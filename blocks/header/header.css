@@ -45,7 +45,8 @@ header {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--s2-spacing-200);
+  font-size: var(--s2-body-size-s);
+  gap: var(--s2-spacing-300);
 
   ul {
     display: none;
@@ -78,7 +79,7 @@ header {
   ul {
     display: flex;
     align-items: center;
-    gap: var(--s2-spacing-200);
+    gap: var(--s2-spacing-100);
     margin: 0;
     padding: 0;
     list-style: none;
