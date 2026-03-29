@@ -1,0 +1,19 @@
+.action-button {
+  display: block;
+  height: var(--se-component-m-height);
+  border-radius: var(--s2-corner-radius-500);
+  font-size: var(--s2-component-m-regular-font-size);
+  font-weight: var(--s2-component-m-regular-font-weight);
+  line-height: var(--s2-component-m-regular-line-height);
+  background-color: var(--s2-gray-100);
+  border: none;
+  transition: background-color 0.2s ease-in-out;
+
+  &.action-button-quiet {
+    background-color: transparent;
+
+    &:hover {
+        background-color: var(--s2-gray-100);
+    }
+  }
+}

@@ -13,6 +13,9 @@ const locales = {
 };
 
 const linkBlocks = [
+  { 'action-button': '/tools/widgets/scheme' },
+  { 'action-button': '/tools/widgets/ask-ai' },
+  { 'action-button': '/tools/widgets/settings' },
   { fragment: '/fragments/' },
   { schedule: '/schedules/' },
   { youtube: 'https://www.youtube' },
@@ -30,10 +33,11 @@ const decorateArea = ({ area = document }) => {
     img.fetchPriority = 'high';
   };
 
-  eagerLoad(area, 'img');
+  eagerLoad(area, 'img:not([src*=".svg"])');
 };
 
 export async function loadPage() {
+  document.documentElement.classList.add('spectrum-edge');
   setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
   await loadArea();
 }

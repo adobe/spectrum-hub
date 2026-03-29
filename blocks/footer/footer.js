@@ -11,20 +11,18 @@ export default async function init(el) {
   const { locale } = getConfig();
   const footerMeta = getMetadata('footer');
   const path = footerMeta || FOOTER_PATH;
-  try {
-    const fragment = await loadFragment(`${locale.prefix}${path}`);
-    fragment.classList.add('footer-content');
 
-    const sections = [...fragment.querySelectorAll('.section')];
+  const { fragment } = await loadFragment(`${locale.prefix}${path}`);
+  if (!fragment) return;
+  fragment.classList.add('footer-content');
 
-    const copyright = sections.pop();
-    copyright.classList.add('section-copyright');
+const sections = [...fragment.querySelectorAll('.section')];
 
-    const legal = sections.pop();
-    legal.classList.add('section-legal');
+  const copyright = sections.pop();
+  copyright.classList.add('section-copyright');
 
-    el.append(fragment);
-  } catch (e) {
-    throw Error(e);
-  }
+  const legal = sections.pop();
+  legal.classList.add('section-legal');
+
+  el.append(fragment);
 }

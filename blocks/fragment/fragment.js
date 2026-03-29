@@ -30,7 +30,7 @@ function applyPageStyles(fragment) {
  */
 export async function loadFragment(path) {
   const resp = await fetch(`${path}`);
-  if (!resp.ok) throw Error(`Couldn't fetch ${path}`);
+  if (!resp.ok) return { error: `Could not fetch fragment - ${resp.status}` };
 
   const html = await resp.text();
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -49,7 +49,7 @@ export async function loadFragment(path) {
   fragment.remove();
   container.remove();
 
-  return fragment;
+  return { fragment };
 }
 
 /**
@@ -97,7 +97,7 @@ function getRequestPath(a) {
 export default async function init(a) {
   const path = getRequestPath(a);
 
-  const fragment = await loadFragment(path);
+  const { fragment } = await loadFragment(path);
   if (fragment) {
     const elToReplace = getReplaceEl(a);
     const sections = fragment.querySelectorAll(':scope > .section');

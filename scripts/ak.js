@@ -57,36 +57,38 @@ export async function loadStyle(href) {
   });
 }
 
-export async function loadBlock(block) {
-  const { codeBase, log, components } = getConfig();
-  const { classList } = block;
-  const name = classList[0];
-  block.dataset.blockName = name;
-  const blockPath = `${codeBase}/blocks/${name}/${name}`;
+export async function loadExperience(el, type, name, style) {
+  const { codeBase } = getConfig();
+  const path = `${codeBase}/${type}/${name}/${name}`;
   const loading = [new Promise((resolve) => {
     (async () => {
       try {
-        await (await import(`${blockPath}.js`)).default(block);
-      } catch (ex) { log(ex, block); }
+        await (await import(`${path}.js`)).default(el);
+      } catch (ex) {
+        getConfig().log(ex, el);
+      }
       resolve();
     })();
   })];
-  const isCmp = components.some((cmp) => name === cmp);
-  if (!isCmp) loading.push(loadStyle(`${blockPath}.css`));
+  if (style) loading.push(loadStyle(`${path}.css`));
   await Promise.all(loading);
+  return el;
+}
+
+export async function loadBlock(block) {
+  const { components } = getConfig();
+  const [name] = block.classList;
+  block.dataset.blockName = name;
+  const style = !components.some((cmp) => name === cmp);
+  await loadExperience(block, 'blocks', name, style);
   return block;
 }
 
-function loadTemplate() {
-  const meta = getMetadata('template');
-  if (!meta) return;
-  const template = meta.replaceAll(' ', '-').toLowerCase();
-  const { codeBase } = getConfig();
-  document.body.classList.add('has-template');
-  loadStyle(`${codeBase}/templates/${template}/${template}.css`).then(() => {
-    document.body.classList.add(`${template}-template`);
-    document.body.classList.remove('has-template');
-  });
+async function loadTemplate() {
+  const name = getMetadata('template');
+  if (!name) return;
+  await loadExperience(document.body, 'templates', name, true);
+  document.body.classList.add(`${name}-template`);
 }
 
 function decoratePictures(el) {
@@ -221,7 +223,7 @@ function decorateLinks(el) {
 function loadIcons(el) {
   const icons = el.querySelectorAll('span.icon');
   if (!icons.length) return;
-  import('./utils/icons.js').then((mod) => mod.default(icons));
+  import('./utils/svg.js').then((mod) => mod.default(icons));
 }
 
 function groupChildren(section) {
@@ -286,19 +288,31 @@ function decorateDoc() {
   if (pageId) localStorage.setItem('lazyhash', pageId);
 }
 
+async function loadSession() {
+  sessionStorage.setItem('session', true);
+  document.body.classList.add('session');
+  const header = document.querySelector('header');
+  if (header) await loadBlock(header);
+}
+
 export async function loadArea({ area } = { area: document }) {
   const isDoc = area === document;
+  const isSession = sessionStorage.getItem('session');
   if (isDoc) decorateDoc();
   decoratePictures(area);
   const { decorateArea } = getConfig();
   if (decorateArea) decorateArea({ area });
   const sections = decorateSections(area, isDoc);
+  if (isDoc && isSession) await loadSession();
   for (const [idx, section] of sections.entries()) {
     loadIcons(section);
     await Promise.all(section.linkBlocks.map((block) => loadBlock(block)));
     await Promise.all(section.blocks.map((block) => loadBlock(block)));
     delete section.dataset.status;
-    if (isDoc && idx === 0) import('./postlcp.js').then((mod) => mod.default());
+    if (isDoc && idx === 0) {
+      if (!isSession) await loadSession();
+      import('./utils/favicon.js');
+    }
   }
   if (isDoc) import('./lazy.js');
 }
