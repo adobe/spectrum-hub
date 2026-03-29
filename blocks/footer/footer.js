@@ -16,7 +16,7 @@ export default async function init(el) {
   if (!fragment) return;
   fragment.classList.add('footer-content');
 
-const sections = [...fragment.querySelectorAll('.section')];
+  const sections = [...fragment.querySelectorAll('.section')];
 
   const copyright = sections.pop();
   copyright.classList.add('section-copyright');

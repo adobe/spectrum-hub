@@ -3,20 +3,25 @@ footer {
     text-decoration: none;
   }
 
-  .footer-content {
-    max-width: var(--grid-container-width);
-    margin: 48px auto;
-    font-size: 14px;
+  p {
+    margin: 0;
   }
 
-  .section-legal ul {
+  ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  .section-copyright p {
-    margin: 0;
+  .footer-content {
+    max-width: var(--se-grid-container-width);
+    margin: 0 auto;
+    padding-block: 48px;
+    font-size: var(--s2-body-size-s);
+  }
+
+  .section-legal {
+    margin-bottom: var(--s2-spacing-100);
   }
 
   .section {
@@ -34,13 +39,12 @@ footer {
     .section-legal {
       display: flex;
       justify-content: end;
-      gap: var(--spacing-xl);
-      margin-bottom: 24px;
+      gap: var(--s2-spacing-300);
 
       ul {
         display: flex;
         justify-content: end;
-        gap: var(--spacing-xl);
+        gap: var(--s2-spacing-300);
       }
 
       li {
@@ -51,7 +55,7 @@ footer {
     .section-copyright {
       display: flex;
       justify-content: end;
-      gap: var(--spacing-xl);
+      gap: var(--s2-spacing-300);
     }
   }
 }

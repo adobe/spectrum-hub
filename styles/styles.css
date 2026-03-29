@@ -337,6 +337,10 @@ main > div, div[data-status] {
         display: none;
       }
 
+      main {
+        min-height: 100svh;
+      }
+
       /* Don't let fonts load unless there's a session */
       &.session {
         font-family: var(--s2-font-family);
