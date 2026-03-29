@@ -1,0 +1,7 @@
+.*
+*.md
+LICENSE
+package.json
+package-lock.json
+test/
+workers/

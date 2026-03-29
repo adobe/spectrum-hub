@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>404</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles/styles.css"/>
+    <script src="/deps/rum.js" type="module"></script>
+    <script src="/scripts/ak.js" type="module"></script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    <script nonce="aem" type="module">
+      import sampleRUM from '/deps/rum.js';
+      sampleRUM('404', { source: document.referrer });
+    </script>
+    <link rel="icon" href="data:,">
+  </head>
+  <body>
+    <header></header>
+    <main><div><a href="/fragments/404">https://main--author-kit--aemsites.aem.page/fragments/404</a></div></main>
+    <footer></footer>
+  </body>
+</html>

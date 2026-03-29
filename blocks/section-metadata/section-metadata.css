@@ -1,0 +1,238 @@
+.section {
+  --top-bottom-spacing: 0;
+  --section-container-width: var(--grid-container-width);
+  --section-column-width: var(--grid-column-width);
+
+  padding: var(--top-bottom-spacing) 0;
+
+  > * {
+    color: light-dark(var(--color-dark), var(--color-light));
+  }
+
+  &.grid-2 {
+    --grid-size: 2;
+  }
+
+  &.grid-3 {
+    --grid-size: 3;
+  }
+
+  &.grid-4 {
+    --grid-size: 4;
+  }
+
+  &.grid-5 {
+    --grid-size: 5;
+  }
+
+  &.grid-6 {
+    --grid-size: 6;
+  }
+
+  &.gap-xs {
+    --gap-spacing: var(--spacing-xs);
+  }
+
+  &.gap-s {
+    --gap-spacing: var(--spacing-s);
+  }
+
+  &.gap-m {
+    --gap-spacing: var(--spacing-m);
+  }
+
+  &.gap-l {
+    --gap-spacing: var(--spacing-l);
+  }
+
+  &.gap-xl {
+    --gap-spacing: var(--spacing-xl);
+  }
+
+  &.gap-xxl {
+    --gap-spacing: var(--spacing-xxl);
+  }
+
+  &.spacing-xs {
+    --top-bottom-spacing: calc(var(--spacing-xs) * 2);
+  }
+
+  &.spacing-s {
+    --top-bottom-spacing: calc(var(--spacing-s) * 2);
+  }
+
+  &.spacing-m {
+    --top-bottom-spacing: calc(var(--spacing-m) * 2);
+  }
+
+  &.spacing-l {
+    --top-bottom-spacing: calc(var(--spacing-l) * 2);
+  }
+
+  &.spacing-xl {
+    --top-bottom-spacing: calc(var(--spacing-xl) * 2);
+  }
+
+  &.spacing-xxl {
+    --top-bottom-spacing: calc(var(--spacing-xxl) * 2);
+  }
+
+  &.grid .block-content {
+    display: grid;
+    gap: var(--gap-spacing);
+  }
+
+  &.center {
+    .default-content {
+      text-align: center;
+    }
+  }
+
+  > .default-content {
+    margin-bottom: calc(var(--top-bottom-spacing) / 3);
+
+    > *:first-child {
+      margin-top: 0;
+    }
+
+    > *:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &.container {
+    .default-content,
+    .block-content {
+      max-width: var(--section-container-width);
+      margin-inline: auto;
+    }
+
+    &.container-2 {
+      --section-container-width: calc(var(--grid-column-width) * 4);
+    }
+
+    &.container-4 {
+      --section-container-width: calc(var(--grid-column-width) * 8);
+    }
+
+    &.container-6 {
+      --section-container-width: var(--grid-container-width);
+    }
+  }
+
+  &.has-background {
+    position: relative;
+
+    .default-content,
+    .block-content {
+      position: relative;
+    }
+  }
+
+  picture.section-background {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .section-background img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Pre-defined layouts */
+  &.layout-bento {
+    .block-content {
+      --grid-container-width: 83.4%;
+
+      display: grid;
+      gap: var(--gap-spacing);
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (width >= 600px) {
+  .section {
+    &.grid-2 .block-content {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-size), 1fr);
+    }
+  }
+}
+
+@media (width >= 900px) {
+  .section {
+    &.grid-4 .block-content,
+    &.grid-6 .block-content {
+      display: grid;
+      grid-template-columns: repeat(calc(var(--grid-size) / 2), 1fr);
+    }
+
+    &.container.container-4 {
+      --section-container-width: calc(var(--grid-column-width) * 4);
+    }
+
+    &.container.container-6 {
+      --section-container-width: calc(var(--grid-column-width) * 6);
+    }
+
+    &.peek-background {
+      .section-background img {
+        object-position: 0 40%;
+      }
+
+      .default-content {
+        margin-bottom: calc(var(--spacing-xxl) * 12);
+      }
+    }
+  }
+
+  .section.layout-bento {
+    .block-content {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-areas:
+        "one   one   two"
+        "one   one   three"
+        "four  five  five";
+
+      > * {
+        /* blocks can use a container query */
+        container-type: inline-size;
+      }
+
+      > *:nth-child(1) {
+        grid-area: one;
+      }
+
+      > *:nth-child(2) {
+        grid-area: two;
+      }
+
+      > *:nth-child(3) {
+        grid-area: three;
+      }
+
+      > *:nth-child(4) {
+        grid-area: four;
+      }
+
+      > *:nth-child(5) {
+        grid-area: five;
+      }
+
+      > *:nth-child(6) {
+        grid-area: six;
+      }
+    }
+  }
+}
+
+@media (width >= 1200px) {
+  .section.grid .block-content {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 1fr);
+  }
+}

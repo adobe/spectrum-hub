@@ -1,0 +1,37 @@
+.advanced-tabs {
+  .section {
+    display: none;
+
+    &.is-visible {
+      display: block;
+    }
+
+    &[data-status="decorated"] {
+      display: none;
+    }
+  }
+}
+
+.tab-list {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+
+  button {
+    background-color: transparent;
+    border: none;
+    font-size: var(--body-font-size-xl);
+    padding: 4px 8px;
+    margin: 0;
+    border-bottom: 2px solid transparent;
+    box-sizing: border-box;
+    transition: border-bottom 0.2s ease-in-out;
+
+    &.is-active {
+      border-bottom: 2px solid light-dark(#000, #fff);
+    }
+  }
+}

@@ -1,0 +1,90 @@
+:host {
+  min-width: 200px;
+  display: block;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  background-color: light-dark(var(--color-light), var(--color-dark));
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 8px 0 rgb(0 0 0 / 30%),
+    0 3px 6px 0 rgb(0 0 0 / 4%),
+    0 4px 8px 0 rgb(0 0 0 / 8%);
+
+  button {
+    font-family: inherit;
+  }
+
+  .main-content {
+    padding: 18px 24px;
+  }
+
+  .date-group {
+    font-size: 14px;
+  }
+
+  .date-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .date-tab {
+    padding: 0 0 4px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+
+    &.is-selected {
+      border-bottom: 2px solid;
+    }
+  }
+
+  .date-value {
+    display: none;
+
+    &.is-selected {
+      display: block;
+    }
+  }
+
+  input {
+    margin-top: 8px;
+    line-height: 32px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: none;
+  }
+}
+
+p {
+  margin: 0;
+  line-height: 1.6;
+
+  &.heading {
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  &.date-label {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #676767;
+  }
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 48px;
+  gap: 2px;
+
+  button {
+    background-color: light-dark(var(--color-gray-100), var(--color-gray-800));
+    font-weight: 700;
+    border: none;
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:prod": "wrangler deploy --env=\"\"",
+    "deploy:stage": "wrangler deploy --env stage"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "wrangler": "^4.40.0"
+  }
+}
