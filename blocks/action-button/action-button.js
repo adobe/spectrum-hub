@@ -47,7 +47,9 @@ const BUTTONS = {
 };
 
 function getLinkProps(a) {
-  return a.title.split('|').reduce((acc, prop) => {
+  const { title } = a;
+  a.removeAttribute('title');
+  return title.split('|').reduce((acc, prop) => {
     // The first split will be key
     const [key, ...values] = prop.split(':');
     // The values may have colons in them, join them back.

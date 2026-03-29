@@ -6,10 +6,6 @@ const { locale } = getConfig();
 
 const HEADER_PATH = '/fragments/nav/header';
 
-async function decorateAction(section, pattern) {
-  console.log(section)
-}
-
 function decorateBrandSection(section) {
   section.classList.add('brand-section');
   const pic = section.querySelector('picture');

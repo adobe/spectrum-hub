@@ -291,8 +291,6 @@ function decorateDoc() {
 async function loadSession() {
   sessionStorage.setItem('session', true);
   document.body.classList.add('session');
-  const header = document.querySelector('header');
-  if (header) await loadBlock(header);
 }
 
 export async function loadArea({ area } = { area: document }) {
@@ -311,6 +309,8 @@ export async function loadArea({ area } = { area: document }) {
     delete section.dataset.status;
     if (isDoc && idx === 0) {
       if (!isSession) await loadSession();
+      const header = document.querySelector('header');
+      if (header) await loadBlock(header);
       import('./utils/favicon.js');
     }
   }

@@ -292,6 +292,7 @@
 
   /* grid */
   --se-grid-container-width: 83.4%;
+  --se-grid-column-width: calc(var(--se-grid-container-width) / 12);
   --se-grid-gutter-width: 8.3%;
 
   /* color schemes */
@@ -322,6 +323,9 @@ main > div, div[data-status] {
 @layer spectrum-edge {
   html.spectrum-edge {
     body {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100svh;
       margin: 0;
       background-color: var(--se-body-background-color);
       color: var(--se-body-color);
@@ -337,10 +341,6 @@ main > div, div[data-status] {
         display: none;
       }
 
-      main {
-        min-height: 100svh;
-      }
-
       /* Don't let fonts load unless there's a session */
       &.session {
         font-family: var(--s2-font-family);
@@ -351,23 +351,29 @@ main > div, div[data-status] {
       }
     }
 
-    h1 { font-size: var(--s2-heading-size-xxl); }
-    h2 { font-size: var(--s2-heading-size-xl); }
-    h3 { font-size: var(--s2-heading-size-l); }
-    h4 { font-size: var(--s2-heading-size-m); }
-    h5 { font-size: var(--s2-heading-size-s); }
-    h6 { font-size: var(--s2-heading-size-xs); }
+    /* Semantic elements */
+    h1, .heading-size-xxl { font-size: var(--s2-heading-size-xxl); }
+    h2, .heading-size-xl { font-size: var(--s2-heading-size-xl); }
+    h3, .heading-size-l { font-size: var(--s2-heading-size-l); }
+    h4, .heading-size-m { font-size: var(--s2-heading-size-m); }
+    h5, .heading-size-s { font-size: var(--s2-heading-size-s); }
+    h6, .heading-size-xs { font-size: var(--s2-heading-size-xs); }
 
     h1,
     h2,
     h3,
     h4,
     h5,
-    h6 {
+    h6,
+    [class*="heading-size"] {
       font-weight: var(--s2-heading-font-weight);
       line-height: var(--s2-heading-line-height);
       margin: calc(1em * var(--s2-heading-margin-top-multiplier)) 0 calc(1em * var(--s2-heading-margin-bottom-multiplier));
     }
+
+    /* Beyond semantic */
+    .heading-size-xxxxl { font-size: var(--s2-heading-size-xxxxl); }
+    .heading-size-xxxl { font-size: var(--s2-heading-size-xxxl); }
 
     p {
       margin: calc(1em * var(--s2-body-margin-multiplier)) 0;

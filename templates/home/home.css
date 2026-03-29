@@ -1,3 +1,27 @@
+body {
+  --s2-home-gradient-light: radial-gradient(
+    100% 60% at 50% 100%,
+    rgb(243 243 243) 0%,
+    rgb(229 240 254 / 60%) 25%,
+    rgb(200 190 250 / 40%) 50%,
+    rgb(240 220 245 / 25%) 75%,
+    rgb(243 243 243) 100%);
+  --s2-home-gradient-dark: radial-gradient(
+    100% 60% at 50% 100%,
+    rgb(17 17 17) 0%,
+    rgb(30 50 120 / 40%) 25%,
+    rgb(80 70 180 / 30%) 50%,
+    rgb(100 80 140 / 20%) 75%,
+    rgb(17 17 17) 100%);
+}
+
 body.home-template {
-  height: 100svh;
+  background-image: var(--s2-home-gradient-light);
+}
+
+body.home-template.dark-scheme,
+body.home-template:not(.light-scheme, .dark-scheme) {
+  @media (prefers-color-scheme: dark) {
+    background-image: var(--s2-home-gradient-dark);
+  }
 }
