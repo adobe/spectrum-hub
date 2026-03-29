@@ -31,7 +31,7 @@ header {
     height: 32px;
   }
 
-  p {
+  a {
     display: flex;
     align-items: center;
     gap: var(--s2-spacing-200);

@@ -8,8 +8,12 @@ const HEADER_PATH = '/fragments/nav/header';
 
 function decorateBrandSection(section) {
   section.classList.add('brand-section');
+  const link = section.querySelector('a');
   const pic = section.querySelector('picture');
-  if (pic) picture2svg(pic);
+  if (pic) {
+    if (link) link.prepend(pic);
+    picture2svg(pic);
+  }
 }
 
 function decorateNavSection(section) {
