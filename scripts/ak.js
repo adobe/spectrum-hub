@@ -310,8 +310,10 @@ export async function loadArea({ area } = { area: document }) {
     if (isDoc && idx === 0) {
       if (!isSession) await loadSession();
       const header = document.querySelector('header');
-      if (header) await loadBlock(header);
-      import('./utils/favicon.js');
+      if (header) {
+        await loadBlock(header);
+        delete header.dataset.status;
+      }
     }
   }
   if (isDoc) import('./lazy.js');

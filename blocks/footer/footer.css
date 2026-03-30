@@ -1,4 +1,8 @@
 footer {
+  nav {
+    display: unset;
+  }
+
   a {
     display: block;
     text-decoration: none;

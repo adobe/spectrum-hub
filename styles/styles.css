@@ -306,7 +306,8 @@
 }
 
 /* --- Edge Delivery-specific decoration hiding --- */
-main > div, div[data-status] {
+main > div,
+div[data-status] {
   display: none;
 }
 
