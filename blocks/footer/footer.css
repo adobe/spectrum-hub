@@ -1,7 +1,5 @@
 footer {
-  nav {
-    display: unset;
-  }
+  display: unset;
 
   a {
     display: block;

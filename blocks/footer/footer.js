@@ -12,8 +12,6 @@ export default async function init(el) {
   const footerMeta = getMetadata('footer');
   const path = footerMeta || FOOTER_PATH;
 
-  const nav = document.createElement('nav');
-
   const { fragment } = await loadFragment(`${locale.prefix}${path}`);
   if (!fragment) return;
   fragment.classList.add('footer-content');
@@ -26,7 +24,5 @@ export default async function init(el) {
   const legal = sections.pop();
   legal.classList.add('section-legal');
 
-  nav.append(fragment);
-
-  el.append(nav);
+  el.append(fragment);
 }

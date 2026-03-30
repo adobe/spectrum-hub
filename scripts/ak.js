@@ -269,7 +269,6 @@ function decorateHeader() {
     return;
   }
   header.className = meta;
-  header.dataset.status = 'decorated';
   const breadcrumbs = document.body.querySelector('breadcrumbs');
   const breadcrumbsPath = getMetadata('breadcrumbs');
   if (!(breadcrumbs || breadcrumbsPath)) return;
@@ -312,7 +311,6 @@ export async function loadArea({ area } = { area: document }) {
       const header = document.querySelector('header');
       if (header) {
         await loadBlock(header);
-        delete header.dataset.status;
       }
     }
   }

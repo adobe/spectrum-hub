@@ -306,8 +306,7 @@
 }
 
 /* --- Edge Delivery-specific decoration hiding --- */
-main > div,
-div[data-status] {
+main > div, div[data-status] {
   display: none;
 }
 
@@ -338,7 +337,7 @@ div[data-status] {
         height: var(--s2-nav-height);
       }
 
-      nav {
+      footer {
         display: none;
       }
 
