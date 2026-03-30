@@ -334,6 +334,7 @@ main > div, div[data-status] {
       line-height: var(--s2-body-line-height);
 
       header {
+        visibility: hidden;
         height: var(--s2-nav-height);
       }
 

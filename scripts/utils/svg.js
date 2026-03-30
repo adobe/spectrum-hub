@@ -16,9 +16,11 @@ export default function loadIcons(icons) {
 export async function picture2svg(picture) {
   const img = picture.querySelector('[src*=".svg"]');
   const { src } = img;
+  // Prevent a duplicate download of the image
+  picture.replaceChildren();
   const resp = await fetch(src);
   const text = await resp.text();
   const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
   const svg = doc.querySelector('svg');
-  picture.parentElement.replaceChild(svg, picture);
+  picture.replaceWith(svg);
 }

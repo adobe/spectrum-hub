@@ -6,13 +6,13 @@ const { locale } = getConfig();
 
 const HEADER_PATH = '/fragments/nav/header';
 
-function decorateBrandSection(section) {
+async function decorateBrandSection(section) {
   section.classList.add('brand-section');
   const link = section.querySelector('a');
   const pic = section.querySelector('picture');
   if (pic) {
     if (link) link.prepend(pic);
-    picture2svg(pic);
+    await picture2svg(pic);
   }
 }
 
@@ -33,7 +33,7 @@ async function decorateHeader(fragment) {
   // Nav is anything left over
   const nav = sections[0];
 
-  if (brand) decorateBrandSection(brand);
+  if (brand) await decorateBrandSection(brand);
   if (nav) decorateNavSection(nav);
   if (actions) decorateActionSection(actions);
 }
