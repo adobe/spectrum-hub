@@ -1,6 +1,8 @@
 footer {
   a {
+    display: block;
     text-decoration: none;
+    padding-block: var(--s2-spacing-100);
   }
 
   p {
@@ -20,15 +22,15 @@ footer {
     font-size: var(--s2-body-size-s);
   }
 
-  .section-legal {
-    margin-bottom: var(--s2-spacing-100);
-  }
-
   .section {
     .default-content {
       max-width: initial;
       margin: initial;
     }
+  }
+
+  .section-legal {
+    margin-bottom: var(--s2-spacing-100);
   }
 }
 
