@@ -1,0 +1,126 @@
+[
+  {
+    "attribute": "pending-label",
+    "property": "pendingLabel",
+    "type": "string",
+    "default": "'Pending'"
+  },
+  {
+    "attribute": "pending",
+    "property": "pending",
+    "type": "boolean",
+    "default": "false"
+  },
+  {
+    "attribute": "variant",
+    "property": "variant",
+    "type": "ButtonVariants",
+    "description": "The visual variant to apply to this button."
+  },
+  {
+    "attribute": "static-color",
+    "property": "staticColor",
+    "type": "'black' | 'white' | undefined",
+    "description": "The static color variant to use for this button."
+  },
+  {
+    "attribute": "treatment",
+    "property": "treatment",
+    "type": "ButtonTreatments",
+    "default": "'fill'",
+    "description": "The visual treatment to apply to this button."
+  },
+  {
+    "attribute": "quiet",
+    "property": "quiet",
+    "type": "boolean",
+    "description": "Style this button to be less obvious"
+  },
+  {
+    "attribute": "no-wrap",
+    "property": "noWrap",
+    "type": "boolean",
+    "default": "false",
+    "description": "Disables text wrapping within the button component's label.\nPlease note that this option is not a part of the design specification\nand should be used carefully, with consideration of this overflow behavior\nand the readability of the button's content."
+  },
+  {
+    "attribute": "active",
+    "property": "active",
+    "type": "boolean",
+    "default": "false",
+    "inheritedFrom": "ButtonBase"
+  },
+  {
+    "attribute": "type",
+    "property": "type",
+    "type": "'button' | 'submit' | 'reset'",
+    "default": "'button'",
+    "description": "The default behavior of the button.\nPossible values are: `button` (default), `submit`, and `reset`.",
+    "inheritedFrom": "ButtonBase"
+  },
+  {
+    "attribute": "disabled",
+    "property": "disabled",
+    "type": "boolean",
+    "default": "false",
+    "description": "Disable this control. It will not receive focus or events",
+    "inheritedFrom": "Focusable"
+  },
+  {
+    "attribute": "autofocus",
+    "property": "autofocus",
+    "type": "boolean",
+    "default": "false",
+    "description": "When this control is rendered, focus it automatically",
+    "inheritedFrom": "Focusable"
+  },
+  {
+    "attribute": "tabIndex",
+    "property": "tabIndex",
+    "type": "number",
+    "description": "The tab index to apply to this control. See general documentation about\nthe tabindex HTML property",
+    "inheritedFrom": "Focusable"
+  },
+  {
+    "attribute": "download",
+    "property": "download",
+    "type": "string | undefined",
+    "description": "Causes the browser to treat the linked URL as a download.",
+    "inheritedFrom": "LikeAnchor"
+  },
+  {
+    "attribute": "label",
+    "property": "label",
+    "type": "string | undefined",
+    "description": "An accessible label that describes the component.\nIt will be applied to aria-label, but not visually rendered.",
+    "inheritedFrom": "LikeAnchor"
+  },
+  {
+    "attribute": "href",
+    "property": "href",
+    "type": "string | undefined",
+    "description": "The URL that the hyperlink points to.",
+    "inheritedFrom": "LikeAnchor"
+  },
+  {
+    "attribute": "target",
+    "property": "target",
+    "type": "'_blank' | '_parent' | '_self' | '_top' | undefined",
+    "description": "Where to display the linked URL, as the name for a browsing context (a tab, window, or &lt;iframe&gt;).",
+    "inheritedFrom": "LikeAnchor"
+  },
+  {
+    "attribute": "referrerpolicy",
+    "property": "referrerpolicy",
+    "type": "| 'no-referrer'\n      | 'no-referrer-when-downgrade'\n      | 'origin'\n      | 'origin-when-cross-origin'\n      | 'same-origin'\n      | 'strict-origin'\n      | 'strict-origin-when-cross-origin'\n      | 'unsafe-url' | undefined",
+    "description": "How much of the referrer to send when following the link.",
+    "inheritedFrom": "LikeAnchor"
+  },
+  {
+    "attribute": "rel",
+    "property": "rel",
+    "type": "string | undefined",
+    "description": "The relationship of the linked URL as space-separated link types.",
+    "inheritedFrom": "LikeAnchor"
+  }
+]

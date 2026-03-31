@@ -1,0 +1,66 @@
+[
+  {
+    "attribute": "emphasized",
+    "property": "emphasized",
+    "type": "boolean",
+    "default": "false"
+  },
+  {
+    "attribute": "hold-affordance",
+    "property": "holdAffordance",
+    "type": "boolean",
+    "default": "false"
+  },
+  {
+    "attribute": "quiet",
+    "property": "quiet",
+    "type": "boolean",
+    "default": "false"
+  },
+  {
+    "attribute": "role",
+    "property": "role",
+    "type": "string",
+    "default": "'button'"
+  },
+  {
+    "attribute": "selected",
+    "property": "selected",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether an Action Button with `role='button'`\nshould also be `aria-pressed='true'`"
+  },
+  {
+    "attribute": "toggles",
+    "property": "toggles",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether to automatically manage the `selected`\nattribute on interaction and whether `aria-pressed=\"false\"`\nshould be used when `selected === false`"
+  },
+  {
+    "attribute": "static-color",
+    "property": "staticColor",
+    "type": "'white' | 'black' | undefined",
+    "description": "The static color variant to use for the action button."
+  },
+  {
+    "attribute": "value",
+    "property": "value",
+    "type": "string"
+  },
+  {
+    "attribute": "active",
+    "property": "active",
+    "type": "boolean",
+    "default": "false",
+    "inheritedFrom": "ButtonBase"
+  },
+  {
+    "attribute": "type",
+    "property": "type",
+    "type": "'button' | 'submit' | 'reset'",
+    "default": "'button'",
+    "description": "The default behavior of the button.\nPossible values are: `button` (default), `submit`, and `reset`.",
+    "inheritedFrom": "ButtonBase"
+  }
+]
