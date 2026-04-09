@@ -28,6 +28,7 @@ header {
   }
 
   picture, svg {
+    flex: 0 0 auto;
     display: block;
     width: 32px;
     height: 32px;
@@ -46,6 +47,7 @@ header {
 .main-nav-section {
   position: relative;
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
   font-size: var(--s2-body-size-s);
   gap: var(--s2-spacing-300);
@@ -53,16 +55,27 @@ header {
   ul {
     display: none;
     align-items: center;
-    gap: var(--s2-spacing-400);
+    gap: var(--s2-spacing-200);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    border-radius: 24px;
+    padding-inline: var(--s2-spacing-300);
+    transition: background-color 0.2s ease-in-out;
+
     &:hover {
-      text-decoration: underline;
+      background-color: rgb(from var(--s2-gray-500) r g b / 0.2);
     }
+  }
+
+  .default-content {
+    max-width: unset;
   }
 
   &:has(+ .actions-section) {

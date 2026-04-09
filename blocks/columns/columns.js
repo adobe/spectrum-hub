@@ -1,18 +1,6 @@
-function decorateCover(col) {
-  const children = [...col.children];
-  if (children.length === 1 && children[0].nodeName === 'PICTURE') {
-    col.classList.add('cover-image');
-    col.parentElement.classList.add('cover-row');
-  } else {
-    col.classList.add('cover-content');
-  }
-}
-
 function decorateCols(el, cols) {
-  const hasCover = el.classList.contains('image-cover');
   for (const [idx, col] of cols.entries()) {
     col.classList.add('col', `col-${idx + 1}`);
-    if (hasCover) decorateCover(col);
   }
 }
 

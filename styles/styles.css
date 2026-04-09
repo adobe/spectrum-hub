@@ -279,10 +279,6 @@
   --s2-font-family: 'Adobe Clean', adobe-clean, sans-serif;
   --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
 
-  /* nav */
-  --s2-nav-height: 64px;
-  --s2-nav-width: 64px;
-
   /* se etc conveniences */
   --se-adobe-corporate-color: rgb(235 16 0);
   --se-corner-radius-50: 1px;
@@ -294,6 +290,9 @@
   --se-grid-container-width: 83.4%;
   --se-grid-column-width: calc(var(--se-grid-container-width) / 12);
   --se-grid-gutter-width: 8.3%;
+
+  /* nav */
+  --sh-nav-height: 80px;
 
   /* color schemes */
   color-scheme: light dark;
@@ -335,7 +334,7 @@ main > div, div[data-status] {
 
       header {
         visibility: hidden;
-        height: var(--s2-nav-height);
+        height: var(--sh-nav-height);
       }
 
       footer {
@@ -348,7 +347,7 @@ main > div, div[data-status] {
       }
 
       &.no-header {
-        --s2-nav-height: 0;
+        --sh-nav-height: 0;
       }
     }
 
@@ -372,7 +371,7 @@ main > div, div[data-status] {
       margin: calc(1em * var(--s2-heading-margin-top-multiplier)) 0 calc(1em * var(--s2-heading-margin-bottom-multiplier));
     }
 
-    /* Beyond semantic */
+    /* Beyond semantics */
     .heading-size-xxxxl { font-size: var(--s2-heading-size-xxxxl); }
     .heading-size-xxxl { font-size: var(--s2-heading-size-xxxl); }
 

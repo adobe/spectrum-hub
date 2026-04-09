@@ -17,6 +17,10 @@ body {
 
 body.home-template {
   background-image: var(--s2-home-gradient-light);
+
+  h1 {
+    font-weight: 400;
+  }
 }
 
 body.home-template.dark-scheme,
