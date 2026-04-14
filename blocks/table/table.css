@@ -1,7 +1,21 @@
 .table {
-  > div {
+  .row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(var(--child-count), 1fr);
+  }
+
+  .heading-toggle {
+    display: flex;
+    justify-content: space-between;
+
+    .table-tabs {
+      display: flex;
+      align-items: center;
+      gap: var(--s2-spacing-100);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
   }
 
   &.quiet {

@@ -1,5 +1,8 @@
 .action-button {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--s2-spacing-75);
+  padding-inline: var(--s2-spacing-100);
   height: var(--se-component-m-height);
   border-radius: var(--s2-corner-radius-500);
   font-size: var(--s2-component-m-regular-font-size);
