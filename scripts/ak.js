@@ -87,8 +87,10 @@ export async function loadBlock(block) {
 async function loadTemplate() {
   const name = getMetadata('template');
   if (!name) return;
+  document.body.classList.toggle('template-loading');
   await loadExperience(document.body, 'templates', name, true);
   document.body.classList.add(`${name}-template`);
+  document.body.classList.toggle('template-loading');
 }
 
 function decoratePictures(el) {
