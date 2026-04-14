@@ -1,11 +1,10 @@
 .table {
-  table {
-    width: 100%;
-    border-collapse: collapse;
+  > div {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
 
-    th,
-    td {
-      border: 1px solid;
-    }
+  &.quiet {
+    background-color: teal;
   }
 }
