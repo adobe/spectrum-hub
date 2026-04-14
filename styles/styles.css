@@ -304,8 +304,10 @@
   }
 }
 
-/* --- Edge Delivery-specific decoration hiding --- */
-main > div, div[data-status] {
+/* --- Spectrum Edge specific decoration hiding --- */
+main > div,
+div[data-status],
+.template-loading {
   display: none;
 }
 
