@@ -6,26 +6,19 @@ const PROPS_TO_LABELS = {
   attribute: 'Attribute',
   property: 'Property',
   type: 'Type',
-  default: 'Default',
+  default: 'Default value',
+  description: 'Description',
+  inheritedFrom: 'Inherited from',
 };
-
 
 const decorateHeading = (headingRow) => {
   const tabs = headingRow.querySelector('ul');
   if (!tabs) return;
 
-  const tabItems = tabs.querySelectorAll('li');
-  // for (const tabItem of tabItems) {
-  //   const { textContent } = tabItem;
-  //   const btn = document.createElement('button');
-  //   btn.textContent = textContent;
-  //   tabItem.replaceChildren(btn);
-  // }
-
   tabs.classList.add('table-tabs');
 };
 
-const decorateRows = (el, rows) => {
+const decorateRows = (rows) => {
   for (const [idx, row] of rows.entries()) {
     row.classList.add('row', `row-${idx + 1}`);
     const cols = [...row.children];
@@ -62,22 +55,21 @@ const decorateDataRows = async (href) => {
 
   if (!json.length) return null;
 
-  // Create header row from the keys of the first item
-  const properties = Object.keys(json[0]);
+  // gather all the available properties for dev table
+  const properties = [...new Set(json.flatMap(Object.keys))];
   const headerRow = createHeaderRow(properties);
 
   // Create data rows
   const dataRows = json.map((props) => {
     const row = document.createElement('div');
 
-    const cols = Object.values(props).map((value) => {
+    const cols = properties.map((key) => {
       const col = document.createElement('div');
-      col.textContent = value;
+      col.textContent = props[key] ?? '';
       return col;
     });
 
     if (cols) row.append(...cols);
-
     return row;
   });
 
@@ -91,5 +83,5 @@ export default async function init(el) {
     if (dataRows) el.append(...dataRows);
   }
   const rows = [...el.children];
-  decorateRows(el, rows);
+  decorateRows(rows);
 }
