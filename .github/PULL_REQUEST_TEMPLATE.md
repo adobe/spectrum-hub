@@ -1,3 +1,5 @@
+<!--- Provide a general summary of your changes in the Title above -->
+
 ## Description
 
 <!-- Describe your changes in detail. What does this PR do and why? What problem does it solve? -->
@@ -5,6 +7,8 @@
 ### Screenshots (if applicable)
 
 ### Type of change
+
+<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 
 - [ ] Bug fix
 - [ ] New feature / block
@@ -73,3 +77,15 @@
 - [ ] Did it pass in Desktop?
 - [ ] Did it pass in (emulated) Mobile?
 - [ ] Did it pass in (emulated) iPad?
+
+## Checklist:
+
+<!--- Go over all the following points, and put an `x` in all the boxes that apply. If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
+
+- [ ] I have signed the [Adobe Open Source CLA](https://opensource.adobe.com/cla.html).
+- [ ] My code follows the code style of this project.
+- [ ] My change requires a change to the documentation.
+- [ ] I have updated the documentation accordingly.
+- [ ] I have read the **CONTRIBUTING** document.
+- [ ] I have added tests to cover my changes.
+- [ ] All new and existing tests passed.
