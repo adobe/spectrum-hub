@@ -30,15 +30,22 @@ Rules can be found in the `rules` directory in `md` format.
 - **Purpose**: Generates GitHub pull request titles and body following Spectrum Hub conventions, including description structure, accessibility testing checklist, validation steps, and device review.
 - **How to invoke**: Ask to create or draft a PR description (e.g. "write a PR description", "draft a pull request for this branch"). Requires a GitHub issue or Jira ticket number; the agent will prompt if not provided.
 
+#### Writing documentation
+
+- **File**: [`.ai/rules/write-documentation.md`](./rules/write-documentation.md)
+- **Purpose**: Follow Adobe content writing standards when writing documentation for Spectrum Hub — including Markdown formatting, voice and tone, and writing for external or internal audiences.
+- **How to invoke**: Auto-triggers when editing `*.md` files, or ask explicitly (e.g. "write the docs for this block", "update the README").
+
 ### When rules are activated
 
 **Always-applied rules:** Rules use `alwaysApply: true` to activate automatically, or `globs` to activate when matching files are edited.
 **On-demand rules:** Rules with `alwaysApply: false` and no globs are on-demand only — invoke by mentioning the rule or asking for the relevant task (e.g. "write a PR description", "draft a Jira ticket").
 
-| Rule                    | Always applied | On-demand | Glob |
-| ----------------------- | :------------: | :-------: | ---- |
-| write-issues-tickets    |                |     x     | —    |
-| pr-descriptions         |                |     x     | —    |
+| Rule                 | Always applied | On-demand | Glob       |
+| -------------------- | :------------: | :-------: | ---------- |
+| write-issues-tickets |                |     x     | —          |
+| pr-descriptions      |                |     x     | —          |
+| write-documentation  |                |     x     | `**/*.md`  |
 
 ### Usage
 
@@ -64,12 +71,6 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 - **File**: [`.ai/skills/conventional-commits/SKILL.md`](./skills/conventional-commits/SKILL.md)
 - **Purpose**: Create conventional commit messages following the conventional commits specification.
 - **How to invoke**: Ask for a commit message (e.g. "write a commit message for these changes", "suggest a commit message"). Applies when you're about to run `git commit`.
-
-#### Documentation standards
-
-- **File**: [`.ai/skills/documentation/SKILL.md`](./skills/documentation/SKILL.md)
-- **Purpose**: Follow Adobe content writing standards when writing documentation — Markdown, JSDoc, Jira tickets, PR descriptions, or any externally-shipped content.
-- **How to invoke**: Ask to write or edit docs (e.g. "write the PR description", "draft the Jira ticket", "add JSDoc to this"). Applies to `.md`, `.mdx`, and `.stories.ts` files.
 
 ## Using rules and skills across tools and IDEs
 
