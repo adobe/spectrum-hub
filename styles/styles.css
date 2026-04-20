@@ -294,6 +294,9 @@
   /* nav */
   --sh-nav-height: 80px;
 
+  /* options table buttons */
+  --sh-content-color-white: rgb(255 255 255);
+
   /* color schemes */
   color-scheme: light dark;
 }
