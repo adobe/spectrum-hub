@@ -7,13 +7,7 @@ alwaysApply: false
 
 If a ticket (GitHub issue or Jira ticket) is not provided by the prompt, prompt the user to supply one before generating the description or pull request content.
 
-When prompted to create a GitHub pull request description, output the following:
-
-- Title
-- Labels
-- Description
-
-Output results in the chat window in a way that can be copied and pasted into GitHub.
+When prompted to create a GitHub pull request description, suggest a PR title. Then output the description results in the chat window in a way that can be copied and pasted into GitHub.
 
 ## GitHub markdown formatting rules
 
@@ -22,7 +16,7 @@ Use these syntax rules when writing GitHub PR descriptions:
 - `##` through `######` - Headings (use `##` for main, `###` for secondary, etc.)
 - `**text**` - Bold text
 - `` `code` `` - Inline code
-- ``` `language` ``` - Language-specific code blocks
+- ` ```language``` ` - Language-specific code blocks
 - `[text](url)` - Links
 - `-` - Bullet points
 - `1.` - Numbered list items
@@ -34,29 +28,25 @@ Use these syntax rules when writing GitHub PR descriptions:
 - Use conventional commit format: `feat(component): brief description of change or issue`
 - Keep titles concise but descriptive (under 80 characters)
 - Use present tense for the description (e.g., "add" not "added")
-- For PRs, include the component name in parentheses if applicable
-
-## Description structure
-
-- Present title, labels, and type before description content
-- Description format and structure should follow the pull request template in the Templates section below
-- Accessibility testing checklist is required. Populate keyboard and screen reader with component-specific numbered
-  steps (Storybook paths, expected focus behavior, what should be announced). For non-interactive components (e.g. static
-  elements, dividers), state that clearly under Keyboard (e.g. no focusable parts; confirm no regressions in surrounding
-  examples) and still document Screen reader checks (roles, structure, labels).
-- Include links to related issues, RFCs, or documentation when applicable
-- All descriptions must include clear acceptance criteria or expected outcomes
-- Provide enough context so anyone can understand the objective
-- Use prefixes in titles: [Bug], [Fix], [Docs], [Refactor], [Research], [S2], [Test]
+- Include the component name in parentheses if applicable
 
 Examples:
 
-- [bug]:
-- [Bug(component)]:
+- [bug:]
+- [bug(component)]:
 - [fix]:
-- [Fix(component)]:
+- [fix(component)]:
 - [docs]:
-- [Docs(component)]:
+- [docs(component)]:
+
+## Description structure
+
+- Present title suggestion before description content
+- Description format and structure should follow the pull request template in the Templates section below
+- Accessibility testing checklist is required. Populate keyboard and screen reader with component-specific numbered steps (Storybook paths, expected focus behavior, what should be announced). For non-interactive components (e.g. static elements, dividers), state that clearly under Keyboard (e.g. no focusable parts; confirm no regressions in surrounding examples) and still document Screen reader checks (roles, structure, labels).
+- Include links to related issues, RFCs, or documentation when applicable
+- All descriptions must include clear acceptance criteria and expected outcomes
+- Provide enough context so anyone can understand the objective
 
 ## Severity classification
 
@@ -69,36 +59,20 @@ Examples:
 ## Best practices
 
 - Link to relevant issues using the format: `#issue-number`
-- Include component name in brackets if applicable: `[sp-button]`
-- Add relevant labels for easier filtering
+- Include component name in parentheses in title if applicable: `(button)`
 - Attach screenshots or videos for visual changes
 - Reference design specs or documentation when available
 - Use descriptive commit messages when linking to PRs
 - Include reproduction steps for bugs
 - Add environment information when relevant
 
-## Acceptance criteria
+## Validation instructions
 
-- Write criteria in "Given/When/Then" format
+- Describe in detail what a reviewer should test and how
 - Make criteria specific and testable
 - Include edge cases and error scenarios
 - Consider accessibility requirements
 - Include performance considerations when relevant
-
-## Labels
-
-Use the following labels to categorize pull requests. Only use labels that exist in the repository. GitHub labels are separate from Jira labels; for Jira tickets use the jira-ticket rule and `config.json`.
-
-
-## Pull request guidelines
-
-- Keep PRs focused and small when possible
-- Include tests for new features
-- Update documentation when APIs change
-- Add screenshots for visual changes
-- Link to related issues using keywords like "Fixes #123" or "Closes #456"
-- Request reviews from appropriate team members
-- Use draft PRs for work in progress
 
 ## Pull request template
 
