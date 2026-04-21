@@ -1,13 +1,14 @@
 .table {
-  .row {
-    display: grid;
-    grid-template-columns: repeat(var(--child-count), 1fr);
-  }
-
   .heading-toggle {
     display: flex;
+    place-content: center;
     justify-content: space-between;
-
+    margin-block: 2rem;
+    
+    & > h2 {
+      margin: 0;
+    }
+    
     .table-tabs {
       display: flex;
       align-items: center;
@@ -16,9 +17,60 @@
       margin: 0;
       padding: 0;
     }
+
+    .action-button:hover {
+      background-color: var(--s2-gray-800);
+      color: var(--sh-content-color-white);
+    }
+  }
+  
+  .header-row {
+    background-color: var(--s2-gray-75);
+    min-block-size: 32px;
+    border-start-start-radius: var(--s2-corner-radius-300);
+    border-start-end-radius: var(--s2-corner-radius-300);
+    border-block-start: 1px solid var(--s2-gray-300);
+    
+    & > div {
+      font-weight: var(--s2-component-m-bold-font-weight);
+      color: var(--s2-gray-800);
+      font-size: var(--s2-component-m-regular-font-size);
+    }
+  }
+  
+  .row {
+    display: grid;
+    place-content: center;
+    grid-template-columns: repeat(var(--child-count), 1fr);
+    min-block-size: 40px;
+
+    & > div:not(.heading-toggle) {
+      padding-inline: 16px 8px;
+      padding-block: 10px;
+    }
   }
 
-  &.quiet {
-    background-color: teal;
+  .row:last-of-type {
+    border-end-start-radius: var(--s2-corner-radius-300);
+    border-end-end-radius: var(--s2-corner-radius-300);
+  }
+  
+  .header-row, 
+  .header-row ~ .row {
+    border-inline: 1px solid var(--s2-gray-300);
+    border-block-end: 1px solid var(--s2-gray-300);
+  }
+
+  /* @todo: use the visually-hidden class in DA? */
+  &.data .row.row-2 {
+    display: none;
+  }
+
+  &.quiet .header-row {
+    border-radius: 0;
+  }
+
+  &.quiet .row {
+    border-inline: 0;
   }
 }
