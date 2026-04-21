@@ -19,14 +19,18 @@ const decorateHeading = (headingRow) => {
 };
 
 const decorateRows = (rows) => {
+  let nextIsHeader = false;
   for (const [idx, row] of rows.entries()) {
     row.classList.add('row', `row-${idx + 1}`);
     const cols = [...row.children];
     row.style = `--child-count: ${cols.length}`;
     if (idx === 0 && cols.length === 1) {
       decorateHeading(row);
-
       row.children[0].classList.add('heading-toggle');
+      nextIsHeader = true;
+    } else if (nextIsHeader && !row.classList.contains('header-row')) {
+      row.classList.add('header-row');
+      nextIsHeader = false;
     }
   }
 };
