@@ -18,12 +18,20 @@ Output results in the chat window in a way that can be copied and pasted into Ji
 Use these syntax rules when writing Jira tickets:
 
 - `h2.` through `h6.` - Headings (use `h2.` for main, `h3.` for secondary, etc. - avoid `h1.` in descriptions)
-- `*text*` - Bold text
+- `*text*` - Bold text (see **Bold usage** below; do not pepper bold across the description)
 - `{{code}}` - Inline code
 - `{code:language}{code}` - Language-specific code blocks, as in `{code:js}{code}` for JavaScript and Typescript code blocks (JIRA doesn't support `{code:typescript}`)
 - `[text|url]` - Links
 - `-` - Bullet points
 - `#` - Numbered list items
+
+### Bold usage
+
+- Default to **no** bold in Overview, Technical notes, Open questions, QA, Source, and other sections. Keep those sections plain text (plus `{{code}}` and links as needed).
+- In the **Acceptance criteria** section **only**, use `*text*` to bold the three BDD keywords **Given**, **When**, and **Then** at the start of each clause. Do not bold the rest of the sentence, random nouns, or every other word.
+- Use consistent casing in the written criteria (e.g. sentence case after each keyword; match your team’s style). In Jira, only wrap the three keywords: `*Given*`, `*When*`, `*Then*`.
+- **Bad:** `*Given* *light* *mode* *and* *dark* *mode*, *when* a *page* *loads*...` (over-bold)
+- **Good:** `*Given* light and dark site themes are available, *when* a page loads in each theme, *then* background gradients match the spec without harsh banding.`
 
 ## Title format
 
@@ -123,7 +131,7 @@ h2. Severity
 ## Agent criteria for writing tickets/issues
 
 - Write the overviews in plain language as user stories (i.e. "As a user, I want to...")
-- Write acceptance criteria in "Given/When/Then" format
+- Write acceptance criteria in "Given/When/Then" format, and in Jira bold **only** those three keywords in each criterion (see **Bold usage** under Jira syntax formatting rules).
 - Make acceptance criteria specific and testable
 - Include edge cases and error scenarios
 - Document accessibility requirements and testing steps
