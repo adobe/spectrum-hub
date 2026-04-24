@@ -18,6 +18,8 @@ async function decorateBrandSection(section) {
 
 function decorateNavSection(section) {
   section.classList.add('main-nav-section');
+  section.setAttribute('role', 'navigation');
+  section.setAttribute('aria-label', 'Main navigation');
 }
 
 async function decorateActionSection(section) {
