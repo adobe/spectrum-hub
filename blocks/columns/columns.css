@@ -1,17 +1,50 @@
 .columns {
   --columns-gap: 0;
+  --image-corner-radius: 24px;
+  --xs-image-size: 120px;
+  --s-image-size: 316px;
+  --m-image-size: 502px;
 
   display: grid;
-  gap: var(--columns-gap);
+
+  picture {
+    display: block;
+    width: 100%;
+  }
 
   img {
     display: block;
+    width: 100%;
+    height: auto;
+    background-color: var(--s2-gray-800);
+    border-radius: var(--image-corner-radius);
   }
 
   .row {
     display: grid;
     align-items: center;
     gap: var(--columns-gap);
+  }
+
+  @media (width >= 768px) {
+    /* extra-small */
+    &:not(:is(.small, .medium, .large)) {
+      --col-size: var(--xs-image-size);
+    }
+
+    /* small */
+    &.small {
+      --col-size: var(--s-image-size);
+    }
+
+    /* medium */
+    &.medium {
+      --col-size: var(--m-image-size);
+    }
+
+    .row {
+      grid-template-columns: var(--col-size) auto;
+    }
   }
 
   .col {
@@ -25,33 +58,33 @@
   }
 
   &.gap-xs {
-    --columns-gap: var(--spacing-xs);
+    --columns-gap: var(--s2-spacing-100);
   }
 
   &.gap-s {
-    --columns-gap: var(--spacing-s);
+    --columns-gap: var(--s2-spacing-200);
   }
 
   &.gap-m {
-    --columns-gap: var(--spacing-m);
+    --columns-gap: var(--s2-spacing-300);
   }
 
   &.gap-l {
-    --columns-gap: var(--spacing-l);
+    --columns-gap: var(--s2-spacing-400);
   }
 
   &.gap-xl {
-    --columns-gap: var(--spacing-xl);
+    --columns-gap: var(--s2-spacing-500);
   }
 
   &.gap-xxl {
-    --columns-gap: var(--spacing-xxl);
+    --columns-gap: var(--s2-spacing-600);
   }
 
   &.image-cover {
     .cover-row {
       .cover-content {
-        padding: var(--spacing-xxl);
+        padding: var(--s2-spacing-600);
       }
 
       .cover-image {
@@ -75,28 +108,6 @@
   &.align-top {
     .row {
       align-items: start;
-    }
-  }
-}
-
-@media (width >= 900px) {
-  .columns {
-    .row {
-      grid-template-columns: repeat(var(--child-count), 1fr);
-    }
-
-    &.image-cover {
-      .cover-row {
-        .cover-content {
-          padding: 0 calc(var(--spacing-xxl) * 2);
-        }
-      }
-    }
-
-    &.z-pattern {
-      .row:nth-of-type(odd) .col-1 {
-        order: 2;
-      }
     }
   }
 }
