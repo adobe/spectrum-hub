@@ -9,6 +9,7 @@ function decorateRows(el, rows) {
     row.classList.add('row', `row-${idx + 1}`);
     const cols = [...row.children];
     row.style = `--child-count: ${cols.length}`;
+    if (cols.length === 1) row.classList.add('single-col');
     decorateCols(el, cols);
   }
 }
