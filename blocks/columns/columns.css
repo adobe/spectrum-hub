@@ -9,13 +9,13 @@
 
   picture {
     display: block;
-    width: 100%;
+    inline-size: 100%;
   }
 
   img {
     display: block;
-    width: 100%;
-    height: auto;
+    inline-size: 100%;
+    block-size: auto;
     background-color: var(--s2-gray-800);
     border-radius: var(--image-corner-radius);
   }
@@ -37,28 +37,46 @@
       --col-size: var(--s-image-size);
     }
 
-    /* medium */
+    /* medium and large snap --col-size at 768px only for centered/stacked (picture sizing) */
+    &:is(.centered, .stacked) {
+      &.medium {
+        --col-size: var(--m-image-size);
+      }
+
+      &.large {
+        --col-size: 100%;
+      }
+    }
+
+    /* xs and small snap at 768px */
+    &:not(:is(.medium, .large)) .row {
+      grid-template-columns: var(--col-size) auto;
+    }
+  }
+
+  @media (width >= 900px) {
+    /* medium and large snap --col-size at 900px for default and image-right */
     &.medium {
       --col-size: var(--m-image-size);
     }
 
-    /* large */
     &.large {
       --col-size: 100%;
     }
 
-    .row {
+    /* medium and large side-by-side layout snaps at 900px */
+    &:is(.medium, .large) .row {
       grid-template-columns: var(--col-size) auto;
     }
   }
 
   .col {
     :first-child {
-      margin-top: 0;
+      margin-block-start: 0;
     }
 
     :last-child {
-      margin-bottom: 0;
+      margin-block-end: 0;
     }
 
     &.col-2 {
@@ -104,7 +122,7 @@
 
       .cover-image {
         position: relative;
-        padding-bottom: 100%;
+        padding-block-end: 100%;
 
         picture {
           position: absolute;
@@ -113,8 +131,8 @@
 
         img {
           object-fit: cover;
-          width: 100%;
-          height: 100%;
+          inline-size: 100%;
+          block-size: 100%;
         }
       }
     }
@@ -146,7 +164,7 @@
     }
 
     picture {
-      width: var(--col-size, 100%);
+      inline-size: var(--col-size, 100%);
       margin-inline: auto;
     }
 
@@ -162,8 +180,13 @@
       }
 
       picture {
-        width: var(--col-size);
+        inline-size: var(--col-size);
       }
     }
+  }
+
+  /* Single-column rows (like image only or title+description only) are always full-width regardless of size variant */
+  .row.single-col {
+    grid-template-columns: 1fr;
   }
 }
