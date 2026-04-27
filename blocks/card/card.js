@@ -1,31 +1,62 @@
-export default function init(el) {
-  const inner = el.querySelector(':scope > div');
+export function decorateCard(inner, hashAware = false) {
   inner.classList.add('card-inner');
-  const pic = el.querySelector('picture');
-  if (pic) {
-    const picPara = pic.closest('p');
-    if (picPara) {
-      const picDiv = document.createElement('div');
-      picDiv.className = 'card-picture-container';
-      picDiv.append(pic);
-      inner.insertAdjacentElement('afterbegin', picDiv);
-      picPara.remove();
+
+  const [imageCol, titleCol, descCol, buttonLinkCol, linkOutCol] = [...inner.children];
+
+  // First EDS column: image
+  if (imageCol) {
+    const pic = imageCol.querySelector('picture');
+    if (pic) {
+      imageCol.classList.add('card-picture-container');
+      const picPara = pic.closest('p');
+      if (picPara) {
+        imageCol.prepend(pic);
+        picPara.remove();
+      }
+    } else {
+      imageCol.remove();
     }
   }
-  // Decorate content
-  const con = inner.querySelector(':scope > div:not([class])');
-  if (!con) return;
-  con.classList.add('card-content-container');
 
-  // Decorate CTA
-  const ctaPara = inner.querySelector(':scope > div:last-of-type > p:last-of-type');
-  if (!ctaPara) return;
-  const cta = ctaPara.querySelector('a');
-  if (!cta) return;
-  const hashAware = el.classList.contains('hash-aware');
-  if (hashAware) {
-    cta.href = `${cta.getAttribute('href')}${window.location.hash}`;
+  // Second + third EDS columns: title and description merged into one content container
+  if (!titleCol) return;
+  const contentContainer = document.createElement('div');
+  contentContainer.classList.add('card-content-container');
+  contentContainer.append(...titleCol.childNodes);
+  if (descCol) contentContainer.append(...descCol.childNodes);
+  titleCol.replaceWith(contentContainer);
+  descCol?.remove();
+
+  // Fourth EDS column: internal button link (mutually exclusive with external link)
+  if (buttonLinkCol) {
+    const a = buttonLinkCol.querySelector('a');
+    if (a) {
+      if (hashAware) {
+        a.href = `${a.getAttribute('href')}${window.location.hash}`;
+      }
+      a.classList.add('card-button');
+      buttonLinkCol.classList.add('card-button-container');
+      linkOutCol?.remove();
+    } else {
+      buttonLinkCol.remove();
+    }
   }
-  ctaPara.classList.add('card-cta-container');
-  inner.append(ctaPara);
+
+  // Fifth EDS column: external link (opens in new tab)
+  if (linkOutCol) {
+    const a = linkOutCol.querySelector('a');
+    if (a) {
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      linkOutCol.classList.add('card-external-link-container');
+    } else {
+      linkOutCol.remove();
+    }
+  }
+}
+
+export default function init(el) {
+  const inner = el.querySelector(':scope > div');
+  if (!inner) return;
+  decorateCard(inner, el.classList.contains('hash-aware'));
 }
