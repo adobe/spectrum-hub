@@ -14,7 +14,17 @@ function decorateRows(el, rows) {
   }
 }
 
+function detectImageRight(el, rows) {
+  if (el.classList.contains('image-right')) return;
+  const firstMultiColRow = rows.find((row) => row.children.length >= 2);
+  if (!firstMultiColRow) return;
+  if (!firstMultiColRow.children[0].querySelector('picture')) {
+    el.classList.add('image-right');
+  }
+}
+
 export default function init(el) {
   const rows = [...el.children];
   decorateRows(el, rows);
+  detectImageRight(el, rows);
 }
