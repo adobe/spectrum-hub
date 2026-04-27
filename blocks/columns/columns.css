@@ -1,11 +1,12 @@
 .columns {
-  --columns-gap: 0;
+  --columns-gap: 56px;
   --image-corner-radius: 24px;
   --xs-image-size: 120px;
   --s-image-size: 316px;
   --m-image-size: 502px;
 
   display: grid;
+  margin-block-end: var(--s2-spacing-1000);
 
   picture {
     display: block;
@@ -71,6 +72,10 @@
   }
 
   .col {
+    flex-direction: column;
+    display: flex;
+    gap: var(--s2-spacing-300);
+
     :first-child {
       margin-block-start: 0;
     }
@@ -79,14 +84,8 @@
       margin-block-end: 0;
     }
 
-    &.col-2 {
-      display: flex;
-      flex-direction: column;
-      gap: var(--s2-spacing-300);
-
-      p, h4 {
-        margin-block-start: 0;
-      }
+    p, h4 {
+      margin-block: 0;
     }
   }
 
@@ -153,6 +152,8 @@
   }
 
   &.centered {
+    --columns-gap: var(--s2-spacing-600);
+
     text-align: center;
 
     .row {
@@ -170,6 +171,8 @@
   }
 
   &.stacked {
+    --columns-gap: var(--s2-spacing-600);
+
     @media (width >= 768px) {
       .row {
         grid-template-columns: 1fr;
