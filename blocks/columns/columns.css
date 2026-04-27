@@ -110,4 +110,16 @@
       align-items: start;
     }
   }
+
+  &.image-right {
+    @media (width >= 768px) {
+      .row {
+        grid-template-columns: auto var(--col-size);
+      }
+
+      .col-1 {
+        order: 2;
+      }
+    }
+  }
 }
