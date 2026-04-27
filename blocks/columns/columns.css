@@ -149,10 +149,6 @@
       .row {
         grid-template-columns: auto var(--col-size);
       }
-
-      &:not(.stacked) .col-1 {
-        order: 2;
-      }
     }
   }
 
