@@ -46,7 +46,7 @@ async function fetchTypes(category, component) {
  */
 function extractInterfaceBlock(source, interfaceName) {
   const startRegex = new RegExp(
-    `(?:export\\s+)?(?:interface|type)\\s+${interfaceName}[^{]*\\{`,
+    `(?:export\\s+)?(?:interface|type)\\s+${interfaceName}([^{]*)\\{`,
   );
   const startMatch = startRegex.exec(source);
   if (!startMatch) return null;
@@ -62,6 +62,30 @@ function extractInterfaceBlock(source, interfaceName) {
   }
 
   return source.slice(start, i - 1);
+}
+
+/**
+ * Capture any component's `extends` list from the interface header.
+ * Intersects all word tokens in the header against known BASE_PROPS keys,
+ * so generics, utility types, and type params are automatically ignored.
+ * Warns about names that look like base types but aren't tracked yet.
+ */
+function extractExtends(source, interfaceName) {
+  const startRegex = new RegExp(
+    `(?:export\\s+)?(?:interface|type)\\s+${interfaceName}([^{]*)\\{`,
+  );
+  const match = startRegex.exec(source);
+  if (!match) return [];
+
+  const allNames = match[1].match(/\b\w+\b/g) ?? [];
+  const known = allNames.filter((name) => BASE_PROPS[name]);
+  const unknown = allNames.filter((name) => !BASE_PROPS[name] && /Props|Events|Mixin/.test(name));
+
+  if (unknown.length) {
+    console.warn(`  Warning: [${unknown.join(', ')}] found in ${interfaceName} header but not in rsp-base-props.json — add to BASE_SOURCES in extract-base-props.js, or add "extends" to components.json`);
+  }
+
+  return known;
 }
 
 function parseJSDoc(comment) {
@@ -123,11 +147,13 @@ async function main() {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
   let count = 0;
-  for (const [component, { category, interface: interfaceName, extends: bases = [] }] of Object.entries(ALLOW_LIST)) {
+  for (const [component, { category, interface: interfaceName, extends: configBases }] of Object.entries(ALLOW_LIST)) {
     console.log(`Fetching types for ${component} (@adobe/react-spectrum/dist/types/src/${category}/${component}.d.ts)...`);
 
     const source = await fetchTypes(category, component);
     const block = extractInterfaceBlock(source, interfaceName);
+    const extendsList = extractExtends(source, interfaceName);
+    const bases = configBases ?? extendsList;  
 
     if (!block) {
       console.warn(`  Warning: ${interfaceName} not found in ${component}.d.ts`);
