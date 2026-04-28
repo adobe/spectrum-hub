@@ -2,36 +2,36 @@
   {
     "property": "isPending",
     "type": "boolean",
-    "description": "/** Whether to disable events immediately and display a loading spinner after a 1 second delay. /"
+    "description": "Whether to disable events immediately and display a loading spinner after a 1 second delay."
   },
   {
     "property": "isQuiet",
     "type": "boolean",
-    "description": "/** Whether the button should be displayed with a quiet style."
+    "description": "Whether the button should be displayed with a quiet style."
   },
   {
     "property": "type",
     "type": "'button' | 'submit' | 'reset'",
     "default": "'button'",
-    "description": "/** The behavior of the button when used in an HTML form.",
+    "description": "The behavior of the button when used in an HTML form.",
     "inheritedFrom": "AriaBaseButtonProps"
   },
   {
     "property": "preventFocusOnPress",
     "type": "boolean",
-    "description": "/** Whether to prevent focus from moving to the button when pressing it. Caution, this can make the button inaccessible and should only be used when alternative keyboard interaction is provided, such as ComboBox's MenuTrigger or a NumberField's increment/decrement control. /",
+    "description": "Whether to prevent focus from moving to the button when pressing it. Caution, this can make the button inaccessible and should only be used when alternative keyboard interaction is provided, such as ComboBox's MenuTrigger or a NumberField's increment/decrement control.",
     "inheritedFrom": "AriaBaseButtonProps"
   },
   {
     "property": "form",
     "type": "string",
-    "description": "/** The `<form>` element to associate the button with. The value of this attribute must be the id of a `<form>` in the same document. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#form). /",
+    "description": "The `<form>` element to associate the button with. The value of this attribute must be the id of a `<form>` in the same document. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#form).",
     "inheritedFrom": "AriaBaseButtonProps"
   },
   {
     "property": "formAction",
     "type": "ButtonHTMLAttributes<HTMLButtonElement>['formAction']",
-    "description": "/** The URL that processes the information submitted by the button. Overrides the action attribute of the button's form owner. /",
+    "description": "The URL that processes the information submitted by the button. Overrides the action attribute of the button's form owner.",
     "inheritedFrom": "AriaBaseButtonProps"
   }
 ]

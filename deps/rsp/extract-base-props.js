@@ -2,7 +2,7 @@
  * Extracts shared base type properties from React Aria and @react-types/shared
  * and writes them to data/rsp-base-props.json.
  *
- * Run manually when upstream base types change (react-aria, @react-types/shared).
+ * Runs daily via GitHub Actions before extract-props.js.
  * Output is committed and consumed by extract-props.js.
  *
  * Usage: node deps/rsp/extract-base-props.js
@@ -58,7 +58,8 @@ function parseJSDoc(comment) {
   const result = { description: '', default: null };
   if (!comment) return result;
 
-  const lines = comment
+  const cleaned = comment.replace(/^\/\*\*/, '').replace(/\*\/$/, '');
+  const lines = cleaned
     .split('\n')
     .map((l) => l.replace(/^\s*\*\s?/, '').trim())
     .filter(Boolean);

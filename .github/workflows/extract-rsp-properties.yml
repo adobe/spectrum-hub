@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Extract base shared properties
+        run: node deps/rsp/extract-base-props.js
+
       - name: Extract component properties
         run: node deps/rsp/extract-props.js
 

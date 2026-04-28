@@ -4,28 +4,23 @@ Extracts component prop metadata from [React Spectrum's](https://react-spectrum.
 
 ## How it works
 
-React Spectrum publishes compiled TypeScript declaration files in `@adobe/react-spectrum/dist/types/src/{category}/{Component}.d.ts`. Two scripts work together, mirroring the SWC `sp-mixins.json` pattern:
+React Spectrum publishes compiled TypeScript declaration files in `@adobe/react-spectrum/dist/types/src/{category}/{Component}.d.ts`. Two scripts work together:
 
-- **`extract-props.js`** — Fetches each component's `.d.ts` file from unpkg, parses its own properties, then merges in shared base type properties from `data/rsp-base-props.json`. Runs daily via GitHub Actions.
-- **`extract-base-props.js`** — Fetches shared base types (`AriaBaseButtonProps`, `ButtonProps`, `StyleProps`, etc.) from `react-aria` and `@react-types/shared` and writes `data/rsp-base-props.json`. Run manually when upstream base types change.
+- **`extract-base-props.js`** — Fetches shared base types (`AriaBaseButtonProps`, `ButtonProps`, `StyleProps`, etc.) from `react-aria` and `@react-types/shared` and writes `data/rsp-base-props.json`. Runs daily via GitHub Actions.
+- **`extract-props.js`** — Fetches each component's `.d.ts` file from unpkg, parses its own properties, then merges in shared base type properties from `data/rsp-base-props.json`. Runs daily via GitHub Actions after `extract-base-props.js`.
 
-Unlike SWC's Custom Elements Manifest, React Spectrum has no structured metadata format — so properties are parsed directly from TypeScript source. Inherited props (from `@react-aria`, `@react-stately`, etc.) are not included.
+Unlike SWC's Custom Elements Manifest, React Spectrum has no structured metadata format — so properties are parsed directly from TypeScript source.
 
 ## Running the extraction
 
-**First time or after base types change:**
+Both scripts fetch directly from unpkg and can be run locally at any time. Run them in order:
 
 ```sh
 node deps/rsp/extract-base-props.js
-```
-
-**Per-component extraction (daily / normal use):**
-
-```sh
 node deps/rsp/extract-props.js
 ```
 
-**In GitHub Actions:** The `Update React Spectrum Component Properties` workflow runs this same command daily at 7am UTC (and on manual dispatch). If the output changes, it commits the updated JSON files to `deps/rsp/data/`.
+**In GitHub Actions:** The `Update React Spectrum Component Properties` workflow runs both scripts daily at 7am UTC (and on manual dispatch), in the same order. If the output changes, it commits the updated JSON files to `deps/rsp/data/`.
 
 ## Adding a component
 
@@ -49,4 +44,4 @@ To find the category and interface name, browse the package on [unpkg](https://u
 
 ## Adding a new base type
 
-Edit `extract-base-props.js` and add an entry to `BASE_SOURCES`, then re-run the script to update `data/rsp-base-props.json`.
+Edit `extract-base-props.js` and add an entry to `BASE_SOURCES`, then run both scripts locally to update `data/rsp-base-props.json` and the affected component JSON files.

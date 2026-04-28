@@ -68,7 +68,8 @@ function parseJSDoc(comment) {
   const result = { description: '', default: null };
   if (!comment) return result;
 
-  const lines = comment
+  const cleaned = comment.replace(/^\/\*\*/, '').replace(/\*\/$/, '');
+  const lines = cleaned
     .split('\n')
     .map((l) => l.replace(/^\s*\*\s?/, '').trim())
     .filter(Boolean);
