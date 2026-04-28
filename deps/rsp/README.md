@@ -38,10 +38,33 @@ Edit `components.json`:
 - **Key** — the component name, used as the output filename (`Button.json`)
 - **`category`** — the subdirectory under `dist/types/src/` (e.g. `button`, `textfield`)
 - **`interface`** — the exact TypeScript interface name to extract from the `.d.ts` file
-- **`extends`** — list of base type names from `data/rsp-base-props.json` to merge in
+- **`extends`** — *(optional)* list of base type names from `data/rsp-base-props.json` to merge in as inherited props. If omitted, `extract-props.js` auto-resolves base types by intersecting the interface's `extends` clause against known keys in `rsp-base-props.json`. Only add this manually when auto-resolution is incomplete — for example, when a base type is wrapped in a utility type like `Omit<BaseType, ...>` and can't be detected automatically.
 
-To find the category and interface name, browse the package on [unpkg](https://unpkg.com/@adobe/react-spectrum/dist/types/src/) and look for the `Spectrum*Props` interface in the relevant file. Check what it `extends` to determine which entries to add to `extends`.
+To find the category and interface name, browse the package on [unpkg](https://unpkg.com/@adobe/react-spectrum/dist/types/src/) and look for the `Spectrum*Props` interface in the relevant file. If the script warns about untracked base types after adding a component, those names need to be added to `BASE_SOURCES` in `extract-base-props.js` — see [Adding a new base type](#adding-a-new-base-type) below.
 
 ## Adding a new base type
 
 Edit `extract-base-props.js` and add an entry to `BASE_SOURCES`, then run both scripts locally to update `data/rsp-base-props.json` and the affected component JSON files.
+
+## Known limitations
+
+**Parser scope**
+
+`parseProps` uses a single-line regex and will silently skip or misparse:
+
+- Multi-line type unions
+- Generic types with angle brackets (e.g. `Array<string>`)
+- Function signatures (e.g. `(val: T) => void`)
+- Conditional or mapped types
+
+Spot-check the output JSON against the RSP documentation when adding a new component. If output looks sparse, the component likely uses one of these patterns. Evaluate `ts-morph` if parser failures accumulate.
+
+**`Omit<>` wrapping and prop exclusions**
+
+RSP sometimes wraps a base type in a utility type to exclude specific props — for example, `Omit<AriaButtonProps<T>, 'onClick'>`. Auto-resolution detects word tokens in the header and intersects them against `rsp-base-props.json`, so `AriaButtonProps` would be flagged as untracked but `onClick` itself is not checked against what the `Omit` excludes.
+
+In practice this is safe as long as the omitted prop does not appear in any of the base types that _are_ tracked. For `Button`, `onClick` lives in `PressEvents`, which is not listed in Button's `extends` config, so it is not included in the output. If upstream ever moves `onClick` into a tracked base type, the output would incorrectly include a prop RSP intentionally excludes — with no warning. Spot-check omit-heavy components when RSP releases a new version.
+
+**Auto-resolution only sees directly tracked base types**
+
+`extractExtends` returns names that exist in `rsp-base-props.json`. If a component extends a composite type (like `AriaButtonProps`) that itself extends tracked sub-types, those sub-types will not be resolved automatically. Use the manual `extends` field in `components.json` to list them explicitly.
