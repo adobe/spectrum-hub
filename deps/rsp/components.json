@@ -6,7 +6,6 @@
   },
   "ActionButton": {
     "category": "button",
-    "interface": "SpectrumActionButtonProps",
-    "extends": ["AriaBaseButtonProps", "ButtonProps", "StyleProps"]
+    "interface": "SpectrumActionButtonProps"
   }
 }
