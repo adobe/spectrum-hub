@@ -4,9 +4,9 @@
  *
  * Fetches each component's TypeScript declaration file from unpkg, finds the
  * target interface, parses its own properties, then merges in shared base type
- * properties from data/rs-base-props.json (populated by extract-base-props.js).
+ * properties from data/rsp-base-props.json (populated by extract-base-props.js).
  *
- * Usage: node deps/react-spectrum/extract-props.js
+ * Usage: node deps/rsp/extract-props.js
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
-const BASE_PROPS_FILE = join(__dirname, 'data', 'rs-base-props.json');
+const BASE_PROPS_FILE = join(__dirname, 'data', 'rsp-base-props.json');
 
 const ALLOW_LIST = JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8'));
 
@@ -139,7 +139,7 @@ async function main() {
     const seen = new Set(ownProps.map((p) => p.property));
     const baseProps = bases.flatMap((base) => {
       if (!BASE_PROPS[base]) {
-        console.warn(`  Warning: base type "${base}" not found in rs-base-props.json — run extract-base-props.js`);
+        console.warn(`  Warning: base type "${base}" not found in rsp-base-props.json — run extract-base-props.js`);
         return [];
       }
       return BASE_PROPS[base]

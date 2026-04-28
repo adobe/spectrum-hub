@@ -1,11 +1,11 @@
 /**
  * Extracts shared base type properties from React Aria and @react-types/shared
- * and writes them to data/rs-base-props.json.
+ * and writes them to data/rsp-base-props.json.
  *
  * Run manually when upstream base types change (react-aria, @react-types/shared).
  * Output is committed and consumed by extract-props.js.
  *
- * Usage: node deps/react-spectrum/extract-base-props.js
+ * Usage: node deps/rsp/extract-base-props.js
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
@@ -13,7 +13,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUTPUT_FILE = join(__dirname, 'data', 'rs-base-props.json');
+const OUTPUT_FILE = join(__dirname, 'data', 'rsp-base-props.json');
 
 const BASE_SOURCES = {
   AriaBaseButtonProps: {
@@ -131,7 +131,7 @@ async function main() {
   }
 
   writeFileSync(OUTPUT_FILE, JSON.stringify(result, null, 2) + '\n');
-  console.log(`Done. Wrote ${Object.keys(result).length} base type(s) to rs-base-props.json`);
+  console.log(`Done. Wrote ${Object.keys(result).length} base type(s) to rsp-base-props.json`);
 }
 
 main().catch((err) => {
