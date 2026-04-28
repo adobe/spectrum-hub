@@ -109,6 +109,20 @@ function parseProps(block) {
   return props;
 }
 
+async function fetchSource(url) {
+  const urls = [
+    url,
+    url.replace('https://unpkg.com/', 'https://cdn.jsdelivr.net/npm/'),
+  ];
+  for (const cdnUrl of urls) {
+    try {
+      const res = await fetch(cdnUrl);
+      if (res.ok) return res.text();
+    } catch { /* try next CDN */ }
+  }
+  throw new Error(`Failed to fetch ${url} from all CDNs`);
+}
+
 async function main() {
   mkdirSync(join(__dirname, 'data'), { recursive: true });
 
@@ -119,9 +133,12 @@ async function main() {
     console.log(`Fetching ${name} from ${url}...`);
 
     if (!cache[url]) {
-      const res = await fetch(url);
-      if (!res.ok) { console.warn(`  Warning: failed to fetch ${url}`); continue; }
-      cache[url] = await res.text();
+      try {
+        cache[url] = await fetchSource(url);
+      } catch (err) {
+        console.warn(`  Warning: ${err.message}`);
+        continue;
+      }
     }
 
     const block = extractInterfaceBlock(cache[url], interfaceName);
