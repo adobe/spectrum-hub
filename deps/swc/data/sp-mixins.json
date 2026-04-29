@@ -40,7 +40,7 @@
       "property": "label",
       "type": "string",
       "default": "''",
-      "description": "Accessible label for the asset’s file or folder variant."
+      "description": "Accessible label for the asset's file or folder variant."
     }
   ],
   "BadgeBase": [
@@ -358,21 +358,21 @@
       "property": "indeterminate",
       "type": "boolean",
       "default": "false",
-      "description": "Whether the progress circle shows indeterminate progress (loading state).\n\nWhen true, displays an animated loading indicator instead of a specific progress value."
+      "description": "Whether the progress circle shows indeterminate progress (loading state)."
     },
     {
       "attribute": "label",
       "property": "label",
       "type": "string",
       "default": "''",
-      "description": "Accessible label for the progress circle.\n\nUsed to provide context about what is loading or progressing."
+      "description": "Accessible label for the progress circle."
     },
     {
       "attribute": "progress",
       "property": "progress",
       "type": "number",
       "default": "0",
-      "description": "Progress value from 0 to 100.\n\nOnly relevant when indeterminate is false."
+      "description": "Progress value from 0 to 100."
     }
   ],
   "SliderHandle": [

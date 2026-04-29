@@ -152,6 +152,8 @@ async function main() {
         for (const a of mixins[ref]) {
           attrs.push({ ...a, inheritedFrom: ref });
         }
+      } else {
+        console.warn(`  Warning: "${ref}" referenced by ${tag} not found in sp-mixins.json — run extract-cem-mixins.js to update`);
       }
     }
 
