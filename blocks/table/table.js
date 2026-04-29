@@ -11,10 +11,8 @@ const PROPS_TO_LABELS = {
   inheritedFrom: 'Inherited from',
 };
 
-const decorateHeading = (headingRow) => {
-  const tabs = headingRow.querySelector('ul');
+const decorateHeading = ({ tabs }) => {
   if (!tabs) return;
-
   tabs.classList.add('table-tabs');
 };
 
@@ -25,7 +23,6 @@ const decorateRows = (rows) => {
     const cols = [...row.children];
     row.style = `--child-count: ${cols.length}`;
     if (idx === 0 && cols.length === 1) {
-      decorateHeading(row);
       row.children[0].classList.add('heading-toggle');
       nextIsHeader = true;
     } else if (nextIsHeader && !row.classList.contains('header-row')) {
