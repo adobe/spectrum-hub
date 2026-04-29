@@ -82,7 +82,7 @@ function extractExtends(source, interfaceName) {
   const unknown = allNames.filter((name) => !BASE_PROPS[name] && /Props|Events|Mixin/.test(name));
 
   if (unknown.length) {
-    console.warn(`  Warning: [${unknown.join(', ')}] found in ${interfaceName} header but not in rsp-base-props.json — add to BASE_SOURCES in extract-base-props.js, or add "extends" to components.json`);
+    console.warn(`  Warning: [${unknown.join(', ')}] found in ${interfaceName} header but not in rsp-base-props.json — add to REACT_ARIA_FILES in extract-base-props.js, or add "extends" to components.json`);
   }
 
   return known;
@@ -121,8 +121,19 @@ function parseProps(block) {
   for (const raw of lines) {
     const line = raw.trim();
 
-    if (line.startsWith('/**')) { inJSDoc = true; jsdocLines = [line]; continue; }
-    if (inJSDoc) { jsdocLines.push(line); if (line.includes('*/')) inJSDoc = false; continue; }
+    // Single-line JSDoc (/** ... */) must close inJSDoc on the same iteration;
+    // otherwise the next line (the property declaration) gets absorbed into jsdocLines.
+    if (line.startsWith('/**')) {
+      inJSDoc = true;
+      jsdocLines = [line];
+
+      if (line.includes('*/')) inJSDoc = false; continue;
+    }
+    if (inJSDoc) {
+      jsdocLines.push(line);
+
+      if (line.includes('*/')) inJSDoc = false; continue;
+    }
 
     const propMatch = line.match(/^(?:readonly\s+)?(\w+)(\??):\s*(.+?);?\s*$/);
     if (propMatch) {
