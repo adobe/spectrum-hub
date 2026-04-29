@@ -11,11 +11,6 @@ const PROPS_TO_LABELS = {
   inheritedFrom: 'Inherited from',
 };
 
-const decorateHeading = ({ tabs }) => {
-  if (!tabs) return;
-  tabs.classList.add('table-tabs');
-};
-
 const decorateRows = (rows) => {
   let nextIsHeader = false;
   for (const [idx, row] of rows.entries()) {
@@ -37,6 +32,7 @@ const createHeaderRow = (properties) => {
   tableHead.classList.add('header-row');
 
   const row = document.createElement('tr');
+  row.classList.add('row');
 
   const headerCols = properties.map((key) => {
     const columnHeaders = document.createElement('th');
@@ -67,11 +63,12 @@ const buildDataTable = async (href) => {
   // Create data rows
   for (const props of json) {
     const row = document.createElement('tr');
+    row.classList.add('row');
     const tableCells = properties.map((key) => {
       const tableCell = document.createElement('td');
       tableCell.textContent = props[key] ?? '';
       return tableCell;
-    })
+    });
     row.append(...tableCells);
     tableBody.append(row);
   }
@@ -82,17 +79,12 @@ const buildDataTable = async (href) => {
 };
 
 export default async function init(el) {
-  const data = {
-    dataHref: el.querySelector('a[href$=".json"')?.href,
-    title: el.children?.[0]?.children?.[0]?.querySelector('h2'),
-    tabs: el.children?.[0]?.children?.[0]?.querySelector('ul'),
-  };
+  const dataHref = el.querySelector('a[href$=".json"]')?.href;
 
-  if (data.dataHref) {
-    const table = await buildDataTable(data.dataHref);
+  if (dataHref) {
+    const table = await buildDataTable(dataHref);
     if (table) el.replaceChildren(table);
+  } else {
+    decorateRows([...el.children]);
   }
-  const rows = [...el.children];
-  decorateHeading(data);
-  decorateRows(rows);
 }
