@@ -81,9 +81,14 @@ const decorateDataRows = async (href) => {
 };
 
 export default async function init(el) {
-  const dataHref = el.querySelector('a[href$=".json"')?.href;
-  if (dataHref) {
-    const dataRows = await decorateDataRows(dataHref);
+  const data = {
+    dataHref: el.querySelector('a[href$=".json"')?.href,
+    title: el.children?.[0]?.children?.[0]?.querySelector('h2'),
+    tabs: el.children?.[0]?.children?.[0]?.querySelector('ul'),
+  };
+
+  if (data.dataHref) {
+    const dataRows = await decorateDataRows(data.dataHref);
     if (dataRows) el.append(...dataRows);
   }
   const rows = [...el.children];
