@@ -1,15 +1,18 @@
 .table {
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    inline-size: 100%;
+    table-layout: fixed;
+  }
+
   .heading-toggle {
     display: flex;
     place-content: center;
     justify-content: space-between;
     margin-block: 2rem;
-    
-    & > h2 {
-      margin: 0;
-    }
-    
-    .table-tabs {
+
+    /* .table-tabs {
       display: flex;
       align-items: center;
       gap: var(--s2-spacing-100);
@@ -21,56 +24,60 @@
     .action-button:hover {
       background-color: var(--s2-gray-800);
       color: var(--sh-content-color-white);
-    }
+    } */
   }
-  
-  .header-row {
-    background-color: var(--s2-gray-75);
-    min-block-size: 32px;
+
+  thead tr th:first-child {
     border-start-start-radius: var(--s2-corner-radius-300);
+  }
+
+  thead tr th:last-child {
     border-start-end-radius: var(--s2-corner-radius-300);
-    border-block-start: 1px solid var(--s2-gray-300);
-    
-    & > div {
-      font-weight: var(--s2-component-m-bold-font-weight);
-      color: var(--s2-gray-800);
-      font-size: var(--s2-component-m-regular-font-size);
-    }
-  }
-  
-  .row {
-    display: grid;
-    place-content: center;
-    grid-template-columns: repeat(var(--child-count), 1fr);
-    min-block-size: 40px;
-
-    & > div:not(.heading-toggle) {
-      padding-inline: 16px 8px;
-      padding-block: 10px;
-    }
   }
 
-  .row:last-of-type {
+  tbody tr:last-child td:first-child {
     border-end-start-radius: var(--s2-corner-radius-300);
+  }
+
+  tbody tr:last-child td:last-child {
     border-end-end-radius: var(--s2-corner-radius-300);
   }
-  
-  .header-row, 
-  .header-row ~ .row {
-    border-inline: 1px solid var(--s2-gray-300);
+
+  th, td {
+    padding-inline: 16px 8px;
+    padding-block: 10px;
     border-block-end: 1px solid var(--s2-gray-300);
   }
 
-  /* @todo: use the visually-hidden class in DA? */
-  &.data .row.row-2 {
-    display: none;
+  th:first-child, td:first-child {
+    border-inline-start: 1px solid var(--s2-gray-300);
   }
 
-  &.quiet .header-row {
+  th:last-child, td:last-child {
+    border-inline-end: 1px solid var(--s2-gray-300);
+  }
+
+  thead tr {
+    background-color: var(--s2-gray-75);
+  }
+
+  thead th {
+    border-block-start: 1px solid var(--s2-gray-300);
+    font-weight: var(--s2-component-m-bold-font-weight);
+    color: var(--s2-gray-800);
+    font-size: var(--s2-component-m-regular-font-size);
+    text-align: start;
+  }
+
+  &.quiet thead tr th:first-child,
+  &.quiet thead tr th:last-child,
+  &.quiet tbody tr:last-child td:first-child,
+  &.quiet tbody tr:last-child td:last-child {
     border-radius: 0;
   }
 
-  &.quiet .row {
+  &.quiet th,
+  &.quiet td {
     border-inline: 0;
   }
 }
