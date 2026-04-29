@@ -6,7 +6,7 @@ Extracts component prop metadata from [React Spectrum's](https://react-spectrum.
 
 React Spectrum publishes compiled TypeScript declaration files in `@adobe/react-spectrum/dist/types/src/{category}/{Component}.d.ts`. Two scripts work together:
 
-- **`extract-base-props.js`** — Fetches shared base types (`AriaBaseButtonProps`, `ButtonProps`, `StyleProps`, etc.) from `react-aria` and `@react-types/shared` and writes `data/rsp-base-props.json`. Runs daily via GitHub Actions.
+- **`extract-base-props.js`** — Builds a complete picture of the shared base type system and writes `data/rsp-base-props.json`. For `@react-types/shared`, all interfaces are auto-discovered via unpkg's `?meta` API — no manual configuration needed as new types are added upstream. For `react-aria`, files are listed manually in `REACT_ARIA_FILES` because react-aria contains 235 files organized by hook; only component-specific files are relevant and those are added as new component categories are registered. Runs daily via GitHub Actions.
 - **`extract-props.js`** — Fetches each component's `.d.ts` file from unpkg, parses its own properties, then merges in shared base type properties from `data/rsp-base-props.json`. Runs daily via GitHub Actions after `extract-base-props.js`.
 
 Unlike SWC's Custom Elements Manifest, React Spectrum has no structured metadata format — so properties are parsed directly from TypeScript source.
@@ -40,7 +40,7 @@ Edit `components.json`:
 - **`interface`** — the exact TypeScript interface name to extract from the `.d.ts` file
 - **`extends`** — *(optional)* list of base type names from `data/rsp-base-props.json` to merge in as inherited props. If omitted, `extract-props.js` auto-resolves base types by intersecting the interface's `extends` clause against known keys in `rsp-base-props.json`. Only add this manually when auto-resolution is incomplete — for example, when a base type is wrapped in a utility type like `Omit<BaseType, ...>` and can't be detected automatically.
 
-To find the category and interface name, browse the package on [unpkg](https://unpkg.com/@adobe/react-spectrum/dist/types/src/) and look for the `Spectrum*Props` interface in the relevant file. If the script warns about untracked base types after adding a component, those names need to be added to `BASE_SOURCES` in `extract-base-props.js` — see [Adding a new base type](#adding-a-new-base-type) below.
+To find the category and interface name, browse the package on [unpkg](https://unpkg.com/@adobe/react-spectrum/dist/types/src/) and look for the `Spectrum*Props` interface in the relevant file. If the script warns about untracked base types after adding a component, those names need to be added to `REACT_ARIA_FILES` in `extract-base-props.js` — see [Adding a new react-aria base type](#adding-a-new-react-aria-base-type) below.
 
 ## Adding a new base type
 

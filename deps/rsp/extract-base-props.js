@@ -55,6 +55,8 @@ function extractInterfaceBlock(source, interfaceName) {
   return source.slice(start, i - 1);
 }
 
+// Identical to parseJSDoc in extract-props.js — kept local to avoid a shared module
+// dependency between two scripts that run independently.
 function parseJSDoc(comment) {
   const result = { description: '', default: null };
   if (!comment) return result;
@@ -78,6 +80,8 @@ function parseJSDoc(comment) {
   return result;
 }
 
+// Same single-line regex parser and JSDoc fix as in extract-props.js. See that file for
+// a full list of known limitations (multi-line unions, generics, function signatures).
 function parseProps(block) {
   const props = [];
   const lines = block.split('\n');
@@ -121,6 +125,8 @@ function parseProps(block) {
   return props;
 }
 
+// Tries unpkg first, then falls back to jsdelivr. A single CDN blip would otherwise
+// produce an empty rsp-base-props.json, silently wiping all inherited props on the next run.
 async function fetchSource(url) {
   const urls = [
     url,
