@@ -49,10 +49,10 @@ const createHeaderRow = (properties) => {
   return tableHead;
 };
 
-const decorateDataRows = async (href) => {
+const buildDataTable = async (href) => {
   const resp = await fetch(href);
   if (!resp.ok) {
-    config.log('dead!');
+    config.log('Table data fetch failed:', href);
     return null;
   }
   const json = await resp.json();
@@ -61,23 +61,24 @@ const decorateDataRows = async (href) => {
 
   // gather all the available properties for dev table
   const properties = [...new Set(json.flatMap(Object.keys))];
-  const headerRow = createHeaderRow(properties);
+
+  const tableBody = document.createElement('tbody');
 
   // Create data rows
-  const dataRows = json.map((props) => {
-    const row = document.createElement('div');
+  for (const props of json) {
+    const row = document.createElement('tr');
+    const tableCells = properties.map((key) => {
+      const tableCell = document.createElement('td');
+      tableCell.textContent = props[key] ?? '';
+      return tableCell;
+    })
+    row.append(...tableCells);
+    tableBody.append(row);
+  }
 
-    const cols = properties.map((key) => {
-      const col = document.createElement('div');
-      col.textContent = props[key] ?? '';
-      return col;
-    });
-
-    if (cols) row.append(...cols);
-    return row;
-  });
-
-  return [headerRow, ...dataRows];
+  const table = document.createElement('table');
+  table.append(createHeaderRow(properties), tableBody)
+  return table;
 };
 
 export default async function init(el) {
@@ -88,8 +89,8 @@ export default async function init(el) {
   };
 
   if (data.dataHref) {
-    const dataRows = await decorateDataRows(data.dataHref);
-    if (dataRows) el.append(...dataRows);
+    const table = await buildDataTable(data.dataHref);
+    if (table) el.replaceChildren(table);
   }
   const rows = [...el.children];
   decorateHeading(data);
