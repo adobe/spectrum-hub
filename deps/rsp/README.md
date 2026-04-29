@@ -42,9 +42,18 @@ Edit `components.json`:
 
 To find the category and interface name, browse the package on [unpkg](https://unpkg.com/@adobe/react-spectrum/dist/types/src/) and look for the `Spectrum*Props` interface in the relevant file. If the script warns about untracked base types after adding a component, those names need to be added to `REACT_ARIA_FILES` in `extract-base-props.js` — see [Adding a new react-aria base type](#adding-a-new-react-aria-base-type) below.
 
-## Adding a new base type
+## Adding a new react-aria base type
 
-Edit `extract-base-props.js` and add an entry to `BASE_SOURCES`, then run both scripts locally to update `data/rsp-base-props.json` and the affected component JSON files.
+`@react-types/shared` types are discovered automatically — no changes needed when new types are added there.
+
+For `react-aria`, add the relevant file URL to `REACT_ARIA_FILES` in `extract-base-props.js`, then run both scripts locally to update `data/rsp-base-props.json` and the affected component JSON files:
+
+```js
+const REACT_ARIA_FILES = [
+  'https://unpkg.com/react-aria/dist/types/src/button/useButton.d.ts',
+  'https://unpkg.com/react-aria/dist/types/src/textfield/useTextField.d.ts', // example
+];
+```
 
 ## Known limitations
 

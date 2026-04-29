@@ -29,6 +29,7 @@ const CDN_URLS = [
   (category, component) => `https://cdn.jsdelivr.net/npm/@adobe/react-spectrum/dist/types/src/${category}/${component}.d.ts`,
 ];
 
+// Tries each CDN in order; jsdelivr is the fallback in case unpkg is rate-limited or unavailable.
 async function fetchTypes(category, component) {
   for (const buildUrl of CDN_URLS) {
     const url = buildUrl(category, component);
@@ -42,7 +43,9 @@ async function fetchTypes(category, component) {
 
 /**
  * Extracts the body of a named interface or type from TypeScript source.
- * Uses bracket counting to handle nested types correctly.
+ * Uses bracket counting rather than a closing-brace regex because interface
+ * bodies can contain nested object types ({ }) that would cause a simple
+ * pattern to close too early.
  */
 function extractInterfaceBlock(source, interfaceName) {
   const startRegex = new RegExp(
@@ -65,10 +68,16 @@ function extractInterfaceBlock(source, interfaceName) {
 }
 
 /**
- * Capture any component's `extends` list from the interface header.
- * Intersects all word tokens in the header against known BASE_PROPS keys,
- * so generics, utility types, and type params are automatically ignored.
- * Warns about names that look like base types but aren't tracked yet.
+ * Captures the resolved `extends` list from the interface header in the .d.ts source.
+ *
+ * Rather than parsing TypeScript syntax, this intersects all word tokens in the header
+ * against known BASE_PROPS keys. Generics, utility type names (Omit, Pick), and type
+ * parameters don't appear in rsp-base-props.json, so they're silently ignored — no
+ * special syntax handling required.
+ *
+ * A warning is emitted for names that look like base types (matching Props|Events|Mixin)
+ * but aren't tracked yet — that's the signal to add their source file to REACT_ARIA_FILES
+ * in extract-base-props.js, or to declare them manually via "extends" in components.json.
  */
 function extractExtends(source, interfaceName) {
   const startRegex = new RegExp(
@@ -88,6 +97,8 @@ function extractExtends(source, interfaceName) {
   return known;
 }
 
+// Strips delimiters and leading `* ` from a raw JSDoc comment block, then extracts
+// a plain-text description and optional @default value.
 function parseJSDoc(comment) {
   const result = { description: '', default: null };
   if (!comment) return result;
@@ -111,6 +122,18 @@ function parseJSDoc(comment) {
   return result;
 }
 
+/**
+ * Parses individual property declarations from an interface body.
+ *
+ * Uses a single-line regex and will silently skip or misparse:
+ *   - Multi-line type unions
+ *   - Generic types with angle brackets (e.g. Array<string>)
+ *   - Function signatures (e.g. (val: T) => void)
+ *   - Conditional or mapped types
+ *
+ * Spot-check output JSON against RSP docs when adding a new component. If output
+ * looks sparse, the component likely uses one of these patterns.
+ */
 function parseProps(block) {
   const props = [];
   const lines = block.split('\n');
@@ -164,7 +187,10 @@ async function main() {
     const source = await fetchTypes(category, component);
     const block = extractInterfaceBlock(source, interfaceName);
     const extendsList = extractExtends(source, interfaceName);
-    const bases = configBases ?? extendsList;  
+    // Manual "extends" in components.json takes full precedence over auto-resolution.
+    // Use it when a base type is wrapped in a utility type (e.g. Omit<AriaButtonProps, ...>)
+    // that prevents auto-detection, or when a react-aria type isn't yet in REACT_ARIA_FILES.
+    const bases = configBases ?? extendsList;
 
     if (!block) {
       console.warn(`  Warning: ${interfaceName} not found in ${component}.d.ts`);
