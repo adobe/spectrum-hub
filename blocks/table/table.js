@@ -11,20 +11,40 @@ const PROPS_TO_LABELS = {
   inheritedFrom: 'Inherited from',
 };
 
-const decorateRows = (rows) => {
-  let nextIsHeader = false;
-  for (const [idx, row] of rows.entries()) {
-    row.classList.add('row', `row-${idx + 1}`);
-    const cols = [...row.children];
-    row.style = `--child-count: ${cols.length}`;
-    if (idx === 0 && cols.length === 1) {
-      row.children[0].classList.add('heading-toggle');
-      nextIsHeader = true;
-    } else if (nextIsHeader && !row.classList.contains('header-row')) {
-      row.classList.add('header-row');
-      nextIsHeader = false;
-    }
+// supports manually inputting tables in DA
+const buildTable = (rows) => {
+  const [headerRow, ...dataRows] = rows;
+
+  const tableHead = document.createElement('thead');
+  tableHead.classList.add('header-row');
+
+  const headRow = document.createElement('tr');
+  headRow.classList.add('row');
+
+  for (const col of headerRow.children) {
+    const columnHeader = document.createElement('th');
+    columnHeader.scope = 'col';
+    columnHeader.innerHTML = col.innerHTML;
+    headRow.append(columnHeader);
   }
+  tableHead.append(headRow);
+
+  const tableBody = document.createElement('tbody');
+  for (const row of dataRows) {
+    const bodyRow = document.createElement('tr');
+    bodyRow.classList.add('row');
+
+    for (const col of row.children) {
+      const tableCell = document.createElement('td');
+      tableCell.innerHTML = col.innerHTML;
+      bodyRow.append(tableCell);
+    }
+    tableBody.append(bodyRow);
+  }
+
+  const table = document.createElement('table');
+  table.append(tableHead, tableBody);
+  return table;
 };
 
 const createHeaderRow = (properties) => {
@@ -45,6 +65,7 @@ const createHeaderRow = (properties) => {
   return tableHead;
 };
 
+// supports populating data table with extracted JSON via a link
 const buildDataTable = async (href) => {
   const resp = await fetch(href);
   if (!resp.ok) {
@@ -74,7 +95,7 @@ const buildDataTable = async (href) => {
   }
 
   const table = document.createElement('table');
-  table.append(createHeaderRow(properties), tableBody)
+  table.append(createHeaderRow(properties), tableBody);
   return table;
 };
 
@@ -85,6 +106,7 @@ export default async function init(el) {
     const table = await buildDataTable(dataHref);
     if (table) el.replaceChildren(table);
   } else {
-    decorateRows([...el.children]);
+    const table = buildTable([...el.children]);
+    el.replaceChildren(table);
   }
 }
