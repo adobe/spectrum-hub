@@ -33,17 +33,20 @@ const decorateRows = (rows) => {
 };
 
 const createHeaderRow = (properties) => {
-  const headerRow = document.createElement('div');
-  headerRow.classList.add('header-row');
+  const tableHead = document.createElement('thead');
+  tableHead.classList.add('header-row');
+
+  const row = document.createElement('tr');
 
   const headerCols = properties.map((key) => {
-    const col = document.createElement('div');
-    col.textContent = PROPS_TO_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
-    return col;
+    const columnHeaders = document.createElement('th');
+    columnHeaders.scope = 'col';
+    columnHeaders.textContent = PROPS_TO_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
+    return columnHeaders;
   });
-
-  headerRow.append(...headerCols);
-  return headerRow;
+  row.append(...headerCols);
+  tableHead.append(row);
+  return tableHead;
 };
 
 const decorateDataRows = async (href) => {
@@ -89,5 +92,6 @@ export default async function init(el) {
     if (dataRows) el.append(...dataRows);
   }
   const rows = [...el.children];
+  decorateHeading(data);
   decorateRows(rows);
 }
