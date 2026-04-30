@@ -1,11 +1,24 @@
 .columns {
-  --columns-gap: 0;
+  --columns-gap: 56px;
+  --image-corner-radius: 24px;
+  --xs-image-size: 120px;
+  --s-image-size: 316px;
+  --m-image-size: 502px;
 
   display: grid;
-  gap: var(--columns-gap);
+  margin-block-end: var(--s2-spacing-1000);
+
+  picture {
+    display: block;
+    inline-size: 100%;
+  }
 
   img {
     display: block;
+    inline-size: 100%;
+    block-size: auto;
+    background-color: var(--s2-gray-800);
+    border-radius: var(--image-corner-radius);
   }
 
   .row {
@@ -14,49 +27,101 @@
     gap: var(--columns-gap);
   }
 
+  @media (width >= 768px) {
+    /* extra-small */
+    &:not(:is(.small, .medium, .large)) {
+      --col-size: var(--xs-image-size);
+    }
+
+    /* small */
+    &.small {
+      --col-size: var(--s-image-size);
+    }
+
+    /* medium and large snap --col-size at 768px only for centered/stacked (picture sizing) */
+    &:is(.centered, .stacked) {
+      &.medium {
+        --col-size: var(--m-image-size);
+      }
+
+      &.large {
+        --col-size: 100%;
+      }
+    }
+
+    /* xs and small snap at 768px */
+    &:not(:is(.medium, .large)) .row {
+      grid-template-columns: var(--col-size) auto;
+    }
+  }
+
+  @media (width >= 900px) {
+    /* medium and large snap --col-size at 900px for default and image-right */
+    &.medium {
+      --col-size: var(--m-image-size);
+    }
+
+    &.large {
+      --col-size: 100%;
+    }
+
+    /* medium and large side-by-side layout snaps at 900px */
+    &:is(.medium, .large) .row {
+      grid-template-columns: var(--col-size) auto;
+    }
+  }
+
   .col {
+    flex-direction: column;
+    display: flex;
+    gap: var(--s2-spacing-300);
+
     :first-child {
-      margin-top: 0;
+      margin-block-start: 0;
     }
 
     :last-child {
-      margin-bottom: 0;
+      margin-block-end: 0;
+    }
+
+    p, h4 {
+      margin-block: 0;
     }
   }
 
   &.gap-xs {
-    --columns-gap: var(--spacing-xs);
+    --columns-gap: var(--s2-spacing-100);
   }
 
   &.gap-s {
-    --columns-gap: var(--spacing-s);
+    --columns-gap: var(--s2-spacing-200);
   }
 
   &.gap-m {
-    --columns-gap: var(--spacing-m);
+    --columns-gap: var(--s2-spacing-300);
   }
 
   &.gap-l {
-    --columns-gap: var(--spacing-l);
+    --columns-gap: var(--s2-spacing-400);
   }
 
   &.gap-xl {
-    --columns-gap: var(--spacing-xl);
+    --columns-gap: var(--s2-spacing-500);
   }
 
   &.gap-xxl {
-    --columns-gap: var(--spacing-xxl);
+    --columns-gap: var(--s2-spacing-600);
   }
 
   &.image-cover {
     .cover-row {
       .cover-content {
-        padding: var(--spacing-xxl);
+        padding: var(--s2-spacing-600);
       }
 
       .cover-image {
         position: relative;
-        padding-bottom: 100%;
+        padding-block-end: 100%;
 
         picture {
           position: absolute;
@@ -65,8 +130,8 @@
 
         img {
           object-fit: cover;
-          width: 100%;
-          height: 100%;
+          inline-size: 100%;
+          block-size: 100%;
         }
       }
     }
@@ -77,26 +142,50 @@
       align-items: start;
     }
   }
-}
 
-@media (width >= 900px) {
-  .columns {
+  &.image-right {
+    @media (width >= 768px) {
+      .row {
+        grid-template-columns: auto var(--col-size);
+      }
+    }
+  }
+
+  &.centered {
+    --columns-gap: var(--s2-spacing-600);
+
+    text-align: center;
+
     .row {
-      grid-template-columns: repeat(var(--child-count), 1fr);
+      grid-template-columns: 1fr;
     }
 
-    &.image-cover {
-      .cover-row {
-        .cover-content {
-          padding: 0 calc(var(--spacing-xxl) * 2);
-        }
-      }
+    picture {
+      inline-size: var(--col-size, 100%);
+      margin-inline: auto;
     }
 
-    &.z-pattern {
-      .row:nth-of-type(odd) .col-1 {
-        order: 2;
+    .col-2 {
+      align-items: center;
+    }
+  }
+
+  &.stacked {
+    --columns-gap: var(--s2-spacing-600);
+
+    @media (width >= 768px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      picture {
+        inline-size: var(--col-size);
       }
     }
+  }
+
+  /* Single-column rows (like image only or title+description only) are always full-width regardless of size variant */
+  .row.single-col {
+    grid-template-columns: 1fr;
   }
 }
