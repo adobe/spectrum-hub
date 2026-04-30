@@ -294,6 +294,9 @@
   /* nav */
   --sh-nav-height: 80px;
 
+  /* options table buttons */
+  --sh-content-color-white: rgb(255 255 255);
+
   /* color schemes */
   color-scheme: light dark;
 }
@@ -304,8 +307,10 @@
   }
 }
 
-/* --- Edge Delivery-specific decoration hiding --- */
-main > div, div[data-status] {
+/* --- Spectrum Edge specific decoration hiding --- */
+main > div,
+div[data-status],
+.template-loading {
   display: none;
 }
 

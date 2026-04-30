@@ -16,6 +16,7 @@ const linkBlocks = [
   { 'action-button': '/tools/widgets/scheme' },
   { 'action-button': '/tools/widgets/ask-ai' },
   { 'action-button': '/tools/widgets/settings' },
+  { 'action-button': '/tools/widgets/action' },
   { fragment: '/fragments/' },
   { schedule: '/schedules/' },
   { youtube: 'https://www.youtube' },

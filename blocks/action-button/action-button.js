@@ -44,6 +44,8 @@ const BUTTONS = {
   '/tools/widgets/settings': {
     click: handleSettings,
   },
+  /* TODO: for designer/developer toggles */
+  '/tools/widgets/action': {},
 };
 
 function getLinkProps(a) {
@@ -73,7 +75,9 @@ export default function actionButton(a) {
   if (buttonProps) {
     const button = document.createElement('button');
     button.className = a.className;
-    button.addEventListener('click', buttonProps.click);
+    if (buttonProps.click) {
+      button.addEventListener('click', buttonProps.click);
+    }
     button.append(...a.childNodes);
     a.replaceWith(button);
   }
