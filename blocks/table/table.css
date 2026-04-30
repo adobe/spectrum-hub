@@ -5,21 +5,107 @@
   --table-head-row-padding-block: 7px;
   --table-body-row-padding-block: 11px;
 
-  table {
-    border-collapse: separate;
-    border-spacing: 0;
-    inline-size: 100%;
-    table-layout: fixed;
+  /* stacked layout for small screens */
+  thead {
+    display: none;
   }
 
-  .heading-toggle {
+  tbody tr {
+    display: block;
+    background-color: var(--s2-gray-25);
+    border: var(--table-border-width) solid var(--s2-gray-300);
+
+    & + tr {
+      border-block-start: 0;
+    }
+
+    &:first-child {
+      border-start-start-radius: var(--s2-corner-radius-300);
+      border-start-end-radius: var(--s2-corner-radius-300);
+    }
+
+    &:last-child {
+      border-end-start-radius: var(--s2-corner-radius-300);
+      border-end-end-radius: var(--s2-corner-radius-300);
+    }
+  }
+
+  tbody td {
+    display: block;
+    color: var(--s2-gray-700);
+    font-weight: var(--s2-component-m-regular-font-weight);
+    padding-block: var(--table-body-row-padding-block);
+  }
+
+  table {
+    inline-size: 100%;
+  }
+
+  @media (width >= 768px) {
+    overflow-x: auto;
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tbody tr {
+      display: table-row;
+      border: 0;
+      margin-block-end: 0;
+    }
+
+    tbody td {
+      display: table-cell;
+      block-size: var(--table-body-row-min-block-size);
+      vertical-align: top;
+    }
+
+    /* borders between rows */
+    th, td {
+      border-block-end: var(--table-border-width) solid var(--s2-gray-300);
+    }
+
+    /* inline borders for non-quiet variant */
+    th:first-child, td:first-child {
+      border-inline-start: var(--table-border-width) solid var(--s2-gray-300);
+    }
+
+    th:last-child, td:last-child {
+      border-inline-end: var(--table-border-width) solid var(--s2-gray-300);
+    }
+
+    /* table corners are rounded in non-quiet variant */
+    thead tr th:first-child {
+      border-start-start-radius: var(--s2-corner-radius-300);
+    }
+
+    thead tr th:last-child {
+      border-start-end-radius: var(--s2-corner-radius-300);
+    }
+
+    tbody tr:last-child td:first-child {
+      border-end-start-radius: var(--s2-corner-radius-300);
+    }
+
+    tbody tr:last-child td:last-child {
+      border-end-end-radius: var(--s2-corner-radius-300);
+    }
+  }
+  /* TODO: for designer/developer toggles */
+
+  /* .heading-toggle {
     display: flex;
     place-content: center;
     justify-content: space-between;
     margin-block: var(--s2-spacing-400);
 
-    /* TODO: for designer/developer toggles */
-    /* .table-tabs {
+    .table-tabs {
       display: flex;
       align-items: center;
       gap: var(--s2-spacing-100);
@@ -31,46 +117,11 @@
     .action-button:hover {
       background-color: var(--s2-gray-800);
       color: var(--sh-content-color-white);
-    } */
-  }
-
-  /* table corners are rounded in non-quiet variant */
-  thead tr th:first-child {
-    border-start-start-radius: var(--s2-corner-radius-300);
-  }
-
-  thead tr th:last-child {
-    border-start-end-radius: var(--s2-corner-radius-300);
-  }
-
-  tbody tr:last-child td:first-child {
-    border-end-start-radius: var(--s2-corner-radius-300);
-  }
-
-  tbody tr:last-child td:last-child {
-    border-end-end-radius: var(--s2-corner-radius-300);
-  }
-
-  /* borders between rows */
-  th, td {
-    border-block-end: var(--table-border-width) solid var(--s2-gray-300);
-  }
-
-  /* inline borders for non-quiet variant */
-  th:first-child, td:first-child {
-    border-inline-start: var(--table-border-width) solid var(--s2-gray-300);
-  }
-
-  th:last-child, td:last-child {
-    border-inline-end: var(--table-border-width) solid var(--s2-gray-300);
-  }
+    }
+  } */
 
   thead tr {
     background-color: var(--s2-gray-75);
-  }
-
-  tbody tr {
-    background-color: var(--s2-gray-25);
   }
 
   thead th,
@@ -78,6 +129,11 @@
     line-height: var(--s2-component-m-medium-line-height);
     box-sizing: border-box;
     padding-inline: var(--s2-spacing-300) var(--s2-spacing-100);
+    overflow-wrap: break-word;
+
+    @media (width >= 930px) {
+      overflow-wrap: normal;
+    }
   }
 
   thead th {
@@ -88,13 +144,6 @@
     text-align: start;
     block-size: var(--table-head-row-min-block-size);
     padding-block: var(--table-head-row-padding-block);
-  }
-
-  tbody td {
-    color: var(--s2-gray-700);
-    font-weight: var(--s2-component-m-regular-font-weight);
-    block-size: var(--table-body-row-min-block-size);
-    padding-block: var(--table-body-row-padding-block);
   }
 
   /* border radii and inline borders are removed for quiet variant */
@@ -112,5 +161,7 @@
 
   &.quiet tbody tr {
     background-color: transparent;
+    border-inline: 0;
+    border-radius: 0;
   }
 }
