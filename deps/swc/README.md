@@ -37,13 +37,20 @@ Keys are tag names, values are the npm package suffix (under `@spectrum-web-comp
 
 ## Updating mixins
 
-Run `extract-cem-mixins.js` against a full CEM built from the SWC repo:
+**This is a manual engineering maintenance task.** Unlike `extract-cem-components.js`, mixin extraction cannot be automated — the mixin class declarations live inside the SWC monorepo and are never published to npm or any CDN. There is no automated signal when they go out of date.
+
+`data/sp-mixins.json` should be refreshed when:
+- A SWC release notes changes to shared base classes or mixins (`Focusable`, `LikeAnchor`, `SizedMixin`, etc.)
+- A newly added component is missing expected inherited properties in its output JSON
+- SWC bumps a major version
+
+To update, run `extract-cem-mixins.js` against a full CEM built from the SWC repo:
 
 ```sh
 cd spectrum-web-components/1st-gen
 yarn cem analyze --outdir .
-cd ../../spectrum-docs
+cd ../../spectrum-hub
 node deps/swc/extract-cem-mixins.js ../spectrum-web-components/1st-gen/custom-elements.json
 ```
 
-This overwrites `data/sp-mixins.json`. Commit the result.
+This overwrites `data/sp-mixins.json`. Commit the result and re-run `extract-cem-components.js` locally to verify the component output files look correct before pushing.
