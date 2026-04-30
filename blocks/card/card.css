@@ -1,85 +1,124 @@
 .card {
-  --spacing-default: var(--spacing-l);
-
-  overflow-wrap: break-word;
-  box-shadow: 0 1px 6px 0 rgb(0 0 0 / 12%);
+  border-radius: 24px;
+  min-height: 100px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    0 0 1px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  background-color: light-dark(var(--color-gray-100), var(--color-gray-900));
-  color: light-dark(var(--color-dark), var(--color-light));
-  transition: all 0.25s ease-in-out;
 
   .card-inner {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--s2-spacing-100);
+    padding: var(--s2-spacing-400);
+    background-color: var(--s2-gray-25);
+    border-radius: inherit;
+    min-block-size: 100%;
   }
 
-  &:not(.quiet) {
-    .card-picture-container {
-      position: relative;
-      padding-bottom: 60%;
+  .card-picture-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--s2-spacing-800);
+    height: var(--s2-spacing-800);
+    border-radius: var(--s2-corner-radius-800);
+    background-color: var(--s2-gray-700);
+    overflow: hidden;
 
-      picture {
-        position: absolute;
-        inset: 0;
-        opacity: 0.85;
-        transition: opacity 0.25s ease-in-out;
-      }
-
-      img {
-        object-fit: cover;
-        width: 100%;
-        height: 100%;
-      }
+    img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
     }
   }
 
   .card-content-container {
-    padding: var(--spacing-default);
-
-    :first-child {
-      margin-top: 0;
-      font-size: 16px;
-    }
-
-    :last-child {
-      margin-bottom: 0;
-    }
-
-    &:has(+ .card-cta-container) {
-      padding: var(--spacing-default) var(--spacing-default) var(--spacing-m) var(--spacing-default);
-    }
-  }
-
-  .card-cta-container {
-    padding: 0 var(--spacing-default) var(--spacing-default) var(--spacing-default);
-    margin: 0;
+    flex: 1;
     display: flex;
-    justify-content: end;
-  }
+    flex-direction: column;
+    gap: var(--s2-spacing-100);
 
-  &:not(.quiet):hover {
-    transform: scale(1.005);
-    box-shadow: 0 2px 8px 0 rgb(0 0 0 / 16%);
+    > :first-child {
+      font-size: var(--s2-component-l-bold-font-size);
+      font-weight: var(--s2-component-l-bold-font-weight);
+      line-height: var(--s2-component-l-bold-line-height);
+      color: var(--s2-gray-900);
+      margin: 0;
+    }
 
-    picture {
-      opacity: 1;
+    > p {
+      font-size: var(--s2-component-m-regular-font-size);
+      line-height: var(--s2-component-m-regular-line-height);
+      color: var(--s2-gray-800);
+      margin: 0;
     }
   }
 
-  /* Variations */
-  &.center {
-    text-align: center;
+  .card-external-link-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      font-size: var(--s2-component-m-regular-font-size);
+      line-height: var(--s2-component-m-regular-line-height);
+      color: var(--s2-blue-900);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--s2-blue-900);
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+    }
   }
 
-  &.quiet {
-    --spacing-default: 0;
+  .card-button-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
 
-    box-shadow: initial;
-    background-color: initial;
-
-    .card-content-container * {
-      margin: 6px;
+    p {
+      margin: 0;
     }
+  }
+
+  .card-button {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--s2-spacing-100) var(--s2-spacing-300);
+    border-radius: var(--s2-corner-radius-800);
+    background-color: var(--s2-blue-800);
+    color: #fff;
+    font-size: var(--s2-component-m-bold-font-size);
+    font-weight: var(--s2-component-m-bold-font-weight);
+    line-height: var(--s2-component-m-bold-line-height);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: var(--s2-blue-1000);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--s2-blue-900);
+      outline-offset: 2px;
+    }
+  }
+
+  &.stacked .card-inner {
+    flex-direction: column;
   }
 }
