@@ -116,4 +116,5 @@ export default async function init(el) {
     return heading.id;
   });
   if (table && labelIds.length) table.setAttribute('aria-labelledby', labelIds.join(' '));
+  el.tabIndex = 0;
 }
