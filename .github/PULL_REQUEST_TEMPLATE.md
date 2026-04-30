@@ -47,6 +47,9 @@
 
 ### To Validate
 
+URL for testing:
+https://<branch-name>--spectrum-hub--adobe.aem.page/
+
 - [ ] Make sure all PR Checks have passed
 - [ ] Pull down the branch locally or visit the branch preview
 - [ ] Run `npm test` and confirm all tests pass
