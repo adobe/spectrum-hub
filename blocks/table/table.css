@@ -1,11 +1,180 @@
 .table {
-  table {
-    width: 100%;
-    border-collapse: collapse;
+  --table-head-row-min-block-size: 32px;
+  --table-body-row-min-block-size: 40px;
+  --table-border-width: 1px;
+  --table-head-row-padding-block: 7px;
+  --table-body-row-padding-block: 11px;
 
-    th,
-    td {
-      border: 1px solid;
+  /* stacked layout for small screens */
+  thead {
+    /* hides the thead visually on small screens, without breaking a11y (WCAG 1.3.1 (Info and Relationships) */
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    display: block; /* Technically breaks a11y relationships, which is why the roles are set again in JS */
+    background-color: var(--s2-gray-25);
+    border: var(--table-border-width) solid var(--s2-gray-300);
+
+    & + tr {
+      border-block-start: 0;
     }
+
+    &:first-child {
+      border-start-start-radius: var(--s2-corner-radius-300);
+      border-start-end-radius: var(--s2-corner-radius-300);
+    }
+
+    &:last-child {
+      border-end-start-radius: var(--s2-corner-radius-300);
+      border-end-end-radius: var(--s2-corner-radius-300);
+    }
+  }
+
+  tbody td {
+    display: block;
+    color: var(--s2-gray-700);
+    font-weight: var(--s2-component-m-regular-font-weight);
+    padding-block: var(--table-body-row-padding-block);
+  }
+
+  table {
+    inline-size: 100%;
+    position: relative;
+  }
+
+  @media (width >= 768px) {
+    overflow-x: auto;
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    thead {
+      display: table-header-group;
+      position: static;
+      inline-size: auto;
+      block-size: auto;
+      overflow: visible;
+      clip-path: none;
+      white-space: normal;
+    }
+
+    tbody tr {
+      display: table-row;
+      border: 0;
+      margin-block-end: 0;
+    }
+
+    tbody td {
+      display: table-cell;
+      block-size: var(--table-body-row-min-block-size);
+      vertical-align: top;
+    }
+
+    /* borders between rows */
+    th, td {
+      border-block-end: var(--table-border-width) solid var(--s2-gray-300);
+    }
+
+    /* inline borders for non-quiet variant */
+    th:first-child, td:first-child {
+      border-inline-start: var(--table-border-width) solid var(--s2-gray-300);
+    }
+
+    th:last-child, td:last-child {
+      border-inline-end: var(--table-border-width) solid var(--s2-gray-300);
+    }
+
+    /* table corners are rounded in non-quiet variant */
+    thead tr th:first-child {
+      border-start-start-radius: var(--s2-corner-radius-300);
+    }
+
+    thead tr th:last-child {
+      border-start-end-radius: var(--s2-corner-radius-300);
+    }
+
+    tbody tr:last-child td:first-child {
+      border-end-start-radius: var(--s2-corner-radius-300);
+    }
+
+    tbody tr:last-child td:last-child {
+      border-end-end-radius: var(--s2-corner-radius-300);
+    }
+  }
+  /* TODO: for designer/developer toggles */
+
+  /* .heading-toggle {
+    display: flex;
+    place-content: center;
+    justify-content: space-between;
+    margin-block: var(--s2-spacing-400);
+
+    .table-tabs {
+      display: flex;
+      align-items: center;
+      gap: var(--s2-spacing-100);
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .action-button:hover {
+      background-color: var(--s2-gray-800);
+      color: var(--sh-content-color-white);
+    }
+  } */
+
+  thead tr {
+    background-color: var(--s2-gray-75);
+  }
+
+  thead th,
+  tbody > tr td {
+    line-height: var(--s2-component-m-medium-line-height);
+    box-sizing: border-box;
+    padding-inline: var(--s2-spacing-300) var(--s2-spacing-100);
+    overflow-wrap: break-word;
+
+    @media (width >= 930px) {
+      overflow-wrap: normal;
+    }
+  }
+
+  thead th {
+    border-block-start: var(--table-border-width) solid var(--s2-gray-300);
+    font-weight: var(--s2-component-m-bold-font-weight);
+    color: var(--s2-gray-800);
+    font-size: var(--s2-component-m-regular-font-size);
+    text-align: start;
+    block-size: var(--table-head-row-min-block-size);
+    padding-block: var(--table-head-row-padding-block);
+  }
+
+  /* border radii and inline borders are removed for quiet variant */
+  &.quiet thead tr th:first-child,
+  &.quiet thead tr th:last-child,
+  &.quiet tbody tr:last-child td:first-child,
+  &.quiet tbody tr:last-child td:last-child {
+    border-radius: 0;
+  }
+
+  &.quiet th,
+  &.quiet td {
+    border-inline: 0;
+  }
+
+  &.quiet tbody tr {
+    background-color: transparent;
+    border-inline: 0;
+    border-radius: 0;
   }
 }
