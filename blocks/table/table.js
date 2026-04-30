@@ -11,34 +11,20 @@ const PROPS_TO_LABELS = {
   inheritedFrom: 'Inherited from',
 };
 
-// supports manually inputting tables in DA
-const buildTable = (rows) => {
-  const [headerRow, ...dataRows] = rows;
-
+const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');
   tableHead.classList.add('header-row');
 
   const headRow = document.createElement('tr');
   headRow.classList.add('row');
-
-  for (const col of headerRow.children) {
-    const columnHeader = document.createElement('th');
-    columnHeader.scope = 'col';
-    columnHeader.innerHTML = col.innerHTML;
-    headRow.append(columnHeader);
-  }
+  headRow.append(...headerCells);
   tableHead.append(headRow);
 
   const tableBody = document.createElement('tbody');
-  for (const row of dataRows) {
+  for (const cells of dataCells) {
     const bodyRow = document.createElement('tr');
     bodyRow.classList.add('row');
-
-    for (const col of row.children) {
-      const tableCell = document.createElement('td');
-      tableCell.innerHTML = col.innerHTML;
-      bodyRow.append(tableCell);
-    }
+    bodyRow.append(...cells);
     tableBody.append(bodyRow);
   }
 
@@ -47,22 +33,24 @@ const buildTable = (rows) => {
   return table;
 };
 
-const createHeaderRow = (properties) => {
-  const tableHead = document.createElement('thead');
-  tableHead.classList.add('header-row');
+// supports manually inputting tables in DA
+const buildTable = (rows) => {
+  const [headerRow, ...dataRows] = rows;
 
-  const row = document.createElement('tr');
-  row.classList.add('row');
-
-  const headerCols = properties.map((key) => {
-    const columnHeaders = document.createElement('th');
-    columnHeaders.scope = 'col';
-    columnHeaders.textContent = PROPS_TO_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
-    return columnHeaders;
+  const headerCells = [...headerRow.children].map((col) => {
+    const columnHeader = document.createElement('th');
+    columnHeader.scope = 'col';
+    columnHeader.innerHTML = col.innerHTML;
+    return columnHeader;
   });
-  row.append(...headerCols);
-  tableHead.append(row);
-  return tableHead;
+
+  const dataCells = dataRows.map((row) => [...row.children].map((col) => {
+    const tableCell = document.createElement('td');
+    tableCell.innerHTML = col.innerHTML;
+    return tableCell;
+  }));
+
+  return buildTableElement(headerCells, dataCells);
 };
 
 // supports populating data table with extracted JSON via a link
@@ -79,24 +67,21 @@ const buildDataTable = async (href) => {
   // gather all the available properties for dev table
   const properties = [...new Set(json.flatMap(Object.keys))];
 
-  const tableBody = document.createElement('tbody');
+  const headerCells = properties.map((key) => {
+    const columnHeaders = document.createElement('th');
+    columnHeaders.scope = 'col';
+    columnHeaders.textContent = PROPS_TO_LABELS[key] || key.charAt(0).toUpperCase() + key.slice(1);
+    return columnHeaders;
+  });
 
   // Create data rows
-  for (const props of json) {
-    const row = document.createElement('tr');
-    row.classList.add('row');
-    const tableCells = properties.map((key) => {
-      const tableCell = document.createElement('td');
-      tableCell.textContent = props[key] ?? '';
-      return tableCell;
-    });
-    row.append(...tableCells);
-    tableBody.append(row);
-  }
+  const dataCells = json.map((props) => properties.map((key) => {
+    const tableCell = document.createElement('td');
+    tableCell.textContent = props[key] ?? '';
+    return tableCell;
+  }));
 
-  const table = document.createElement('table');
-  table.append(createHeaderRow(properties), tableBody);
-  return table;
+  return buildTableElement(headerCells, dataCells);
 };
 
 export default async function init(el) {
