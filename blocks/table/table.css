@@ -1,4 +1,10 @@
 .table {
+  --table-head-row-min-block-size: 32px;
+  --table-body-row-min-block-size: 40px;
+  --table-border-width: 1px;
+  --table-head-row-padding-block: 7px;
+  --table-body-row-padding-block: 11px;
+
   table {
     border-collapse: separate;
     border-spacing: 0;
@@ -10,8 +16,9 @@
     display: flex;
     place-content: center;
     justify-content: space-between;
-    margin-block: 2rem;
+    margin-block: var(--s2-spacing-400);
 
+    /* TODO: for designer/developer toggles */
     /* .table-tabs {
       display: flex;
       align-items: center;
@@ -27,6 +34,7 @@
     } */
   }
 
+  /* table corners are rounded in non-quiet variant */
   thead tr th:first-child {
     border-start-start-radius: var(--s2-corner-radius-300);
   }
@@ -43,32 +51,53 @@
     border-end-end-radius: var(--s2-corner-radius-300);
   }
 
+  /* borders between rows */
   th, td {
-    padding-inline: 16px 8px;
-    padding-block: 10px;
-    border-block-end: 1px solid var(--s2-gray-300);
+    border-block-end: var(--table-border-width) solid var(--s2-gray-300);
   }
 
+  /* inline borders for non-quiet variant */
   th:first-child, td:first-child {
-    border-inline-start: 1px solid var(--s2-gray-300);
+    border-inline-start: var(--table-border-width) solid var(--s2-gray-300);
   }
 
   th:last-child, td:last-child {
-    border-inline-end: 1px solid var(--s2-gray-300);
+    border-inline-end: var(--table-border-width) solid var(--s2-gray-300);
   }
 
   thead tr {
     background-color: var(--s2-gray-75);
   }
 
+  tbody tr {
+    background-color: var(--s2-gray-25);
+  }
+
+  thead th,
+  tbody > tr td {
+    line-height: var(--s2-component-m-medium-line-height);
+    box-sizing: border-box;
+    padding-inline: var(--s2-spacing-300) var(--s2-spacing-100);
+  }
+
   thead th {
-    border-block-start: 1px solid var(--s2-gray-300);
+    border-block-start: var(--table-border-width) solid var(--s2-gray-300);
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--s2-gray-800);
     font-size: var(--s2-component-m-regular-font-size);
     text-align: start;
+    block-size: var(--table-head-row-min-block-size);
+    padding-block: var(--table-head-row-padding-block);
   }
 
+  tbody td {
+    color: var(--s2-gray-700);
+    font-weight: var(--s2-component-m-regular-font-weight);
+    block-size: var(--table-body-row-min-block-size);
+    padding-block: var(--table-body-row-padding-block);
+  }
+
+  /* border radii and inline borders are removed for quiet variant */
   &.quiet thead tr th:first-child,
   &.quiet thead tr th:last-child,
   &.quiet tbody tr:last-child td:first-child,
@@ -79,5 +108,9 @@
   &.quiet th,
   &.quiet td {
     border-inline: 0;
+  }
+
+  &.quiet tbody tr {
+    background-color: transparent;
   }
 }
