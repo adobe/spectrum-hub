@@ -14,21 +14,30 @@ const PROPS_TO_LABELS = {
 const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');
   tableHead.classList.add('header-row');
+  // explicitly resetting table roles so that when the CSS display property changes on
+  // small screens, no accessibility issues arise (WCAG 1.3.1 (Info and Relationships))
+  tableHead.role = 'rowgroup';
 
   const headRow = document.createElement('tr');
   headRow.classList.add('row');
+  headRow.role = 'row';
+  headerCells.forEach((cell) => { cell.role = 'columnheader'; });
   headRow.append(...headerCells);
   tableHead.append(headRow);
 
   const tableBody = document.createElement('tbody');
+  tableBody.role = 'rowgroup';
   for (const cells of dataCells) {
     const bodyRow = document.createElement('tr');
     bodyRow.classList.add('row');
+    bodyRow.role = 'row';
+    cells.forEach((cell) => { cell.role = 'cell'; });
     bodyRow.append(...cells);
     tableBody.append(bodyRow);
   }
 
   const table = document.createElement('table');
+  table.role = 'table';
   table.append(tableHead, tableBody);
   return table;
 };
@@ -77,7 +86,7 @@ const buildDataTable = async (href) => {
   // Create data rows
   const dataCells = json.map((props) => properties.map((key) => {
     const tableCell = document.createElement('td');
-    tableCell.textContent = props[key] ?? '';
+    tableCell.textContent = props[key] || '-';
     return tableCell;
   }));
 
@@ -94,4 +103,17 @@ export default async function init(el) {
     const table = buildTable([...el.children]);
     el.replaceChildren(table);
   }
+
+  const table = el.querySelector('table');
+  const h1 = document.querySelector('h1');
+
+  // finds the appropriate section heading in DA, and creates the table's accessible name
+  // for users who navigate via table landmarks
+  const sectionHeading = el.closest('.section')?.querySelector('h2, h3, h4, h5, h6');
+  const labelIds = [h1, sectionHeading].flatMap((heading) => {
+    if (!heading) return [];
+    if (!heading.id) heading.id = `table-heading-${Math.random().toString(36).slice(2)}`;
+    return heading.id;
+  });
+  if (table && labelIds.length) table.setAttribute('aria-labelledby', labelIds.join(' '));
 }
