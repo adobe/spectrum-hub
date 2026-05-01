@@ -21,6 +21,10 @@
     background-color: var(--s2-gray-25);
     border: var(--table-border-width) solid var(--s2-gray-300);
 
+    &:hover {
+      background-color: var(--s2-gray-100);
+    }
+
     & + tr {
       border-block-start: 0;
     }
@@ -143,6 +147,7 @@
     box-sizing: border-box;
     padding-inline: var(--s2-spacing-300) var(--s2-spacing-100);
     overflow-wrap: break-word;
+    position: relative;
 
     @media (width >= 930px) {
       overflow-wrap: normal;
@@ -157,6 +162,61 @@
     text-align: start;
     block-size: var(--table-head-row-min-block-size);
     padding-block: var(--table-head-row-padding-block);
+  }
+
+  td:focus-visible {
+    outline: none;
+    position: relative;
+    z-index: 1;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 2px solid var(--s2-blue-900);
+      border-radius: var(--s2-corner-radius-300);
+      pointer-events: none;
+    }
+  }
+
+  tbody tr:focus-visible {
+    outline: none;
+    /* background-color: var(--s2-blue-100); */
+
+    /* Mobile: tr is display:block so ::after positions correctly */
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-inline-start: 2px solid var(--s2-blue-900);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Desktop: tr is display:table-row and won't contain absolute children reliably.
+       Draw the ring via each td's ::after instead. */
+    @media (width >= 768px) {
+      position: static;
+
+      &::after {
+        display: none;
+      }
+
+      td:first-child::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-inline-start: 4px solid var(--s2-blue-900);
+        pointer-events: none;
+        z-index: 1;
+      }
+    }
+  }
+
+  tbody tr:has(td:focus-visible) {
+    background-color: var(--s2-blue-100);
   }
 
   /* border radii and inline borders are removed for quiet variant */
@@ -176,5 +236,17 @@
     background-color: transparent;
     border-inline: 0;
     border-radius: 0;
+
+    &:hover {
+      background-color: var(--s2-gray-100);
+    }
+
+    &:focus-visible {
+      background-color: var(--s2-gray-100);
+    }
+  }
+
+  &.quiet tbody tr:has(td:focus-visible) {
+    background-color: var(--s2-blue-100);
   }
 }
