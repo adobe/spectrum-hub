@@ -1,12 +1,11 @@
 .action-button {
-  display: block;
-  
-  /* TODO: for designer/developer toggles */
-  /* display: flex;
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: var(--s2-spacing-75);
-  padding-inline: var(--s2-spacing-100); */
+  padding-inline: var(--s2-spacing-100);
   height: var(--se-component-m-height);
+  min-width: 32px;
   border-radius: var(--s2-corner-radius-500);
   font-size: var(--s2-component-m-regular-font-size);
   font-weight: var(--s2-component-m-regular-font-weight);
@@ -21,5 +20,9 @@
     &:hover {
         background-color: var(--s2-gray-100);
     }
+  }
+
+  &:has(.visually-hidden) {
+    padding-inline: 0;
   }
 }

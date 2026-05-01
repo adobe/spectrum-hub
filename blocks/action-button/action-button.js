@@ -44,7 +44,6 @@ const BUTTONS = {
   '/tools/widgets/settings': {
     click: handleSettings,
   },
-  /* TODO: for designer/developer toggles */
   '/tools/widgets/action': {},
 };
 

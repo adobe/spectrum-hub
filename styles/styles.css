@@ -57,6 +57,24 @@
   font-stretch: normal;
 }
 
+@font-face {
+  font-family: "Trebuchet MS";
+  src: local("Trebuchet MS");
+  font-weight: 400;
+  size-adjust: 88%;
+  ascent-override: 92%;
+  descent-override: 18%;
+}
+
+@font-face {
+  font-family: "Trebuchet MS";
+  src: local("Trebuchet MS Bold"), local("Trebuchet MS");
+  font-weight: 700;
+  size-adjust: 90%;
+  ascent-override: 92%;
+  descent-override: 18%;
+}
+
 /* --- Variables --- */
 
 :root {
@@ -276,7 +294,7 @@
   /* --- End generated --- */
 
   /* fonts */
-  --s2-font-family: 'Adobe Clean', adobe-clean, sans-serif;
+  --s2-font-family: 'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif;
   --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
 
   /* se etc conveniences */
@@ -301,9 +319,9 @@
   color-scheme: light dark;
 }
 
-@media (width >= 1440px) {
+@media (width >= 1800px) {
   :root {
-    --se-grid-container-width: 1200px;
+    --se-grid-container-width: 1500px;
   }
 }
 
@@ -333,7 +351,7 @@ div[data-status],
       margin: 0;
       background-color: var(--se-body-background-color);
       color: var(--se-body-color);
-      font-family: 'Adobe Clean', sans-serif;
+      font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
 
