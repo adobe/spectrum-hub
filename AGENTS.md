@@ -29,7 +29,7 @@ When a task matches one of the following, read and apply the corresponding rule 
 | ---- | --------- |
 | Writing or editing `.md` files | [`.ai/rules/write-documentation.md`](./.ai/rules/write-documentation.md) |
 | Drafting a PR description | [`.ai/rules/pr-descriptions.md`](./.ai/rules/pr-descriptions.md) |
-| Drafting a Jira ticket or GitHub issue | [`.ai/rules/issue-ticket.md`](./.ai/rules/issue-ticket.md) |
+| Drafting a Jira ticket or GitHub issue | [`.ai/rules/write-issue-ticket.md`](./.ai/rules/write-issue-ticket.md) |
 
 ## IDE-specific folders
 
