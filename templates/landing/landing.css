@@ -1,0 +1,16 @@
+@media (width >= 900px) {
+  .landing-template {
+    .template-wrapper {
+      display: grid;
+      grid-template-columns: 0.2fr 0.8fr;
+      width: var(--se-grid-container-width);
+      margin: 0 auto;
+
+      .section {
+        > .default-content {
+          max-width: 100%;
+        }
+      }
+    }
+  }
+}
