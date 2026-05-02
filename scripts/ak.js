@@ -1,4 +1,4 @@
-/*
+s/*
  * Copyright 2026 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
@@ -292,6 +292,8 @@ function decorateDoc() {
 async function loadSession() {
   sessionStorage.setItem('session', true);
   document.body.classList.add('session');
+  const header = document.querySelector('header');
+  if (header) await loadBlock(header);
 }
 
 export async function loadArea({ area } = { area: document }) {
@@ -302,18 +304,14 @@ export async function loadArea({ area } = { area: document }) {
   const { decorateArea } = getConfig();
   if (decorateArea) decorateArea({ area });
   const sections = decorateSections(area, isDoc);
-  if (isDoc && isSession) await loadSession();
+  if (isDoc && isSession) loadSession();
   for (const [idx, section] of sections.entries()) {
     loadIcons(section);
     await Promise.all(section.linkBlocks.map((block) => loadBlock(block)));
     await Promise.all(section.blocks.map((block) => loadBlock(block)));
     delete section.dataset.status;
     if (isDoc && idx === 0) {
-      if (!isSession) await loadSession();
-      const header = document.querySelector('header');
-      if (header) {
-        await loadBlock(header);
-      }
+      if (!isSession) loadSession();
     }
   }
   if (isDoc) import('./lazy.js');
