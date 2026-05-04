@@ -111,7 +111,7 @@ function parseProps(block) {
       const [, name, optional, type] = propMatch;
       const { description, default: defaultVal } = parseJSDoc(jsdocLines.join('\n'));
 
-      const prop = { property: name, type: type.trim() };
+      const prop = { property: name, type: type.trim().replace(/,$/, '') };
       if (optional !== '?') prop.required = true;
       if (defaultVal) prop.default = defaultVal;
       if (description) prop.description = description;
