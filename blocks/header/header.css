@@ -2,6 +2,18 @@ header {
   position: relative;
   visibility: unset;
 
+  .skip-link:focus-visible {
+    clip-path: unset;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    white-space: normal;
+    position: static;
+    padding: var(--s2-spacing-100) var(--s2-spacing-200);
+    outline: 2px solid var(--s2-blue-900);
+    outline-offset: 2px;
+  }
+
   p {
     margin: 0;
   }

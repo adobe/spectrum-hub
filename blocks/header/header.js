@@ -12,6 +12,15 @@ const HAMBURGER_MENU_ICON = `
     <path d="m16.25,9H3.75c-.41406,0-.75.33594-.75.75s.33594.75.75.75h12.5c.41406,0,.75-.33594.75-.75s-.33594-.75-.75-.75Z"/>
   </svg>`;
 
+function createSkipLink() {
+  const skipLink = document.createElement('a');
+  skipLink.classList.add('skip-link');
+  skipLink.classList.add('visually-hidden');
+  skipLink.href = '#main-content';
+  skipLink.innerText = 'Skip to main content';
+  return skipLink;
+}
+
 async function decorateBrandSection(section) {
   section.classList.add('brand-section');
   const link = section.querySelector('a');
@@ -124,4 +133,7 @@ export default async function init(el) {
   fragment.classList.add('header-content');
   await decorateHeader(fragment);
   el.append(fragment);
+
+  const skipLink = createSkipLink();
+  el.prepend(skipLink);
 }
