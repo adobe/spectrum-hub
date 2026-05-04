@@ -93,6 +93,68 @@ const buildDataTable = async (href) => {
   return buildTableElement(headerCells, dataCells);
 };
 
+const initRowNavigation = (table) => {
+  const getRows = () => [...table.querySelectorAll('tbody tr')];
+  const rows = getRows();
+  if (!rows.length) return;
+
+  let active = rows[0];
+  let groupFocused = false;
+
+  rows[0].tabIndex = 0;
+  rows.slice(1).forEach((r) => { r.tabIndex = -1; });
+
+  const moveTo = (row) => {
+    active.tabIndex = -1;
+    active = row;
+    row.tabIndex = 0;
+    row.focus();
+  };
+
+  table.addEventListener('keydown', (e) => {
+    if (!e.target.closest('tbody tr')) return;
+    const rows = getRows();
+    const rowIndex = rows.indexOf(active);
+
+    let target;
+    switch (e.key) {
+      case 'ArrowDown': target = rows[rowIndex + 1]; break;
+      case 'ArrowUp': target = rows[rowIndex - 1]; break;
+      case 'Home': if (e.ctrlKey) target = rows[0]; break;
+      case 'End': if (e.ctrlKey) target = rows[rows.length - 1]; break;
+      default: return;
+    }
+
+    if (target) {
+      e.preventDefault();
+      moveTo(target);
+    }
+  });
+
+  // While the group has focus, all rows drop to -1 so Tab exits cleanly.
+  // Restore on the way out (borrowed from SWC 1st-gen RovingTabindexController).
+  table.addEventListener('focusin', (e) => {
+    const row = e.target.closest('tbody tr');
+    if (!row) return;
+    if (!groupFocused) {
+      groupFocused = true;
+      rows.forEach((r) => { r.tabIndex = -1; });
+    }
+    if (row !== active) {
+      active.tabIndex = -1;
+      active = row;
+    }
+    active.tabIndex = 0;
+  });
+
+  table.addEventListener('focusout', (e) => {
+    if (!table.contains(e.relatedTarget)) {
+      groupFocused = false;
+      active.tabIndex = 0;
+    }
+  });
+};
+
 export default async function init(el) {
   const dataHref = el.querySelector('a[href$=".json"]')?.href;
 
@@ -105,16 +167,18 @@ export default async function init(el) {
   }
 
   const table = el.querySelector('table');
-  const h1 = document.querySelector('h1');
+  if (!table) return;
 
   // finds the appropriate section heading in DA, and creates the table's accessible name
   // for users who navigate via table landmarks
+  const h1 = document.querySelector('h1');
   const sectionHeading = el.closest('.section')?.querySelector('h2, h3, h4, h5, h6');
   const labelIds = [h1, sectionHeading].flatMap((heading) => {
     if (!heading) return [];
     if (!heading.id) heading.id = `table-heading-${Math.random().toString(36).slice(2)}`;
     return heading.id;
   });
-  if (table && labelIds.length) table.setAttribute('aria-labelledby', labelIds.join(' '));
-  el.tabIndex = 0;
+  if (labelIds.length) table.setAttribute('aria-labelledby', labelIds.join(' '));
+
+  initRowNavigation(table);
 }
