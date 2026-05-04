@@ -1,0 +1,365 @@
+[
+  {
+    "property": "variant",
+    "type": "'accent' | 'primary' | 'secondary' | 'negative' | LegacyButtonVariant",
+    "required": true,
+    "description": "The [visual style](https://spectrum.adobe.com/page/button/#Options) of the button."
+  },
+  {
+    "property": "style",
+    "type": "'fill' | 'outline'",
+    "description": "The background style of the button."
+  },
+  {
+    "property": "staticColor",
+    "type": "'white' | 'black'",
+    "description": "The static color style to apply. Useful when the button appears over a color background."
+  },
+  {
+    "property": "isPending",
+    "type": "boolean",
+    "description": "Whether to disable events immediately and display a loading spinner after a 1 second delay."
+  },
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the button should be displayed with a quiet style."
+  },
+  {
+    "property": "'aria-disabled'",
+    "type": "boolean | 'true' | 'false'",
+    "description": "Indicates whether the element is disabled to users of assistive technology.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "'aria-expanded'",
+    "type": "boolean | 'true' | 'false'",
+    "description": "Indicates whether the element, or another grouping element it controls, is currently expanded or collapsed.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "'aria-haspopup'",
+    "type": "boolean | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | 'true' | 'false'",
+    "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "'aria-controls'",
+    "type": "string",
+    "description": "Identifies the element (or elements) whose contents or presence are controlled by the current element.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "'aria-pressed'",
+    "type": "boolean | 'true' | 'false' | 'mixed'",
+    "description": "Indicates the current \"pressed\" state of toggle buttons.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "'aria-current'",
+    "type": "boolean | 'true' | 'false' | 'page' | 'step' | 'location' | 'date' | 'time'",
+    "description": "Indicates whether this element represents the current item within a container or set of related elements.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "type",
+    "type": "'button' | 'submit' | 'reset'",
+    "default": "'button'",
+    "description": "The behavior of the button when used in an HTML form.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "preventFocusOnPress",
+    "type": "boolean",
+    "description": "Whether to prevent focus from moving to the button when pressing it. Caution, this can make the button inaccessible and should only be used when alternative keyboard interaction is provided, such as ComboBox's MenuTrigger or a NumberField's increment/decrement control.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "form",
+    "type": "string",
+    "description": "The `<form>` element to associate the button with. The value of this attribute must be the id of a `<form>` in the same document. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#form).",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "formAction",
+    "type": "ButtonHTMLAttributes<HTMLButtonElement>['formAction']",
+    "description": "The URL that processes the information submitted by the button. Overrides the action attribute of the button's form owner.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "formEncType",
+    "type": "string",
+    "description": "Indicates how to encode the form data that is submitted.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "formMethod",
+    "type": "string",
+    "description": "Indicates the HTTP method used to submit the form.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "formNoValidate",
+    "type": "boolean",
+    "description": "Indicates that the form is not to be validated when it is submitted.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "formTarget",
+    "type": "string",
+    "description": "Overrides the target attribute of the button's form owner.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "name",
+    "type": "string",
+    "description": "Submitted as a pair with the button's value as part of the form data.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "value",
+    "type": "string",
+    "description": "The value associated with the button's name when it's submitted with the form data.",
+    "inheritedFrom": "AriaBaseButtonProps"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether the button is disabled.",
+    "inheritedFrom": "ButtonProps"
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "description": "The content to display in the button.",
+    "inheritedFrom": "ButtonProps"
+  },
+  {
+    "property": "UNSAFE_className",
+    "type": "string",
+    "description": "Sets the CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. Only use as a **last resort**. Use style props instead.",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "UNSAFE_style",
+    "type": "CSSProperties",
+    "description": "Sets inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. Only use as a **last resort**. Use style props instead.",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "margin",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for all four sides of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "marginStart",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for the logical start side of the element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-start).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "marginEnd",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for the logical end side of an element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-end).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "marginTop",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for the top side of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-top).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "marginBottom",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for the bottom side of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-bottom).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "marginX",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for both the left and right sides of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "marginY",
+    "type": "Responsive<DimensionValue>",
+    "description": "The margin for both the top and bottom sides of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "width",
+    "type": "Responsive<DimensionValue>",
+    "description": "The width of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/width).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "height",
+    "type": "Responsive<DimensionValue>",
+    "description": "The height of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/height).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "minWidth",
+    "type": "Responsive<DimensionValue>",
+    "description": "The minimum width of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/min-width).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "minHeight",
+    "type": "Responsive<DimensionValue>",
+    "description": "The minimum height of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/min-height).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "maxWidth",
+    "type": "Responsive<DimensionValue>",
+    "description": "The maximum width of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/max-width).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "maxHeight",
+    "type": "Responsive<DimensionValue>",
+    "description": "The maximum height of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/max-height).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "flex",
+    "type": "Responsive<string | number | boolean>",
+    "description": "When used in a flex layout, specifies how the element will grow or shrink to fit the space available. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "flexGrow",
+    "type": "Responsive<number>",
+    "description": "When used in a flex layout, specifies how the element will grow to fit the space available. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-grow).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "flexShrink",
+    "type": "Responsive<number>",
+    "description": "When used in a flex layout, specifies how the element will shrink to fit the space available. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-shrink).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "flexBasis",
+    "type": "Responsive<number | string>",
+    "description": "When used in a flex layout, specifies the initial main size of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "justifySelf",
+    "type": "Responsive<'auto' | 'normal' | 'start' | 'end' | 'flex-start' | 'flex-end' | 'self-start' | 'self-end' | 'center' | 'left' | 'right' | 'stretch'>, // ...",
+    "description": "Specifies how the element is justified inside a flex or grid container. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "alignSelf",
+    "type": "Responsive<'auto' | 'normal' | 'start' | 'end' | 'center' | 'flex-start' | 'flex-end' | 'self-start' | 'self-end' | 'stretch'>",
+    "description": "Overrides the `alignItems` property of a flex or grid container. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "order",
+    "type": "Responsive<number>",
+    "description": "The layout order for the element within a flex or grid container. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/order).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridArea",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the named grid area that the element should be placed in within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-area).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridColumn",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the column the element should be placed in within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridRow",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the row the element should be placed in within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridColumnStart",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the starting column to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-start).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridColumnEnd",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the ending column to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-end).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridRowStart",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the starting row to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "gridRowEnd",
+    "type": "Responsive<string>",
+    "description": "When used in a grid layout, specifies the ending row to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-end).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "position",
+    "type": "Responsive<'static' | 'relative' | 'absolute' | 'fixed' | 'sticky'>",
+    "description": "Specifies how the element is positioned. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/position).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "zIndex",
+    "type": "Responsive<number>",
+    "description": "The stacking order for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/z-index).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "top",
+    "type": "Responsive<DimensionValue>",
+    "description": "The top position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/top).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "bottom",
+    "type": "Responsive<DimensionValue>",
+    "description": "The bottom position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "start",
+    "type": "Responsive<DimensionValue>",
+    "description": "The logical start position for the element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline-start).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "end",
+    "type": "Responsive<DimensionValue>",
+    "description": "The logical end position for the element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline-end).",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "left",
+    "type": "Responsive<DimensionValue>",
+    "description": "The left position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/left). Consider using `start` instead for RTL support.",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "right",
+    "type": "Responsive<DimensionValue>",
+    "description": "The right position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/right). Consider using `start` instead for RTL support.",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "isHidden",
+    "type": "Responsive<boolean>",
+    "description": "Hides the element.",
+    "inheritedFrom": "StyleProps"
+  }
+]

@@ -9,7 +9,14 @@ const PROPS_TO_LABELS = {
   default: 'Default value',
   description: 'Description',
   inheritedFrom: 'Inherited from',
+  required: 'Required',
 };
+
+const PROP_ORDER = Object.keys(PROPS_TO_LABELS);
+
+// Base types whose props apply to every RSP component (layout, spacing, etc.) — not useful
+// in a component-specific API table.
+const EXCLUDED_SOURCES = new Set(['StyleProps']);
 
 const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');
@@ -73,8 +80,14 @@ const buildDataTable = async (href) => {
 
   if (!json.length) return null;
 
-  // gather all the available properties for dev table
-  const properties = [...new Set(json.flatMap(Object.keys))];
+  const rows = json.filter((prop) => !EXCLUDED_SOURCES.has(prop.inheritedFrom));
+
+  // gather all the available properties for dev table, in canonical column order
+  const allKeys = [...new Set(rows.flatMap(Object.keys))];
+  const properties = [
+    ...PROP_ORDER.filter((k) => allKeys.includes(k)),
+    ...allKeys.filter((k) => !PROP_ORDER.includes(k)),
+  ];
 
   const headerCells = properties.map((key) => {
     const columnHeaders = document.createElement('th');
@@ -84,7 +97,7 @@ const buildDataTable = async (href) => {
   });
 
   // Create data rows
-  const dataCells = json.map((props) => properties.map((key) => {
+  const dataCells = rows.map((props) => properties.map((key) => {
     const tableCell = document.createElement('td');
     tableCell.textContent = props[key] || '-';
     return tableCell;

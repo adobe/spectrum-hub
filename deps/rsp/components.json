@@ -1,0 +1,11 @@
+{
+  "Button": {
+    "category": "button",
+    "interface": "SpectrumButtonProps",
+    "extends": ["AriaBaseButtonProps", "ButtonProps", "StyleProps"]
+  },
+  "ActionButton": {
+    "category": "button",
+    "interface": "SpectrumActionButtonProps"
+  }
+}
