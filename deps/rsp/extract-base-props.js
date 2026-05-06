@@ -203,8 +203,10 @@ async function main() {
     }
   }));
 
-  writeFileSync(OUTPUT_FILE, JSON.stringify(result, null, 2) + '\n');
-  console.log(`Done. Wrote ${Object.keys(result).length} base type(s) to rsp-base-props.json`);
+  // Sort keys so output is deterministic across runs — unpkg ?meta returns files in non-deterministic order.
+  const sorted = Object.fromEntries(Object.entries(result).sort(([a], [b]) => a.localeCompare(b)));
+  writeFileSync(OUTPUT_FILE, JSON.stringify(sorted, null, 2) + '\n');
+  console.log(`Done. Wrote ${Object.keys(sorted).length} base type(s) to rsp-base-props.json`);
 }
 
 main().catch((err) => {
