@@ -8,6 +8,7 @@ export default async function init() {
 
   const sitenav = document.createElement('nav');
   sitenav.className = 'sitenav';
+  sitenav.setAttribute('aria-label', 'Second-level site navigation');
   await loadBlock(sitenav);
 
   main.replaceWith(wrapper);
