@@ -1,0 +1,17 @@
+@media (width >= 900px) {
+  .detail-template {
+    .template-wrapper {
+      display: grid;
+      grid-template-columns: 0.2fr 0.6fr 0.2fr;
+      gap: var(--s2-spacing-1000);
+      inline-size: var(--se-grid-container-width);
+      margin: 0 auto;
+
+      .section {
+        > .default-content {
+          max-inline-size: 100%;
+        }
+      }
+    }
+  }
+}
