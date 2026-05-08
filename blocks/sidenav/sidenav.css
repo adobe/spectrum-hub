@@ -1,0 +1,83 @@
+.sidenav {
+  position: sticky;
+  top: var(--sidenav-top-offset, var(--sh-nav-height, 0));
+  align-self: start;
+  max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+  overflow-y: auto;
+  font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
+  font-size: var(--s2-component-m-medium-font-size);
+  line-height: 1.4;
+  color: var(--se-body-color, #000);
+  padding: 12px 8px;
+}
+
+.sidenav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidenav-list > li + li {
+  margin-block-start: var(--s2-spacing-300);
+}
+
+.sidenav a,
+.sidenav-segment-label {
+  display: flex;
+  align-items: center;
+  gap: var(--s2-spacing-100);
+  padding: var(--s2-spacing-100) var(--s2-spacing-300);
+  border-radius: var(--s2-corner-radius-500);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sidenav a:hover,
+.sidenav-segment-label:hover {
+  background-color: rgb(0 0 0 / 4%);
+}
+
+.sidenav a:focus-visible,
+.sidenav-segment-label:focus-visible {
+  outline: 2px solid var(--s2-blue-900);
+  outline-offset: var(--s2-spacing-50);
+}
+
+.sidenav a[aria-current="page"] {
+  background-color: rgb(0 0 0 / 8%);
+  font-weight: var(--s2-component-m-bold-font-weight);
+}
+
+.sidenav details > summary {
+  list-style: none;
+}
+
+.sidenav-segment-label::before {
+  content: "";
+  flex: 0 0 auto;
+  inline-size: 10px;
+  block-size: 10px;
+  
+  /* replace with spectrum chevron */
+  border-inline-end: 1.5px solid currentcolor;
+  border-block-end: 1.5px solid currentcolor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.sidenav details[open] > .sidenav-segment-label::before {
+  transform: rotate(45deg);
+}
+
+/* Align child links under the parent label (chevron-width + gap). */
+.sidenav details > ul {
+  padding-inline-start: var(--s2-spacing-300);
+  padding-block-start: var(--s2-spacing-100);
+}
+
+/* Leaf links inside a segment sit flush with the parent label text. */
+.sidenav details > ul > li > a {
+  padding-inline-start: var(--s2-spacing-200);
+}
