@@ -12,6 +12,6 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
-    "wrangler": "^4.40.0"
+    "wrangler": "^4.90.0"
   }
 }
