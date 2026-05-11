@@ -13,6 +13,14 @@ Spectrum Hub is built on AEM Edge Delivery Services. Getting started takes a mat
 1. Open the cloned folder in your favorite code editor and build something amazing.
 1. **Recommended:** Install common npm packages like linting and testing: `npm i`.
 
+### Testing
+Unit and DOM-fixture tests run in [Web Test Runner](https://modern-web.dev/docs/test-runner/overview/) against a real browser.
+
+- `npm test` — run the full suite once.
+- `npm run test:watch` — re-run on file changes.
+
+`npx playwright install` is **not** needed for these tests. Playwright is planned for a separate page-level and accessibility suite (tracked in the testing plan); its setup will be documented when it lands.
+
 ## Noteworthy details
 This project pulls together the very best across the world of Spectrum developer tooling:
 
