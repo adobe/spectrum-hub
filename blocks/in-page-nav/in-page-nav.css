@@ -1,0 +1,44 @@
+.in-page-nav {
+  position: sticky;
+  inset-block-start: var(--in-page-nav-top-offset, var(--sh-nav-height, 0));
+  align-self: start;
+  max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+  overflow-block: auto;
+  font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
+  font-size: var(--s2-component-m-medium-font-size);
+  line-height: 1.4;
+  color: var(--se-body-color, #000);
+  padding-block: var(--s2-spacing-200);
+}
+
+.in-page-nav-label {
+  margin-block-end: var(--s2-spacing-100);
+  padding-inline: var(--s2-spacing-200);
+  font-size: var(--s2-component-s-bold-font-size);
+  font-weight: var(--s2-component-s-bold-font-weight);
+  text-transform: uppercase;
+  color: rgb(0 0 0 / 60%);
+}
+
+.in-page-nav nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.in-page-nav nav li + li {
+  margin-block-start: var(--s2-spacing-50);
+}
+
+.in-page-nav nav a {
+  display: block;
+  padding-block: var(--s2-spacing-100);
+  padding-inline: var(--s2-spacing-200);
+  border-radius: var(--s2-corner-radius-300);
+  color: inherit;
+  text-decoration: none;
+}
+
+.in-page-nav nav a:hover {
+  background-color: rgb(0 0 0 / 4%);
+}
