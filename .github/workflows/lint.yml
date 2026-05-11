@@ -30,6 +30,12 @@ jobs:
       - name: Run ESLint
         run: npx eslint .
 
+      # Stylelint 17 removed the built-in --formatter=github (see stylelint/stylelint#7447).
+      # Unix formatter lines match .github/matchers/stylelint-unix.json for PR annotations.
+      - name: Register Stylelint problem matcher
+        if: always()
+        run: echo "::add-matcher::.github/matchers/stylelint-unix.json"
+
       - name: Run Stylelint
         if: always()
-        run: npx stylelint "blocks/**/*.css" "styles/*.css" --formatter=github
+        run: npx stylelint "blocks/**/*.css" "styles/*.css" --formatter=unix
