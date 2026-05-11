@@ -56,19 +56,15 @@
 
 .sidenav-segment-label::before {
   content: "";
+  background-image: url('../../img/icons/s2-chevron-right.svg');
   flex: 0 0 auto;
-  inline-size: 10px;
-  block-size: 10px;
-  
-  /* replace with spectrum chevron */
-  border-inline-end: 1.5px solid currentcolor;
-  border-block-end: 1.5px solid currentcolor;
-  transform: rotate(-45deg);
+  inline-size: 20px;
+  block-size: 20px;
   transition: transform 0.15s ease;
 }
 
 .sidenav details[open] > .sidenav-segment-label::before {
-  transform: rotate(45deg);
+  transform: rotate(90deg);
 }
 
 /* Align child links under the parent label (chevron-width + gap). */
