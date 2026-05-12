@@ -1,3 +1,5 @@
+/* Follows Disclosure Navigation Menu APG: https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/ */
+
 import { getConfig } from '../../scripts/ak.js';
 import { loadFragment } from '../fragment/fragment.js';
 
@@ -178,7 +180,15 @@ function renderNode(node, currentPath) {
     if (node.path) {
       li.append(createNavLink(node.path, node.label, currentPath));
     } else {
-      li.textContent = node.label;
+      // Non-link leaf: render as a section label rather than an unannotated
+      // list item. role="presentation" removes the <li> from the screen
+      // reader's list of items (it's not a link/segment alongside its
+      // siblings); the .sidenav-group-label class is the visual hook.
+      li.setAttribute('role', 'presentation');
+      const heading = document.createElement('span');
+      heading.classList.add('sidenav-group-label');
+      heading.textContent = node.label;
+      li.append(heading);
     }
     return { el: li, hasActive: currentPath === node.path };
   }
@@ -187,16 +197,16 @@ function renderNode(node, currentPath) {
   const details = document.createElement('details');
   const summary = document.createElement('summary');
   summary.classList.add('sidenav-segment-label');
+  // TODO: VoiceOver announces a <summary> twice on navigation: once via
+  // its computed accessible name (e.g. "Core systems, summary, collapsed")
+  // and once via the descendant text node. Could be silenced with
+  // aria-label + aria-hidden. Tradeoff is to duplicate the label string across an
+  // attribute and the DOM.
   summary.textContent = node.label;
   details.append(summary);
 
   const ul = document.createElement('ul');
   let hasActive = currentPath === node.path;
-  if (node.path) {
-    const indexLi = document.createElement('li');
-    indexLi.append(createNavLink(node.path, node.label, currentPath));
-    ul.append(indexLi);
-  }
   node.children.forEach((child) => {
     const { el: childEl, hasActive: childHasActive } = renderNode(child, currentPath);
     ul.append(childEl);
@@ -216,25 +226,76 @@ function renderNode(node, currentPath) {
   return { el: li, hasActive };
 }
 
-export default async function init(el) {
+// Builds the rendered <ul> for the current section without attaching it to the
+// page. Kept separate from `init` so the upcoming unified mobile-drawer work
+// can call this directly and lift the list into a shared drawer instead of
+// rebuilding the tree logic there.
+async function buildSidenavList() {
   const topSection = getTopSection();
   if (!topSection) {
-    return;
+    return null;
   }
 
   // Prefer the authored nav doc; fall back to the query-index only if it's missing.
   const tree = (await treeFromFragment(topSection)) || (await treeFromIndex(topSection));
   if (!tree || !tree.length) {
-    return;
+    return null;
   }
 
   const rootList = document.createElement('ul');
   rootList.classList.add('sidenav-list');
   const here = window.location.pathname;
   tree.forEach((node) => rootList.append(renderNode(node, here).el));
-  el.append(rootList);
+  return rootList;
+}
 
-  // Scroll the active link into view inside the nav rail so users landing on
-  // a deep page don't have to hunt for their position in a long list.
-  el.querySelector('a[aria-current="page"]')?.scrollIntoView({ block: 'nearest' });
+export default async function init(el) {
+  // Render the disclosure skeleton synchronously so the surrounding template
+  // grid can paint immediately. The section nav tree is fetched and swapped
+  // in below without blocking first paint — keeps both the FCP/LCP win and
+  // the CLS=0 footprint, since the disclosure summary occupies its final
+  // size from the start.
+  const disclosure = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.classList.add('sidenav-segment-label', 'sidenav-disclosure');
+  const sectionName = window.location.pathname.split('/')[1];
+  summary.textContent = `${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} navigation`;
+  const placeholder = document.createElement('ul');
+  placeholder.classList.add('sidenav-list');
+  disclosure.append(summary, placeholder);
+  el.append(disclosure);
+
+  // Default to closed on narrow widths so the section nav stays out of the
+  // way until the visitor opens it; force open above 900px where the summary
+  // is hidden and the rail renders inline. Setting `open` on every viewport
+  // change (rather than only on the desktop branch) also resets the state if
+  // someone resizes from desktop down to mobile.
+  const desktopMql = window.matchMedia('(width >= 900px)');
+  const syncDisclosure = () => {
+    disclosure.open = desktopMql.matches;
+  };
+  syncDisclosure();
+  desktopMql.addEventListener('change', syncDisclosure);
+
+  // Fetch the tree in the background and swap the placeholder once ready. If
+  // the fetch fails or returns nothing, drop the disclosure so the page
+  // doesn't show an empty "Section navigation" button.
+  buildSidenavList()
+    .then((rootList) => {
+      if (!rootList) {
+        disclosure.remove();
+        return;
+      }
+      placeholder.replaceWith(rootList);
+      // Scroll the active link into view inside the nav rail so users landing
+      // on a deep page don't have to hunt for their position. Only meaningful
+      // when the disclosure is open (desktop); on mobile the visitor expands
+      // it themselves.
+      if (disclosure.open) {
+        el.querySelector('a[aria-current="page"]')?.scrollIntoView({ block: 'nearest' });
+      }
+    })
+    .catch(() => {
+      disclosure.remove();
+    });
 }
