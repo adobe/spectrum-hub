@@ -3,7 +3,7 @@
     .template-wrapper {
       display: grid;
       grid-template-columns: 0.2fr 0.6fr 0.2fr;
-      grid-template-areas: 'sitenav main anchornav';
+      grid-template-areas: 'sitenav main pagenav';
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
@@ -12,8 +12,8 @@
         grid-area: sitenav;
       }
 
-      .in-page-nav {
-        grid-area: anchornav;
+      .page-nav {
+        grid-area: pagenav;
       }
 
       .section {

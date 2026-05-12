@@ -10,12 +10,12 @@ export default async function init() {
   sitenav.className = 'sitenav';
   sitenav.setAttribute('aria-label', 'Second-level site navigation');
 
-  const inPageNav = document.createElement('nav');
-  inPageNav.className = 'in-page-nav';
-  inPageNav.setAttribute('aria-label', 'On this page');
+  const pageNav = document.createElement('nav');
+  pageNav.className = 'page-nav';
+  pageNav.setAttribute('aria-label', 'On this page');
 
-  await Promise.all([loadBlock(sitenav), loadBlock(inPageNav)]);
+  await Promise.all([loadBlock(sitenav), loadBlock(pageNav)]);
 
   main.replaceWith(wrapper);
-  wrapper.append(sitenav, inPageNav, main);
+  wrapper.append(sitenav, pageNav, main);
 }
