@@ -30,7 +30,7 @@
   max-block-size: calc(100vh - var(--sh-nav-height, 0px));
   overflow-y: auto;
   background-color: var(--se-body-background-color);
-  z-index: 10;
+  z-index: 1;
 
   @media (width >= 900px) {
     position: static;
