@@ -5,14 +5,14 @@ import { loadFragment } from '../fragment/fragment.js';
 
 const { locale } = getConfig();
 
-// sidenav data sources, in priority order:
+// sitenav data sources, in priority order:
 //   1. Happy path — an author-maintained nav fragment at `/fragments/nav/{topSection}`
 //      (e.g. `/fragments/nav/foundations`). Authors control labels, order, and
 //      structure by editing a nested bulleted list in AEM. Matches the convention
 //      used by the site header (`/fragments/nav/header`) and footer
 //      (`/fragments/nav/footer`). This is the canonical source of truth.
 //   2. Fallback — `/query-index.json` + the SEGMENT_ORDER map below. Used only when
-//      the nav fragment is missing or empty so the sidenav never disappears during
+//      the nav fragment is missing or empty so the sitenav never disappears during
 //      the migration period before nav docs are published. Once every section has a
 //      nav doc, the fallback (and SEGMENT_ORDER) can be deleted.
 
@@ -183,20 +183,20 @@ function renderNode(node, currentPath) {
       // Non-link leaf: render as a section label rather than an unannotated
       // list item. role="presentation" removes the <li> from the screen
       // reader's list of items (it's not a link/segment alongside its
-      // siblings); the .sidenav-group-label class is the visual hook.
+      // siblings); the .sitenav-group-label class is the visual hook.
       li.setAttribute('role', 'presentation');
       const heading = document.createElement('span');
-      heading.classList.add('sidenav-group-label');
+      heading.classList.add('sitenav-group-label');
       heading.textContent = node.label;
       li.append(heading);
     }
     return { el: li, hasActive: currentPath === node.path };
   }
 
-  li.classList.add('sidenav-segment');
+  li.classList.add('sitenav-segment');
   const details = document.createElement('details');
   const summary = document.createElement('summary');
-  summary.classList.add('sidenav-segment-label');
+  summary.classList.add('sitenav-segment-label');
   // TODO: VoiceOver announces a <summary> twice on navigation: once via
   // its computed accessible name (e.g. "Core systems, summary, collapsed")
   // and once via the descendant text node. Could be silenced with
@@ -230,7 +230,7 @@ function renderNode(node, currentPath) {
 // page. Kept separate from `init` so the upcoming unified mobile-drawer work
 // can call this directly and lift the list into a shared drawer instead of
 // rebuilding the tree logic there.
-async function buildSidenavList() {
+async function buildsitenavList() {
   const topSection = getTopSection();
   if (!topSection) {
     return null;
@@ -243,7 +243,7 @@ async function buildSidenavList() {
   }
 
   const rootList = document.createElement('ul');
-  rootList.classList.add('sidenav-list');
+  rootList.classList.add('sitenav-list');
   const here = window.location.pathname;
   tree.forEach((node) => rootList.append(renderNode(node, here).el));
   return rootList;
@@ -257,11 +257,11 @@ export default async function init(el) {
   // size from the start.
   const disclosure = document.createElement('details');
   const summary = document.createElement('summary');
-  summary.classList.add('sidenav-segment-label', 'sidenav-disclosure');
+  summary.classList.add('sitenav-segment-label', 'sitenav-disclosure');
   const sectionName = window.location.pathname.split('/')[1];
   summary.textContent = `${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} navigation`;
   const placeholder = document.createElement('ul');
-  placeholder.classList.add('sidenav-list');
+  placeholder.classList.add('sitenav-list');
   disclosure.append(summary, placeholder);
   el.append(disclosure);
 
@@ -280,7 +280,7 @@ export default async function init(el) {
   // Fetch the tree in the background and swap the placeholder once ready. If
   // the fetch fails or returns nothing, drop the disclosure so the page
   // doesn't show an empty "Section navigation" button.
-  buildSidenavList()
+  buildsitenavList()
     .then((rootList) => {
       if (!rootList) {
         disclosure.remove();
