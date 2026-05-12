@@ -1,20 +1,8 @@
 /* Follows Disclosure Navigation Menu APG: https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/ */
 
 import { getConfig } from '../../scripts/ak.js';
-import { loadFragment } from '../fragment/fragment.js';
 
 const { locale } = getConfig();
-
-// sitenav data sources, in priority order:
-//   1. Happy path — an author-maintained nav fragment at `/fragments/nav/{topSection}`
-//      (e.g. `/fragments/nav/foundations`). Authors control labels, order, and
-//      structure by editing a nested bulleted list in AEM. Matches the convention
-//      used by the site header (`/fragments/nav/header`) and footer
-//      (`/fragments/nav/footer`). This is the canonical source of truth.
-//   2. Fallback — `/query-index.json` + the SEGMENT_ORDER map below. Used only when
-//      the nav fragment is missing or empty so the sitenav never disappears during
-//      the migration period before nav docs are published. Once every section has a
-//      nav doc, the fallback (and SEGMENT_ORDER) can be deleted.
 
 const SEGMENT_ORDER = {
   foundations: [
@@ -56,52 +44,7 @@ function formatLabel(key) {
   return key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
 }
 
-// --- Happy path: tree from the AEM-authored nav fragment ---
-
-function getDirectContent(li) {
-  const clone = li.cloneNode(true);
-  clone.querySelectorAll('ul, ol').forEach((n) => n.remove());
-  const anchor = clone.querySelector('a');
-  return {
-    path: anchor ? anchor.getAttribute('href') : null,
-    label: (anchor ? anchor.textContent : clone.textContent).trim(),
-  };
-}
-
-function nodeFromLi(li) {
-  const { path, label } = getDirectContent(li);
-  const nestedList = [...li.children].find((c) => c.tagName === 'UL' || c.tagName === 'OL');
-  const children = [];
-  if (nestedList) {
-    [...nestedList.children].forEach((childLi) => {
-      if (childLi.tagName === 'LI') {
-        children.push(nodeFromLi(childLi));
-      }
-    });
-  }
-  return { path, label, children };
-}
-
-async function treeFromFragment(topSection) {
-  const { fragment } = await loadFragment(`${locale.prefix}/fragments/nav/${topSection}`);
-  if (!fragment) {
-    return null;
-  }
-  const sourceList = fragment.querySelector('ul, ol');
-  if (!sourceList) {
-    return null;
-  }
-  const nodes = [];
-  [...sourceList.children].forEach((li) => {
-    if (li.tagName === 'LI') {
-      nodes.push(nodeFromLi(li));
-    }
-  });
-  return nodes.length ? nodes : null;
-}
-
-// --- Fallback: tree derived from query-index.json + SEGMENT_ORDER ---
-
+// tree derived from query-index.json + SEGMENT_ORDER
 function buildPathTree(pages, topSection) {
   const root = { children: new Map() };
   pages.forEach(({ path, title }) => {
@@ -230,14 +173,13 @@ function renderNode(node, currentPath) {
 // page. Kept separate from `init` so the upcoming unified mobile-drawer work
 // can call this directly and lift the list into a shared drawer instead of
 // rebuilding the tree logic there.
-async function buildsitenavList() {
+async function buildSitenavList() {
   const topSection = getTopSection();
   if (!topSection) {
     return null;
   }
 
-  // Prefer the authored nav doc; fall back to the query-index only if it's missing.
-  const tree = (await treeFromFragment(topSection)) || (await treeFromIndex(topSection));
+  const tree = await treeFromIndex(topSection);
   if (!tree || !tree.length) {
     return null;
   }
@@ -280,7 +222,7 @@ export default async function init(el) {
   // Fetch the tree in the background and swap the placeholder once ready. If
   // the fetch fails or returns nothing, drop the disclosure so the page
   // doesn't show an empty "Section navigation" button.
-  buildsitenavList()
+  buildSitenavList()
     .then((rootList) => {
       if (!rootList) {
         disclosure.remove();
