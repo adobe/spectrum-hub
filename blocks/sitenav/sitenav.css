@@ -8,6 +8,7 @@
   line-height: 1.4;
   color: var(--se-body-color, #000);
   padding: var(--s2-spacing-200) var(--s2-spacing-100);
+  background-color: var(--se-body-background-color);
 
   @media (width >= 900px) {
     max-block-size: calc(100vh - var(--sh-nav-height, 0px));
@@ -80,6 +81,7 @@
 
 .sitenav details > summary {
   list-style: none;
+  background-color: var(--se-body-background-color);
 }
 
 .sitenav-segment-label::before {
