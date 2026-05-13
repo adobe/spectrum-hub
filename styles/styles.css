@@ -347,6 +347,8 @@ div[data-status],
 /* --- Spectrum Edge default styles --- */
 @layer spectrum-edge {
   html.spectrum-edge {
+    scroll-behavior: smooth;
+
     body {
       display: grid;
       grid-template-rows: auto 1fr auto;
@@ -451,6 +453,10 @@ div[data-status],
 
     .dark-scheme {
       color-scheme: dark;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      scroll-behavior: auto;
     }
   }
 }
