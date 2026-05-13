@@ -14,8 +14,7 @@ function getPageName() {
 }
 
 // Keeps the summary's current-section label and each link's aria-current in
-// sync with the heading the visitor is reading. The topmost heading inside
-// the rootMargin band is considered active.
+// sync with the heading the visitor is reading.
 function watchScrollSpy(headings, currentLabel, linkById, fallbackLabel) {
   let activeId = null;
 
@@ -62,12 +61,8 @@ export default async function init(el) {
     return;
   }
 
-  // Assign ids and make headings focusable. Slugify-with-dedupe so two
-  // headings with the same text don't collide on a shared id (which would
-  // route both anchor links to the first occurrence). tabindex="-1" is set
-  // on every heading — including those with pre-existing ids — so clicking
-  // an page-nav link moves focus to the target section, not just the
-  // scroll position.
+  // Assign ids and make headings focusable. Tabindex="-1" is set
+  // on every heading so clicking a page-nav link moves focus to the target
   const usedIds = new Set();
   headings.forEach((h) => {
     if (!h.id) {
@@ -83,16 +78,13 @@ export default async function init(el) {
     usedIds.add(h.id);
     h.setAttribute('tabindex', '-1');
     // .page-nav-target opts the heading into scroll-margin compensation
-    // so anchor scrolls clear the sticky header (and, at mobile, the sticky
-    // summary bar) instead of landing under them.
+    // so anchor scrolls clear the sticky header/sitenav
     h.classList.add('page-nav-target');
   });
 
   // The page's h1 acts as the "top" of the page for the back-to-top link.
   // Same id/tabindex/class treatment as the h2 targets so anchor scroll,
-  // focus, and scroll-margin all behave the same way. Not added to
-  // linkById — scroll-spy then treats arriving at the h1 as "no section
-  // active" and resets the summary to the page name.
+  // focus, and scroll-margin all behave the same way.
   const h1 = document.querySelector('main h1');
   if (h1) {
     if (!h1.id) {
@@ -110,20 +102,15 @@ export default async function init(el) {
     h1.classList.add('page-nav-target');
   }
 
-  // Build the disclosure shell. At mobile the summary is the visible bar
-  // showing the current section name (page name when no section is active
-  // yet); at desktop the summary is hidden via CSS and the matchMedia
-  // listener below forces the details open so the list always renders
-  // inline in the rail.
   const details = document.createElement('details');
   const summary = document.createElement('summary');
   summary.classList.add('page-nav-summary');
   // TODO: VoiceOver announces a <summary> twice on navigation: once via
   // its computed accessible name (e.g. "Button, summary, collapsed") and
   // once via the descendant text node. Could be silenced with aria-label
-  // on the summary + aria-hidden on the inner span. Tradeoff is to
-  // duplicate the label string across an attribute and the DOM. Same
-  // accepted-as-is stance as the sitenav's segment summaries.
+  // on the summary + aria-hidden on the inner span. Tradeoff would be to
+  // duplicate the label string across an attribute and the DOM. This is the
+  // same "accepted-as-is" stance as the sitenav's segment summaries.
   const currentLabel = document.createElement('span');
   currentLabel.classList.add('page-nav-current');
   const pageName = getPageName();
@@ -143,9 +130,7 @@ export default async function init(el) {
     linkById.set(h.id, a);
   });
 
-  // Append the back-to-top item after the section links. Anchors to the h1
-  // so the existing close-on-click handler (a[href^="#"]) and the focus +
-  // scroll-margin treatment from the h1's tabindex/class apply for free.
+  // Append the back-to-top item after the section links.
   if (h1) {
     const topLi = document.createElement('li');
     const topLink = document.createElement('a');
@@ -165,10 +150,7 @@ export default async function init(el) {
   syncDisclosure();
   desktopMql.addEventListener('change', syncDisclosure);
 
-  // Close the overlay after a link is clicked at mobile, so the visitor
-  // sees the target section instead of the still-open menu over it. Gated
-  // on !desktopMql.matches because at desktop the details is force-opened
-  // and closing it would empty the rail.
+  // Close the overlay after a link is clicked at small screens
   details.addEventListener('click', (e) => {
     const a = e.target.closest('a[href^="#"]');
     if (!a) {
@@ -179,7 +161,5 @@ export default async function init(el) {
     }
   });
 
-  // Observe h1 alongside h2s so scroll-spy resets the summary to the page
-  // name when the visitor returns to the top of the page.
   watchScrollSpy(h1 ? [...headings, h1] : headings, currentLabel, linkById, pageName);
 }

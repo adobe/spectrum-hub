@@ -119,12 +119,10 @@ Hidden at desktop where the list renders inline in the rail. */
   font-weight: var(--s2-component-m-bold-font-weight);
 }
 
-/* Headings opted-in by the block (see init() in in-page-nav.js) get
-   scroll-margin so anchor scrolls clear the sticky chrome. Mobile leaves
-   room for the site header AND the in-page-nav summary bar; desktop only
-   needs to clear the site header (the in-page-nav lives in the side rail,
-   not above content). The 60px is an estimate of the summary's rendered
-   height — slightly generous so the heading isn't kissed by the bar. */
+/* Headings opted-in by the block (see init() in page-nav.js) get scroll-margin so anchor scrolls clear
+the sticky chrome. Mobile leaves room for the site header AND the page-nav summary bar; desktop only
+needs to clear the site header (the page-nav lives in the side rail, not above content). The 60px is an
+estimate of the summary's rendered height. */
 .page-nav-target {
   scroll-margin-block-start: calc(var(--sh-nav-height, 80px) + 60px);
 
