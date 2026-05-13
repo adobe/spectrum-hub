@@ -169,7 +169,7 @@ function renderNode(node, currentPath) {
   return { el: li, hasActive };
 }
 
-// Builds the rendered <ul> for the current section without attaching it to the
+// TODO: Builds the rendered <ul> for the current section without attaching it to the
 // page. Kept separate from `init` so the upcoming unified mobile-drawer work
 // can call this directly and lift the list into a shared drawer instead of
 // rebuilding the tree logic there.
@@ -194,9 +194,7 @@ async function buildSitenavList() {
 export default async function init(el) {
   // Render the disclosure skeleton synchronously so the surrounding template
   // grid can paint immediately. The section nav tree is fetched and swapped
-  // in below without blocking first paint — keeps both the FCP/LCP win and
-  // the CLS=0 footprint, since the disclosure summary occupies its final
-  // size from the start.
+  // in below without blocking first paint.
   const disclosure = document.createElement('details');
   const summary = document.createElement('summary');
   summary.classList.add('sitenav-segment-label', 'sitenav-disclosure');
@@ -213,11 +211,24 @@ export default async function init(el) {
   // change (rather than only on the desktop branch) also resets the state if
   // someone resizes from desktop down to mobile.
   const desktopMql = window.matchMedia('(width >= 900px)');
+
+  // The summary's rendered height as a CSS custom property so the
+  // page-nav block can stack below it at mobile widths.
+  const updateSummaryHeight = () => {
+    const height = desktopMql.matches ? 0 : summary.offsetHeight;
+    document.documentElement.style.setProperty('--sitenav-summary-height', `${height}px`);
+  };
+
   const syncDisclosure = () => {
     disclosure.open = desktopMql.matches;
+    updateSummaryHeight();
   };
   syncDisclosure();
   desktopMql.addEventListener('change', syncDisclosure);
+
+  // Keep --sitenav-summary-height accurate across font scaling, orientation
+  // changes, or any other layout shift that affects the summary's height.
+  new ResizeObserver(updateSummaryHeight).observe(summary);
 
   // Fetch the tree in the background and swap the placeholder once ready. If
   // the fetch fails or returns nothing, drop the disclosure so the page
