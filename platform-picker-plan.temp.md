@@ -122,9 +122,9 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
 ### Control, a11y, and selection
 
 - **APG pattern: Select-Only Combobox.** [APG reference](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/).
-- **Control: `<sp-picker>`** (Spectrum Web Components, Lit, already a project dep). Free APG-correct keyboard, focus, and ARIA. Used by `fragment` and `schedule` blocks today via the `components` array in `scripts/scripts.js`.
+- **Control: custom Lit `<hub-picker>`** (`blocks/picker/picker-element.js`). Implements APG Select-Only Combobox keyboard, focus, and ARIA ourselves on top of the existing `deps/lit/dist/index.js`. Originally planned as SWC's `<sp-picker>`; switched to a hand-rolled Lit element to avoid SWC bundle build-step drift (no CI step rebuilds bundled deps when SWC versions float). See commits `42c45bc`–`f4e15b7`.
 - **Single-select.** URL is canonical — can only encode one option at a time. No multi-select product requirement; "All" already covers cross-implementation comparison.
-- **Mobile:** `<sp-picker>`'s built-in tray/dialog mode at narrow widths. No custom mobile control needed.
+- **Mobile:** open design decision. The plan originally inherited `<sp-picker>`'s tray/dialog mode at narrow widths; the custom `<hub-picker>` has no equivalent. Current behavior: popdown listbox below the trigger on all viewports. Revisit if mobile UX testing shows the popdown isn't acceptable — implementing a tray would be a non-trivial follow-up.
 
 ### Placement
 
@@ -132,7 +132,7 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
   - **Where it appears:** `/platforms/[implementation]/components/[component]` — implementation-specific component pages.
   - **Where it does NOT appear:** `/components` (the implementation-cards + status-table overview page — reached via sitenav, not picker), `/foundations/*`, `/guidance/*`, homepage, top-level marketing pages. The picker only exists where switching implementation context for the current content is a meaningful action.
   - **Desktop:** rendered above the sitenav in the left rail. `<sp-picker>` inline; popup listbox opens below the trigger.
-  - **Mobile:** rendered inside the section-menu disclosure (the existing collapsed `<details>` that wraps the sitenav at narrow widths). Visitors tap "Section menu" to open the disclosure; the picker sits at the top of that expanded panel, above the sitenav links. The picker itself remains an `<sp-picker>` — tapping it opens its native popup/tray for option selection.
+  - **Mobile:** rendered inside the section-menu disclosure (the existing collapsed `<details>` that wraps the sitenav at narrow widths). Visitors tap "Section menu" to open the disclosure; the picker sits at the top of that expanded panel, above the sitenav links. Tapping the `<hub-picker>` trigger opens the popdown listbox below it (see Control/a11y/selection above re: no tray mode in v1).
   - **Visual treatment / copy:** reads as a "view perspective" lens, not dev tooling.
   - **Tradeoff for bouncing audiences (designers, evaluators):** on mobile, they have to open the section menu before switching implementations — more friction than persistent chrome placement. Accepted in exchange for clean section-scoping and a single source of truth for "where the picker lives."
   - **Future revisit:** when the unified-mobile-drawer ticket ships (combining header nav + sitenav into one drawer), the section-menu disclosure folds into that drawer. The picker will end up inside the drawer's section-nav region, not the global header region. The current "picker is not a contributor to the drawer" note in `unified-mobile-drawer-ticket.temp.md` will need re-examination then.
@@ -174,7 +174,7 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
 ### New / modified blocks
 
 1. **Picker block** (new — `blocks/picker/`)
-   - Wraps `<sp-picker>` from Spectrum Web Components.
+   - Renders the custom Lit `<hub-picker>` defined in `picker-element.js`.
    - Selected state derived from URL (e.g. `/platforms/rsp/...` → `"rsp"`).
    - On selection change → navigate to the corresponding URL (or `/components` if "All").
    - Renders at the top of the left rail (desktop) or inside the section-menu disclosure (mobile).
@@ -216,7 +216,7 @@ URL = /platforms/rsp/components/button
 │
 ├─► Picker block
 │     Parse URL → "rsp"
-│     Render <sp-picker> selectedKey="rsp"
+│     Render <hub-picker> value="rsp"
 │     On change → navigate to new URL
 │
 ├─► Sitenav block
@@ -280,7 +280,7 @@ URL = /components
 │ ▶ Section menu (collapsed)        │
 │   When expanded:                  │
 │   ┌──────────────────────────┐    │
-│   │ Picker (<sp-picker>)     │    │
+│   │ Picker (<hub-picker>)    │    │
 │   │ Sitenav tree             │    │
 │   └──────────────────────────┘    │
 ├──────────────────────────────────┤
@@ -299,12 +299,13 @@ URL = /components
 
 Ordered to push decoupling seams to the front. Design specs are still in flight, so blocks built early should be cheap to rework visually. Strategy: shared utilities own all the cross-cutting logic (implementation list, URL parsing, status lookup); blocks stay thin and visual-only; the template owns placement and composition (no cross-block DOM mutation).
 
-1. **Shared utilities** (`scripts/utils/`):
-   - `implementations.js` — single source of truth for the implementation list, display labels, slug↔label maps, `currentImplementationFromUrl()`, `otherImplementations()`. Adding a third implementation later = edit one file.
+1. **Shared utilities** (`scripts/utils/`) — **shipped:**
+   - `implementations.js` — single source of truth for the implementation list (`IMPLEMENTATIONS`, `ALL_OPTION`), `getImplementationById`, `getOtherImplementations`. Adding a third implementation later = edit one file.
    - `platform-url.js` — URL parsing / building: `getImplementationFromPath`, `getComponentFromPath`, `buildImplementationPath`, `isOnPlatformPage`, `isOnComponentsOverview`. URL structure changes contained here.
-2. **SWC status extraction + adapter:**
-   - Extend `deps/swc/extract-cem-components.js` (or sibling script) to also fetch 2nd-gen presence from `@adobe/spectrum-wc` via unpkg's `?meta` endpoint, and versions from the npm registry for both generations. Emit a unified `deps/swc/data/status.json` with per-component presence + default status per generation (`1.x` → Stable, `0.x` → Beta) + optional hand-curated per-component overrides. Wire the existing daily GitHub Action to keep it fresh.
-   - `scripts/utils/component-status.js` — thin adapter over the manifest. Consumers call `getComponentStatus(component, impl)` without knowing the manifest's field shape. Manifest evolves → adapter changes → consumers stay still.
+2. **Status adapter + seed manifests:**
+   - `scripts/utils/component-status.js` — thin adapter over the per-impl status manifests. Consumers call `getComponentStatus(component, impl)` without knowing the manifest's field shape. **Shipped.**
+   - `deps/swc/data/status.json` and `deps/rsp/data/status.json` — hand-authored seed manifests matching the adapter's schema. **Shipped as placeholders.**
+   - Extraction pipelines that regenerate these from npm + unpkg are **deferred to follow-up tickets.** RSP retargets from `@adobe/react-spectrum` (v3 classic) to `@react-spectrum/s2`; SWC moves to `@adobe/spectrum-wc` (2nd-gen) once Button and ActionButton land there. Both tickets are open; this plan unblocks block work in the meantime by treating the seed manifests as the contract.
 3. **Authoring contract** — confirm with content team the "repeat content per implementation page" approach in parallel with utility work. Finalize URL patterns and any per-page metadata fields.
 4. **Picker block** — `<sp-picker>` wrapper, URL-derived state, navigation on selection change. Imports utilities. Wrapped in a thin facade so swapping the underlying control later (e.g. for a different SWC version, native `<select>`, custom combobox) is contained at the facade boundary. No knowledge of the sitenav or other blocks.
 5. **Sitenav extension** — subtree-swap by URL implementation segment; hide `Platforms/` wrapper. Reads utilities for URL parsing and implementation list. Does not know about the picker or related-resources.
