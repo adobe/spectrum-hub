@@ -154,13 +154,17 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
 
 ### Content authoring
 
-- **Working assumption: authors repeat information per implementation page.**
-  - **Why:** simplest authoring model — each `/platforms/[impl]/components/[component]` page is self-contained and authoritative for that implementation. No fragments to share, no metadata to mark cross-cutting content, no per-component agnostic page to maintain.
-  - **Implication:** content that applies to both React Spectrum and SWC (e.g. usage principles for Button) is duplicated across both implementation pages. Authors keep parity by editing both when content changes.
-  - **Tradeoff:** content drift between implementation pages is the well-known cost. Accepted for v1 in exchange for the authoring simplicity.
-  - **Foundations and Guidance content** are the only true cross-implementation content. They live at the root (`/foundations/*`, `/guidance/*`) and are linked from implementation pages as needed.
-  - **Revisit triggers:**
-    - If maintenance burden / content drift becomes painful, revisit by introducing fragments shared across implementation pages.
+- **Use fragments for cross-implementation shared content; inline impl-specific content directly.**
+  - **Why:** content that applies to both implementations (behavior guidance, accessibility intent, principles for a given component) lives in one authored document. Both implementation pages reference it via the `fragment` block, so editing the source updates both pages on next load. Authoring effort and drift risk are both minimized for the shared content; impl-specific content (e.g. RSP code samples vs. SWC code samples for the same component) remains inline on each impl page where it belongs.
+  - **Why fragments specifically:** the `fragment` block already ships (`blocks/fragment/`) and is the EDS-native mechanism for inlining one authored document inside another. No new code required.
+  - **Decision history:** the v1 working assumption was "authors repeat per impl page" with content drift accepted as a tradeoff. The revisit trigger (maintenance burden / drift becoming painful) fired during the design lock-in for the implementation-based IA, so the team has moved to the fragment-for-cross-impl pattern now rather than later.
+  - **URL convention for shared fragments:** `/fragments/components/<component>/<section>` (e.g. `/fragments/components/button/behavior`). Predictable per-component bucket under an explicit `fragments` namespace so authors and devs can locate the shared source without guessing.
+  - **What goes in a fragment vs. inline:**
+    - **Fragment:** behavior guidance, accessibility notes, foundational principles, usage do/don'ts — anything that should remain in lockstep across implementations.
+    - **Inline on the impl page:** API surface, code samples, version-specific notes, anything that genuinely differs between implementations.
+  - **Deviations:** if a section needs to diverge for one implementation, authors either inline that section on the impl page (dropping the fragment reference for that section) or split the fragment into a shared part plus an impl-specific tail. Both are normal authoring operations — no code change.
+  - **Foundations and Guidance content** continue to live at the root (`/foundations/*`, `/guidance/*`) and are linked from implementation pages as needed.
+  - **Revisit trigger:**
     - If per-component agnostic pages (`/components/[component]`) get authored later, the cross-implementation gap fallback and sibling-surfacing decisions need to be updated to point at them.
 
 ## Constraints & dependencies
