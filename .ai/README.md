@@ -84,6 +84,12 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 - **Purpose**: Scaffold and implement a new EDS block — covers file structure, the `init(el)` function contract, template injection, CSS conventions, design tokens, and when to use templates vs per-page authoring vs fragments.
 - **How to invoke**: Ask to create or add a new block (e.g. "create a new block", "scaffold a block for X", "add a new block to the detail template").
 
+#### Test-driven development
+
+- **File**: [`.ai/skills/test-driven-development/SKILL.md`](./skills/test-driven-development/SKILL.md)
+- **Purpose**: Red–green–refactor TDD for agents — define behavior with a failing test first, implement the smallest change that passes, then refactor with tests green. Covers when TDD applies (features, bug fixes, refactors, behavior changes), exceptions that need human agreement, and the red–green–refactor cycle. Companion reference: [`.ai/skills/test-driven-development/testing-anti-patterns.md`](./skills/test-driven-development/testing-anti-patterns.md) (mock misuse, test-only production hooks, and related smells); load it when adding mocks or heavy test doubles.
+- **How to invoke**: Use before writing implementation code for a feature or fix (per the skill frontmatter). Ask explicitly (e.g. "use TDD", "write the failing test first", "red–green–refactor") or mention `@test-driven-development` / the skill path in Cursor.
+
 ## Using rules and skills across tools and IDEs
 
 Canonical content lives in **`.ai/`** (this directory). Tool-specific directories (`.cursor/`, `.claude/`) are thin adapters that point back here via symlinks — edit files in `.ai/`, never in the adapter directories.
