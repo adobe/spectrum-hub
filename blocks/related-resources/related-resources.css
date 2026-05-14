@@ -1,0 +1,33 @@
+.related-resources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.related-resources-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.related-resources-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.related-resources-list a {
+  display: inline-block;
+  text-decoration: none;
+  color: #1473e6;
+}
+
+.related-resources-list a:hover {
+  text-decoration: underline;
+}
