@@ -118,6 +118,7 @@ class SpectrumHubPicker extends LitElement {
             id=${this.optionId(index)}
             role="option"
             aria-selected=${option.id === this.value ? 'true' : 'false'}
+            data-active=${this._open && index === this._activeIndex ? '' : nothing}
             @click=${() => this.selectOption(option)}
           >${option.label}</li>
         `)}

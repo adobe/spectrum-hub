@@ -274,4 +274,19 @@ describe('<hub-picker>', () => {
     expect(trigger.getAttribute('aria-expanded')).to.equal('false');
     outside.remove();
   });
+
+  it('marks only the keyboard-active option with data-active when open', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await el.updateComplete;
+    const options = el.shadowRoot.querySelectorAll('[role="option"]');
+    expect(options[0].hasAttribute('data-active')).to.be.false;
+    expect(options[1].hasAttribute('data-active')).to.be.true;
+  });
 });

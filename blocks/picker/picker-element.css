@@ -58,3 +58,7 @@ li {
 li:hover {
   background: #f0f0f0;
 }
+
+li[data-active] {
+  background: #e6efff;
+}
