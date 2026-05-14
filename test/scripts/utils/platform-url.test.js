@@ -5,6 +5,8 @@ import {
   buildImplementationPath,
   isOnPlatformPage,
   isOnComponentsOverview,
+  isOnPlatformComponentPage,
+  resolveTargetUrl,
 } from '../../../scripts/utils/platform-url.js';
 
 describe('scripts/utils/platform-url.js', () => {
@@ -66,6 +68,38 @@ describe('scripts/utils/platform-url.js', () => {
     it('returns false for unrelated paths', () => {
       expect(isOnComponentsOverview('/foundations/principles')).to.be.false;
       expect(isOnComponentsOverview('/')).to.be.false;
+    });
+  });
+
+  describe('isOnPlatformComponentPage', () => {
+    it('returns true for /platforms/[impl]/components/[component] paths', () => {
+      expect(isOnPlatformComponentPage('/platforms/rsp/components/button')).to.be.true;
+      expect(isOnPlatformComponentPage('/platforms/swc/components/tabs')).to.be.true;
+    });
+
+    it('returns false when the component segment is missing', () => {
+      expect(isOnPlatformComponentPage('/platforms/rsp/components')).to.be.false;
+      expect(isOnPlatformComponentPage('/platforms/rsp/components/')).to.be.false;
+    });
+
+    it('returns false when the section is not "components"', () => {
+      expect(isOnPlatformComponentPage('/platforms/rsp/foundations/icons')).to.be.false;
+    });
+
+    it('returns false for paths outside /platforms/', () => {
+      expect(isOnPlatformComponentPage('/components/button')).to.be.false;
+      expect(isOnPlatformComponentPage('/')).to.be.false;
+    });
+  });
+
+  describe('resolveTargetUrl', () => {
+    it('routes the "all" option to the cross-implementation overview', () => {
+      expect(resolveTargetUrl('all', 'button')).to.equal('/components');
+    });
+
+    it('routes an implementation option to its platform component page', () => {
+      expect(resolveTargetUrl('rsp', 'button')).to.equal('/platforms/rsp/components/button');
+      expect(resolveTargetUrl('swc', 'tabs')).to.equal('/platforms/swc/components/tabs');
     });
   });
 });

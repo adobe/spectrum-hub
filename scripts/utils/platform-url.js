@@ -20,3 +20,15 @@ export function isOnPlatformPage(path) {
 export function isOnComponentsOverview(path) {
   return path === '/components' || path.startsWith('/components/');
 }
+
+export function isOnPlatformComponentPage(path) {
+  const parts = path.split('/');
+  return parts[1] === 'platforms' && !!parts[2] && parts[3] === 'components' && !!parts[4];
+}
+
+export function resolveTargetUrl(value, currentComponent) {
+  if (value === 'all') {
+    return '/components';
+  }
+  return buildImplementationPath(value, currentComponent);
+}
