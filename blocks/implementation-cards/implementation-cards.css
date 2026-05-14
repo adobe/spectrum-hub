@@ -1,0 +1,41 @@
+.implementation-cards-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.implementation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #d3d3d3;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.implementation-card:hover,
+.implementation-card:focus-visible {
+  border-color: #1473e6;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.implementation-card:focus-visible {
+  outline: 2px solid #1473e6;
+  outline-offset: 2px;
+}
+
+.implementation-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.implementation-card-count {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #555;
+}
