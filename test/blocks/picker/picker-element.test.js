@@ -289,4 +289,45 @@ describe('<hub-picker>', () => {
     expect(options[0].hasAttribute('data-active')).to.be.false;
     expect(options[1].hasAttribute('data-active')).to.be.true;
   });
+
+  it('opens the listbox on ArrowDown when closed', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+  });
+
+  it('opens the listbox on ArrowUp when closed', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+  });
+
+  it('positions the active option at the saved value when opening', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    el.value = 'swc';
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    const swcOption = el.shadowRoot.querySelectorAll('[role="option"]')[1];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(swcOption.id);
+    expect(swcOption.hasAttribute('data-active')).to.be.true;
+  });
 });

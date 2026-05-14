@@ -55,8 +55,18 @@ class SpectrumHubPicker extends LitElement {
     return this.options.find((option) => option.id === this.value)?.label ?? '';
   }
 
+  openListbox() {
+    const valueIndex = this.options.findIndex((option) => option.id === this.value);
+    this._activeIndex = valueIndex >= 0 ? valueIndex : 0;
+    this._open = true;
+  }
+
   toggleOpen() {
-    this._open = !this._open;
+    if (this._open) {
+      this._open = false;
+    } else {
+      this.openListbox();
+    }
   }
 
   handleKeydown(e) {
@@ -66,9 +76,19 @@ class SpectrumHubPicker extends LitElement {
       this.updateComplete.then(() => this.shadowRoot.querySelector('button')?.focus());
       return;
     }
+    if (e.key === 'ArrowDown' && !this._open) {
+      e.preventDefault();
+      this.openListbox();
+      return;
+    }
     if (e.key === 'ArrowDown' && this._open) {
       e.preventDefault();
       this._activeIndex = Math.min(this._activeIndex + 1, this.options.length - 1);
+      return;
+    }
+    if (e.key === 'ArrowUp' && !this._open) {
+      e.preventDefault();
+      this.openListbox();
       return;
     }
     if (e.key === 'ArrowUp' && this._open) {
