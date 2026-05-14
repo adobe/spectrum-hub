@@ -129,4 +129,149 @@ describe('<hub-picker>', () => {
     expect(options[0].getAttribute('aria-selected')).to.equal('false');
     expect(options[1].getAttribute('aria-selected')).to.equal('true');
   });
+
+  it('closes the listbox and keeps focus on the trigger when Escape is pressed', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.focus();
+    trigger.click();
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    expect(el.shadowRoot.activeElement).to.equal(trigger);
+  });
+
+  it('points aria-activedescendant at the first option when opened with no value', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    const firstOption = el.shadowRoot.querySelectorAll('[role="option"]')[0];
+    expect(firstOption.id).to.have.length.greaterThan(0);
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(firstOption.id);
+  });
+
+  it('moves the active option forward on ArrowDown when open', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await el.updateComplete;
+    const secondOption = el.shadowRoot.querySelectorAll('[role="option"]')[1];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(secondOption.id);
+  });
+
+  it('moves the active option backward on ArrowUp when open', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await el.updateComplete;
+    const firstOption = el.shadowRoot.querySelectorAll('[role="option"]')[0];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(firstOption.id);
+  });
+
+  it('jumps to the first option on Home when open', async () => {
+    el.options = [
+      { id: 'a', label: 'A' },
+      { id: 'b', label: 'B' },
+      { id: 'c', label: 'C' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    await el.updateComplete;
+    const firstOption = el.shadowRoot.querySelectorAll('[role="option"]')[0];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(firstOption.id);
+  });
+
+  it('jumps to the last option on End when open', async () => {
+    el.options = [
+      { id: 'a', label: 'A' },
+      { id: 'b', label: 'B' },
+      { id: 'c', label: 'C' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    await el.updateComplete;
+    const lastOption = el.shadowRoot.querySelectorAll('[role="option"]')[2];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(lastOption.id);
+  });
+
+  it('selects the active option on Enter and closes the listbox', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    const eventPromise = new Promise((resolve) => {
+      el.addEventListener('change', resolve, { once: true });
+    });
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    const event = await eventPromise;
+    expect(event.detail.value).to.equal('swc');
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    expect(el.value).to.equal('swc');
+  });
+
+  it('selects the active option on Space and closes the listbox', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    const eventPromise = new Promise((resolve) => {
+      el.addEventListener('change', resolve, { once: true });
+    });
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    const event = await eventPromise;
+    expect(event.detail.value).to.equal('swc');
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+  });
+
+  it('closes the listbox when clicking outside the picker', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+    const outside = document.createElement('div');
+    document.body.append(outside);
+    outside.click();
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    outside.remove();
+  });
 });

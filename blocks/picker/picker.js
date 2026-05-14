@@ -11,6 +11,7 @@ export default async function init(el) {
   const picker = document.createElement('hub-picker');
   picker.options = OPTIONS;
   picker.value = initialValue;
+  picker.label = 'Choose an implementation';
   picker.addEventListener('change', (e) => {
     picker.value = e.detail.value;
     // eslint-disable-next-line no-console
