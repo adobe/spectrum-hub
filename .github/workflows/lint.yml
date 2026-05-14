@@ -24,18 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Register ESLint problem matcher
-        run: echo "::add-matcher::.github/matchers/eslint-stylish.json"
-
-      - name: Run ESLint
-        run: npx eslint .
-
-      # Stylelint 17 removed the built-in --formatter=github (see stylelint/stylelint#7447).
-      # Unix formatter lines match .github/matchers/stylelint-unix.json for PR annotations.
-      - name: Register Stylelint problem matcher
+      - name: ESLint
+        run: npm run lint:js
+      
+      - name: Stylelint
         if: always()
-        run: echo "::add-matcher::.github/matchers/stylelint-unix.json"
-
-      - name: Run Stylelint
-        if: always()
-        run: npx stylelint "blocks/**/*.css" "styles/*.css" --formatter=unix
+        run: npm run lint:css
