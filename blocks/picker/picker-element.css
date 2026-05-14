@@ -1,0 +1,60 @@
+:host {
+  display: inline-block;
+  position: relative;
+  font: inherit;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 12rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  background: #fff;
+  border: 1px solid #8e8e8e;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+button::after {
+  content: '\25BE';
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+button:focus-visible {
+  outline: 2px solid #1473e6;
+  outline-offset: 2px;
+}
+
+ul {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #d3d3d3;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+  z-index: 1;
+}
+
+button[aria-expanded='false'] + ul {
+  display: none;
+}
+
+li {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+li:hover {
+  background: #f0f0f0;
+}
