@@ -1,0 +1,68 @@
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.status-table th,
+.status-table td {
+  padding: 0.75rem;
+  text-align: start;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.status-table thead th {
+  font-weight: 600;
+  background: #f6f6f6;
+  border-bottom: 2px solid #d3d3d3;
+}
+
+.status-table tbody th {
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.status-badge:hover,
+.status-badge:focus-visible {
+  text-decoration: underline;
+}
+
+.status-badge:focus-visible {
+  outline: 2px solid #1473e6;
+  outline-offset: 2px;
+}
+
+.status-badge-stable {
+  background: #e6f3ea;
+  color: #1c6a36;
+  border-color: #b8dcc4;
+}
+
+.status-badge-beta {
+  background: #fff4e0;
+  color: #87510a;
+  border-color: #f1d49a;
+}
+
+.status-badge-caution {
+  background: #fbe4e4;
+  color: #8b1e1e;
+  border-color: #e8b5b5;
+}
+
+.status-badge-deprecated {
+  background: #ececec;
+  color: #4a4a4a;
+  border-color: #c9c9c9;
+  text-decoration: line-through;
+}
