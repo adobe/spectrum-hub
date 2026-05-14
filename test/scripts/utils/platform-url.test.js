@@ -7,6 +7,7 @@ import {
   isOnComponentsOverview,
   isOnPlatformComponentPage,
   resolveTargetUrl,
+  getSectionPrefix,
 } from '../../../scripts/utils/platform-url.js';
 
 describe('scripts/utils/platform-url.js', () => {
@@ -100,6 +101,23 @@ describe('scripts/utils/platform-url.js', () => {
     it('routes an implementation option to its platform component page', () => {
       expect(resolveTargetUrl('rsp', 'button')).to.equal('/platforms/rsp/components/button');
       expect(resolveTargetUrl('swc', 'tabs')).to.equal('/platforms/swc/components/tabs');
+    });
+  });
+
+  describe('getSectionPrefix', () => {
+    it('returns the implementation-scoped prefix for /platforms/[impl]/* paths', () => {
+      expect(getSectionPrefix('/platforms/rsp/components/button')).to.equal('/platforms/rsp/');
+      expect(getSectionPrefix('/platforms/swc/components/tabs')).to.equal('/platforms/swc/');
+    });
+
+    it('returns the top-section prefix for non-platform paths', () => {
+      expect(getSectionPrefix('/foundations/principles')).to.equal('/foundations/');
+      expect(getSectionPrefix('/components/button')).to.equal('/components/');
+    });
+
+    it('returns null for the root path', () => {
+      expect(getSectionPrefix('/')).to.be.null;
+      expect(getSectionPrefix('')).to.be.null;
     });
   });
 });

@@ -32,3 +32,14 @@ export function resolveTargetUrl(value, currentComponent) {
   }
   return buildImplementationPath(value, currentComponent);
 }
+
+export function getSectionPrefix(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  if (!parts.length) {
+    return null;
+  }
+  if (parts[0] === 'platforms' && parts[1]) {
+    return `/platforms/${parts[1]}/`;
+  }
+  return `/${parts[0]}/`;
+}

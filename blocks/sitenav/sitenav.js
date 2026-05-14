@@ -1,6 +1,11 @@
 /* Follows Disclosure Navigation Menu APG: https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/ */
 
 import { getConfig } from '../../scripts/ak.js';
+import { getImplementationById } from '../../scripts/utils/implementations.js';
+import {
+  getImplementationFromPath,
+  getSectionPrefix,
+} from '../../scripts/utils/platform-url.js';
 
 const { locale } = getConfig();
 
@@ -22,15 +27,13 @@ const SEGMENT_ORDER = {
   ],
 };
 
-function getTopSection() {
-  // Strip the locale prefix (e.g. `/jp`) before reading the section so a URL
-  // like `/jp/foundations/...` returns `foundations`, not `jp`. `locale.prefix`
-  // is empty string for the default locale, in which case nothing is stripped.
+// Strip the locale prefix (e.g. `/jp`) so URLs like `/jp/foundations/...` are
+// treated as `/foundations/...`. `locale.prefix` is empty string for the
+// default locale, in which case nothing is stripped.
+function strippedPath() {
   const { pathname } = window.location;
-  const stripped = pathname.startsWith(locale.prefix)
-    ? pathname.slice(locale.prefix.length) : pathname;
-  const [, section] = stripped.split('/');
-  return section || null;
+  return pathname.startsWith(locale.prefix)
+    ? pathname.slice(locale.prefix.length) || '/' : pathname;
 }
 
 function isAncestorOf(ancestorPath, currentPath) {
@@ -44,16 +47,19 @@ function formatLabel(key) {
   return key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
 }
 
-// tree derived from query-index.json + SEGMENT_ORDER
-function buildPathTree(pages, topSection) {
+// tree derived from query-index.json + SEGMENT_ORDER. `sectionPrefix` is the
+// URL prefix that anchors the tree root (e.g. `/foundations/` or
+// `/platforms/rsp/`); pages outside that prefix are filtered upstream.
+function buildPathTree(pages, sectionPrefix) {
+  const sectionDepth = sectionPrefix.split('/').filter(Boolean).length;
   const root = { children: new Map() };
   pages.forEach(({ path, title }) => {
     const parts = path.split('/').filter(Boolean);
-    if (parts[0] !== topSection) {
+    if (parts.length <= sectionDepth) {
       return;
     }
     let node = root;
-    for (let i = 1; i < parts.length; i += 1) {
+    for (let i = sectionDepth; i < parts.length; i += 1) {
       const key = parts[i];
       if (!node.children.has(key)) {
         node.children.set(key, {
@@ -89,18 +95,22 @@ function flattenPathNode(node) {
   };
 }
 
-async function treeFromIndex(topSection) {
+async function treeFromIndex(sectionPrefix) {
   const resp = await fetch('/query-index.json');
   if (!resp.ok) {
     return null;
   }
   const { data } = await resp.json();
-  const sectionPages = data.filter(({ path }) => path.startsWith(`/${topSection}/`));
+  const sectionPages = data.filter(({ path }) => path.startsWith(sectionPrefix));
   if (!sectionPages.length) {
     return null;
   }
-  const root = buildPathTree(sectionPages, topSection);
-  const ordered = sortMap(root.children, SEGMENT_ORDER[topSection]);
+  const root = buildPathTree(sectionPages, sectionPrefix);
+  // SEGMENT_ORDER is keyed by the last segment of the prefix (e.g. `foundations`,
+  // `components`). Platform-scoped prefixes (`/platforms/rsp/`) fall through to
+  // default ordering until per-impl orderings are introduced.
+  const sectionKey = sectionPrefix.split('/').filter(Boolean).slice(-1)[0];
+  const ordered = sortMap(root.children, SEGMENT_ORDER[sectionKey]);
   return [...ordered.values()].map(flattenPathNode);
 }
 
@@ -174,12 +184,12 @@ function renderNode(node, currentPath) {
 // can call this directly and lift the list into a shared drawer instead of
 // rebuilding the tree logic there.
 async function buildSitenavList() {
-  const topSection = getTopSection();
-  if (!topSection) {
+  const sectionPrefix = getSectionPrefix(strippedPath());
+  if (!sectionPrefix) {
     return null;
   }
 
-  const tree = await treeFromIndex(topSection);
+  const tree = await treeFromIndex(sectionPrefix);
   if (!tree || !tree.length) {
     return null;
   }
@@ -198,8 +208,15 @@ export default async function init(el) {
   const disclosure = document.createElement('details');
   const summary = document.createElement('summary');
   summary.classList.add('sitenav-segment-label', 'sitenav-disclosure');
-  const sectionName = window.location.pathname.split('/')[1];
-  summary.textContent = `${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} navigation`;
+  // For /platforms/[impl]/... the implementation drives the label so the
+  // `Platforms/` wrapper is hidden from visitors (per platform-picker plan).
+  // For other sections the first segment is the section name itself.
+  const here = strippedPath();
+  const implId = getImplementationFromPath(here);
+  const labelText = implId
+    ? getImplementationById(implId)?.label ?? formatLabel(implId)
+    : formatLabel(here.split('/')[1] || '');
+  summary.textContent = `${labelText} navigation`;
   const placeholder = document.createElement('ul');
   placeholder.classList.add('sitenav-list');
   disclosure.append(summary, placeholder);
