@@ -3,23 +3,23 @@
     .template-wrapper {
       display: grid;
       grid-template-columns: 0.2fr 0.6fr 0.2fr;
-      grid-template-areas: 'sitenav main pagenav';
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
 
-      .sitenav {
-        grid-area: sitenav;
-      }
-
-      .page-nav {
-        grid-area: pagenav;
+      /* Rails are flex columns so empty children (e.g. the .picker element on
+         non-platform pages, or .related-resources off component pages)
+         collapse without leaving grid gaps. */
+      .left-rail,
+      .right-rail {
+        display: flex;
+        flex-direction: column;
+        gap: var(--s2-spacing-400, 1rem);
       }
 
       .section {
         > .default-content {
           max-inline-size: 100%;
-          grid-area: main;
         }
       }
     }
