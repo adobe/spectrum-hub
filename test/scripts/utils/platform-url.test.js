@@ -8,6 +8,7 @@ import {
   isOnPlatformComponentPage,
   resolveTargetUrl,
   getSectionPrefix,
+  getPlatformSectionSuffix,
 } from '../../../scripts/utils/platform-url.js';
 
 describe('scripts/utils/platform-url.js', () => {
@@ -95,12 +96,31 @@ describe('scripts/utils/platform-url.js', () => {
 
   describe('resolveTargetUrl', () => {
     it('routes the "all" option to the cross-implementation overview', () => {
-      expect(resolveTargetUrl('all', 'button')).to.equal('/components');
+      expect(resolveTargetUrl('all', 'anything')).to.equal('/components');
     });
 
-    it('routes an implementation option to its platform component page', () => {
-      expect(resolveTargetUrl('rsp', 'button')).to.equal('/platforms/rsp/components/button');
-      expect(resolveTargetUrl('swc', 'tabs')).to.equal('/platforms/swc/components/tabs');
+    it('preserves the section suffix when switching implementations', () => {
+      expect(resolveTargetUrl('rsp', 'overview')).to.equal('/platforms/rsp/overview');
+      expect(resolveTargetUrl('swc', 'components/button')).to.equal('/platforms/swc/components/button');
+      expect(resolveTargetUrl('rsp', 'components/tabs')).to.equal('/platforms/rsp/components/tabs');
+    });
+  });
+
+  describe('getPlatformSectionSuffix', () => {
+    it('returns the path after /platforms/[impl]/ for platform paths', () => {
+      expect(getPlatformSectionSuffix('/platforms/rsp/overview')).to.equal('overview');
+      expect(getPlatformSectionSuffix('/platforms/swc/components/button')).to.equal('components/button');
+    });
+
+    it('returns an empty string for an impl root with no further path', () => {
+      expect(getPlatformSectionSuffix('/platforms/rsp')).to.equal('');
+      expect(getPlatformSectionSuffix('/platforms/rsp/')).to.equal('');
+    });
+
+    it('returns null for non-platform paths', () => {
+      expect(getPlatformSectionSuffix('/components/button')).to.be.null;
+      expect(getPlatformSectionSuffix('/foundations/principles')).to.be.null;
+      expect(getPlatformSectionSuffix('/')).to.be.null;
     });
   });
 

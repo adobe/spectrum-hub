@@ -25,7 +25,7 @@ async function fetchQueryIndex() {
 function buildCard(impl, count) {
   const card = document.createElement('a');
   card.className = 'implementation-card';
-  card.href = `/platforms/${impl.id}/`;
+  card.href = `/platforms/${impl.id}/overview`;
   card.setAttribute('aria-label', `${impl.label}: ${count} ${count === 1 ? 'component' : 'components'}`);
 
   const title = document.createElement('h2');
