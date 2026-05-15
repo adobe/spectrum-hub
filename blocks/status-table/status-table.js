@@ -7,6 +7,16 @@ function formatComponentLabel(slug) {
   return slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
 }
 
+// Variant: the block's classList narrows which implementations to render.
+//   <div class="status-table">      → all implementations (combined view)
+//   <div class="status-table rsp">  → React Spectrum only
+//   <div class="status-table swc">  → Spectrum Web Components only
+// Unknown / no variant class falls through to the combined view.
+function getRequestedImpls(el) {
+  const requested = IMPLEMENTATIONS.filter((impl) => el.classList.contains(impl.id));
+  return requested.length ? requested : IMPLEMENTATIONS;
+}
+
 async function fetchImplStatus(implId) {
   try {
     const resp = await fetch(`/deps/${implId}/data/status.json`);
@@ -29,12 +39,12 @@ function unionComponents(statusByImpl) {
   return [...set].sort();
 }
 
-function buildHeaderCells() {
+function buildHeaderCells(impls) {
   const componentHead = document.createElement('th');
   componentHead.scope = 'col';
   componentHead.textContent = 'Component';
 
-  const implHeads = IMPLEMENTATIONS.map((impl) => {
+  const implHeads = impls.map((impl) => {
     const th = document.createElement('th');
     th.scope = 'col';
     th.textContent = impl.label;
@@ -61,12 +71,12 @@ function buildStatusCell(component, impl, statusData) {
   return td;
 }
 
-function buildRowCells(component, statusByImpl) {
+function buildRowCells(component, impls, statusByImpl) {
   const rowHead = document.createElement('th');
   rowHead.scope = 'row';
   rowHead.textContent = formatComponentLabel(component);
 
-  const statusCells = IMPLEMENTATIONS.map((impl) => (
+  const statusCells = impls.map((impl) => (
     buildStatusCell(component, impl, statusByImpl[impl.id])
   ));
 
@@ -94,8 +104,10 @@ function labelTableFromSectionHeading(table, el) {
 }
 
 export default async function init(el) {
+  const requestedImpls = getRequestedImpls(el);
+
   const statusByImpl = {};
-  await Promise.all(IMPLEMENTATIONS.map(async (impl) => {
+  await Promise.all(requestedImpls.map(async (impl) => {
     statusByImpl[impl.id] = await fetchImplStatus(impl.id);
   }));
 
@@ -104,8 +116,10 @@ export default async function init(el) {
     return;
   }
 
-  const headerCells = buildHeaderCells();
-  const dataCells = components.map((component) => buildRowCells(component, statusByImpl));
+  const headerCells = buildHeaderCells(requestedImpls);
+  const dataCells = components.map((component) => (
+    buildRowCells(component, requestedImpls, statusByImpl)
+  ));
 
   const table = buildTableElement(headerCells, dataCells);
   table.classList.add('status-table');
