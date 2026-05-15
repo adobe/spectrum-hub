@@ -7,6 +7,14 @@
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
 
+      /* Rail is a flex column so an empty .picker (on non-platform landings)
+         collapses without pushing the sitenav down. */
+      .left-rail {
+        display: flex;
+        flex-direction: column;
+        gap: var(--s2-spacing-400);
+      }
+
       .section {
         > .default-content {
           max-inline-size: 100%;

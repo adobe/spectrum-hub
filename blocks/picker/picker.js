@@ -18,10 +18,10 @@ export default async function init(el) {
     return;
   }
 
-  // Preserve the section under the impl when switching. Empty suffix on a bare
-  // impl root falls back to 'overview' since /platforms/[impl]/ itself isn't a
-  // real page.
-  const sectionSuffix = getPlatformSectionSuffix(path) || 'overview';
+  // Preserve the section under the impl when switching. On a bare impl root
+  // (e.g. /platforms/rsp) the suffix is empty — switching then routes to the
+  // sibling impl's root (e.g. /platforms/swc/), which is its landing page.
+  const sectionSuffix = getPlatformSectionSuffix(path);
 
   const picker = document.createElement('hub-picker');
   picker.options = OPTIONS;

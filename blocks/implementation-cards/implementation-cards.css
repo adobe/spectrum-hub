@@ -1,7 +1,14 @@
+.implementation-cards {
+  margin-block-end: 3rem;
+}
+
 .implementation-cards-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: 1rem;
+
+  @media (width >= 600px) {
+    grid-template-columns: repeat(auto-fit, 14rem);
+  }
 }
 
 .implementation-card {

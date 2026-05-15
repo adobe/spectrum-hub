@@ -14,7 +14,7 @@
       .right-rail {
         display: flex;
         flex-direction: column;
-        gap: var(--s2-spacing-400, 1rem);
+        gap: var(--s2-spacing-400);
       }
 
       .section {

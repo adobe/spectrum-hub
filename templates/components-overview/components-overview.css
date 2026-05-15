@@ -1,0 +1,22 @@
+.components-overview-template {
+  .template-wrapper {
+    gap: var(--s2-spacing-700);
+    inline-size: var(--se-grid-container-width);
+    margin: 0 auto;
+
+    .container {
+      box-sizing: border-box;
+    }
+
+    .section {
+      > .default-content,
+      > .block-content {
+        max-inline-size: 100%;
+      }
+
+      > .block-content {
+        
+      }
+    }
+  }
+}

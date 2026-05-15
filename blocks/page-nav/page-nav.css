@@ -1,0 +1,133 @@
+.page-nav {
+  position: sticky;
+  inset-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
+  z-index: 1; /* lift above sibling <main> so the overlay list can paint on top */
+  align-self: start;
+  font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
+  font-size: var(--s2-component-m-medium-font-size);
+  line-height: 1.4;
+  color: var(--se-body-color, #000);
+
+  @media (width >= 900px) {
+    max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+    overflow-block: auto;
+    padding-block: var(--s2-spacing-200);
+    inset-block-start: var(--sh-nav-height, 80px);
+  }
+
+  & ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  & li + li {
+    margin-block-start: var(--s2-spacing-50);
+  }
+}
+
+.page-nav > details {
+  position: relative;
+
+  @media (width >= 900px) {
+    position: static;
+  }
+}
+
+.page-nav > details[open] > ul {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+  overflow-y: auto;
+  padding: var(--s2-spacing-200);
+  background-color: var(--se-body-background-color);
+  z-index: 10;
+
+  @media (width >= 900px) {
+    position: static;
+    max-block-size: none;
+    overflow-y: visible;
+    padding: 0;
+    background-color: transparent;
+    z-index: auto;
+  }
+}
+
+/* The disclosure summary is the mobile-only approach: a full-width bar showing the current section name and a chevron.
+Hidden at desktop where the list renders inline in the rail. */
+.page-nav-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2-spacing-200);
+  padding: var(--s2-spacing-300) var(--s2-spacing-400);
+  background-color: var(--se-body-color);
+  color: var(--se-body-background-color);
+  font-weight: var(--s2-component-m-bold-font-weight);
+  cursor: pointer;
+  user-select: none;
+  list-style: none; /* hides the native disclosure marker */
+
+  @media (width >= 900px) {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--s2-blue-900);
+    outline-offset: var(--s2-spacing-50);
+  }
+
+  &::after {
+    content: '';
+    mask-image: url('../../img/icons/s2-chevron-down.svg');
+    background-color: currentcolor;
+    flex: 0 0 auto;
+    inline-size: 20px;
+    block-size: 20px;
+    transition: transform 0.15s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
+
+.page-nav > details[open] > .page-nav-summary::after {
+  transform: rotate(180deg);
+}
+
+.page-nav a {
+  display: block;
+  padding-block: var(--s2-spacing-100);
+  padding-inline: var(--s2-spacing-200);
+  border-radius: var(--s2-corner-radius-300);
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    background-color: rgb(from var(--se-body-color) r g b / 8%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--s2-blue-900);
+    outline-offset: var(--s2-spacing-50);
+  }
+}
+
+.page-nav a[aria-current="location"] {
+  background-color: rgb(from var(--s2-gray-1000) r g b / 16%);
+  font-weight: var(--s2-component-m-bold-font-weight);
+}
+
+/* Headings opted-in by the block (see init() in page-nav.js) get scroll-margin so anchor scrolls clear
+the sticky chrome. Mobile leaves room for the site header AND the page-nav summary bar; desktop only
+needs to clear the site header (the page-nav lives in the side rail, not above content). The 60px is an
+estimate of the summary's rendered height. */
+.page-nav-target {
+  scroll-margin-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px) + 60px); /* TODO: account for height of the collapsed sitenav */
+
+  @media (width >= 900px) {
+    scroll-margin-block-start: var(--sh-nav-height, 80px);
+  }
+}

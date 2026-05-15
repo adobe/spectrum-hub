@@ -20,11 +20,6 @@ const SEGMENT_ORDER = {
     'inclusivity',
     'support',
   ],
-  components: [
-    'core-systems',
-    'availability',
-    'patterns',
-  ],
 };
 
 // Strip the locale prefix (e.g. `/jp`) so URLs like `/jp/foundations/...` are
