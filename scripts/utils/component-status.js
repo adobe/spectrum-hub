@@ -1,20 +1,12 @@
-export function getComponentStatus(component, impl, data) {
-  const entry = data.components[component];
-  if (!entry) {
+// Resolves a component's status from an implementation's S2 manifest.
+// Both `rsp` (@react-spectrum/s2) and `swc` (@adobe/spectrum-wc) manifests
+// share the same shape: { package: { default_status }, components: { id: bool },
+// overrides: { id: status } }. Returns null when the component isn't in the
+// manifest (or is in the manifest with a falsy value) — i.e. the implementation
+// doesn't ship it yet.
+export function getComponentStatus(component, data) {
+  if (!data.components[component]) {
     return null;
   }
-
-  const override = data.overrides[component];
-
-  if (impl === 'swc') {
-    if (entry.second_gen) {
-      return override || data.generations.second_gen.default_status;
-    }
-    if (entry.first_gen) {
-      return override || data.generations.first_gen.default_status;
-    }
-    return null;
-  }
-
-  return override || data.package.default_status;
+  return data.overrides[component] || data.package.default_status;
 }

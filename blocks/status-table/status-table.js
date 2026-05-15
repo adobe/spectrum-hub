@@ -47,7 +47,7 @@ function buildHeader() {
 
 function buildCell(component, impl, statusData) {
   const td = document.createElement('td');
-  const status = getComponentStatus(component, impl.id, statusData);
+  const status = getComponentStatus(component, statusData);
   if (!status) {
     td.textContent = '—';
     td.setAttribute('aria-label', 'Not available');
