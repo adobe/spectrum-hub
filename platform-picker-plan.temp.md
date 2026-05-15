@@ -11,10 +11,12 @@ User story: as a Spectrum Hub visitor, I want to filter or switch documentation 
 The picker operates on a **flat content tree**:
 
 - **Per-implementation subtrees under `/platforms/`:**
-  - `/platforms/rsp/[section]/[page]`
+  - `/platforms/rsp` — the React Spectrum implementation landing page (was previously planned as `/platforms/rsp/overview`; the `/overview` segment was dropped in favor of the impl root being the landing page itself)
+  - `/platforms/rsp/[section]/[page]` (e.g. `/platforms/rsp/components/button`)
+  - `/platforms/swc` — the Spectrum Web Components implementation landing page (same pattern)
   - `/platforms/swc/[section]/[page]`
 - **Agnostic content at the root:**
-  - `/components` — the implementation-cards + cross-implementation status-table page (the "All" view). Reached via sitenav or by selecting "All" in the picker.
+  - `/components` — the implementation-cards + cross-implementation status-table page (the "All" view). Reached via sitenav or by selecting "All" in the picker. Uses the dedicated `components-overview` template (see Implementation outline).
   - Foundations / Guidance live at the root, outside `/platforms/`.
   - **No per-component agnostic pages in v1.** A page like `/components/[component]` is *not* part of the v1 model — pending the content-authoring open questions. Cross-implementation gap fallback targets `/components` (see the State and content reaction decisions).
 
@@ -129,8 +131,13 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
 ### Placement
 
 - **Section-scoped: the picker lives with the sitenav.**
-  - **Where it appears:** `/platforms/[implementation]/components/[component]` — implementation-specific component pages.
-  - **Where it does NOT appear:** `/components` (the implementation-cards + status-table overview page — reached via sitenav, not picker), `/foundations/*`, `/guidance/*`, homepage, top-level marketing pages. The picker only exists where switching implementation context for the current content is a meaningful action.
+  - **Where it appears:** any page under `/platforms/[impl]/...`, including:
+    - The implementation landing page itself (`/platforms/rsp`, `/platforms/swc`).
+    - Implementation-specific component pages (`/platforms/[impl]/components/[component]`).
+    - Any other section under an implementation that lands in v1+ (e.g. impl-specific foundations should they exist).
+    - This is wider than originally planned — the v0 sketch limited the picker to component detail pages only. Reality: anywhere the visitor is inside an implementation context, switching to the sibling impl is a meaningful action (it preserves the path *after* the impl segment — see Picker navigation below).
+  - **Where it does NOT appear:** `/components` (uses the implementation-cards + status-table overview instead — reached via sitenav, not picker), `/foundations/*`, `/guidance/*`, homepage, top-level marketing pages. The picker is gated by the picker block itself reading the URL — the templates inject the block unconditionally and it self-removes on non-platform paths.
+  - **Picker navigation behavior:** selecting a different impl preserves the path *after* the impl segment. From `/platforms/rsp/components/button` → swc → `/platforms/swc/components/button`. From `/platforms/rsp` (bare impl root) → swc → `/platforms/swc` (no trailing slash; the trailing-slash form returns 404 in AEM). Selecting "All" always routes to `/components`.
   - **Desktop:** rendered above the sitenav in the left rail. `<sp-picker>` inline; popup listbox opens below the trigger.
   - **Mobile:** rendered inside the section-menu disclosure (the existing collapsed `<details>` that wraps the sitenav at narrow widths). Visitors tap "Section menu" to open the disclosure; the picker sits at the top of that expanded panel, above the sitenav links. Tapping the `<hub-picker>` trigger opens the popdown listbox below it (see Control/a11y/selection above re: no tray mode in v1).
   - **Visual treatment / copy:** reads as a "view perspective" lens, not dev tooling.
@@ -180,34 +187,48 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
 1. **Picker block** (new — `blocks/picker/`)
    - Renders the custom Lit `<hub-picker>` defined in `picker-element.js`.
    - Selected state derived from URL (e.g. `/platforms/rsp/...` → `"rsp"`).
-   - On selection change → navigate to the corresponding URL (or `/components` if "All").
+   - On selection change → navigate, preserving the path after the impl segment. "All" routes to `/components`.
    - Renders at the top of the left rail (desktop) or inside the section-menu disclosure (mobile).
-   - Only present on `/platforms/[impl]/components/[component]` pages.
+   - Self-gates on URL: appears on any `/platforms/[impl]/...` page, no-op everywhere else. Templates inject the block unconditionally.
 
 2. **Related-resources block** (new — `blocks/related-resources/`)
    - Labeled-link list, mirroring the existing Figma component / Dev docs / Copy markdown pattern.
    - Adds **sibling-implementation links** (e.g. on a React Spectrum Button page, a link to the SWC Button page).
    - Lives in the page-nav rail (desktop) / page-nav section (mobile).
+   - Self-gates on URL: only appears on `/platforms/[impl]/components/[component]` pages (sibling links only meaningful for component-level pages).
 
 3. **Status-table block** (new — `blocks/status-table/`)
-   - Renders the cross-implementation comparison at `/components`.
-   - Rows = components. Columns = implementations. Cells = status badges (stable / beta / planned / etc.).
-   - Reads `/query-index.json` plus per-page metadata.
+   - Renders an implementation status grid. Rows = components. Columns = implementations. Cells = status badges (stable / beta / caution / deprecated).
+   - **Per-implementation variants via class:**
+     - `<div class="status-table">` — combined view, all impls (used on `/components`).
+     - `<div class="status-table rsp">` — RSP only (used on the RSP landing page `/platforms/rsp`).
+     - `<div class="status-table swc">` — SWC only (used on the SWC landing page `/platforms/swc`).
+     - Unknown classes fall back to the combined view.
+   - **Why variant class instead of URL inference:** the block could detect its scope from the current URL (combined on `/components`, single-impl on `/platforms/[impl]`). Variant class was chosen for two reasons: (1) authors get explicit control — placing the block in DA with a class is the same shape EDS uses for every other variant, and (2) URL inference fights you when content authors ever want a combined table on an impl page (or vice versa). Matches the create-new-block skill's stated variant pattern.
+   - **Composition:** imports `buildTableElement` from the existing `blocks/table/table.js` to share the role-reset scaffolding (aria-rowgroup, aria-row, etc. that survive responsive `display` changes). The status-table block only owns the per-cell rendering — badges, links to component pages, per-cell aria-labels — and inherits the table-building primitive.
+   - **Data:** consumes the two per-impl status manifests (`deps/{rsp,swc}/data/status.json`) via the `getComponentStatus` adapter.
 
 4. **Implementation-cards block** (new — `blocks/implementation-cards/`)
    - The cards-across-the-top at `/components` — one card per implementation.
-   - Shows component count + status-ratio visual.
+   - Shows component count (from `/query-index.json` entries under `/platforms/[impl]/components/`); status-ratio visual is deferred until design specs land.
+   - Each card links to `/platforms/[impl]` (the impl landing page) — no trailing slash, no `/overview` segment.
 
 5. **Sitenav block** (existing, modified — `blocks/sitenav/`)
    - New behavior: swap rendered subtree based on URL implementation segment.
    - Hides the `Platforms/` organizational wrapper from the visible nav.
+
+### New templates
+
+- **`components-overview` template** (`templates/components-overview/`) — owns the `/components` page composition. Renders the heading, implementation-cards, and status-table stacked in a grid. Uses `display: contents` (or equivalent) on `.default-content` / `.block-content` wrappers so authored blocks promote to grid items, and hides empty `.block-content` wrappers DA may emit so the layout doesn't accumulate empty rows.
+- **`detail` template** (existing, modified) — left rail wraps picker + sitenav; right rail wraps page-nav + related-resources. Used for `/platforms/[impl]/components/[component]` pages.
+- **`landing` template** (existing, modified) — left rail wraps picker + sitenav. Used for `/platforms/[impl]` impl landing pages and other landings (e.g. `/foundations/`). Picker self-gates so it's an empty container on non-platform landings.
 
 ### Data sources
 
 | Source | Used by | Notes |
 | --- | --- | --- |
 | `/query-index.json` (existing) | sitenav, implementation-cards | Already powers the current sitenav. Used to list pages per implementation for nav and counting. |
-| `deps/swc/data/status.json` (new) | status-table, related-resources, implementation-cards | Extracted from npm + unpkg metadata for `@spectrum-web-components/*` (1st-gen, `sp-*` tag names) and `@adobe/spectrum-wc` (2nd-gen, `swc-*` tag names). Contains per-component presence in each generation, per-generation version → default status (`0.x` → Beta, `1.x` → Stable), and optional hand-curated per-component overrides. |
+| `deps/{rsp,swc}/data/status.json` | status-table, implementation-cards | **S2-only** per-impl manifests. Both manifests share a flat schema: `{ package: { default_status }, components: { id: bool }, overrides: { id: status } }`. RSP targets `@react-spectrum/s2`; SWC targets `@adobe/spectrum-wc` (2nd-gen, `swc-*` tags). The dual-generation modeling that earlier drafts had (first_gen / second_gen per component) was dropped — components shipping only in 1st-gen `sp-*` are intentionally invisible to the picker. Today both manifests are hand-authored seeds; extraction pipelines that regenerate them are tracked separately (see Build order step 2). |
 | Per-page metadata (`<meta>` tags) | picker | Implementation derived from URL segment, not metadata. |
 | Implementations registry | picker, related-resources, implementation-cards | v1: hardcoded list `['rsp', 'swc']`. Future: data-driven per the extensibility decision so adding a new web framework doesn't require a code change. |
 
@@ -237,24 +258,45 @@ URL = /platforms/rsp/components/button
 └─► Page content (standard EDS block decoration)
 ```
 
-**On `/components`:**
+**On `/components`** (uses the dedicated `components-overview` template):
 
 ```
 URL = /components
 │
 ├─► (No picker — out of scope per Placement decision)
 │
-├─► Sitenav block
-│     Standard components-section nav (no implementation subtree swap)
-│
 ├─► Implementation-cards block
 │     Fetch /query-index.json
-│     Group by implementation → render one card each, with count + status ratio
+│     Group by implementation → render one card each, with count
+│     (status-ratio visual deferred until design lands)
 │
-└─► Status-table block
-      Fetch /query-index.json + read per-page metadata
-      Group by (component × implementation)
-      Render grid with status badges
+└─► Status-table block (no variant class — combined view)
+      Fetch /deps/{rsp,swc}/data/status.json
+      Compute union of components across both manifests
+      Render table: rows = components, columns = implementations,
+      cells = status badges linked to /platforms/[impl]/components/[component]
+```
+
+**On a per-implementation landing page** (e.g. `/platforms/rsp`):
+
+```
+URL = /platforms/rsp
+│
+├─► Picker block
+│     Parse URL → "rsp"
+│     Render <hub-picker> value="rsp"
+│     On change → preserve path-after-impl (empty here) → navigate to
+│       /platforms/swc (no trailing slash) or /components for "All"
+│
+├─► Sitenav block
+│     Section prefix → /platforms/rsp
+│     Filter pages whose path === prefix OR path starts with prefix + "/"
+│     Render subtree of children (impl root itself is excluded from its
+│     own tree, same as every other section landing page)
+│
+└─► Status-table block (variant class: rsp)
+      Fetch /deps/rsp/data/status.json only
+      Render single-column table of RSP components
 ```
 
 ### Layout
@@ -301,22 +343,26 @@ URL = /components
 
 ### Build order
 
-Ordered to push decoupling seams to the front. Design specs are still in flight, so blocks built early should be cheap to rework visually. Strategy: shared utilities own all the cross-cutting logic (implementation list, URL parsing, status lookup); blocks stay thin and visual-only; the template owns placement and composition (no cross-block DOM mutation).
+Ordered to push decoupling seams to the front. Design specs are still in flight, so blocks built early should be cheap to rework visually. Strategy: shared utilities own all the cross-cutting logic (implementation list, URL parsing, status lookup); blocks stay thin and visual-only; the **templates** own placement and composition (no cross-block DOM mutation). The build flow is *pieces first* (utilities → adapter → individual blocks), *wiring last* (templates compose those blocks into pages), *then verify*.
 
 1. **Shared utilities** (`scripts/utils/`) — **shipped:**
    - `implementations.js` — single source of truth for the implementation list (`IMPLEMENTATIONS`, `ALL_OPTION`), `getImplementationById`, `getOtherImplementations`. Adding a third implementation later = edit one file.
    - `platform-url.js` — URL parsing / building: `getImplementationFromPath`, `getComponentFromPath`, `buildImplementationPath`, `isOnPlatformPage`, `isOnComponentsOverview`. URL structure changes contained here.
-2. **Status adapter + seed manifests:**
-   - `scripts/utils/component-status.js` — thin adapter over the per-impl status manifests. Consumers call `getComponentStatus(component, impl)` without knowing the manifest's field shape. **Shipped.**
-   - `deps/swc/data/status.json` and `deps/rsp/data/status.json` — hand-authored seed manifests matching the adapter's schema. **Shipped as placeholders.**
-   - Extraction pipelines that regenerate these from npm + unpkg are **deferred to follow-up tickets.** RSP retargets from `@adobe/react-spectrum` (v3 classic) to `@react-spectrum/s2`; SWC moves to `@adobe/spectrum-wc` (2nd-gen) once Button and ActionButton land there. Both tickets are open; this plan unblocks block work in the meantime by treating the seed manifests as the contract.
+2. **Status adapter + S2 manifests:**
+   - `scripts/utils/component-status.js` — thin adapter over the per-impl status manifests. Consumers call `getComponentStatus(component, data)` without knowing the manifest's field shape. **Shipped.**
+   - `deps/rsp/data/status.json` and `deps/swc/data/status.json` — S2-only per-impl manifests, currently hand-authored seeds. **Shipped as placeholders matching the long-term schema.**
+   - **Retargeting the extraction pipelines is now a near-term priority (no longer "defer until after blocks").** Both pipelines currently target non-S2 packages (`@adobe/react-spectrum` v3 classic for RSP, `@spectrum-web-components/*` 1st-gen for SWC), which is at odds with the picker's S2-only contract. Real data is available upstream for both: RSP S2 ships many components, and `@adobe/spectrum-wc` has ~8 beta components today. Without the retarget, the status table can't render anything meaningful beyond the seeded placeholders. Both retarget tickets are open and should be picked up alongside / immediately after the picker work — they are the gating dependency for the status-table block being useful in production.
 3. **Authoring contract** — confirm with content team the "repeat content per implementation page" approach in parallel with utility work. Finalize URL patterns and any per-page metadata fields.
-4. **Picker block** — `<sp-picker>` wrapper, URL-derived state, navigation on selection change. Imports utilities. Wrapped in a thin facade so swapping the underlying control later (e.g. for a different SWC version, native `<select>`, custom combobox) is contained at the facade boundary. No knowledge of the sitenav or other blocks.
+4. **Picker block** — custom Lit `<hub-picker>` (defined in `picker-element.js`), URL-derived state, navigation on selection change that preserves the path-after-impl. Self-gates on URL: renders on any `/platforms/[impl]/...` page, no-op everywhere else. Imports utilities. No knowledge of the sitenav or other blocks.
 5. **Sitenav extension** — subtree-swap by URL implementation segment; hide `Platforms/` wrapper. Reads utilities for URL parsing and implementation list. Does not know about the picker or related-resources.
-6. **Related-resources block** — labeled-link list with sibling-implementation entries. Reads utilities for "other implementations" and `platform-url.js` for building sibling links. Same shape as the picker logic but emits anchor links instead of `<sp-picker>` options.
-7. **Template-owned placement** — the components template (or a `section-menu` wrapper block) renders the structural composition so picker and sitenav sit as siblings inside `<details>` on mobile and stack in the left rail on desktop. Neither block mutates the other's DOM. When the unified-mobile-drawer ticket eventually lands, this is the only piece that needs reshuffling.
-8. **`/components` overview** — implementation-cards block + status-table block. Both consume `component-status.js`. Build last so design specs have the longest possible runway to arrive before code lands.
-9. **Tests + a11y audit** — block-level unit tests; keyboard / screen-reader pass across the new chrome. Per-block CSS scopes (no `.sitenav .picker { ... }` selectors anywhere); placement-coordination CSS lives on the template's layout wrapper.
+6. **Related-resources block** — labeled-link list with sibling-implementation entries. Reads utilities for "other implementations" and `platform-url.js` for building sibling links. Same shape as the picker logic but emits anchor links instead of picker options.
+7. **`/components` overview blocks** — implementation-cards block + status-table block. Both consume `component-status.js` and the per-impl status manifests. The status-table block also imports `buildTableElement` from the existing `blocks/table/table.js` to share table-building scaffolding. Built independently of any template — placement comes in step 8.
+8. **Template-owned placement** — the three templates that compose these blocks into pages:
+   - **`templates/detail/`** (modified) — left rail wraps `.picker` + `.sitenav`; right rail wraps `.page-nav` + `.related-resources`. Used for `/platforms/[impl]/components/[component]` pages.
+   - **`templates/landing/`** (modified) — left rail wraps `.picker` + `.sitenav`. Used for `/platforms/[impl]` impl landing pages and other landings (e.g. `/foundations/`). Picker self-gates so it's an empty container on non-platform landings.
+   - **`templates/components-overview/`** (new) — single-column grid stacking heading, implementation-cards, and status-table for the `/components` page. Uses `display: contents` (or equivalent) on DA's `.default-content` / `.block-content` wrappers so the authored blocks promote to grid items, and hides empty `.block-content` wrappers DA may emit so the layout doesn't gain empty rows.
+   - Across all three: no cross-block DOM mutation — each block owns its own DOM, the template just chooses where each lives. When the unified-mobile-drawer ticket eventually lands, the mobile disclosure migration is contained to these template files.
+9. **Tests + a11y audit** — block-level unit tests; keyboard / screen-reader pass across the new chrome. Per-block CSS scopes (no `.sitenav .picker { ... }` selectors anywhere); placement-coordination CSS lives on the templates' layout wrappers.
 
 The line between **visual rework** (likely) and **structural rework** (less likely) is intentionally encoded in this file layout: design changes → edit blocks; IA / URL / implementation-set changes → edit utilities.
 

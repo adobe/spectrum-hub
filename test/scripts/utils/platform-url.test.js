@@ -100,16 +100,20 @@ describe('scripts/utils/platform-url.js', () => {
     });
 
     it('preserves the section suffix when switching implementations', () => {
-      expect(resolveTargetUrl('rsp', 'overview')).to.equal('/platforms/rsp/overview');
       expect(resolveTargetUrl('swc', 'components/button')).to.equal('/platforms/swc/components/button');
       expect(resolveTargetUrl('rsp', 'components/tabs')).to.equal('/platforms/rsp/components/tabs');
+    });
+
+    it('routes to the impl root without trailing slash when the suffix is empty', () => {
+      expect(resolveTargetUrl('rsp', '')).to.equal('/platforms/rsp');
+      expect(resolveTargetUrl('swc', '')).to.equal('/platforms/swc');
     });
   });
 
   describe('getPlatformSectionSuffix', () => {
     it('returns the path after /platforms/[impl]/ for platform paths', () => {
-      expect(getPlatformSectionSuffix('/platforms/rsp/overview')).to.equal('overview');
       expect(getPlatformSectionSuffix('/platforms/swc/components/button')).to.equal('components/button');
+      expect(getPlatformSectionSuffix('/platforms/rsp/components/tabs')).to.equal('components/tabs');
     });
 
     it('returns an empty string for an impl root with no further path', () => {
@@ -126,13 +130,13 @@ describe('scripts/utils/platform-url.js', () => {
 
   describe('getSectionPrefix', () => {
     it('returns the implementation-scoped prefix for /platforms/[impl]/* paths', () => {
-      expect(getSectionPrefix('/platforms/rsp/components/button')).to.equal('/platforms/rsp/');
-      expect(getSectionPrefix('/platforms/swc/components/tabs')).to.equal('/platforms/swc/');
+      expect(getSectionPrefix('/platforms/rsp/components/button')).to.equal('/platforms/rsp');
+      expect(getSectionPrefix('/platforms/swc/components/tabs')).to.equal('/platforms/swc');
     });
 
     it('returns the top-section prefix for non-platform paths', () => {
-      expect(getSectionPrefix('/foundations/principles')).to.equal('/foundations/');
-      expect(getSectionPrefix('/components/button')).to.equal('/components/');
+      expect(getSectionPrefix('/foundations/principles')).to.equal('/foundations');
+      expect(getSectionPrefix('/components/button')).to.equal('/components');
     });
 
     it('returns null for the root path', () => {

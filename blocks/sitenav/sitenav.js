@@ -96,7 +96,12 @@ async function treeFromIndex(sectionPrefix) {
     return null;
   }
   const { data } = await resp.json();
-  const sectionPages = data.filter(({ path }) => path.startsWith(sectionPrefix));
+  // sectionPrefix has no trailing slash (e.g. /platforms/rsp), so an exact
+  // match or a `prefix/`-extended match are both valid; bare `startsWith`
+  // alone would also match sibling prefixes like `/platforms/rsp-other`.
+  const sectionPages = data.filter(({ path }) => (
+    path === sectionPrefix || path.startsWith(`${sectionPrefix}/`)
+  ));
   if (!sectionPages.length) {
     return null;
   }
