@@ -18,11 +18,14 @@ const PROP_ORDER = Object.keys(PROPS_TO_LABELS);
 // in a component-specific API table.
 const EXCLUDED_SOURCES = new Set(['StyleProps']);
 
-const buildTableElement = (headerCells, dataCells) => {
+// Exposed so specialized table blocks (e.g. status-table) can share the role-
+// reset scaffolding without re-implementing it. Callers pass already-built
+// header and data cells; this wraps them in <thead>/<tbody>/<tr> with the
+// explicit role attributes that survive responsive `display` changes on small
+// screens (WCAG 1.3.1 — Info and Relationships).
+export const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');
   tableHead.classList.add('header-row');
-  // explicitly resetting table roles so that when the CSS display property changes on
-  // small screens, no accessibility issues arise (WCAG 1.3.1 (Info and Relationships))
   tableHead.role = 'rowgroup';
 
   const headRow = document.createElement('tr');
@@ -38,7 +41,11 @@ const buildTableElement = (headerCells, dataCells) => {
     const bodyRow = document.createElement('tr');
     bodyRow.classList.add('row');
     bodyRow.role = 'row';
-    cells.forEach((cell) => { cell.role = 'cell'; });
+    cells.forEach((cell) => {
+      // <th scope="row"> stays a rowheader after the responsive role reset;
+      // everything else (including non-row <th>) becomes a plain cell.
+      cell.role = cell.tagName === 'TH' && cell.scope === 'row' ? 'rowheader' : 'cell';
+    });
     bodyRow.append(...cells);
     tableBody.append(bodyRow);
   }
