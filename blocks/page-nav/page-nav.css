@@ -1,7 +1,12 @@
 .page-nav {
   position: sticky;
   inset-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
-  z-index: 1; /* lift above sibling <main> so the overlay list can paint on top */
+
+  /* Same tier as the sitenav in the chrome stacking ladder (see styles.css).
+     Both pin on mobile with different `top` offsets, so they never overlap
+     each other — but they both need to overlay <main> and sit below the
+     picker's listbox and the header's mobile-menu. */
+  z-index: var(--sh-z-sitenav);
   align-self: start;
   font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
   font-size: var(--s2-component-m-medium-font-size);
@@ -42,7 +47,7 @@
   overflow-y: auto;
   padding: var(--s2-spacing-200);
   background-color: var(--se-body-background-color);
-  z-index: 10;
+  z-index: var(--sh-z-sitenav);
 
   @media (width >= 900px) {
     position: static;

@@ -1,21 +1,46 @@
-@media (width >= 900px) {
-  .detail-template {
+.detail-template {
+  /* Mobile (default): single-column flow with the rails stacked above main so
+     the page-nav inside the right rail can sticky-pin near the top of the
+     viewport once the visitor scrolls past it. Right-rail ALSO holds
+     related-resources today — see template-integration discussion. */
+  .template-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'left-rail'
+      'right-rail'
+      'main';
+
+    .left-rail {
+      grid-area: left-rail;
+    }
+
+    .right-rail {
+      grid-area: right-rail;
+    }
+
+    main {
+      grid-area: main;
+    }
+
+    /* Rails are flex columns so empty children (e.g. the .picker element on
+       non-platform pages, or .related-resources off component pages) collapse
+       without leaving grid gaps. */
+    .left-rail,
+    .right-rail {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2-spacing-400);
+    }
+  }
+
+  @media (width >= 900px) {
     .template-wrapper {
-      display: grid;
       grid-template-columns: 0.2fr 0.6fr 0.2fr;
+      grid-template-areas: 'left-rail main right-rail';
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
-
-      /* Rails are flex columns so empty children (e.g. the .picker element on
-         non-platform pages, or .related-resources off component pages)
-         collapse without leaving grid gaps. */
-      .left-rail,
-      .right-rail {
-        display: flex;
-        flex-direction: column;
-        gap: var(--s2-spacing-400);
-      }
 
       .section {
         > .default-content {
