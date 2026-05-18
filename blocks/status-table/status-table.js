@@ -2,10 +2,7 @@ import { buildTableElement } from '../table/table.js';
 import { IMPLEMENTATIONS } from '../../scripts/utils/implementations.js';
 import { getComponentStatus } from '../../scripts/utils/component-status.js';
 import { buildImplementationPath } from '../../scripts/utils/platform-url.js';
-
-function formatComponentLabel(slug) {
-  return slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
-}
+import { formatLabel } from '../../scripts/utils/strings.js';
 
 // Variant: the block's classList narrows which implementations to render.
 //   <div class="status-table">      → all implementations (combined view)
@@ -66,7 +63,7 @@ function buildStatusCell(component, impl, statusData) {
   link.href = buildImplementationPath(impl.id, component);
   link.className = `status-badge status-badge-${status}`;
   link.textContent = status;
-  link.setAttribute('aria-label', `${formatComponentLabel(component)} in ${impl.label}: ${status}`);
+  link.setAttribute('aria-label', `${formatLabel(component)} in ${impl.label}: ${status}`);
   td.append(link);
   return td;
 }
@@ -74,7 +71,7 @@ function buildStatusCell(component, impl, statusData) {
 function buildRowCells(component, impls, statusByImpl) {
   const rowHead = document.createElement('th');
   rowHead.scope = 'row';
-  rowHead.textContent = formatComponentLabel(component);
+  rowHead.textContent = formatLabel(component);
 
   const statusCells = impls.map((impl) => (
     buildStatusCell(component, impl, statusByImpl[impl.id])

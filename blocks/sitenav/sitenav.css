@@ -1,22 +1,12 @@
 .sitenav {
-  position: sticky;
-  top: var(--sitenav-top-offset, var(--sh-nav-height, 0));
-
-  /* Floor of the chrome stacking ladder — above sibling <main> but below the
-     picker's listbox and the header's mobile-nav. See styles.css. */
-  z-index: var(--sh-z-sitenav);
-  align-self: start;
+  /* Stickiness lives on the .left-rail container (see templates/detail/detail.css
+     and templates/landing/landing.css) so picker and sitenav pin as a unit. */
   font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
   font-size: var(--s2-component-m-medium-font-size);
   line-height: 1.4;
   color: var(--se-body-color, #000);
   padding: var(--s2-spacing-200) var(--s2-spacing-100);
   background-color: var(--se-body-background-color);
-
-  @media (width >= 900px) {
-    max-block-size: calc(100vh - var(--sh-nav-height, 0px));
-    overflow-y: auto;
-  }
 }
 
 .sitenav > details {

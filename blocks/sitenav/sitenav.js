@@ -6,6 +6,7 @@ import {
   getImplementationFromPath,
   getSectionPrefix,
 } from '../../scripts/utils/platform-url.js';
+import { formatLabel } from '../../scripts/utils/strings.js';
 
 const { locale } = getConfig();
 
@@ -36,10 +37,6 @@ function isAncestorOf(ancestorPath, currentPath) {
     return false;
   }
   return currentPath === ancestorPath || currentPath.startsWith(`${ancestorPath}/`);
-}
-
-function formatLabel(key) {
-  return key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
 }
 
 // tree derived from query-index.json + SEGMENT_ORDER. `sectionPrefix` is the

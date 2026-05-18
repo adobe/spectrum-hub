@@ -1,19 +1,28 @@
-@media (width >= 900px) {
-  .landing-template {
+.landing-template {
+  /* Container-level stickiness so picker + sitenav stay pinned as the
+     visitor scrolls. Rail sits at the picker tier of the chrome stacking
+     ladder (see styles.css) so the picker's listbox can overlay anything
+     below picker tier. Flex column so an empty .picker (on non-platform
+     landings) collapses without pushing the sitenav down. Applied at both
+     viewports — desktop adds the grid that places it as a side column. */
+  .template-wrapper .left-rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2-spacing-400);
+    position: sticky;
+    inset-block-start: var(--sh-nav-height, 80px);
+    z-index: var(--sh-z-picker);
+    max-block-size: calc(100vh - var(--sh-nav-height, 80px));
+    overflow-y: auto;
+  }
+
+  @media (width >= 900px) {
     .template-wrapper {
       display: grid;
       grid-template-columns: 0.2fr 0.8fr;
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
-
-      /* Rail is a flex column so an empty .picker (on non-platform landings)
-         collapses without pushing the sitenav down. */
-      .left-rail {
-        display: flex;
-        flex-direction: column;
-        gap: var(--s2-spacing-400);
-      }
 
       .section {
         > .default-content {

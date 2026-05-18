@@ -6,16 +6,10 @@ export default async function init() {
   const wrapper = document.createElement('div');
   wrapper.className = 'template-wrapper';
 
-  // Left rail: picker (above) + sitenav (below).
-  // INTERIM: picker and sitenav are siblings inside `.left-rail`, but the
-  // platform-picker plan calls for them to share one `<details>` disclosure on
-  // mobile (picker hidden until the visitor expands the section menu). Today
-  // the sitenav owns its own internal disclosure; folding the picker inside it
-  // requires migrating disclosure ownership out of the sitenav block. Deferred
-  // to the unified-mobile-drawer ticket (see unified-mobile-drawer-ticket.temp.md).
-  // Once that lands, the disclosure moves up to this template and wraps both
-  // children, matching the plan's mobile UX. The picker block self-gates on
-  // URL, so the empty `.picker` element is harmless on non-platform pages.
+  // Left rail: picker above sitenav. Both self-gate on URL so empty containers
+  // are harmless on non-platform pages. The picker/sitenav disclosure merge for
+  // mobile is owned by the unified-mobile-drawer ticket (see
+  // unified-mobile-drawer-ticket.temp.md), not by this template.
   const leftRail = document.createElement('div');
   leftRail.className = 'left-rail';
 

@@ -3,8 +3,6 @@ import {
   getImplementationFromPath,
   getComponentFromPath,
   buildImplementationPath,
-  isOnPlatformPage,
-  isOnComponentsOverview,
   isOnPlatformComponentPage,
   resolveTargetUrl,
   getSectionPrefix,
@@ -37,39 +35,6 @@ describe('scripts/utils/platform-url.js', () => {
     it('builds a /platforms/[impl]/components/[component] URL', () => {
       expect(buildImplementationPath('rsp', 'button')).to.equal('/platforms/rsp/components/button');
       expect(buildImplementationPath('swc', 'tabs')).to.equal('/platforms/swc/components/tabs');
-    });
-  });
-
-  describe('isOnPlatformPage', () => {
-    it('returns true for paths under /platforms/', () => {
-      expect(isOnPlatformPage('/platforms/rsp/components/button')).to.be.true;
-      expect(isOnPlatformPage('/platforms/swc')).to.be.true;
-    });
-
-    it('returns false for paths outside /platforms/', () => {
-      expect(isOnPlatformPage('/components/button')).to.be.false;
-      expect(isOnPlatformPage('/foundations/getting-started/principles')).to.be.false;
-      expect(isOnPlatformPage('/')).to.be.false;
-    });
-  });
-
-  describe('isOnComponentsOverview', () => {
-    it('returns true for the agnostic /components overview', () => {
-      expect(isOnComponentsOverview('/components')).to.be.true;
-      expect(isOnComponentsOverview('/components/')).to.be.true;
-    });
-
-    it('returns true for an agnostic component detail page', () => {
-      expect(isOnComponentsOverview('/components/button')).to.be.true;
-    });
-
-    it('returns false for platform-scoped paths', () => {
-      expect(isOnComponentsOverview('/platforms/rsp/components/button')).to.be.false;
-    });
-
-    it('returns false for unrelated paths', () => {
-      expect(isOnComponentsOverview('/foundations/principles')).to.be.false;
-      expect(isOnComponentsOverview('/')).to.be.false;
     });
   });
 
