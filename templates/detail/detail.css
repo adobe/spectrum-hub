@@ -1,8 +1,7 @@
 .detail-template {
   /* Mobile (default): single-column flow with the rails stacked above main so
      the page-nav inside the right rail can sticky-pin near the top of the
-     viewport once the visitor scrolls past it. Right-rail ALSO holds
-     related-resources today — see template-integration discussion. */
+     viewport once the visitor scrolls past it. */
   .template-wrapper {
     display: grid;
     grid-template-columns: 1fr;
@@ -13,24 +12,32 @@
 
     .left-rail {
       grid-area: left-rail;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2-spacing-400);
     }
 
+    /* Container-level stickiness: the whole right-rail pins as a unit so the
+       page-nav and related-resources stay together. Top offset accounts for
+       the sticky header AND the sticky sitenav summary so right-rail lands
+       just below the sitenav disclosure bar. Shares the sitenav tier of the
+       chrome stacking ladder (see styles.css) because it's section chrome.
+       max-block-size + overflow-y let the rail scroll internally when the
+       combined page-nav + related-resources height exceeds the viewport. */
     .right-rail {
       grid-area: right-rail;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2-spacing-400);
+      position: sticky;
+      inset-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px));
+      z-index: var(--sh-z-sitenav);
+      max-block-size: calc(100vh - var(--sh-nav-height, 80px) - var(--sitenav-summary-height, 0px));
+      overflow-y: auto;
     }
 
     main {
       grid-area: main;
-    }
-
-    /* Rails are flex columns so empty children (e.g. the .picker element on
-       non-platform pages, or .related-resources off component pages) collapse
-       without leaving grid gaps. */
-    .left-rail,
-    .right-rail {
-      display: flex;
-      flex-direction: column;
-      gap: var(--s2-spacing-400);
     }
   }
 
@@ -41,6 +48,14 @@
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
+
+      /* Desktop: right-rail still sticks (now to the side of main rather than
+         above it). Top offset only needs to clear the header — sitenav is in
+         the left rail, not above page-nav. */
+      .right-rail {
+        inset-block-start: var(--sh-nav-height, 80px);
+        max-block-size: calc(100vh - var(--sh-nav-height, 80px));
+      }
 
       .section {
         > .default-content {

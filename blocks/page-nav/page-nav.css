@@ -1,24 +1,11 @@
 .page-nav {
-  position: sticky;
-  inset-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
-
-  /* Same tier as the sitenav in the chrome stacking ladder (see styles.css).
-     Both pin on mobile with different `top` offsets, so they never overlap
-     each other — but they both need to overlay <main> and sit below the
-     picker's listbox and the header's mobile-menu. */
-  z-index: var(--sh-z-sitenav);
-  align-self: start;
+  /* Stickiness lives on the .right-rail container (see templates/detail/detail.css)
+     so page-nav and related-resources pin as a unit. The block is just a
+     regular flow child of that sticky container — no individual sticky here. */
   font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
   font-size: var(--s2-component-m-medium-font-size);
   line-height: 1.4;
   color: var(--se-body-color, #000);
-
-  @media (width >= 900px) {
-    max-block-size: calc(100vh - var(--sh-nav-height, 0px));
-    overflow-block: auto;
-    padding-block: var(--s2-spacing-200);
-    inset-block-start: var(--sh-nav-height, 80px);
-  }
 
   & ul {
     list-style: none;
