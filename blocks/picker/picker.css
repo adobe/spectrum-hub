@@ -1,3 +1,10 @@
 .picker {
   display: block;
+
+  /* Establish a stacking context so the listbox inside the shadow DOM paints
+     above the sitenav's expanded disclosure on mobile. Without this the
+     sitenav's <details>[open] > .sitenav-list renders on top of the listbox.
+     Sits below the header's mobile-menu in the chrome stacking ladder. */
+  position: relative;
+  z-index: var(--sh-z-picker);
 }

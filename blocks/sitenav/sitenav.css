@@ -1,7 +1,10 @@
 .sitenav {
   position: sticky;
   top: var(--sitenav-top-offset, var(--sh-nav-height, 0));
-  z-index: 1; /* lift above sibling <main> so the overlay list can paint on top */
+
+  /* Floor of the chrome stacking ladder — above sibling <main> but below the
+     picker's listbox and the header's mobile-nav. See styles.css. */
+  z-index: var(--sh-z-sitenav);
   align-self: start;
   font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
   font-size: var(--s2-component-m-medium-font-size);
@@ -31,7 +34,7 @@
   max-block-size: calc(100vh - var(--sh-nav-height, 0px));
   overflow-y: auto;
   background-color: var(--se-body-background-color);
-  z-index: 1;
+  z-index: var(--sh-z-sitenav);
 
   @media (width >= 900px) {
     position: static;

@@ -312,6 +312,14 @@
   /* nav */
   --sh-nav-height: 80px;
 
+  /* Chrome stacking ladder.
+     Centralized so the picker's listbox, the sitenav disclosure, and the
+     header's mobile menu can never silently fight each other on small screens.
+     Order: mobile menu > picker (open listbox overlays sitenav) > sitenav. */
+  --sh-z-sitenav: 10;
+  --sh-z-picker: 20;
+  --sh-z-mobile-menu: 30;
+
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);
 

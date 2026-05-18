@@ -3,7 +3,10 @@ header {
   visibility: unset;
   position: sticky;
   inset: 0;
-  z-index: 1;
+
+  /* Top of the chrome stacking ladder so the mobile-nav drawer always wins
+     against the picker's listbox and the sitenav disclosure. See styles.css. */
+  z-index: var(--sh-z-mobile-menu);
   isolation: isolate;
 
   /*
