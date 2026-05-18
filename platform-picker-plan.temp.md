@@ -216,12 +216,53 @@ Grouped by concern. Each cluster answers a piece of "what is this picker and how
 5. **Sitenav block** (existing, modified — `blocks/sitenav/`)
    - New behavior: swap rendered subtree based on URL implementation segment.
    - Hides the `Platforms/` organizational wrapper from the visible nav.
+   - Drive-by fix: the previous `init` read `pathname.split('/')[1]` raw and produced labels like "Jp navigation" on locale-prefixed URLs. The refactor uses a `strippedPath()` helper so locale-prefixed paths get the same label as the unprefixed default.
+   - **Stickiness moved out:** `position: sticky` and its `top` offset used to live on `.sitenav`. After the rail-container-sticky refactor (see Chrome infrastructure below), the rail container pins as a unit and `.sitenav` is regular flow inside it. The inner overlay (`.sitenav > details[open] > .sitenav-list`) keeps its own `z-index` for the open-disclosure popup.
+
+6. **Page-nav block** (existing, modified — `blocks/page-nav/`)
+   - Reads `<h2>` elements inside `<main>` to build the in-page TOC.
+   - **Fragment-aware refactor.** Previously scanned `main h2` once on `init` — h2s inside async-loading fragments (the `fragment` block fetches and inlines content) were missed. Now: builds the TOC immediately, then watches `<main>` with a `MutationObserver` and rebuilds when h2s arrive (or are removed).
+   - **Hot-path optimizations** so the observer is cheap on busy pages:
+     - Identity-check short-circuit (compare the new `Set` of h2 references to the last-rendered set; skip the rebuild if unchanged).
+     - `requestAnimationFrame` debouncing — back-to-back mutations in the same frame coalesce into a single rebuild.
+     - Observer auto-disconnects after `OBSERVER_STABILITY_MS` (3 seconds) with no h2 mutations. Resets on each h2-affecting mutation.
+   - **State preserved across rebuilds:** `details.open` (so a mobile visitor's expand state survives a fragment arrival) and the active scroll-spy heading id (so `aria-current="location"` doesn't flash off until the next IntersectionObserver tick).
+   - **Stickiness moved out:** same pattern as sitenav — the rail container is the sticky element; `.page-nav` is regular flow inside it.
+
+7. **Table block** (existing, modified — `blocks/table/`)
+   - Exports `buildTableElement(headerCells, dataCells)` so specialized table blocks (currently `status-table`) can share the role-reset scaffolding that survives responsive `display` changes (WCAG 1.3.1). The helper was previously a local `const`.
+   - The helper also handles `<th scope="row">` row headers correctly — sets `role="rowheader"` instead of `role="cell"` for them. No regression to existing table-block consumers (they pass `<td>` cells).
 
 ### New templates
 
 - **`components-overview` template** (`templates/components-overview/`) — owns the `/components` page composition. Renders the heading, implementation-cards, and status-table stacked in a grid. Uses `display: contents` (or equivalent) on `.default-content` / `.block-content` wrappers so authored blocks promote to grid items, and hides empty `.block-content` wrappers DA may emit so the layout doesn't accumulate empty rows.
 - **`detail` template** (existing, modified) — left rail wraps picker + sitenav; right rail wraps page-nav + related-resources. Used for `/platforms/[impl]/components/[component]` pages.
 - **`landing` template** (existing, modified) — left rail wraps picker + sitenav. Used for `/platforms/[impl]` impl landing pages and other landings (e.g. `/foundations/`). Picker self-gates so it's an empty container on non-platform landings.
+
+### Chrome infrastructure
+
+Emerged during implementation but not in the original plan. Captured here so a future reviewer (or new session) can find the reasoning without spelunking commits.
+
+**Chrome stacking ladder.** Three CSS custom properties in `styles/styles.css` give the chrome a single source of truth for z-index tiers:
+
+```css
+--sh-z-sitenav: 10;       /* floor — section chrome (sitenav, page-nav) */
+--sh-z-picker: 20;        /* picker's listbox overlays sitenav content */
+--sh-z-mobile-menu: 30;   /* ceiling — header mobile-nav drawer */
+```
+
+- The picker tier sits above the sitenav tier so the listbox dropping out of the picker host can paint above the sitenav's expanded `<details>` panel. Without this, the sitenav's open-disclosure list painted on top of the picker listbox on mobile (verified bug pre-fix).
+- The mobile-menu tier is the highest so the header's mobile-nav drawer wins against any open picker or sitenav.
+- Applied at: `blocks/header/header.css` (uses `--sh-z-mobile-menu`), `blocks/picker/picker.css` (host element uses `--sh-z-picker` to establish a stacking context), `blocks/sitenav/sitenav.css` (inner overlay uses `--sh-z-sitenav`), `blocks/page-nav/page-nav.css` (open-disclosure overlay uses `--sh-z-sitenav`), and both rail containers in the templates.
+
+**Rail-container stickiness.** Both rails (`.left-rail` in detail+landing, `.right-rail` in detail) are `position: sticky` themselves, with their stacking context at the appropriate ladder tier:
+
+- `.left-rail` sticks at `top: var(--sh-nav-height)` with `z-index: var(--sh-z-picker)`. Holds the picker (which is why the rail is at picker tier — keeps the picker's effective stacking high enough to overlay the right-rail when the picker listbox drops).
+- `.right-rail` sticks at `top: calc(var(--sh-nav-height) + var(--sitenav-summary-height))` on mobile (just below the sitenav summary bar) and `top: var(--sh-nav-height)` on desktop. Holds page-nav + related-resources, both pinned together.
+- Both rails set `max-block-size` + `overflow-y: auto` so when the rail's combined content exceeds the viewport, it scrolls internally instead of pushing the page around.
+- Sitenav and page-nav blocks had individual `position: sticky` rules previously. Those were removed during the refactor — the rail container is now the canonical sticky element. Both blocks are regular flow inside their container.
+
+**Why container-level instead of per-block sticky:** keeps page-nav + related-resources visually together as the visitor scrolls (instead of related-resources detaching when page-nav sticks). Also gives one place to coordinate sticky offsets across the chrome, instead of each block computing its own `top` value.
 
 ### Data sources
 
@@ -347,7 +388,8 @@ Ordered to push decoupling seams to the front. Design specs are still in flight,
 
 1. **Shared utilities** (`scripts/utils/`) — **shipped:**
    - `implementations.js` — single source of truth for the implementation list (`IMPLEMENTATIONS`, `ALL_OPTION`), `getImplementationById`, `getOtherImplementations`. Adding a third implementation later = edit one file.
-   - `platform-url.js` — URL parsing / building: `getImplementationFromPath`, `getComponentFromPath`, `buildImplementationPath`, `isOnPlatformPage`, `isOnComponentsOverview`. URL structure changes contained here.
+   - `platform-url.js` — URL parsing / building: `getImplementationFromPath`, `getComponentFromPath`, `buildImplementationPath`, `isOnPlatformComponentPage`, `resolveTargetUrl`, `getSectionPrefix`, `getPlatformSectionSuffix`. URL structure changes contained here. Earlier drafts also had `isOnPlatformPage` and `isOnComponentsOverview` — both removed during cleanup as they had no production consumers (only their own tests).
+   - `strings.js` — `formatLabel(slug)` and `slugify(text)` extracted as shared helpers (previously duplicated across sitenav, status-table, and page-nav).
 2. **Status adapter + S2 manifests:**
    - `scripts/utils/component-status.js` — thin adapter over the per-impl status manifests. Consumers call `getComponentStatus(component, data)` without knowing the manifest's field shape. **Shipped.**
    - `deps/rsp/data/status.json` and `deps/swc/data/status.json` — S2-only per-impl manifests, currently hand-authored seeds. **Shipped as placeholders matching the long-term schema.**
@@ -357,12 +399,13 @@ Ordered to push decoupling seams to the front. Design specs are still in flight,
 5. **Sitenav extension** — subtree-swap by URL implementation segment; hide `Platforms/` wrapper. Reads utilities for URL parsing and implementation list. Does not know about the picker or related-resources.
 6. **Related-resources block** — labeled-link list with sibling-implementation entries. Reads utilities for "other implementations" and `platform-url.js` for building sibling links. Same shape as the picker logic but emits anchor links instead of picker options.
 7. **`/components` overview blocks** — implementation-cards block + status-table block. Both consume `component-status.js` and the per-impl status manifests. The status-table block also imports `buildTableElement` from the existing `blocks/table/table.js` to share table-building scaffolding. Built independently of any template — placement comes in step 8.
-8. **Template-owned placement** — the three templates that compose these blocks into pages:
+8. **Template-owned placement + chrome infrastructure** — the three templates that compose these blocks into pages, plus the cross-cutting chrome plumbing:
    - **`templates/detail/`** (modified) — left rail wraps `.picker` + `.sitenav`; right rail wraps `.page-nav` + `.related-resources`. Used for `/platforms/[impl]/components/[component]` pages.
    - **`templates/landing/`** (modified) — left rail wraps `.picker` + `.sitenav`. Used for `/platforms/[impl]` impl landing pages and other landings (e.g. `/foundations/`). Picker self-gates so it's an empty container on non-platform landings.
    - **`templates/components-overview/`** (new) — single-column grid stacking heading, implementation-cards, and status-table for the `/components` page. Uses `display: contents` (or equivalent) on DA's `.default-content` / `.block-content` wrappers so the authored blocks promote to grid items, and hides empty `.block-content` wrappers DA may emit so the layout doesn't gain empty rows.
-   - Across all three: no cross-block DOM mutation — each block owns its own DOM, the template just chooses where each lives. When the unified-mobile-drawer ticket eventually lands, the mobile disclosure migration is contained to these template files.
-9. **Tests + a11y audit** — block-level unit tests; keyboard / screen-reader pass across the new chrome. Per-block CSS scopes (no `.sitenav .picker { ... }` selectors anywhere); placement-coordination CSS lives on the templates' layout wrappers.
+   - **Chrome stacking ladder + rail-container stickiness** (see "Chrome infrastructure" section above). The rails themselves are the sticky elements; sitenav and page-nav lost their individual `position: sticky` rules during this step. `styles/styles.css` gains the three z-index custom properties; `blocks/header/header.css` uses the top tier so its mobile-nav drawer wins; `blocks/picker/picker.css` puts the picker host at picker tier so its listbox can overlay sitenav content.
+   - Across all three templates: no cross-block DOM mutation — each block owns its own DOM, the template just chooses where each lives. When the unified-mobile-drawer ticket eventually lands, the mobile disclosure migration is contained to these template files.
+9. **Tests + a11y audit** — block-level unit tests; keyboard / screen-reader pass across the new chrome. Per-block CSS scopes (no `.sitenav .picker { ... }` selectors anywhere); placement-coordination CSS lives on the templates' layout wrappers. Current state: picker element has 50+ tests covering APG Select-Only Combobox; utilities have unit tests; other blocks (sitenav, related-resources, implementation-cards, status-table, page-nav) rely on shared-utility tests + DOM rendering and warrant a dedicated a11y audit (filed as Epic 3 in the breakdown).
 
 The line between **visual rework** (likely) and **structural rework** (less likely) is intentionally encoded in this file layout: design changes → edit blocks; IA / URL / implementation-set changes → edit utilities.
 
