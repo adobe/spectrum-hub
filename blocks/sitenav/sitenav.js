@@ -33,19 +33,19 @@ function getTopSection() {
   return section || null;
 }
 
-function isAncestorOf(ancestorPath, currentPath) {
+export function isAncestorOf(ancestorPath, currentPath) {
   if (!ancestorPath) {
     return false;
   }
   return currentPath === ancestorPath || currentPath.startsWith(`${ancestorPath}/`);
 }
 
-function formatLabel(key) {
+export function formatLabel(key) {
   return key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
 }
 
 // tree derived from query-index.json + SEGMENT_ORDER
-function buildPathTree(pages, topSection) {
+export function buildPathTree(pages, topSection) {
   const root = { children: new Map() };
   pages.forEach(({ path, title }) => {
     const parts = path.split('/').filter(Boolean);
@@ -70,7 +70,7 @@ function buildPathTree(pages, topSection) {
   return root;
 }
 
-function sortMap(children, order) {
+export function sortMap(children, order) {
   if (!order || !order.length) {
     return children;
   }
@@ -81,7 +81,7 @@ function sortMap(children, order) {
   return new Map([...children.entries()].sort(([a], [b]) => rank(a) - rank(b)));
 }
 
-function flattenPathNode(node) {
+export function flattenPathNode(node) {
   return {
     path: node.path,
     label: node.title || formatLabel(node.key),
