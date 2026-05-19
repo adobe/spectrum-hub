@@ -40,9 +40,9 @@ export default function init(payload) {
   const { search } = window.location;
   const ref = new URLSearchParams(search).get('quick-edit');
   let origin;
-  if (ref === 'on' || !ref) origin = 'https://da.live';
-  if (ref === 'local') origin = 'http://localhost:6456';
-  if (!origin) origin = `https://${ref}--da-nx--adobe.aem.live`;
+  if (ref === 'on' || !ref) { origin = 'https://da.live'; }
+  if (ref === 'local') { origin = 'http://localhost:6456'; }
+  if (!origin) { origin = `https://${ref}--da-nx--adobe.aem.live`; }
   addImportmap();
   loadMoudle(origin, payload || generateSidekickPayload());
 }

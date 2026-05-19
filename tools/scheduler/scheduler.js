@@ -120,7 +120,7 @@ export default function toggleScheduler() {
  * This will automatically detect if scheduler should be shown.
  */
 (async function autoLoadScheduler() {
-  if (ENV === 'prod') return;
+  if (ENV === 'prod') { return; }
 
   // Query param takes most precedence
   let sim = new URL(window.location.href).searchParams.get('schedule');
@@ -131,15 +131,15 @@ export default function toggleScheduler() {
       localStorage.removeItem('aem-schedule');
       return;
     }
-    if (sim === 'now') sim = Math.floor(Date.now() / 1000);
+    if (sim === 'now') { sim = Math.floor(Date.now() / 1000); }
     localStorage.setItem('aem-schedule', sim);
   }
 
   // If no query param, try existing local storage
-  if (!sim) sim = localStorage.getItem('aem-schedule');
+  if (!sim) { sim = localStorage.getItem('aem-schedule'); }
 
   // If still empty, use the current time
-  if (!sim) return;
+  if (!sim) { return; }
 
   let scheduler = document.querySelector('aem-scheduler');
   if (!scheduler) {

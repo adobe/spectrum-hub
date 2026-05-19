@@ -4,11 +4,11 @@
  * @returns {Object|null} Object with r, g, b values (0-255) or null if invalid
  */
 function parseColor(section) {
-  if (!section) return null;
+  if (!section) { return null; }
 
   const computedBg = getComputedStyle(section).backgroundColor;
   const rgbMatch = computedBg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (!rgbMatch) return null;
+  if (!rgbMatch) { return null; }
   return {
     r: parseInt(rgbMatch[1], 10),
     g: parseInt(rgbMatch[2], 10),
@@ -39,14 +39,14 @@ function getRelativeLuminance({ r, g, b }) {
  */
 export function getColorScheme(section) {
   const rgb = parseColor(section);
-  if (!rgb) return null;
+  if (!rgb) { return null; }
 
   return getRelativeLuminance(rgb) > 0.5 ? 'light-scheme' : 'dark-scheme';
 }
 
 export function setColorScheme(section) {
   const scheme = getColorScheme(section);
-  if (!scheme) return;
+  if (!scheme) { return; }
   section.querySelectorAll(':scope > *').forEach((el) => {
     // Reset any pre-made color schemes
     el.classList.remove('light-scheme', 'dark-scheme');
@@ -87,8 +87,8 @@ async function handleStyle(text, section) {
 }
 
 async function handleLayout(text, section, type) {
-  if (text === '0') return;
-  if (type === 'grid') section.classList.add('grid');
+  if (text === '0') { return; }
+  if (type === 'grid') { section.classList.add('grid'); }
   section.classList.add(`${type}-${text}`);
 }
 
@@ -97,23 +97,23 @@ const getMetadata = (el) => [...el.childNodes].reduce((rdx, row) => {
     const key = row.children[0].textContent.trim().toLowerCase();
     const content = row.children[1];
     const text = content.textContent.trim().toLowerCase();
-    if (key && content) rdx[key] = { content, text };
+    if (key && content) { rdx[key] = { content, text }; }
   }
   return rdx;
 }, {});
 
 export default async function init(el) {
   const section = el.closest('.section');
-  if (!section) return;
+  if (!section) { return; }
   const metadata = getMetadata(el);
-  if (metadata.style?.text) await handleStyle(metadata.style.text, section);
-  if (metadata.grid?.text) handleLayout(metadata.grid.text, section, 'grid');
-  if (metadata.gap?.text) handleLayout(metadata.gap.text, section, 'gap');
-  if (metadata.spacing?.text) handleLayout(metadata.spacing.text, section, 'spacing');
-  if (metadata.container?.text) handleLayout(metadata.container.text, section, 'container');
-  if (metadata.layout?.text) handleLayout(metadata.layout.text, section, 'layout');
-  if (metadata['background-color']?.content) handleBackground(metadata['background-color'].content, section);
-  if (metadata['background-image']?.content) handleBackground(metadata['background-image'].content, section);
-  if (metadata.background?.content) handleBackground(metadata.background, section);
+  if (metadata.style?.text) { await handleStyle(metadata.style.text, section); }
+  if (metadata.grid?.text) { handleLayout(metadata.grid.text, section, 'grid'); }
+  if (metadata.gap?.text) { handleLayout(metadata.gap.text, section, 'gap'); }
+  if (metadata.spacing?.text) { handleLayout(metadata.spacing.text, section, 'spacing'); }
+  if (metadata.container?.text) { handleLayout(metadata.container.text, section, 'container'); }
+  if (metadata.layout?.text) { handleLayout(metadata.layout.text, section, 'layout'); }
+  if (metadata['background-color']?.content) { handleBackground(metadata['background-color'].content, section); }
+  if (metadata['background-image']?.content) { handleBackground(metadata['background-image'].content, section); }
+  if (metadata.background?.content) { handleBackground(metadata.background, section); }
   el.remove();
 }

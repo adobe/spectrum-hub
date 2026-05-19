@@ -13,7 +13,7 @@ export default async function init(el) {
   const path = footerMeta || FOOTER_PATH;
 
   const { fragment } = await loadFragment(`${locale.prefix}${path}`);
-  if (!fragment) return;
+  if (!fragment) { return; }
   fragment.classList.add('footer-content');
 
   const sections = [...fragment.querySelectorAll('.section')];

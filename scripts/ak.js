@@ -22,7 +22,7 @@ export function getLocale(locales = { '': {} }) {
   const { pathname } = window.location;
   const matches = Object.keys(locales).filter((locale) => pathname.startsWith(`${locale}/`));
   const prefix = getMetadata('locale') || matches.sort((a, b) => b.length - a.length)?.[0] || '';
-  if (locales[prefix].lang) document.documentElement.lang = locales[prefix].lang;
+  if (locales[prefix].lang) { document.documentElement.lang = locales[prefix].lang; }
   return { prefix, ...locales[prefix] };
 }
 
@@ -70,7 +70,7 @@ export async function loadExperience(el, type, name, style) {
       resolve();
     })();
   })];
-  if (style) loading.push(loadStyle(`${path}.css`));
+  if (style) { loading.push(loadStyle(`${path}.css`)); }
   await Promise.all(loading);
   return el;
 }
@@ -86,7 +86,7 @@ export async function loadBlock(block) {
 
 async function loadTemplate() {
   const name = getMetadata('template');
-  if (!name) return;
+  if (!name) { return; }
   document.body.classList.toggle('template-loading');
   await loadExperience(document.body, 'templates', name, true);
   document.body.classList.add(`${name}-template`);
@@ -112,9 +112,9 @@ function decorateButton(link) {
   const isStrong = link.closest('strong');
   const isStrike = link.closest('del');
   const isUnder = link.querySelector('u');
-  if (!(isEm || isStrong || isStrike || isUnder)) return;
+  if (!(isEm || isStrong || isStrike || isUnder)) { return; }
   const trueParent = link.closest('p, li, div');
-  if (!trueParent) return;
+  if (!trueParent) { return; }
   const siblings = [...trueParent.childNodes];
 
   const hasSibling = siblings.every(
@@ -124,8 +124,8 @@ function decorateButton(link) {
     || el.nodeName === 'DEL'
     || !el.textContent.trim(),
   );
-  if (!hasSibling) return;
-  if (siblings.length > 1) trueParent.classList.add('btn-group');
+  if (!hasSibling) { return; }
+  if (siblings.length > 1) { trueParent.classList.add('btn-group'); }
 
   link.classList.add('btn');
   if (isStrike) {
@@ -143,40 +143,40 @@ function decorateButton(link) {
     isUnder.remove();
   }
   const toReplace = [isEm, isStrong, isStrike].find((el) => el?.parentNode === trueParent);
-  if (toReplace) trueParent.replaceChild(link, toReplace);
+  if (toReplace) { trueParent.replaceChild(link, toReplace); }
 }
 
 export function localizeUrl({ config, url }) {
   const { locales, locale } = config;
 
   // If in root locale, do nothing
-  if (locale.prefix === '') return null;
+  if (locale.prefix === '') { return null; }
 
   const { origin, pathname, search, hash } = url;
 
   // If the link is already localized, do nothing
-  if (pathname.startsWith(`${locale.prefix}/`)) return null;
+  if (pathname.startsWith(`${locale.prefix}/`)) { return null; }
 
   const localized = Object.keys(locales).some(
     (key) => key !== '' && pathname.startsWith(`${key}/`),
   );
-  if (localized) return null;
+  if (localized) { return null; }
 
   return new URL(`${origin}${locale.prefix}${pathname}${search}${hash}`);
 }
 
 function decorateHash(a, url) {
   const { hash } = url;
-  if (!hash || hash === '#') return {};
+  if (!hash || hash === '#') { return {}; }
 
   const findHash = (name) => {
     const found = hash.includes(name);
-    if (found) a.href = a.href.replace(name, '');
+    if (found) { a.href = a.href.replace(name, ''); }
     return found;
   };
 
   const blank = findHash('#_blank');
-  if (blank) a.target = '_blank';
+  if (blank) { a.target = '_blank'; }
 
   const dnt = findHash('#_dnt');
   const dnb = findHash('#_dnb');
@@ -187,24 +187,24 @@ export function decorateLink(config, a) {
   try {
     const url = new URL(a.href);
     const hostMatch = config.hostnames.some((host) => url.hostname.endsWith(host));
-    if (hostMatch) a.href = a.href.replace(url.origin, '');
+    if (hostMatch) { a.href = a.href.replace(url.origin, ''); }
 
     const isRelative = a.getAttribute('href').startsWith('/');
     const { dnt, dnb } = decorateHash(a, url);
     if (isRelative && !dnt) {
       const localized = localizeUrl({ config, url });
-      if (localized) a.href = localized.href;
+      if (localized) { a.href = localized.href; }
     }
     decorateButton(a);
     if (!dnb) {
       const { href } = a;
       const found = config.linkBlocks.some((pattern) => {
         const key = Object.keys(pattern)[0];
-        if (!href.includes(pattern[key])) return false;
+        if (!href.includes(pattern[key])) { return false; }
         a.classList.add(key, 'auto-block');
         return true;
       });
-      if (found) return a;
+      if (found) { return a; }
     }
   } catch (ex) {
     config.log('Could not decorate link', ex);
@@ -217,14 +217,14 @@ function decorateLinks(el) {
   const anchors = [...el.querySelectorAll('a')];
   return anchors.reduce((acc, a) => {
     const decorated = decorateLink(config, a);
-    if (decorated) acc.push(decorated);
+    if (decorated) { acc.push(decorated); }
     return acc;
   }, []);
 }
 
 function loadIcons(el) {
   const icons = el.querySelectorAll('span.icon');
-  if (!icons.length) return;
+  if (!icons.length) { return; }
   import('./utils/svg.js').then((mod) => mod.default(icons));
 }
 
@@ -263,7 +263,7 @@ function decorateSections(parent, isDoc) {
 
 function decorateHeader() {
   const header = document.querySelector('header');
-  if (!header) return;
+  if (!header) { return; }
   const meta = getMetadata('header') || 'header';
   if (meta === 'off') {
     document.body.classList.add('no-header');
@@ -273,9 +273,9 @@ function decorateHeader() {
   header.className = meta;
   const breadcrumbs = document.body.querySelector('breadcrumbs');
   const breadcrumbsPath = getMetadata('breadcrumbs');
-  if (!(breadcrumbs || breadcrumbsPath)) return;
+  if (!(breadcrumbs || breadcrumbsPath)) { return; }
   document.body.classList.add('has-breadcrumbs');
-  if (breadcrumbs) header.append(breadcrumbs);
+  if (breadcrumbs) { header.append(breadcrumbs); }
 }
 
 function decorateDoc() {
@@ -283,36 +283,36 @@ function decorateDoc() {
   loadTemplate();
 
   const scheme = localStorage.getItem('color-scheme');
-  if (scheme) document.body.classList.add(scheme);
+  if (scheme) { document.body.classList.add(scheme); }
 
   const pageId = window.location.hash?.replace('#', '');
-  if (pageId) localStorage.setItem('lazyhash', pageId);
+  if (pageId) { localStorage.setItem('lazyhash', pageId); }
 }
 
 async function loadSession() {
   sessionStorage.setItem('session', true);
   document.body.classList.add('session');
   const header = document.querySelector('header');
-  if (header) await loadBlock(header);
+  if (header) { await loadBlock(header); }
 }
 
 export async function loadArea({ area } = { area: document }) {
   const isDoc = area === document;
   const isSession = sessionStorage.getItem('session');
-  if (isDoc) decorateDoc();
+  if (isDoc) { decorateDoc(); }
   decoratePictures(area);
   const { decorateArea } = getConfig();
-  if (decorateArea) decorateArea({ area });
+  if (decorateArea) { decorateArea({ area }); }
   const sections = decorateSections(area, isDoc);
-  if (isDoc && isSession) loadSession();
+  if (isDoc && isSession) { loadSession(); }
   for (const [idx, section] of sections.entries()) {
     loadIcons(section);
     await Promise.all(section.linkBlocks.map((block) => loadBlock(block)));
     await Promise.all(section.blocks.map((block) => loadBlock(block)));
     delete section.dataset.status;
     if (isDoc && idx === 0) {
-      if (!isSession) loadSession();
+      if (!isSession) { loadSession(); }
     }
   }
-  if (isDoc) import('./lazy.js');
+  if (isDoc) { import('./lazy.js'); }
 }

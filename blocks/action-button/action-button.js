@@ -19,7 +19,7 @@ function handleColorScheme() {
   body.classList.remove(theme.remove);
   body.classList.add(theme.add);
   localStorage.setItem('color-scheme', theme.add);
-  // Re-calculatie section schemes
+  // Re-calculate section schemes
   const sections = document.querySelectorAll('.section');
   for (const section of sections) {
     setColorScheme(section);
@@ -62,12 +62,12 @@ function getLinkProps(a) {
 
 export default function actionButton(a) {
   const props = getLinkProps(a);
-  if (props.style) a.classList.add(`action-button-${props.style}`);
+  if (props.style) { a.classList.add(`action-button-${props.style}`); }
 
   // Wrap the text in a span
   const span = document.createElement('span');
   span.textContent = a.lastChild.textContent;
-  if (props.label === 'hide') span.classList.add('visually-hidden');
+  if (props.label === 'hide') { span.classList.add('visually-hidden'); }
   a.lastChild.replaceWith(span);
 
   const buttonProps = BUTTONS[a.pathname];

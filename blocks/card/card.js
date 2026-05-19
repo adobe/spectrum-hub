@@ -14,14 +14,14 @@ export default function init(el) {
   }
   // Decorate content
   const con = inner.querySelector(':scope > div:not([class])');
-  if (!con) return;
+  if (!con) { return; }
   con.classList.add('card-content-container');
 
   // Decorate CTA
   const ctaPara = inner.querySelector(':scope > div:last-of-type > p:last-of-type');
-  if (!ctaPara) return;
+  if (!ctaPara) { return; }
   const cta = ctaPara.querySelector('a');
-  if (!cta) return;
+  if (!cta) { return; }
   const hashAware = el.classList.contains('hash-aware');
   if (hashAware) {
     cta.href = `${cta.getAttribute('href')}${window.location.hash}`;

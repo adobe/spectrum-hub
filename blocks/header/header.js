@@ -26,7 +26,7 @@ async function decorateBrandSection(section) {
   const link = section.querySelector('a');
   const pic = section.querySelector('picture');
   if (pic) {
-    if (link) link.prepend(pic);
+    if (link) { link.prepend(pic); }
     await picture2svg(pic);
   }
 }
@@ -87,15 +87,15 @@ function addMobileNavListeners(button, navElement) {
   });
 
   document.addEventListener('click', (e) => {
-    if (isOpen && !navElement.contains(e.target)) closeNav();
+    if (isOpen && !navElement.contains(e.target)) { closeNav(); }
   });
 
   navElement.addEventListener('focusout', (e) => {
-    if (isOpen && !navElement.contains(e.relatedTarget)) closeNav();
+    if (isOpen && !navElement.contains(e.relatedTarget)) { closeNav(); }
   });
 
   window.matchMedia('(width >= 800px)').addEventListener('change', (e) => {
-    if (e.matches && isOpen) closeNav();
+    if (e.matches && isOpen) { closeNav(); }
   });
 }
 
@@ -144,16 +144,16 @@ async function decorateHeader(fragment) {
   // Nav is anything left over
   const nav = sections[0];
 
-  if (brand) await decorateBrandSection(brand);
+  if (brand) { await decorateBrandSection(brand); }
 
   let navElement;
   if (nav) {
     navElement = decorateNavSection(nav);
     createMobileNavButton(fragment);
   }
-  if (actions) decorateActionSection(actions);
+  if (actions) { decorateActionSection(actions); }
 
-  if (navElement && actions) createMobileNavItems(navElement, actions);
+  if (navElement && actions) { createMobileNavItems(navElement, actions); }
 }
 
 /**
@@ -164,7 +164,7 @@ export default async function init(el) {
   const headerMeta = getMetadata('header');
   const path = headerMeta || HEADER_PATH;
   const { fragment } = await loadFragment(`${locale.prefix}${path}`);
-  if (!fragment) return;
+  if (!fragment) { return; }
   fragment.classList.add('header-content');
   await decorateHeader(fragment);
   el.append(fragment);

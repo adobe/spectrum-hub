@@ -78,7 +78,7 @@ const buildDataTable = async (href) => {
   }
   const json = await resp.json();
 
-  if (!json.length) return null;
+  if (!json.length) { return null; }
 
   const rows = json.filter((prop) => !EXCLUDED_SOURCES.has(prop.inheritedFrom));
 
@@ -111,7 +111,7 @@ export default async function init(el) {
 
   if (dataHref) {
     const table = await buildDataTable(dataHref);
-    if (table) el.replaceChildren(table);
+    if (table) { el.replaceChildren(table); }
   } else {
     const table = buildTable([...el.children]);
     el.replaceChildren(table);
@@ -127,10 +127,10 @@ export default async function init(el) {
     .filter((h) => el.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_PRECEDING)
     .at(-1);
   const labelIds = [h1, sectionHeading].flatMap((heading) => {
-    if (!heading) return [];
-    if (!heading.id) heading.id = `table-heading-${Math.random().toString(36).slice(2)}`;
+    if (!heading) { return []; }
+    if (!heading.id) { heading.id = `table-heading-${Math.random().toString(36).slice(2)}`; }
     return heading.id;
   });
-  if (table && labelIds.length) table.setAttribute('aria-labelledby', labelIds.join(' '));
+  if (table && labelIds.length) { table.setAttribute('aria-labelledby', labelIds.join(' ')); }
   el.tabIndex = 0;
 }

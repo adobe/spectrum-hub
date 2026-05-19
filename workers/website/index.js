@@ -72,11 +72,11 @@ const formatSearchParams = (url) => {
 
   if (isMediaRequest(url)) {
     for (const [key] of searchParams.entries()) {
-      if (!['format', 'height', 'optimize', 'width'].includes(key)) searchParams.delete(key);
+      if (!['format', 'height', 'optimize', 'width'].includes(key)) { searchParams.delete(key); }
     }
   } else if (getExtension(url.pathname) === 'json') {
     for (const [key] of searchParams.entries()) {
-      if (!['limit', 'offset', 'sheet'].includes(key)) searchParams.delete(key);
+      if (!['limit', 'offset', 'sheet'].includes(key)) { searchParams.delete(key); }
     }
   } else {
     url.search = '';
@@ -109,10 +109,10 @@ export default {
     const url = new URL(req.url);
 
     const portResp = getPortRedirect(req, url);
-    if (portResp) return portResp;
+    if (portResp) { return portResp; }
 
     const rumResp = getRUMRequest(req, url);
-    if (rumResp) return rumResp;
+    if (rumResp) { return rumResp; }
 
     const request = formatRequest(env, req, url);
 

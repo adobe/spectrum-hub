@@ -1,6 +1,6 @@
 function setBackgroundFocus(img) {
   const { title } = img.dataset;
-  if (!title?.includes('data-focal')) return;
+  if (!title?.includes('data-focal')) { return; }
   delete img.dataset.title;
   const [x, y] = title.split(':')[1].split(',');
   img.style.objectPosition = `${x}% ${y}%`;
@@ -8,13 +8,13 @@ function setBackgroundFocus(img) {
 
 function decorateBackground(bg) {
   const bgPic = bg.querySelector('picture');
-  if (!bgPic) return;
+  if (!bgPic) { return; }
 
   const img = bgPic.querySelector('img');
   setBackgroundFocus(img);
 
   const vidLink = bgPic.closest('a[href*=".mp4"]');
-  if (!vidLink) return;
+  if (!vidLink) { return; }
   const video = document.createElement('video');
   video.src = vidLink.href;
   video.loop = true;

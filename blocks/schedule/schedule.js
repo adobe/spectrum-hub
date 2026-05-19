@@ -9,7 +9,7 @@ async function removeSchedule(a, e) {
     a.remove();
     return;
   }
-  if (e) config.log(e);
+  if (e) { config.log(e); }
   config.log(`Could not load: ${a.href}`);
 }
 
@@ -60,7 +60,7 @@ async function loadEvent(a, event, defEvent) {
 
   let fragment = await loadLocalizedEvent(event);
   // Try the default event if the original match didn't work.
-  if (!fragment) fragment = await loadLocalizedEvent(defEvent);
+  if (!fragment) { fragment = await loadLocalizedEvent(defEvent); }
   // If still no fragment, remove the schedule link
   if (!fragment) {
     removeSchedule(a);
@@ -79,7 +79,7 @@ async function loadEvent(a, event, defEvent) {
 
 function getDate() {
   const now = Date.now();
-  if (ENV === 'prod') return now;
+  if (ENV === 'prod') { return now; }
 
   // Attempt a simulated schedule
   const sim = localStorage.getItem('aem-schedule')

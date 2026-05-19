@@ -11,5 +11,5 @@ import { getConfig, getMetadata } from '../ak.js';
   document.head.insertAdjacentHTML('beforeend', tags);
 
   const favicon = document.head.querySelector('link[href="data:,"]');
-  if (favicon) favicon.href = `${favBase}.ico`;
+  if (favicon) { favicon.href = `${favBase}.ico`; }
 }());
