@@ -4,7 +4,6 @@ import init, {
   formatLabel,
   isAncestorOf,
   buildPathTree,
-  sortMap,
   flattenPathNode,
 } from '../../blocks/sitenav/sitenav.js';
 
@@ -129,55 +128,6 @@ describe('sitenav block', () => {
       const visual = root.children.get('visual-language');
       expect(visual.title).to.equal('Visual language');
       expect(visual.children.get('color').title).to.equal('Color');
-    });
-  });
-
-  describe('sortMap', () => {
-    it('returns the input unchanged when no order is given', () => {
-      const input = new Map([['b', 1], ['a', 2]]);
-      const result = sortMap(input);
-      expect([...result.keys()]).to.deep.equal(['b', 'a']);
-    });
-
-    it('returns the input unchanged when the order is empty', () => {
-      const input = new Map([['b', 1], ['a', 2]]);
-      const result = sortMap(input, []);
-      expect([...result.keys()]).to.deep.equal(['b', 'a']);
-    });
-
-    it('sorts keys to match the given order', () => {
-      const input = new Map([
-        ['behavior', 1],
-        ['getting-started', 2],
-        ['visual-language', 3],
-      ]);
-      const result = sortMap(input, ['getting-started', 'visual-language', 'behavior']);
-      expect([...result.keys()]).to.deep.equal([
-        'getting-started',
-        'visual-language',
-        'behavior',
-      ]);
-    });
-
-    it('keys not in the order list follow the ordered keys', () => {
-      const input = new Map([
-        ['unknown', 1],
-        ['getting-started', 2],
-        ['also-unknown', 3],
-        ['behavior', 4],
-      ]);
-      const result = sortMap(input, ['getting-started', 'behavior']);
-      const keys = [...result.keys()];
-      expect(keys[0]).to.equal('getting-started');
-      expect(keys[1]).to.equal('behavior');
-      // Remaining order among unknowns is unspecified (stable in modern engines),
-      // but they must come after the ordered ones.
-      expect(keys.slice(2).sort()).to.deep.equal(['also-unknown', 'unknown']);
-    });
-
-    it('handles an empty Map', () => {
-      const result = sortMap(new Map(), ['anything']);
-      expect(result.size).to.equal(0);
     });
   });
 

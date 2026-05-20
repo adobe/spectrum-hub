@@ -4,24 +4,6 @@ import { getConfig } from '../../scripts/ak.js';
 
 const { locale } = getConfig();
 
-const SEGMENT_ORDER = {
-  foundations: [
-    'getting-started',
-    'visual-language',
-    'behavior',
-    'system',
-    'composition',
-    'content-design',
-    'inclusivity',
-    'support',
-  ],
-  components: [
-    'core-systems',
-    'availability',
-    'patterns',
-  ],
-};
-
 function getTopSection() {
   // Strip the locale prefix (e.g. `/jp`) before reading the section so a URL
   // like `/jp/foundations/...` returns `foundations`, not `jp`. `locale.prefix`
@@ -44,7 +26,7 @@ export function formatLabel(key) {
   return key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' ');
 }
 
-// tree derived from query-index.json + SEGMENT_ORDER
+// tree derived from query-index.json
 export function buildPathTree(pages, topSection) {
   const root = { children: new Map() };
   pages.forEach(({ path, title }) => {
@@ -70,17 +52,6 @@ export function buildPathTree(pages, topSection) {
   return root;
 }
 
-export function sortMap(children, order) {
-  if (!order || !order.length) {
-    return children;
-  }
-  const rank = (key) => {
-    const i = order.indexOf(key);
-    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
-  };
-  return new Map([...children.entries()].sort(([a], [b]) => rank(a) - rank(b)));
-}
-
 export function flattenPathNode(node) {
   return {
     path: node.path,
@@ -100,8 +71,7 @@ async function treeFromIndex(topSection) {
     return null;
   }
   const root = buildPathTree(sectionPages, topSection);
-  const ordered = sortMap(root.children, SEGMENT_ORDER[topSection]);
-  return [...ordered.values()].map(flattenPathNode);
+  return [...root.children.values()].map(flattenPathNode);
 }
 
 // --- Renderer ---
