@@ -80,7 +80,7 @@ Hidden at desktop where the list renders inline in the rail. */
 
   &::after {
     content: '';
-    mask-image: url('../../img/icons/s2-chevron-down.svg');
+    mask-image: url('../../img/icons/s2-chevron-right.svg');
     background-color: currentcolor;
     flex: 0 0 auto;
     inline-size: 20px;
@@ -94,7 +94,7 @@ Hidden at desktop where the list renders inline in the rail. */
 }
 
 .page-nav > details[open] > .page-nav-summary::after {
-  transform: rotate(180deg);
+  transform: rotate(90deg);
 }
 
 .page-nav a {
