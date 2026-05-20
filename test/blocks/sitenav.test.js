@@ -5,9 +5,9 @@ import {
   buildPathTree,
   sortMap,
   flattenPathNode,
-} from '../../../blocks/sitenav/sitenav.js';
+} from '../../blocks/sitenav/sitenav.js';
 
-describe('blocks/sitenav/sitenav.js', () => {
+describe('sitenav block', () => {
   describe('formatLabel', () => {
     it('capitalizes the first character', () => {
       expect(formatLabel('hello')).to.equal('Hello');
@@ -158,7 +158,7 @@ describe('blocks/sitenav/sitenav.js', () => {
       ]);
     });
 
-    it('places keys not in the order list after the ordered keys', () => {
+    it('keys not in the order list follow the ordered keys', () => {
       const input = new Map([
         ['unknown', 1],
         ['getting-started', 2],
