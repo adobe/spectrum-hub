@@ -226,6 +226,12 @@ export default async function init(el) {
   syncDisclosure();
   desktopMql.addEventListener('change', syncDisclosure);
 
+  document.addEventListener('click', (e) => {
+    if (disclosure.open && !desktopMql.matches && !el.contains(e.target)) {
+      disclosure.open = false;
+    }
+  });
+
   // Keep --sitenav-summary-height accurate across font scaling, orientation
   // changes, or any other layout shift that affects the summary's height.
   new ResizeObserver(updateSummaryHeight).observe(summary);

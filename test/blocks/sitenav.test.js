@@ -1,5 +1,6 @@
 import { expect } from '@esm-bundle/chai';
-import {
+import sinon from 'sinon';
+import init, {
   formatLabel,
   isAncestorOf,
   buildPathTree,
@@ -177,6 +178,54 @@ describe('sitenav block', () => {
     it('handles an empty Map', () => {
       const result = sortMap(new Map(), ['anything']);
       expect(result.size).to.equal(0);
+    });
+  });
+
+  describe('init', () => {
+    let el;
+    let sandbox;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      window.history.pushState({}, '', '/foundations/color');
+      sandbox.stub(window, 'fetch').resolves({
+        ok: true,
+        json: () => Promise.resolve({ data: [{ path: '/foundations/color', title: 'Color' }] }),
+      });
+      el = document.createElement('nav');
+      document.body.append(el);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      el.remove();
+      window.history.pushState({}, '', '/');
+    });
+
+    it('closes the disclosure when a click lands outside the nav on mobile', async () => {
+      sandbox.stub(window, 'matchMedia').returns({ matches: false, addEventListener: () => {} });
+      await init(el);
+      const disclosure = el.querySelector('details');
+      disclosure.open = true;
+      document.body.click();
+      expect(disclosure.open).to.be.false;
+    });
+
+    it('leaves the disclosure open when a click lands inside the nav on mobile', async () => {
+      sandbox.stub(window, 'matchMedia').returns({ matches: false, addEventListener: () => {} });
+      await init(el);
+      const disclosure = el.querySelector('details');
+      disclosure.open = true;
+      el.click();
+      expect(disclosure.open).to.be.true;
+    });
+
+    it('does not close the disclosure on desktop even when a click lands outside', async () => {
+      sandbox.stub(window, 'matchMedia').returns({ matches: true, addEventListener: () => {} });
+      await init(el);
+      const disclosure = el.querySelector('details');
+      document.body.click();
+      expect(disclosure.open).to.be.true;
     });
   });
 
