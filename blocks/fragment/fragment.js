@@ -40,7 +40,10 @@ export async function loadFragment(path) {
   fragment.classList.add('fragment-content');
   fragment.append(...sections);
 
-  replaceDotMedia(path, doc);
+  // replaceDotMedia(path, doc) is called after fragment.append(...sections), which moves
+  // all nodes out of doc, so doc.querySelectorAll(...) finds nothing to rewrite. Pass
+  // fragment as the search root so the rewrites actually reach the moved nodes.
+  replaceDotMedia(path, fragment);
 
   const container = applyPageStyles(fragment);
 
