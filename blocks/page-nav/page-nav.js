@@ -161,5 +161,11 @@ export default async function init(el) {
     }
   });
 
+  document.addEventListener('click', (e) => {
+    if (details.open && !desktopMql.matches && !el.contains(e.target)) {
+      details.open = false;
+    }
+  });
+
   watchScrollSpy(h1 ? [...headings, h1] : headings, currentLabel, linkById, pageName);
 }
