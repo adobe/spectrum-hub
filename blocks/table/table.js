@@ -124,6 +124,7 @@ export default async function init(el) {
   // on the page gets its own accessible name rather than all sharing the first heading
   const section = el.closest('.section');
   const sectionHeading = [...(section?.querySelectorAll('h2, h3, h4, h5, h6') ?? [])]
+    // eslint-disable-next-line no-bitwise
     .filter((h) => el.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_PRECEDING)
     .at(-1);
   const labelIds = [h1, sectionHeading].flatMap((heading) => {
