@@ -69,6 +69,10 @@ Hidden at desktop where the list renders inline in the rail. */
   user-select: none;
   list-style: none; /* hides the native disclosure marker */
 
+  &::-webkit-details-marker {
+    display: none;
+  }
+
   @media (width >= 900px) {
     display: none;
   }
@@ -80,8 +84,11 @@ Hidden at desktop where the list renders inline in the rail. */
 
   &::after {
     content: '';
-    mask-image: url('../../img/icons/s2-chevron-right.svg');
+    mask-image: url('/img/icons/s2-icon-chevronright-20-n.svg');
     background-color: currentcolor;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
     flex: 0 0 auto;
     inline-size: 20px;
     block-size: 20px;

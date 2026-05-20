@@ -83,12 +83,20 @@
 .sitenav details > summary {
   list-style: none;
   background-color: var(--se-body-background-color);
+
+  &::-webkit-details-marker {
+    display: none;
+  }
 }
 
+/* Decorative chevron only — not exposed to assistive tech (pseudo-element). */
 .sitenav-segment-label::before {
   content: '';
-  mask-image: url('../../img/icons/s2-chevron-right.svg');
-  background-color: var(--s2-gray-1000);
+  mask-image: url('/img/icons/s2-icon-chevronright-20-n.svg');
+  background-color: currentcolor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
   flex: 0 0 auto;
   inline-size: 20px;
   block-size: 20px;
