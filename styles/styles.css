@@ -311,6 +311,9 @@
 
   /* nav */
   --sh-nav-height: 80px;
+  --sh-z-pagenav: 1; /* in-page TOC */
+  --sh-z-sitenav: 2; /* section nav mobile disclosure; above page-nav */
+  --sh-z-mobile-menu: 3; /* header mobile-nav drawer; above all section chrome */
 
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);

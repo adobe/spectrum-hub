@@ -2,7 +2,7 @@ header {
   visibility: unset;
   position: sticky;
   inset: 0;
-  z-index: 1;
+  z-index: var(--sh-z-mobile-menu);
   isolation: isolate;
 
   /*
@@ -174,6 +174,7 @@ header {
     position: absolute;
     inset-inline: 0;
     top: 100%;
+    z-index: var(--sh-z-mobile-menu);
     border: 1px solid var(--s2-gray-300);
 
     hr {

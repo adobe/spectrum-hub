@@ -1,3 +1,28 @@
+.detail-template {
+  .template-wrapper {
+    display: grid;
+    grid-template-areas:
+      'sitenav'
+      'pagenav'
+      'main';
+
+    .sitenav {
+      grid-area: sitenav;
+      z-index: var(--sh-z-sitenav);
+      isolation: isolate;
+    }
+
+    main {
+      grid-area: main;
+    }
+
+    .page-nav {
+      grid-area: pagenav;
+      z-index: var(--sh-z-pagenav);
+    }
+  }
+}
+
 @media (width >= 900px) {
   .detail-template {
     .template-wrapper {
@@ -7,6 +32,12 @@
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
+
+      .sitenav,
+      .page-nav {
+        z-index: auto;
+        isolation: auto;
+      }
 
       .section {
         > .default-content {
