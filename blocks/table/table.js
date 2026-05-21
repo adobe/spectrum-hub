@@ -17,6 +17,7 @@ const PROP_ORDER = Object.keys(PROPS_TO_LABELS);
 // Base types whose props apply to every RSP component (layout, spacing, etc.) — not useful
 // in a component-specific API table.
 const EXCLUDED_SOURCES = new Set(['StyleProps']);
+const EXCLUDED_COLUMNS = new Set(['status', 'since']);
 
 const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');
@@ -83,7 +84,8 @@ const buildDataTable = async (href) => {
   const rows = json.filter((prop) => !EXCLUDED_SOURCES.has(prop.inheritedFrom));
 
   // gather all the available properties for dev table, in canonical column order
-  const allKeys = [...new Set(rows.flatMap(Object.keys))];
+  const allKeys = [...new Set(rows.flatMap(Object.keys))]
+    .filter((key) => !EXCLUDED_COLUMNS.has(key));
   const properties = [
     ...PROP_ORDER.filter((k) => allKeys.includes(k)),
     ...allKeys.filter((k) => !PROP_ORDER.includes(k)),

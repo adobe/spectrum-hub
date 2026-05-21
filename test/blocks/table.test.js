@@ -265,10 +265,10 @@ describe('table block', () => {
 
     it('resolves a relative href and calls fetch with the absolute URL', async () => {
       const stub = stubFetchOk(PROPS.slice(0, 1));
-      await init(makeDataEl('/deps/swc/data/sp-button.json'));
+      await init(makeDataEl('/deps/swc/data/swc-button.json'));
       // a.href resolves the relative path against the page origin
       const calledUrl = stub.firstCall.args[0];
-      expect(calledUrl).to.match(/\/deps\/swc\/data\/sp-button\.json$/);
+      expect(calledUrl).to.match(/\/deps\/swc\/data\/swc-button\.json$/);
     });
 
     it('creates header cells from JSON keys using PROPS_TO_LABELS', async () => {
@@ -280,6 +280,25 @@ describe('table block', () => {
       expect(headers).to.include('Type');
       expect(headers).to.include('Default value');
       expect(headers).to.include('Description');
+    });
+
+    it('keeps status and since metadata out of table columns', async () => {
+      stubFetchOk([
+        {
+          attribute: 'variant',
+          type: 'string',
+          status: 'internal',
+          since: '2.0.0',
+        },
+      ]);
+      const el = makeDataEl();
+      await init(el);
+      const headers = [...el.querySelectorAll('th')].map((th) => th.textContent);
+      const cells = [...el.querySelectorAll('td')].map((td) => td.textContent);
+      expect(headers).to.not.include('Status');
+      expect(headers).to.not.include('Since');
+      expect(cells).to.not.include('internal');
+      expect(cells).to.not.include('2.0.0');
     });
 
     it('filters rows whose inheritedFrom is StyleProps', async () => {
