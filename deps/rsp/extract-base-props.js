@@ -3,8 +3,8 @@
  * and writes them to data/rsp-base-props.json.
  *
  * @react-types/shared: all interfaces auto-discovered via the unpkg ?meta API.
- * react-aria: specific files listed manually in REACT_ARIA_FILES — add entries
- * as new component categories are registered in components.json.
+ * react-aria-components: all .d.ts files auto-discovered via the unpkg ?meta API.
+ * @react-spectrum/s2: style-utils.d.ts for StyleProps and related layout types.
  *
  * Runs daily via GitHub Actions before extract-props.js.
  * Output is committed and consumed by extract-props.js.
@@ -22,20 +22,23 @@ const OUTPUT_FILE = join(__dirname, 'data', 'rsp-base-props.json');
 const SHARED_TYPES_META = 'https://unpkg.com/@react-types/shared/src/?meta';
 const SHARED_TYPES_BASE = 'https://unpkg.com/@react-types/shared';
 
-// Add a URL here when a new component category surfaces untracked react-aria types.
-const REACT_ARIA_FILES = [
-  'https://unpkg.com/react-aria/dist/types/src/button/useButton.d.ts',
+const RAC_META = 'https://unpkg.com/react-aria-components/dist/types/src/?meta';
+const RAC_BASE = 'https://unpkg.com/react-aria-components';
+
+// S2 layout/style props; fetched after shared types so StyleProps reflects S2 macros.
+const S2_TYPE_FILES = [
+  'https://unpkg.com/@react-spectrum/s2/dist/types/src/style-utils.d.ts',
 ];
 
 // Returns all exported interface names from a TypeScript source string.
 // Used to extract every interface in a file without knowing names in advance.
-function findInterfaceNames(source) {
+export function findInterfaceNames(source) {
   return [...source.matchAll(/export\s+interface\s+(\w+)/g)].map((m) => m[1]);
 }
 
 // Bracket-counting extraction — same rationale as in extract-props.js: interface bodies
 // can contain nested object types that would cause a simple closing-brace regex to close too early.
-function extractInterfaceBlock(source, interfaceName) {
+export function extractInterfaceBlock(source, interfaceName) {
   const startRegex = new RegExp(
     `(?:export\\s+)?(?:interface|type)\\s+${interfaceName}[^{]*\\{`,
   );
@@ -57,7 +60,7 @@ function extractInterfaceBlock(source, interfaceName) {
 
 // Identical to parseJSDoc in extract-props.js — kept local to avoid a shared module
 // dependency between two scripts that run independently.
-function parseJSDoc(comment) {
+export function parseJSDoc(comment) {
   const result = { description: '', default: null };
   if (!comment) return result;
 
@@ -82,7 +85,7 @@ function parseJSDoc(comment) {
 
 // Same single-line regex parser and JSDoc fix as in extract-props.js. See that file for
 // a full list of known limitations (multi-line unions, generics, function signatures).
-function parseProps(block) {
+export function parseProps(block) {
   const props = [];
   const lines = block.split('\n');
 
@@ -144,7 +147,7 @@ async function fetchSource(url) {
 // Extracts all exported interfaces from a source file and merges non-empty ones into result.
 // Interfaces with 0 parsed props are skipped — they're typically re-export stubs or
 // interfaces whose props use patterns the regex parser can't handle (see parseProps limits).
-function extractAllFromSource(source, fileLabel, result) {
+export function extractAllFromSource(source, result = {}) {
   const names = findInterfaceNames(source);
   let count = 0;
   for (const name of names) {
@@ -183,7 +186,7 @@ async function main() {
       const url = `${SHARED_TYPES_BASE}${f.path}`;
       try {
         const source = await fetchSource(url);
-        const count = extractAllFromSource(source, f.path, result);
+        const count = extractAllFromSource(source, result);
         if (count > 0) console.log(`  ${f.path}: ${count} interface(s)`);
       } catch (err) {
         console.warn(`  Warning: ${err.message}`);
@@ -191,12 +194,34 @@ async function main() {
     }));
   }
 
-  // --- react-aria: manual file list, auto-extract all interfaces ---
-  console.log('Extracting react-aria base types...');
-  await Promise.all(REACT_ARIA_FILES.map(async (url) => {
+  // --- react-aria-components: auto-discover via ?meta ---
+  console.log('Discovering react-aria-components files...');
+  try {
+    const racMeta = JSON.parse(await fetchSource(RAC_META));
+    const racFiles = racMeta.files.filter(
+      (f) => f.path.endsWith('.d.ts') && !f.path.endsWith('index.d.ts'),
+    );
+    console.log(`  Found ${racFiles.length} files`);
+
+    await Promise.all(racFiles.map(async (f) => {
+      const url = `${RAC_BASE}${f.path}`;
+      try {
+        const source = await fetchSource(url);
+        const count = extractAllFromSource(source, result);
+        if (count > 0) console.log(`  ${f.path}: ${count} interface(s)`);
+      } catch (err) {
+        console.warn(`  Warning: ${err.message}`);
+      }
+    }));
+  } catch (err) {
+    console.warn(`  Warning: could not fetch react-aria-components metadata — ${err.message}`);
+  }
+
+  console.log('Extracting @react-spectrum/s2 shared types...');
+  await Promise.all(S2_TYPE_FILES.map(async (url) => {
     try {
       const source = await fetchSource(url);
-      const count = extractAllFromSource(source, url, result);
+      const count = extractAllFromSource(source, result);
       console.log(`  ${url.split('/').slice(-2).join('/')}: ${count} interface(s)`);
     } catch (err) {
       console.warn(`  Warning: ${err.message}`);
@@ -209,7 +234,9 @@ async function main() {
   console.log(`Done. Wrote ${Object.keys(sorted).length} base type(s) to rsp-base-props.json`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
