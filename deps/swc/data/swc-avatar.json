@@ -1,0 +1,55 @@
+[
+  {
+    "attribute": "src",
+    "property": "src",
+    "type": "string",
+    "default": "''",
+    "description": "URL of the profile image to display.",
+    "inheritedFrom": "AvatarBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "alt",
+    "property": "alt",
+    "type": "string | undefined",
+    "description": "Text description of the avatar image.",
+    "inheritedFrom": "AvatarBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "AvatarSize",
+    "default": "500",
+    "description": "The size of the avatar. Invalid values fall back to the default (500).",
+    "inheritedFrom": "AvatarBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "outline",
+    "property": "outline",
+    "type": "boolean",
+    "default": "false",
+    "description": "Renders a visual outline around the avatar image.",
+    "inheritedFrom": "AvatarBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "disabled",
+    "property": "disabled",
+    "type": "boolean",
+    "default": "false",
+    "description": "Renders the avatar at reduced opacity, indicating the entity is inactive or unavailable.",
+    "inheritedFrom": "AvatarBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "decorative",
+    "property": "decorative",
+    "type": "boolean",
+    "default": "false",
+    "description": "Marks the avatar as decorative, hiding it from assistive technology.",
+    "inheritedFrom": "AvatarBase",
+    "since": "2.0.0"
+  }
+]

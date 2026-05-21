@@ -1,0 +1,38 @@
+[
+  {
+    "attribute": "disabled",
+    "property": "disabled",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether this tab is disabled. Disabled tabs are announced as\nunavailable by assistive technology and cannot be activated,\nbut remain focusable via arrow keys within the tablist.",
+    "inheritedFrom": "TabBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "selected",
+    "property": "selected",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether this tab is currently selected. Managed by the parent\n`swc-tabs` container — consumers should not set this directly.\nUse `swc-tabs[selected]` instead.",
+    "inheritedFrom": "TabBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "vertical",
+    "property": "vertical",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the tab is displayed in vertical orientation.\n\nOrientation is primarily driven by the parent `swc-tabs` `direction`\nattribute; this property remains for styling and any consumers that read\nit explicitly. We can remove it in a future major once vertical layout is\nfully parent-driven only—track that cleanup in the component backlog if\nit becomes redundant in practice.",
+    "inheritedFrom": "TabBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "tab-id",
+    "property": "tabId",
+    "type": "string",
+    "default": "''",
+    "description": "Unique identifier for this tab. Used by the parent `swc-tabs`\nto match this tab to its corresponding `swc-tab-panel`.",
+    "inheritedFrom": "TabBase",
+    "since": "2.0.0"
+  }
+]

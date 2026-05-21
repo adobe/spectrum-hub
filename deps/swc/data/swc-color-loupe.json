@@ -1,0 +1,20 @@
+[
+  {
+    "attribute": "open",
+    "property": "open",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the loupe is visible. When `false` the loupe is hidden via\nCSS opacity and transform transitions.",
+    "inheritedFrom": "ColorLoupeBase",
+    "since": "0.0.1"
+  },
+  {
+    "attribute": "color",
+    "property": "color",
+    "type": "string",
+    "default": "'rgba(255, 0, 0, 0.5)'",
+    "description": "The CSS color value to display inside the loupe.\nSupports any valid CSS color string, including those with alpha\ntransparency (which reveals the checkerboard behind).\n\nDefault is semi-transparent red so the opacity checkerboard is visible\nwhen the component is rendered without a `color` attribute.",
+    "inheritedFrom": "ColorLoupeBase",
+    "since": "0.0.1"
+  }
+]

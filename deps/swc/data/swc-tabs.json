@@ -1,0 +1,54 @@
+[
+  {
+    "attribute": "keyboard-activation",
+    "property": "keyboardActivation",
+    "type": "KeyboardActivation",
+    "description": "Whether selection follows keyboard focus (`automatic`) or the user\nmust press Enter or Space to activate (`manual`, default).",
+    "inheritedFrom": "TabsBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "density",
+    "property": "density",
+    "type": "TabDensity",
+    "description": "Layout density: `regular` (default) or `compact` (reduced tab spacing).",
+    "inheritedFrom": "TabsBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "direction",
+    "property": "direction",
+    "type": "TabsDirection",
+    "default": "'horizontal'",
+    "description": "The layout direction of the tab list.\n\n**Breaking change:** `'vertical-right'` is no longer supported.\nUse `'vertical'` instead.",
+    "inheritedFrom": "TabsBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "disabled",
+    "property": "disabled",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the entire tab list is disabled. When `true`,\n`aria-disabled=\"true\"` is applied to the tablist element and\nall interaction is suppressed.",
+    "inheritedFrom": "TabsBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "accessible-label",
+    "property": "accessibleLabel",
+    "type": "string",
+    "default": "''",
+    "description": "Accessible label for the tablist. Rendered as `aria-label` on the\nelement with `role=\"tablist\"` in the concrete template.",
+    "inheritedFrom": "TabsBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "selected",
+    "property": "selected",
+    "type": "string",
+    "default": "''",
+    "description": "The `tab-id` of the currently selected tab. Setting this property\nupdates which tab appears selected and which panel is visible.",
+    "inheritedFrom": "TabsBase",
+    "since": "2.0.0"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "IllustratedMessageSize",
+    "default": "'m'",
+    "description": "The size of the message",
+    "inheritedFrom": "IllustratedMessageBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "orientation",
+    "property": "orientation",
+    "type": "IllustratedMessageOrientation",
+    "default": "'vertical'",
+    "description": "The layout orientation",
+    "inheritedFrom": "IllustratedMessageBase",
+    "since": "2.0.0"
+  }
+]

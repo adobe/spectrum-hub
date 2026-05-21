@@ -1,0 +1,27 @@
+[
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "ElementSize",
+    "description": "The size of the divider.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "vertical",
+    "property": "vertical",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the divider is vertical. If false, the divider is horizontal. The default is false.",
+    "inheritedFrom": "DividerBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "static-color",
+    "property": "staticColor",
+    "type": "DividerStaticColor | undefined",
+    "description": "The static color variant to use for the divider.",
+    "inheritedFrom": "DividerBase",
+    "since": "2.0.0"
+  }
+]

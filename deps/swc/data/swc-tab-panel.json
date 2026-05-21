@@ -1,0 +1,20 @@
+[
+  {
+    "attribute": "selected",
+    "property": "selected",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether this panel is currently visible (its associated tab is\nselected). Managed by the parent `swc-tabs` — consumers should\nnot set this directly.",
+    "inheritedFrom": "TabPanelBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "tab-id",
+    "property": "tabId",
+    "type": "string",
+    "default": "''",
+    "description": "Unique identifier linking this panel to its corresponding tab.\nMust match the `tab-id` attribute on the associated `swc-tab`.",
+    "inheritedFrom": "TabPanelBase",
+    "since": "2.0.0"
+  }
+]

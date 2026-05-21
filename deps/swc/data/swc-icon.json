@@ -1,0 +1,21 @@
+[
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "ElementSize",
+    "description": "T-shirt icon size.",
+    "inheritedFrom": "SizedMixin",
+    "status": "internal",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "label",
+    "property": "label",
+    "type": "string",
+    "default": "''",
+    "description": "Accessible label for the icon.",
+    "inheritedFrom": "IconBase",
+    "status": "internal",
+    "since": "2.0.0"
+  }
+]

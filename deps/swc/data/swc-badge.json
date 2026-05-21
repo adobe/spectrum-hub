@@ -1,0 +1,43 @@
+[
+  {
+    "attribute": "variant",
+    "property": "variant",
+    "type": "BadgeVariant",
+    "default": "'neutral'",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "ElementSize",
+    "description": "The size of the badge.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "fixed",
+    "property": "fixed",
+    "type": "FixedValues | undefined",
+    "description": "The fixed position of the badge.",
+    "inheritedFrom": "BadgeBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "subtle",
+    "property": "subtle",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the badge is subtle.",
+    "inheritedFrom": "BadgeBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "outline",
+    "property": "outline",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the badge is outlined.\n\nCan only be used with semantic variants.",
+    "inheritedFrom": "BadgeBase",
+    "since": "2.0.0"
+  }
+]

@@ -1,0 +1,277 @@
+{
+  "AssetBase": [
+    {
+      "attribute": "variant",
+      "property": "variant",
+      "type": "AssetVariant | undefined",
+      "description": "The variant of the asset. When not provided, slot content is rendered (e.g., an image)."
+    },
+    {
+      "attribute": "label",
+      "property": "label",
+      "type": "string",
+      "default": "''",
+      "description": "Accessible label for the asset’s file or folder variant."
+    }
+  ],
+  "AvatarBase": [
+    {
+      "attribute": "src",
+      "property": "src",
+      "type": "string",
+      "default": "''",
+      "description": "URL of the profile image to display."
+    },
+    {
+      "attribute": "alt",
+      "property": "alt",
+      "type": "string | undefined",
+      "description": "Text description of the avatar image."
+    },
+    {
+      "attribute": "size",
+      "property": "size",
+      "type": "AvatarSize",
+      "default": "500",
+      "description": "The size of the avatar. Invalid values fall back to the default (500)."
+    },
+    {
+      "attribute": "outline",
+      "property": "outline",
+      "type": "boolean",
+      "default": "false",
+      "description": "Renders a visual outline around the avatar image."
+    },
+    {
+      "attribute": "disabled",
+      "property": "disabled",
+      "type": "boolean",
+      "default": "false",
+      "description": "Renders the avatar at reduced opacity, indicating the entity is inactive or unavailable."
+    },
+    {
+      "attribute": "decorative",
+      "property": "decorative",
+      "type": "boolean",
+      "default": "false",
+      "description": "Marks the avatar as decorative, hiding it from assistive technology."
+    }
+  ],
+  "BadgeBase": [
+    {
+      "attribute": "fixed",
+      "property": "fixed",
+      "type": "FixedValues | undefined",
+      "description": "The fixed position of the badge."
+    },
+    {
+      "attribute": "subtle",
+      "property": "subtle",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the badge is subtle."
+    },
+    {
+      "attribute": "outline",
+      "property": "outline",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the badge is outlined.\n\nCan only be used with semantic variants."
+    }
+  ],
+  "ButtonBase": [
+    {
+      "attribute": "disabled",
+      "property": "disabled",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the button is disabled. Removes focusability and prevents\ninteraction."
+    },
+    {
+      "attribute": "pending",
+      "property": "pending",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the button is in a pending (busy) state. The button remains\nfocusable but activation is suppressed."
+    },
+    {
+      "attribute": "accessible-label",
+      "property": "accessibleLabel",
+      "type": "string | undefined",
+      "description": "Accessible label forwarded to the internal `<button>` element as\n`aria-label`. Required for icon-only buttons, which have no visible text."
+    },
+    {
+      "attribute": "pending-label",
+      "property": "pendingLabel",
+      "type": "string | undefined",
+      "description": "Custom accessible label used during the pending state. When omitted,\nthe pending label is derived from the resolved non-busy accessible name\nplus a busy suffix (e.g. \"Save, busy\")."
+    }
+  ],
+  "ColorLoupeBase": [
+    {
+      "attribute": "open",
+      "property": "open",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the loupe is visible. When `false` the loupe is hidden via\nCSS opacity and transform transitions."
+    },
+    {
+      "attribute": "color",
+      "property": "color",
+      "type": "string",
+      "default": "'rgba(255, 0, 0, 0.5)'",
+      "description": "The CSS color value to display inside the loupe.\nSupports any valid CSS color string, including those with alpha\ntransparency (which reveals the checkerboard behind).\n\nDefault is semi-transparent red so the opacity checkerboard is visible\nwhen the component is rendered without a `color` attribute."
+    }
+  ],
+  "DividerBase": [
+    {
+      "attribute": "vertical",
+      "property": "vertical",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the divider is vertical. If false, the divider is horizontal. The default is false."
+    },
+    {
+      "attribute": "static-color",
+      "property": "staticColor",
+      "type": "DividerStaticColor | undefined",
+      "description": "The static color variant to use for the divider."
+    }
+  ],
+  "IconBase": [
+    {
+      "attribute": "label",
+      "property": "label",
+      "type": "string",
+      "default": "''",
+      "description": "Accessible label for the icon."
+    }
+  ],
+  "IllustratedMessageBase": [
+    {
+      "attribute": "size",
+      "property": "size",
+      "type": "IllustratedMessageSize",
+      "default": "'m'",
+      "description": "The size of the message"
+    },
+    {
+      "attribute": "orientation",
+      "property": "orientation",
+      "type": "IllustratedMessageOrientation",
+      "default": "'vertical'",
+      "description": "The layout orientation"
+    }
+  ],
+  "ProgressCircleBase": [
+    {
+      "attribute": "label",
+      "property": "label",
+      "type": "string",
+      "default": "''",
+      "description": "Accessible label for the progress circle.\n\nUsed to provide context about what is loading or progressing.\nWhen no accessible name is provided (no label, aria-label, or\naria-labelledby), a default \"Loading\" label is applied."
+    },
+    {
+      "attribute": "progress",
+      "property": "progress",
+      "type": "number | null",
+      "default": "null",
+      "description": "Progress value from 0 to 100.\n\nWhen `null` (indeterminate), the component shows a loading animation.\nSetting a number switches to determinate mode. Removing the `progress`\nattribute or setting this property to `null` returns to indeterminate.\nValues outside 0–100 or non-finite numbers are clamped (non-finite becomes 0).\n\nReflected to the `progress` attribute when set; the attribute is omitted when indeterminate."
+    }
+  ],
+  "SizedMixin": [
+    {
+      "attribute": "size",
+      "property": "size",
+      "type": "ElementSize"
+    }
+  ],
+  "TabBase": [
+    {
+      "attribute": "disabled",
+      "property": "disabled",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether this tab is disabled. Disabled tabs are announced as\nunavailable by assistive technology and cannot be activated,\nbut remain focusable via arrow keys within the tablist."
+    },
+    {
+      "attribute": "selected",
+      "property": "selected",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether this tab is currently selected. Managed by the parent\n`swc-tabs` container — consumers should not set this directly.\nUse `swc-tabs[selected]` instead."
+    },
+    {
+      "attribute": "vertical",
+      "property": "vertical",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the tab is displayed in vertical orientation.\n\nOrientation is primarily driven by the parent `swc-tabs` `direction`\nattribute; this property remains for styling and any consumers that read\nit explicitly. We can remove it in a future major once vertical layout is\nfully parent-driven only—track that cleanup in the component backlog if\nit becomes redundant in practice."
+    },
+    {
+      "attribute": "tab-id",
+      "property": "tabId",
+      "type": "string",
+      "default": "''",
+      "description": "Unique identifier for this tab. Used by the parent `swc-tabs`\nto match this tab to its corresponding `swc-tab-panel`."
+    }
+  ],
+  "TabPanelBase": [
+    {
+      "attribute": "selected",
+      "property": "selected",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether this panel is currently visible (its associated tab is\nselected). Managed by the parent `swc-tabs` — consumers should\nnot set this directly."
+    },
+    {
+      "attribute": "tab-id",
+      "property": "tabId",
+      "type": "string",
+      "default": "''",
+      "description": "Unique identifier linking this panel to its corresponding tab.\nMust match the `tab-id` attribute on the associated `swc-tab`."
+    }
+  ],
+  "TabsBase": [
+    {
+      "attribute": "keyboard-activation",
+      "property": "keyboardActivation",
+      "type": "KeyboardActivation",
+      "description": "Whether selection follows keyboard focus (`automatic`) or the user\nmust press Enter or Space to activate (`manual`, default)."
+    },
+    {
+      "attribute": "density",
+      "property": "density",
+      "type": "TabDensity",
+      "description": "Layout density: `regular` (default) or `compact` (reduced tab spacing)."
+    },
+    {
+      "attribute": "direction",
+      "property": "direction",
+      "type": "TabsDirection",
+      "default": "'horizontal'",
+      "description": "The layout direction of the tab list.\n\n**Breaking change:** `'vertical-right'` is no longer supported.\nUse `'vertical'` instead."
+    },
+    {
+      "attribute": "disabled",
+      "property": "disabled",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the entire tab list is disabled. When `true`,\n`aria-disabled=\"true\"` is applied to the tablist element and\nall interaction is suppressed."
+    },
+    {
+      "attribute": "accessible-label",
+      "property": "accessibleLabel",
+      "type": "string",
+      "default": "''",
+      "description": "Accessible label for the tablist. Rendered as `aria-label` on the\nelement with `role=\"tablist\"` in the concrete template."
+    },
+    {
+      "attribute": "selected",
+      "property": "selected",
+      "type": "string",
+      "default": "''",
+      "description": "The `tab-id` of the currently selected tab. Setting this property\nupdates which tab appears selected and which panel is visible."
+    }
+  ]
+}

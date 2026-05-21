@@ -1,0 +1,21 @@
+[
+  {
+    "attribute": "variant",
+    "property": "variant",
+    "type": "AssetVariant | undefined",
+    "description": "The variant of the asset. When not provided, slot content is rendered (e.g., an image).",
+    "inheritedFrom": "AssetBase",
+    "status": "internal",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "label",
+    "property": "label",
+    "type": "string",
+    "default": "''",
+    "description": "Accessible label for the asset’s file or folder variant.",
+    "inheritedFrom": "AssetBase",
+    "status": "internal",
+    "since": "2.0.0"
+  }
+]

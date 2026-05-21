@@ -1,4 +1,15 @@
-{
-  "sp-action-button": "action-button",
-  "sp-button": "button"
-}
+[
+  "swc-asset",
+  "swc-avatar",
+  "swc-badge",
+  "swc-button",
+  "swc-color-loupe",
+  "swc-divider",
+  "swc-icon",
+  "swc-illustrated-message",
+  "swc-progress-circle",
+  "swc-status-light",
+  "swc-tab",
+  "swc-tab-panel",
+  "swc-tabs"
+]

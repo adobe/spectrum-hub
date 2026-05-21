@@ -1,0 +1,18 @@
+[
+  {
+    "attribute": "variant",
+    "property": "variant",
+    "type": "string",
+    "default": "'neutral'",
+    "description": "Semantic or non-semantic color variant for the status dot.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "ElementSize",
+    "description": "The size of the status light.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0"
+  }
+]
