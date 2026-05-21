@@ -1,8 +1,9 @@
 name: Update Component Properties
 
 on:
-  schedule:
-    - cron: '0 6 * * *' # Daily at 6am UTC
+  # Re-add the daily schedule after @adobe/spectrum-wc publishes custom-elements.json.
+  # schedule:
+  #   - cron: '0 6 * * *' # Daily at 6am UTC
   workflow_dispatch: # Allow manual trigger
 
 permissions:
@@ -20,7 +21,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Extract component properties
+      - name: Extract component properties from published CEM
         run: node deps/swc/extract-cem-components.js
 
       - name: Commit changes
