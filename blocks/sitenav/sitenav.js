@@ -185,7 +185,7 @@ export default async function init(el) {
   // The summary's rendered height as a CSS custom property so the
   // page-nav block can stack below it at mobile widths.
   const updateSummaryHeight = () => {
-    const height = desktopMql.matches ? 0 : summary.offsetHeight;
+    const height = desktopMql.matches ? 0 : el.offsetHeight;
     document.documentElement.style.setProperty('--sitenav-summary-height', `${height}px`);
   };
 
