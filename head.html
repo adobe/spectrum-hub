@@ -1,5 +1,120 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="stylesheet" href="/styles/styles.css"/>
+    <link rel="preload" href="/styles/fonts/adobe-clean-display-black.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        @font-face {
+            font-family: adobe-clean;
+            src: url("/styles/fonts/adobe-clean-regular.woff2") format("woff2");
+            font-display: swap;
+            font-style: normal;
+            font-weight: 400;
+            font-stretch: normal;
+        }
+
+        @font-face {
+            font-family: adobe-clean;
+            src: url("/styles/fonts/adobe-clean-italic.woff2") format("woff2");
+            font-display: swap;
+            font-style: italic;
+            font-weight: 400;
+            font-stretch: normal;
+        }
+
+        @font-face {
+            font-family: adobe-clean;
+            src: url("/styles/fonts/adobe-clean-bold.woff2") format("woff2");
+            font-display: swap;
+            font-style: normal;
+            font-weight: 700;
+            font-stretch: normal;
+        }
+
+        @font-face {
+            font-family: adobe-clean;
+            src: url("/styles/fonts/adobe-clean-bold-italic.woff2") format("woff2");
+            font-display: swap;
+            font-style: italic;
+            font-weight: 700;
+            font-stretch: normal;
+        }
+
+        @font-face {
+            font-family: adobe-clean-display;
+            src: url("/styles/fonts/adobe-clean-display-black.woff2") format("woff2");
+            font-display: swap;
+            font-style: normal;
+            font-weight: 900;
+            font-stretch: normal;
+        }
+
+        @font-face {
+            font-family: "Trebuchet MS";
+            src: local("Trebuchet MS");
+            font-weight: 400;
+            size-adjust: 88%;
+            ascent-override: 92%;
+            descent-override: 18%;
+        }
+
+        @font-face {
+            font-family: "Trebuchet MS";
+            src: local("Trebuchet MS Bold"), local("Trebuchet MS");
+            font-weight: 700;
+            size-adjust: 90%;
+            ascent-override: 92%;
+            descent-override: 18%;
+        }
+
+        :root {
+            --s2-font-family: 'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif;
+            --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
+            --s2-body-size-m: 16px;
+            --s2-body-line-height: 1.5;
+            --sh-nav-height: 80px;
+            --se-body-background-color: light-dark(#fff, #000);
+            --se-body-color: light-dark(#000, #fff);
+            color-scheme: light dark;
+        }
+
+        /* Mirrors the @layer wrapper in styles.css so anything that reveals
+        the header (or otherwise overrides these rules) outside the layer
+        still wins the cascade. */
+        @layer spectrum-edge {
+            html.spectrum-edge body {
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                min-height: 100svh;
+                margin: 0;
+                background-color: var(--se-body-background-color);
+                color: var(--se-body-color);
+                font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
+                font-size: var(--s2-body-size-m);
+                line-height: var(--s2-body-line-height);
+            }
+
+            html.spectrum-edge body header {
+                visibility: hidden;
+                height: var(--sh-nav-height);
+            }
+
+            html.spectrum-edge body footer {
+                display: none;
+            }
+
+            html.spectrum-edge body.session {
+                font-family: var(--s2-font-family);
+            }
+
+            html.spectrum-edge body.no-header {
+                --sh-nav-height: 0;
+            }
+        }
+
+        main > div, div[data-status], .template-loading {
+            display: none;
+        }
+    </style>
+    <link rel="preload" href="/styles/styles.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/styles/styles.css"></noscript>
     <script src="/deps/rum.js" type="module"></script>
     <script src="/scripts/ak.js" type="module"></script>
     <script src="/scripts/scripts.js" type="module"></script>
