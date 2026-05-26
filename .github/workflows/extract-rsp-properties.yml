@@ -20,6 +20,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Discover published S2 components
+        run: node deps/rsp/discover-components.js
+
       - name: Extract base shared properties
         run: node deps/rsp/extract-base-props.js
 
@@ -30,6 +33,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/rsp/data/
+          git add deps/rsp/components.json deps/rsp/data/
           git diff --staged --quiet || git commit -m "chore: update React Spectrum component properties"
           git push
