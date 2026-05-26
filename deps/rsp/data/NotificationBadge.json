@@ -1,0 +1,20 @@
+[
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'S'",
+    "description": "The size of the notification badge.",
+    "inheritedFrom": "NotificationBadgeStyleProps"
+  },
+  {
+    "property": "value",
+    "type": "number | null",
+    "description": "The value to be displayed in the notification badge."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

@@ -1,0 +1,7 @@
+[
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true
+  }
+]

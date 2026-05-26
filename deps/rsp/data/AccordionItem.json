@@ -1,0 +1,74 @@
+[
+  {
+    "property": "isExpanded",
+    "type": "boolean",
+    "required": true,
+    "description": "Whether the accordion item is expanded.",
+    "inheritedFrom": "AccordionItemRenderProps"
+  },
+  {
+    "property": "isFocusVisibleWithin",
+    "type": "boolean",
+    "required": true,
+    "description": "Whether the accordion item has keyboard focus.",
+    "inheritedFrom": "AccordionItemRenderProps"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "required": true,
+    "description": "Whether the accordion item is disabled.",
+    "inheritedFrom": "AccordionItemRenderProps"
+  },
+  {
+    "property": "state",
+    "type": "AccordionItemState",
+    "required": true,
+    "description": "State of the accordion item.",
+    "inheritedFrom": "AccordionItemRenderProps"
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the accordion item."
+  },
+  {
+    "property": "density",
+    "type": "'compact' | 'regular' | 'spacious'",
+    "default": "'regular'",
+    "description": "The amount of space between the accordion item."
+  },
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the accordion item should be displayed with a quiet style."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The contents of the accordion item, consisting of a accordion item title and accordion item panel."
+  },
+  {
+    "property": "id",
+    "type": "Key",
+    "description": "An id for the accordion item, matching the id used in `expandedKeys`."
+  },
+  {
+    "property": "onExpandedChange",
+    "type": "(isExpanded: boolean) => void",
+    "description": "Handler that is called when the accordion item's expanded state changes."
+  },
+  {
+    "property": "defaultExpanded",
+    "type": "boolean",
+    "description": "Whether the accordion item is expanded by default (uncontrolled)."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "property": "isDismissible",
+    "type": "boolean",
+    "description": "Whether the Dialog is dismissible."
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the Dialog."
+  },
+  {
+    "property": "isKeyboardDismissDisabled",
+    "type": "boolean",
+    "description": "Whether pressing the escape key to close the dialog should be disabled."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode | ((opts: DialogRenderProps) => ReactNode)",
+    "description": "Children of the dialog. A function may be provided to access a function to close the dialog.",
+    "inheritedFrom": "DialogProps"
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

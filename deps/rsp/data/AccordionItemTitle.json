@@ -1,0 +1,14 @@
+[
+  {
+    "property": "level",
+    "type": "number",
+    "default": "3",
+    "description": "The heading level of the accordion item title."
+  },
+  {
+    "property": "children",
+    "type": "React.ReactNode",
+    "required": true,
+    "description": "The contents of the accordion item title."
+  }
+]

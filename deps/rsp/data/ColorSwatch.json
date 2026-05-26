@@ -1,0 +1,19 @@
+[
+  {
+    "property": "size",
+    "type": "'XS' | 'S' | 'M' | 'L'",
+    "default": "'M'",
+    "description": "The size of the ColorSwatch."
+  },
+  {
+    "property": "rounding",
+    "type": "'default' | 'none' | 'full'",
+    "default": "'default'",
+    "description": "The corner rounding of the ColorSwatch."
+  },
+  {
+    "property": "styles",
+    "type": "StylesPropWithHeight",
+    "description": "Spectrum-defined styles, returned by the `style()` macro."
+  }
+]

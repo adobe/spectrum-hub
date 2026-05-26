@@ -1,0 +1,26 @@
+[
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the text field."
+  },
+  {
+    "property": "isInvalid",
+    "type": "boolean",
+    "description": "Whether the value is invalid.",
+    "inheritedFrom": "TextFieldProps"
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "placeholder",
+    "type": "string",
+    "description": "Temporary text that occupies the text input when it is empty. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
+    "inheritedFrom": "InputProps"
+  }
+]

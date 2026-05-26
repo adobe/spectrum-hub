@@ -1,0 +1,57 @@
+[
+  {
+    "property": "children",
+    "type": "ReactNode | ((item: T) => ReactNode)",
+    "required": true,
+    "description": "The SelectBox elements contained within the SelectBoxGroup."
+  },
+  {
+    "property": "orientation",
+    "type": "Orientation",
+    "default": "'vertical'",
+    "description": "The layout direction of the content in each SelectBox."
+  },
+  {
+    "property": "selectionMode",
+    "type": "'single' | 'multiple'",
+    "default": "'single'",
+    "description": "The selection mode for the SelectBoxGroup."
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether the SelectBoxGroup is disabled."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  },
+  {
+    "property": "selectionBehavior",
+    "type": "SelectionBehavior",
+    "default": "\"toggle\"",
+    "description": "How multiple selection should behave in the collection.",
+    "inheritedFrom": "ListBoxProps"
+  },
+  {
+    "property": "dragAndDropHooks",
+    "type": "DragAndDropHooks<NoInfer<T>>",
+    "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the ListBox.",
+    "inheritedFrom": "ListBoxProps"
+  },
+  {
+    "property": "renderEmptyState",
+    "type": "(props: ListBoxRenderProps) => ReactNode",
+    "description": "Provides content to display when there are no items in the list.",
+    "inheritedFrom": "ListBoxProps"
+  },
+  {
+    "property": "layout",
+    "type": "'stack' | 'grid'",
+    "default": "'stack'",
+    "description": "Whether the items are arranged in a stack or grid.",
+    "inheritedFrom": "ListBoxProps"
+  }
+]

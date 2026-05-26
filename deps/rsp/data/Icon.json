@@ -1,0 +1,48 @@
+[
+  {
+    "property": "styles",
+    "type": "StyleString<AllowedOverrides>"
+  },
+  {
+    "property": "UNSAFE_className",
+    "type": "UnsafeClassName",
+    "description": "Sets the CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. Only use as a **last resort**. Use the `style` macro via the `styles` prop instead.",
+    "inheritedFrom": "UnsafeStyles"
+  },
+  {
+    "property": "UNSAFE_style",
+    "type": "CSSProperties",
+    "description": "Sets inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. Only use as a **last resort**. Use the `style` macro via the `styles` prop instead.",
+    "inheritedFrom": "UnsafeStyles"
+  },
+  {
+    "property": "'aria-label'",
+    "type": "string",
+    "description": "Defines a string value that labels the current element.",
+    "inheritedFrom": "AriaLabelingProps"
+  },
+  {
+    "property": "'aria-labelledby'",
+    "type": "string",
+    "description": "Identifies the element (or elements) that labels the current element.",
+    "inheritedFrom": "AriaLabelingProps"
+  },
+  {
+    "property": "'aria-describedby'",
+    "type": "string",
+    "description": "Identifies the element (or elements) that describes the object.",
+    "inheritedFrom": "AriaLabelingProps"
+  },
+  {
+    "property": "'aria-details'",
+    "type": "string",
+    "description": "Identifies the element (or elements) that provide a detailed, extended description for the object.",
+    "inheritedFrom": "AriaLabelingProps"
+  },
+  {
+    "property": "id",
+    "type": "string",
+    "description": "The element's unique identifier. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+    "inheritedFrom": "DOMProps"
+  }
+]

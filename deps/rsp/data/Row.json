@@ -1,0 +1,56 @@
+[
+  {
+    "property": "columns",
+    "type": "Iterable<T>",
+    "description": "A list of columns used when dynamically rendering cells.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "children",
+    "type": "ReactNode | ((item: T) => ReactElement)",
+    "description": "The cells within the row. Supports static items or a function for dynamic rendering.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "value",
+    "type": "T",
+    "description": "The object value that this row represents. When using dynamic collections, this is set automatically.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "dependencies",
+    "type": "ReadonlyArray<any>",
+    "description": "Values that should invalidate the cell cache when using dynamic collections.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "textValue",
+    "type": "string",
+    "description": "A string representation of the row's contents, used for features like typeahead.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether the row is disabled.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "onAction",
+    "type": "() => void",
+    "description": "Handler that is called when a user performs an action on the row. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "id",
+    "type": "Key",
+    "description": "The unique id of the row.",
+    "inheritedFrom": "RowProps"
+  },
+  {
+    "property": "hasChildItems",
+    "type": "boolean",
+    "description": "Whether this row has children, even if not loaded yet.",
+    "inheritedFrom": "RowProps"
+  }
+]

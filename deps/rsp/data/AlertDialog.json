@@ -1,0 +1,72 @@
+[
+  {
+    "property": "variant",
+    "type": "'confirmation' | 'information' | 'destructive' | 'error' | 'warning'",
+    "default": "'confirmation'",
+    "description": "The [visual style](https://spectrum.adobe.com/page/alert-dialog/#Options) of the AlertDialog."
+  },
+  {
+    "property": "title",
+    "type": "string",
+    "required": true,
+    "description": "The title of the AlertDialog."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The contents of the AlertDialog."
+  },
+  {
+    "property": "cancelLabel",
+    "type": "string",
+    "description": "The label to display within the cancel button."
+  },
+  {
+    "property": "primaryActionLabel",
+    "type": "string",
+    "required": true,
+    "description": "The label to display within the confirm button."
+  },
+  {
+    "property": "secondaryActionLabel",
+    "type": "string",
+    "description": "The label to display within the secondary button."
+  },
+  {
+    "property": "isPrimaryActionDisabled",
+    "type": "boolean",
+    "description": "Whether the primary button is disabled."
+  },
+  {
+    "property": "isSecondaryActionDisabled",
+    "type": "boolean",
+    "description": "Whether the secondary button is disabled."
+  },
+  {
+    "property": "onCancel",
+    "type": "() => void",
+    "description": "Handler that is called when the cancel button is pressed."
+  },
+  {
+    "property": "onPrimaryAction",
+    "type": "() => void",
+    "description": "Handler that is called when the primary button is pressed."
+  },
+  {
+    "property": "onSecondaryAction",
+    "type": "() => void",
+    "description": "Handler that is called when the secondary button is pressed."
+  },
+  {
+    "property": "autoFocusButton",
+    "type": "'cancel' | 'primary' | 'secondary'",
+    "description": "Button to focus by default when the dialog opens."
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L'",
+    "default": "'M'",
+    "description": "The size of the Dialog."
+  }
+]

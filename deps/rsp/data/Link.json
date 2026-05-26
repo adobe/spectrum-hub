@@ -1,0 +1,38 @@
+[
+  {
+    "property": "variant",
+    "type": "'primary' | 'secondary'",
+    "default": "'primary'",
+    "description": "The [visual style](https://spectrum.adobe.com/page/link/#Options) of the link.",
+    "inheritedFrom": "LinkStyleProps"
+  },
+  {
+    "property": "staticColor",
+    "type": "'white' | 'black' | 'auto'",
+    "description": "The static color style to apply. Useful when the link appears over a color background.",
+    "inheritedFrom": "LinkStyleProps"
+  },
+  {
+    "property": "isStandalone",
+    "type": "boolean",
+    "description": "Whether the link is on its own vs inside a longer string of text.",
+    "inheritedFrom": "LinkStyleProps"
+  },
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the link should be displayed with a quiet style.",
+    "inheritedFrom": "LinkStyleProps"
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

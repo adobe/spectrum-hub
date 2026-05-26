@@ -1,0 +1,44 @@
+[
+  {
+    "property": "size",
+    "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the ActionButton.",
+    "inheritedFrom": "ActionButtonStyleProps"
+  },
+  {
+    "property": "staticColor",
+    "type": "'black' | 'white' | 'auto'",
+    "description": "The static color style to apply. Useful when the ActionButton appears over a color background.",
+    "inheritedFrom": "ActionButtonStyleProps"
+  },
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the button should be displayed with a [quiet style](https://spectrum.adobe.com/page/action-button/#Quiet).",
+    "inheritedFrom": "ActionButtonStyleProps"
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The content to display in the button."
+  },
+  {
+    "property": "isEmphasized",
+    "type": "boolean",
+    "description": "Whether the button should be displayed with an [emphasized style](https://spectrum.adobe.com/page/action-button/#Emphasis)."
+  },
+  {
+    "property": "id",
+    "type": "Key",
+    "description": "When used in a ToggleButtonGroup, an identifier for the item in `selectedKeys`. When used standalone, a DOM id.",
+    "inheritedFrom": "ToggleButtonProps"
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

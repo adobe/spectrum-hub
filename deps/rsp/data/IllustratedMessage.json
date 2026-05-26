@@ -1,0 +1,27 @@
+[
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L'",
+    "default": "'M'",
+    "description": "The size of the IllustratedMessage.",
+    "inheritedFrom": "IllustratedMessageStyleProps"
+  },
+  {
+    "property": "orientation",
+    "type": "'horizontal' | 'vertical'",
+    "default": "'vertical'",
+    "description": "The direction that the IllustratedMessage should be laid out in.",
+    "inheritedFrom": "IllustratedMessageStyleProps"
+  },
+  {
+    "property": "styles",
+    "type": "StylesPropWithHeight",
+    "description": "Spectrum-defined styles, returned by the `style()` macro."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The content to display in the IllustratedMessage."
+  }
+]

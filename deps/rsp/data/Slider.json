@@ -1,0 +1,39 @@
+[
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "inheritedFrom": "SliderBaseProps"
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the Slider.",
+    "inheritedFrom": "SliderBaseProps"
+  },
+  {
+    "property": "isEmphasized",
+    "type": "boolean",
+    "description": "Whether the Slider should be displayed with an emphasized style.",
+    "inheritedFrom": "SliderBaseProps"
+  },
+  {
+    "property": "trackStyle",
+    "type": "'thin' | 'thick'",
+    "default": "'thin'",
+    "description": "The style of the Slider's track.",
+    "inheritedFrom": "SliderBaseProps"
+  },
+  {
+    "property": "thumbStyle",
+    "type": "'default' | 'precise'",
+    "default": "'default'",
+    "description": "The style of the Slider's thumb.",
+    "inheritedFrom": "SliderBaseProps"
+  },
+  {
+    "property": "fillOffset",
+    "type": "number",
+    "description": "The offset from which to start the fill."
+  }
+]
