@@ -42,12 +42,12 @@ describe('implementations', () => {
       expect(result.id).to.equal('rsp');
     });
 
-    it('returns undefined for an unknown id', () => {
-      expect(getImplementationById('unknown')).to.be.undefined;
+    it('returns null for an unknown id', () => {
+      expect(getImplementationById('unknown')).to.be.null;
     });
 
-    it('returns undefined for "all"', () => {
-      expect(getImplementationById('all')).to.be.undefined;
+    it('returns null for "all"', () => {
+      expect(getImplementationById('all')).to.be.null;
     });
   });
 

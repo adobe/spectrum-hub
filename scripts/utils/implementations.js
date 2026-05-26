@@ -11,7 +11,7 @@ export const IMPLEMENTATIONS = [
 export const ALL_OPTION = { id: 'all', label: 'All' };
 
 export function getImplementationById(id) {
-  return IMPLEMENTATIONS.find((impl) => impl.id === id);
+  return IMPLEMENTATIONS.find((impl) => impl.id === id) || null;
 }
 
 export function getOtherImplementations(currentId) {
