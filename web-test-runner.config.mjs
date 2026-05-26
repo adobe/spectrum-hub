@@ -11,7 +11,11 @@
  */
 
 export default {
-  files: './test/**/*.test.{js,html}',
+  files: [
+    'test/**/*.test.js',
+    'test/**/*.test.html',
+    '!test/extractions/**',
+  ],
   nodeResolve: true,
   port: 2000,
 };
