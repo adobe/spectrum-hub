@@ -7,8 +7,10 @@
     "lint:js": "eslint .",
     "lint:css": "stylelint blocks/**/*.css styles/*.css",
     "lint": "npm run lint:js && npm run lint:css",
-    "test": "wtr \"./test/**/*.test.(js|html)\" --node-resolve --port=2000 --coverage --concurrent-browsers 4",
-    "test:watch": "npm test -- --watch",
+    "test": "npm run test:unit && npm run test:extractions",
+    "test:unit": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --concurrent-browsers 4",
+    "test:extractions": "node --test test/extractions/*.node.test.js",
+    "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
     "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js"
