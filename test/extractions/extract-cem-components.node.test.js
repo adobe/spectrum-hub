@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { collectComponentData } from './extract-cem-components.js';
+import { collectComponentData } from '../../deps/swc/extract-cem-components.js';
 
 describe('collectComponentData', () => {
   it('filters one 2nd-gen CEM by tagName and formats declaration attributes', () => {

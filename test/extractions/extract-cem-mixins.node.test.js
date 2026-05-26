@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { collectMixins } from './extract-cem-mixins.js';
+import { collectMixins } from '../../deps/swc/extract-cem-mixins.js';
 
 describe('collectMixins', () => {
   it('collects own attributes for classes referenced by inheritedFrom', () => {
