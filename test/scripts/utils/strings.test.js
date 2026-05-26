@@ -3,8 +3,8 @@ import { formatLabel, slugify } from '../../../scripts/utils/strings.js';
 
 describe('strings', () => {
   describe('formatLabel', () => {
-    it('converts a hyphenated slug to title case', () => {
-      expect(formatLabel('react-spectrum')).to.equal('React Spectrum');
+    it('capitalizes the first letter and replaces hyphens with spaces', () => {
+      expect(formatLabel('react-spectrum')).to.equal('React spectrum');
     });
 
     it('handles a single word slug', () => {
@@ -12,7 +12,7 @@ describe('strings', () => {
     });
 
     it('handles multiple hyphens', () => {
-      expect(formatLabel('spectrum-web-components')).to.equal('Spectrum Web Components');
+      expect(formatLabel('spectrum-web-components')).to.equal('Spectrum web components');
     });
 
     it('returns an empty string for an empty input', () => {
@@ -25,12 +25,16 @@ describe('strings', () => {
       expect(slugify('React Spectrum')).to.equal('react-spectrum');
     });
 
-    it('handles multiple spaces', () => {
-      expect(slugify('Spectrum Web Components')).to.equal('spectrum-web-components');
+    it('strips non-alphanumeric characters', () => {
+      expect(slugify('Action Button!')).to.equal('action-button');
     });
 
-    it('returns a single word lowercased', () => {
-      expect(slugify('Button')).to.equal('button');
+    it('trims leading and trailing whitespace', () => {
+      expect(slugify('  hello  ')).to.equal('hello');
+    });
+
+    it('collapses multiple separators into one hyphen', () => {
+      expect(slugify('foo  bar')).to.equal('foo-bar');
     });
 
     it('returns an empty string for an empty input', () => {
