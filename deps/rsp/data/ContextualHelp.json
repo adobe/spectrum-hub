@@ -1,0 +1,33 @@
+[
+  {
+    "property": "variant",
+    "type": "'info' | 'help'",
+    "default": "'help'",
+    "description": "Indicates whether contents are informative or provides helpful guidance.",
+    "inheritedFrom": "ContextualHelpStyleProps"
+  },
+  {
+    "property": "placement",
+    "type": "Placement",
+    "default": "'bottom start'",
+    "description": "The placement of the popover with respect to the action button."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "Contents of the Contextual Help popover."
+  },
+  {
+    "property": "size",
+    "type": "'XS' | 'S'",
+    "default": "'XS'",
+    "description": "The size of the ActionButton."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

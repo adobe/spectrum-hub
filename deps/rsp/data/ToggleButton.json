@@ -22,13 +22,18 @@
     "property": "children",
     "type": "ReactNode",
     "required": true,
-    "description": "The content to display in the ActionButton."
+    "description": "The content to display in the button."
   },
   {
-    "property": "isPending",
+    "property": "isEmphasized",
     "type": "boolean",
-    "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers.",
-    "inheritedFrom": "ButtonProps"
+    "description": "Whether the button should be displayed with an [emphasized style](https://spectrum.adobe.com/page/action-button/#Emphasis)."
+  },
+  {
+    "property": "id",
+    "type": "Key",
+    "description": "When used in a ToggleButtonGroup, an identifier for the item in `selectedKeys`. When used standalone, a DOM id.",
+    "inheritedFrom": "ToggleButtonProps"
   },
   {
     "property": "styles",

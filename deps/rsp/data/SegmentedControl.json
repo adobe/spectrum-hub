@@ -1,0 +1,39 @@
+[
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The content to display in the segmented control."
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether the segmented control is disabled."
+  },
+  {
+    "property": "isJustified",
+    "type": "boolean",
+    "description": "Whether the items should divide the container width equally."
+  },
+  {
+    "property": "selectedKey",
+    "type": "Key | null",
+    "description": "The id of the currently selected item (controlled)."
+  },
+  {
+    "property": "defaultSelectedKey",
+    "type": "Key",
+    "description": "The id of the initial selected item (uncontrolled)."
+  },
+  {
+    "property": "onSelectionChange",
+    "type": "(id: Key) => void",
+    "description": "Handler that is called when the selection changes."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

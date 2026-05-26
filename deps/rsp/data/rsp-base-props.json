@@ -1,95 +1,4 @@
 {
-  "AriaBaseButtonProps": [
-    {
-      "property": "'aria-disabled'",
-      "type": "boolean | 'true' | 'false'",
-      "description": "Indicates whether the element is disabled to users of assistive technology."
-    },
-    {
-      "property": "'aria-expanded'",
-      "type": "boolean | 'true' | 'false'",
-      "description": "Indicates whether the element, or another grouping element it controls, is currently expanded or collapsed."
-    },
-    {
-      "property": "'aria-haspopup'",
-      "type": "boolean | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | 'true' | 'false'",
-      "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element."
-    },
-    {
-      "property": "'aria-controls'",
-      "type": "string",
-      "description": "Identifies the element (or elements) whose contents or presence are controlled by the current element."
-    },
-    {
-      "property": "'aria-pressed'",
-      "type": "boolean | 'true' | 'false' | 'mixed'",
-      "description": "Indicates the current \"pressed\" state of toggle buttons."
-    },
-    {
-      "property": "'aria-current'",
-      "type": "boolean | 'true' | 'false' | 'page' | 'step' | 'location' | 'date' | 'time'",
-      "description": "Indicates whether this element represents the current item within a container or set of related elements."
-    },
-    {
-      "property": "type",
-      "type": "'button' | 'submit' | 'reset'",
-      "default": "'button'",
-      "description": "The behavior of the button when used in an HTML form."
-    },
-    {
-      "property": "preventFocusOnPress",
-      "type": "boolean",
-      "description": "Whether to prevent focus from moving to the button when pressing it. Caution, this can make the button inaccessible and should only be used when alternative keyboard interaction is provided, such as ComboBox's MenuTrigger or a NumberField's increment/decrement control."
-    },
-    {
-      "property": "form",
-      "type": "string",
-      "description": "The `<form>` element to associate the button with. The value of this attribute must be the id of a `<form>` in the same document. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#form)."
-    },
-    {
-      "property": "formAction",
-      "type": "ButtonHTMLAttributes<HTMLButtonElement>['formAction']",
-      "description": "The URL that processes the information submitted by the button. Overrides the action attribute of the button's form owner."
-    },
-    {
-      "property": "formEncType",
-      "type": "string",
-      "description": "Indicates how to encode the form data that is submitted."
-    },
-    {
-      "property": "formMethod",
-      "type": "string",
-      "description": "Indicates the HTTP method used to submit the form."
-    },
-    {
-      "property": "formNoValidate",
-      "type": "boolean",
-      "description": "Indicates that the form is not to be validated when it is submitted."
-    },
-    {
-      "property": "formTarget",
-      "type": "string",
-      "description": "Overrides the target attribute of the button's form owner."
-    },
-    {
-      "property": "name",
-      "type": "string",
-      "description": "Submitted as a pair with the button's value as part of the form data."
-    },
-    {
-      "property": "value",
-      "type": "string",
-      "description": "The value associated with the button's name when it's submitted with the form data."
-    }
-  ],
-  "AriaButtonElementTypeProps": [
-    {
-      "property": "elementType",
-      "type": "T | JSXElementConstructor<any>",
-      "default": "'button'",
-      "description": "The HTML element or React element used to render the button, e.g. 'div', 'a', or `RouterLink`."
-    }
-  ],
   "AriaLabelingProps": [
     {
       "property": "'aria-label'",
@@ -163,30 +72,515 @@
       "description": "The space to display between rows. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/row-gap)."
     }
   ],
-  "ButtonAria": [
+  "BreadcrumbProps": [
     {
-      "property": "buttonProps",
-      "type": "T",
+      "property": "className",
+      "type": "ClassNameOrFunction<BreadcrumbRenderProps>",
+      "default": "'react-aria-Breadcrumb'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "A unique id for the breadcrumb, which will be passed to `onAction` when the breadcrumb is pressed."
+    }
+  ],
+  "BreadcrumbRenderProps": [
+    {
+      "property": "isCurrent",
+      "type": "boolean",
       "required": true,
-      "description": "Props for the button element."
+      "description": "Whether the breadcrumb is for the current page."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the breadcrumb is disabled."
+    }
+  ],
+  "BreadcrumbsProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-Breadcrumbs'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the breadcrumbs are disabled."
+    },
+    {
+      "property": "onAction",
+      "type": "(key: Key) => void",
+      "description": "Handler that is called when a breadcrumb is clicked."
+    }
+  ],
+  "ButtonProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ButtonRenderProps>",
+      "default": "'react-aria-Button'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "isPending",
+      "type": "boolean",
+      "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers."
+    }
+  ],
+  "ButtonRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the button is currently hovered with a mouse."
     },
     {
       "property": "isPressed",
       "type": "boolean",
       "required": true,
-      "description": "Whether the button is currently pressed."
-    }
-  ],
-  "ButtonProps": [
+      "description": "Whether the button is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the button is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the button is keyboard focused."
+    },
     {
       "property": "isDisabled",
       "type": "boolean",
+      "required": true,
       "description": "Whether the button is disabled."
     },
     {
+      "property": "isPending",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the button is currently in a pending state."
+    }
+  ],
+  "CalendarCellProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<CalendarCellRenderProps>",
+      "default": "'react-aria-CalendarCell'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "date",
+      "type": "CalendarDate",
+      "required": true,
+      "description": "The date to render in the cell."
+    }
+  ],
+  "CalendarCellRenderProps": [
+    {
+      "property": "date",
+      "type": "CalendarDate",
+      "required": true,
+      "description": "The date that the cell represents."
+    },
+    {
+      "property": "formattedDate",
+      "type": "string",
+      "required": true,
+      "description": "The day number formatted according to the current locale."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is currently being pressed."
+    },
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is selected."
+    },
+    {
+      "property": "isSelectionStart",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is the first date in a range selection."
+    },
+    {
+      "property": "isSelectionEnd",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is the last date in a range selection."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is disabled, according to the calendar's `minValue`, `maxValue`, and `isDisabled` props. Disabled dates are not focusable, and cannot be selected by the user. They are typically displayed with a dimmed appearance."
+    },
+    {
+      "property": "isOutsideVisibleRange",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is outside the visible range of the calendar. For example, dates before the first day of a month in the same week."
+    },
+    {
+      "property": "isOutsideMonth",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is outside the current month."
+    },
+    {
+      "property": "isUnavailable",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is unavailable, according to the calendar's `isDateUnavailable` prop. Unavailable dates remain focusable, but cannot be selected by the user. They should be displayed with a visual affordance to indicate they are unavailable, such as a different color or a strikethrough. Note that because they are focusable, unavailable dates must meet a 4.5:1 color contrast ratio, [as defined by WCAG](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is part of an invalid selection."
+    },
+    {
+      "property": "isToday",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is today."
+    }
+  ],
+  "CalendarGridBodyProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-CalendarGridBody'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
       "property": "children",
-      "type": "ReactNode",
-      "description": "The content to display in the button."
+      "type": "(date: CalendarDate) => ReactElement",
+      "required": true,
+      "description": "A function to render a `<CalendarCell>` for a given date."
+    }
+  ],
+  "CalendarGridHeaderProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-CalendarGridHeader'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "children",
+      "type": "(day: string) => ReactElement",
+      "required": true,
+      "description": "A function to render a `<CalendarHeaderCell>` for a weekday name."
+    }
+  ],
+  "CalendarGridProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-CalendarGrid'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "children",
+      "type": "ReactElement | ReactElement[] | ((date: CalendarDate) => ReactElement)",
+      "description": "Either a function to render calendar cells for each date in the month, or children containing a `<CalendarGridHeader>`` and `<CalendarGridBody>` when additional customization is needed."
+    },
+    {
+      "property": "offset",
+      "type": "DateDuration",
+      "description": "An offset from the beginning of the visible date range that this CalendarGrid should display. Useful when displaying more than one month at a time."
+    },
+    {
+      "property": "weekdayStyle",
+      "type": "'narrow' | 'short' | 'long'",
+      "default": "\"narrow\"",
+      "description": "The style of weekday names to display in the calendar grid header, e.g. single letter, abbreviation, or full day name."
+    }
+  ],
+  "CalendarHeaderCellProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-CalendarHeaderCell'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    }
+  ],
+  "CalendarProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<CalendarRenderProps>",
+      "default": "'react-aria-Calendar'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "visibleDuration",
+      "type": "DateDuration",
+      "default": "{months: 1}",
+      "description": "The amount of days that will be displayed at once. This affects how pagination works."
+    },
+    {
+      "property": "createCalendar",
+      "type": "(identifier: CalendarIdentifier) => ICalendar",
+      "description": "A function to create a new [Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a given calendar identifier. If not provided, the `createCalendar` function from `@internationalized/date` will be used."
+    }
+  ],
+  "CalendarRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the calendar is disabled."
+    },
+    {
+      "property": "state",
+      "type": "CalendarState",
+      "required": true,
+      "description": "State of the calendar."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the calendar is invalid."
+    }
+  ],
+  "CellProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<CellRenderProps>",
+      "default": "'react-aria-Cell'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the cell."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the cell's contents, used for features like typeahead."
+    },
+    {
+      "property": "colSpan",
+      "type": "number",
+      "description": "Indicates how many columns the data cell spans."
+    }
+  ],
+  "CellRenderProps": [
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is currently keyboard focused."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the cell is currently hovered with a mouse."
+    },
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the parent row is currently selected."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the parent row is non-interactive, i.e. both selection and actions are disabled and the item may not be focused. Dependent on `disabledKeys` and `disabledBehavior`."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the cell."
+    },
+    {
+      "property": "columnIndex",
+      "type": "number | null",
+      "description": "The index of the column that this cell belongs to. Respects col spanning."
+    },
+    {
+      "property": "isTreeColumn",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column displays hierarchical data."
+    },
+    {
+      "property": "isExpanded",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the parent row is expanded."
+    },
+    {
+      "property": "hasChildItems",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the parent row has child rows."
+    },
+    {
+      "property": "level",
+      "type": "number",
+      "required": true,
+      "description": "What level the parent row has within the table."
+    }
+  ],
+  "CheckboxGroupProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<CheckboxGroupRenderProps>",
+      "default": "'react-aria-CheckboxGroup'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "CheckboxGroupRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox group is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox group is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox group is required."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox group is invalid."
+    },
+    {
+      "property": "state",
+      "type": "CheckboxGroupState",
+      "required": true,
+      "description": "State of the checkbox group."
+    }
+  ],
+  "CheckboxProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<CheckboxRenderProps>",
+      "default": "'react-aria-Checkbox'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "inputRef",
+      "type": "RefObject<HTMLInputElement | null>",
+      "description": "A ref for the HTML input element."
+    }
+  ],
+  "CheckboxRenderProps": [
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is selected."
+    },
+    {
+      "property": "isIndeterminate",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is indeterminate."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is read only."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox invalid."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is required."
     }
   ],
   "Collection": [
@@ -225,11 +619,835 @@
       "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise interacted with."
     }
   ],
+  "CollectionBranchProps": [
+    {
+      "property": "collection",
+      "type": "ICollection<Node<unknown>>",
+      "required": true,
+      "description": "The collection of items to render."
+    },
+    {
+      "property": "parent",
+      "type": "Node<unknown>",
+      "required": true,
+      "description": "The parent node of the items to render."
+    },
+    {
+      "property": "renderDropIndicator",
+      "type": "(target: ItemDropTarget) => ReactNode",
+      "description": "A function that renders a drop indicator between items."
+    }
+  ],
+  "CollectionProps": [
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactNode)",
+      "description": "The contents of the collection."
+    },
+    {
+      "property": "dependencies",
+      "type": "ReadonlyArray<any>",
+      "description": "Values that should invalidate the item cache when using dynamic collections."
+    }
+  ],
+  "CollectionRenderer": [
+    {
+      "property": "isVirtualized",
+      "type": "boolean",
+      "description": "Whether this is a virtualized collection."
+    },
+    {
+      "property": "layoutDelegate",
+      "type": "LayoutDelegate",
+      "description": "A delegate object that provides layout information for items in the collection."
+    },
+    {
+      "property": "dropTargetDelegate",
+      "type": "DropTargetDelegate",
+      "description": "A delegate object that provides drop targets for pointer coordinates within the collection."
+    },
+    {
+      "property": "CollectionRoot",
+      "type": "React.ComponentType<CollectionRootProps>",
+      "required": true,
+      "description": "A component that renders the root collection items."
+    },
+    {
+      "property": "CollectionBranch",
+      "type": "React.ComponentType<CollectionBranchProps>",
+      "required": true,
+      "description": "A component that renders the child collection items."
+    }
+  ],
+  "CollectionRootProps": [
+    {
+      "property": "collection",
+      "type": "ICollection<Node<unknown>>",
+      "required": true,
+      "description": "The collection of items to render."
+    },
+    {
+      "property": "persistedKeys",
+      "type": "Set<Key> | null",
+      "description": "A set of keys for items that should always be persisted in the DOM."
+    },
+    {
+      "property": "scrollRef",
+      "type": "RefObject<HTMLElement | null>",
+      "description": "A ref to the scroll container for the collection."
+    },
+    {
+      "property": "renderDropIndicator",
+      "type": "(target: ItemDropTarget) => ReactNode",
+      "description": "A function that renders a drop indicator between items."
+    }
+  ],
   "CollectionStateBase": [
     {
       "property": "collection",
       "type": "C",
       "description": "A pre-constructed collection to use instead of building one from items and children."
+    }
+  ],
+  "ColorAreaProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorAreaRenderProps>",
+      "default": "'react-aria-ColorArea'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ColorAreaRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color area is disabled."
+    },
+    {
+      "property": "state",
+      "type": "ColorAreaState",
+      "required": true,
+      "description": "State of the color area."
+    }
+  ],
+  "ColorFieldProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorFieldRenderProps>",
+      "default": "'react-aria-ColorField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "channel",
+      "type": "ColorChannel",
+      "description": "The color channel that this field edits. If not provided, the color is edited as a hex value."
+    },
+    {
+      "property": "colorSpace",
+      "type": "ColorSpace",
+      "description": "The color space that the color field operates in if a `channel` prop is provided. If no `channel` is provided, the color field always displays the color as an RGB hex value."
+    }
+  ],
+  "ColorFieldRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color field is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color field is invalid."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color field is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color field is required."
+    },
+    {
+      "property": "channel",
+      "type": "ColorChannel | 'hex'",
+      "required": true,
+      "description": "The color channel that this field edits, or \"hex\" if no `channel` prop is set."
+    },
+    {
+      "property": "state",
+      "type": "ColorFieldState",
+      "required": true,
+      "description": "State of the color field."
+    }
+  ],
+  "ColorPickerProps": [
+    {
+      "property": "children",
+      "type": "ChildrenOrFunction<ColorPickerRenderProps>",
+      "required": true,
+      "description": "The children of the component. A function may be provided to alter the children based on component state."
+    }
+  ],
+  "ColorPickerRenderProps": [
+    {
+      "property": "color",
+      "type": "Color",
+      "required": true,
+      "description": "The currently selected color."
+    }
+  ],
+  "ColorSliderProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorSliderRenderProps>",
+      "default": "'react-aria-ColorSlider'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ColorSliderRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The orientation of the color slider."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color slider is disabled."
+    },
+    {
+      "property": "state",
+      "type": "ColorSliderState",
+      "required": true,
+      "description": "State of the color slider."
+    }
+  ],
+  "ColorSwatchPickerItemProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorSwatchPickerItemRenderProps>",
+      "default": "'react-aria-ColorSwatchPickerItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "color",
+      "type": "string | Color",
+      "required": true,
+      "description": "The color of the swatch."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the color swatch is disabled."
+    }
+  ],
+  "ColorSwatchPickerItemRenderProps": [
+    {
+      "property": "color",
+      "type": "Color",
+      "required": true,
+      "description": "The color of the swatch."
+    }
+  ],
+  "ColorSwatchPickerProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorSwatchPickerRenderProps>",
+      "default": "'react-aria-ColorSwatchPicker'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The children of the ColorSwatchPicker."
+    },
+    {
+      "property": "layout",
+      "type": "'grid' | 'stack'",
+      "default": "'grid'",
+      "description": "Whether the items are arranged in a stack or grid."
+    }
+  ],
+  "ColorSwatchProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorSwatchRenderProps>",
+      "default": "'react-aria-ColorSwatch'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ColorSwatchRenderProps": [
+    {
+      "property": "color",
+      "type": "Color",
+      "required": true,
+      "description": "The color of the swatch."
+    }
+  ],
+  "ColorThumbProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorThumbRenderProps>",
+      "default": "'react-aria-ColorThumb'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ColorThumbRenderProps": [
+    {
+      "property": "color",
+      "type": "Color",
+      "required": true,
+      "description": "The selected color, excluding the alpha channel."
+    },
+    {
+      "property": "isDragging",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether this thumb is currently being dragged."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is disabled."
+    }
+  ],
+  "ColorWheelProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorWheelRenderProps>",
+      "default": "'react-aria-ColorWheel'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ColorWheelRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the color wheel is disabled."
+    },
+    {
+      "property": "state",
+      "type": "ColorWheelState",
+      "required": true,
+      "description": "State of the color wheel."
+    }
+  ],
+  "ColorWheelTrackProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColorWheelTrackRenderProps>",
+      "default": "'react-aria-ColorWheelTrack'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ColumnProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColumnRenderProps>",
+      "default": "'react-aria-Column'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the column."
+    },
+    {
+      "property": "allowsSorting",
+      "type": "boolean",
+      "description": "Whether the column allows sorting."
+    },
+    {
+      "property": "isRowHeader",
+      "type": "boolean",
+      "description": "Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be announced by assistive technology during row navigation."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the column's contents, used for accessibility announcements."
+    },
+    {
+      "property": "width",
+      "type": "ColumnSize | null",
+      "description": "The width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`."
+    },
+    {
+      "property": "defaultWidth",
+      "type": "ColumnSize | null",
+      "description": "The default width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`."
+    },
+    {
+      "property": "minWidth",
+      "type": "ColumnStaticSize | null",
+      "description": "The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`."
+    },
+    {
+      "property": "maxWidth",
+      "type": "ColumnStaticSize | null",
+      "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`."
+    }
+  ],
+  "ColumnRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column is currently keyboard focused."
+    },
+    {
+      "property": "allowsSorting",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column allows sorting."
+    },
+    {
+      "property": "sortDirection",
+      "type": "SortDirection | undefined",
+      "required": true,
+      "description": "The current sort direction."
+    },
+    {
+      "property": "isResizing",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the column is currently being resized."
+    }
+  ],
+  "ColumnResizerProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ColumnResizerRenderProps>",
+      "default": "'react-aria-ColumnResizer'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "A custom accessibility label for the resizer."
+    }
+  ],
+  "ColumnResizerRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the resizer is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the resizer is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the resizer is currently keyboard focused."
+    },
+    {
+      "property": "isResizing",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the resizer is currently being resized."
+    },
+    {
+      "property": "resizableDirection",
+      "type": "'right' | 'left' | 'both'",
+      "required": true,
+      "description": "The direction that the column is currently resizable."
+    }
+  ],
+  "ComboBoxProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ComboBoxRenderProps>",
+      "default": "'react-aria-ComboBox'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "defaultFilter",
+      "type": "(textValue: string, inputValue: string) => boolean",
+      "description": "The filter function used to determine if a option should be included in the combo box list."
+    },
+    {
+      "property": "formValue",
+      "type": "'text' | 'key'",
+      "default": "'key'",
+      "description": "Whether the text or key of the selected item is submitted as part of an HTML form. When `allowsCustomValue` is `true`, this option does not apply and the text is always submitted."
+    },
+    {
+      "property": "allowsEmptyCollection",
+      "type": "boolean",
+      "description": "Whether the combo box allows the menu to be open when the collection is empty."
+    }
+  ],
+  "ComboBoxRenderProps": [
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the combobox is currently open."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the combobox is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the combobox is invalid."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the combobox is required."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the combobox is read only."
+    }
+  ],
+  "ComboBoxValueProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ComboBoxValueRenderProps<T>>",
+      "default": "'react-aria-ComboBoxValue'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "placeholder",
+      "type": "ReactNode",
+      "description": "A value to display when no items are selected."
+    }
+  ],
+  "ComboBoxValueRenderProps": [
+    {
+      "property": "isPlaceholder",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the value is a placeholder."
+    },
+    {
+      "property": "selectedItems",
+      "type": "(T | null)[]",
+      "required": true,
+      "description": "The object values of the currently selected items."
+    },
+    {
+      "property": "selectedText",
+      "type": "string",
+      "required": true,
+      "description": "The textValue of the currently selected items."
+    },
+    {
+      "property": "state",
+      "type": "ComboBoxState<T, 'single' | 'multiple'>",
+      "required": true,
+      "description": "The state of the ComboBox."
+    }
+  ],
+  "DateFieldProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DateFieldRenderProps>",
+      "default": "'react-aria-DateField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "DateFieldRenderProps": [
+    {
+      "property": "state",
+      "type": "DateFieldState",
+      "required": true,
+      "description": "State of the date field."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date field is invalid."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date field is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date field is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date field is required."
+    }
+  ],
+  "DateInputProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DateInputRenderProps>",
+      "default": "'react-aria-DateInput'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "children",
+      "type": "(segment: IDateSegment) => ReactElement",
+      "required": true
+    }
+  ],
+  "DateInputRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date input is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocusWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether an element within the date input is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether an element within the date input is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date input is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date input is invalid."
+    }
+  ],
+  "DatePickerProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DatePickerRenderProps>",
+      "default": "'react-aria-DatePicker'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "DatePickerRenderProps": [
+    {
+      "property": "isFocusWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether an element within the date picker is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether an element within the date picker is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date picker is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date picker is read only."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date picker is invalid."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date picker is required."
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date picker's popover is currently open."
+    },
+    {
+      "property": "state",
+      "type": "DatePickerState",
+      "required": true,
+      "description": "State of the date picker."
+    }
+  ],
+  "DateRangePickerProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DateRangePickerRenderProps>",
+      "default": "'react-aria-DateRangePicker'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "DateRangePickerRenderProps": [
+    {
+      "property": "state",
+      "type": "DateRangePickerState",
+      "required": true,
+      "description": "State of the date range picker."
+    }
+  ],
+  "DateSegmentProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DateSegmentRenderProps>",
+      "default": "'react-aria-DateSegment'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "segment",
+      "type": "IDateSegment",
+      "required": true
+    }
+  ],
+  "DateSegmentRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the segment is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the segment is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the segment is keyboard focused."
+    },
+    {
+      "property": "isPlaceholder",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the value is a placeholder."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the segment is read only."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date field is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the date field is in an invalid state."
+    },
+    {
+      "property": "type",
+      "type": "DateSegmentType",
+      "required": true,
+      "description": "The type of segment. Values include `literal`, `year`, `month`, `day`, etc."
+    }
+  ],
+  "DialogProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-Dialog'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((opts: DialogRenderProps) => ReactNode)",
+      "description": "Children of the dialog. A function may be provided to access a function to close the dialog."
+    }
+  ],
+  "DialogRenderProps": [
+    {
+      "property": "close",
+      "type": "() => void",
+      "required": true
+    }
+  ],
+  "DialogTriggerProps": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
     }
   ],
   "DirectoryDropItem": [
@@ -244,6 +1462,95 @@
       "type": "string",
       "required": true,
       "description": "The directory name."
+    }
+  ],
+  "DisclosureGroupProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DisclosureGroupRenderProps>",
+      "default": "'react-aria-DisclosureGroup'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "DisclosureGroupRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the disclosure group is disabled."
+    },
+    {
+      "property": "state",
+      "type": "DisclosureGroupState",
+      "required": true,
+      "description": "State of the disclosure group."
+    }
+  ],
+  "DisclosurePanelProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DisclosurePanelRenderProps>",
+      "default": "'react-aria-DisclosurePanel'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "role",
+      "type": "'group' | 'region'",
+      "default": "'group'",
+      "description": "The accessibility role for the disclosure's panel."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The children of the component."
+    }
+  ],
+  "DisclosurePanelRenderProps": [
+    {
+      "property": "isFocusVisibleWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether keyboard focus is within the disclosure panel."
+    }
+  ],
+  "DisclosureProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DisclosureRenderProps>",
+      "default": "'react-aria-Disclosure'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "An id for the disclosure when used within a DisclosureGroup, matching the id used in `expandedKeys`."
+    }
+  ],
+  "DisclosureRenderProps": [
+    {
+      "property": "isExpanded",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the disclosure is expanded."
+    },
+    {
+      "property": "isFocusVisibleWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the disclosure has keyboard focus."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the disclosure is disabled."
+    },
+    {
+      "property": "state",
+      "type": "DisclosureState",
+      "required": true,
+      "description": "State of the disclosure."
     }
   ],
   "DOMAttributes": [
@@ -270,9 +1577,81 @@
   ],
   "DOMProps": [
     {
-      "property": "id",
-      "type": "string",
-      "description": "The element's unique identifier. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id)."
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The children of the component."
+    }
+  ],
+  "DOMRenderProps": [
+    {
+      "property": "render",
+      "type": "DOMRenderFunction<E, T>",
+      "description": "Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Requirements: * You must render the expected element type (e.g. if `<button>` is expected, you cannot render an `<a>`). * Only a single root DOM element can be rendered (no fragments). * You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate."
+    }
+  ],
+  "DragAndDrop": [
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks<T>",
+      "required": true,
+      "description": "Drag and drop hooks for the collection element."
+    }
+  ],
+  "DragAndDropContextValue": [
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks"
+    },
+    {
+      "property": "dragState",
+      "type": "DraggableCollectionState"
+    },
+    {
+      "property": "dropState",
+      "type": "DroppableCollectionState"
+    }
+  ],
+  "DragAndDropOptions": [
+    {
+      "property": "getItems",
+      "type": "(keys: Set<Key>, items: T[]) => DragItem[]",
+      "default": "() => []",
+      "description": "A function that returns the items being dragged. If not specified, we assume that the collection is not draggable."
+    },
+    {
+      "property": "renderDragPreview",
+      "type": "(items: DragItem[]) => JSX.Element | {",
+      "description": "A function that renders a drag preview, which is shown under the user's cursor while dragging. By default, a copy of the dragged element is rendered."
+    },
+    {
+      "property": "element",
+      "type": "JSX.Element",
+      "required": true
+    },
+    {
+      "property": "x",
+      "type": "number",
+      "required": true
+    },
+    {
+      "property": "y",
+      "type": "number",
+      "required": true
+    },
+    {
+      "property": "renderDropIndicator",
+      "type": "(target: DropTarget) => JSX.Element",
+      "description": "A function that renders a drop indicator element between two items in a collection. This should render a `<DropIndicator>` element. If this function is not provided, a default DropIndicator is provided."
+    },
+    {
+      "property": "dropTargetDelegate",
+      "type": "DropTargetDelegate",
+      "description": "A custom delegate object that provides drop targets for pointer coordinates within the collection."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the drag and drop events should be disabled."
     }
   ],
   "DragDropEvent": [
@@ -431,6 +1810,22 @@
       "type": "'dropexit'",
       "required": true,
       "description": "The event type."
+    }
+  ],
+  "DropIndicatorProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DropIndicatorRenderProps>",
+      "default": "'react-aria-DropIndicator'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "DropIndicatorRenderProps": [
+    {
+      "property": "isDropTarget",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the drop indicator is currently the active drop target."
     }
   ],
   "DropMoveEvent": [
@@ -626,6 +2021,46 @@
       "description": "A function returning whether a given target in the droppable collection is a valid \"on\" drop target for the current drag types."
     }
   ],
+  "DropZoneProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DropZoneRenderProps>",
+      "default": "'react-aria-DropZone'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "DropZoneRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the dropzone is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the dropzone is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the dropzone is keyboard focused."
+    },
+    {
+      "property": "isDropTarget",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the dropzone is the drop target."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the dropzone is disabled."
+    }
+  ],
   "Expandable": [
     {
       "property": "expandedKeys",
@@ -641,6 +2076,20 @@
       "property": "onExpandedChange",
       "type": "(keys: Set<Key>) => any",
       "description": "Handler that is called when items are expanded or collapsed."
+    }
+  ],
+  "FieldErrorProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<FieldErrorRenderProps>",
+      "default": "'react-aria-FieldError'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "elementType",
+      "type": "string",
+      "default": "'span'",
+      "description": "The HTML element type to render. Defaults to `'span'`. Set to `'div'` when using block-level children (e.g. `<ul>`) to avoid invalid HTML."
     }
   ],
   "FileDropItem": [
@@ -661,6 +2110,38 @@
       "type": "string",
       "required": true,
       "description": "The file name."
+    }
+  ],
+  "FileTriggerProps": [
+    {
+      "property": "acceptedFileTypes",
+      "type": "ReadonlyArray<string>",
+      "description": "Specifies what mime type of files are allowed."
+    },
+    {
+      "property": "allowsMultiple",
+      "type": "boolean",
+      "description": "Whether multiple files can be selected."
+    },
+    {
+      "property": "defaultCamera",
+      "type": "'user' | 'environment'",
+      "description": "Specifies the use of a media capture mechanism to capture the media on the spot."
+    },
+    {
+      "property": "onSelect",
+      "type": "(files: FileList | null) => void",
+      "description": "Handler when a user selects a file."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The children of the component."
+    },
+    {
+      "property": "acceptDirectory",
+      "type": "boolean",
+      "description": "Enables the selection of directories instead of individual files."
     }
   ],
   "FlexStyleProps": [
@@ -710,59 +2191,16 @@
   ],
   "FormProps": [
     {
-      "property": "validationErrors",
-      "type": "ValidationErrors",
-      "description": "Validation errors for the form, typically returned by a server. This should be set to an object mapping from input names to errors."
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-Form'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
     },
     {
-      "property": "action",
-      "type": "string | FormHTMLAttributes<HTMLFormElement>['action']",
-      "description": "Where to send the form-data when the form is submitted. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#action)."
-    },
-    {
-      "property": "encType",
-      "type": "'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'",
-      "description": "The enctype attribute specifies how the form-data should be encoded when submitting it to the server. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#enctype)."
-    },
-    {
-      "property": "method",
-      "type": "'get' | 'post' | 'dialog'",
-      "description": "The HTTP method to submit the form with. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#method)."
-    },
-    {
-      "property": "target",
-      "type": "'_blank' | '_self' | '_parent' | '_top'",
-      "description": "The target attribute specifies a name or a keyword that indicates where to display the response that is received after submitting the form. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#target)."
-    },
-    {
-      "property": "onSubmit",
-      "type": "(event: FormEvent<HTMLFormElement>) => void",
-      "description": "Triggered when a user submits the form."
-    },
-    {
-      "property": "onReset",
-      "type": "(event: FormEvent<HTMLFormElement>) => void",
-      "description": "Triggered when a user resets the form."
-    },
-    {
-      "property": "onInvalid",
-      "type": "(event: FormEvent<HTMLFormElement>) => void",
-      "description": "Triggered for each invalid field when a user submits the form."
-    },
-    {
-      "property": "autoComplete",
-      "type": "'off' | 'on'",
-      "description": "Indicates whether input elements can by default have their values automatically completed by the browser. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#autocomplete)."
-    },
-    {
-      "property": "autoCapitalize",
-      "type": "'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters'",
-      "description": "Controls whether inputted text is automatically capitalized and, if so, in what manner. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autocapitalize)."
-    },
-    {
-      "property": "role",
-      "type": "'search' | 'presentation'",
-      "description": "An ARIA role override to apply to the form element."
+      "property": "validationBehavior",
+      "type": "'aria' | 'native'",
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission when a field value is missing or invalid, or mark fields as required or invalid via ARIA."
     }
   ],
   "GlobalDOMAttributes": [
@@ -1045,6 +2483,164 @@
       "type": "TransitionEventHandler<T> | undefined"
     }
   ],
+  "GridListItemProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<GridListItemRenderProps>",
+      "default": "'react-aria-GridListItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item."
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this item represents. When using dynamic collections, this is set automatically."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the item's contents, used for features like typeahead."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled."
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality."
+    }
+  ],
+  "GridListItemRenderProps": [
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item."
+    },
+    {
+      "property": "state",
+      "type": "ListState<unknown>",
+      "required": true,
+      "description": "State of the grid list."
+    }
+  ],
+  "GridListLoadMoreItemProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-GridListLoadMoreItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The load more spinner to render when loading additional items."
+    },
+    {
+      "property": "isLoading",
+      "type": "boolean",
+      "description": "Whether or not the loading spinner should be rendered or not."
+    }
+  ],
+  "GridListProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<GridListRenderProps>",
+      "default": "'react-aria-GridList'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "disallowTypeAhead",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether typeahead navigation is disabled."
+    },
+    {
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "default": "\"toggle\"",
+      "description": "How multiple selection should behave in the collection."
+    },
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks<NoInfer<T>>",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the GridList."
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "(props: GridListRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no items in the list."
+    },
+    {
+      "property": "layout",
+      "type": "'stack' | 'grid'",
+      "default": "'stack'",
+      "description": "Whether the items are arranged in a stack or grid."
+    },
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "default": "'vertical'",
+      "description": "The primary orientation of the items. Usually this is the direction that the collection scrolls."
+    }
+  ],
+  "GridListRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the list has no items and should display its empty state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the grid list is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the grid list is currently keyboard focused."
+    },
+    {
+      "property": "isDropTarget",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the grid list is currently the active drop target."
+    },
+    {
+      "property": "layout",
+      "type": "'stack' | 'grid'",
+      "required": true,
+      "description": "Whether the items are arranged in a stack or grid."
+    },
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The primary orientation of the items."
+    },
+    {
+      "property": "state",
+      "type": "ListState<unknown>",
+      "required": true,
+      "description": "State of the grid list."
+    }
+  ],
+  "GridListSectionProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-GridListSection'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    }
+  ],
   "GridStyleProps": [
     {
       "property": "areas",
@@ -1088,6 +2684,73 @@
       "type": "'group' | 'region' | 'presentation'"
     }
   ],
+  "GroupProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<GroupRenderProps>",
+      "default": "'react-aria-Group'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the group is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "description": "Whether the group is invalid."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "description": "Whether the group is read only."
+    },
+    {
+      "property": "role",
+      "type": "'group' | 'region' | 'presentation'",
+      "default": "'group'",
+      "description": "An accessibility role for the group. By default, this is set to `'group'`. Use `'region'` when the contents of the group is important enough to be included in the page table of contents. Use `'presentation'` if the group is visual only and does not represent a semantic grouping of controls."
+    }
+  ],
+  "GroupRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the group is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocusWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether an element within the group is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether an element within the group is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the group is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the group is invalid."
+    }
+  ],
+  "HeadingProps": [
+    {
+      "property": "level",
+      "type": "number"
+    }
+  ],
   "HelpTextProps": [
     {
       "property": "description",
@@ -1098,6 +2761,20 @@
       "property": "errorMessage",
       "type": "ReactNode | ((v: ValidationResult) => ReactNode)",
       "description": "An error message for the field."
+    }
+  ],
+  "HiddenDateAria": [
+    {
+      "property": "containerProps",
+      "type": "React.HTMLAttributes<HTMLDivElement>",
+      "required": true,
+      "description": "Props for the container element."
+    },
+    {
+      "property": "inputProps",
+      "type": "React.InputHTMLAttributes<HTMLInputElement>",
+      "required": true,
+      "description": "Props for the hidden input element."
     }
   ],
   "HoverEvent": [
@@ -1161,6 +2838,51 @@
       "description": "The `<form>` element to associate the input with. The value of this attribute must be the id of a `<form>` in the same document. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form)."
     }
   ],
+  "InputProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<InputRenderProps>",
+      "default": "'react-aria-Input'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "placeholder",
+      "type": "string",
+      "description": "Temporary text that occupies the text input when it is empty. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder)."
+    }
+  ],
+  "InputRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the input is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the input is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the input is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the input is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the input is invalid."
+    }
+  ],
   "ItemDropTarget": [
     {
       "property": "type",
@@ -1214,6 +2936,71 @@
       "description": "Whether this item has children, even if not loaded yet."
     }
   ],
+  "ItemRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item is currently in a pressed state."
+    },
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item is currently selected."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item is currently keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item is non-interactive, i.e. both selection and actions are disabled and the item may not be focused. Dependent on `disabledKeys` and `disabledBehavior`."
+    },
+    {
+      "property": "selectionMode",
+      "type": "SelectionMode",
+      "required": true,
+      "description": "The type of selection that is allowed in the collection."
+    },
+    {
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "required": true,
+      "description": "The selection behavior for the collection."
+    },
+    {
+      "property": "allowsDragging",
+      "type": "boolean",
+      "description": "Whether the item allows dragging."
+    },
+    {
+      "property": "isDragging",
+      "type": "boolean",
+      "description": "Whether the item is currently being dragged."
+    },
+    {
+      "property": "isDropTarget",
+      "type": "boolean",
+      "description": "Whether the item is currently an active drop target."
+    }
+  ],
   "KeyboardEvents": [
     {
       "property": "onKeyDown",
@@ -1233,21 +3020,10 @@
       "description": "The content to display as the label."
     }
   ],
-  "LinkButtonProps": [
+  "LabelProps": [
     {
-      "property": "href",
-      "type": "string",
-      "description": "A URL to link to if elementType=\"a\"."
-    },
-    {
-      "property": "target",
-      "type": "string",
-      "description": "The target window for the link."
-    },
-    {
-      "property": "rel",
-      "type": "string",
-      "description": "The relationship between the linked resource and the current page. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel)."
+      "property": "elementType",
+      "type": "string"
     }
   ],
   "LinkDOMProps": [
@@ -1292,12 +3068,371 @@
       "description": "Options for the configured client side router."
     }
   ],
+  "LinkProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<LinkRenderProps>",
+      "default": "'react-aria-Link'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "LinkRenderProps": [
+    {
+      "property": "isCurrent",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the link is the current item within a list."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the link is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the link is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the link is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the link is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the link is disabled."
+    }
+  ],
+  "ListBoxItemProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ListBoxItemRenderProps>",
+      "default": "'react-aria-ListBoxItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item."
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this item represents. When using dynamic collections, this is set automatically."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the item's contents, used for features like typeahead."
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "An accessibility label for this item."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled."
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality."
+    }
+  ],
+  "ListBoxLoadMoreItemProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-ListBoxLoadMoreItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The load more spinner to render when loading additional items."
+    },
+    {
+      "property": "isLoading",
+      "type": "boolean",
+      "description": "Whether or not the loading spinner should be rendered or not."
+    }
+  ],
+  "ListBoxProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ListBoxRenderProps>",
+      "default": "'react-aria-ListBox'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "default": "\"toggle\"",
+      "description": "How multiple selection should behave in the collection."
+    },
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks<NoInfer<T>>",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the ListBox."
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "(props: ListBoxRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no items in the list."
+    },
+    {
+      "property": "layout",
+      "type": "'stack' | 'grid'",
+      "default": "'stack'",
+      "description": "Whether the items are arranged in a stack or grid."
+    },
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "default": "'vertical'",
+      "description": "The primary orientation of the items. Usually this is the direction that the collection scrolls."
+    }
+  ],
+  "ListBoxRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the listbox has no items and should display its empty state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the listbox is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the listbox is currently keyboard focused."
+    },
+    {
+      "property": "isDropTarget",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the listbox is currently the active drop target."
+    },
+    {
+      "property": "layout",
+      "type": "'stack' | 'grid'",
+      "required": true,
+      "description": "Whether the items are arranged in a stack or grid."
+    },
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The primary orientation of the items."
+    },
+    {
+      "property": "state",
+      "type": "ListState<unknown>",
+      "required": true,
+      "description": "State of the listbox."
+    }
+  ],
+  "ListBoxSectionProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-ListBoxSection'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    }
+  ],
   "LongPressEvent": [
     {
       "property": "type",
       "type": "'longpressstart' | 'longpressend' | 'longpress'",
       "required": true,
       "description": "The type of long press event being fired."
+    }
+  ],
+  "MenuItemProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<MenuItemRenderProps>",
+      "default": "'react-aria-MenuItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item."
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this item represents. When using dynamic collections, this is set automatically."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the item's contents, used for features like typeahead."
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "An accessibility label for this item."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled."
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when the item is selected."
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "description": "Whether the menu should close when the menu item is selected."
+    }
+  ],
+  "MenuItemRenderProps": [
+    {
+      "property": "hasSubmenu",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item has a submenu."
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the item's submenu is open."
+    }
+  ],
+  "MenuProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<MenuRenderProps>",
+      "default": "'react-aria-Menu'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "() => ReactNode",
+      "description": "Provides content to display when there are no items in the list."
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "description": "Whether the menu should close when the menu item is selected."
+    }
+  ],
+  "MenuRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the menu has no items and should display its empty state."
+    }
+  ],
+  "MenuSectionProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-MenuSection'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "description": "Whether the menu should close when the menu item is selected."
+    }
+  ],
+  "MenuTriggerProps": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
+    }
+  ],
+  "MeterProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<MeterRenderProps>",
+      "default": "'react-aria-Meter'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "MeterRenderProps": [
+    {
+      "property": "percentage",
+      "type": "number",
+      "required": true,
+      "description": "The value as a percentage between the minimum and maximum."
+    },
+    {
+      "property": "valueText",
+      "type": "string | undefined",
+      "required": true,
+      "description": "A formatted version of the value."
+    }
+  ],
+  "ModalOverlayProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ModalRenderProps>",
+      "default": "'react-aria-ModalOverlay'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "description": "Whether the modal is currently performing an entry animation."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "description": "Whether the modal is currently performing an exit animation."
+    },
+    {
+      "property": "UNSTABLE_portalContainer",
+      "type": "Element",
+      "default": "document.body",
+      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to."
+    }
+  ],
+  "ModalRenderProps": [
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the modal is currently entering. Use this to apply animations."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the modal is currently exiting. Use this to apply animations."
+    },
+    {
+      "property": "state",
+      "type": "OverlayTriggerState",
+      "required": true,
+      "description": "State of the modal."
     }
   ],
   "MoveEndEvent": [
@@ -1490,6 +3625,135 @@
       "description": "A function that renders this node to a React Element in the DOM."
     }
   ],
+  "NumberFieldProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<NumberFieldRenderProps>",
+      "default": "'react-aria-NumberField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "NumberFieldRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the number field is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the number field is invalid."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the number field is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the number field is required."
+    },
+    {
+      "property": "state",
+      "type": "NumberFieldState",
+      "required": true,
+      "description": "State of the number field."
+    }
+  ],
+  "OverlayArrowProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<OverlayArrowRenderProps>",
+      "default": "'react-aria-OverlayArrow'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "OverlayArrowRenderProps": [
+    {
+      "property": "placement",
+      "type": "PlacementAxis | null",
+      "required": true,
+      "description": "The placement of the overlay relative to the trigger."
+    }
+  ],
+  "PopoverProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<PopoverRenderProps>",
+      "default": "'react-aria-Popover'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "trigger",
+      "type": "string",
+      "description": "The name of the component that triggered the popover. This is reflected on the element as the `data-trigger` attribute, and can be used to provide specific styles for the popover depending on which element triggered it."
+    },
+    {
+      "property": "triggerRef",
+      "type": "RefObject<Element | null>",
+      "description": "The ref for the element which the popover positions itself with respect to. When used within a trigger component such as DialogTrigger, MenuTrigger, Select, etc., this is set automatically. It is only required when used standalone."
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "description": "Whether the popover is currently performing an entry animation."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "description": "Whether the popover is currently performing an exit animation."
+    },
+    {
+      "property": "UNSTABLE_portalContainer",
+      "type": "Element",
+      "default": "document.body",
+      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to."
+    },
+    {
+      "property": "offset",
+      "type": "number",
+      "default": "8",
+      "description": "The additional offset applied along the main axis between the element and its anchor element."
+    }
+  ],
+  "PopoverRenderProps": [
+    {
+      "property": "trigger",
+      "type": "string | null",
+      "required": true,
+      "description": "The name of the component that triggered the popover, e.g. \"DialogTrigger\" or \"ComboBox\"."
+    },
+    {
+      "property": "placement",
+      "type": "PlacementAxis | null",
+      "required": true,
+      "description": "The placement of the popover relative to the trigger."
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the popover is currently entering. Use this to apply animations."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the popover is currently exiting. Use this to apply animations."
+    }
+  ],
+  "PossibleLinkDOMRenderProps": [
+    {
+      "property": "render",
+      "type": "(props: DetailedHTMLProps<LinkWithRequiredHref, HTMLAnchorElement> | React.JSX.IntrinsicElements[Fallback], renderProps: T) => ReactElement",
+      "description": "Overrides the default DOM element with a custom render function. This allows rendering existing components with built-in styles and behaviors such as router links, animation libraries, and pre-styled components. Note: You can check if `'href' in props` in order to tell whether to render an `<a>` element. Requirements: * You must render the expected element type (e.g. if `<a>` is expected, you cannot render a `<button>`). * Only a single root DOM element can be rendered (no fragments). * You must pass through props and ref to the underlying DOM element, merging with your own prop as appropriate."
+    }
+  ],
   "PressEvent": [
     {
       "property": "type",
@@ -1583,6 +3847,184 @@
       "description": "**Not recommended – use `onPress` instead.** `onClick` is an alias for `onPress` provided for compatibility with other libraries. `onPress` provides additional event details for non-mouse interactions."
     }
   ],
+  "ProgressBarProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ProgressBarRenderProps>",
+      "default": "'react-aria-ProgressBar'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ProgressBarRenderProps": [
+    {
+      "property": "percentage",
+      "type": "number | undefined",
+      "required": true,
+      "description": "The value as a percentage between the minimum and maximum."
+    },
+    {
+      "property": "valueText",
+      "type": "string | undefined",
+      "required": true,
+      "description": "A formatted version of the value."
+    },
+    {
+      "property": "isIndeterminate",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the progress bar is indeterminate."
+    }
+  ],
+  "RACValidation": [
+    {
+      "property": "validationBehavior",
+      "type": "'native' | 'aria'",
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission when the value is missing or invalid, or mark the field as required or invalid via ARIA."
+    }
+  ],
+  "RadioGroupProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<RadioGroupRenderProps>",
+      "default": "'react-aria-RadioGroup'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "RadioGroupRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The orientation of the radio group."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio group is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio group is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio group is required."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio group is invalid."
+    },
+    {
+      "property": "state",
+      "type": "RadioGroupState",
+      "required": true,
+      "description": "State of the radio group."
+    }
+  ],
+  "RadioProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<RadioRenderProps>",
+      "default": "'react-aria-Radio'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "inputRef",
+      "type": "RefObject<HTMLInputElement | null>",
+      "description": "A ref for the HTML input element."
+    }
+  ],
+  "RadioRenderProps": [
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is selected."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is read only."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the radio is invalid."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the checkbox is required."
+    }
+  ],
+  "RangeCalendarProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<RangeCalendarRenderProps>",
+      "default": "'react-aria-RangeCalendar'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "visibleDuration",
+      "type": "DateDuration",
+      "default": "{months: 1}",
+      "description": "The amount of days that will be displayed at once. This affects how pagination works."
+    },
+    {
+      "property": "createCalendar",
+      "type": "(identifier: CalendarIdentifier) => ICalendar",
+      "description": "A function to create a new [Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a given calendar identifier. If not provided, the `createCalendar` function from `@internationalized/date` will be used."
+    }
+  ],
+  "RangeCalendarRenderProps": [
+    {
+      "property": "state",
+      "type": "RangeCalendarState",
+      "required": true,
+      "description": "State of the range calendar."
+    }
+  ],
   "RangeInputBase": [
     {
       "property": "minValue",
@@ -1653,12 +4095,126 @@
       "type": "(value: T, event?: SyntheticEvent) => R"
     }
   ],
+  "RenderProps": [
+    {
+      "property": "children",
+      "type": "ChildrenOrFunction<T>",
+      "description": "The children of the component. A function may be provided to alter the children based on component state."
+    }
+  ],
+  "ResizableTableContainerProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-ResizableTableContainer'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    },
+    {
+      "property": "onResizeStart",
+      "type": "(widths: Map<Key, ColumnSize>) => void",
+      "description": "Handler that is called when a user starts a column resize."
+    },
+    {
+      "property": "onResize",
+      "type": "(widths: Map<Key, ColumnSize>) => void",
+      "description": "Handler that is called when a user performs a column resize. Can be used with the width property on columns to put the column widths into a controlled state."
+    },
+    {
+      "property": "onResizeEnd",
+      "type": "(widths: Map<Key, ColumnSize>) => void",
+      "description": "Handler that is called after a user performs a column resize. Can be used to store the widths of columns for another future session."
+    }
+  ],
   "RootDropTarget": [
     {
       "property": "type",
       "type": "'root'",
       "required": true,
       "description": "The event type."
+    }
+  ],
+  "RowProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<RowRenderProps>",
+      "default": "'react-aria-Row'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "columns",
+      "type": "Iterable<T>",
+      "description": "A list of columns used when dynamically rendering cells."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactElement)",
+      "description": "The cells within the row. Supports static items or a function for dynamic rendering."
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this row represents. When using dynamic collections, this is set automatically."
+    },
+    {
+      "property": "dependencies",
+      "type": "ReadonlyArray<any>",
+      "description": "Values that should invalidate the cell cache when using dynamic collections."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the row's contents, used for features like typeahead."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the row is disabled."
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the row. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the row."
+    },
+    {
+      "property": "hasChildItems",
+      "type": "boolean",
+      "description": "Whether this row has children, even if not loaded yet."
+    }
+  ],
+  "RowRenderProps": [
+    {
+      "property": "isFocusVisibleWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the row's children have keyboard focus."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the row."
+    },
+    {
+      "property": "isExpanded",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the row is expanded."
+    },
+    {
+      "property": "hasChildItems",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the row has child rows."
+    },
+    {
+      "property": "level",
+      "type": "number",
+      "required": true,
+      "description": "What level the row has within the table."
     }
   ],
   "ScrollEvent": [
@@ -1682,27 +4238,208 @@
       "description": "Handler that is called when the scroll wheel moves."
     }
   ],
-  "SectionProps": [
+  "SearchFieldProps": [
     {
-      "property": "title",
-      "type": "ReactNode",
-      "description": "Rendered contents of the section, e.g. a header."
+      "property": "className",
+      "type": "ClassNameOrFunction<SearchFieldRenderProps>",
+      "default": "'react-aria-SearchField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "SearchFieldRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the search field is empty."
     },
     {
-      "property": "'aria-label'",
-      "type": "string",
-      "description": "An accessibility label for the section."
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the search field is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the search field is invalid."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the search field is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the search field is required."
+    },
+    {
+      "property": "state",
+      "type": "SearchFieldState",
+      "required": true,
+      "description": "State of the search field."
+    }
+  ],
+  "SectionProps": [
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the section."
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this section represents. When using dynamic collections, this is set automatically."
     },
     {
       "property": "children",
-      "type": "ItemElement<T> | ItemElement<T>[] | ItemRenderer<T>",
-      "required": true,
+      "type": "ReactNode | ((item: T) => ReactElement)",
       "description": "Static child items or a function to render children."
     },
     {
-      "property": "items",
-      "type": "Iterable<T>",
-      "description": "Item objects in the section."
+      "property": "dependencies",
+      "type": "ReadonlyArray<any>",
+      "description": "Values that should invalidate the item cache when using dynamic collections."
+    }
+  ],
+  "SelectableCollectionContextValue": [
+    {
+      "property": "filter",
+      "type": "(nodeTextValue: string, node: Node<T>) => boolean"
+    },
+    {
+      "property": "shouldUseVirtualFocus",
+      "type": "boolean",
+      "description": "Whether the collection items should use virtual focus instead of being focused directly."
+    },
+    {
+      "property": "disallowTypeAhead",
+      "type": "boolean",
+      "description": "Whether typeahead is disabled."
+    }
+  ],
+  "SelectionIndicatorProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SharedElementRenderProps>",
+      "default": "'react-aria-SelectionIndicator'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "description": "Whether the SelectionIndicator is visible. This is usually set automatically by the parent component."
+    }
+  ],
+  "SelectRenderProps": [
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the select is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the select is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the select is disabled."
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the select is currently open."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the select is invalid."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the select is required."
+    }
+  ],
+  "SelectValueProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SelectValueRenderProps<T>>",
+      "default": "'react-aria-SelectValue'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "SelectValueRenderProps": [
+    {
+      "property": "isPlaceholder",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the value is a placeholder."
+    },
+    {
+      "property": "selectedItem",
+      "type": "T | null",
+      "required": true,
+      "description": "The object value of the first selected item."
+    },
+    {
+      "property": "selectedItems",
+      "type": "(T | null)[]",
+      "required": true,
+      "description": "The object values of the currently selected items."
+    },
+    {
+      "property": "selectedText",
+      "type": "string",
+      "required": true,
+      "description": "The textValue of the currently selected items."
+    },
+    {
+      "property": "state",
+      "type": "SelectState<T, 'single' | 'multiple'>",
+      "required": true,
+      "description": "The state of the select."
+    }
+  ],
+  "SeparatorProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-Separator'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    }
+  ],
+  "SharedElementRenderProps": [
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the element is currently entering."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the element is currently exiting."
+    }
+  ],
+  "SharedElementTransitionProps": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
     }
   ],
   "SingleSelection": [
@@ -1737,6 +4474,121 @@
       "property": "height",
       "type": "number",
       "required": true
+    }
+  ],
+  "SliderOutputProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SliderRenderProps>",
+      "default": "'react-aria-SliderOutput'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "SliderProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SliderRenderProps>",
+      "default": "'react-aria-Slider'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "formatOptions",
+      "type": "Intl.NumberFormatOptions",
+      "description": "The display format of the value label."
+    }
+  ],
+  "SliderRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The orientation of the slider."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the slider is disabled."
+    },
+    {
+      "property": "state",
+      "type": "SliderState",
+      "required": true,
+      "description": "State of the slider."
+    }
+  ],
+  "SliderThumbProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SliderThumbRenderProps>",
+      "default": "'react-aria-SliderThumb'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "inputRef",
+      "type": "RefObject<HTMLInputElement | null>",
+      "description": "A ref for the HTML input element."
+    }
+  ],
+  "SliderThumbRenderProps": [
+    {
+      "property": "state",
+      "type": "SliderState",
+      "required": true,
+      "description": "State of the slider."
+    },
+    {
+      "property": "isDragging",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether this thumb is currently being dragged."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the thumb is disabled."
+    }
+  ],
+  "SliderTrackProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SliderTrackRenderProps>",
+      "default": "'react-aria-SliderTrack'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "SliderTrackRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the slider track is currently hovered with a mouse."
+    }
+  ],
+  "SlotProps": [
+    {
+      "property": "slot",
+      "type": "string | null",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent component. An explicit `null` value indicates that the local props completely override all props received from a parent."
     }
   ],
   "Sortable": [
@@ -1830,194 +4682,506 @@
   ],
   "StyleProps": [
     {
-      "property": "UNSAFE_className",
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    }
+  ],
+  "StyleRenderProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<T>",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "style",
+      "type": "StyleOrFunction<T>",
+      "description": "The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state."
+    }
+  ],
+  "SubmenuTriggerProps": [
+    {
+      "property": "children",
+      "type": "ReactElement[]",
+      "required": true,
+      "description": "The contents of the SubmenuTrigger. The first child should be an Item (the trigger) and the second child should be the Popover (for the submenu)."
+    },
+    {
+      "property": "delay",
+      "type": "number",
+      "default": "200",
+      "description": "The delay time in milliseconds for the submenu to appear after hovering over the trigger."
+    }
+  ],
+  "SwitchProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<SwitchRenderProps>",
+      "default": "'react-aria-Switch'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "inputRef",
+      "type": "RefObject<HTMLInputElement | null>",
+      "description": "A ref for the HTML input element."
+    }
+  ],
+  "SwitchRenderProps": [
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is selected."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is currently hovered with a mouse."
+    },
+    {
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is currently in a pressed state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the switch is read only."
+    },
+    {
+      "property": "state",
+      "type": "ToggleState",
+      "required": true,
+      "description": "State of the switch."
+    }
+  ],
+  "TableBodyProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TableBodyRenderProps>",
+      "default": "'react-aria-TableBody'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "(props: TableBodyRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no rows in the table."
+    }
+  ],
+  "TableBodyRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table body has no rows and should display its empty state."
+    },
+    {
+      "property": "isDropTarget",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the Table is currently the active drop target."
+    }
+  ],
+  "TableHeaderProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TableHeaderRenderProps>",
+      "default": "'react-aria-TableHeader'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "columns",
+      "type": "Iterable<T>",
+      "description": "A list of table columns."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactElement)",
+      "description": "A list of `Column(s)` or a function. If the latter, a list of columns must be provided using the `columns` prop."
+    },
+    {
+      "property": "dependencies",
+      "type": "ReadonlyArray<any>",
+      "description": "Values that should invalidate the column cache when using dynamic collections."
+    }
+  ],
+  "TableHeaderRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table header is currently hovered with a mouse."
+    }
+  ],
+  "TableLoadMoreItemProps": [
+    {
+      "property": "className",
       "type": "string",
-      "description": "Sets the CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. Only use as a **last resort**. Use style props instead."
+      "default": "'react-aria-TableLoadMoreItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
     },
     {
-      "property": "UNSAFE_style",
-      "type": "CSSProperties",
-      "description": "Sets inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. Only use as a **last resort**. Use style props instead."
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The load more spinner to render when loading additional items."
     },
     {
-      "property": "margin",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for all four sides of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin)."
+      "property": "isLoading",
+      "type": "boolean",
+      "description": "Whether or not the loading spinner should be rendered or not."
+    }
+  ],
+  "TableOptionsContextValue": [
+    {
+      "property": "selectionMode",
+      "type": "SelectionMode",
+      "required": true,
+      "description": "The type of selection that is allowed in the table."
     },
     {
-      "property": "marginStart",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for the logical start side of the element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-start)."
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior | null",
+      "required": true,
+      "description": "The selection behavior for the table. If selectionMode is `\"none\"`, this will be `null`."
     },
     {
-      "property": "marginEnd",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for the logical end side of an element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-end)."
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table allows empty selection."
     },
     {
-      "property": "marginTop",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for the top side of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-top)."
+      "property": "allowsDragging",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table allows rows to be dragged."
+    }
+  ],
+  "TableProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TableRenderProps>",
+      "default": "'react-aria-Table'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
     },
     {
-      "property": "marginBottom",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for the bottom side of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin-bottom)."
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows."
     },
     {
-      "property": "marginX",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for both the left and right sides of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin)."
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "default": "\"toggle\"",
+      "description": "How multiple selection should behave in the collection."
     },
     {
-      "property": "marginY",
-      "type": "Responsive<DimensionValue>",
-      "description": "The margin for both the top and bottom sides of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/margin)."
+      "property": "disabledBehavior",
+      "type": "DisabledBehavior",
+      "default": "\"all\"",
+      "description": "Whether `disabledKeys` applies to all interactions, or only selection."
     },
     {
-      "property": "width",
-      "type": "Responsive<DimensionValue>",
-      "description": "The width of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/width)."
+      "property": "onRowAction",
+      "type": "(key: Key) => void",
+      "description": "Handler that is called when a user performs an action on the row."
     },
     {
-      "property": "height",
-      "type": "Responsive<DimensionValue>",
-      "description": "The height of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/height)."
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Table."
+    }
+  ],
+  "TableRenderProps": [
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table is currently focused."
     },
     {
-      "property": "minWidth",
-      "type": "Responsive<DimensionValue>",
-      "description": "The minimum width of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/min-width)."
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table is currently keyboard focused."
     },
     {
-      "property": "minHeight",
-      "type": "Responsive<DimensionValue>",
-      "description": "The minimum height of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/min-height)."
+      "property": "isDropTarget",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the table is currently the active drop target."
     },
     {
-      "property": "maxWidth",
-      "type": "Responsive<DimensionValue>",
-      "description": "The maximum width of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/max-width)."
+      "property": "state",
+      "type": "TableState<unknown>",
+      "required": true,
+      "description": "State of the table."
+    }
+  ],
+  "TabListProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TabListRenderProps>",
+      "default": "'react-aria-TabList'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "TabListRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The orientation of the tab list."
     },
     {
-      "property": "maxHeight",
-      "type": "Responsive<DimensionValue>",
-      "description": "The maximum height of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/max-height)."
+      "property": "state",
+      "type": "TabListState<unknown>",
+      "required": true,
+      "description": "State of the tab list."
+    }
+  ],
+  "TabPanelProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TabPanelRenderProps>",
+      "default": "'react-aria-TabPanel'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
     },
     {
-      "property": "flex",
-      "type": "Responsive<string | number | boolean>",
-      "description": "When used in a flex layout, specifies how the element will grow or shrink to fit the space available. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex)."
+      "property": "shouldForceMount",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether to mount the tab panel in the DOM even when it is not currently selected. Inactive tab panels are inert and cannot be interacted with. They must be styled appropriately so this is clear to the user visually."
+    }
+  ],
+  "TabPanelRenderProps": [
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab panel is currently focused."
     },
     {
-      "property": "flexGrow",
-      "type": "Responsive<number>",
-      "description": "When used in a flex layout, specifies how the element will grow to fit the space available. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-grow)."
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab panel is currently keyboard focused."
     },
     {
-      "property": "flexShrink",
-      "type": "Responsive<number>",
-      "description": "When used in a flex layout, specifies how the element will shrink to fit the space available. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-shrink)."
+      "property": "isInert",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab panel is currently non-interactive. This occurs when the `shouldForceMount` prop is true, and the corresponding tab is not selected."
     },
     {
-      "property": "flexBasis",
-      "type": "Responsive<number | string>",
-      "description": "When used in a flex layout, specifies the initial main size of the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/flex-basis)."
+      "property": "isEntering",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab panel is currently entering. Use this to apply animations."
     },
     {
-      "property": "justifySelf",
-      "type": "Responsive<'auto' | 'normal' | 'start' | 'end' | 'flex-start' | 'flex-end' | 'self-start' | 'self-end' | 'center' | 'left' | 'right' | 'stretch'>, // ...",
-      "description": "Specifies how the element is justified inside a flex or grid container. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self)."
+      "property": "isExiting",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab panel is currently exiting. Use this to apply animations."
     },
     {
-      "property": "alignSelf",
-      "type": "Responsive<'auto' | 'normal' | 'start' | 'end' | 'center' | 'flex-start' | 'flex-end' | 'self-start' | 'self-end' | 'stretch'>",
-      "description": "Overrides the `alignItems` property of a flex or grid container. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)."
+      "property": "state",
+      "type": "TabListState<unknown>",
+      "required": true,
+      "description": "State of the tab list."
+    }
+  ],
+  "TabPanelsProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-TabPanels'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    }
+  ],
+  "TabProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TabRenderProps>",
+      "default": "'react-aria-Tab'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
     },
     {
-      "property": "order",
-      "type": "Responsive<number>",
-      "description": "The layout order for the element within a flex or grid container. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/order)."
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the tab."
     },
     {
-      "property": "gridArea",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the named grid area that the element should be placed in within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-area)."
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the tab is disabled."
+    }
+  ],
+  "TabRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab is currently hovered with a mouse."
     },
     {
-      "property": "gridColumn",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the column the element should be placed in within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column)."
+      "property": "isPressed",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab is currently in a pressed state."
     },
     {
-      "property": "gridRow",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the row the element should be placed in within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row)."
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab is currently selected."
     },
     {
-      "property": "gridColumnStart",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the starting column to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-start)."
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab is currently focused."
     },
     {
-      "property": "gridColumnEnd",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the ending column to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column-end)."
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab is currently keyboard focused."
     },
     {
-      "property": "gridRowStart",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the starting row to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start)."
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tab is disabled."
+    }
+  ],
+  "TabsProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TabsRenderProps>",
+      "default": "'react-aria-Tabs'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "TabsRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The orientation of the tabs."
+    }
+  ],
+  "TagGroupProps": [
+    {
+      "property": "className",
+      "type": "string",
+      "default": "'react-aria-TagGroup'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element."
+    }
+  ],
+  "TagListProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TagListRenderProps>",
+      "default": "'react-aria-TagList'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
     },
     {
-      "property": "gridRowEnd",
-      "type": "Responsive<string>",
-      "description": "When used in a grid layout, specifies the ending row to span within the grid. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-end)."
+      "property": "renderEmptyState",
+      "type": "(props: TagListRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no items in the tag list."
+    }
+  ],
+  "TagListRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tag list has no items and should display its empty state."
     },
     {
-      "property": "position",
-      "type": "Responsive<'static' | 'relative' | 'absolute' | 'fixed' | 'sticky'>",
-      "description": "Specifies how the element is positioned. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/position)."
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tag list is currently focused."
     },
     {
-      "property": "zIndex",
-      "type": "Responsive<number>",
-      "description": "The stacking order for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/z-index)."
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tag list is currently keyboard focused."
     },
     {
-      "property": "top",
-      "type": "Responsive<DimensionValue>",
-      "description": "The top position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/top)."
+      "property": "state",
+      "type": "ListState<unknown>",
+      "required": true,
+      "description": "State of the TagGroup."
+    }
+  ],
+  "TagProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TagRenderProps>",
+      "default": "'react-aria-Tag'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
     },
     {
-      "property": "bottom",
-      "type": "Responsive<DimensionValue>",
-      "description": "The bottom position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/bottom)."
+      "property": "id",
+      "type": "Key",
+      "description": "A unique id for the tag."
     },
     {
-      "property": "start",
-      "type": "Responsive<DimensionValue>",
-      "description": "The logical start position for the element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline-start)."
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the tags's contents, used for accessibility. Required if children is not a plain text string."
     },
     {
-      "property": "end",
-      "type": "Responsive<DimensionValue>",
-      "description": "The logical end position for the element, depending on layout direction. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/inset-inline-end)."
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the tag is disabled."
     },
     {
-      "property": "left",
-      "type": "Responsive<DimensionValue>",
-      "description": "The left position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/left). Consider using `start` instead for RTL support."
-    },
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality."
+    }
+  ],
+  "TagRenderProps": [
     {
-      "property": "right",
-      "type": "Responsive<DimensionValue>",
-      "description": "The right position for the element. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/right). Consider using `start` instead for RTL support."
-    },
+      "property": "allowsRemoving",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tag group allows items to be removed."
+    }
+  ],
+  "TextAreaProps": [
     {
-      "property": "isHidden",
-      "type": "Responsive<boolean>",
-      "description": "Hides the element."
+      "property": "className",
+      "type": "ClassNameOrFunction<InputRenderProps>",
+      "default": "'react-aria-TextArea'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
     }
   ],
   "TextDropItem": [
@@ -2032,6 +5196,45 @@
       "type": "Set<string>",
       "required": true,
       "description": "The drag types available for this item. These are often mime types, but may be custom app-specific types."
+    }
+  ],
+  "TextFieldProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TextFieldRenderProps>",
+      "default": "'react-aria-TextField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "description": "Whether the value is invalid."
+    }
+  ],
+  "TextFieldRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the text field is disabled."
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the value is invalid."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the text field is read only."
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the text field is required."
     }
   ],
   "TextInputBase": [
@@ -2134,6 +5337,448 @@
       "property": "spellCheck",
       "type": "string",
       "description": "An enumerated attribute that defines whether the element may be checked for spelling errors. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/spellcheck)."
+    }
+  ],
+  "TextProps": [
+    {
+      "property": "elementType",
+      "type": "string"
+    }
+  ],
+  "TimeFieldProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<DateFieldRenderProps>",
+      "default": "'react-aria-TimeField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ToastListProps": [
+    {
+      "property": "children",
+      "type": "(renderProps: {",
+      "required": true,
+      "description": "A function to render each toast."
+    },
+    {
+      "property": "toast",
+      "type": "QueuedToast<T>",
+      "required": true
+    }
+  ],
+  "ToastProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ToastRenderProps<T>>",
+      "default": "'react-aria-Toast'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ToastRegionProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ToastRegionRenderProps<T>>",
+      "default": "'react-aria-ToastRegion'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "queue",
+      "type": "ToastQueue<T>",
+      "required": true,
+      "description": "The queue of toasts to display."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((renderProps: {",
+      "required": true,
+      "description": "A function to render each toast, or children containing a `<ToastList>`."
+    },
+    {
+      "property": "toast",
+      "type": "QueuedToast<T>",
+      "required": true
+    }
+  ],
+  "ToastRegionRenderProps": [
+    {
+      "property": "visibleToasts",
+      "type": "QueuedToast<T>[]",
+      "required": true,
+      "description": "A list of all currently visible toasts."
+    },
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the toast region is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the toast region is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the toast region is keyboard focused."
+    }
+  ],
+  "ToastRenderProps": [
+    {
+      "property": "toast",
+      "type": "QueuedToast<T>",
+      "required": true,
+      "description": "The toast object to display."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the toast is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the toast is keyboard focused."
+    }
+  ],
+  "ToggleButtonGroupProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ToggleButtonGroupRenderProps>",
+      "default": "'react-aria-ToggleButtonGroup'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ToggleButtonGroupRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The orientation of the toggle button group."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the toggle button group is disabled."
+    },
+    {
+      "property": "state",
+      "type": "ToggleGroupState",
+      "required": true,
+      "description": "State of the toggle button group."
+    }
+  ],
+  "ToggleButtonProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ToggleButtonRenderProps>",
+      "default": "'react-aria-ToggleButton'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "When used in a ToggleButtonGroup, an identifier for the item in `selectedKeys`. When used standalone, a DOM id."
+    }
+  ],
+  "ToggleButtonRenderProps": [
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the button is currently selected."
+    },
+    {
+      "property": "state",
+      "type": "ToggleState",
+      "required": true,
+      "description": "State of the toggle button."
+    }
+  ],
+  "ToolbarProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<ToolbarRenderProps>",
+      "default": "'react-aria-Toolbar'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "ToolbarRenderProps": [
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "required": true,
+      "description": "The current orientation of the toolbar."
+    }
+  ],
+  "TooltipProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TooltipRenderProps>",
+      "default": "'react-aria-Tooltip'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "triggerRef",
+      "type": "RefObject<Element | null>",
+      "description": "The ref for the element which the tooltip positions itself with respect to. When used within a TooltipTrigger this is set automatically. It is only required when used standalone."
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "description": "Whether the tooltip is currently performing an entry animation."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "description": "Whether the tooltip is currently performing an exit animation."
+    },
+    {
+      "property": "UNSTABLE_portalContainer",
+      "type": "Element",
+      "default": "document.body",
+      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to."
+    },
+    {
+      "property": "placement",
+      "type": "Placement",
+      "default": "'top'",
+      "description": "The placement of the tooltip with respect to the trigger."
+    }
+  ],
+  "TooltipRenderProps": [
+    {
+      "property": "placement",
+      "type": "PlacementAxis | null",
+      "required": true,
+      "description": "The placement of the tooltip relative to the trigger."
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tooltip is currently entering. Use this to apply animations."
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tooltip is currently exiting. Use this to apply animations."
+    },
+    {
+      "property": "state",
+      "type": "TooltipTriggerState",
+      "required": true,
+      "description": "State of the tooltip."
+    }
+  ],
+  "TooltipTriggerComponentProps": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
+    }
+  ],
+  "TreeItemContentProps": [
+    {
+      "property": "children",
+      "type": "ChildrenOrFunction<TreeItemContentRenderProps>",
+      "required": true,
+      "description": "The children of the component. A function may be provided to alter the children based on component state."
+    }
+  ],
+  "TreeItemProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TreeItemRenderProps>",
+      "default": "'react-aria-TreeItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the tree row."
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this tree item represents. When using dynamic collections, this is set automatically."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "required": true,
+      "description": "A string representation of the tree item's contents, used for features like typeahead."
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "An accessibility label for this tree item."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content of the tree item along with any nested children. Supports static nested tree items or use of a Collection to dynamically render nested tree items."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled."
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on this tree item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality."
+    }
+  ],
+  "TreeItemRenderProps": [
+    {
+      "property": "isExpanded",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree item is expanded."
+    },
+    {
+      "property": "hasChildItems",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree item has child tree items."
+    },
+    {
+      "property": "level",
+      "type": "number",
+      "required": true,
+      "description": "What level the tree item has within the tree."
+    },
+    {
+      "property": "isFocusVisibleWithin",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree item's children have keyboard focus."
+    },
+    {
+      "property": "state",
+      "type": "TreeState<unknown>",
+      "required": true,
+      "description": "The state of the tree."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "required": true,
+      "description": "The unique id of the tree row."
+    }
+  ],
+  "TreeLoadMoreItemProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TreeLoadMoreItemRenderProps>",
+      "default": "'react-aria-TreeLoadMoreItem'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "children",
+      "type": "ChildrenOrFunction<TreeLoadMoreItemRenderProps>",
+      "description": "The load more spinner to render when loading additional items."
+    },
+    {
+      "property": "isLoading",
+      "type": "boolean",
+      "description": "Whether or not the loading spinner should be rendered or not."
+    }
+  ],
+  "TreeLoadMoreItemRenderProps": [
+    {
+      "property": "level",
+      "type": "number",
+      "required": true,
+      "description": "What level the tree item has within the tree."
+    }
+  ],
+  "TreeProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TreeRenderProps>",
+      "default": "'react-aria-Tree'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    },
+    {
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "default": "\"toggle\"",
+      "description": "How multiple selection should behave in the tree."
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "(props: TreeEmptyStateRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no items in the list."
+    },
+    {
+      "property": "disabledBehavior",
+      "type": "DisabledBehavior",
+      "default": "'all'",
+      "description": "Whether `disabledKeys` applies to all interactions, or only selection."
+    },
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks<NoInfer<T>>",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Tree."
+    }
+  ],
+  "TreeRenderProps": [
+    {
+      "property": "isEmpty",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree has no items and should display its empty state."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree is currently focused."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree is currently keyboard focused."
+    },
+    {
+      "property": "selectionMode",
+      "type": "SelectionMode",
+      "required": true,
+      "description": "The type of selection that is allowed in the collection."
+    },
+    {
+      "property": "allowsDragging",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the tree allows dragging."
+    },
+    {
+      "property": "state",
+      "type": "TreeState<unknown>",
+      "required": true,
+      "description": "State of the tree."
+    }
+  ],
+  "UnsafeStyles": [
+    {
+      "property": "UNSAFE_className",
+      "type": "UnsafeClassName",
+      "description": "Sets the CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. Only use as a **last resort**. Use the `style` macro via the `styles` prop instead."
+    },
+    {
+      "property": "UNSAFE_style",
+      "type": "CSSProperties",
+      "description": "Sets inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. Only use as a **last resort**. Use the `style` macro via the `styles` prop instead."
     }
   ],
   "Validation": [
@@ -2346,6 +5991,25 @@
       "property": "overflow",
       "type": "Responsive<string>",
       "description": "Species what to do when the element's content is too long to fit its size. See [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/overflow)."
+    }
+  ],
+  "VirtualizerProps": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The child collection to virtualize (e.g. ListBox, GridList, or Table)."
+    },
+    {
+      "property": "layout",
+      "type": "LayoutClass<O> | ILayout<O>",
+      "required": true,
+      "description": "The layout object that determines the position and size of the visible elements."
+    },
+    {
+      "property": "layoutOptions",
+      "type": "O",
+      "description": "Options for the layout."
     }
   ]
 }

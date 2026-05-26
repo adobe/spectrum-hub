@@ -1,0 +1,19 @@
+[
+  {
+    "property": "loadingState",
+    "type": "LoadingState",
+    "description": "The current loading state of the TreeView or TreeView row."
+  },
+  {
+    "property": "children",
+    "type": "ChildrenOrFunction<TreeLoadMoreItemRenderProps>",
+    "description": "The load more spinner to render when loading additional items.",
+    "inheritedFrom": "TreeLoadMoreItemProps"
+  },
+  {
+    "property": "isLoading",
+    "type": "boolean",
+    "description": "Whether or not the loading spinner should be rendered or not.",
+    "inheritedFrom": "TreeLoadMoreItemProps"
+  }
+]

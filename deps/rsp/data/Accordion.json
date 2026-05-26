@@ -1,0 +1,55 @@
+[
+  {
+    "property": "children",
+    "type": "React.ReactNode",
+    "required": true,
+    "description": "The accordion item elements in the accordion."
+  },
+  {
+    "property": "styles",
+    "type": "StylesPropWithHeight",
+    "description": "Spectrum-defined styles, returned by the `style()` macro."
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the accordion."
+  },
+  {
+    "property": "density",
+    "type": "'compact' | 'regular' | 'spacious'",
+    "default": "'regular'",
+    "description": "The amount of space between the accordion items."
+  },
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the accordion should be displayed with a quiet style."
+  },
+  {
+    "property": "allowsMultipleExpanded",
+    "type": "boolean",
+    "description": "Whether multiple accordion items can be expanded at the same time."
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether all accordion items are disabled."
+  },
+  {
+    "property": "expandedKeys",
+    "type": "Iterable<Key>",
+    "description": "The currently expanded keys in the accordion (controlled)."
+  },
+  {
+    "property": "defaultExpandedKeys",
+    "type": "Iterable<Key>",
+    "description": "The initial expanded keys in the accordion (uncontrolled)."
+  },
+  {
+    "property": "onExpandedChange",
+    "type": "(keys: Set<Key>) => any",
+    "description": "Handler that is called when accordion items are expanded or collapsed."
+  }
+]

@@ -1,0 +1,85 @@
+[
+  {
+    "property": "layout",
+    "type": "'grid' | 'waterfall'",
+    "default": "'grid'",
+    "description": "The layout of the cards."
+  },
+  {
+    "property": "size",
+    "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the cards."
+  },
+  {
+    "property": "density",
+    "type": "'compact' | 'regular' | 'spacious'",
+    "default": "'regular'",
+    "description": "The amount of space between the cards."
+  },
+  {
+    "property": "variant",
+    "type": "'primary' | 'secondary' | 'tertiary' | 'quiet'",
+    "default": "'primary'",
+    "description": "The visual style of the cards."
+  },
+  {
+    "property": "selectionStyle",
+    "type": "'checkbox' | 'highlight'",
+    "default": "'checkbox'",
+    "description": "How selection should be displayed."
+  },
+  {
+    "property": "loadingState",
+    "type": "LoadingState",
+    "description": "The loading state of the CardView."
+  },
+  {
+    "property": "onLoadMore",
+    "type": "() => void",
+    "description": "Handler that is called when more items should be loaded, e.g. while scrolling near the bottom."
+  },
+  {
+    "property": "styles",
+    "type": "StylesPropWithHeight",
+    "description": "Spectrum-defined styles, returned by the `style()` macro."
+  },
+  {
+    "property": "renderActionBar",
+    "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
+    "description": "Provides the ActionBar to render when cards are selected in the CardView."
+  },
+  {
+    "property": "disallowTypeAhead",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether typeahead navigation is disabled.",
+    "inheritedFrom": "GridListProps"
+  },
+  {
+    "property": "selectionBehavior",
+    "type": "SelectionBehavior",
+    "default": "\"toggle\"",
+    "description": "How multiple selection should behave in the collection.",
+    "inheritedFrom": "GridListProps"
+  },
+  {
+    "property": "dragAndDropHooks",
+    "type": "DragAndDropHooks<NoInfer<T>>",
+    "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the GridList.",
+    "inheritedFrom": "GridListProps"
+  },
+  {
+    "property": "renderEmptyState",
+    "type": "(props: GridListRenderProps) => ReactNode",
+    "description": "Provides content to display when there are no items in the list.",
+    "inheritedFrom": "GridListProps"
+  },
+  {
+    "property": "orientation",
+    "type": "Orientation",
+    "default": "'vertical'",
+    "description": "The primary orientation of the items. Usually this is the direction that the collection scrolls.",
+    "inheritedFrom": "GridListProps"
+  }
+]

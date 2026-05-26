@@ -1,0 +1,51 @@
+[
+  {
+    "property": "styles",
+    "type": "StylesPropWithHeight",
+    "description": "Spectrum-defined styles, returned by the `style()` macro."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The children of the group."
+  },
+  {
+    "property": "size",
+    "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
+    "default": "\"M\"",
+    "description": "Size of the buttons."
+  },
+  {
+    "property": "density",
+    "type": "'compact' | 'regular'",
+    "default": "\"regular\"",
+    "description": "Spacing between the buttons."
+  },
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the button should be displayed with a [quiet style](https://spectrum.adobe.com/page/action-button/#Quiet)."
+  },
+  {
+    "property": "isJustified",
+    "type": "boolean",
+    "description": "Whether the buttons should divide the container width equally."
+  },
+  {
+    "property": "staticColor",
+    "type": "'white' | 'black' | 'auto'",
+    "description": "The static color style to apply. Useful when the ActionButtonGroup appears over a color background."
+  },
+  {
+    "property": "orientation",
+    "type": "'horizontal' | 'vertical'",
+    "default": "'horizontal'",
+    "description": "The axis the group should align with."
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether the group is disabled."
+  }
+]

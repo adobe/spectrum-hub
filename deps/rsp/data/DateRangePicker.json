@@ -1,0 +1,58 @@
+[
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the DateField."
+  },
+  {
+    "property": "maxVisibleMonths",
+    "type": "number",
+    "default": "1",
+    "description": "The maximum number of months to display at once in the calendar popover, if screen space permits."
+  },
+  {
+    "property": "trigger",
+    "type": "string",
+    "description": "The name of the component that triggered the popover. This is reflected on the element as the `data-trigger` attribute, and can be used to provide specific styles for the popover depending on which element triggered it.",
+    "inheritedFrom": "PopoverProps"
+  },
+  {
+    "property": "triggerRef",
+    "type": "RefObject<Element | null>",
+    "description": "The ref for the element which the popover positions itself with respect to. When used within a trigger component such as DialogTrigger, MenuTrigger, Select, etc., this is set automatically. It is only required when used standalone.",
+    "inheritedFrom": "PopoverProps"
+  },
+  {
+    "property": "isEntering",
+    "type": "boolean",
+    "description": "Whether the popover is currently performing an entry animation.",
+    "inheritedFrom": "PopoverProps"
+  },
+  {
+    "property": "isExiting",
+    "type": "boolean",
+    "description": "Whether the popover is currently performing an exit animation.",
+    "inheritedFrom": "PopoverProps"
+  },
+  {
+    "property": "UNSTABLE_portalContainer",
+    "type": "Element",
+    "default": "document.body",
+    "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
+    "inheritedFrom": "PopoverProps"
+  },
+  {
+    "property": "offset",
+    "type": "number",
+    "default": "8",
+    "description": "The additional offset applied along the main axis between the element and its anchor element.",
+    "inheritedFrom": "PopoverProps"
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

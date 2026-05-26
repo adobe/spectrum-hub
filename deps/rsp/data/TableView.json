@@ -1,0 +1,101 @@
+[
+  {
+    "property": "isQuiet",
+    "type": "boolean",
+    "description": "Whether the Table should be displayed with a quiet style.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "density",
+    "type": "'compact' | 'spacious' | 'regular'",
+    "default": "'regular'",
+    "description": "Sets the amount of vertical padding within each cell.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "overflowMode",
+    "type": "'wrap' | 'truncate'",
+    "default": "'truncate'",
+    "description": "Sets the overflow behavior for the cell contents.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "onAction",
+    "type": "(key: Key) => void",
+    "description": "Handler that is called when a user performs an action on a row.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "onResizeStart",
+    "type": "(widths: Map<Key, ColumnSize>) => void",
+    "description": "Handler that is called when a user starts a column resize.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "onResize",
+    "type": "(widths: Map<Key, ColumnSize>) => void",
+    "description": "Handler that is called when a user performs a column resize. Can be used with the width property on columns to put the column widths into a controlled state.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "onResizeEnd",
+    "type": "(widths: Map<Key, ColumnSize>) => void",
+    "description": "Handler that is called after a user performs a column resize. Can be used to store the widths of columns for another future session.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "loadingState",
+    "type": "LoadingState",
+    "description": "The current loading state of the table.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "onLoadMore",
+    "type": "() => any",
+    "description": "Handler that is called when more items should be loaded, e.g. while scrolling near the bottom.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "renderActionBar",
+    "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
+    "description": "Provides the ActionBar to display when rows are selected in the TableView.",
+    "inheritedFrom": "S2TableProps"
+  },
+  {
+    "property": "styles",
+    "type": "StylesPropWithHeight",
+    "description": "Spectrum-defined styles, returned by the `style()` macro."
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "description": "The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows.",
+    "inheritedFrom": "TableProps"
+  },
+  {
+    "property": "selectionBehavior",
+    "type": "SelectionBehavior",
+    "default": "\"toggle\"",
+    "description": "How multiple selection should behave in the collection.",
+    "inheritedFrom": "TableProps"
+  },
+  {
+    "property": "disabledBehavior",
+    "type": "DisabledBehavior",
+    "default": "\"all\"",
+    "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
+    "inheritedFrom": "TableProps"
+  },
+  {
+    "property": "onRowAction",
+    "type": "(key: Key) => void",
+    "description": "Handler that is called when a user performs an action on the row.",
+    "inheritedFrom": "TableProps"
+  },
+  {
+    "property": "dragAndDropHooks",
+    "type": "DragAndDropHooks",
+    "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Table.",
+    "inheritedFrom": "TableProps"
+  }
+]

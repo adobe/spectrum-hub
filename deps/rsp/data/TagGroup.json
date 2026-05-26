@@ -1,0 +1,54 @@
+[
+  {
+    "property": "description",
+    "type": "ReactNode",
+    "description": "A description for the tag group."
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L'",
+    "default": "'M'",
+    "description": "The size of the tag group."
+  },
+  {
+    "property": "isEmphasized",
+    "type": "boolean",
+    "description": "Whether the tags are displayed in an emphasized style."
+  },
+  {
+    "property": "renderEmptyState",
+    "type": "() => ReactNode",
+    "description": "Provides content to display when there are no items in the tag group."
+  },
+  {
+    "property": "isInvalid",
+    "type": "boolean",
+    "description": "Whether the tags are displayed in a error state."
+  },
+  {
+    "property": "errorMessage",
+    "type": "ReactNode",
+    "description": "An error message for the field."
+  },
+  {
+    "property": "maxRows",
+    "type": "number",
+    "description": "Limit the number of rows initially shown. This will render a button that allows the user to expand to show all tags."
+  },
+  {
+    "property": "groupActionLabel",
+    "type": "string",
+    "description": "The label to display on the action button."
+  },
+  {
+    "property": "onGroupAction",
+    "type": "() => void",
+    "description": "Handler that is called when the action button is pressed."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

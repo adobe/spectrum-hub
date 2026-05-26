@@ -1,0 +1,32 @@
+[
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The ColorSwatches within the ColorSwatchPicker."
+  },
+  {
+    "property": "density",
+    "type": "'compact' | 'regular' | 'spacious'",
+    "default": "'regular'",
+    "description": "The amount of padding between the swatches."
+  },
+  {
+    "property": "size",
+    "type": "'XS' | 'S' | 'M' | 'L'",
+    "default": "'M'",
+    "description": "The size of the color swatches."
+  },
+  {
+    "property": "rounding",
+    "type": "'none' | 'default' | 'full'",
+    "default": "'none'",
+    "description": "The corner rounding of the color swatches."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "property": "orientation",
+    "type": "'horizontal' | 'vertical'",
+    "default": "'horizontal'",
+    "description": "The axis the ButtonGroup should align with. Setting this to 'vertical' will prevent any switching behaviors between 'vertical' and 'horizontal'.",
+    "inheritedFrom": "ButtonGroupStyleProps"
+  },
+  {
+    "property": "align",
+    "type": "'start' | 'end' | 'center'",
+    "default": "'start'",
+    "description": "The alignment of the Buttons within the ButtonGroup.",
+    "inheritedFrom": "ButtonGroupStyleProps"
+  },
+  {
+    "property": "size",
+    "type": "'S' | 'M' | 'L' | 'XL'",
+    "default": "'M'",
+    "description": "The size of the Buttons within the ButtonGroup.",
+    "inheritedFrom": "ButtonGroupStyleProps"
+  },
+  {
+    "property": "children",
+    "type": "ReactNode",
+    "required": true,
+    "description": "The Buttons contained within the ButtonGroup."
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "description": "Whether the Buttons in the ButtonGroup are all disabled."
+  },
+  {
+    "property": "styles",
+    "type": "StylesProp",
+    "description": "Spectrum-defined styles, returned by the `style()` macro.",
+    "inheritedFrom": "StyleProps"
+  }
+]
