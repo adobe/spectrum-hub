@@ -1,0 +1,5 @@
+.picker {
+  display: block;
+  position: relative;
+  z-index: var(--sh-z-picker);
+}
