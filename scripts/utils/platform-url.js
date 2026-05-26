@@ -10,7 +10,7 @@ export function getImplementationFromPath(path) {
 export function getComponentFromPath(path) {
   if (!path.startsWith(PLATFORMS_PREFIX)) { return null; }
   const parts = path.slice(PLATFORMS_PREFIX.length).split('/');
-  if (parts.length < 3 || !parts[2]) { return null; }
+  if (parts[1] !== 'components' || !parts[2]) { return null; }
   return parts[2];
 }
 

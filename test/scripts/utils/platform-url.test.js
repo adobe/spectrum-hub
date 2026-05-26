@@ -48,6 +48,10 @@ describe('platform-url', () => {
     it('returns null for a section path without a component', () => {
       expect(getComponentFromPath('/platforms/rsp/components')).to.be.null;
     });
+
+    it('returns null for a non-components section', () => {
+      expect(getComponentFromPath('/platforms/rsp/foundations/accessibility')).to.be.null;
+    });
   });
 
   describe('buildImplementationPath', () => {
@@ -79,6 +83,10 @@ describe('platform-url', () => {
 
     it('returns false for a section page without a component', () => {
       expect(isOnPlatformComponentPage('/platforms/rsp/components')).to.be.false;
+    });
+
+    it('returns false for a non-components section', () => {
+      expect(isOnPlatformComponentPage('/platforms/rsp/foundations/accessibility')).to.be.false;
     });
   });
 
