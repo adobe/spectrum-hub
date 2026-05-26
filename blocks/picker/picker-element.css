@@ -1,0 +1,95 @@
+:host {
+  display: block;
+  position: relative;
+  font: inherit;
+
+  @media (width >= 600px) {
+    display: inline-block;
+  }
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2-spacing-100);
+  min-width: 12rem;
+  width: 100%;
+  padding-block: calc((var(--se-component-m-height) - 1lh) / 2);
+  padding-inline: var(--s2-spacing-200);
+  font: inherit;
+  color: inherit;
+  background: var(--s2-gray-100);
+  border: none;
+  border-radius: var(--s2-corner-radius-500);
+  cursor: pointer;
+  text-align: start;
+  margin-block-start: var(--s2-spacing-300);
+
+  &::after {
+    content: '';
+    display: inline-block;
+    inline-size: 20px;
+    block-size: 20px;
+    mask-image: url('/img/icons/s2-icon-chevronright-20-n.svg');
+    background-color: currentcolor;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    border-color: var(--s2-gray-700);
+    background: var(--s2-gray-50);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--s2-blue-900);
+    outline-offset: 2px;
+  }
+
+  &[aria-expanded="true"]::after{
+    transform: rotate(90deg);
+  }
+}
+
+ul {
+  position: absolute;
+  top: calc(100% + var(--s2-spacing-75));
+  inset-inline-start: 0;
+  min-width: 100%;
+  margin: 0;
+  padding-block: var(--s2-spacing-75);
+  padding-inline: 0;
+  list-style: none;
+  background: var(--s2-gray-25);
+  border: 1px solid var(--s2-gray-300);
+  border-radius: var(--s2-corner-radius-100);
+  box-shadow: 0 var(--s2-spacing-75) var(--s2-spacing-300) rgb(from var(--s2-gray-1000) r g b / 12%);
+  z-index: 1;
+}
+
+button[aria-expanded='false'] + ul {
+  display: none;
+}
+
+li {
+  padding-block: var(--s2-spacing-100);
+  padding-inline: var(--s2-spacing-200);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgb(from var(--s2-gray-500) r g b / 15%);
+  }
+
+  &[data-active] {
+    background: var(--s2-blue-100);
+  }
+
+  &[aria-selected='true'] {
+    font-weight: var(--s2-heading-font-weight);
+  }
+}
