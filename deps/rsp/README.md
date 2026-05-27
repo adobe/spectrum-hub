@@ -10,13 +10,36 @@ S2 publishes compiled TypeScript declaration files at `@react-spectrum/s2/dist/t
 | ------ | ---- |
 | **`discover-components.js`** | Scans published S2 types on unpkg and regenerates `components.json` (allow list, `includes`, cross-file `includeFiles`, and `extends`). S2 has no CEM-style index, so discovery replaces a hand-maintained component list. |
 | **`extract-base-props.js`** | Builds shared base types in `data/rsp-base-props.json` from `@react-types/shared`, all of `react-aria-components`, and S2 `style-utils.d.ts`. |
-| **`extract-props.js`** | Reads `components.json`, fetches each component (and any `includeFiles`) `.d.ts`, parses props, and merges configured `includes` and `extends`. |
+| **`extract-props.js`** | Reads `components.json`, fetches each component (and any `includeFiles`) `.d.ts`, parses props, merges configured `includes` and `extends`, and attaches doc **status** from the published S2 site. |
+| **`extract-doc-status.js`** | Resolves `alpha` / `beta` / `rc` / `stable` from [react-spectrum.adobe.com](https://react-spectrum.adobe.com) via `fetchComponentDocStatus` (used by `extract-props.js`; runnable alone for debugging). |
 
 Unlike SWC's Custom Elements Manifest, React Spectrum has no structured metadata format — properties are parsed from TypeScript source with known regex limitations (see [Known limitations](#known-limitations)).
 
 ### Parallel with SWC extraction
 
-Each package builds one JSON array per component. The per-component step in `extract-props.js` is **`collectComponentProps`** (TypeScript source + `components.json` config → rows with `property`, `type`, and so on). The SWC counterpart in `deps/swc/extract-cem-components.js` is **`collectComponentData`** (CEM + `tagName` → rows with `attribute`, `property`, and so on). Names differ because CEM uses attributes and RSP uses React/TS props; the role is the same.
+Each package writes one JSON file per component. RSP files use `{ "status": "stable", "props": [ ... ] }` when a doc page exists (`status` omitted when there is no published S2 doc for that name). SWC files remain a top-level prop array.
+
+The per-component pipeline in `extract-props.js` is:
+
+1. **`collectComponentProps`** — TypeScript source + `components.json` config → prop rows.
+2. **`fetchComponentDocStatus`** — doc maturity from the S2 docs site (see `extract-doc-status.js`).
+3. **`buildComponentData(props, status)`** — wraps props and optional `status` for the JSON file.
+
+The SWC counterpart in `deps/swc/extract-cem-components.js` is **`collectComponentData`** (CEM + `tagName` → rows with `attribute`, `property`, and so on). Names differ because CEM uses attributes and RSP uses React/TS props; the role is the same.
+
+### Doc status (`status`)
+
+Prerelease labels come from the **S2 documentation site**, not from `@react-spectrum/s2` types on unpkg. Authors set `export const version = 'rc'` in `packages/dev/s2-docs/pages/s2/*.mdx`; the live site renders that as a badge on `https://react-spectrum.adobe.com/{Component}.html`.
+
+| Value | Meaning |
+| ----- | ------- |
+| `stable` | Doc page exists, no prerelease badge |
+| `alpha` / `beta` / `rc` | Doc page shows a VersionBadge |
+| *(field omitted)* | No published doc page for that component name (e.g. some sub-primitives) |
+
+`extract-props.js` calls `fetchComponentDocStatus` once per component while extracting. To debug a single name: `node deps/rsp/extract-doc-status.js Button`.
+
+**In Spectrum Hub UI**, use `scripts/utils/component-status.js`: `getComponentStatus(data)` reads RSP `status` from the extraction object; SWC flat arrays still use `since` / per-prop `internal` when CEM provides them. `getComponentProps(data)` returns prop rows for either shape (used by the table block).
 
 ### What gets merged into each component
 
