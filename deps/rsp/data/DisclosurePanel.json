@@ -1,14 +1,16 @@
-[
-  {
-    "property": "children",
-    "type": "React.ReactNode",
-    "required": true
-  },
-  {
-    "property": "role",
-    "type": "'group' | 'region'",
-    "default": "'group'",
-    "description": "The accessibility role for the disclosure's panel.",
-    "inheritedFrom": "DisclosurePanelProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "React.ReactNode",
+      "required": true
+    },
+    {
+      "property": "role",
+      "type": "'group' | 'region'",
+      "default": "'group'",
+      "description": "The accessibility role for the disclosure's panel.",
+      "inheritedFrom": "DisclosurePanelProps"
+    }
+  ]
+}

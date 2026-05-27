@@ -1,40 +1,42 @@
-[
-  {
-    "property": "isSticky",
-    "type": "boolean",
-    "inheritedFrom": "CellProps"
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The content to render as the cell children.",
-    "inheritedFrom": "CellProps"
-  },
-  {
-    "property": "renderEditing",
-    "type": "() => ReactNode",
-    "required": true,
-    "description": "The component which will handle editing the cell. For example, a `TextField` or a `Picker`."
-  },
-  {
-    "property": "isSaving",
-    "type": "boolean",
-    "description": "Whether the cell is currently being saved."
-  },
-  {
-    "property": "onSubmit",
-    "type": "(e: FormEvent<HTMLFormElement>) => void",
-    "description": "Handler that is called when the value has been changed and is ready to be saved."
-  },
-  {
-    "property": "onCancel",
-    "type": "() => void",
-    "description": "Handler that is called when the user cancels the edit."
-  },
-  {
-    "property": "action",
-    "type": "string | FormHTMLAttributes<HTMLFormElement>['action']",
-    "description": "The action to submit the form to. Only available in React 19+."
-  }
-]
+{
+  "props": [
+    {
+      "property": "isSticky",
+      "type": "boolean",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to render as the cell children.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "renderEditing",
+      "type": "() => ReactNode",
+      "required": true,
+      "description": "The component which will handle editing the cell. For example, a `TextField` or a `Picker`."
+    },
+    {
+      "property": "isSaving",
+      "type": "boolean",
+      "description": "Whether the cell is currently being saved."
+    },
+    {
+      "property": "onSubmit",
+      "type": "(e: FormEvent<HTMLFormElement>) => void",
+      "description": "Handler that is called when the value has been changed and is ready to be saved."
+    },
+    {
+      "property": "onCancel",
+      "type": "() => void",
+      "description": "Handler that is called when the user cancels the edit."
+    },
+    {
+      "property": "action",
+      "type": "string | FormHTMLAttributes<HTMLFormElement>['action']",
+      "description": "The action to submit the form to. Only available in React 19+."
+    }
+  ]
+}

@@ -1,8 +1,10 @@
-[
-  {
-    "property": "children",
-    "type": "React.ReactNode",
-    "required": true,
-    "description": "The contents of the accordion item header."
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "React.ReactNode",
+      "required": true,
+      "description": "The contents of the accordion item header."
+    }
+  ]
+}

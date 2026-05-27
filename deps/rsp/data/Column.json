@@ -1,77 +1,79 @@
-[
-  {
-    "property": "showDivider",
-    "type": "boolean",
-    "description": "Whether the column should render a divider between it and the next column."
-  },
-  {
-    "property": "allowsResizing",
-    "type": "boolean",
-    "description": "Whether the column allows resizing."
-  },
-  {
-    "property": "align",
-    "type": "'start' | 'center' | 'end'",
-    "default": "'start'",
-    "description": "The alignment of the column's contents relative to its allotted width."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The content to render as the column header."
-  },
-  {
-    "property": "menuItems",
-    "type": "ReactNode",
-    "description": "Menu fragment to be rendered inside the column header's menu."
-  },
-  {
-    "property": "id",
-    "type": "Key",
-    "description": "The unique id of the column.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "allowsSorting",
-    "type": "boolean",
-    "description": "Whether the column allows sorting.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "isRowHeader",
-    "type": "boolean",
-    "description": "Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be announced by assistive technology during row navigation.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "textValue",
-    "type": "string",
-    "description": "A string representation of the column's contents, used for accessibility announcements.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "width",
-    "type": "ColumnSize | null",
-    "description": "The width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "defaultWidth",
-    "type": "ColumnSize | null",
-    "description": "The default width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "minWidth",
-    "type": "ColumnStaticSize | null",
-    "description": "The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "maxWidth",
-    "type": "ColumnStaticSize | null",
-    "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-    "inheritedFrom": "ColumnProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "showDivider",
+      "type": "boolean",
+      "description": "Whether the column should render a divider between it and the next column."
+    },
+    {
+      "property": "allowsResizing",
+      "type": "boolean",
+      "description": "Whether the column allows resizing."
+    },
+    {
+      "property": "align",
+      "type": "'start' | 'center' | 'end'",
+      "default": "'start'",
+      "description": "The alignment of the column's contents relative to its allotted width."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to render as the column header."
+    },
+    {
+      "property": "menuItems",
+      "type": "ReactNode",
+      "description": "Menu fragment to be rendered inside the column header's menu."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the column.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "allowsSorting",
+      "type": "boolean",
+      "description": "Whether the column allows sorting.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "isRowHeader",
+      "type": "boolean",
+      "description": "Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be announced by assistive technology during row navigation.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the column's contents, used for accessibility announcements.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "width",
+      "type": "ColumnSize | null",
+      "description": "The width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "defaultWidth",
+      "type": "ColumnSize | null",
+      "description": "The default width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "minWidth",
+      "type": "ColumnStaticSize | null",
+      "description": "The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "maxWidth",
+      "type": "ColumnStaticSize | null",
+      "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
+      "inheritedFrom": "ColumnProps"
+    }
+  ]
+}

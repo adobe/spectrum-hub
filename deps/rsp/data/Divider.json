@@ -1,28 +1,31 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L'",
-    "default": "'M'",
-    "description": "How thick the Divider should be.",
-    "inheritedFrom": "DividerSpectrumProps"
-  },
-  {
-    "property": "orientation",
-    "type": "'horizontal' | 'vertical'",
-    "default": "'horizontal'",
-    "description": "The orientation of the Divider.",
-    "inheritedFrom": "DividerSpectrumProps"
-  },
-  {
-    "property": "staticColor",
-    "type": "'white' | 'black' | 'auto'",
-    "description": "The static color style to apply. Useful when the Divider appears over a color background.",
-    "inheritedFrom": "DividerSpectrumProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L'",
+      "default": "'M'",
+      "description": "How thick the Divider should be.",
+      "inheritedFrom": "DividerSpectrumProps"
+    },
+    {
+      "property": "orientation",
+      "type": "'horizontal' | 'vertical'",
+      "default": "'horizontal'",
+      "description": "The orientation of the Divider.",
+      "inheritedFrom": "DividerSpectrumProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "'white' | 'black' | 'auto'",
+      "description": "The static color style to apply. Useful when the Divider appears over a color background.",
+      "inheritedFrom": "DividerSpectrumProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

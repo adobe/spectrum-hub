@@ -1,39 +1,42 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the ProgressBar.",
-    "inheritedFrom": "ProgressBarStyleProps"
-  },
-  {
-    "property": "isIndeterminate",
-    "type": "boolean",
-    "description": "Whether presentation is indeterminate when progress isn't known.",
-    "inheritedFrom": "ProgressBarStyleProps"
-  },
-  {
-    "property": "staticColor",
-    "type": "'white' | 'black' | 'auto'",
-    "description": "The static color style to apply. Useful when the button appears over a color background.",
-    "inheritedFrom": "ProgressBarStyleProps"
-  },
-  {
-    "property": "labelPosition",
-    "type": "LabelPosition",
-    "default": "'top'",
-    "description": "The label's overall position relative to the element it is labeling.",
-    "inheritedFrom": "ProgressBarStyleProps"
-  },
-  {
-    "property": "label",
-    "type": "ReactNode",
-    "description": "The content to display as the label."
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the ProgressBar.",
+      "inheritedFrom": "ProgressBarStyleProps"
+    },
+    {
+      "property": "isIndeterminate",
+      "type": "boolean",
+      "description": "Whether presentation is indeterminate when progress isn't known.",
+      "inheritedFrom": "ProgressBarStyleProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "'white' | 'black' | 'auto'",
+      "description": "The static color style to apply. Useful when the button appears over a color background.",
+      "inheritedFrom": "ProgressBarStyleProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "LabelPosition",
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "ProgressBarStyleProps"
+    },
+    {
+      "property": "label",
+      "type": "ReactNode",
+      "description": "The content to display as the label."
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

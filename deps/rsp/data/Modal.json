@@ -1,27 +1,29 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL' | 'fullscreen' | 'fullscreenTakeover'",
-    "default": "'M'",
-    "description": "The size of the Modal."
-  },
-  {
-    "property": "isEntering",
-    "type": "boolean",
-    "description": "Whether the modal is currently performing an entry animation.",
-    "inheritedFrom": "ModalOverlayProps"
-  },
-  {
-    "property": "isExiting",
-    "type": "boolean",
-    "description": "Whether the modal is currently performing an exit animation.",
-    "inheritedFrom": "ModalOverlayProps"
-  },
-  {
-    "property": "UNSTABLE_portalContainer",
-    "type": "Element",
-    "default": "document.body",
-    "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
-    "inheritedFrom": "ModalOverlayProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL' | 'fullscreen' | 'fullscreenTakeover'",
+      "default": "'M'",
+      "description": "The size of the Modal."
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "description": "Whether the modal is currently performing an entry animation.",
+      "inheritedFrom": "ModalOverlayProps"
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "description": "Whether the modal is currently performing an exit animation.",
+      "inheritedFrom": "ModalOverlayProps"
+    },
+    {
+      "property": "UNSTABLE_portalContainer",
+      "type": "Element",
+      "default": "document.body",
+      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
+      "inheritedFrom": "ModalOverlayProps"
+    }
+  ]
+}

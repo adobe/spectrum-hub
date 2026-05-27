@@ -1,8 +1,10 @@
-[
-  {
-    "property": "renderEmptyState",
-    "type": "(props: TableBodyRenderProps) => ReactNode",
-    "description": "Provides content to display when there are no rows in the table.",
-    "inheritedFrom": "TableBodyProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "renderEmptyState",
+      "type": "(props: TableBodyRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no rows in the table.",
+      "inheritedFrom": "TableBodyProps"
+    }
+  ]
+}

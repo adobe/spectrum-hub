@@ -1,20 +1,22 @@
-[
-  {
-    "property": "columns",
-    "type": "Iterable<T>",
-    "description": "A list of table columns.",
-    "inheritedFrom": "TableHeaderProps"
-  },
-  {
-    "property": "children",
-    "type": "ReactNode | ((item: T) => ReactElement)",
-    "description": "A list of `Column(s)` or a function. If the latter, a list of columns must be provided using the `columns` prop.",
-    "inheritedFrom": "TableHeaderProps"
-  },
-  {
-    "property": "dependencies",
-    "type": "ReadonlyArray<any>",
-    "description": "Values that should invalidate the column cache when using dynamic collections.",
-    "inheritedFrom": "TableHeaderProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "columns",
+      "type": "Iterable<T>",
+      "description": "A list of table columns.",
+      "inheritedFrom": "TableHeaderProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactElement)",
+      "description": "A list of `Column(s)` or a function. If the latter, a list of columns must be provided using the `columns` prop.",
+      "inheritedFrom": "TableHeaderProps"
+    },
+    {
+      "property": "dependencies",
+      "type": "ReadonlyArray<any>",
+      "description": "Values that should invalidate the column cache when using dynamic collections.",
+      "inheritedFrom": "TableHeaderProps"
+    }
+  ]
+}

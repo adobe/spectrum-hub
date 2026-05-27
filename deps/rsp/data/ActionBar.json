@@ -1,34 +1,37 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "A list of ActionButtons to display."
-  },
-  {
-    "property": "isEmphasized",
-    "type": "boolean",
-    "description": "Whether the ActionBar should be displayed with a emphasized style."
-  },
-  {
-    "property": "selectedItemCount",
-    "type": "number | 'all'",
-    "description": "The number of selected items that the ActionBar is currently linked to. If 0, the ActionBar is hidden."
-  },
-  {
-    "property": "onClearSelection",
-    "type": "() => void",
-    "description": "Handler that is called when the ActionBar clear button is pressed."
-  },
-  {
-    "property": "scrollRef",
-    "type": "RefObject<HTMLElement | null>",
-    "description": "A ref to the scrollable element the ActionBar appears above."
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "A list of ActionButtons to display."
+    },
+    {
+      "property": "isEmphasized",
+      "type": "boolean",
+      "description": "Whether the ActionBar should be displayed with a emphasized style."
+    },
+    {
+      "property": "selectedItemCount",
+      "type": "number | 'all'",
+      "description": "The number of selected items that the ActionBar is currently linked to. If 0, the ActionBar is hidden."
+    },
+    {
+      "property": "onClearSelection",
+      "type": "() => void",
+      "description": "Handler that is called when the ActionBar clear button is pressed."
+    },
+    {
+      "property": "scrollRef",
+      "type": "RefObject<HTMLElement | null>",
+      "description": "A ref to the scrollable element the ActionBar appears above."
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

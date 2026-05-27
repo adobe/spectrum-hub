@@ -1,26 +1,29 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L'",
-    "default": "'M'",
-    "description": "The size of the ProgressCircle.",
-    "inheritedFrom": "ProgressCircleStyleProps"
-  },
-  {
-    "property": "staticColor",
-    "type": "'black' | 'white' | 'auto'",
-    "description": "The static color style to apply. Useful when the button appears over a color background.",
-    "inheritedFrom": "ProgressCircleStyleProps"
-  },
-  {
-    "property": "isIndeterminate",
-    "type": "boolean",
-    "description": "Whether presentation is indeterminate when progress isn't known.",
-    "inheritedFrom": "ProgressCircleStyleProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesPropWithHeight",
-    "description": "Spectrum-defined styles, returned by the `style()` macro."
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L'",
+      "default": "'M'",
+      "description": "The size of the ProgressCircle.",
+      "inheritedFrom": "ProgressCircleStyleProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "'black' | 'white' | 'auto'",
+      "description": "The static color style to apply. Useful when the button appears over a color background.",
+      "inheritedFrom": "ProgressCircleStyleProps"
+    },
+    {
+      "property": "isIndeterminate",
+      "type": "boolean",
+      "description": "Whether presentation is indeterminate when progress isn't known.",
+      "inheritedFrom": "ProgressCircleStyleProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    }
+  ],
+  "status": "stable"
+}

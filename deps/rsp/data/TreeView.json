@@ -1,52 +1,55 @@
-[
-  {
-    "property": "selectionStyle",
-    "type": "'highlight' | 'checkbox'",
-    "default": "'checkbox'",
-    "description": "How selection should be displayed. For guidance on when to use which option, refer to the [Spectrum](https://spectrum.adobe.com/page/tree-view/#Checkbox-or-highlight-selection-style) page.",
-    "inheritedFrom": "TreeViewStyleProps"
-  },
-  {
-    "property": "onAction",
-    "type": "(key: Key) => void",
-    "description": "Handler that is called when a user performs an action on a row.",
-    "inheritedFrom": "S2TreeProps"
-  },
-  {
-    "property": "renderActionBar",
-    "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
-    "description": "Provides the ActionBar to display when items are selected in the TreeView.",
-    "inheritedFrom": "S2TreeProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesPropWithHeight",
-    "description": "Spectrum-defined styles, returned by the `style()` macro."
-  },
-  {
-    "property": "selectionBehavior",
-    "type": "SelectionBehavior",
-    "default": "\"toggle\"",
-    "description": "How multiple selection should behave in the tree.",
-    "inheritedFrom": "TreeProps"
-  },
-  {
-    "property": "renderEmptyState",
-    "type": "(props: TreeEmptyStateRenderProps) => ReactNode",
-    "description": "Provides content to display when there are no items in the list.",
-    "inheritedFrom": "TreeProps"
-  },
-  {
-    "property": "disabledBehavior",
-    "type": "DisabledBehavior",
-    "default": "'all'",
-    "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
-    "inheritedFrom": "TreeProps"
-  },
-  {
-    "property": "dragAndDropHooks",
-    "type": "DragAndDropHooks<NoInfer<T>>",
-    "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Tree.",
-    "inheritedFrom": "TreeProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "selectionStyle",
+      "type": "'highlight' | 'checkbox'",
+      "default": "'checkbox'",
+      "description": "How selection should be displayed. For guidance on when to use which option, refer to the [Spectrum](https://spectrum.adobe.com/page/tree-view/#Checkbox-or-highlight-selection-style) page.",
+      "inheritedFrom": "TreeViewStyleProps"
+    },
+    {
+      "property": "onAction",
+      "type": "(key: Key) => void",
+      "description": "Handler that is called when a user performs an action on a row.",
+      "inheritedFrom": "S2TreeProps"
+    },
+    {
+      "property": "renderActionBar",
+      "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
+      "description": "Provides the ActionBar to display when items are selected in the TreeView.",
+      "inheritedFrom": "S2TreeProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "default": "\"toggle\"",
+      "description": "How multiple selection should behave in the tree.",
+      "inheritedFrom": "TreeProps"
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "(props: TreeEmptyStateRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no items in the list.",
+      "inheritedFrom": "TreeProps"
+    },
+    {
+      "property": "disabledBehavior",
+      "type": "DisabledBehavior",
+      "default": "'all'",
+      "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
+      "inheritedFrom": "TreeProps"
+    },
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks<NoInfer<T>>",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Tree.",
+      "inheritedFrom": "TreeProps"
+    }
+  ],
+  "status": "stable"
+}

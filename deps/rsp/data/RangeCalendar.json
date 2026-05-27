@@ -1,32 +1,35 @@
-[
-  {
-    "property": "errorMessage",
-    "type": "ReactNode",
-    "description": "The error message to display when the calendar is invalid."
-  },
-  {
-    "property": "visibleMonths",
-    "type": "number",
-    "default": "1",
-    "description": "The number of months to display at once."
-  },
-  {
-    "property": "visibleDuration",
-    "type": "DateDuration",
-    "default": "{months: 1}",
-    "description": "The amount of days that will be displayed at once. This affects how pagination works.",
-    "inheritedFrom": "RangeCalendarProps"
-  },
-  {
-    "property": "createCalendar",
-    "type": "(identifier: CalendarIdentifier) => ICalendar",
-    "description": "A function to create a new [Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a given calendar identifier. If not provided, the `createCalendar` function from `@internationalized/date` will be used.",
-    "inheritedFrom": "RangeCalendarProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "errorMessage",
+      "type": "ReactNode",
+      "description": "The error message to display when the calendar is invalid."
+    },
+    {
+      "property": "visibleMonths",
+      "type": "number",
+      "default": "1",
+      "description": "The number of months to display at once."
+    },
+    {
+      "property": "visibleDuration",
+      "type": "DateDuration",
+      "default": "{months: 1}",
+      "description": "The amount of days that will be displayed at once. This affects how pagination works.",
+      "inheritedFrom": "RangeCalendarProps"
+    },
+    {
+      "property": "createCalendar",
+      "type": "(identifier: CalendarIdentifier) => ICalendar",
+      "description": "A function to create a new [Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a given calendar identifier. If not provided, the `createCalendar` function from `@internationalized/date` will be used.",
+      "inheritedFrom": "RangeCalendarProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

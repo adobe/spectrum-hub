@@ -1,30 +1,32 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode | ((renderProps: CardRenderProps) => ReactNode)",
-    "required": true,
-    "description": "The children of the Card.",
-    "inheritedFrom": "CardProps"
-  },
-  {
-    "property": "size",
-    "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the Card.",
-    "inheritedFrom": "CardProps"
-  },
-  {
-    "property": "density",
-    "type": "'compact' | 'regular' | 'spacious'",
-    "default": "'regular'",
-    "description": "The amount of internal padding within the Card.",
-    "inheritedFrom": "CardProps"
-  },
-  {
-    "property": "variant",
-    "type": "'primary' | 'secondary' | 'tertiary' | 'quiet'",
-    "default": "'primary'",
-    "description": "The visual style of the Card.",
-    "inheritedFrom": "CardProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode | ((renderProps: CardRenderProps) => ReactNode)",
+      "required": true,
+      "description": "The children of the Card.",
+      "inheritedFrom": "CardProps"
+    },
+    {
+      "property": "size",
+      "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the Card.",
+      "inheritedFrom": "CardProps"
+    },
+    {
+      "property": "density",
+      "type": "'compact' | 'regular' | 'spacious'",
+      "default": "'regular'",
+      "description": "The amount of internal padding within the Card.",
+      "inheritedFrom": "CardProps"
+    },
+    {
+      "property": "variant",
+      "type": "'primary' | 'secondary' | 'tertiary' | 'quiet'",
+      "default": "'primary'",
+      "description": "The visual style of the Card.",
+      "inheritedFrom": "CardProps"
+    }
+  ]
+}

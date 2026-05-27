@@ -1,25 +1,27 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the CloseButton."
-  },
-  {
-    "property": "staticColor",
-    "type": "'white' | 'black' | 'auto'",
-    "description": "The static color style to apply. Useful when the Button appears over a color background."
-  },
-  {
-    "property": "isPending",
-    "type": "boolean",
-    "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers.",
-    "inheritedFrom": "ButtonProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the CloseButton."
+    },
+    {
+      "property": "staticColor",
+      "type": "'white' | 'black' | 'auto'",
+      "description": "The static color style to apply. Useful when the Button appears over a color background."
+    },
+    {
+      "property": "isPending",
+      "type": "boolean",
+      "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers.",
+      "inheritedFrom": "ButtonProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ]
+}

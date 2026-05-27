@@ -1,37 +1,40 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the disclosure."
-  },
-  {
-    "property": "density",
-    "type": "'compact' | 'regular' | 'spacious'",
-    "default": "'regular'",
-    "description": "The amount of space between the disclosures."
-  },
-  {
-    "property": "isQuiet",
-    "type": "boolean",
-    "description": "Whether the disclosure should be displayed with a quiet style."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The contents of the disclosure, consisting of a DisclosureTitle and DisclosurePanel."
-  },
-  {
-    "property": "id",
-    "type": "Key",
-    "description": "An id for the disclosure when used within a DisclosureGroup, matching the id used in `expandedKeys`.",
-    "inheritedFrom": "DisclosureProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the disclosure."
+    },
+    {
+      "property": "density",
+      "type": "'compact' | 'regular' | 'spacious'",
+      "default": "'regular'",
+      "description": "The amount of space between the disclosures."
+    },
+    {
+      "property": "isQuiet",
+      "type": "boolean",
+      "description": "Whether the disclosure should be displayed with a quiet style."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The contents of the disclosure, consisting of a DisclosureTitle and DisclosurePanel."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "An id for the disclosure when used within a DisclosureGroup, matching the id used in `expandedKeys`.",
+      "inheritedFrom": "DisclosureProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

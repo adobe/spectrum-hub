@@ -1,30 +1,33 @@
-[
-  {
-    "property": "styles",
-    "type": "StylesPropWithHeight",
-    "description": "Spectrum-defined styles, returned by the `style()` macro."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The content to display in the drop zone."
-  },
-  {
-    "property": "isFilled",
-    "type": "boolean",
-    "description": "Whether the drop zone has been filled."
-  },
-  {
-    "property": "replaceMessage",
-    "type": "string",
-    "default": "'Drop file to replace'",
-    "description": "The message to replace the default banner message that is shown when the drop zone is filled."
-  },
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L'",
-    "default": "'M'",
-    "description": "The size of the DropZone."
-  }
-]
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to display in the drop zone."
+    },
+    {
+      "property": "isFilled",
+      "type": "boolean",
+      "description": "Whether the drop zone has been filled."
+    },
+    {
+      "property": "replaceMessage",
+      "type": "string",
+      "default": "'Drop file to replace'",
+      "description": "The message to replace the default banner message that is shown when the drop zone is filled."
+    },
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L'",
+      "default": "'M'",
+      "description": "The size of the DropZone."
+    }
+  ],
+  "status": "stable"
+}

@@ -1,40 +1,43 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The content of the tooltip."
-  },
-  {
-    "property": "triggerRef",
-    "type": "RefObject<Element | null>",
-    "description": "The ref for the element which the tooltip positions itself with respect to. When used within a TooltipTrigger this is set automatically. It is only required when used standalone.",
-    "inheritedFrom": "TooltipProps"
-  },
-  {
-    "property": "isEntering",
-    "type": "boolean",
-    "description": "Whether the tooltip is currently performing an entry animation.",
-    "inheritedFrom": "TooltipProps"
-  },
-  {
-    "property": "isExiting",
-    "type": "boolean",
-    "description": "Whether the tooltip is currently performing an exit animation.",
-    "inheritedFrom": "TooltipProps"
-  },
-  {
-    "property": "UNSTABLE_portalContainer",
-    "type": "Element",
-    "default": "document.body",
-    "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
-    "inheritedFrom": "TooltipProps"
-  },
-  {
-    "property": "placement",
-    "type": "Placement",
-    "default": "'top'",
-    "description": "The placement of the tooltip with respect to the trigger.",
-    "inheritedFrom": "TooltipProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content of the tooltip."
+    },
+    {
+      "property": "triggerRef",
+      "type": "RefObject<Element | null>",
+      "description": "The ref for the element which the tooltip positions itself with respect to. When used within a TooltipTrigger this is set automatically. It is only required when used standalone.",
+      "inheritedFrom": "TooltipProps"
+    },
+    {
+      "property": "isEntering",
+      "type": "boolean",
+      "description": "Whether the tooltip is currently performing an entry animation.",
+      "inheritedFrom": "TooltipProps"
+    },
+    {
+      "property": "isExiting",
+      "type": "boolean",
+      "description": "Whether the tooltip is currently performing an exit animation.",
+      "inheritedFrom": "TooltipProps"
+    },
+    {
+      "property": "UNSTABLE_portalContainer",
+      "type": "Element",
+      "default": "document.body",
+      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
+      "inheritedFrom": "TooltipProps"
+    },
+    {
+      "property": "placement",
+      "type": "Placement",
+      "default": "'top'",
+      "description": "The placement of the tooltip with respect to the trigger.",
+      "inheritedFrom": "TooltipProps"
+    }
+  ],
+  "status": "stable"
+}

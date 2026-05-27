@@ -1,33 +1,36 @@
-[
-  {
-    "property": "variant",
-    "type": "'informative' | 'positive' | 'notice' | 'negative' | 'neutral'",
-    "default": "neutral",
-    "description": "The semantic tone of a Inline Alert.",
-    "inheritedFrom": "InlineStylesProps"
-  },
-  {
-    "property": "fillStyle",
-    "type": "'border' | 'subtleFill' | 'boldFill'",
-    "default": "border",
-    "description": "The visual style of the Inline Alert.",
-    "inheritedFrom": "InlineStylesProps"
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The contents of the Inline Alert."
-  },
-  {
-    "property": "autoFocus",
-    "type": "boolean",
-    "description": "Whether to automatically focus the Inline Alert when it first renders."
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "variant",
+      "type": "'informative' | 'positive' | 'notice' | 'negative' | 'neutral'",
+      "default": "neutral",
+      "description": "The semantic tone of a Inline Alert.",
+      "inheritedFrom": "InlineStylesProps"
+    },
+    {
+      "property": "fillStyle",
+      "type": "'border' | 'subtleFill' | 'boldFill'",
+      "default": "border",
+      "description": "The visual style of the Inline Alert.",
+      "inheritedFrom": "InlineStylesProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The contents of the Inline Alert."
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "description": "Whether to automatically focus the Inline Alert when it first renders."
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

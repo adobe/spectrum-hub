@@ -1,40 +1,43 @@
-[
-  {
-    "property": "variant",
-    "type": "'informative' | 'positive' | 'notice' | 'negative'",
-    "default": "'informative'",
-    "description": "The [visual style](https://spectrum.adobe.com/page/meter/#-Options) of the Meter.",
-    "inheritedFrom": "MeterStyleProps"
-  },
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the Meter.",
-    "inheritedFrom": "MeterStyleProps"
-  },
-  {
-    "property": "staticColor",
-    "type": "'white' | 'black' | 'auto'",
-    "description": "The static color style to apply. Useful when the button appears over a color background.",
-    "inheritedFrom": "MeterStyleProps"
-  },
-  {
-    "property": "labelPosition",
-    "type": "LabelPosition",
-    "default": "'top'",
-    "description": "The label's overall position relative to the element it is labeling.",
-    "inheritedFrom": "MeterStyleProps"
-  },
-  {
-    "property": "label",
-    "type": "ReactNode",
-    "description": "The content to display as the label."
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "variant",
+      "type": "'informative' | 'positive' | 'notice' | 'negative'",
+      "default": "'informative'",
+      "description": "The [visual style](https://spectrum.adobe.com/page/meter/#-Options) of the Meter.",
+      "inheritedFrom": "MeterStyleProps"
+    },
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the Meter.",
+      "inheritedFrom": "MeterStyleProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "'white' | 'black' | 'auto'",
+      "description": "The static color style to apply. Useful when the button appears over a color background.",
+      "inheritedFrom": "MeterStyleProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "LabelPosition",
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "MeterStyleProps"
+    },
+    {
+      "property": "label",
+      "type": "ReactNode",
+      "description": "The content to display as the label."
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

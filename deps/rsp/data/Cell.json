@@ -1,56 +1,58 @@
-[
-  {
-    "property": "showDivider",
-    "type": "boolean",
-    "description": "Whether the column should render a divider between it and the next column.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "allowsResizing",
-    "type": "boolean",
-    "description": "Whether the column allows resizing.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "align",
-    "type": "'start' | 'center' | 'end'",
-    "default": "'start'",
-    "description": "The alignment of the column's contents relative to its allotted width.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The content to render as the column header.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "menuItems",
-    "type": "ReactNode",
-    "description": "Menu fragment to be rendered inside the column header's menu.",
-    "inheritedFrom": "ColumnProps"
-  },
-  {
-    "property": "isSticky",
-    "type": "boolean"
-  },
-  {
-    "property": "id",
-    "type": "Key",
-    "description": "The unique id of the cell.",
-    "inheritedFrom": "CellProps"
-  },
-  {
-    "property": "textValue",
-    "type": "string",
-    "description": "A string representation of the cell's contents, used for features like typeahead.",
-    "inheritedFrom": "CellProps"
-  },
-  {
-    "property": "colSpan",
-    "type": "number",
-    "description": "Indicates how many columns the data cell spans.",
-    "inheritedFrom": "CellProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "showDivider",
+      "type": "boolean",
+      "description": "Whether the column should render a divider between it and the next column.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "allowsResizing",
+      "type": "boolean",
+      "description": "Whether the column allows resizing.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "align",
+      "type": "'start' | 'center' | 'end'",
+      "default": "'start'",
+      "description": "The alignment of the column's contents relative to its allotted width.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to render as the column header.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "menuItems",
+      "type": "ReactNode",
+      "description": "Menu fragment to be rendered inside the column header's menu.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "isSticky",
+      "type": "boolean"
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the cell.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the cell's contents, used for features like typeahead.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "colSpan",
+      "type": "number",
+      "description": "Indicates how many columns the data cell spans.",
+      "inheritedFrom": "CellProps"
+    }
+  ]
+}

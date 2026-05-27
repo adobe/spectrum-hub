@@ -1,35 +1,37 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'fullscreen' | 'fullscreenTakeover'",
-    "description": "The size of the Dialog."
-  },
-  {
-    "property": "isDismissible",
-    "type": "boolean",
-    "description": "Whether the Dialog is dismissible."
-  },
-  {
-    "property": "isKeyboardDismissDisabled",
-    "type": "boolean",
-    "description": "Whether pressing the escape key to close the dialog should be disabled."
-  },
-  {
-    "property": "padding",
-    "type": "'default' | 'none'",
-    "default": "'default'",
-    "description": "The amount of padding around the contents of the dialog."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode | ((opts: DialogRenderProps) => ReactNode)",
-    "description": "Children of the dialog. A function may be provided to access a function to close the dialog.",
-    "inheritedFrom": "DialogProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'fullscreen' | 'fullscreenTakeover'",
+      "description": "The size of the Dialog."
+    },
+    {
+      "property": "isDismissible",
+      "type": "boolean",
+      "description": "Whether the Dialog is dismissible."
+    },
+    {
+      "property": "isKeyboardDismissDisabled",
+      "type": "boolean",
+      "description": "Whether pressing the escape key to close the dialog should be disabled."
+    },
+    {
+      "property": "padding",
+      "type": "'default' | 'none'",
+      "default": "'default'",
+      "description": "The amount of padding around the contents of the dialog."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((opts: DialogRenderProps) => ReactNode)",
+      "description": "Children of the dialog. A function may be provided to access a function to close the dialog.",
+      "inheritedFrom": "DialogProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ]
+}

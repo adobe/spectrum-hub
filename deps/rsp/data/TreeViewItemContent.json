@@ -1,8 +1,10 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "Rendered contents of the tree item or child items."
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "Rendered contents of the tree item or child items."
+    }
+  ]
+}

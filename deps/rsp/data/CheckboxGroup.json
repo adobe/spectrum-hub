@@ -1,31 +1,34 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the Checkboxes in the CheckboxGroup."
-  },
-  {
-    "property": "orientation",
-    "type": "Orientation",
-    "default": "'vertical'",
-    "description": "The axis the checkboxes should align with."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The Checkboxes contained within the CheckboxGroup."
-  },
-  {
-    "property": "isEmphasized",
-    "type": "boolean",
-    "description": "By default, checkboxes are not emphasized (gray). The emphasized (blue) version provides visual prominence."
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the Checkboxes in the CheckboxGroup."
+    },
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "default": "'vertical'",
+      "description": "The axis the checkboxes should align with."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The Checkboxes contained within the CheckboxGroup."
+    },
+    {
+      "property": "isEmphasized",
+      "type": "boolean",
+      "description": "By default, checkboxes are not emphasized (gray). The emphasized (blue) version provides visual prominence."
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

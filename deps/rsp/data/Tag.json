@@ -1,32 +1,34 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The children of the tag."
-  },
-  {
-    "property": "id",
-    "type": "Key",
-    "description": "A unique id for the tag.",
-    "inheritedFrom": "TagProps"
-  },
-  {
-    "property": "textValue",
-    "type": "string",
-    "description": "A string representation of the tags's contents, used for accessibility. Required if children is not a plain text string.",
-    "inheritedFrom": "TagProps"
-  },
-  {
-    "property": "isDisabled",
-    "type": "boolean",
-    "description": "Whether the tag is disabled.",
-    "inheritedFrom": "TagProps"
-  },
-  {
-    "property": "onAction",
-    "type": "() => void",
-    "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
-    "inheritedFrom": "TagProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The children of the tag."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "A unique id for the tag.",
+      "inheritedFrom": "TagProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the tags's contents, used for accessibility. Required if children is not a plain text string.",
+      "inheritedFrom": "TagProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the tag is disabled.",
+      "inheritedFrom": "TagProps"
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
+      "inheritedFrom": "TagProps"
+    }
+  ]
+}

@@ -1,21 +1,23 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the ClearButton.",
-    "inheritedFrom": "ClearButtonStyleProps"
-  },
-  {
-    "property": "isStaticColor",
-    "type": "boolean",
-    "description": "Whether the ClearButton should be displayed with a static color.",
-    "inheritedFrom": "ClearButtonStyleProps"
-  },
-  {
-    "property": "isPending",
-    "type": "boolean",
-    "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers.",
-    "inheritedFrom": "ButtonProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the ClearButton.",
+      "inheritedFrom": "ClearButtonStyleProps"
+    },
+    {
+      "property": "isStaticColor",
+      "type": "boolean",
+      "description": "Whether the ClearButton should be displayed with a static color.",
+      "inheritedFrom": "ClearButtonStyleProps"
+    },
+    {
+      "property": "isPending",
+      "type": "boolean",
+      "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers.",
+      "inheritedFrom": "ButtonProps"
+    }
+  ]
+}

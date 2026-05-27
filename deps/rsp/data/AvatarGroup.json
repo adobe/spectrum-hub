@@ -1,24 +1,27 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "Avatar children of the avatar group."
-  },
-  {
-    "property": "label",
-    "type": "string",
-    "description": "The label for the avatar group."
-  },
-  {
-    "property": "size",
-    "type": "16 | 20 | 24 | 28 | 32 | 36 | 40",
-    "default": "24",
-    "description": "The size of the avatar group."
-  },
-  {
-    "property": "styles",
-    "type": "StylesPropWithoutWidth",
-    "description": "Spectrum-defined styles, returned by the `style()` macro."
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "Avatar children of the avatar group."
+    },
+    {
+      "property": "label",
+      "type": "string",
+      "description": "The label for the avatar group."
+    },
+    {
+      "property": "size",
+      "type": "16 | 20 | 24 | 28 | 32 | 36 | 40",
+      "default": "24",
+      "description": "The size of the avatar group."
+    },
+    {
+      "property": "styles",
+      "type": "StylesPropWithoutWidth",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    }
+  ],
+  "status": "stable"
+}

@@ -1,9 +1,12 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the text field.",
-    "inheritedFrom": "TextFieldProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the text field.",
+      "inheritedFrom": "TextFieldProps"
+    }
+  ],
+  "status": "stable"
+}

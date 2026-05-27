@@ -1,25 +1,28 @@
-[
-  {
-    "property": "styles",
-    "type": "StylesPropWithHeight",
-    "description": "Spectrum-defined styles, returned by the `style()` macro."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The content to display in the tabs."
-  },
-  {
-    "property": "density",
-    "type": "'compact' | 'regular'",
-    "default": "'regular'",
-    "description": "The amount of space between the tabs."
-  },
-  {
-    "property": "labelBehavior",
-    "type": "'show' | 'hide'",
-    "default": "'show'",
-    "description": "Defines if the text within the tabs should be hidden and only the icon should be shown. The text is always visible when the item is collapsed into a picker."
-  }
-]
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to display in the tabs."
+    },
+    {
+      "property": "density",
+      "type": "'compact' | 'regular'",
+      "default": "'regular'",
+      "description": "The amount of space between the tabs."
+    },
+    {
+      "property": "labelBehavior",
+      "type": "'show' | 'hide'",
+      "default": "'show'",
+      "description": "Defines if the text within the tabs should be hidden and only the icon should be shown. The text is always visible when the item is collapsed into a picker."
+    }
+  ],
+  "status": "stable"
+}

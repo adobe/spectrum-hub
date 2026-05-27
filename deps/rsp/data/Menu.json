@@ -1,37 +1,40 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the Menu."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode | ((item: T) => ReactNode)",
-    "required": true,
-    "description": "The contents of the collection."
-  },
-  {
-    "property": "hideLinkOutIcon",
-    "type": "boolean",
-    "description": "Hides the default link out icons on menu items that open links in a new tab."
-  },
-  {
-    "property": "renderEmptyState",
-    "type": "() => ReactNode",
-    "description": "Provides content to display when there are no items in the list.",
-    "inheritedFrom": "MenuProps"
-  },
-  {
-    "property": "shouldCloseOnSelect",
-    "type": "boolean",
-    "description": "Whether the menu should close when the menu item is selected.",
-    "inheritedFrom": "MenuProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the Menu."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactNode)",
+      "required": true,
+      "description": "The contents of the collection."
+    },
+    {
+      "property": "hideLinkOutIcon",
+      "type": "boolean",
+      "description": "Hides the default link out icons on menu items that open links in a new tab."
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "() => ReactNode",
+      "description": "Provides content to display when there are no items in the list.",
+      "inheritedFrom": "MenuProps"
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "description": "Whether the menu should close when the menu item is selected.",
+      "inheritedFrom": "MenuProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

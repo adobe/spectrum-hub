@@ -1,14 +1,16 @@
-[
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "required": true,
-    "description": "The children of the breadcrumb item."
-  },
-  {
-    "property": "id",
-    "type": "Key",
-    "description": "A unique id for the breadcrumb, which will be passed to `onAction` when the breadcrumb is pressed.",
-    "inheritedFrom": "BreadcrumbProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The children of the breadcrumb item."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "A unique id for the breadcrumb, which will be passed to `onAction` when the breadcrumb is pressed.",
+      "inheritedFrom": "BreadcrumbProps"
+    }
+  ]
+}

@@ -1,32 +1,35 @@
-[
-  {
-    "property": "styles",
-    "type": "StyleString",
-    "description": "The styles of the popover.",
-    "inheritedFrom": "PopoverProps"
-  },
-  {
-    "property": "hideArrow",
-    "type": "boolean",
-    "default": "false",
-    "description": "Whether a popover's arrow should be hidden.",
-    "inheritedFrom": "PopoverProps"
-  },
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L'",
-    "description": "The size of the Popover. If not specified, the popover fits its contents.",
-    "inheritedFrom": "PopoverProps"
-  },
-  {
-    "property": "children",
-    "type": "ReactNode",
-    "description": "The children of the popover."
-  },
-  {
-    "property": "padding",
-    "type": "'default' | 'none'",
-    "default": "'default'",
-    "description": "The amount of padding around the contents of the dialog."
-  }
-]
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "description": "The styles of the popover.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
+      "property": "hideArrow",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether a popover's arrow should be hidden.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L'",
+      "description": "The size of the Popover. If not specified, the popover fits its contents.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The children of the popover."
+    },
+    {
+      "property": "padding",
+      "type": "'default' | 'none'",
+      "default": "'default'",
+      "description": "The amount of padding around the contents of the dialog."
+    }
+  ],
+  "status": "stable"
+}

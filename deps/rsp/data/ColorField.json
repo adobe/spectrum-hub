@@ -1,32 +1,35 @@
-[
-  {
-    "property": "size",
-    "type": "'S' | 'M' | 'L' | 'XL'",
-    "default": "'M'",
-    "description": "The size of the color field."
-  },
-  {
-    "property": "channel",
-    "type": "ColorChannel",
-    "description": "The color channel that this field edits. If not provided, the color is edited as a hex value.",
-    "inheritedFrom": "ColorFieldProps"
-  },
-  {
-    "property": "colorSpace",
-    "type": "ColorSpace",
-    "description": "The color space that the color field operates in if a `channel` prop is provided. If no `channel` is provided, the color field always displays the color as an RGB hex value.",
-    "inheritedFrom": "ColorFieldProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesProp",
-    "description": "Spectrum-defined styles, returned by the `style()` macro.",
-    "inheritedFrom": "StyleProps"
-  },
-  {
-    "property": "placeholder",
-    "type": "string",
-    "description": "Temporary text that occupies the text input when it is empty. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
-    "inheritedFrom": "InputProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "The size of the color field."
+    },
+    {
+      "property": "channel",
+      "type": "ColorChannel",
+      "description": "The color channel that this field edits. If not provided, the color is edited as a hex value.",
+      "inheritedFrom": "ColorFieldProps"
+    },
+    {
+      "property": "colorSpace",
+      "type": "ColorSpace",
+      "description": "The color space that the color field operates in if a `channel` prop is provided. If no `channel` is provided, the color field always displays the color as an RGB hex value.",
+      "inheritedFrom": "ColorFieldProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "placeholder",
+      "type": "string",
+      "description": "Temporary text that occupies the text input when it is empty. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
+      "inheritedFrom": "InputProps"
+    }
+  ],
+  "status": "alpha"
+}

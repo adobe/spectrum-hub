@@ -1,7 +1,9 @@
-[
-  {
-    "property": "children",
-    "type": "() => ReactNode",
-    "required": true
-  }
-]
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "() => ReactNode",
+      "required": true
+    }
+  ]
+}

@@ -1,93 +1,96 @@
-[
-  {
-    "property": "isQuiet",
-    "type": "boolean",
-    "description": "Whether the ListView should be displayed with a quiet style.",
-    "inheritedFrom": "ListViewStylesProps"
-  },
-  {
-    "property": "selectionStyle",
-    "type": "'highlight' | 'checkbox'",
-    "default": "'checkbox'",
-    "description": "How selection should be displayed.",
-    "inheritedFrom": "ListViewStylesProps"
-  },
-  {
-    "property": "overflowMode",
-    "type": "'wrap' | 'truncate'",
-    "default": "'truncate'",
-    "description": "Sets the overflow behavior for item contents.",
-    "inheritedFrom": "ListViewStylesProps"
-  },
-  {
-    "property": "styles",
-    "type": "StylesPropWithHeight",
-    "description": "Spectrum-defined styles, returned by the `style()` macro."
-  },
-  {
-    "property": "loadingState",
-    "type": "LoadingState",
-    "description": "The current loading state of the ListView."
-  },
-  {
-    "property": "onLoadMore",
-    "type": "() => void",
-    "description": "Handler that is called when more items should be loaded, e.g. while scrolling near the bottom."
-  },
-  {
-    "property": "children",
-    "type": "ReactNode | ((item: T) => ReactNode)",
-    "required": true,
-    "description": "The children of the ListView."
-  },
-  {
-    "property": "renderActionBar",
-    "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
-    "description": "Provides the ActionBar to display when items are selected in the ListView."
-  },
-  {
-    "property": "hideLinkOutIcon",
-    "type": "boolean",
-    "description": "Hides the default link out icons on items that open links in a new tab."
-  },
-  {
-    "property": "disallowTypeAhead",
-    "type": "boolean",
-    "default": "false",
-    "description": "Whether typeahead navigation is disabled.",
-    "inheritedFrom": "GridListProps"
-  },
-  {
-    "property": "selectionBehavior",
-    "type": "SelectionBehavior",
-    "default": "\"toggle\"",
-    "description": "How multiple selection should behave in the collection.",
-    "inheritedFrom": "GridListProps"
-  },
-  {
-    "property": "dragAndDropHooks",
-    "type": "DragAndDropHooks<NoInfer<T>>",
-    "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the GridList.",
-    "inheritedFrom": "GridListProps"
-  },
-  {
-    "property": "renderEmptyState",
-    "type": "(props: GridListRenderProps) => ReactNode",
-    "description": "Provides content to display when there are no items in the list.",
-    "inheritedFrom": "GridListProps"
-  },
-  {
-    "property": "layout",
-    "type": "'stack' | 'grid'",
-    "default": "'stack'",
-    "description": "Whether the items are arranged in a stack or grid.",
-    "inheritedFrom": "GridListProps"
-  },
-  {
-    "property": "orientation",
-    "type": "Orientation",
-    "default": "'vertical'",
-    "description": "The primary orientation of the items. Usually this is the direction that the collection scrolls.",
-    "inheritedFrom": "GridListProps"
-  }
-]
+{
+  "props": [
+    {
+      "property": "isQuiet",
+      "type": "boolean",
+      "description": "Whether the ListView should be displayed with a quiet style.",
+      "inheritedFrom": "ListViewStylesProps"
+    },
+    {
+      "property": "selectionStyle",
+      "type": "'highlight' | 'checkbox'",
+      "default": "'checkbox'",
+      "description": "How selection should be displayed.",
+      "inheritedFrom": "ListViewStylesProps"
+    },
+    {
+      "property": "overflowMode",
+      "type": "'wrap' | 'truncate'",
+      "default": "'truncate'",
+      "description": "Sets the overflow behavior for item contents.",
+      "inheritedFrom": "ListViewStylesProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "loadingState",
+      "type": "LoadingState",
+      "description": "The current loading state of the ListView."
+    },
+    {
+      "property": "onLoadMore",
+      "type": "() => void",
+      "description": "Handler that is called when more items should be loaded, e.g. while scrolling near the bottom."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactNode)",
+      "required": true,
+      "description": "The children of the ListView."
+    },
+    {
+      "property": "renderActionBar",
+      "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
+      "description": "Provides the ActionBar to display when items are selected in the ListView."
+    },
+    {
+      "property": "hideLinkOutIcon",
+      "type": "boolean",
+      "description": "Hides the default link out icons on items that open links in a new tab."
+    },
+    {
+      "property": "disallowTypeAhead",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether typeahead navigation is disabled.",
+      "inheritedFrom": "GridListProps"
+    },
+    {
+      "property": "selectionBehavior",
+      "type": "SelectionBehavior",
+      "default": "\"toggle\"",
+      "description": "How multiple selection should behave in the collection.",
+      "inheritedFrom": "GridListProps"
+    },
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks<NoInfer<T>>",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the GridList.",
+      "inheritedFrom": "GridListProps"
+    },
+    {
+      "property": "renderEmptyState",
+      "type": "(props: GridListRenderProps) => ReactNode",
+      "description": "Provides content to display when there are no items in the list.",
+      "inheritedFrom": "GridListProps"
+    },
+    {
+      "property": "layout",
+      "type": "'stack' | 'grid'",
+      "default": "'stack'",
+      "description": "Whether the items are arranged in a stack or grid.",
+      "inheritedFrom": "GridListProps"
+    },
+    {
+      "property": "orientation",
+      "type": "Orientation",
+      "default": "'vertical'",
+      "description": "The primary orientation of the items. Usually this is the direction that the collection scrolls.",
+      "inheritedFrom": "GridListProps"
+    }
+  ],
+  "status": "stable"
+}
