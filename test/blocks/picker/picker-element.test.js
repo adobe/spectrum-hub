@@ -312,4 +312,244 @@ describe('<hub-picker>', () => {
     expect(trigger.getAttribute('aria-activedescendant')).to.equal(swcOption.id);
     expect(swcOption.hasAttribute('data-active')).to.be.true;
   });
+
+  it('does not set aria-activedescendant before the listbox has been opened', () => {
+    const trigger = el.shadowRoot.querySelector('button');
+    expect(trigger.hasAttribute('aria-activedescendant')).to.be.false;
+  });
+
+  it('clears aria-activedescendant when the listbox closes after an option click', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    el.shadowRoot.querySelectorAll('[role="option"]')[0].click();
+    await el.updateComplete;
+    expect(trigger.hasAttribute('aria-activedescendant')).to.be.false;
+  });
+
+  it('clears aria-activedescendant when Escape closes the listbox', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.hasAttribute('aria-activedescendant')).to.be.false;
+  });
+
+  it('ArrowDown at the last option does not move past it', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await el.updateComplete;
+    const lastOption = el.shadowRoot.querySelectorAll('[role="option"]')[1];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(lastOption.id);
+  });
+
+  it('ArrowUp at the first option does not move past it', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await el.updateComplete;
+    const firstOption = el.shadowRoot.querySelectorAll('[role="option"]')[0];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(firstOption.id);
+  });
+
+  it('ArrowDown with a single option keeps the active index at 0', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await el.updateComplete;
+    const onlyOption = el.shadowRoot.querySelector('[role="option"]');
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(onlyOption.id);
+  });
+
+  it('ArrowUp with a single option keeps the active index at 0', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await el.updateComplete;
+    const onlyOption = el.shadowRoot.querySelector('[role="option"]');
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(onlyOption.id);
+  });
+
+  it('sets data-active on the first option when opening with no saved value', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    el.shadowRoot.querySelector('button').click();
+    await el.updateComplete;
+    const options = el.shadowRoot.querySelectorAll('[role="option"]');
+    expect(options[0].hasAttribute('data-active')).to.be.true;
+    expect(options[1].hasAttribute('data-active')).to.be.false;
+  });
+
+  it('removes data-active from all options after click selection closes the listbox', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    el.shadowRoot.querySelector('button').click();
+    await el.updateComplete;
+    el.shadowRoot.querySelectorAll('[role="option"]')[1].click();
+    await el.updateComplete;
+    const options = el.shadowRoot.querySelectorAll('[role="option"]');
+    expect(options[0].hasAttribute('data-active')).to.be.false;
+    expect(options[1].hasAttribute('data-active')).to.be.false;
+  });
+
+  it('removes data-active from all options after Escape closes the listbox', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await el.updateComplete;
+    const options = el.shadowRoot.querySelectorAll('[role="option"]');
+    expect(options[0].hasAttribute('data-active')).to.be.false;
+    expect(options[1].hasAttribute('data-active')).to.be.false;
+  });
+
+  it('shows an empty string in the trigger when value matches no option', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    el.value = 'unknown';
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('button').textContent.trim()).to.equal('');
+  });
+
+  it('marks no option as aria-selected when value matches no option', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    el.value = 'unknown';
+    await el.updateComplete;
+    const options = el.shadowRoot.querySelectorAll('[role="option"]');
+    expect([...options].every((o) => o.getAttribute('aria-selected') === 'false')).to.be.true;
+  });
+
+  it('updates the trigger label reactively when the value property changes', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    el.value = 'rsp';
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('button').textContent.trim()).to.equal('React Spectrum');
+    el.value = 'swc';
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('button').textContent.trim()).to.equal('Spectrum Web Components');
+  });
+
+  it('updates the trigger label reactively when the options property changes', async () => {
+    el.value = 'extra';
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('button').textContent.trim()).to.equal('');
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }, { id: 'extra', label: 'Extra Impl' }];
+    await el.updateComplete;
+    expect(el.shadowRoot.querySelector('button').textContent.trim()).to.equal('Extra Impl');
+  });
+
+  it('Home when the listbox is closed does not open it', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+  });
+
+  it('End when the listbox is closed does not open it', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+  });
+
+  it('Escape when the listbox is already closed does not change state', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+  });
+
+  it('all rendered options have unique ids', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+      { id: 'all', label: 'All' },
+    ];
+    await el.updateComplete;
+    const ids = [...el.shadowRoot.querySelectorAll('[role="option"]')].map((o) => o.id);
+    expect(new Set(ids).size).to.equal(ids.length);
+    expect(ids.every((id) => id.length > 0)).to.be.true;
+  });
+
+  it('the listbox id matches the value of aria-controls on the trigger', async () => {
+    const trigger = el.shadowRoot.querySelector('button');
+    const listbox = el.shadowRoot.querySelector('[role="listbox"]');
+    expect(trigger.getAttribute('aria-controls')).to.equal(listbox.id);
+  });
+
+  it('renders an empty listbox when options is an empty array', async () => {
+    el.options = [];
+    await el.updateComplete;
+    const listbox = el.shadowRoot.querySelector('[role="listbox"]');
+    expect(listbox).to.exist;
+    expect(listbox.querySelectorAll('[role="option"]')).to.have.lengthOf(0);
+  });
+
+  it('change event is a CustomEvent with detail.value equal to the selected option id', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    el.shadowRoot.querySelector('button').click();
+    await el.updateComplete;
+    const eventPromise = new Promise((resolve) => {
+      el.addEventListener('change', resolve, { once: true });
+    });
+    el.shadowRoot.querySelector('[role="option"]').click();
+    const event = await eventPromise;
+    expect(event).to.be.instanceOf(CustomEvent);
+    expect(event.detail).to.deep.equal({ value: 'rsp' });
+  });
 });
