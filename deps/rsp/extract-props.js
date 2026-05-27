@@ -11,6 +11,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { fetchComponentDocStatus } from './extract-doc-status.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
@@ -285,6 +286,18 @@ export function collectComponentProps(
   return [...ownProps, ...inheritedBaseProps];
 }
 
+/**
+ * Builds the JSON object written to data/{Component}.json.
+ *
+ * @param {object[]} props Parsed prop rows from collectComponentProps.
+ * @param {string | null} status From fetchComponentDocStatus; omitted when null (no doc page).
+ */
+export function buildComponentData(props, status) {
+  const componentData = { props };
+  if (status) componentData.status = status;
+  return componentData;
+}
+
 async function main() {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
@@ -305,10 +318,14 @@ async function main() {
     const ownCount = props.filter((p) => !p.inheritedFrom).length;
     const inheritedCount = props.length - ownCount;
 
+    const status = await fetchComponentDocStatus(component);
+    const componentData = buildComponentData(props, status);
+
     const outFile = join(OUTPUT_DIR, `${component}.json`);
-    writeFileSync(outFile, JSON.stringify(props, null, 2) + '\n');
+    writeFileSync(outFile, JSON.stringify(componentData, null, 2) + '\n');
+    const statusNote = status ? `Status=${status}` : 'No doc page.';
     console.log(
-      `  Wrote ${props.length} properties (${ownCount} own, ${inheritedCount} inherited) to ${component}.json`,
+      `  Wrote ${props.length} properties (${ownCount} own, ${inheritedCount} inherited) to ${component}.json. ${statusNote}`,
     );
     count++;
   }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  buildComponentData,
   collectComponentProps,
   extractExtends,
   extractInterfaceBlock,
@@ -25,6 +26,30 @@ const MOCK_BASE_PROPS = {
     },
   ],
 };
+
+describe('buildComponentData', () => {
+  const props = [{ property: 'size', type: "'M'" }];
+
+  it('always includes props', () => {
+    assert.deepEqual(buildComponentData(props, null), { props });
+  });
+
+  it('adds status when a doc page exists', () => {
+    assert.deepEqual(buildComponentData(props, 'stable'), {
+      props,
+      status: 'stable',
+    });
+  });
+
+  it('adds prerelease status labels', () => {
+    assert.deepEqual(buildComponentData(props, 'rc'), { props, status: 'rc' });
+  });
+
+  it('omits status when fetchComponentDocStatus returns null', () => {
+    assert.deepEqual(buildComponentData(props, null), { props });
+    assert.equal(buildComponentData(props, null).status, undefined);
+  });
+});
 
 describe('parseJSDoc', () => {
   it('extracts description and @default', () => {
