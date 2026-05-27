@@ -7,7 +7,7 @@ import {
   getSwcComponentStatus,
   isPrereleaseStatus,
   normalizeComponentExtraction,
-} from '../../../scripts/utils/component-status.js';
+} from '../../scripts/utils/component-status.js';
 
 describe('normalizeComponentExtraction', () => {
   it('wraps SWC flat arrays as props with no doc status', () => {
@@ -102,5 +102,41 @@ describe('isPrereleaseStatus', () => {
     assert.equal(isPrereleaseStatus('rc'), true);
     assert.equal(isPrereleaseStatus('stable'), false);
     assert.equal(isPrereleaseStatus(null), false);
+  });
+});
+
+describe('getComponentStatus — extraction data shapes', () => {
+  // SWC shape (e.g. swc-button.json): flat array, props carry since fields
+  const swcFixture = [
+    { attribute: 'variant', property: 'variant', type: 'ButtonVariant', since: '0.0.1' },
+    { attribute: 'disabled', property: 'disabled', type: 'boolean', since: '0.0.1', inheritedFrom: 'ButtonBase' },
+  ];
+
+  // TODO: remove this old data shape
+  // RSP current shape (e.g. ActionButton.json): flat array, no since fields yet
+  const rspFlatFixture = [
+    { property: 'size', type: "'XS' | 'S' | 'M' | 'L' | 'XL'", inheritedFrom: 'ActionButtonStyleProps' },
+    { property: 'children', type: 'ReactNode', required: true },
+  ];
+
+  // RSP future shape (after doc-status extraction): object with top-level status
+  const rspWithDocStatusFixture = {
+    status: 'beta',
+    props: [
+      { property: 'size', type: "'S' | 'M' | 'L'" },
+      { property: 'variant', type: "'primary' | 'secondary'" },
+    ],
+  };
+
+  it('returns "stable" for a SWC component whose props all have since', () => {
+    assert.equal(getComponentStatus(swcFixture), 'stable');
+  });
+
+  it('returns null for an RSP component with no since fields (pre-extraction)', () => {
+    assert.equal(getComponentStatus(rspFlatFixture), null);
+  });
+
+  it('returns the doc status for an RSP component with a top-level status field', () => {
+    assert.equal(getComponentStatus(rspWithDocStatusFixture), 'beta');
   });
 });
