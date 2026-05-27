@@ -2,23 +2,39 @@
   .template-wrapper {
     display: grid;
     grid-template-areas:
-      'sitenav'
-      'pagenav'
+      'left-rail'
+      'right-rail'
       'main';
 
-    .sitenav {
-      grid-area: sitenav;
-      z-index: var(--sh-z-sitenav);
+    .left-rail,
+    .right-rail {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2-spacing-200);
+      position: sticky;
+      z-index: var(--sh-z-picker);
+      background-color: var(--se-body-background-color);
+    }
+    
+    .left-rail {
+      grid-area: left-rail;
+      inset-block-start: var(--sh-nav-height, 80px);
+      max-block-size: calc(100vh - var(--sh-nav-height, 80px));
       isolation: isolate;
+      z-index: var(--sh-z-sitenav);
     }
 
     main {
       grid-area: main;
     }
 
-    .page-nav {
-      grid-area: pagenav;
+    .right-rail {
+      grid-area: right-rail;
+      gap: 0;
+      inset-block-start: calc(var(--sh-nav-height, 80px) + 2 * var(--sitenav-summary-height, 0px));
+      max-block-size: calc(100vh - var(--sh-nav-height, 80px) - var(--sitenav-summary-height, 0px));
       z-index: var(--sh-z-pagenav);
+      box-shadow: 0 0 4px 4px var(--s2-gray-100);
     }
   }
 }
@@ -27,21 +43,29 @@
   .detail-template {
     .template-wrapper {
       grid-template-columns: 0.2fr 0.6fr 0.2fr;
-      grid-template-areas: 'sitenav main pagenav';
+      grid-template-areas: 'left-rail main right-rail';
       gap: var(--s2-spacing-1000);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
 
-      .sitenav,
-      .page-nav {
+      .left-rail,
+      .right-rail {
         z-index: auto;
         isolation: auto;
+        gap: var(--s2-spacing-400);
       }
 
-      .section {
-        > .default-content {
-          max-inline-size: 100%;
-        }
+      /* Desktop: right-rail still sticks (now to the side of main rather than
+      above it). Top offset only needs to clear the header — sitenav is in
+      the left rail, not above page-nav. */
+      .right-rail {
+        inset-block-start: var(--sh-nav-height, 80px);
+        max-block-size: calc(100vh - var(--sh-nav-height, 80px));
+        box-shadow: none;
+      }
+
+      .section > .default-content {
+        max-inline-size: 100%;
       }
     }
   }
