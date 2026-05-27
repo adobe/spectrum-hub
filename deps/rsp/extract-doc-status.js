@@ -9,8 +9,8 @@
 
 import { fileURLToPath } from 'url';
 
-const S2_DOCS_BASE = 'https://react-spectrum.adobe.com';
-const S2_MDX_URL = (component) =>
+export const S2_DOCS_BASE = 'https://react-spectrum.adobe.com';
+export const s2MdxUrl = (component) =>
   `https://cdn.jsdelivr.net/gh/adobe/react-spectrum@main/packages/dev/s2-docs/pages/s2/${component}.mdx`;
 const VERSION_EXPORT = /export\s+const\s+version\s*=\s*['"](alpha|beta|rc)['"]/;
 const HTML_BADGE = />(alpha|beta|rc)</;
@@ -54,7 +54,7 @@ export async function fetchComponentDocStatus(componentName) {
     return null;
   }
 
-  const mdx = await fetchText(S2_MDX_URL(componentName));
+  const mdx = await fetchText(s2MdxUrl(componentName));
   if (!mdx.ok) return null;
 
   return parseStatusFromMdx(mdx.text);
