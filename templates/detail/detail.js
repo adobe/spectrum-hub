@@ -27,6 +27,7 @@ export default async function init() {
   pageNav.className = 'page-nav';
   pageNav.setAttribute('aria-label', 'On this page');
 
+  // TODO: relatedResources block not created. spdocs-149
   const relatedResources = document.createElement('aside');
   relatedResources.className = 'related-resources';
 
@@ -36,7 +37,7 @@ export default async function init() {
     loadBlock(picker),
     loadBlock(sitenav),
     loadBlock(pageNav),
-    loadBlock(relatedResources),
+    // TODO: loadBlock(relatedResources),
   ]);
 
   main.replaceWith(wrapper);
