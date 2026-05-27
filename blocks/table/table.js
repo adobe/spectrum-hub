@@ -1,4 +1,5 @@
 import { getConfig } from '../../scripts/ak.js';
+import { getComponentProps } from '../../scripts/utils/component-status.js';
 
 const config = getConfig();
 
@@ -78,10 +79,11 @@ const buildDataTable = async (href) => {
     return null;
   }
   const json = await resp.json();
+  const rows = getComponentProps(json).filter(
+    (prop) => !EXCLUDED_SOURCES.has(prop.inheritedFrom),
+  );
 
-  if (!json.length) { return null; }
-
-  const rows = json.filter((prop) => !EXCLUDED_SOURCES.has(prop.inheritedFrom));
+  if (!rows?.length) { return null; }
 
   // gather all the available properties for dev table, in canonical column order
   const allKeys = [...new Set(rows.flatMap(Object.keys))]

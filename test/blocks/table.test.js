@@ -308,6 +308,13 @@ describe('table block', () => {
       expect(el.querySelectorAll('tbody tr')).to.have.length(1);
     });
 
+    it('reads props from RSP extraction shape { status, props }', async () => {
+      stubFetchOk({ status: 'stable', props: PROPS });
+      const el = makeDataEl();
+      await init(el);
+      expect(el.querySelectorAll('tbody tr')).to.have.length(1);
+    });
+
     it('uses "-" for missing cell values', async () => {
       // Row 2 lacks 'type', so its type cell should fall back to '-'
       stubFetchOk([
