@@ -2,10 +2,6 @@
   display: block;
   position: relative;
   font: inherit;
-
-  @media (width >= 600px) {
-    display: inline-block;
-  }
 }
 
 button {
