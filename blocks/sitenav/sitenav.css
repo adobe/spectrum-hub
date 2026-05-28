@@ -1,5 +1,7 @@
 .sitenav {
   position: sticky;
+  box-sizing: border-box;
+  inline-size: 100%;
   top: var(--sitenav-top-offset, var(--sh-nav-height, 0));
   z-index: var(--sh-z-sitenav); /* lift above sibling <main> so the overlay list can paint on top */
   align-self: start;
