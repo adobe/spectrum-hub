@@ -7,6 +7,8 @@
   font-size: var(--s2-component-m-medium-font-size);
   line-height: 1.4;
   color: var(--se-body-color, #000);
+  box-sizing: border-box;
+  inline-size: 100%;
 
   @media (width >= 900px) {
     max-block-size: calc(100vh - var(--sh-nav-height, 0px));
@@ -132,7 +134,7 @@ the sticky chrome. Mobile leaves room for the site header AND the page-nav summa
 needs to clear the site header (the page-nav lives in the side rail, not above content). The 60px is an
 estimate of the summary's rendered height. */
 .page-nav-target {
-  scroll-margin-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px) + 60px); /* TODO: account for height of the collapsed sitenav */
+  scroll-margin-block-start: calc(var(--sh-nav-height, 80px) + 2 * var(--sitenav-summary-height, 0px) + 60px); /* TODO: roughly accounts for height of the collapsed sitenav & picker, but this approach will probably change */
 
   @media (width >= 900px) {
     scroll-margin-block-start: var(--sh-nav-height, 80px);
