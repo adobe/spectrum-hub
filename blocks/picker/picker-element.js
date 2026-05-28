@@ -1,3 +1,5 @@
+/* Follows Select-Only Combobox APG: https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/ */
+
 import { LitElement, html, nothing } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
 
@@ -19,6 +21,7 @@ class SpectrumHubPicker extends LitElement {
     this.label = '';
     this._open = false;
     this._activeIndex = 0;
+    this._triggerId = `hub-picker-trigger-${crypto.randomUUID()}`;
     this._listboxId = `hub-picker-listbox-${crypto.randomUUID()}`;
     this._handleOutsideClick = (e) => {
       if (!e.composedPath().includes(this)) { this._open = false; }
@@ -59,6 +62,11 @@ class SpectrumHubPicker extends LitElement {
     this._open = true;
   }
 
+  openListboxAtEnd() {
+    this._activeIndex = Math.max(this.options.length - 1, 0);
+    this._open = true;
+  }
+
   toggleOpen() {
     if (this._open) {
       this._open = false;
@@ -68,15 +76,24 @@ class SpectrumHubPicker extends LitElement {
   }
 
   handleKeydown(e) {
+    if (e.key === 'Tab' && this._open) {
+      this._open = false;
+      return;
+    }
     if (e.key === 'Escape' && this._open) {
       e.preventDefault();
       this._open = false;
       this.updateComplete.then(() => this.shadowRoot.querySelector('button')?.focus());
       return;
     }
-    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !this._open) {
+    if (e.key === 'ArrowDown' && !this._open) {
       e.preventDefault();
       this.openListbox();
+      return;
+    }
+    if (e.key === 'ArrowUp' && !this._open) {
+      e.preventDefault();
+      this.openListboxAtEnd();
       return;
     }
     if (e.key === 'ArrowDown' && this._open) {
@@ -115,7 +132,9 @@ class SpectrumHubPicker extends LitElement {
   render() {
     return html`
       <button
+        id=${this._triggerId}
         role="combobox"
+        aria-haspopup="listbox"
         aria-label=${this.label || nothing}
         aria-expanded=${this._open ? 'true' : 'false'}
         aria-controls=${this._listboxId}
@@ -123,7 +142,7 @@ class SpectrumHubPicker extends LitElement {
         @click=${this.toggleOpen}
         @keydown=${this.handleKeydown}
       >${this.selectedLabel}</button>
-      <ul id=${this._listboxId} role="listbox">
+      <ul id=${this._listboxId} role="listbox" aria-labelledby=${this._triggerId}>
         ${this.options.map((option, index) => html`
           <li
             id=${this.optionId(index)}

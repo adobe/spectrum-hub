@@ -552,4 +552,50 @@ describe('<hub-picker>', () => {
     expect(event).to.be.instanceOf(CustomEvent);
     expect(event.detail).to.deep.equal({ value: 'rsp' });
   });
+
+  it('trigger has aria-haspopup="listbox"', () => {
+    expect(el.shadowRoot.querySelector('button').getAttribute('aria-haspopup')).to.equal('listbox');
+  });
+
+  it('Tab when the listbox is open closes it', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+  });
+
+  it('Shift+Tab when the listbox is open closes it', async () => {
+    el.options = [{ id: 'rsp', label: 'React Spectrum' }];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.click();
+    await el.updateComplete;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+    await el.updateComplete;
+    expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+  });
+
+  it('ArrowUp when the listbox is closed opens it at the last option', async () => {
+    el.options = [
+      { id: 'rsp', label: 'React Spectrum' },
+      { id: 'swc', label: 'Spectrum Web Components' },
+    ];
+    await el.updateComplete;
+    const trigger = el.shadowRoot.querySelector('button');
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await el.updateComplete;
+    const lastOption = el.shadowRoot.querySelectorAll('[role="option"]')[1];
+    expect(trigger.getAttribute('aria-activedescendant')).to.equal(lastOption.id);
+  });
+
+  it('listbox is labelled by the trigger button', () => {
+    const trigger = el.shadowRoot.querySelector('button');
+    const listbox = el.shadowRoot.querySelector('[role="listbox"]');
+    expect(trigger.id.length).to.be.greaterThan(0);
+    expect(listbox.getAttribute('aria-labelledby')).to.equal(trigger.id);
+  });
 });
