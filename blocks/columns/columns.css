@@ -1,3 +1,4 @@
+/* These columns represent the "Core layout blocks" */
 .columns {
   --columns-gap: 56px;
   --image-corner-radius: 24px;
@@ -137,7 +138,7 @@
       inline-size: var(--col-size);
       block-size: var(--col-size);
       background-color: var(--s2-gray-800);
-      object-fit: cover;
+      object-fit: contain;
     }
   }
 
@@ -236,4 +237,21 @@
       max-inline-size: 80ch;
     }
   }
+}
+
+.section.grid.grid-2 > .block-content > .columns,
+.section.grid.grid-3 > .block-content > .columns {
+  margin-inline: unset;
+}
+
+.section.grid.grid-2 > .block-content,
+.section.grid.grid-3 > .block-content {
+  margin-inline: auto;
+  max-inline-size: var(--se-grid-container-width);
+  border: 1px solid red;
+}
+
+.section.grid.grid-2 > .block-content > .columns > .row,
+.section.grid.grid-3 > .block-content > .columns > .row {
+  display: flex;
 }
