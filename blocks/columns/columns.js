@@ -9,15 +9,17 @@ function decorateRows(el, rows) {
     row.classList.add('row', `row-${idx + 1}`);
     const cols = [...row.children];
     row.style = `--child-count: ${cols.length}`;
-    if (cols.length === 1) row.classList.add('single-col');
+    if (cols.length === 1) {
+      row.classList.add('single-col');
+    }
     decorateCols(el, cols);
   }
 }
 
 function detectImageRight(el, rows) {
-  if (el.classList.contains('image-right')) return;
+  if (el.classList.contains('image-right')) { return; }
   const firstMultiColRow = rows.find((row) => row.children.length >= 2);
-  if (!firstMultiColRow) return;
+  if (!firstMultiColRow) { return; }
   if (!firstMultiColRow.children[0].querySelector('picture')) {
     el.classList.add('image-right');
   }
