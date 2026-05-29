@@ -27,7 +27,7 @@
     gap: var(--columns-gap);
   }
 
-  @media (width >= 768px) {
+  @media (width >= 600px) {
     /* extra-small */
     &:not(:is(.small, .medium, .large)) {
       --col-size: var(--xs-image-size);
@@ -38,7 +38,7 @@
       --col-size: var(--s-image-size);
     }
 
-    /* medium and large snap --col-size at 768px only for centered/stacked (picture sizing) */
+    /* medium and large snap --col-size at 600px only for centered/stacked (picture sizing) */
     &:is(.centered, .stacked) {
       &.medium {
         --col-size: var(--m-image-size);
@@ -49,7 +49,7 @@
       }
     }
 
-    /* xs and small snap at 768px */
+    /* xs and small snap at 600px */
     &:not(:is(.medium, .large)) .row {
       grid-template-columns: var(--col-size) auto;
     }
@@ -144,7 +144,7 @@
   }
 
   &.image-right {
-    @media (width >= 768px) {
+    @media (width >= 600px) {
       .row {
         grid-template-columns: auto var(--col-size);
       }
@@ -173,7 +173,7 @@
   &.stacked {
     --columns-gap: var(--s2-spacing-600);
 
-    @media (width >= 768px) {
+    @media (width >= 600px) {
       .row {
         grid-template-columns: 1fr;
       }
