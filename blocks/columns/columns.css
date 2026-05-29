@@ -5,69 +5,85 @@
   --s-image-size: 316px;
   --m-image-size: 502px;
 
-  display: grid;
-  margin-block-end: var(--s2-spacing-1000);
-
-  picture {
-    display: block;
-    inline-size: 100%;
-  }
-
-  img {
-    display: block;
-    inline-size: 100%;
-    block-size: auto;
-    background-color: var(--s2-gray-800);
-    border-radius: var(--image-corner-radius);
-  }
-
-  .row {
-    display: grid;
-    align-items: center;
-    gap: var(--columns-gap);
-  }
-
-  @media (width >= 600px) {
-    /* extra-small */
-    &:not(:is(.small, .medium, .large)) {
-      --col-size: var(--xs-image-size);
-    }
-
-    /* small */
-    &.small {
-      --col-size: var(--s-image-size);
-    }
-
-    /* medium and large snap --col-size at 600px only for centered/stacked (picture sizing) */
-    &:is(.centered, .stacked) {
-      &.medium {
-        --col-size: var(--m-image-size);
-      }
-
-      &.large {
-        --col-size: 100%;
-      }
-    }
-
-    /* xs and small snap at 600px */
-    &:not(:is(.medium, .large)) .row {
-      grid-template-columns: var(--col-size) auto;
-    }
+  .block-content & {
+    max-inline-size: var(--se-grid-container-width);
+    margin-inline: auto;
   }
 
   @media (width >= 900px) {
-    /* medium and large snap --col-size at 900px for default and image-right */
+    .block-content & {
+      max-inline-size: unset;
+      margin-inline: 0;
+    }
+  }
+
+  /* extra-small */
+  &:not(:is(.small, .medium, .large)) {
+    --col-size: var(--xs-image-size);
+  }
+
+  /* small */
+  &.small {
+    --col-size: var(--s-image-size);
+  }
+
+  /* medium, large, and image-only */
+  &.medium, 
+  &.large,
+  > .row.single-col {
+    --col-size: var(--s-image-size);
+  }
+
+  @media (width >= 600px) {
     &.medium {
       --col-size: var(--m-image-size);
     }
-
-    &.large {
+    
+    &.large,
+    .row.single-col {
       --col-size: 100%;
     }
+  }
+  
+  container-type: inline-size;
+  container-name: columns;
+  margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
 
-    /* medium and large side-by-side layout snaps at 900px */
-    &:is(.medium, .large) .row {
+  .row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--columns-gap);
+  }
+  
+  @media (width >= 600px) {
+    &:not(.medium, .large) > .row {
+      display: grid;
+      align-items: start;
+    }
+
+    /* xs and small snap to their 2-column layout at 600px */
+    &:not(:is(.small, .medium, .large)) > .row,
+    &.small > .row{
       grid-template-columns: var(--col-size) auto;
+    }
+
+    /* medium and large stay flex containers, but change their alignment */
+    &.medium > .row,
+    &.large > .row {
+      align-items: start;
+    }
+  }
+  
+  @media (width >= 900px) {
+    @container columns (width > 725px) {
+      /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 900px wide */
+      &.medium > .row,
+      &.large > .row {
+        display: grid;
+        align-items: start;
+        grid-template-columns: var(--col-size) auto;
+      }
     }
   }
 
@@ -75,6 +91,8 @@
     flex-direction: column;
     display: flex;
     gap: var(--s2-spacing-300);
+    box-sizing: border-box;
+    text-wrap-style: pretty;
 
     :first-child {
       margin-block-start: 0;
@@ -86,6 +104,40 @@
 
     p, h4 {
       margin-block: 0;
+    }
+
+    &:has(p, h4) {
+      max-inline-size: 80ch;
+    }
+  }
+
+  .col:has(img, picture) {
+    border-radius: var(--image-corner-radius);
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: var(--col-size);
+    max-block-size: var(--col-size);
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    picture {
+      display: flex;
+      align-self: stretch;
+      flex: 1;
+      inline-size: 100%;
+      block-size: 100%;
+      box-sizing: border-box;
+    }
+  
+    img {
+      display: block;
+      box-sizing: border-box;
+      inline-size: var(--col-size);
+      block-size: var(--col-size);
+      background-color: var(--s2-gray-800);
+      object-fit: cover;
     }
   }
 
@@ -158,14 +210,8 @@
 
     .row {
       grid-template-columns: 1fr;
-    }
-
-    picture {
-      inline-size: var(--col-size, 100%);
-      margin-inline: auto;
-    }
-
-    .col-2 {
+      display: flex;
+      flex-direction: column;
       align-items: center;
     }
   }
@@ -173,19 +219,21 @@
   &.stacked {
     --columns-gap: var(--s2-spacing-600);
 
+    .row {
+      align-items: start;
+    }
+
     @media (width >= 600px) {
       .row {
-        grid-template-columns: 1fr;
-      }
-
-      picture {
-        inline-size: var(--col-size);
-      }
+        display: flex;
+      }      
     }
   }
 
   /* Single-column rows (like image only or title+description only) are always full-width regardless of size variant */
   .row.single-col {
-    grid-template-columns: 1fr;
+    > div:not(:has(img)) {
+      max-inline-size: 80ch;
+    }
   }
 }
