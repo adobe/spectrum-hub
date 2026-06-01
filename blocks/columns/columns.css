@@ -58,21 +58,29 @@
   }
   
   @media (width >= 600px) {
-    &:not(.medium, .large) > .row {
+    &:not(.small, .medium, .large) > .row {
       display: grid;
       align-items: start;
     }
 
-    /* xs and small snap to their 2-column layout at 600px */
-    &:not(:is(.small, .medium, .large)) > .row,
-    &.small > .row{
+    /* xs/default will snap to the 2-column layout at 600px */
+    &:not(:is(.small, .medium, .large)) > .row {
       grid-template-columns: var(--col-size) auto;
     }
 
-    /* medium and large stay flex containers, but change their alignment */
+    /* small/medium/large stay flex containers, but change their alignment */
+    &.small > .row,
     &.medium > .row,
     &.large > .row {
       align-items: start;
+    }
+
+    @container columns (width > 530px) {
+      /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
+      &.small > .row {
+        display: grid;
+        grid-template-columns: var(--col-size) auto;
+      }
     }
   }
   
