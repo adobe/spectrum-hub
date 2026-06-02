@@ -3,7 +3,7 @@
     .template-wrapper {
       display: grid;
       grid-template-columns: 0.2fr 0.8fr;
-      gap: var(--s2-spacing-1000);
+      gap: var(--s2-spacing-800);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
 
