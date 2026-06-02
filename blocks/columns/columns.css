@@ -6,43 +6,56 @@
   --s-image-size: 316px;
   --m-image-size: 502px;
 
-  .block-content & {
+  .block-content > & {
     max-inline-size: var(--se-grid-container-width);
+    inline-size: 100%;
     margin-inline: auto;
   }
 
-  @media (width >= 900px) {
-    .block-content & {
+
+  @container grid (width >= 800px) {
+    .section.grid:not(.grid-3) > .block-content & {
+      margin-inline: unset;
+    }
+  }
+
+  @media (width >= 1200px) {
+    /* target any of the columns that are not already in the section-metadata grids */
+    .section:not(.grid) > .block-content & {
       max-inline-size: unset;
       margin-inline: 0;
+    }
+
+    .section.grid > .block-content & {
+      margin-inline: unset;
     }
   }
 
   /* extra-small */
   &:not(:is(.small, .medium, .large)) {
-    --col-size: var(--xs-image-size);
+    --image-size: var(--xs-image-size);
   }
 
   /* small */
   &.small {
-    --col-size: var(--s-image-size);
+    --image-size: var(--s-image-size);
   }
 
   /* medium, large, and image-only */
   &.medium, 
   &.large,
   > .row.single-col {
-    --col-size: var(--s-image-size);
+    --image-size: var(--s-image-size);
   }
 
   @media (width >= 600px) {
     &.medium {
-      --col-size: var(--m-image-size);
+      --image-size: var(--m-image-size);
     }
     
     &.large,
     .row.single-col {
-      --col-size: 100%;
+      --image-size: 100%;
     }
   }
   
@@ -65,7 +78,7 @@
 
     /* xs/default will snap to the 2-column layout at 600px */
     &:not(:is(.small, .medium, .large)) > .row {
-      grid-template-columns: var(--col-size) auto;
+      grid-template-columns: var(--image-size) auto;
     }
 
     /* small/medium/large stay flex containers, but change their alignment */
@@ -79,19 +92,19 @@
       /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
       &.small > .row {
         display: grid;
-        grid-template-columns: var(--col-size) auto;
+        grid-template-columns: var(--image-size) auto;
       }
     }
   }
   
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     @container columns (width > 725px) {
-      /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 900px wide */
+      /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 1200px wide */
       &.medium > .row,
       &.large > .row {
         display: grid;
         align-items: start;
-        grid-template-columns: var(--col-size) auto;
+        grid-template-columns: var(--image-size) auto;
       }
     }
   }
@@ -122,13 +135,14 @@
 
   .col:has(img, picture) {
     border-radius: var(--image-corner-radius);
-    inline-size: 100%;
-    block-size: 100%;
-    max-inline-size: var(--col-size);
-    max-block-size: var(--col-size);
+    min-inline-size: var(--image-size);
+    block-size: var(--image-size);
+    max-inline-size: var(--image-size);
+    max-block-size: var(--image-size);
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    /* background: var(--s2-gray-400) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; image fallback */
     box-sizing: border-box;
 
     picture {
@@ -143,10 +157,11 @@
     img {
       display: block;
       box-sizing: border-box;
-      inline-size: var(--col-size);
-      block-size: var(--col-size);
-      background-color: var(--s2-gray-800);
+      inline-size: var(--image-size);
+      background-color: var(--s2-gray-100); /* TODO: remove this */
+      block-size: auto;
       object-fit: contain;
+      aspect-ratio: auto;
     }
   }
 
@@ -207,7 +222,7 @@
   &.image-right {
     @media (width >= 600px) {
       .row {
-        grid-template-columns: auto var(--col-size);
+        grid-template-columns: auto var(--image-size);
       }
     }
   }
@@ -245,21 +260,4 @@
       max-inline-size: 80ch;
     }
   }
-}
-
-.section.grid.grid-2 > .block-content > .columns,
-.section.grid.grid-3 > .block-content > .columns {
-  margin-inline: unset;
-}
-
-.section.grid.grid-2 > .block-content,
-.section.grid.grid-3 > .block-content {
-  margin-inline: auto;
-  max-inline-size: var(--se-grid-container-width);
-  border: 1px solid red;
-}
-
-.section.grid.grid-2 > .block-content > .columns > .row,
-.section.grid.grid-3 > .block-content > .columns > .row {
-  display: flex;
 }
