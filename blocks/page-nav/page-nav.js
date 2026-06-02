@@ -143,7 +143,7 @@ export default async function init(el) {
   details.append(list);
   el.append(details);
 
-  const desktopMql = window.matchMedia('(width >= 900px)');
+  const desktopMql = window.matchMedia('(width >= 1200px)');
   const syncDisclosure = () => {
     details.open = desktopMql.matches;
   };

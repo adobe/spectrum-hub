@@ -23,12 +23,12 @@
   }
 }
 
-@media (width >= 900px) {
+@media (width >= 1200px) {
   .detail-template {
     .template-wrapper {
       grid-template-columns: 0.2fr 0.6fr 0.2fr;
       grid-template-areas: 'sitenav main pagenav';
-      gap: var(--s2-spacing-1000);
+      gap: var(--s2-spacing-400);
       inline-size: var(--se-grid-container-width);
       margin: 0 auto;
 

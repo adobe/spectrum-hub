@@ -8,7 +8,7 @@
   line-height: 1.4;
   color: var(--se-body-color, #000);
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     max-block-size: calc(100vh - var(--sh-nav-height, 0px));
     overflow-block: auto;
     padding-block: var(--s2-spacing-200);
@@ -29,7 +29,7 @@
 .page-nav > details {
   position: relative;
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     position: static;
   }
 }
@@ -44,7 +44,7 @@
   background-color: var(--se-body-background-color);
   z-index: 1;
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     position: static;
     max-block-size: none;
     overflow-y: visible;
@@ -73,7 +73,7 @@ Hidden at desktop where the list renders inline in the rail. */
     display: none;
   }
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     display: none;
   }
 
@@ -134,7 +134,7 @@ estimate of the summary's rendered height. */
 .page-nav-target {
   scroll-margin-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px) + 60px); /* TODO: account for height of the collapsed sitenav */
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     scroll-margin-block-start: var(--sh-nav-height, 80px);
   }
 }
