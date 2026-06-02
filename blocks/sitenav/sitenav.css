@@ -11,7 +11,7 @@
   background-color: var(--se-body-background-color);
   isolation: isolate;
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     max-block-size: calc(100vh - var(--sh-nav-height, 0px));
     overflow-y: auto;
   }
@@ -20,7 +20,7 @@
 .sitenav > details {
   position: relative;
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     position: static;
   }
 }
@@ -34,7 +34,7 @@
   background-color: var(--se-body-background-color);
   z-index: var(--sh-z-sitenav);
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     position: static;
     max-block-size: none;
     overflow-y: visible;
@@ -124,12 +124,12 @@
   }
 }
 
-/* The outer disclosure summary is visible only at narrow widths. Above 900px, the matchMedia listener forces details[open] so the list always renders; hiding the summary keeps the rail visually unchanged on desktop. */
+/* The outer disclosure summary is visible only at narrow widths. Above 1200px, the matchMedia listener forces details[open] so the list always renders; hiding the summary keeps the rail visually unchanged on desktop. */
 .sitenav-disclosure {
   font-weight: var(--s2-component-m-bold-font-weight);
   background-color: var(--se-body-background-color);
 
-  @media (width >= 900px) {
+  @media (width >= 1200px) {
     display: none;
   }
 }

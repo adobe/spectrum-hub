@@ -176,11 +176,11 @@ export default async function init(el) {
   el.append(disclosure);
 
   // Default to closed on narrow widths so the section nav stays out of the
-  // way until the visitor opens it; force open above 900px where the summary
+  // way until the visitor opens it; force open above 1200px where the summary
   // is hidden and the rail renders inline. Setting `open` on every viewport
   // change (rather than only on the desktop branch) also resets the state if
   // someone resizes from desktop down to mobile.
-  const desktopMql = window.matchMedia('(width >= 900px)');
+  const desktopMql = window.matchMedia('(width >= 1200px)');
 
   // The summary's rendered height as a CSS custom property so the
   // page-nav block can stack below it at mobile widths.
