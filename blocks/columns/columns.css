@@ -97,7 +97,7 @@
     }
   }
   
-  @media (width >= 1200px) {
+  @media (width >= 900px) {
     @container columns (width > 725px) {
       /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 1200px wide */
       &.medium > .row,
