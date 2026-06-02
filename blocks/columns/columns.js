@@ -54,7 +54,7 @@ function detectImageRight(el, rows) {
   if (el.classList.contains('image-right')) { return; }
   const firstMultiColRow = rows.find((row) => row.children.length >= 2);
   if (!firstMultiColRow) { return; }
-  if (!firstMultiColRow.children[0].querySelector('picture')) {
+  if (!firstMultiColRow.children[0].querySelector('picture, img')) {
     el.classList.add('image-right');
   }
 }

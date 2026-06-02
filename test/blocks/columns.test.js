@@ -81,6 +81,40 @@ const WITH_PICTURE_IN_ROW2 = `
   </div>
 `;
 
+const IMAGE_LEFT_BARE_IMG = `
+  <div>
+    <div><img src="hero.jpg" alt="" loading="lazy"></div>
+    <div><p>Content</p></div>
+  </div>
+`;
+
+const IMAGE_RIGHT_BARE_IMG = `
+  <div>
+    <div><p>Content</p></div>
+    <div><img src="hero.jpg" alt="" loading="lazy"></div>
+  </div>
+`;
+
+const NO_IMAGE_IN_FIRST_ROW = `
+  <div>
+    <div><p>Only text</p></div>
+    <div><p>More text</p></div>
+  </div>
+  <div>
+    <div><p>Not alt</p></div>
+    <div></div>
+  </div>
+`;
+
+const ALL_SINGLE_COL_ROWS = `
+  <div>
+    <div><p>Row one</p></div>
+  </div>
+  <div>
+    <div><p>Row two</p></div>
+  </div>
+`;
+
 describe('columns block', () => {
   let el;
 
@@ -96,6 +130,11 @@ describe('columns block', () => {
   it('adds a 1-based row-N class to each row', () => {
     expect(el.children[0].classList.contains('row-1')).to.be.true;
     expect(el.children[1].classList.contains('row-2')).to.be.true;
+  });
+
+  it('renumbers the trailing row after the alt row is removed', () => {
+    expect(el.children[1].classList.contains('row-2')).to.be.true;
+    expect(el.children[1].classList.contains('row-3')).to.be.false;
   });
 
   it('adds "col" class to every cell in every row', () => {
@@ -123,7 +162,9 @@ describe('columns block', () => {
   it('adds "single-col" to a one-column row', () => {
     el = makeEl(SINGLE_COL);
     init(el);
+    expect(el.children.length).to.equal(1);
     expect(el.children[0].classList.contains('single-col')).to.be.true;
+    expect(el.classList.contains('image-right')).to.be.false;
   });
 
   it('does not add "image-right" when the image is in the first column', () => {
@@ -142,6 +183,27 @@ describe('columns block', () => {
       el = makeEl(IMAGE_RIGHT_WITH_ALT_ROW);
       init(el);
       expect(el.classList.contains('image-right')).to.be.true;
+    });
+
+    it('does not add "image-right" when the first column has a bare img', () => {
+      el = makeEl(IMAGE_LEFT_BARE_IMG);
+      init(el);
+      expect(el.classList.contains('image-right')).to.be.false;
+    });
+
+    it('adds "image-right" when the image is a bare img in the second column', () => {
+      el = makeEl(IMAGE_RIGHT_BARE_IMG);
+      init(el);
+      expect(el.classList.contains('image-right')).to.be.true;
+    });
+
+    it('does not add "image-right" when every row is single-column', () => {
+      el = makeEl(ALL_SINGLE_COL_ROWS);
+      init(el);
+      expect(el.children.length).to.equal(2);
+      expect(el.children[0].classList.contains('single-col')).to.be.true;
+      expect(el.children[1].classList.contains('single-col')).to.be.true;
+      expect(el.classList.contains('image-right')).to.be.false;
     });
   });
 
@@ -186,6 +248,13 @@ describe('columns block', () => {
       expect(el.querySelector('img').getAttribute('alt')).to.equal('');
     });
 
+    it('keeps both rows when the first row has no image', () => {
+      el = makeEl(NO_IMAGE_IN_FIRST_ROW);
+      init(el);
+      expect(el.children.length).to.equal(2);
+      expect(el.children[1].textContent).to.include('Not alt');
+    });
+
     it('keeps a second content row when non-image columns have text', () => {
       el = makeEl(WITH_CONTENT_ROW);
       init(el);
@@ -198,8 +267,34 @@ describe('columns block', () => {
       expect(el.children.length).to.equal(2);
     });
 
-    it('does not treat a content row as alt text when it has multiple columns of text', () => {
+    it('leaves two rows after removing the alt text row from three authored rows', () => {
       expect(el.children.length).to.equal(2);
+    });
+  });
+
+  describe('init edge cases', () => {
+    it('does not throw when the block has no rows', () => {
+      el = document.createElement('div');
+      expect(() => init(el)).to.not.throw();
+      expect(el.children.length).to.equal(0);
+    });
+
+    it('can run init twice without duplicate row or col classes', () => {
+      el = makeEl(MOCK_COLUMNS);
+      init(el);
+      init(el);
+      expect(el.children.length).to.equal(2);
+      [...el.children].forEach((row) => {
+        expect(row.classList.contains('row')).to.be.true;
+        expect([...row.classList].filter((name) => name === 'row').length).to.equal(1);
+        [...row.children].forEach((col) => {
+          expect(col.classList.contains('col')).to.be.true;
+          expect([...col.classList].filter((name) => name === 'col').length).to.equal(1);
+        });
+      });
+      expect(el.children[0].classList.contains('row-1')).to.be.true;
+      expect(el.children[1].classList.contains('row-2')).to.be.true;
+      expect(el.children[1].classList.contains('row-3')).to.be.false;
     });
   });
 });
