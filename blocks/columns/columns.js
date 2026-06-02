@@ -19,7 +19,7 @@ function decorateRows(el, rows) {
 
 function isAltTextRow(contentRow, altRow) {
   if (!contentRow.querySelector('picture, img')) { return false; }
-  if (altRow.querySelector('picture')) { return false; }
+  if (altRow.querySelector('picture, img')) { return false; }
 
   const contentCols = [...contentRow.children];
   const altCols = [...altRow.children];

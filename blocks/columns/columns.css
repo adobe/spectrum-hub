@@ -159,7 +159,7 @@
       display: block;
       box-sizing: border-box;
       inline-size: var(--image-size);
-      background-color: var(--s2-gray-100); /* TODO: remove this */
+      background-color: var(--s2-gray-500); /* TODO: remove this */
       block-size: auto;
       object-fit: contain;
       aspect-ratio: auto;

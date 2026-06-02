@@ -81,6 +81,17 @@ const WITH_PICTURE_IN_ROW2 = `
   </div>
 `;
 
+const WITH_BARE_IMG_IN_ROW2 = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+    <div><p>Content</p></div>
+  </div>
+  <div>
+    <div><img src="other.jpg" alt="" loading="lazy"></div>
+    <div></div>
+  </div>
+`;
+
 const IMAGE_LEFT_BARE_IMG = `
   <div>
     <div><img src="hero.jpg" alt="" loading="lazy"></div>
@@ -263,6 +274,12 @@ describe('columns block', () => {
 
     it('does not treat a second row as alt text when it contains a picture', () => {
       el = makeEl(WITH_PICTURE_IN_ROW2);
+      init(el);
+      expect(el.children.length).to.equal(2);
+    });
+
+    it('does not treat a second row as alt text when it contains a bare img', () => {
+      el = makeEl(WITH_BARE_IMG_IN_ROW2);
       init(el);
       expect(el.children.length).to.equal(2);
     });
