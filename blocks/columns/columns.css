@@ -12,10 +12,11 @@
     margin-inline: auto;
   }
 
-
+  /* turns the auto-margin off early for 2-column grids */
   @container grid (width >= 800px) {
     .section.grid:not(.grid-3) > .block-content & {
       margin-inline: unset;
+      max-inline-size: 100%;
     }
   }
 
@@ -143,7 +144,7 @@
     justify-content: center;
     overflow: hidden;
     
-    /* background: var(--s2-gray-400) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; image fallback */
+    /* background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; image fallback */
     box-sizing: border-box;
 
     picture {
