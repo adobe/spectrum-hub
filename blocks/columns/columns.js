@@ -10,44 +10,8 @@ function decorateRows(el, rows) {
     row.classList.add('row', `row-${idx + 1}`);
     const cols = [...row.children];
     row.style = `--child-count: ${cols.length}`;
-    if (cols.length === 1) {
-      row.classList.add('single-col');
-    }
     decorateCols(el, cols);
   }
-}
-
-function isAltTextRow(contentRow, altRow) {
-  if (!contentRow.querySelector('picture, img')) { return false; }
-  if (altRow.querySelector('picture, img')) { return false; }
-
-  const contentCols = [...contentRow.children];
-  const altCols = [...altRow.children];
-
-  return contentCols.every((col, idx) => {
-    if (col.querySelector('picture, img')) { return true; }
-    return !altCols[idx]?.textContent.trim();
-  });
-}
-
-function applyAltFromRow(cols, altCols) {
-  cols.forEach((col, idx) => {
-    const img = col.querySelector('picture img, img');
-    const alt = altCols[idx]?.textContent.trim();
-    if (!img || !alt) { return; }
-    img.setAttribute('alt', alt);
-  });
-}
-
-function applyAltText(rows) {
-  if (rows.length < 2) { return rows; }
-
-  const [contentRow, altRow, ...rest] = rows;
-  if (!isAltTextRow(contentRow, altRow)) { return rows; }
-
-  applyAltFromRow([...contentRow.children], [...altRow.children]);
-  altRow.remove();
-  return [contentRow, ...rest];
 }
 
 function detectImageRight(el, rows) {
@@ -60,7 +24,7 @@ function detectImageRight(el, rows) {
 }
 
 export default function init(el) {
-  const rows = applyAltText([...el.children]);
+  const rows = [...el.children];
   decorateRows(el, rows);
   detectImageRight(el, rows);
 }
