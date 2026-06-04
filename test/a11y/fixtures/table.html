@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Table block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/table/table.css">
+</head>
+<body>
+  <main id="main-content">
+    <h1 id="page-heading">Button component</h1>
+    <div class="section">
+      <h2 id="api-heading">Properties</h2>
+      <div class="table">
+        <div>
+          <div>Name</div>
+          <div>Type</div>
+          <div>Default</div>
+          <div>Description</div>
+        </div>
+        <div>
+          <div>size</div>
+          <div>string</div>
+          <div>medium</div>
+          <div>Controls the size of the button</div>
+        </div>
+        <div>
+          <div>variant</div>
+          <div>string</div>
+          <div>primary</div>
+          <div>Sets the visual style variant</div>
+        </div>
+        <div>
+          <div>disabled</div>
+          <div>boolean</div>
+          <div>false</div>
+          <div>Disables interaction and applies disabled styling</div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/table/table.js';
+    document.querySelectorAll('.table').forEach(init);
+  </script>
+</body>
+</html>

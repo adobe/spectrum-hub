@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail template fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/templates/detail/detail.css">
+</head>
+<!--
+  The detail template adds .detail-template to body via ak.js loadTemplate.
+  We set it upfront so template CSS (grid layout, landmark regions) is applied.
+-->
+<body class="detail-template">
+  <header class="header">
+    <a class="skip-link visually-hidden" href="#main-content">Skip to main content</a>
+  </header>
+  <main id="main-content">
+    <h1>Button component</h1>
+    <h2>Usage guidelines</h2>
+    <p>Guidance on when and how to use this component in your designs and code.</p>
+    <h2>Accessibility</h2>
+    <p>Keyboard navigation, focus management, and screen reader behaviour.</p>
+    <h2>API reference</h2>
+    <p>Properties, events, and slots exposed by the component.</p>
+  </main>
+  <footer>
+    <p>© 2026 Adobe. All rights reserved.</p>
+  </footer>
+  <script type="module">
+    import { setConfig } from '/scripts/ak.js';
+    // components must be set before loadBlock is called inside the template init
+    setConfig({ components: [], hostnames: [], linkBlocks: [] });
+    import init from '/templates/detail/detail.js';
+    init();
+  </script>
+</body>
+</html>

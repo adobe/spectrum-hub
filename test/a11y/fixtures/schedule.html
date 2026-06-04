@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <p><a id="sched-link" href="/mock-schedule.json">Scheduled content</a></p>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/schedule/schedule.js';
+    init(document.getElementById('sched-link'));
+  </script>
+</body>
+</html>

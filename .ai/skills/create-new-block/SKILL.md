@@ -238,8 +238,69 @@ Use `block__element--modifier` naming for classes added inside a block. The bloc
 
 The block root class (`my-block`) is set by `loadBlock` from the first class on the element. All additional classes added by `init` should follow BEM from there.
 
-## Known open questions
+## Testing
 
-These were unresolved at the time this skill was written and should be verified before implementing:
+Every block has two kinds of tests.
 
-1. What is the testing convention for blocks — are there unit tests, and if so what does the test file look like?
+### Unit tests
+
+Unit tests live in `test/blocks/<name>.test.js` and run in a real browser via `@web/test-runner`. They mount the block element directly and call `init(el)`, then assert on the resulting DOM. See existing tests for the pattern — `test/blocks/card.test.js` is a good reference.
+
+### Accessibility tests
+
+axe-core WCAG 2.2 AA scans run against every block and template via Playwright. When you add a new block:
+
+1. Create `test/a11y/fixtures/<name>.html`. The fixture is a minimal HTML page that loads the block's CSS with `<link>` and initializes it with `<script type="module">`. Use a `data:` URI image placeholder so fixture images never 404.
+
+   ```html
+   <!DOCTYPE html>
+   <html lang="en">
+   <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>My-block fixture</title>
+     <link rel="stylesheet" href="/styles/styles.css">
+     <link rel="stylesheet" href="/blocks/my-block/my-block.css">
+   </head>
+   <body>
+     <main id="main-content">
+       <div class="my-block"><!-- authored content here --></div>
+     </main>
+     <script type="module">
+       import init from '/blocks/my-block/my-block.js';
+       document.querySelectorAll('.my-block').forEach(init);
+     </script>
+   </body>
+   </html>
+   ```
+
+2. Add an entry to the `BLOCKS` array in `test/a11y/accessibility.spec.js`:
+
+   ```js
+   {
+     name: 'my-block',
+     path: '/test/a11y/fixtures/my-block.html',
+     readySelector: '.my-block-inner', // element that appears after init completes
+   }
+   ```
+
+   `readySelector` is a CSS selector for any element created by `init` — the test waits for it before running axe. If the block removes itself from the DOM on init (like `section-metadata`), use `{ selector: '.my-block', state: 'detached' }` instead of a string.
+
+   If the block fetches remote data at runtime, add a `routes` array to mock those requests:
+
+   ```js
+   {
+     name: 'my-block',
+     path: '/test/a11y/fixtures/my-block.html',
+     readySelector: '.my-block-result',
+     routes: [
+       {
+         url: '**/my-data-endpoint',
+         contentType: 'application/json',
+         body: JSON.stringify({ data: [] }),
+       },
+     ],
+   }
+   ```
+
+For full guidance on the fixture format, route mocking, and template-specific requirements (`setConfig`), see the **Accessibility tests** section in [`AGENTS.md`](../../../AGENTS.md).

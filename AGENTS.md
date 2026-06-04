@@ -42,6 +42,35 @@ When a task matches one of the following, read and apply the corresponding rule 
 | Drafting a PR description | [`.ai/rules/pr-descriptions.md`](./.ai/rules/pr-descriptions.md) |
 | Drafting a Jira ticket or GitHub issue | [`.ai/rules/issue-ticket.md`](./.ai/rules/issue-ticket.md) |
 
+## Accessibility tests
+
+The project runs axe-core WCAG 2.2 AA scans against every block and template via Playwright. Tests live in `test/a11y/` and run on every PR via `.github/workflows/a11y.yml`.
+
+### When you add a block or template
+
+1. Create an HTML fixture in `test/a11y/fixtures/<name>.html` that initializes the block in isolation. Fixtures are served as static files by `serve .` — load block CSS and JS directly with `<link>` and `<script type="module">`.
+2. Add an entry to the `BLOCKS` array in `test/a11y/accessibility.spec.js` with a `name`, `path`, and `readySelector` (a CSS selector that appears in the DOM once the block has finished initializing).
+
+For blocks that fetch remote data at runtime (header, footer, sitenav, fragment, schedule), add a `routes` array to the entry. Each route intercepts a network request with `page.route()` and returns mock HTML or JSON so the test runs without a live server.
+
+For templates, call `setConfig({ components: [], hostnames: [], linkBlocks: [] })` before `init()` in the fixture script — templates use `loadBlock()` internally, which requires `components` to be defined.
+
+### When you change a block or template
+
+| What changed | What to update |
+| --- | --- |
+| A WCAG violation is introduced | Fix the accessibility issue in the block |
+| The init-produced DOM structure changes | Update `readySelector` in the `BLOCKS` entry |
+| A fetch URL or response format changes | Update the `routes` mock in the `BLOCKS` entry |
+
+### File locations
+
+| What | Path |
+| --- | --- |
+| Test spec and `BLOCKS` registry | `test/a11y/accessibility.spec.js` |
+| HTML fixtures (one per block/template) | `test/a11y/fixtures/` |
+| GitHub Actions workflow | `.github/workflows/a11y.yml` |
+
 ## IDE-specific folders
 
 Some editors load extra project config from their own directories (for example `.cursor/` and `.claude/`). Those locations are thin adapters that symlink back to `.ai/`. **`.ai/` remains the portable source of truth** for rules and skills documented here. If instructions conflict, prefer **`.ai/README.md`** and the files under **`.ai/rules/`** and **`.ai/skills/`**.

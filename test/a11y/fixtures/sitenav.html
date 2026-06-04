@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitenav block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/sitenav/sitenav.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="sitenav"></div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/sitenav/sitenav.js';
+    init(document.querySelector('.sitenav'));
+  </script>
+</body>
+</html>

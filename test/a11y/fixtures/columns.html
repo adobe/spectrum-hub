@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Columns block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/columns/columns.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="columns-wrapper">
+        <div class="columns">
+          <div>
+            <div>
+              <picture>
+                <img
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  alt="First column illustration"
+                  width="400"
+                  height="300"
+                >
+              </picture>
+            </div>
+            <div>
+              <h3>Feature one</h3>
+              <p>Describe the first feature clearly and concisely.</p>
+            </div>
+          </div>
+          <div>
+            <div>
+              <picture>
+                <img
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  alt="Second column illustration"
+                  width="400"
+                  height="300"
+                >
+              </picture>
+            </div>
+            <div>
+              <h3>Feature two</h3>
+              <p>Describe the second feature clearly and concisely.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/columns/columns.js';
+    document.querySelectorAll('.columns').forEach(init);
+  </script>
+</body>
+</html>

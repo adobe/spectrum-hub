@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Section-metadata block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/section-metadata/section-metadata.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <p>Section content that receives the applied style.</p>
+      <!-- section-metadata removes itself after applying metadata to the parent section -->
+      <div class="section-metadata">
+        <div>
+          <div>style</div>
+          <div>highlight</div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/section-metadata/section-metadata.js';
+    document.querySelectorAll('.section-metadata').forEach(init);
+  </script>
+</body>
+</html>

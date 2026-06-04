@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/youtube/youtube.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="youtube-wrapper">
+        <p>
+          <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            Watch: Getting started with Author Kit
+          </a>
+        </p>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/youtube/youtube.js';
+    document.querySelectorAll('.youtube-wrapper a').forEach(init);
+  </script>
+</body>
+</html>

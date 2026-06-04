@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page-nav block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/page-nav/page-nav.css">
+</head>
+<body>
+  <main id="main-content">
+    <h1>Component overview</h1>
+    <h2>Usage guidelines</h2>
+    <p>Guidance on when and how to use this component in your designs.</p>
+    <h2>Accessibility</h2>
+    <p>Notes on keyboard navigation, ARIA patterns, and screen reader behaviour.</p>
+    <h2>API reference</h2>
+    <p>Properties, events, and slots exposed by the component.</p>
+    <div class="page-nav"></div>
+  </main>
+  <script type="module">
+    import init from '/blocks/page-nav/page-nav.js';
+    document.querySelectorAll('.page-nav').forEach(init);
+  </script>
+</body>
+</html>

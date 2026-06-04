@@ -13,6 +13,7 @@
     "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
+    "test:a11y": "playwright test",
     "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js",
     "build:turndown": "esbuild --format=esm --minify ./deps/turndown/src/index.js --bundle --outfile=./deps/turndown/dist/index.js",
     "build:swc-tooltip": "esbuild --format=esm --minify ./deps/components/swc-tooltip/src/index.js --bundle --outfile=./deps/components/swc-tooltip/dist/index.js"
@@ -29,7 +30,9 @@
   "homepage": "https://github.com/adobe/spectrum-hub#readme",
   "devDependencies": {
     "@adobe/eslint-config-helix": "^3.0.17",
+    "@axe-core/playwright": "^4.11.3",
     "@esm-bundle/chai": "4.3.4-fix.0",
+    "@playwright/test": "^1.60.0",
     "@web/dev-server-import-maps": "^0.3.0",
     "@web/test-runner": "^1.0.0",
     "@web/test-runner-commands": "1.0.0",
@@ -38,6 +41,7 @@
     "eslint-plugin-chai-friendly": "^1.1.0",
     "eslint-plugin-import": "^2.32.0",
     "globals": "^17.0.0",
+    "serve": "^14.2.6",
     "sinon": "^21.0.1",
     "stylelint": "^17.1.0",
     "stylelint-config-standard": "^40.0.0"

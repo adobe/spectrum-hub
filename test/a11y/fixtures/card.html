@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/card/card.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="card-wrapper">
+        <div class="card">
+          <div>
+            <div>
+              <p>
+                <picture>
+                  <img
+                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    alt="A scenic landscape photo"
+                    width="180"
+                    height="120"
+                  >
+                </picture>
+              </p>
+              <h3>Card heading</h3>
+              <p>Concise supporting text that gives context for the card action.</p>
+            </div>
+          </div>
+          <div>
+            <div>button</div>
+            <div><a href="/learn-more">Learn more</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/card/card.js';
+    document.querySelectorAll('.card').forEach(init);
+  </script>
+</body>
+</html>

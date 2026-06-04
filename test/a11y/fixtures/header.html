@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Header block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/header/header.css">
+</head>
+<body>
+  <header class="header"></header>
+  <main id="main-content">
+    <h1>Page content</h1>
+    <p>Main content area used to verify the skip link target works.</p>
+  </main>
+  <script type="module">
+    import init from '/blocks/header/header.js';
+    init(document.querySelector('header'));
+  </script>
+</body>
+</html>

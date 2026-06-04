@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Action-button block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/action-button/action-button.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <p>
+        <a class="action-button" href="/tools/widgets/action" title="style:primary">
+          Settings
+        </a>
+      </p>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/action-button/action-button.js';
+    document.querySelectorAll('.action-button').forEach(init);
+  </script>
+</body>
+</html>
