@@ -19,11 +19,11 @@
   }
 
 
-  & + &,
+  /* & + &,
   &:has(+ &) {
     max-inline-size: 100%;
     margin: unset;
-  }
+  } */
 
   .card-content:not(:has(img, picture)) {
     display: flex;
@@ -116,6 +116,7 @@
     }
   }
 
+  /* TODO: design is still ongoing, so we need to support buttons in cards? or are those being removed? */
   /* .card-content:has(.card-button-container) { */
     /* border: 1px solid red; */
     /* display: flex; */

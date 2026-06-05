@@ -178,14 +178,14 @@
 }
 
 @media (width >= 900px) {
-  @container grid (width >= 800px) {
+  /* @container grid (width >= 800px) {
     .section.grid-3 .block-content {
       display: grid;
       grid-template-columns: repeat(var(--grid-size), 1fr);
       max-inline-size: var(--se-grid-container-width);
       margin: 0 auto;
     }
-  }
+  } */
 
   .section.grid-4 .block-content {
     display: grid;
@@ -195,7 +195,7 @@
   }
 }
 
-@media (width >= 900px) {
+/* @media (width >= 900px) {
   @container grid (width >= 800px) {
     .section.grid-3 .block-content {
       display: grid;
@@ -204,7 +204,7 @@
       margin: 0 auto;
     }
   }
-}
+} */
 
 @media (width >= 1200px) {
   .section {
@@ -300,13 +300,13 @@
     }
   }
 
-  @container grid (width >= 800px) {
-    /* the cards use this if they are not in a section container */
+  /* @container grid (width >= 800px) {
+    the cards use this if they are not in a section container
     .section.grid-3 .block-content {
       display: grid;
       grid-template-columns: repeat(var(--grid-size), 1fr);
       margin: unset;
       max-inline-size: 100%;
     }
-  }
+  } */
 }
