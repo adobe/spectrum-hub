@@ -12,7 +12,7 @@ function decorateRows(el, rows) {
     row.style = `--child-count: ${cols.length}`;
     decorateCols(el, cols);
   }
-  if (rows.length && rows.every((row) => row.children.length === 1)) {
+  if (rows.length && rows.every((row) => row.children.length === 1) && el.querySelector('img, picture')) {
     el.classList.add('centered');
   }
 }
