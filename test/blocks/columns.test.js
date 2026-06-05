@@ -34,6 +34,12 @@ const ALL_SINGLE_COL_ROWS = `
   </div>
 `;
 
+const SINGLE_COL_WITH_IMAGE = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+`;
+
 const IMAGE_RIGHT = `
   <div>
     <div><p>Content</p></div>
@@ -105,18 +111,24 @@ describe('columns block', () => {
   });
 
   describe('centered', () => {
-    it('adds "centered" to the block when all rows are single-column', () => {
-      el = makeEl(SINGLE_COL);
-      init(el);
-      expect(el.classList.contains('centered')).to.be.true;
-    });
-
     it('does not add "centered" when rows have multiple columns', () => {
       expect(el.classList.contains('centered')).to.be.false;
     });
 
-    it('adds "centered" to the block when multiple rows are all single-column', () => {
+    it('does not add "centered" when all rows are single-column text only', () => {
+      el = makeEl(SINGLE_COL);
+      init(el);
+      expect(el.classList.contains('centered')).to.be.false;
+    });
+
+    it('does not add "centered" when multiple single-column rows are text only', () => {
       el = makeEl(ALL_SINGLE_COL_ROWS);
+      init(el);
+      expect(el.classList.contains('centered')).to.be.false;
+    });
+
+    it('adds "centered" when all rows are single-column and contain an image', () => {
+      el = makeEl(SINGLE_COL_WITH_IMAGE);
       init(el);
       expect(el.classList.contains('centered')).to.be.true;
     });
