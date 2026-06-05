@@ -56,43 +56,24 @@
 
     /* large & image-only */
     &.large,
-    > .row:only-child:has(> .col:only-child) {
+    &.centered > .row:only-child {
       --image-size: 100%;
     }
   }
-
-  .row {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: var(--columns-gap);
-  }
-
-  /* Rows with a single column are centered automatically */
-  &:has(> .row ~ .row):not(:has(.col ~ .col)) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-    
-  :not(:has(.col ~ .col)) {
-    max-inline-size: 80ch;
-  }
   
   @media (width >= 600px) {
-    &:not(.small, .medium, .large, .align-start) > .row:not(:has(> .col:only-child)) {
+    &:not(.small, .medium, .large, .align-start, .centered) > .row {
       display: grid;
     }
 
     /* xs/default will snap to the 2-column layout at 600px (except for when the image is on the right */
-    &:not(.small, .medium, .large, .image-right) > .row:not(:has(> .col:only-child)) {
+    &:not(.small, .medium, .large, .image-right, .centered) > .row {
       grid-template-columns: var(--image-size) auto;
     }
 
     @container columns (width > 530px) {
       /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
-      &.small:not(.align-start, .image-right) > .row:not(:has(> .col:only-child)) {
+      &.small:not(.align-start, .image-right, .centered) > .row {
         display: grid;
         grid-template-columns: var(--image-size) auto;
       }
@@ -102,13 +83,20 @@
   @media (width >= 900px) {
     @container columns (width > 725px) {
       /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 1200px wide */
-      &.medium:not(.align-start, .image-right) > .row:not(:has(> .col:only-child)),
-      &.large:not(.align-start) > .row:not(:has(> .col:only-child)) {
+      &.medium:not(.align-start, .image-right, .centered) > .row,
+      &.large:not(.align-start, .centered) > .row {
         display: grid;
         align-items: start;
         grid-template-columns: var(--image-size) auto;
       }
     }
+  }
+
+  .row {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: var(--columns-gap);
   }
 
   .col {
@@ -168,6 +156,10 @@
     }
   }
 
+  .col:not(:has(img, picture)) {
+    max-inline-size: 80ch;
+  }
+
   &.gap-xs {
     --columns-gap: var(--s2-spacing-100);
   }
@@ -222,23 +214,33 @@
     }
   }
 
+  /* Centered columns */
+  &.centered {
+    display: flex;
+    flex-direction: column;
+    gap: var(--columns-gap);
+    align-items: center;
+    text-align: center;
+  }
+
   &.image-right {
     @media (width >= 600px) {
       /* image-right flips the column sizing */
-      &:not(.medium, .large) .row:not(:has(> .col:only-child)) {
+      &:not(.medium, .large, .centered) .row {
         display: grid;
         grid-template-columns: auto var(--image-size);
       }
     }
 
     @media (width >= 900px) {
-      &.medium .row:not(:has(> .col:only-child)) {
+      &.medium:not(.centered) .row {
         display: grid;
         grid-template-columns: auto var(--image-size);
       }
     }
   }
 
+  /* start-aligned, stacked/vertical columns */
   &.align-start {
     --columns-gap: var(--s2-spacing-600);
 
@@ -254,6 +256,10 @@
   }
 }
 
-/* .columns + .columns {
-  border: 1px solid red;
-} */
+.columns:has(> .row:only-child > .col:only-child) .row {
+  grid-template-columns: 1fr;
+
+  .col:has(img, picture) {
+    --image-size: 100%;
+  }
+}
