@@ -9,11 +9,6 @@
     color: light-dark(var(--color-dark), var(--color-light));
   }
 
-  &.grid {
-    container-type: inline-size;
-    container-name: grid;
-  }
-
   &.grid-2 {
     --grid-size: 2;
   }
@@ -160,17 +155,15 @@
 }
 
 @media (width >= 600px) {
-  @container grid (width >= 940px) {
-    .section.grid-2 .block-content {
+  .section {
+    &.grid-2 .block-content {
       display: grid;
       grid-template-columns: repeat(var(--grid-size), 1fr);
-      max-inline-size: var(--se-grid-container-width);
-      margin: 0 auto;
     }
   }
 }
 
-@media (width >= 1200px) {
+@media (width >= 900px) {
   .section {
     &.grid-4 .block-content,
     &.grid-6 .block-content {
@@ -238,23 +231,8 @@
 }
 
 @media (width >= 1200px) {
-  /* see core layouts/columns
-  large screens- when the grid is wide enough, invoke 2 columns */
-  @container grid (width >= 800px) {
-    .section.grid-2:not(.container) .block-content {
-      display: grid;
-      grid-template-columns: repeat(var(--grid-size), 1fr);
-      margin: unset;
-      max-inline-size: 100%;
-    }
-  }
-
-  /* see core layouts/columns
-  large screens- when the grid is wide enough, invoke 3 columns */
-  @container grid (width >= 940px) {
-    .section.grid-3:not(.container) .block-content {
-      display: grid;
-      grid-template-columns: repeat(var(--grid-size), 1fr);
-    }
+  .section.grid .block-content {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 1fr);
   }
 }
