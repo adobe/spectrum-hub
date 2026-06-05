@@ -8,6 +8,7 @@
 
   max-inline-size: var(--se-grid-container-width);
   margin-inline: auto;
+  inline-size: 100%;
   margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
   container-type: inline-size;
   container-name: columns;
@@ -26,8 +27,8 @@
   } */
 
   /* @media (width >= 1200px) { */
-    /* target any of the columns that are not already in the section-metadata grids
-    .section:not(.grid) > .block-content & {
+    /* target any of the columns that are not already in the section-metadata grids */
+    /* .section:not(.grid) > .block-content & {
       max-inline-size: unset;
       margin-inline: 0;
     } */

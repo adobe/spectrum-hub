@@ -160,11 +160,11 @@
 }
 
 @media (width >= 600px) {
-  @container grid (width >= 800px) {
+  @container grid (width >= 940px) {
     .section.grid-2 .block-content {
       display: grid;
       grid-template-columns: repeat(var(--grid-size), 1fr);
-      max-width: var(--se-grid-container-width);
+      max-inline-size: var(--se-grid-container-width);
       margin: 0 auto;
     }
   }
@@ -238,6 +238,8 @@
 }
 
 @media (width >= 1200px) {
+  /* see core layouts/columns
+  large screens- when the grid is wide enough, invoke 2 columns */
   @container grid (width >= 800px) {
     .section.grid-2:not(.container) .block-content {
       display: grid;
@@ -247,7 +249,8 @@
     }
   }
 
-
+  /* see core layouts/columns
+  large screens- when the grid is wide enough, invoke 3 columns */
   @container grid (width >= 940px) {
     .section.grid-3:not(.container) .block-content {
       display: grid;
