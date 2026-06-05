@@ -12,10 +12,12 @@ function decorateRows(el, rows) {
     row.style = `--child-count: ${cols.length}`;
     decorateCols(el, cols);
   }
+  if (rows.length && rows.every((row) => row.children.length === 1)) {
+    el.classList.add('centered');
+  }
 }
 
 function detectImageRight(el, rows) {
-  if (el.classList.contains('image-right')) { return; }
   const firstMultiColRow = rows.find((row) => row.children.length >= 2);
   if (!firstMultiColRow) { return; }
   if (!firstMultiColRow.children[0].querySelector('picture, img')) {
