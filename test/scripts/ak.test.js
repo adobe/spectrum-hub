@@ -8,6 +8,7 @@ import {
   localizeUrl,
   decorateLink,
   loadArea,
+  initColorScheme,
 } from '../../scripts/ak.js';
 
 // Minimal config that won't throw inside decorateLink / loadBlock
@@ -219,6 +220,46 @@ describe('ak.js', () => {
       const result = decorateLink(badConfig, a);
       expect(result).to.be.null;
       expect(log.calledOnce).to.be.true;
+    });
+  });
+
+  describe('initColorScheme', () => {
+    afterEach(() => {
+      localStorage.removeItem('color-scheme');
+      localStorage.removeItem('color-scheme-source');
+      document.body.className = '';
+    });
+
+    it('seeds color-scheme from matchMedia and sets source to "os" on first visit', () => {
+      sandbox.stub(window, 'matchMedia').returns({ matches: false });
+      initColorScheme();
+      expect(localStorage.getItem('color-scheme')).to.equal('light-scheme');
+      expect(localStorage.getItem('color-scheme-source')).to.equal('os');
+    });
+
+    it('re-seeds color-scheme from current OS when source is "os"', () => {
+      localStorage.setItem('color-scheme', 'light-scheme');
+      localStorage.setItem('color-scheme-source', 'os');
+      sandbox.stub(window, 'matchMedia').returns({ matches: true }); // OS switched to dark
+      initColorScheme();
+      expect(localStorage.getItem('color-scheme')).to.equal('dark-scheme');
+      expect(localStorage.getItem('color-scheme-source')).to.equal('os');
+    });
+
+    it('applies user-set scheme class to body without touching localStorage', () => {
+      localStorage.setItem('color-scheme', 'dark-scheme');
+      localStorage.setItem('color-scheme-source', 'user');
+      initColorScheme();
+      expect(document.body.classList.contains('dark-scheme')).to.be.true;
+      expect(localStorage.getItem('color-scheme-source')).to.equal('user');
+    });
+
+    it('does not add a class to body when source is "os"', () => {
+      localStorage.setItem('color-scheme', 'dark-scheme');
+      localStorage.setItem('color-scheme-source', 'os');
+      sandbox.stub(window, 'matchMedia').returns({ matches: true });
+      initColorScheme();
+      expect(document.body.classList.contains('dark-scheme')).to.be.false;
     });
   });
 
