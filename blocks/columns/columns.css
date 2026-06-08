@@ -104,7 +104,7 @@
     justify-content: center;
     overflow: hidden;
     
-    background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; 
+    /* background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; /* image fallback */
     box-sizing: border-box;
 
     picture {
@@ -222,7 +222,7 @@
   }
 }
 
-/* columns handle their own grid layouts with the need for `section-metadata` */
+/* columns handle their own grid layouts without the need for `section-metadata` */
 .section > .block-content:has(> .columns-grid-2),
 .section > .block-content:has(> .columns-grid-3) {
   container-name: columns-section;
