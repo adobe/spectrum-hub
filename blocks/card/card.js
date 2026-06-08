@@ -1,5 +1,5 @@
-function buildLinkOut(linkInAEM) {
-  const link = linkInAEM.querySelector('a');
+function buildLinkOut(authoredLink) {
+  const link = authoredLink.querySelector('a');
   if (!link) { return null; }
 
   [...link.childNodes].forEach((node) => {
@@ -17,8 +17,8 @@ function buildLinkOut(linkInAEM) {
   return div;
 }
 
-function buildInternalLink(linkInAEM, hashAware) {
-  const link = linkInAEM.querySelector('a');
+function buildInternalLink(authoredLink, hashAware) {
+  const link = authoredLink.querySelector('a');
   if (!link) { return null; }
   if (hashAware) {
     link.href = `${link.getAttribute('href')}${window.location.hash}`;
@@ -29,48 +29,87 @@ function buildInternalLink(linkInAEM, hashAware) {
   return p;
 }
 
+function createCardGrid(el) {
+  let gridClass;
+  if (el.classList.contains('grid-2')) {
+    gridClass = 'grid-2';
+  } else if (el.classList.contains('grid-3')) {
+    gridClass = 'grid-3';
+  } else if (el.classList.contains('grid-4')) {
+    gridClass = 'grid-4';
+  }
+  if (!gridClass) { return; }
+
+  const wrapperClass = `card-${gridClass}`;
+  if (el.parentElement?.classList.contains(wrapperClass)) { return; }
+
+  const group = [el];
+  let prev = el.previousElementSibling;
+  while (prev?.classList.contains('card') && prev.classList.contains(gridClass)) {
+    group.unshift(prev);
+    prev = prev.previousElementSibling;
+  }
+  let next = el.nextElementSibling;
+  while (next?.classList.contains('card') && next.classList.contains(gridClass)) {
+    group.push(next);
+    next = next.nextElementSibling;
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.classList.add(wrapperClass);
+  group[0].before(wrapper);
+  group.forEach((col) => wrapper.append(col));
+}
+
 export default function init(el) {
   const hashAware = el.classList.contains('hash-aware');
   const rows = [...el.querySelectorAll(':scope > div')];
   let linkOut = null;
   let button = null;
   let contentCell = null;
+  let picContainer = null;
 
   rows.forEach((row) => {
     const cells = [...row.querySelectorAll(':scope > div')];
     const key = cells.length > 1 ? cells[0].textContent.trim().toLowerCase() : '';
-    const linkInAEM = cells.length > 1 ? cells[1] : cells[0];
 
     if (key === 'link-out') {
-      linkOut = buildLinkOut(linkInAEM);
+      linkOut = buildLinkOut(cells[1]);
     } else if (key === 'button') {
-      button = buildInternalLink(linkInAEM, hashAware);
+      button = buildInternalLink(cells[1], hashAware);
     } else {
-      contentCell = linkInAEM;
+      // Image may be in its own column (in horizontal orientations)
+      // or share a column with text (vertical)
+      const picCell = cells.find((cell) => cell.querySelector('picture, img'));
+      if (picCell) {
+        const pic = picCell.querySelector('picture, img');
+        const picPara = pic.closest('p');
+        picContainer = document.createElement('div');
+        picContainer.className = 'card-picture-container';
+        picContainer.append(pic);
+        if (picPara) { picPara.remove(); }
+      }
+      // If multi-column, text is in the non-image cell; if single-column, reuse the same cell
+      contentCell = cells.find((cell) => cell !== picCell) || picCell;
+      if (contentCell) { contentCell.classList.add('card-text-container'); }
     }
     row.remove();
   });
-
-  let picContainer = null;
-  if (contentCell) {
-    const pic = contentCell.querySelector('picture');
-    if (pic) {
-      const picPara = pic.closest('p');
-      picContainer = document.createElement('div');
-      picContainer.className = 'card-picture-container';
-      picContainer.append(pic);
-      if (picPara) { picPara.remove(); }
-    }
-    contentCell.classList.add('card-text-container');
-  }
 
   const content = document.createElement('div');
   content.className = 'card-content';
 
   if (picContainer) { content.append(picContainer); }
-  if (contentCell) { content.append(contentCell); }
-  if (linkOut) { content.append(linkOut); }
+  if (contentCell) {
+    const textContent = document.createElement('div');
+    textContent.className = 'card-text-content';
+    textContent.append(...contentCell.childNodes);
+    contentCell.append(textContent);
+    if (linkOut) { contentCell.append(linkOut); }
+    content.append(contentCell);
+  }
   if (button) { content.append(button); }
 
   el.append(content);
+  createCardGrid(el);
 }
