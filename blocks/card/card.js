@@ -11,6 +11,8 @@ function buildLinkOut(linkCell) {
     }
   });
 
+  link.querySelectorAll('.icon').forEach((icon) => icon.setAttribute('aria-hidden', 'true'));
+
   const div = document.createElement('div');
   div.className = 'card-link-out';
   div.append(link);
@@ -106,10 +108,13 @@ export default function init(el) {
     textContent.className = 'card-text-content';
     textContent.append(...contentCell.childNodes);
     contentCell.append(textContent);
-    if (linkOut) { contentCell.append(linkOut); }
+    // Suppress link-out when card-link is present — nesting <a> inside <a> is invalid HTML
+    if (linkOut && !cardLink) { contentCell.append(linkOut); }
     content.append(contentCell);
   }
   if (cardLink) {
+    const heading = contentCell?.querySelector('h1, h2, h3, h4, h5, h6');
+    if (heading) { cardLink.setAttribute('aria-label', heading.textContent.trim()); }
     cardLink.append(content);
     el.append(cardLink);
   } else {

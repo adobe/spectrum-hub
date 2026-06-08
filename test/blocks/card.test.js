@@ -58,6 +58,24 @@ const WITH_LINK_OUT = `
   </div>
 `;
 
+// Both link-out and card-link rows — card-link should win; link-out must be suppressed
+const WITH_BOTH = `
+  <div>
+    <div>link-out</div>
+    <div><a href="/tools/widgets"><span class="icon icon-openin"></span>Open in new tab</a></div>
+  </div>
+  <div>
+    <div>
+      <h3>Title</h3>
+      <p>Body text</p>
+    </div>
+  </div>
+  <div>
+    <div>card-link</div>
+    <div><a href="/platforms/swc/components/button">Visit the docs</a></div>
+  </div>
+`;
+
 // Content row plus a metadata row that makes the whole card a link
 const WITH_CARD_LINK = `
   <div>
@@ -190,6 +208,10 @@ describe('card block', () => {
     it('wraps link-out text nodes in visually-hidden spans', () => {
       expect(el.querySelector('.card-link-out a .visually-hidden')).to.not.be.null;
     });
+
+    it('sets aria-hidden on icon spans inside the link-out anchor', () => {
+      expect(el.querySelector('.card-link-out .icon').getAttribute('aria-hidden')).to.equal('true');
+    });
   });
 
   describe('button row (clickable card)', () => {
@@ -218,6 +240,30 @@ describe('card block', () => {
     it('does not append the hash when hash-aware class is absent', () => {
       window.history.pushState({}, '', '#section-one');
       expect(el.querySelector('a.card-link').getAttribute('href')).to.equal('/platforms/swc/components/button');
+    });
+
+    it('sets aria-label on card-link from the card heading text', () => {
+      expect(el.querySelector('a.card-link').getAttribute('aria-label')).to.equal('Title');
+    });
+  });
+
+  describe('card-link takes precedence over link-out (no nested anchors)', () => {
+    let el;
+    beforeEach(() => {
+      el = makeCard(WITH_BOTH);
+      init(el);
+    });
+
+    it('renders the card as a clickable card-link', () => {
+      expect(el.querySelector('a.card-link')).to.not.be.null;
+    });
+
+    it('does not render a link-out inside the card-link anchor', () => {
+      expect(el.querySelector('a.card-link .card-link-out')).to.be.null;
+    });
+
+    it('does not render a link-out anywhere in the card', () => {
+      expect(el.querySelector('.card-link-out')).to.be.null;
     });
   });
 
