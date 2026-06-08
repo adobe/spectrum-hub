@@ -11,13 +11,31 @@
   margin: var(--s2-spacing-400) auto;
   border-radius: var(--card-border-radius);
   box-sizing: border-box;
-  /* transition: all 0.25s ease-in-out; */
+  transition: box-shadow 0.25s ease-in-out, transform 0.25s ease-in-out;
+
+  &:has(.card-link:hover) {
+    transform: scale(1.005);
+    box-shadow: 0 2px 8px 0 rgb(from var(--s2-gray-1000) r g b / 16%);
+  }
+
+  &:has(.card-link:active) {
+    transform: scale(0.995);
+    box-shadow: 0 2px 8px 0 rgb(from var(--s2-gray-1000) r g b / 16%);
+  }
+
   
   /* TODO: this needs to change to 1200px after core layouts merge */
   @media (width >= 900px) { 
     max-inline-size: 100%;
   }
   
+  .card-link {
+    display: block;
+    block-size: 100%;
+    text-decoration: none;
+    color: inherit;
+  }
+
   .card-content:not(:has(img, picture)) {
     display: flex;
     justify-content: center;

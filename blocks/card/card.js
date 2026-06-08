@@ -1,5 +1,5 @@
-function buildLinkOut(authoredLink) {
-  const link = authoredLink.querySelector('a');
+function buildLinkOut(linkCell) {
+  const link = linkCell.querySelector('a');
   if (!link) { return null; }
 
   [...link.childNodes].forEach((node) => {
@@ -17,16 +17,16 @@ function buildLinkOut(authoredLink) {
   return div;
 }
 
-function buildInternalLink(authoredLink, hashAware) {
-  const link = authoredLink.querySelector('a');
+function buildCardLink(linkCell, hashAware) {
+  const link = linkCell.querySelector('a');
   if (!link) { return null; }
-  if (hashAware) {
-    link.href = `${link.getAttribute('href')}${window.location.hash}`;
-  }
-  const p = document.createElement('p');
-  p.className = 'card-button-container';
-  p.append(link);
-  return p;
+  const href = hashAware
+    ? `${link.getAttribute('href')}${window.location.hash}`
+    : link.getAttribute('href');
+  const a = document.createElement('a');
+  a.href = href;
+  a.className = 'card-link';
+  return a;
 }
 
 function createCardGrid(el) {
@@ -65,7 +65,7 @@ export default function init(el) {
   const hashAware = el.classList.contains('hash-aware');
   const rows = [...el.querySelectorAll(':scope > div')];
   let linkOut = null;
-  let button = null;
+  let cardLink = null;
   let contentCell = null;
   let picContainer = null;
 
@@ -75,8 +75,8 @@ export default function init(el) {
 
     if (key === 'link-out') {
       linkOut = buildLinkOut(cells[1]);
-    } else if (key === 'button') {
-      button = buildInternalLink(cells[1], hashAware);
+    } else if (key === 'card-link') {
+      cardLink = buildCardLink(cells[1], hashAware);
     } else {
       // Image may be in its own column (in horizontal orientations)
       // or share a column with text (vertical)
@@ -93,6 +93,7 @@ export default function init(el) {
       contentCell = cells.find((cell) => cell !== picCell) || picCell;
       if (contentCell) { contentCell.classList.add('card-text-container'); }
     }
+    // remove the link-out and card-link divs from DOM
     row.remove();
   });
 
@@ -108,8 +109,11 @@ export default function init(el) {
     if (linkOut) { contentCell.append(linkOut); }
     content.append(contentCell);
   }
-  if (button) { content.append(button); }
-
-  el.append(content);
+  if (cardLink) {
+    cardLink.append(content);
+    el.append(cardLink);
+  } else {
+    el.append(content);
+  }
   createCardGrid(el);
 }
