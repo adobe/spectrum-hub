@@ -6,11 +6,7 @@ const { log } = getConfig();
 function handleColorScheme() {
   const { body } = document;
 
-  let currPref = localStorage.getItem('color-scheme');
-  if (!currPref) {
-    currPref = matchMedia('(prefers-color-scheme: dark)')
-      .matches ? 'dark-scheme' : 'light-scheme';
-  }
+  const currPref = localStorage.getItem('color-scheme');
 
   const theme = currPref === 'dark-scheme'
     ? { add: 'light-scheme', remove: 'dark-scheme' }
@@ -19,6 +15,7 @@ function handleColorScheme() {
   body.classList.remove(theme.remove);
   body.classList.add(theme.add);
   localStorage.setItem('color-scheme', theme.add);
+  localStorage.setItem('color-scheme-source', 'user');
   // Re-calculate section schemes
   const sections = document.querySelectorAll('.section');
   for (const section of sections) {

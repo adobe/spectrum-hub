@@ -24,6 +24,7 @@ describe('action-button block', () => {
     document.body.className = '';
     document.body.innerHTML = '';
     localStorage.removeItem('color-scheme');
+    localStorage.removeItem('color-scheme-source');
   });
 
   describe('getLinkProps — title parsing', () => {
@@ -174,6 +175,27 @@ describe('action-button block', () => {
       expect(document.body.classList.contains('dark-scheme')).to.be.false;
     });
 
+    it('sets color-scheme-source to "user" after the toggle button is clicked', () => {
+      localStorage.setItem('color-scheme', 'light-scheme');
+      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      document.body.append(a);
+      actionButton(a);
+      document.body.querySelector('button').click();
+      expect(localStorage.getItem('color-scheme-source')).to.equal('user');
+    });
+
+    it('changes "color-scheme-source" to "user" when toggled', () => {
+      localStorage.setItem('color-scheme', 'light-scheme');
+      localStorage.setItem('color-scheme-source', 'os');
+      document.body.classList.add('light-scheme');
+      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      document.body.append(a);
+      actionButton(a);
+      document.body.querySelector('button').click();
+      expect(localStorage.getItem('color-scheme-source')).to.equal('user');
+      expect(localStorage.getItem('color-scheme')).to.equal('dark-scheme');
+    });
+
     it('click persists the new scheme in localStorage', () => {
       localStorage.setItem('color-scheme', 'light-scheme');
       const a = makeAnchor({ href: '/tools/widgets/scheme' });
@@ -181,17 +203,6 @@ describe('action-button block', () => {
       actionButton(a);
       document.body.querySelector('button').click();
       expect(localStorage.getItem('color-scheme')).to.equal('dark-scheme');
-    });
-
-    it('falls back to matchMedia when localStorage has no entry and saves the result', () => {
-      expect(localStorage.getItem('color-scheme')).to.be.null;
-      const matchMediaStub = sinon.stub(window, 'matchMedia').returns({ matches: true });
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
-      document.body.append(a);
-      actionButton(a);
-      document.body.querySelector('button').click();
-      matchMediaStub.restore();
-      expect(localStorage.getItem('color-scheme')).to.equal('light-scheme');
     });
 
     it('a synthetic click (keyboard-equivalent activation) produces the same result', () => {
