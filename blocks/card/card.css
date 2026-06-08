@@ -12,19 +12,19 @@
   border-radius: var(--card-border-radius);
   box-sizing: border-box;
   /* transition: all 0.25s ease-in-out; */
-
+  
   /* TODO: this needs to change to 1200px after core layouts merge */
   @media (width >= 900px) { 
     max-inline-size: 100%;
   }
-
+  
   .card-content:not(:has(img, picture)) {
     display: flex;
     justify-content: center;
     padding: var(--card-padding-block) var(--card-padding-inline);
     box-sizing: border-box;
     gap: var(--s2-spacing-300);
-
+    
     > .card-text-container {
       padding: 0;
       margin: 0;
@@ -33,17 +33,25 @@
   
   .card-content:has(img, picture) {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 1fr;
     gap: var(--s2-spacing-500);
     padding: 0;
     block-size: 100%;
     box-sizing: border-box;
 
+    @media (width >= 600px) {
+      grid-template-columns: auto 1fr;
+    }
+
     .card-picture-container {
       box-sizing: border-box;
-      inline-size: 180px;
+      inline-size: 100%;
       block-size: auto;
       background-color: var(--s2-gray-600); /* fallback bg color */
+
+      @media (width >= 600px) {
+        inline-size: 180px;
+      }
     }
 
     picture {
@@ -175,6 +183,14 @@
       margin: 0 auto;
       grid-template-columns: repeat(2, 1fr);
     }
+
+    .card-grid-2 .card-content:has(img, picture) {
+      grid-template-columns: 1fr;
+    }
+
+    .card-grid-2 .card-picture-container{
+      inline-size: 100% !important; /* overrides the non-grid picture-container rules */
+    }
   }
 }
 
@@ -192,9 +208,25 @@
     .card-grid-4 {
       grid-template-columns: repeat(2, 1fr);
     }
+
+    .card-grid-2 .card-content:has(img, picture) {
+      grid-template-columns: 1fr;
+    }
+
+    .card-grid-2 .card-picture-container{
+      inline-size: 100% !important; /* overrides the non-grid picture-container rules */
+    }
   }
 
   @container card-grid (width >= 800px) {
+    .card-grid-2 .card-content:has(img, picture) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card-grid-2 .card-picture-container{
+      inline-size: unset;
+    }
+
     .card-grid-3 {
       grid-template-columns: repeat(3, 1fr);
     }
