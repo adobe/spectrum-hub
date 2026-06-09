@@ -1,34 +1,14 @@
 header {
+  --header-border-radius: 12px;
+
   visibility: unset;
   position: sticky;
   inset: 0;
   z-index: var(--sh-z-mobile-menu);
-  isolation: isolate;
-
-  /*
-   * Frosted-glass backdrop on a pseudo-element so the header content stays
-   * crisp. The pseudo-element extends ✨50px below the header bottom so the
-   * mask's soft fade dissipates into page content past the header instead of
-   * inside it, avoiding a hard seam at the bottom edge.
-   */
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 -50px;
-    z-index: -1;
-    pointer-events: none;
-    background-color: rgb(from var(--se-body-background-color) r g b / 80%);
-    backdrop-filter: blur(20px);
-    mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      #000 50%,
-      rgb(0 0 0 / 90%) 60%,
-      rgb(0 0 0 / 70%) 65%,
-      rgb(0 0 0 / 45%) 80%,
-      rgb(0 0 0 / 20%) 92%,
-      transparent 100%);
-  }
+  background-color: var(--s2-gray-100);
+  border-radius: var(--header-border-radius);
+  padding-inline: var(--s2-spacing-300);
+  margin: var(--s2-spacing-100);
 
   .skip-link {
     position: absolute;
@@ -43,7 +23,7 @@ header {
     background-color: var(--s2-gray-25);
     border-radius: 6px;
     padding: var(--s2-spacing-100) var(--s2-spacing-200);
-    transform: translateY(calc(-100% - 4px));
+    transform: translateY(calc(-100% - 12px)); /* 12px is the inset of the skip link itself + the margin around the header */
     transition: transform 0.2s ease;
   }
 
@@ -64,7 +44,7 @@ header {
   }
 
   .header-content {
-    max-width: var(--se-grid-container-width);
+    min-block-size: var(--sh-header-height);
     height: 100%;
     margin-inline: auto;
     display: flex;
@@ -218,7 +198,7 @@ header {
 }
 
 .actions-section {
-  display: none;
+  /* display: none; */
 
   @media (width >= 900px) {
     display: flex;
