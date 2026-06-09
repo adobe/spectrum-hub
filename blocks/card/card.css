@@ -98,8 +98,8 @@
   }
 
   .card-text-container {
-    padding-inline-end: var(--card-padding-inline);
-    margin-block: var(--card-padding-block);
+    padding-inline: var(--card-padding-inline);
+    margin-block-end: var(--card-padding-block);
     display: flex;
     flex-direction: column;
     gap: var(--s2-spacing-100);
@@ -108,6 +108,11 @@
     & h3,
     & p {
       margin: 0;
+    }
+
+    @media (width >= 600px) {
+      padding-inline-start: 0;
+      margin-block: var(--card-padding-block);
     }
   }
 
