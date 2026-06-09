@@ -279,16 +279,30 @@ function decorateHeader() {
 }
 
 export function initColorScheme() {
-  const scheme = localStorage.getItem('color-scheme');
-  const colorSchemeSource = localStorage.getItem('color-scheme-source');
+  const osQuery = matchMedia('(prefers-color-scheme: dark)');
 
-  if (!scheme || colorSchemeSource === 'os') {
-    const osScheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark-scheme' : 'light-scheme';
-    localStorage.setItem('color-scheme-source', 'os');
-    localStorage.setItem('color-scheme', osScheme);
-  } else {
-    document.body.classList.add(scheme);
+  function applyScheme(name) {
+    document.body.classList.remove('light-scheme', 'dark-scheme');
+    document.body.classList.add(name);
+    localStorage.setItem('color-scheme', name);
   }
+
+  function syncFromOs() {
+    applyScheme(osQuery.matches ? 'dark-scheme' : 'light-scheme');
+    localStorage.setItem('color-scheme-source', 'os');
+  }
+
+  const scheme = localStorage.getItem('color-scheme');
+  const source = localStorage.getItem('color-scheme-source');
+
+  if (!scheme || source !== 'user') {
+    syncFromOs();
+  } else {
+    applyScheme(scheme);
+  }
+
+  osQuery.addEventListener('change', syncFromOs);
+  return () => osQuery.removeEventListener('change', syncFromOs);
 }
 
 function decorateDoc() {

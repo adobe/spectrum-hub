@@ -224,15 +224,23 @@ describe('ak.js', () => {
   });
 
   describe('initColorScheme', () => {
+    let cleanupColorScheme;
+
+    function fakeMediaQuery(matches) {
+      return { matches, addEventListener: sinon.spy(), removeEventListener: sinon.spy() };
+    }
+
     afterEach(() => {
+      cleanupColorScheme?.();
+      cleanupColorScheme = null;
       localStorage.removeItem('color-scheme');
       localStorage.removeItem('color-scheme-source');
       document.body.className = '';
     });
 
     it('seeds color-scheme from matchMedia and sets source to "os" on first visit', () => {
-      sandbox.stub(window, 'matchMedia').returns({ matches: false });
-      initColorScheme();
+      sandbox.stub(window, 'matchMedia').returns(fakeMediaQuery(false));
+      cleanupColorScheme = initColorScheme();
       expect(localStorage.getItem('color-scheme')).to.equal('light-scheme');
       expect(localStorage.getItem('color-scheme-source')).to.equal('os');
     });
@@ -240,8 +248,8 @@ describe('ak.js', () => {
     it('re-seeds color-scheme from current OS when source is "os"', () => {
       localStorage.setItem('color-scheme', 'light-scheme');
       localStorage.setItem('color-scheme-source', 'os');
-      sandbox.stub(window, 'matchMedia').returns({ matches: true }); // OS switched to dark
-      initColorScheme();
+      sandbox.stub(window, 'matchMedia').returns(fakeMediaQuery(true)); // OS switched to dark
+      cleanupColorScheme = initColorScheme();
       expect(localStorage.getItem('color-scheme')).to.equal('dark-scheme');
       expect(localStorage.getItem('color-scheme-source')).to.equal('os');
     });
@@ -249,17 +257,47 @@ describe('ak.js', () => {
     it('applies user-set scheme class to body without touching localStorage', () => {
       localStorage.setItem('color-scheme', 'dark-scheme');
       localStorage.setItem('color-scheme-source', 'user');
-      initColorScheme();
+      sandbox.stub(window, 'matchMedia').returns(fakeMediaQuery(false));
+      cleanupColorScheme = initColorScheme();
       expect(document.body.classList.contains('dark-scheme')).to.be.true;
       expect(localStorage.getItem('color-scheme-source')).to.equal('user');
     });
 
-    it('does not add a class to body when source is "os"', () => {
-      localStorage.setItem('color-scheme', 'dark-scheme');
+    it('applies OS-derived scheme class to body when source is "os"', () => {
+      localStorage.setItem('color-scheme', 'light-scheme');
       localStorage.setItem('color-scheme-source', 'os');
-      sandbox.stub(window, 'matchMedia').returns({ matches: true });
-      initColorScheme();
-      expect(document.body.classList.contains('dark-scheme')).to.be.false;
+      sandbox.stub(window, 'matchMedia').returns(fakeMediaQuery(true)); // OS is dark
+      cleanupColorScheme = initColorScheme();
+      expect(document.body.classList.contains('dark-scheme')).to.be.true;
+    });
+
+    it('resets source to "os" and updates scheme when OS changes after user toggle', () => {
+      let changeListener;
+      const fakeQuery = {
+        matches: false,
+        addEventListener: (_, fn) => { changeListener = fn; },
+        removeEventListener: sinon.spy(),
+      };
+      sandbox.stub(window, 'matchMedia').returns(fakeQuery);
+      localStorage.setItem('color-scheme', 'dark-scheme');
+      localStorage.setItem('color-scheme-source', 'user');
+      cleanupColorScheme = initColorScheme();
+
+      fakeQuery.matches = true; // OS switches to dark
+      changeListener();
+
+      expect(localStorage.getItem('color-scheme')).to.equal('dark-scheme');
+      expect(localStorage.getItem('color-scheme-source')).to.equal('os');
+      expect(document.body.classList.contains('dark-scheme')).to.be.true;
+    });
+
+    it('cleanup removes the OS change listener', () => {
+      const fakeQuery = fakeMediaQuery(false);
+      sandbox.stub(window, 'matchMedia').returns(fakeQuery);
+      cleanupColorScheme = initColorScheme();
+      cleanupColorScheme();
+      cleanupColorScheme = null;
+      expect(fakeQuery.removeEventListener.calledOnce).to.be.true;
     });
   });
 
