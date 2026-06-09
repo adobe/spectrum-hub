@@ -167,13 +167,14 @@
   }
 
   /* TODO: design is still ongoing, so do we need to support buttons in cards? or are those being removed? */
-  /* .card-content:has(.card-button-container) { */
-    /* border: 1px solid red; */
-    /* display: flex; */
-    /* flex-direction: column; */
-    /* display: grid; */
-    /* grid-template-columns: 0.2fr 0.8fr; */
-  /* } */
+  
+  /* .card-content:has(.card-button-container) {
+    border: 1px solid red;
+    display: flex;
+    flex-direction: column;
+    display: grid;
+    grid-template-columns: 0.2fr 0.8fr;
+  } */
 }
 
 .card.vertical {

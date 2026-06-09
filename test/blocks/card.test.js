@@ -112,7 +112,10 @@ describe('card block', () => {
 
   describe('single-column card with image', () => {
     let el;
-    beforeEach(() => { el = makeCard(SINGLE_COL_WITH_IMAGE); init(el); });
+    beforeEach(() => {
+      el = makeCard(SINGLE_COL_WITH_IMAGE);
+      init(el);
+    });
 
     it('creates a card-picture-container', () => {
       expect(el.querySelector('.card-picture-container')).to.not.be.null;
@@ -148,7 +151,10 @@ describe('card block', () => {
 
   describe('single-column card without image', () => {
     let el;
-    beforeEach(() => { el = makeCard(SINGLE_COL_NO_IMAGE); init(el); });
+    beforeEach(() => {
+      el = makeCard(SINGLE_COL_NO_IMAGE);
+      init(el);
+    });
 
     it('does not create a card-picture-container', () => {
       expect(el.querySelector('.card-picture-container')).to.be.null;
@@ -165,7 +171,10 @@ describe('card block', () => {
 
   describe('multi-column card with image in its own column', () => {
     let el;
-    beforeEach(() => { el = makeCard(MULTI_COL_WITH_IMAGE); init(el); });
+    beforeEach(() => {
+      el = makeCard(MULTI_COL_WITH_IMAGE);
+      init(el);
+    });
 
     it('creates a card-picture-container', () => {
       expect(el.querySelector('.card-picture-container')).to.not.be.null;
@@ -188,7 +197,10 @@ describe('card block', () => {
 
   describe('link-out row', () => {
     let el;
-    beforeEach(() => { el = makeCard(WITH_LINK_OUT); init(el); });
+    beforeEach(() => {
+      el = makeCard(WITH_LINK_OUT);
+      init(el);
+    });
 
     it('creates a card-link-out element', () => {
       expect(el.querySelector('.card-link-out')).to.not.be.null;
@@ -216,7 +228,10 @@ describe('card block', () => {
 
   describe('button row (clickable card)', () => {
     let el;
-    beforeEach(() => { el = makeCard(WITH_CARD_LINK); init(el); });
+    beforeEach(() => {
+      el = makeCard(WITH_CARD_LINK);
+      init(el);
+    });
 
     it('wraps card-content in a card-link anchor', () => {
       expect(el.querySelector('a.card-link > .card-content')).to.not.be.null;
@@ -269,7 +284,10 @@ describe('card block', () => {
 
   describe('card without button row', () => {
     let el;
-    beforeEach(() => { el = makeCard(SINGLE_COL_NO_IMAGE); init(el); });
+    beforeEach(() => {
+      el = makeCard(SINGLE_COL_NO_IMAGE);
+      init(el);
+    });
 
     it('appends card-content directly to the card element', () => {
       expect(el.querySelector(':scope > .card-content')).to.not.be.null;
