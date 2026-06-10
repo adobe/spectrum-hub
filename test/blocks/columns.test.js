@@ -54,6 +54,30 @@ const IMAGE_LEFT = `
   </div>
 `;
 
+const TWO_UP_TEXT = `
+  <div>
+    <div><h3>Title A</h3><p>Content A</p></div>
+    <div><h3>Title B</h3><p>Content B</p></div>
+  </div>
+  <div>
+    <div><h3>Title C</h3><p>Content C</p></div>
+    <div><h3>Title D</h3><p>Content D</p></div>
+  </div>
+`;
+
+const THREE_UP_MIXED_ROWS = `
+  <div>
+    <div><picture><img src="a.jpg" alt=""></picture></div>
+    <div><picture><img src="b.jpg" alt=""></picture></div>
+    <div><picture><img src="c.jpg" alt=""></picture></div>
+  </div>
+  <div>
+    <div><h3>Title A</h3><p>Content A</p></div>
+    <div><h3>Title B</h3><p>Content B</p></div>
+    <div><h3>Title C</h3><p>Content C</p></div>
+  </div>
+`;
+
 const IMAGE_RIGHT_BARE_IMG = `
   <div>
     <div><p>Content</p></div>
@@ -163,6 +187,57 @@ describe('columns block', () => {
       el = makeEl(ALL_SINGLE_COL_ROWS);
       init(el);
       expect(el.classList.contains('image-right')).to.be.false;
+    });
+
+    it('does not add "image-right" when all columns are text-only (two-up grid)', () => {
+      el = makeEl(TWO_UP_TEXT);
+      init(el);
+      expect(el.classList.contains('image-right')).to.be.false;
+    });
+
+    it('does not add "image-right" when all columns in a row are images (three-up grid)', () => {
+      el = makeEl(THREE_UP_MIXED_ROWS);
+      init(el);
+      expect(el.classList.contains('image-right')).to.be.false;
+    });
+  });
+
+  describe('multi-up grid detection', () => {
+    it('adds "multi-up" and "multi-up-2" for two-up text rows', () => {
+      el = makeEl(TWO_UP_TEXT);
+      init(el);
+      expect(el.classList.contains('multi-up')).to.be.true;
+      expect(el.classList.contains('multi-up-2')).to.be.true;
+    });
+
+    it('adds "multi-up" and "multi-up-3" when rows alternate all-image and all-text', () => {
+      el = makeEl(THREE_UP_MIXED_ROWS);
+      init(el);
+      expect(el.classList.contains('multi-up')).to.be.true;
+      expect(el.classList.contains('multi-up-3')).to.be.true;
+    });
+
+    it('sets order on cells so same-position cols group together on mobile', () => {
+      el = makeEl(THREE_UP_MIXED_ROWS);
+      init(el);
+      const [row1, row2] = el.querySelectorAll('.row');
+      // 2 rows total: order = colIndex * 2 + rowIndex
+      expect(row1.children[0].style.order).to.equal('0'); // col0, row0
+      expect(row2.children[0].style.order).to.equal('1'); // col0, row1
+      expect(row1.children[1].style.order).to.equal('2'); // col1, row0
+      expect(row2.children[1].style.order).to.equal('3'); // col1, row1
+    });
+
+    it('does not add "multi-up" when a row mixes image and text columns', () => {
+      el = makeEl(IMAGE_LEFT);
+      init(el);
+      expect(el.classList.contains('multi-up')).to.be.false;
+    });
+
+    it('does not add "multi-up" when every row is single-column', () => {
+      el = makeEl(ALL_SINGLE_COL_ROWS);
+      init(el);
+      expect(el.classList.contains('multi-up')).to.be.false;
     });
   });
 

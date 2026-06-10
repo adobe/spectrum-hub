@@ -40,18 +40,18 @@
       --image-size: 100%;
     }
 
-    &:not(.small, .medium, .large, .align-start, .centered) > .row {
+    &:not(.small, .medium, .large, .align-start, .centered, .multi-up) > .row {
       display: grid;
     }
 
     /* xs/default will snap to the 2-column layout at 600px (except for when the image is on the right */
-    &:not(.small, .medium, .large, .image-right, .centered) > .row {
+    &:not(.small, .medium, .large, .image-right, .centered, .multi-up) > .row {
       grid-template-columns: var(--image-size) auto;
     }
 
     @container columns (width > 530px) {
       /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
-      &.small:not(.align-start, .image-right, .centered) > .row {
+      &.small:not(.align-start, .image-right, .centered, .multi-up) > .row {
         display: grid;
         grid-template-columns: var(--image-size) auto;
       }
@@ -103,7 +103,6 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    
     background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; /* image fallback */
     box-sizing: border-box;
 
@@ -210,6 +209,38 @@
 
     .row {
       align-items: start;
+    }
+  }
+
+  /* multi-up: uniform rows (all-image or all-text, never mixed within a row).
+    Mobile: single-column grid with CSS order grouping same-position cols together.
+    Desktop: N-column grid with explicit grid-column placement via @media. */
+  &.multi-up {
+    --image-size: var(--s-image-size);
+
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--s2-spacing-800) var(--columns-gap);
+
+    .row {
+      display: contents;
+    }
+
+  }
+
+  &.multi-up-2 {
+    @media (width >= 688px) {
+      grid-template-columns: repeat(2, 1fr);
+
+      .col { grid-row: var(--row-idx); }
+    }
+  }
+
+  &.multi-up-3 {
+    @media (width >= 1060px) {
+      grid-template-columns: repeat(3, 1fr);
+
+      .col { grid-row: var(--row-idx); }
     }
   }
 }
