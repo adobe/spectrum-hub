@@ -104,7 +104,7 @@
     justify-content: center;
     overflow: hidden;
     
-    /* background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; /* image fallback */
+    background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; /* image fallback */
     box-sizing: border-box;
 
     picture {
@@ -221,47 +221,3 @@
     --image-size: 100%;
   }
 }
-
-/* columns handle their own grid layouts without the need for `section-metadata` */
-.section > .block-content:has(> .columns-grid-2),
-.section > .block-content:has(> .columns-grid-3) {
-  container-name: columns-section;
-  container-type: inline-size;
-}
-
-.columns-grid-2,
-.columns-grid-3 {
-  max-inline-size: var(--se-grid-container-width);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--s2-spacing-800);
-}
-
-@container columns-section (width >= 900px) {
-  .columns-grid-2 {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--s2-spacing-800) var(--s2-spacing-400);
-  }
-}
-
-@media (width >= 1200px) {
-  .columns-grid-2,
-  .columns-grid-3 {
-    max-inline-size: 100%;
-    margin: unset;
-  }
-
-  @container columns-section (width >= 940px) {
-    .columns-grid-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-}
-
-.columns-grid-2 .columns,
-.columns-grid-3 .columns {
-  max-inline-size: 100%;
-  margin-block: 0;
-}
-
