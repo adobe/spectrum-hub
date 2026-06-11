@@ -40,18 +40,18 @@
       --image-size: 100%;
     }
 
-    &:not(.small, .medium, .large, .align-start, .centered, .multi-up) > .row {
+    &:not(.small, .medium, .large, .align-start, .centered, .grid-layout) > .row {
       display: grid;
     }
 
     /* xs/default will snap to the 2-column layout at 600px (except for when the image is on the right */
-    &:not(.small, .medium, .large, .image-right, .centered, .multi-up) > .row {
+    &:not(.small, .medium, .large, .image-right, .centered, .grid-layout) > .row {
       grid-template-columns: var(--image-size) auto;
     }
 
     @container columns (width > 530px) {
       /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
-      &.small:not(.align-start, .image-right, .centered, .multi-up) > .row {
+      &.small:not(.align-start, .image-right, .centered, .grid-layout) > .row {
         display: grid;
         grid-template-columns: var(--image-size) auto;
       }
@@ -211,36 +211,49 @@
       align-items: start;
     }
   }
+}
 
-  /* multi-up: uniform rows (all-image or all-text, never mixed within a row).
-    Mobile: single-column grid with CSS order grouping same-position cols together.
-    Desktop: N-column grid with explicit grid-column placement via @media. */
-  &.multi-up {
-    --image-size: var(--s-image-size);
+/* grid-layout: uniform rows (all-image or all-text, never mixed within a row).
+Small screens: single-column grid with CSS order grouping same-position cols together.
+Large screens: N-column grid driven by container queries on the inner grid wrapper. */
+.columns.grid-layout {
+  --image-size: var(--s-image-size);
 
+  .grid-container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--s2-spacing-800) var(--columns-gap);
-
-    .row {
-      display: contents;
-    }
-
+    gap: var(--columns-gap);
   }
 
-  &.multi-up-2 {
-    @media (width >= 688px) {
-      grid-template-columns: repeat(2, 1fr);
+  .row {
+    display: contents;
+  }
 
-      .col { grid-row: var(--row-idx); }
+  .col {
+    margin-block-end: calc(56px - var(--columns-gap)); /* we want a total of 56px between images and their text, so include any authored gap value. */
+  }
+
+  &.grid-layout-2 {
+    @container columns (width >= 800px) {
+      .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .col {
+        grid-row: var(--row-idx);
+      }
     }
   }
 
-  &.multi-up-3 {
-    @media (width >= 1060px) {
-      grid-template-columns: repeat(3, 1fr);
+  &.grid-layout-3 {
+    @container columns (width >= 1000px) {
+      .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+      }
 
-      .col { grid-row: var(--row-idx); }
+      .col {
+        grid-row: var(--row-idx);
+      }
     }
   }
 }

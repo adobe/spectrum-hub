@@ -202,19 +202,19 @@ describe('columns block', () => {
     });
   });
 
-  describe('multi-up grid detection', () => {
-    it('adds "multi-up" and "multi-up-2" for two-up text rows', () => {
+  describe('column grid detection', () => {
+    it('adds "grid-layout" and "grid-layout-2" for two-up text rows', () => {
       el = makeEl(TWO_UP_TEXT);
       init(el);
-      expect(el.classList.contains('multi-up')).to.be.true;
-      expect(el.classList.contains('multi-up-2')).to.be.true;
+      expect(el.classList.contains('grid-layout')).to.be.true;
+      expect(el.classList.contains('grid-layout-2')).to.be.true;
     });
 
-    it('adds "multi-up" and "multi-up-3" when rows alternate all-image and all-text', () => {
+    it('adds "grid-layout" and "grid-layout-3" when rows alternate all-image and all-text', () => {
       el = makeEl(THREE_UP_MIXED_ROWS);
       init(el);
-      expect(el.classList.contains('multi-up')).to.be.true;
-      expect(el.classList.contains('multi-up-3')).to.be.true;
+      expect(el.classList.contains('grid-layout')).to.be.true;
+      expect(el.classList.contains('grid-layout-3')).to.be.true;
     });
 
     it('sets order on cells so same-position cols group together on mobile', () => {
@@ -228,16 +228,16 @@ describe('columns block', () => {
       expect(row2.children[1].style.order).to.equal('3'); // col1, row1
     });
 
-    it('does not add "multi-up" when a row mixes image and text columns', () => {
+    it('does not add "grid-layout" when a row mixes image and text columns', () => {
       el = makeEl(IMAGE_LEFT);
       init(el);
-      expect(el.classList.contains('multi-up')).to.be.false;
+      expect(el.classList.contains('grid-layout')).to.be.false;
     });
 
-    it('does not add "multi-up" when every row is single-column', () => {
+    it('does not add "grid-layout" when every row is single-column', () => {
       el = makeEl(ALL_SINGLE_COL_ROWS);
       init(el);
-      expect(el.classList.contains('multi-up')).to.be.false;
+      expect(el.classList.contains('grid-layout')).to.be.false;
     });
   });
 
