@@ -96,17 +96,17 @@ describe('card block', () => {
     document.body.innerHTML = '';
   });
 
-  describe('card-content wrapper', () => {
-    it('always creates a card-content div', () => {
+  describe('card-content-container wrapper', () => {
+    it('always creates a card-content-container div', () => {
       const el = makeCard(SINGLE_COL_NO_IMAGE);
       init(el);
-      expect(el.querySelector('.card-content')).to.not.be.null;
+      expect(el.querySelector('.card-content-container')).to.not.be.null;
     });
 
     it('removes all original authored rows', () => {
       const el = makeCard(SINGLE_COL_WITH_IMAGE);
       init(el);
-      expect(el.querySelectorAll(':scope > div:not(.card-content)').length).to.equal(0);
+      expect(el.querySelectorAll(':scope > div:not(.card-content-container)').length).to.equal(0);
     });
   });
 
@@ -129,8 +129,8 @@ describe('card block', () => {
       expect(el.querySelector('.card-text-container > p > picture')).to.be.null;
     });
 
-    it('places card-picture-container before card-text-container inside card-content', () => {
-      const content = el.querySelector('.card-content');
+    it('places card-picture-container before card-text-container inside card-content-container', () => {
+      const content = el.querySelector('.card-content-container');
       expect(content.firstElementChild.classList.contains('card-picture-container')).to.be.true;
     });
 
@@ -233,8 +233,8 @@ describe('card block', () => {
       init(el);
     });
 
-    it('wraps card-content in a card-link anchor', () => {
-      expect(el.querySelector('a.card-link > .card-content')).to.not.be.null;
+    it('wraps card-content-container in a card-link anchor', () => {
+      expect(el.querySelector('a.card-link > .card-content-container')).to.not.be.null;
     });
 
     it('sets the correct href on card-link', () => {
@@ -289,8 +289,8 @@ describe('card block', () => {
       init(el);
     });
 
-    it('appends card-content directly to the card element', () => {
-      expect(el.querySelector(':scope > .card-content')).to.not.be.null;
+    it('appends card-content-container directly to the card element', () => {
+      expect(el.querySelector(':scope > .card-content-container')).to.not.be.null;
     });
 
     it('does not create a card-link anchor', () => {
@@ -298,48 +298,4 @@ describe('card block', () => {
     });
   });
 
-  describe('createCardGrid', () => {
-    function attachCards(...cards) {
-      const wrapper = document.createElement('div');
-      wrapper.append(...cards);
-      document.body.append(wrapper);
-      return wrapper;
-    }
-
-    it('wraps a grid-2 card in a card-grid-2 container', () => {
-      const el = makeCard(SINGLE_COL_NO_IMAGE, 'grid-2');
-      const wrapper = attachCards(el);
-      init(el);
-      expect(wrapper.querySelector('.card-grid-2')).to.not.be.null;
-    });
-
-    it('groups all adjacent grid-2 siblings into one wrapper', () => {
-      const cards = [
-        makeCard(SINGLE_COL_NO_IMAGE, 'grid-2'),
-        makeCard(SINGLE_COL_NO_IMAGE, 'grid-2'),
-        makeCard(SINGLE_COL_NO_IMAGE, 'grid-2'),
-      ];
-      const wrapper = attachCards(...cards);
-      init(cards[0]);
-      expect(wrapper.querySelectorAll('.card-grid-2 > .card').length).to.equal(3);
-    });
-
-    it('does not double-wrap when init is called on a card already inside a grid wrapper', () => {
-      const [c1, c2] = [
-        makeCard(SINGLE_COL_NO_IMAGE, 'grid-2'),
-        makeCard(SINGLE_COL_NO_IMAGE, 'grid-2'),
-      ];
-      const wrapper = attachCards(c1, c2);
-      init(c1);
-      init(c2);
-      expect(wrapper.querySelectorAll('.card-grid-2').length).to.equal(1);
-    });
-
-    it('does not wrap a card that has no grid class', () => {
-      const el = makeCard(SINGLE_COL_NO_IMAGE);
-      const wrapper = attachCards(el);
-      init(el);
-      expect(wrapper.querySelector('.card-grid-2, .card-grid-3, .card-grid-4')).to.be.null;
-    });
-  });
 });

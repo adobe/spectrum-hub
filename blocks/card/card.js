@@ -31,37 +31,6 @@ function buildCardLink(linkCell, hashAware) {
   return a;
 }
 
-function createCardGrid(el) {
-  let gridClass;
-  if (el.classList.contains('grid-2')) {
-    gridClass = 'grid-2';
-  } else if (el.classList.contains('grid-3')) {
-    gridClass = 'grid-3';
-  } else if (el.classList.contains('grid-4')) {
-    gridClass = 'grid-4';
-  }
-  if (!gridClass) { return; }
-
-  const wrapperClass = `card-${gridClass}`;
-  if (el.parentElement?.classList.contains(wrapperClass)) { return; }
-
-  const group = [el];
-  let prev = el.previousElementSibling;
-  while (prev?.classList.contains('card') && prev.classList.contains(gridClass)) {
-    group.unshift(prev);
-    prev = prev.previousElementSibling;
-  }
-  let next = el.nextElementSibling;
-  while (next?.classList.contains('card') && next.classList.contains(gridClass)) {
-    group.push(next);
-    next = next.nextElementSibling;
-  }
-
-  const wrapper = document.createElement('div');
-  wrapper.classList.add(wrapperClass);
-  group[0].before(wrapper);
-  group.forEach((col) => wrapper.append(col));
-}
 
 export default function init(el) {
   const hashAware = el.classList.contains('hash-aware');
@@ -100,7 +69,7 @@ export default function init(el) {
   });
 
   const content = document.createElement('div');
-  content.className = 'card-content';
+  content.className = 'card-content-container';
 
   if (picContainer) { content.append(picContainer); }
   if (contentCell) {
@@ -120,5 +89,4 @@ export default function init(el) {
   } else {
     el.append(content);
   }
-  createCardGrid(el);
 }

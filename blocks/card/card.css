@@ -45,7 +45,7 @@
     color: inherit;
   }
 
-  .card-content:not(:has(img, picture)) {
+  .card-content-container:not(:has(img, picture)) {
     display: flex;
     justify-content: center;
     padding: var(--card-padding-block) var(--card-padding-inline);
@@ -58,7 +58,7 @@
     }
   }
   
-  .card-content:has(img, picture) {
+  .card-content-container:has(img, picture) {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--s2-spacing-500);
@@ -168,7 +168,7 @@
 
   /* TODO: design is still ongoing, so do we need to support buttons in cards? or are those being removed? */
   
-  /* .card-content:has(.card-button-container) {
+  /* .card-content-container:has(.card-button-container) {
     border: 1px solid red;
     display: flex;
     flex-direction: column;
@@ -180,101 +180,18 @@
 .card.vertical {
   max-inline-size: 50%;
 
-  .card-content {
+  .card-content-container {
     display: flex;
     flex-direction: column;
     gap: 0;
   }
 
-  .card-content:has(img, picture) .card-picture-container {
+  .card-content-container:has(img, picture) .card-picture-container {
     inline-size: 100%;
   }
 
-  .card-content:has(.card-text-container) .card-text-container {
+  .card-content-container:has(.card-text-container) .card-text-container {
     padding: var(--card-padding-block) var(--card-padding-inline);
     margin: 0;
-  }
-}
-
-.block-content:has(.card-grid-2, .card-grid-3, .card-grid-4) {
-  container-name: card-grid;
-  container-type: inline-size;
-}
-
-.card-grid-2,
-.card-grid-3,
-.card-grid-4 {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--s2-spacing-400);
-  max-inline-size: var(--se-grid-container-width);
-  margin: 0 auto;
-
-  > .card {
-    margin: 0;
-    max-inline-size: 100%;
-  }
-}
-
-@media (width >= 600px) {
-  @container card-grid (width >= 800px) {
-    .card-grid-2,
-    .card-grid-4 {
-      margin: 0 auto;
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .card-grid-2 .card-content:has(img, picture) {
-      grid-template-columns: 1fr;
-    }
-
-    .card-grid-2 .card-picture-container{
-      inline-size: 100% !important; /* overrides the non-grid picture-container rules */
-    }
-  }
-}
-
-/* TODO: this needs to change to 1200px after core layouts merge */
-@media (width >= 900px) {
-  .card-grid-2,
-  .card-grid-3,
-  .card-grid-4 {
-    max-inline-size: unset;
-    margin: 0;
-  }
-
-  @container card-grid (width >= 700px) {
-    .card-grid-2,
-    .card-grid-4 {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .card-grid-2 .card-content:has(img, picture) {
-      grid-template-columns: 1fr;
-    }
-
-    .card-grid-2 .card-picture-container{
-      inline-size: 100% !important; /* overrides the non-grid picture-container rules */
-    }
-  }
-
-  @container card-grid (width >= 800px) {
-    .card-grid-2 .card-content:has(img, picture) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .card-grid-2 .card-picture-container{
-      inline-size: unset;
-    }
-
-    .card-grid-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @container card-grid (width >= 800px) {
-    .card-grid-4 {
-      grid-template-columns: repeat(4, 1fr);
-    }
   }
 }
