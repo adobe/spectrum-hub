@@ -297,5 +297,4 @@ describe('card block', () => {
       expect(el.querySelector('a.card-link')).to.be.null;
     });
   });
-
 });

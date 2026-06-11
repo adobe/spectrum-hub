@@ -31,7 +31,6 @@ function buildCardLink(linkCell, hashAware) {
   return a;
 }
 
-
 export default function init(el) {
   const hashAware = el.classList.contains('hash-aware');
   const rows = [...el.querySelectorAll(':scope > div')];
