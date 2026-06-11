@@ -13,5 +13,13 @@
         }
       }
     }
+
+    /* TODO: .section.container is used on the pattern library page for cards.
+    Double check that this breakpoint doesn't conflict with the core layout blocks. */
+    @media (width >= 1200px) {
+      .section.container > .block-content {
+        max-inline-size: 100%;
+      }
+    }
   }
 }
