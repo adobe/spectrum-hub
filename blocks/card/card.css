@@ -6,12 +6,14 @@
   overflow-wrap: break-word;
   box-shadow: 0 1px 6px 0 rgb(from var(--s2-gray-1000) r g b / 12%);
   background-color: var(--s2-gray-25);
-  max-inline-size: var(--se-grid-container-width);
+  inline-size: 100%;
   overflow: hidden;
   margin: var(--s2-spacing-400) auto;
   border-radius: var(--card-border-radius);
   box-sizing: border-box;
   transition: all 0.25s ease-in-out;
+  container-name: card-container;
+  container-type: inline-size;
 
   &:has(.card-link:hover) {
     transform: scale(1.005);
@@ -30,12 +32,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
-  }
-
-  
-  /* TODO: this needs to change to 1200px after core layouts merge */
-  @media (width >= 900px) { 
-    max-inline-size: 100%;
   }
   
   .card-link {
@@ -66,7 +62,7 @@
     block-size: 100%;
     box-sizing: border-box;
 
-    @media (width >= 600px) {
+    @container card-container (width >= 400px) {
       grid-template-columns: auto 1fr;
     }
 
@@ -76,7 +72,7 @@
       block-size: auto;
       background-color: var(--s2-gray-600); /* fallback bg color */
 
-      @media (width >= 600px) {
+      @container card-container (width >= 400px) {
         inline-size: 180px;
       }
     }
@@ -110,7 +106,7 @@
       margin: 0;
     }
 
-    @media (width >= 600px) {
+    @container card-container (width >= 400px) {
       padding-inline-start: 0;
       margin-block: var(--card-padding-block);
     }
@@ -178,8 +174,6 @@
 }
 
 .card.vertical {
-  max-inline-size: 50%;
-
   .card-content-container {
     display: flex;
     flex-direction: column;
