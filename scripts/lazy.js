@@ -9,10 +9,24 @@ async function loadSidekick() {
   if (sk) { import('../tools/sidekick/sidekick.js').then((mod) => mod.default(sk)); }
 }
 
+function loadSpectrumTheme() {
+  if (!document.body) return;
+  const theme = document.createElement('sp-theme');
+  theme.setAttribute('system', 'spectrum-two');
+  theme.setAttribute('scale', 'medium');
+  theme.style.display = 'contents';
+  while (document.body.firstChild) theme.append(document.body.firstChild);
+  document.body.append(theme);
+}
+
 (function loadLazy() {
   import('./utils/lazyhash.js');
   import('./utils/favicon.js');
   import('./utils/footer.js').then(({ default: footer }) => footer());
+  import('./utils/global-sidenav.js').then(({ default: globalSidenav }) => {
+    loadSpectrumTheme();
+    globalSidenav();
+  });
 
   // Author facing tools
   if (ENV !== 'prod') {
