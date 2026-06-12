@@ -1,0 +1,41 @@
+.section-sidenav {
+  display: block;
+  position: sticky;
+  inset: 0;
+  inline-size: min-content;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-inline: 8px;
+}
+
+.section-sidenav ue-sidenav {
+  --mod-underlay-background-color: transparent;
+  --ue-sidenav-background-color: var(--s2-gray-50);
+  --ue-sidenav-toggle-icon-color: currentcolor;
+  --ue-sidenav-selection-indicator-color: currentcolor;
+  --ue-sidenav-selection-indicator-color-hover: currentcolor;
+  --ue-sidenav-parent-indicator-color-hover: currentcolor;
+  --ue-sidenav-selection-indicator-block-size: 18px;
+  --ue-sidenav-corner-radius-full: 2px;
+  --ue-sidenav-selection-indicator-inline-size: 2px;
+  --ue-sidenav-selection-indicator-margin-block-start: 8px;
+  --ue-sidenav-selection-indicator-inline-offset: 2px;
+  --ue-sidenav-item-block-size: 32px;
+  --ue-sidenav-item-focus-indicator-gap: 2px;
+  --ue-sidenav-focus-indicator-border-width: 2px;
+  --ue-sidenav-focus-indicator-color: var(--s2-blue-900);
+  --ue-sidenav-focus-indicator-border-radius: 12px;
+  --ue-sidenav-tooltip-background-color-default: var(--s2-gray-800);
+  --ue-sidenav-tooltip-content-color-default: var(--s2-gray-25);
+}
+
+
+@media (width >= 900px) {
+  .section-sidenav {
+    display: contents;
+  }
+
+  .section-sidenav ue-sidenav::part(toggle-button) {
+    display: none;
+  }
+}
