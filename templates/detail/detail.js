@@ -6,16 +6,20 @@ export default async function init() {
   const wrapper = document.createElement('div');
   wrapper.className = 'template-wrapper';
 
-  const sitenav = document.createElement('nav');
-  sitenav.className = 'sitenav';
+  const navRail = document.createElement('section');
+  navRail.className = 'nav-rail';
+
+  const sitenav = document.createElement('div');
+  sitenav.className = 'section-sidenav';
   sitenav.setAttribute('aria-label', 'Second-level site navigation');
 
   const pageNav = document.createElement('nav');
   pageNav.className = 'page-nav';
   pageNav.setAttribute('aria-label', 'On this page');
 
-  await Promise.all([loadBlock(sitenav), loadBlock(pageNav)]);
-
+  navRail.append(sitenav);
   main.replaceWith(wrapper);
-  wrapper.append(sitenav, main, pageNav);
+  wrapper.append(navRail, main, pageNav);
+
+  await Promise.all([loadBlock(sitenav), loadBlock(pageNav)]);
 }
