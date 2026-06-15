@@ -53,86 +53,43 @@ async function decorateActionSection(section) {
   section.setAttribute('aria-label', 'Additional site actions');
 }
 
-function addMobileNavListeners(button, navElement) {
-  let isOpen = false;
+function addMobileNavListeners(button) {
   button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-controls', 'main-nav-list');
+  button.setAttribute('aria-controls', 'main-nav-list'); // can i add this id to the nav element in ue-sidenav
   button.setAttribute('aria-label', 'Open mobile navigation');
 
-  function closeNav() {
-    isOpen = false;
-    navElement.classList.remove('open');
-    navElement.classList.add('closed');
-    button.setAttribute('aria-expanded', 'false');
-    button.setAttribute('aria-label', 'Open mobile navigation');
-  }
-
   button.addEventListener('click', () => {
-    if (isOpen) {
-      closeNav();
-    } else {
-      isOpen = true;
-      navElement.classList.add('open');
-      navElement.classList.remove('closed');
-      button.setAttribute('aria-expanded', 'true');
-      button.setAttribute('aria-label', 'Close mobile navigation');
-    }
-  });
+    const globalNav = document.querySelector('.global-sidenav ue-sidenav');
+    if (!globalNav) { return; }
+    globalNav.handleToggle();
+    const { isOpen } = globalNav;
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isOpen) {
-      closeNav();
-      button.focus();
-    }
-  });
+    const sectionNav = document.querySelector('.section-sidenav ue-sidenav');
+    if (sectionNav) { sectionNav.handleToggle(); }
 
-  document.addEventListener('click', (e) => {
-    if (isOpen && !navElement.contains(e.target)) { closeNav(); }
-  });
-
-  navElement.addEventListener('focusout', (e) => {
-    if (isOpen && !navElement.contains(e.relatedTarget)) { closeNav(); }
-  });
-
-  window.matchMedia('(width >= 800px)').addEventListener('change', (e) => {
-    if (e.matches && isOpen) { closeNav(); }
+    button.setAttribute('aria-expanded', String(isOpen));
+    button.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
   });
 }
 
 function createMobileNavButton(fragment) {
-  const mainNav = fragment.querySelector('.main-nav-section');
+  let target = fragment.querySelector('.main-nav-section');
+  if (!target) {
+    target = document.createElement('div');
+    target.classList.add('main-nav-section');
+    const lastSection = [...fragment.querySelectorAll(':scope > .section')].at(-1);
+    if (lastSection) {
+      fragment.insertBefore(target, lastSection);
+    } else {
+      fragment.append(target);
+    }
+  }
 
   const mobileNavButton = document.createElement('button');
   mobileNavButton.classList.add('mobile-nav-button');
-  mobileNavButton.setAttribute('aria-controls', 'main-nav-list');
   mobileNavButton.innerHTML = `${HAMBURGER_MENU_ICON}`;
-  addMobileNavListeners(mobileNavButton, mainNav);
-
-  mainNav.prepend(mobileNavButton);
-}
-
-function createMobileNavItems(nav, actions) {
-  const mobileNav = document.createElement('nav');
-  mobileNav.classList.add('mobile-nav');
-  mobileNav.setAttribute('id', 'main-nav-list');
-  mobileNav.setAttribute('aria-label', 'Mobile navigation');
-
-  const navList = document.createElement('ul');
-  navList.setAttribute('aria-label', 'Main navigation');
-  nav.querySelectorAll('li').forEach((item) => {
-    navList.append(item.cloneNode(true));
-  });
-
-  const divider = document.createElement('hr');
-
-  const actionsList = document.createElement('ul');
-  actionsList.setAttribute('aria-label', 'Site actions');
-  actions.querySelectorAll('li').forEach((item) => {
-    actionsList.append(item.cloneNode(true));
-  });
-
-  mobileNav.append(navList, divider, actionsList);
-  nav.append(mobileNav);
+  addMobileNavListeners(mobileNavButton);
+  target.prepend(mobileNavButton);
 }
 
 async function decorateHeader(fragment) {
@@ -149,11 +106,9 @@ async function decorateHeader(fragment) {
   let navElement;
   if (nav) {
     navElement = decorateNavSection(nav);
-    createMobileNavButton(fragment);
   }
+  createMobileNavButton(fragment);
   if (actions) { decorateActionSection(actions); }
-
-  if (navElement && actions) { createMobileNavItems(navElement, actions); }
 }
 
 /**
