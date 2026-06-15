@@ -5,7 +5,6 @@
   inline-size: min-content;
   border-radius: 12px;
   overflow: hidden;
-  margin-inline: 8px;
 }
 
 .section-sidenav ue-sidenav {
@@ -33,6 +32,9 @@
 @media (width >= 900px) {
   .section-sidenav {
     display: contents;
+    inset: unset;
+    top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
+    block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 16px);
   }
 
   .section-sidenav ue-sidenav::part(toggle-button) {

@@ -32,5 +32,8 @@
 @media (width >= 900px) {
   .global-sidenav {
     display: contents;
+    inset: unset;
+    top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
+    block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 16px);
   }
 }

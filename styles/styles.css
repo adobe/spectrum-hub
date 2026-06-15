@@ -311,9 +311,10 @@
 
   /* nav */
   --sh-header-height: 56px;
+  --sh-sitenav-rail-width: 56px;
   --sh-z-pagenav: 1; /* in-page TOC */
-  --sh-z-sitenav: 2; /* section nav mobile disclosure; above page-nav */
-  --sh-z-mobile-menu: 3; /* header mobile-nav drawer; above all section chrome */
+  --sh-z-sitenav: 2; /* section nav; above page-nav */
+  --sh-z-mobile-menu: 3; /* header; above all section chrome */
 
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);
@@ -359,6 +360,10 @@ div[data-status],
       font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
+
+      @media (width >= 900px) {
+        padding-inline-start: var(--sh-sitenav-rail-width);
+      }
 
       header {
         visibility: hidden;
