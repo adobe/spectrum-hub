@@ -15,6 +15,27 @@ body {
     rgb(17 17 17) 100%);
 }
 
+@media (width >= 900px) {
+  .home-template {
+    padding-inline-start: 0;
+
+    .template-wrapper {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--s2-spacing-700);
+      max-inline-size: 100%;
+      box-sizing: border-box;
+
+      .global-sidenav {
+        display: block;
+        position: sticky;
+        z-index: auto;
+        isolation: auto;
+      }
+    }
+  }
+}
+
 body.home-template {
   background-image: var(--s2-home-gradient-light);
 
