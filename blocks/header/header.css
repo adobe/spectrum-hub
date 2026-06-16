@@ -5,7 +5,7 @@ header {
   position: sticky;
   inset: 0;
   z-index: var(--sh-z-mobile-menu);
-  background-color: var(--s2-gray-100);
+  background-color: var(--s2-gray-50);
   border-radius: var(--header-border-radius);
   padding-inline: var(--s2-spacing-300);
 
