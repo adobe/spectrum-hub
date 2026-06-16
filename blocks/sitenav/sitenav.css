@@ -1,6 +1,6 @@
 .sitenav {
   position: sticky;
-  top: var(--sitenav-top-offset, var(--sh-nav-height, 0));
+  top: var(--sitenav-top-offset, var(--sh-header-height, 0));
   z-index: var(--sh-z-sitenav); /* lift above sibling <main> so the overlay list can paint on top */
   align-self: start;
   font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
@@ -12,7 +12,7 @@
   isolation: isolate;
 
   @media (width >= 1200px) {
-    max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+    max-block-size: calc(100vh - var(--sh-header-height, 0px));
     overflow-y: auto;
   }
 }
@@ -29,7 +29,7 @@
   position: absolute;
   inset-block-start: 100%;
   inset-inline: 0;
-  max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+  max-block-size: calc(100vh - var(--sh-header-height, 0px));
   overflow-y: auto;
   background-color: var(--se-body-background-color);
   z-index: var(--sh-z-sitenav);

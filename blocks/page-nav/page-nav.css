@@ -1,6 +1,6 @@
 .page-nav {
   position: sticky;
-  inset-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
+  inset-block-start: calc(var(--sh-header-height, 56px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
   z-index: var(--sh-z-pagenav); /* above <main>; below sitenav mobile disclosure */
   align-self: start;
   font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
@@ -9,10 +9,10 @@
   color: var(--se-body-color, #000);
 
   @media (width >= 1200px) {
-    max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+    max-block-size: calc(100vh - var(--sh-header-height, 0px));
     overflow-block: auto;
     padding-block: var(--s2-spacing-200);
-    inset-block-start: var(--sh-nav-height, 80px);
+    inset-block-start: var(--sh-header-height, 56px);
   }
 
   & ul {
@@ -38,7 +38,7 @@
   position: absolute;
   inset-block-start: 100%;
   inset-inline: 0;
-  max-block-size: calc(100vh - var(--sh-nav-height, 0px));
+  max-block-size: calc(100vh - var(--sh-header-height, 0px));
   overflow-y: auto;
   padding: var(--s2-spacing-200);
   background-color: var(--se-body-background-color);
@@ -132,9 +132,9 @@ the sticky chrome. Mobile leaves room for the site header AND the page-nav summa
 needs to clear the site header (the page-nav lives in the side rail, not above content). The 60px is an
 estimate of the summary's rendered height. */
 .page-nav-target {
-  scroll-margin-block-start: calc(var(--sh-nav-height, 80px) + var(--sitenav-summary-height, 0px) + 60px); /* TODO: account for height of the collapsed sitenav */
+  scroll-margin-block-start: calc(var(--sh-header-height, 56px) + var(--sitenav-summary-height, 0px) + 60px); /* TODO: account for height of the collapsed sitenav */
 
   @media (width >= 1200px) {
-    scroll-margin-block-start: var(--sh-nav-height, 80px);
+    scroll-margin-block-start: var(--sh-header-height, 56px);
   }
 }

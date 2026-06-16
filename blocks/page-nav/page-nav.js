@@ -38,7 +38,7 @@ function watchScrollSpy(headings, currentLabel, linkById, fallbackLabel) {
   // the moment it scrolls under the sticky chrome. Bottom -50% keeps it
   // from activating until it's well into the viewport.
   const navHeight = getComputedStyle(document.documentElement)
-    .getPropertyValue('--sh-nav-height').trim() || '80px';
+    .getPropertyValue('--sh-header-height').trim() || '56px';
   const rootMargin = `-${navHeight} 0px -50% 0px`;
 
   const observer = new IntersectionObserver((entries) => {

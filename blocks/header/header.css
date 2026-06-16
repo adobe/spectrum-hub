@@ -198,8 +198,6 @@ header {
 }
 
 .actions-section {
-  /* display: none; */
-
   @media (width >= 900px) {
     display: flex;
   }

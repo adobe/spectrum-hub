@@ -105,7 +105,7 @@ Other color scales follow the same pattern: `--s2-red-*`, `--s2-orange-*`, `--s2
 --se-grid-container-width  (83.4% up to 1500px at 1800px+)
 --se-grid-column-width     (container / 12)
 --se-grid-gutter-width     (8.3%)
---sh-nav-height            (80px)
+--sh-header-height         (56px)
 ```
 
 #### Spectrum Edge conveniences
