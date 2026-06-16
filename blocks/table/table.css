@@ -111,6 +111,25 @@
     }
   }
 
+  .table-download {
+    display: block;
+    margin-block-start: var(--s2-spacing-300);
+    margin-inline-start: auto;
+    padding-block: var(--s2-spacing-100);
+    padding-inline: var(--s2-spacing-300);
+    background: none;
+    border: var(--table-border-width) solid var(--s2-gray-300);
+    border-radius: var(--s2-corner-radius-100);
+    color: var(--s2-gray-700);
+    cursor: pointer;
+    font-size: var(--s2-component-m-regular-font-size);
+
+    &:hover {
+      background-color: var(--s2-gray-75);
+      border-color: var(--s2-gray-500);
+    }
+  }
+
   /* TODO: for designer/developer toggles */
 
   /* .heading-toggle {

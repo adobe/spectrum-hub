@@ -71,6 +71,30 @@ const buildTable = (rows) => {
   return buildTableElement(headerCells, dataCells);
 };
 
+const escapeCSVCell = (value) => {
+  const str = value == null ? '' : String(value);
+  if (/[,"\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+  return str;
+};
+
+const buildDownloadButton = (rows, properties, filename) => {
+  const button = document.createElement('button');
+  button.className = 'table-download';
+  button.textContent = 'Download CSV';
+  button.addEventListener('click', () => {
+    const header = properties.map((key) => escapeCSVCell(PROPS_TO_LABELS[key] || key));
+    const dataRows = rows.map((row) => properties.map((key) => escapeCSVCell(row[key] ?? '')));
+    const csv = [header, ...dataRows].map((row) => row.join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+  return button;
+};
+
 // supports populating data table with extracted JSON via a link
 const buildDataTable = async (href) => {
   const resp = await fetch(href);
@@ -107,15 +131,19 @@ const buildDataTable = async (href) => {
     return tableCell;
   }));
 
-  return buildTableElement(headerCells, dataCells);
+  return { table: buildTableElement(headerCells, dataCells), rows, properties };
 };
 
 export default async function init(el) {
   const dataHref = el.querySelector('a[href$=".json"]')?.href;
 
   if (dataHref) {
-    const table = await buildDataTable(dataHref);
-    if (table) { el.replaceChildren(table); }
+    const result = await buildDataTable(dataHref);
+    if (result) {
+      const { table, rows, properties } = result;
+      const filename = dataHref.split('/').pop().replace(/\.json$/, '.csv');
+      el.replaceChildren(table, buildDownloadButton(rows, properties, filename));
+    }
   } else {
     const table = buildTable([...el.children]);
     el.replaceChildren(table);

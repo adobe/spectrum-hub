@@ -344,5 +344,58 @@ describe('table block', () => {
       await init(el);
       expect(el.querySelector('table')).to.be.null;
     });
+
+    it('renders a .table-download button after the table', async () => {
+      stubFetchOk(PROPS.slice(0, 1));
+      const el = makeDataEl();
+      await init(el);
+      const btn = el.querySelector('.table-download');
+      expect(btn).to.not.be.null;
+      expect(btn.tagName).to.equal('BUTTON');
+      expect(btn.textContent).to.equal('Download CSV');
+    });
+
+    it('does not render a .table-download button when fetch fails', async () => {
+      sandbox.stub(window, 'fetch').resolves(new Response('', { status: 500 }));
+      const el = makeDataEl();
+      await init(el);
+      expect(el.querySelector('.table-download')).to.be.null;
+    });
+
+    it('clicking the download button creates a CSV blob and revokes the URL', async () => {
+      stubFetchOk(PROPS.slice(0, 1));
+      const el = makeDataEl('https://example.com/Button.json');
+      await init(el);
+
+      const createdBlobs = [];
+      const fakeUrl = 'blob:fake';
+      sandbox.stub(URL, 'createObjectURL').callsFake((blob) => {
+        createdBlobs.push(blob);
+        return fakeUrl;
+      });
+      const revokeStub = sandbox.stub(URL, 'revokeObjectURL');
+
+      // stub the temporary anchor so it doesn't navigate
+      const origCreate = document.createElement.bind(document);
+      sandbox.stub(document, 'createElement').callsFake((tag) => {
+        const node = origCreate(tag);
+        if (tag === 'a') { sandbox.stub(node, 'click'); }
+        return node;
+      });
+
+      el.querySelector('.table-download').click();
+
+      expect(createdBlobs).to.have.length(1);
+      expect(createdBlobs[0].type).to.equal('text/csv');
+      expect(revokeStub.calledOnceWith(fakeUrl)).to.be.true;
+    });
+  });
+
+  describe('when content authors manually create a table (no JSON link)', () => {
+    it('does not render a .table-download button', async () => {
+      const el = makeEl(MOCK_TABLE);
+      await init(el);
+      expect(el.querySelector('.table-download')).to.be.null;
+    });
   });
 });
