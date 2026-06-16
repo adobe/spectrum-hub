@@ -10,7 +10,7 @@ const ACTIONS_HTML = '<ul><li><a href="/search">Search</a></li></ul>';
 function makeFragmentHTML({ brand = BRAND_HTML, nav = NAV_HTML, actions = ACTIONS_HTML } = {}) {
   return `<!DOCTYPE html><html><body><main>
     <div>${brand}</div>
-    <div>${nav}</div>
+    ${nav != null ? `<div>${nav}</div>` : ''}
     <div>${actions}</div>
   </main></body></html>`;
 }
@@ -153,6 +153,33 @@ describe('header block', () => {
 
     it('includes action links in the mobile nav list', () => {
       expect(el.querySelector('#main-nav-list a[href="/search"]')).to.not.be.null;
+    });
+  });
+
+  describe('header without nav section', () => {
+    beforeEach(async () => {
+      stubFetch(sandbox, makeFragmentHTML({ nav: null }));
+      await init(el);
+    });
+
+    it('does not render a main nav section', () => {
+      expect(el.querySelector('nav.main-nav-section')).to.be.null;
+    });
+
+    it('does not render a mobile nav button', () => {
+      expect(el.querySelector('button.mobile-nav-button')).to.be.null;
+    });
+
+    it('does not render a mobile nav list', () => {
+      expect(el.querySelector('#main-nav-list')).to.be.null;
+    });
+
+    it('still renders the brand section', () => {
+      expect(el.querySelector('.brand-section')).to.not.be.null;
+    });
+
+    it('still renders the actions section', () => {
+      expect(el.querySelector('.actions-section')).to.not.be.null;
     });
   });
 
