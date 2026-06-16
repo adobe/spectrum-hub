@@ -353,7 +353,7 @@ div[data-status],
       display: grid;
       grid-template-rows: auto 1fr auto;
       min-height: 100svh;
-      margin: 0;
+      margin: var(--s2-spacing-100);
       background-color: var(--se-body-background-color);
       color: var(--se-body-color);
       font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;

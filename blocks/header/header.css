@@ -8,7 +8,6 @@ header {
   background-color: var(--s2-gray-100);
   border-radius: var(--header-border-radius);
   padding-inline: var(--s2-spacing-300);
-  margin: var(--s2-spacing-100);
 
   .skip-link {
     position: absolute;
