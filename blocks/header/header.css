@@ -3,7 +3,7 @@ header {
 
   visibility: unset;
   position: sticky;
-  inset: 0;
+  inset: var(--s2-spacing-100); /* matches the margin around the `body` so the header doesn't scroll */
   z-index: var(--sh-z-mobile-menu);
   background-color: var(--s2-gray-50);
   border-radius: var(--header-border-radius);
