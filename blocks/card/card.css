@@ -33,12 +33,13 @@
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
-  
+
   .card-link {
     display: block;
     block-size: 100%;
     text-decoration: none;
     color: inherit;
+    outline: none;
   }
 
   .card-content-container:not(:has(img, picture)) {
@@ -47,16 +48,17 @@
     padding: var(--card-padding-block) var(--card-padding-inline);
     box-sizing: border-box;
     gap: var(--s2-spacing-300);
-    
+
     > .card-text-container {
       padding: 0;
       margin: 0;
     }
   }
-  
+
   .card-content-container:has(img, picture) {
     display: grid;
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
     gap: var(--s2-spacing-500);
     padding: 0;
     block-size: 100%;
@@ -64,13 +66,14 @@
 
     @container card-container (width >= 400px) {
       grid-template-columns: auto 1fr;
+      grid-template-rows: 1fr;
     }
 
     .card-picture-container {
       box-sizing: border-box;
       inline-size: 100%;
-      block-size: auto;
-      background-color: var(--s2-gray-600); /* fallback bg color */
+      overflow: hidden;
+      background-color: var(--s2-gray-600);
 
       @container card-container (width >= 400px) {
         inline-size: 180px;
@@ -78,18 +81,16 @@
     }
 
     picture {
-      box-sizing: border-box;
-      display: flex;
-      align-self: stretch;
-      flex: 1;
+      display: block;
       inline-size: 100%;
       block-size: 100%;
     }
 
     img {
       inline-size: 100%;
-      block-size: auto;
-      object-fit: contain;
+      block-size: 100%;
+      object-fit: cover;
+      display: block;
     }
   }
 
@@ -124,53 +125,18 @@
     gap: var(--s2-spacing-100);
   }
 
-  .card-text-container:not(:has(p)) {
-    justify-content: center;
-  }
-
-  .card-link-out > a {
+  .card-link-out {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: inherit;
-    min-inline-size: 24px;
-    min-block-size: 24px;
+    inline-size: 24px !important;
+    block-size: 24px;
 
-    &:focus-visible {
-      outline: 2px solid var(--s2-blue-900);
-      outline-offset: var(--s2-spacing-50);
-      border-radius: var(--s2-corner-radius-100); /* outline width + outline offset */
+    > svg {
+      inline-size: 20px;
+      block-size: 20px;
     }
   }
-
-  .card-button-container {
-    padding-inline-start: var(--s2-spacing-300);
-    margin: 0;
-    display: flex;
-    justify-content: start;
-
-    > a {
-      box-sizing: border-box;
-      min-block-size: var(--se-component-m-height);
-      padding-inline: 16px;
-      padding-block: 7px;
-      border-radius: calc(var(--se-component-m-height) + 4px / 2 ); /* min-height / 2 + border width on top/bottom */
-      background-color: transparent;
-      color: var(--s2-gray-800);
-      text-decoration: none;
-      border: 2px solid var(--s2-gray-800);
-    }
-  }
-
-  /* TODO: design is still ongoing, so do we need to support buttons in cards? or are those being removed? */
-  
-  /* .card-content-container:has(.card-button-container) {
-    border: 1px solid red;
-    display: flex;
-    flex-direction: column;
-    display: grid;
-    grid-template-columns: 0.2fr 0.8fr;
-  } */
 }
 
 .card.vertical {
@@ -182,10 +148,12 @@
 
   .card-content-container:has(img, picture) .card-picture-container {
     inline-size: 100%;
+    aspect-ratio: 16/9;
   }
 
   .card-content-container:has(.card-text-container) .card-text-container {
     padding: var(--card-padding-block) var(--card-padding-inline);
     margin: 0;
+    flex: 1;
   }
 }
