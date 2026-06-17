@@ -139,6 +139,10 @@
   }
 }
 
+.card:not(.vertical) .card-text-container:not(:has(p)) {
+  justify-content: center;
+}
+
 .card.vertical {
   .card-content-container {
     display: flex;
