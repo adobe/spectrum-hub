@@ -12,10 +12,10 @@ header {
   .skip-link {
     position: absolute;
     z-index: 1;
-    inset-inline-start: 4px;
-    inset-block-start: 4px;
-    width: auto;
-    height: auto;
+    inset-inline-start: var(--s2-spacing-75);
+    inset-block-start: var(--s2-spacing-75);
+    inline-size: auto;
+    block-size: auto;
     overflow: visible;
     white-space: normal;
     clip-path: none;
@@ -29,7 +29,7 @@ header {
   .skip-link:focus-visible {
     transform: translateY(0);
     outline: 2px solid var(--s2-blue-900);
-    outline-offset: 2px;
+    outline-offset: var(--s2-spacing-50);
   }
 
   p {
@@ -44,7 +44,7 @@ header {
 
   .header-content {
     min-block-size: var(--sh-header-height);
-    height: 100%;
+    block-size: 100%;
     margin-inline: auto;
     display: flex;
     align-items: center;
@@ -62,8 +62,8 @@ header {
   picture, svg {
     flex: 0 0 auto;
     display: block;
-    width: 32px;
-    height: 32px;
+    inline-size: 32px;
+    block-size: var(--se-component-m-height);
   }
 
   a {
@@ -108,7 +108,7 @@ header {
   a {
     display: flex;
     align-items: center;
-    min-height: 48px;
+    min-block-size: 48px;
     border-radius: 24px;
     padding-inline: var(--s2-spacing-300);
     transition: background-color 0.2s ease-in-out;
@@ -119,7 +119,7 @@ header {
 
     &:focus-visible {
       outline: 2px solid var(--s2-blue-900);
-      outline-offset: 2px;
+      outline-offset: var(--s2-spacing-50);
     }
   }
 
@@ -139,7 +139,7 @@ header {
 
     &:focus-visible {
       outline: 2px solid var(--s2-blue-900);
-      outline-offset: 2px;
+      outline-offset: var(--s2-spacing-50);
     }
 
     @media (width >= 900px) {
@@ -188,8 +188,8 @@ header {
         display: block;
         content: '';
         background-color: var(--s2-gray-200);
-        width: 2px;
-        height: 32px;
+        inline-size: 2px;
+        block-size: var(--se-component-m-height);
         border-radius: var(--se-corner-radius-50);
       }
     }
@@ -207,7 +207,7 @@ header {
 
   & button:focus-visible {
     outline: 2px solid var(--s2-blue-900);
-    outline-offset: 2px;
+    outline-offset: var(--s2-spacing-50);
   }
 
   ul {
@@ -225,7 +225,7 @@ header {
 
     &:focus-visible {
       outline: 2px solid var(--s2-blue-900);
-      outline-offset: 2px;
+      outline-offset: var(--s2-spacing-50);
     }
   }
 }
