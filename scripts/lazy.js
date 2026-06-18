@@ -15,6 +15,13 @@ function loadSpectrumTheme() {
   theme.setAttribute('system', 'spectrum-two');
   theme.setAttribute('scale', 'medium');
   theme.style.display = 'contents';
+
+  const syncColor = () => {
+    theme.setAttribute('color', document.body.classList.contains('dark-scheme') ? 'dark' : 'light');
+  };
+  syncColor();
+  new MutationObserver(syncColor).observe(document.body, { attributeFilter: ['class'] });
+
   while (document.body.firstChild) theme.append(document.body.firstChild);
   document.body.append(theme);
 }
