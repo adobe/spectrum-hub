@@ -25,20 +25,33 @@ function stubRailFetch(sandbox, html = RAIL_HTML, ok = true) {
   });
 }
 
+function stubAnimationFrame(sandbox) {
+  sandbox.stub(window, 'requestAnimationFrame').callsFake((cb) => {
+    cb(performance.now());
+    return 1;
+  });
+}
+
+async function flush(el, predicate, message = 'Timed out waiting for hub-global-sidenav to settle') {
+  for (let i = 0; i < 20; i += 1) {
+    /* eslint-disable no-await-in-loop */
+    await el.updateComplete;
+    if (predicate()) { return; }
+    await new Promise((r) => { setTimeout(r, 0); });
+    /* eslint-enable no-await-in-loop */
+  }
+  throw new Error(message);
+}
+
 // connectedCallback fetches the rail fragment asynchronously, then re-renders.
 // Wait until the items have rendered (or give up after a few ticks).
 async function mountAndWait(isMobile, sandbox) {
+  stubAnimationFrame(sandbox);
   stubMatchMedia(sandbox, isMobile);
   stubRailFetch(sandbox);
   const el = document.createElement('hub-global-sidenav');
   document.body.append(el);
-  for (let i = 0; i < 20; i += 1) {
-    /* eslint-disable no-await-in-loop */
-    await el.updateComplete;
-    if (el.shadowRoot.querySelector('.hub-global-sidenav-item-btn')) { break; }
-    await new Promise((r) => { setTimeout(r, 0); });
-    /* eslint-enable no-await-in-loop */
-  }
+  await flush(el, () => Boolean(el.shadowRoot.querySelector('.hub-global-sidenav-item-btn')));
   return el;
 }
 
@@ -241,6 +254,37 @@ describe('hub-global-sidenav block', () => {
       await el.updateComplete;
 
       expect(document.activeElement).to.equal(trigger);
+    });
+
+    it('moves focus to the first global sidenav item when the mobile drawer opens', async () => {
+      const el = await mountAndWait(true, sandbox);
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await flush(el, () => el.shadowRoot.activeElement === el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'));
+
+      expect(el.shadowRoot.activeElement).to.equal(
+        el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'),
+      );
+    });
+
+    it('wraps Tab from the close button back to the first global sidenav item on mobile', async () => {
+      const el = await mountAndWait(true, sandbox);
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await flush(
+        el,
+        () => Boolean(el._trapKeyHandler)
+          && el.shadowRoot.activeElement === el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'),
+      );
+
+      const firstItem = el.shadowRoot.querySelector('.hub-global-sidenav-item-btn');
+      const closeButton = el.shadowRoot.querySelector('.hub-global-sidenav-close');
+      closeButton.focus();
+      await flush(el, () => el.shadowRoot.activeElement === closeButton);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+
+      expect(el.shadowRoot.activeElement).to.equal(firstItem);
     });
   });
 });
