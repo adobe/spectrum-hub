@@ -104,13 +104,24 @@ describe('header block', () => {
   });
 
   describe('header mobile navigation', () => {
+    let toggleSpy;
+
     beforeEach(async () => {
+      toggleSpy = sandbox.spy();
+      document.addEventListener('hub:sidenav-toggle', toggleSpy);
       stubFetch(sandbox);
       await init(el);
     });
 
-    it('creates a mobile nav button inside the nav section', () => {
-      expect(el.querySelector('nav.main-nav-section button.mobile-nav-button')).to.not.be.null;
+    afterEach(() => {
+      document.removeEventListener('hub:sidenav-toggle', toggleSpy);
+    });
+
+    it('creates a mobile nav button in its own container after the brand section', () => {
+      const brand = el.querySelector('.brand-section');
+      const triggerContainer = brand?.nextElementSibling;
+      expect(triggerContainer?.classList.contains('mobile-nav')).to.be.true;
+      expect(triggerContainer?.querySelector('.mobile-nav-button')).to.not.be.null;
     });
 
     it('sets the mobile nav button aria-expanded to "false" initially', () => {
@@ -118,41 +129,43 @@ describe('header block', () => {
       expect(button.getAttribute('aria-expanded')).to.equal('false');
     });
 
-    it('opens the nav and sets aria-expanded="true" when the button is clicked', () => {
+    it('exposes dialog trigger semantics on the mobile nav button', () => {
+      const button = el.querySelector('button.mobile-nav-button');
+      expect(button.getAttribute('type')).to.equal('button');
+      expect(button.getAttribute('aria-haspopup')).to.equal('dialog');
+      expect(button.getAttribute('aria-controls')).to.equal('hub-global-sidenav');
+      expect(button.getAttribute('aria-label')).to.equal('Open navigation menu');
+    });
+
+    it('opens the global sidenav and updates button state when clicked', () => {
       const button = el.querySelector('button.mobile-nav-button');
       button.click();
+
       expect(button.getAttribute('aria-expanded')).to.equal('true');
-      expect(el.querySelector('nav.main-nav-section').classList.contains('open')).to.be.true;
+      expect(button.getAttribute('aria-label')).to.equal('Close navigation menu');
+      expect(toggleSpy.calledOnce).to.be.true;
+      expect(toggleSpy.firstCall.args[0].detail).to.deep.equal({ open: true });
     });
 
-    it('closes the nav and sets aria-expanded="false" when the button is clicked again', () => {
+    it('closes the global sidenav and updates button state when clicked again', () => {
       const button = el.querySelector('button.mobile-nav-button');
       button.click();
       button.click();
+
       expect(button.getAttribute('aria-expanded')).to.equal('false');
-      expect(el.querySelector('nav.main-nav-section').classList.contains('open')).to.be.false;
+      expect(button.getAttribute('aria-label')).to.equal('Open navigation menu');
+      expect(toggleSpy.calledTwice).to.be.true;
+      expect(toggleSpy.secondCall.args[0].detail).to.deep.equal({ open: false });
     });
 
-    it('closes the open nav when Escape is pressed', () => {
+    it('resets the button state when the global sidenav closes', () => {
       const button = el.querySelector('button.mobile-nav-button');
       button.click();
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-closed'));
+
       expect(button.getAttribute('aria-expanded')).to.equal('false');
-      expect(el.querySelector('nav.main-nav-section').classList.contains('open')).to.be.false;
-    });
-
-    it('creates a mobile nav list with id="main-nav-list" and aria-label', () => {
-      const mobileNav = el.querySelector('#main-nav-list');
-      expect(mobileNav).to.not.be.null;
-      expect(mobileNav.getAttribute('aria-label')).to.equal('Mobile navigation');
-    });
-
-    it('includes nav links in the mobile nav list', () => {
-      expect(el.querySelector('#main-nav-list a[href="/docs"]')).to.not.be.null;
-    });
-
-    it('includes action links in the mobile nav list', () => {
-      expect(el.querySelector('#main-nav-list a[href="/search"]')).to.not.be.null;
+      expect(button.getAttribute('aria-label')).to.equal('Open navigation menu');
     });
   });
 
@@ -166,8 +179,11 @@ describe('header block', () => {
       expect(el.querySelector('nav.main-nav-section')).to.be.null;
     });
 
-    it('does not render a mobile nav button', () => {
-      expect(el.querySelector('button.mobile-nav-button')).to.be.null;
+    it('still renders a mobile nav button after the brand section', () => {
+      const brand = el.querySelector('.brand-section');
+      const triggerContainer = brand?.nextElementSibling;
+      expect(triggerContainer?.classList.contains('mobile-nav')).to.be.true;
+      expect(triggerContainer?.querySelector('button.mobile-nav-button')).to.not.be.null;
     });
 
     it('does not render a mobile nav list', () => {

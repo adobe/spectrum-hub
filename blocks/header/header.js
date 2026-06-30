@@ -5,6 +5,7 @@ import { loadFragment } from '../fragment/fragment.js';
 const { locale } = getConfig();
 
 const HEADER_PATH = '/fragments/nav/header';
+const GLOBAL_SIDENAV_ID = 'hub-global-sidenav';
 const HAMBURGER_MENU_ICON = `
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="currentColor">
     <path d="m16.25,14H3.75c-.41406,0-.75.33594-.75.75s.33594.75.75.75h12.5c.41406,0,.75-.33594.75-.75s-.33594-.75-.75-.75Z"/>
@@ -14,8 +15,7 @@ const HAMBURGER_MENU_ICON = `
 
 function createSkipLink() {
   const skipLink = document.createElement('a');
-  skipLink.classList.add('skip-link');
-  skipLink.classList.add('visually-hidden');
+  skipLink.classList.add('skip-link', 'visually-hidden');
   skipLink.href = '#main-content';
   skipLink.innerText = 'Skip to main content';
   return skipLink;
@@ -53,86 +53,50 @@ async function decorateActionSection(section) {
   section.setAttribute('aria-label', 'Additional site actions');
 }
 
-function addMobileNavListeners(button, navElement) {
-  let isOpen = false;
+function addMobileNavListeners(button) {
+  button.type = 'button';
+  button.setAttribute('aria-haspopup', 'dialog');
+  button.setAttribute('aria-controls', GLOBAL_SIDENAV_ID);
   button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-controls', 'main-nav-list');
-  button.setAttribute('aria-label', 'Open mobile navigation');
+  button.setAttribute('aria-label', 'Open navigation menu');
 
-  function closeNav() {
-    isOpen = false;
-    navElement.classList.remove('open');
-    navElement.classList.add('closed');
-    button.setAttribute('aria-expanded', 'false');
-    button.setAttribute('aria-label', 'Open mobile navigation');
-  }
+  let navOpen = false;
+
+  const setNavState = (open) => {
+    navOpen = open;
+    button.setAttribute('aria-expanded', String(navOpen));
+    button.setAttribute('aria-label', navOpen ? 'Close navigation menu' : 'Open navigation menu');
+  };
 
   button.addEventListener('click', () => {
-    if (isOpen) {
-      closeNav();
-    } else {
-      isOpen = true;
-      navElement.classList.add('open');
-      navElement.classList.remove('closed');
-      button.setAttribute('aria-expanded', 'true');
-      button.setAttribute('aria-label', 'Close mobile navigation');
-    }
+    setNavState(!navOpen);
+    document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: navOpen } }));
   });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isOpen) {
-      closeNav();
-      button.focus();
-    }
-  });
+  document.addEventListener('hub:sidenav-closed', () => setNavState(false));
+}
 
-  document.addEventListener('click', (e) => {
-    if (isOpen && !navElement.contains(e.target)) { closeNav(); }
-  });
-
-  navElement.addEventListener('focusout', (e) => {
-    if (isOpen && !navElement.contains(e.relatedTarget)) { closeNav(); }
-  });
-
-  window.matchMedia('(width >= 800px)').addEventListener('change', (e) => {
-    if (e.matches && isOpen) { closeNav(); }
-  });
+function ensureGlobalSidenavId() {
+  const sidenav = document.querySelector('hub-global-sidenav');
+  if (sidenav && !sidenav.id) {
+    sidenav.id = GLOBAL_SIDENAV_ID;
+  }
 }
 
 function createMobileNavButton(fragment) {
-  const mainNav = fragment.querySelector('.main-nav-section');
+  ensureGlobalSidenavId();
+  const brand = fragment.querySelector('.brand-section');
+  if (!brand) { return; }
+
+  const target = document.createElement('div');
+  target.classList.add('mobile-nav');
 
   const mobileNavButton = document.createElement('button');
   mobileNavButton.classList.add('mobile-nav-button');
-  mobileNavButton.setAttribute('aria-controls', 'main-nav-list');
   mobileNavButton.innerHTML = `${HAMBURGER_MENU_ICON}`;
-  addMobileNavListeners(mobileNavButton, mainNav);
-
-  mainNav.prepend(mobileNavButton);
-}
-
-function createMobileNavItems(nav, actions) {
-  const mobileNav = document.createElement('nav');
-  mobileNav.classList.add('mobile-nav');
-  mobileNav.setAttribute('id', 'main-nav-list');
-  mobileNav.setAttribute('aria-label', 'Mobile navigation');
-
-  const navList = document.createElement('ul');
-  navList.setAttribute('aria-label', 'Main navigation');
-  nav.querySelectorAll('li').forEach((item) => {
-    navList.append(item.cloneNode(true));
-  });
-
-  const divider = document.createElement('hr');
-
-  const actionsList = document.createElement('ul');
-  actionsList.setAttribute('aria-label', 'Site actions');
-  actions.querySelectorAll('li').forEach((item) => {
-    actionsList.append(item.cloneNode(true));
-  });
-
-  mobileNav.append(navList, divider, actionsList);
-  nav.append(mobileNav);
+  addMobileNavListeners(mobileNavButton);
+  target.append(mobileNavButton);
+  brand.insertAdjacentElement('afterend', target);
 }
 
 async function decorateHeader(fragment) {
@@ -146,14 +110,11 @@ async function decorateHeader(fragment) {
 
   if (brand) { await decorateBrandSection(brand); }
 
-  let navElement;
   if (nav) {
-    navElement = decorateNavSection(nav);
-    createMobileNavButton(fragment);
+    decorateNavSection(nav);
   }
+  createMobileNavButton(fragment);
   if (actions) { decorateActionSection(actions); }
-
-  if (navElement && actions) { createMobileNavItems(navElement, actions); }
 }
 
 /**
