@@ -27,7 +27,7 @@
 }
 
 /* Backdrop (mobile only) */
-.hub-global-sidenav__backdrop {
+.hub-global-sidenav-backdrop {
   position: fixed;
   inset: 0;
   background-color: rgb(from var(--s2-gray-900) r g b / 40%);
@@ -35,7 +35,7 @@
 }
 
 /* Nav drawer */
-.hub-global-sidenav__nav {
+.hub-global-sidenav-nav {
   position: fixed;
   inset-block: 0;
   inset-inline-start: 0;
@@ -63,13 +63,13 @@
   backdrop-filter: blur(128px);
 }
 
-:host([open]) .hub-global-sidenav__nav {
+:host([open]) .hub-global-sidenav-nav {
   transform: translateX(0);
 }
 
 /* Desktop: static, animates between expanded and collapsed widths */
 @media (width >= 900px) {
-  .hub-global-sidenav__nav {
+  .hub-global-sidenav-nav {
     position: static;
     inset: unset;
     transform: none;
@@ -87,13 +87,13 @@
     backdrop-filter: blur(128px);
   }
 
-  :host([collapsed]) .hub-global-sidenav__nav {
+  :host([collapsed]) .hub-global-sidenav-nav {
     inline-size: var(--sh-sitenav-rail-width, 56px);
   }
 }
 
 /* Nav rail section buttons */
-.hub-global-sidenav__item-btn {
+.hub-global-sidenav-item-btn {
   appearance: none;
   border: none;
   display: grid;
@@ -152,7 +152,7 @@
   }
 }
 
-:host(:not([collapsed])) .hub-global-sidenav__item-btn {
+:host(:not([collapsed])) .hub-global-sidenav-item-btn {
   gap: var(--s2-spacing-100);
   transition: gap 250ms ease;
 
@@ -161,11 +161,11 @@
   }
 }
 
-:host([collapsed]) .hub-global-sidenav__item-btn {
+:host([collapsed]) .hub-global-sidenav-item-btn {
   gap: 0;
 }
 
-.hub-global-sidenav__item-icon {
+.hub-global-sidenav-item-icon {
   display: inline-block;
   flex-shrink: 0;
   inline-size: 20px;
@@ -176,7 +176,7 @@
   mask-size: contain;
 }
 
-.hub-global-sidenav__item-label {
+.hub-global-sidenav-item-label {
   display: flex;
   align-items: center;
   text-overflow: ellipsis;
@@ -192,13 +192,13 @@
   }
 }
 
-:host([collapsed]) .hub-global-sidenav__item-label {
+:host([collapsed]) .hub-global-sidenav-item-label {
   max-inline-size: 0;
   opacity: 0;
 }
 
 /* Mobile close button — last in DOM for Tab order, but visually first (in small screen drawer) via order: -1 */
-.hub-global-sidenav__close {
+.hub-global-sidenav-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,7 +225,7 @@
   }
 }
 
-.hub-global-sidenav__close-icon {
+.hub-global-sidenav-close-icon {
   display: inline-block;
   inline-size: 20px;
   block-size: 20px;
@@ -237,12 +237,12 @@
 }
 
 /* Desktop collapse toggle button (hidden on mobile) */
-.hub-global-sidenav__toggle-btn {
+.hub-global-sidenav-toggle-btn {
   display: none;
 }
 
 @media (width >= 900px) {
-  .hub-global-sidenav__toggle-btn {
+  .hub-global-sidenav-toggle-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -271,16 +271,16 @@
    * no-preference so it respects reduced motion.
    */
   @media (prefers-reduced-motion: no-preference) and (hover: hover) {
-    :host([collapsed]) .hub-global-sidenav__toggle-btn:not(.is-hover-locked):hover #animate-panel-bar {
+    :host([collapsed]) .hub-global-sidenav-toggle-btn:not(.is-hover-locked):hover #animate-panel-bar {
       animation: toggle-icon-panel-expand 240ms linear forwards;
     }
 
-    :host(:not([collapsed])) .hub-global-sidenav__toggle-btn:not(.is-hover-locked):hover #animate-panel-bar {
+    :host(:not([collapsed])) .hub-global-sidenav-toggle-btn:not(.is-hover-locked):hover #animate-panel-bar {
       animation: toggle-icon-panel-collapse 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
     }
   }
 
-  .hub-global-sidenav__toggle-icon {
+  .hub-global-sidenav-toggle-icon {
     display: block;
   }
 }

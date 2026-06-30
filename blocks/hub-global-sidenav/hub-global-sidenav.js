@@ -41,7 +41,7 @@ export async function parseRailFragment(path) {
 
 const COLLAPSE_ICON = html`
   <svg
-    class="hub-global-sidenav__toggle-icon"
+    class="hub-global-sidenav-toggle-icon"
     xmlns="http://www.w3.org/2000/svg"
     fill="currentColor"
     width="20"
@@ -151,8 +151,9 @@ class HubGlobalSidenav extends LitElement {
 
   // installOnly = true: install trap without moving focus (called after section nav closes).
   _setupFocusTrap(installOnly = false) {
-    const nav = this.shadowRoot.querySelector('.hub-global-sidenav__nav');
+    const nav = this.shadowRoot.querySelector('.hub-global-sidenav-nav');
     if (!nav) { return; }
+    const getFirstFocusable = () => nav.querySelector('.hub-global-sidenav-item-btn');
 
     if (!installOnly) {
       // Defer to hub-section-sidenav only when it is actually open on top.
@@ -161,9 +162,7 @@ class HubGlobalSidenav extends LitElement {
       const sectionNav = document.querySelector('hub-section-sidenav');
       if (sectionNav?.hasAttribute('open')) { return; }
 
-      const firstFocusable = nav.querySelector('hub-sidenav-item')
-        ?.shadowRoot?.querySelector('a, button');
-      firstFocusable?.focus();
+      getFirstFocusable()?.focus();
     }
 
     if (this._trapKeyHandler) { return; } // Already installed.
@@ -174,10 +173,9 @@ class HubGlobalSidenav extends LitElement {
       // Only act when focus is inside this component's nav.
       if (!nav.contains(this.shadowRoot.activeElement)) { return; }
 
-      const closeBtn = nav.querySelector('.hub-global-sidenav__close');
+      const closeBtn = nav.querySelector('.hub-global-sidenav-close');
       const deepActive = getDeepActiveElement();
-      const firstNow = nav.querySelector('hub-sidenav-item')
-        ?.shadowRoot?.querySelector('a, button');
+      const firstNow = getFirstFocusable();
 
       if (!e.shiftKey && deepActive === closeBtn) {
         // Tab from close button → wrap to first item.
@@ -238,31 +236,31 @@ class HubGlobalSidenav extends LitElement {
     return html`
       ${this._isMobile && this._isOpen ? html`
         <div
-          class="hub-global-sidenav__backdrop"
+          class="hub-global-sidenav-backdrop"
           aria-hidden="true"
           @click=${this._selfClose}
         ></div>
       ` : nothing}
       <nav
-        class="hub-global-sidenav__nav"
+        class="hub-global-sidenav-nav"
         aria-label="Top-level site navigation"
         ?inert=${this._isMobile && !this._isOpen}
       >
         ${this._items.map(({ path, label, iconPath }) => html`
           <button
             id=${pathToId(path)}
-            class="hub-global-sidenav__item-btn"
+            class="hub-global-sidenav-item-btn"
             type="button"
             aria-label="${label}, opens section navigation"
             aria-current=${this._isSectionActive(path) ? 'true' : nothing}
             @click=${() => this._selectSection(path)}
           >
             <span
-              class="hub-global-sidenav__item-icon"
+              class="hub-global-sidenav-item-icon"
               aria-hidden="true"
               style="mask-image: url('${iconPath ?? '/img/icons/s2-icon-circle-20-n.svg'}')"
             ></span>
-            <span class="hub-global-sidenav__item-label" aria-hidden="true">${label}</span>
+            <span class="hub-global-sidenav-item-label" aria-hidden="true">${label}</span>
           </button>
           ${!this._isMobile && this._isCollapsed ? html`
             <swc-tooltip variant="neutral" for=${pathToId(path)} placement="end" delay="200">
@@ -273,7 +271,7 @@ class HubGlobalSidenav extends LitElement {
         ${!this._isMobile ? html`
           <button
             id="hub-global-sidenav-toggle"
-            class="hub-global-sidenav__toggle-btn${this._isHoverLocked ? ' is-hover-locked' : ''}"
+            class="hub-global-sidenav-toggle-btn${this._isHoverLocked ? ' is-hover-locked' : ''}"
             aria-label=${collapseLabel}
             @click=${this._toggleCollapse}
             @mouseleave=${this._unlockHover}
@@ -290,11 +288,11 @@ class HubGlobalSidenav extends LitElement {
         ` : nothing}
         ${this._isMobile ? html`
           <button
-            class="hub-global-sidenav__close"
+            class="hub-global-sidenav-close"
             aria-label="Close navigation"
             @click=${this._selfClose}
           >
-            <span class="hub-global-sidenav__close-icon" aria-hidden="true"></span>
+            <span class="hub-global-sidenav-close-icon" aria-hidden="true"></span>
           </button>
         ` : nothing}
       </nav>

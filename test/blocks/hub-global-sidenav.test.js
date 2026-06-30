@@ -35,7 +35,7 @@ async function mountAndWait(isMobile, sandbox) {
   for (let i = 0; i < 20; i += 1) {
     /* eslint-disable no-await-in-loop */
     await el.updateComplete;
-    if (el.shadowRoot.querySelector('.hub-global-sidenav__item-btn')) { break; }
+    if (el.shadowRoot.querySelector('.hub-global-sidenav-item-btn')) { break; }
     await new Promise((r) => { setTimeout(r, 0); });
     /* eslint-enable no-await-in-loop */
   }
@@ -101,19 +101,19 @@ describe('hub-global-sidenav block', () => {
   describe('rendering the rail', () => {
     it('renders one nav button per fragment link', async () => {
       const el = await mountAndWait(false, sandbox);
-      expect(el.shadowRoot.querySelectorAll('.hub-global-sidenav__item-btn')).to.have.lengthOf(3);
+      expect(el.shadowRoot.querySelectorAll('.hub-global-sidenav-item-btn')).to.have.lengthOf(3);
     });
 
     it('renders each item as a <button> with its label and icon', async () => {
       const el = await mountAndWait(false, sandbox);
-      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav__item-btn');
+      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav-item-btn');
       expect(buttons).to.have.lengthOf(3);
       expect(buttons[0].textContent).to.contain('Foundations');
     });
 
     it('each button has an aria-label that includes the action hint', async () => {
       const el = await mountAndWait(false, sandbox);
-      const btn = el.shadowRoot.querySelector('.hub-global-sidenav__item-btn');
+      const btn = el.shadowRoot.querySelector('.hub-global-sidenav-item-btn');
       expect(btn.getAttribute('aria-label')).to.contain('opens section navigation');
     });
 
@@ -133,7 +133,7 @@ describe('hub-global-sidenav block', () => {
       const el = await mountAndWait(false, sandbox);
       const spy = sandbox.spy();
       document.addEventListener('hub:section-selected', spy);
-      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav__item-btn');
+      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav-item-btn');
       buttons[1].click();
       document.removeEventListener('hub:section-selected', spy);
       expect(spy.calledOnce).to.be.true;
@@ -176,7 +176,7 @@ describe('hub-global-sidenav block', () => {
       const el = await mountAndWait(true, sandbox);
       document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
       await el.updateComplete;
-      const backdrop = el.shadowRoot.querySelector('.hub-global-sidenav__backdrop');
+      const backdrop = el.shadowRoot.querySelector('.hub-global-sidenav-backdrop');
       expect(backdrop.getAttribute('aria-hidden')).to.equal('true');
     });
 
@@ -191,7 +191,7 @@ describe('hub-global-sidenav block', () => {
 
     it('nav is inert when closed on mobile', async () => {
       const el = await mountAndWait(true, sandbox);
-      const nav = el.shadowRoot.querySelector('.hub-global-sidenav__nav');
+      const nav = el.shadowRoot.querySelector('.hub-global-sidenav-nav');
       expect(nav.inert).to.be.true;
     });
 
@@ -199,7 +199,7 @@ describe('hub-global-sidenav block', () => {
       const el = await mountAndWait(true, sandbox);
       document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
       await el.updateComplete;
-      const nav = el.shadowRoot.querySelector('.hub-global-sidenav__nav');
+      const nav = el.shadowRoot.querySelector('.hub-global-sidenav-nav');
       expect(nav.inert).to.be.false;
     });
     it('opens when it receives hub:sidenav-toggle { open: true }', async () => {
@@ -207,7 +207,7 @@ describe('hub-global-sidenav block', () => {
       document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
       await el.updateComplete;
       expect(el.hasAttribute('open')).to.be.true;
-      expect(el.shadowRoot.querySelector('.hub-global-sidenav__backdrop')).to.not.be.null;
+      expect(el.shadowRoot.querySelector('.hub-global-sidenav-backdrop')).to.not.be.null;
     });
 
     it('closes when it receives hub:sidenav-closed', async () => {
@@ -223,7 +223,7 @@ describe('hub-global-sidenav block', () => {
       const el = await mountAndWait(true, sandbox);
       document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
       await el.updateComplete;
-      el.shadowRoot.querySelector('.hub-global-sidenav__backdrop').click();
+      el.shadowRoot.querySelector('.hub-global-sidenav-backdrop').click();
       await el.updateComplete;
       expect(el.hasAttribute('open')).to.be.false;
     });
