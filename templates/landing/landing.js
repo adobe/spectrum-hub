@@ -7,8 +7,8 @@ export default async function init() {
   const navRail = document.createElement('aside');
   navRail.className = 'nav-rail';
 
-  const sitenav = document.createElement('nav');
-  sitenav.className = 'sitenav';
+  const sitenav = document.createElement('div');
+  sitenav.className = 'hub-section-sidenav';
   sitenav.setAttribute('aria-label', 'Second-level site navigation');
 
   navRail.append(sitenav);

@@ -37,15 +37,15 @@ describe('landing template', () => {
     expect(firstChildElement.classList.contains('nav-rail')).to.be.true;
   });
 
-  it('places the sitenav inside the nav-rail', async () => {
+  it('places the section sidenav inside the nav-rail', async () => {
     await init();
-    const sitenav = document.querySelector('.nav-rail nav.sitenav');
+    const sitenav = document.querySelector('.nav-rail .hub-section-sidenav');
     expect(sitenav).to.not.be.null;
   });
 
-  it('adds aria-label "Second-level site navigation" to the sitenav', async () => {
+  it('adds aria-label "Second-level site navigation" to the section sidenav', async () => {
     await init();
-    const sitenav = document.querySelector('nav.sitenav');
+    const sitenav = document.querySelector('.hub-section-sidenav');
     expect(sitenav.getAttribute('aria-label')).to.equal('Second-level site navigation');
   });
 

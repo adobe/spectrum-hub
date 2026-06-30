@@ -9,8 +9,12 @@ export default async function init() {
   const navRail = document.createElement('aside');
   navRail.className = 'nav-rail';
 
-  const sitenav = document.createElement('nav');
-  sitenav.className = 'sitenav';
+  // The global rail is loaded globally (scripts/lazy.js) and prepended into
+  // `.nav-rail`. The section sidenav listens for `hub:section-selected`
+  // (dispatched when a global rail button is clicked) and renders that
+  // section's tree.
+  const sitenav = document.createElement('div');
+  sitenav.className = 'hub-section-sidenav';
   sitenav.setAttribute('aria-label', 'Second-level site navigation');
 
   const pageNav = document.createElement('nav');

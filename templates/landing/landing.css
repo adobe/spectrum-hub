@@ -1,3 +1,11 @@
+.landing-template {
+  .template-wrapper {
+    .hub-global-sidenav {
+      display: contents;
+    }
+  }
+}
+
 @media (width >= 900px) {
   .landing-template {
     padding-inline-start: 0;
@@ -18,12 +26,19 @@
         top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
         block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 16px);
 
-        .sitenav {
+        .hub-global-sidenav {
           display: block;
           position: relative;
           inset: 0;
           flex: 0 0 var(--sh-sitenav-rail-width);
           z-index: 1;
+        }
+
+        .hub-section-sidenav {
+          display: block;
+          position: relative;
+          inset: 0;
+          flex: 1;
         }
       }
 

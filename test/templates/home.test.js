@@ -17,6 +17,8 @@ describe('home template', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    // Stub log so loadBlock failures (e.g. missing blocks) are swallowed silently.
+    // components must be an array — loadBlock calls components.some().
     setConfig({ log: sandbox.stub(), components: [], linkBlocks: [], hostnames: [] });
     makeHomeDOM();
   });
@@ -48,6 +50,7 @@ describe('home template', () => {
     });
 
     it('does not throw when the expected DOM structure is present', async () => {
+      // init() rejecting would fail this test; a successful render confirms it.
       await init();
       expect(document.querySelector('.template-wrapper')).to.not.be.null;
     });
@@ -71,9 +74,9 @@ describe('home template', () => {
       expect(firstChildElement.classList.contains('nav-rail')).to.be.true;
     });
 
-    it('places the sitenav inside the nav-rail', async () => {
+    it('places the section sidenav inside the nav-rail so the global rail buttons have a listener', async () => {
       await init();
-      const sitenav = document.querySelector('.nav-rail nav.sitenav');
+      const sitenav = document.querySelector('.nav-rail .hub-section-sidenav');
       expect(sitenav).to.not.be.null;
       expect(sitenav.getAttribute('aria-label')).to.equal('Second-level site navigation');
     });

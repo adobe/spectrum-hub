@@ -1,8 +1,7 @@
 .detail-template {
   .template-wrapper {
-    .sitenav {
-      z-index: var(--sh-z-sitenav);
-      isolation: isolate;
+    .hub-global-sidenav {
+      display: contents;
     }
 
     main {
@@ -36,16 +35,22 @@
         top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
         block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 16px);
 
-        .sitenav {
+        .hub-global-sidenav {
           display: block;
           position: sticky;
           flex: 0 0 var(--sh-sitenav-rail-width);
-          z-index: auto;
-          isolation: auto;
+          z-index: 1;
+        }
+
+        .hub-section-sidenav {
+          display: block;
+          position: sticky;
+          flex: 1;
         }
       }
 
       .page-nav {
+        grid-area: pagenav;
         z-index: auto;
         isolation: auto;
         inset-block-start: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
