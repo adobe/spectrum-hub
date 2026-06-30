@@ -13,7 +13,8 @@
     "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
-    "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js"
+    "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js",
+    "build:swc-tooltip": "esbuild --format=esm --minify ./deps/components/swc-tooltip/src/index.js --bundle --outfile=./deps/components/swc-tooltip/dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -41,6 +42,7 @@
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
+    "@adobe/spectrum-wc": "2.0.0-beta.0",
     "esbuild": "^0.28.0",
     "lit": "^3.3.1"
   }
