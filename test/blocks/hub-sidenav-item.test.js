@@ -27,7 +27,7 @@ describe('hub-sidenav-item block', () => {
 
     it('renders the label text', async () => {
       const el = await mount({ label: 'Color', href: '/foundations/color' });
-      expect(el.shadowRoot.querySelector('.hub-sidenav-item__label').textContent.trim())
+      expect(el.shadowRoot.querySelector('.hub-sidenav-item-label').textContent.trim())
         .to.equal('Color');
     });
 
@@ -45,7 +45,7 @@ describe('hub-sidenav-item block', () => {
 
     it('renders an icon span with the mask-image when iconPath is set', async () => {
       const el = await mount({ label: 'Color', href: '/x', iconPath: '/img/icons/s2-icon-color-20-n.svg' });
-      const icon = el.shadowRoot.querySelector('.hub-sidenav-item__icon');
+      const icon = el.shadowRoot.querySelector('.hub-sidenav-item-icon');
       expect(icon).to.not.be.null;
       expect(icon.getAttribute('style')).to.contain('/img/icons/s2-icon-color-20-n.svg');
     });
@@ -67,33 +67,33 @@ describe('hub-sidenav-item block', () => {
   describe('expandable variant', () => {
     it('renders a toggle button collapsed by default', async () => {
       const el = await mount({ label: 'Visual language', expandable: true });
-      const toggle = el.shadowRoot.querySelector('button.hub-sidenav-item__toggle');
+      const toggle = el.shadowRoot.querySelector('button.hub-sidenav-item-toggle');
       expect(toggle).to.not.be.null;
       expect(toggle.getAttribute('aria-expanded')).to.equal('false');
     });
 
     it('renders a slot for nested children', async () => {
       const el = await mount({ label: 'Visual language', expandable: true });
-      expect(el.shadowRoot.querySelector('.hub-sidenav-item__children slot')).to.not.be.null;
+      expect(el.shadowRoot.querySelector('.hub-sidenav-item-children slot')).to.not.be.null;
     });
 
     it('marks the children container inert while collapsed', async () => {
       const el = await mount({ label: 'Visual language', expandable: true });
-      expect(el.shadowRoot.querySelector('.hub-sidenav-item__children').inert).to.be.true;
+      expect(el.shadowRoot.querySelector('.hub-sidenav-item-children').inert).to.be.true;
     });
 
     it('expands and exposes the children when the toggle is clicked', async () => {
       const el = await mount({ label: 'Visual language', expandable: true });
-      el.shadowRoot.querySelector('button.hub-sidenav-item__toggle').click();
+      el.shadowRoot.querySelector('button.hub-sidenav-item-toggle').click();
       await el.updateComplete;
       expect(el.expanded).to.be.true;
-      expect(el.shadowRoot.querySelector('button.hub-sidenav-item__toggle').getAttribute('aria-expanded')).to.equal('true');
-      expect(el.shadowRoot.querySelector('.hub-sidenav-item__children').inert).to.be.false;
+      expect(el.shadowRoot.querySelector('button.hub-sidenav-item-toggle').getAttribute('aria-expanded')).to.equal('true');
+      expect(el.shadowRoot.querySelector('.hub-sidenav-item-children').inert).to.be.false;
     });
 
     it('renders expanded when the expanded property is set', async () => {
       const el = await mount({ label: 'Visual language', expandable: true, expanded: true });
-      expect(el.shadowRoot.querySelector('button.hub-sidenav-item__toggle').getAttribute('aria-expanded')).to.equal('true');
+      expect(el.shadowRoot.querySelector('button.hub-sidenav-item-toggle').getAttribute('aria-expanded')).to.equal('true');
     });
   });
 });

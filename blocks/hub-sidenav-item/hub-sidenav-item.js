@@ -31,14 +31,14 @@ class HubSidenavItem extends LitElement {
     if (this.expandable) {
       return html`
         <button
-          class="hub-sidenav-item__toggle"
+          class="hub-sidenav-item-toggle"
           aria-expanded=${this.expanded ? 'true' : 'false'}
           @click=${this._toggle}
         >
-          <span class="hub-sidenav-item__label">${this.label}</span>
-          <span class="hub-sidenav-item__chevron" aria-hidden="true"></span>
+          <span class="hub-sidenav-item-label">${this.label}</span>
+          <span class="hub-sidenav-item-chevron" aria-hidden="true"></span>
         </button>
-        <div class="hub-sidenav-item__children" .inert=${!this.expanded}>
+        <div class="hub-sidenav-item-children" .inert=${!this.expanded}>
           <slot></slot>
         </div>
       `;
@@ -47,18 +47,18 @@ class HubSidenavItem extends LitElement {
     return html`
       <a
         id="hub-sidenav-item-link"
-        class="hub-sidenav-item__link"
+        class="hub-sidenav-item-link"
         href=${this.href || nothing}
         aria-current=${ifDefined(this._isActive ? 'page' : undefined)}
       >
         ${this.iconPath ? html`
           <span
-            class="hub-sidenav-item__icon"
+            class="hub-sidenav-item-icon"
             aria-hidden="true"
             style="mask-image: url('${this.iconPath}')"
           ></span>
         ` : nothing}
-        <span class="hub-sidenav-item__label">${this.label}</span>
+        <span class="hub-sidenav-item-label">${this.label}</span>
       </a>
       ${this.collapsed ? html`
         <swc-tooltip variant="neutral" for="hub-sidenav-item-link" placement="end" delay="500">
