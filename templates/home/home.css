@@ -31,7 +31,7 @@ body.home-template {
         gap: var(--s2-spacing-100);
         position: sticky;
         top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
-        block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 16px);
+        block-size:calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 48px); /* 48px equates to the body margin + the margin beneath the header */
 
         .hub-global-sidenav {
           display: block;

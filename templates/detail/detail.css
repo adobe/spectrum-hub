@@ -32,8 +32,8 @@
         grid-template-columns: auto 1fr;
         gap: var(--s2-spacing-100);
         position: sticky;
-        top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
-        block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 16px);
+        top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 32px); /* 32px equates to the margin beneath the header */
+        block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 48px); /* 48px equates to the body margin + the margin beneath the header */
 
         .hub-global-sidenav {
           display: block;
