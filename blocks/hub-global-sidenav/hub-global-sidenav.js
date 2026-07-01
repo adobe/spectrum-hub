@@ -212,6 +212,7 @@ class HubGlobalSidenav extends LitElement {
 
   _selectSection(path) {
     const section = path.split('/').filter(Boolean)[0];
+    console.log('NOICE! [hub-global-sidenav] section button clicked');
     document.dispatchEvent(new CustomEvent('hub:section-selected', {
       detail: { section },
     }));
