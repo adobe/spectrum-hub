@@ -152,6 +152,21 @@ describe('hub-global-sidenav block', () => {
       expect(spy.calledOnce).to.be.true;
       expect(spy.firstCall.args[0].detail).to.deep.equal({ section: 'web' });
     });
+
+    it('fires a hub:section-selected CustomEvent when a section button is clicked', async () => {
+      const el = await mountAndWait(false, sandbox);
+      const spy = sandbox.spy();
+      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav-item-btn');
+      document.addEventListener('hub:section-selected', spy);
+
+      buttons[1].click();
+      document.removeEventListener('hub:section-selected', spy);
+
+      expect(spy.calledOnce).to.be.true;
+      expect(spy.firstCall.args[0]).to.be.instanceOf(CustomEvent);
+      expect(spy.firstCall.args[0].type).to.equal('hub:section-selected');
+      expect(spy.firstCall.args[0].detail).to.deep.equal({ section: 'web' });
+    });
   });
 
   describe('collapse state', () => {
