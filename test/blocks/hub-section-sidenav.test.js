@@ -39,6 +39,21 @@ function stubIndexFetch(sandbox, data = PAGES, ok = true) {
   });
 }
 
+function stubAnimationFrame(sandbox) {
+  sandbox.stub(window, 'requestAnimationFrame').callsFake((cb) => {
+    cb(performance.now());
+    return 1;
+  });
+}
+
+// hub-sidenav-item renders its link in its own nested shadow root, so
+// `el.shadowRoot.activeElement` only reports the <hub-sidenav-item> host —
+// traverse all the way down, same as the component's own getDeepActiveElement.
+function deepActiveElement(root = document) {
+  const active = root.activeElement;
+  return active?.shadowRoot ? deepActiveElement(active.shadowRoot) : active;
+}
+
 // Re-render until `predicate` holds or we run out of ticks. Handles the async
 // fetch → state → render chain in connectedCallback and event handlers.
 async function flush(el, predicate) {
@@ -185,6 +200,33 @@ describe('hub-section-sidenav block', () => {
       expect([...el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header')]
         .map((header) => header.textContent.trim())).to.deep.equal(['RSP', 'SWC']);
     });
+
+    it('renders the top-level section header as a heading for accessible document structure', async () => {
+      window.history.pushState({}, '', '/web/rsp/components/button');
+      stubMatchMedia(sandbox);
+      stubIndexFetch(sandbox, PLATFORM_PAGES);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__section-header'));
+
+      const header = el.shadowRoot.querySelector('.hub-section-sidenav__section-header');
+      expect(header.tagName).to.equal('H2');
+    });
+
+    it('renders group headers as heading elements for accessible document structure', async () => {
+      window.history.pushState({}, '', '/web/rsp/components/button');
+      stubMatchMedia(sandbox);
+      stubIndexFetch(sandbox, PLATFORM_PAGES);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+
+      await flush(el, () => el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header').length);
+
+      const headers = [...el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header')];
+      expect(headers).to.have.length.above(0);
+      headers.forEach((header) => expect(header.tagName).to.equal('H3'));
+    });
   });
 
   describe('responding to hub:section-selected', () => {
@@ -214,6 +256,50 @@ describe('hub-section-sidenav block', () => {
     });
   });
 
+  describe('async section tree loading race', () => {
+    it('renders the nav shell and falls back to the back button while the section tree is still loading on mobile', async () => {
+      window.history.pushState({}, '', '/');
+      stubAnimationFrame(sandbox);
+      stubMatchMedia(sandbox, true);
+      sandbox.stub(window, 'fetch').returns(new Promise(() => {}));
+
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      await el.updateComplete;
+
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+
+      expect(el.shadowRoot.querySelector('nav')).to.not.be.null;
+      const backBtn = el.shadowRoot.querySelector('.hub-section-sidenav__back');
+      expect(backBtn).to.not.be.null;
+      expect(el.shadowRoot.activeElement === backBtn).to.be.true;
+    });
+
+    it('moves focus to the first item once the section tree finishes loading, when the drawer was already open', async () => {
+      window.history.pushState({}, '', '/');
+      stubAnimationFrame(sandbox);
+      stubMatchMedia(sandbox, true);
+      let resolveFetch;
+      sandbox.stub(window, 'fetch').returns(new Promise((resolve) => { resolveFetch = resolve; }));
+
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      await el.updateComplete;
+
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+
+      resolveFetch({ ok: true, json: () => Promise.resolve({ data: PAGES }) });
+      await flush(el, () => el.shadowRoot.querySelector('hub-sidenav-item'));
+      const firstItem = el.shadowRoot.querySelector('hub-sidenav-item')?.shadowRoot?.querySelector('a, button');
+      expect(firstItem).to.not.be.null;
+
+      await flush(el, () => deepActiveElement() === firstItem);
+      expect(deepActiveElement() === firstItem).to.be.true;
+    });
+  });
+
   describe('mobile back-to-menu', () => {
     it('renders a "Back to main menu" button when open on mobile', async () => {
       window.history.pushState({}, '', '/foundations/color');
@@ -224,6 +310,18 @@ describe('hub-section-sidenav block', () => {
       document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
       await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__back'));
       expect(el.shadowRoot.querySelector('.hub-section-sidenav__back')).to.not.be.null;
+    });
+
+    it('the back button has type="button" so it cannot submit an ancestor form', async () => {
+      window.history.pushState({}, '', '/foundations/color');
+      stubMatchMedia(sandbox, true);
+      stubIndexFetch(sandbox);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__back'));
+      const backBtn = el.shadowRoot.querySelector('.hub-section-sidenav__back');
+      expect(backBtn.getAttribute('type')).to.equal('button');
     });
 
     it('closes itself when "Back to main menu" is clicked', async () => {
@@ -252,6 +350,94 @@ describe('hub-section-sidenav block', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       await el.updateComplete;
       expect(el.hasAttribute('open')).to.be.false;
+    });
+  });
+
+  describe('mobile drawer dialog semantics', () => {
+    it('exposes modal dialog semantics on the host when open on mobile', async () => {
+      window.history.pushState({}, '', '/foundations/color');
+      stubMatchMedia(sandbox, true);
+      stubIndexFetch(sandbox);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+
+      expect(el.getAttribute('role')).to.equal('dialog');
+      expect(el.getAttribute('aria-modal')).to.equal('true');
+      expect(el.getAttribute('aria-label')).to.not.be.null;
+    });
+
+    it('removes dialog semantics once closed', async () => {
+      window.history.pushState({}, '', '/foundations/color');
+      stubMatchMedia(sandbox, true);
+      stubIndexFetch(sandbox);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+      expect(el.getAttribute('role')).to.equal('dialog');
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-closed'));
+      await el.updateComplete;
+
+      expect(el.getAttribute('role')).to.be.null;
+      expect(el.getAttribute('aria-modal')).to.be.null;
+      expect(el.getAttribute('aria-label')).to.be.null;
+    });
+  });
+
+  describe('background inerting on mobile', () => {
+    it('marks sibling page content inert while the mobile drawer is open', async () => {
+      window.history.pushState({}, '', '/foundations/color');
+      stubMatchMedia(sandbox, true);
+      stubIndexFetch(sandbox);
+      const sibling = document.createElement('button');
+      document.body.append(sibling);
+
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      expect(sibling.inert).to.be.false;
+
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+
+      expect(sibling.inert).to.be.true;
+    });
+
+    it('restores sibling page content when the drawer closes', async () => {
+      window.history.pushState({}, '', '/foundations/color');
+      stubMatchMedia(sandbox, true);
+      stubIndexFetch(sandbox);
+      const sibling = document.createElement('button');
+      document.body.append(sibling);
+
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+      expect(sibling.inert).to.be.true;
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-closed'));
+      await el.updateComplete;
+
+      expect(sibling.inert).to.be.false;
+    });
+
+    it('clears any inert flag imposed on itself (e.g. by hub-global-sidenav\'s own sweep) when it opens', async () => {
+      window.history.pushState({}, '', '/foundations/color');
+      stubMatchMedia(sandbox, true);
+      stubIndexFetch(sandbox);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      // Simulate hub-global-sidenav having already inerted this element as an
+      // ordinary sibling before this component became the active dialog.
+      el.inert = true;
+
+      document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
+      await flush(el, () => el.hasAttribute('open'));
+
+      expect(el.inert).to.be.false;
     });
   });
 

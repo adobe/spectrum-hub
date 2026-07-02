@@ -10,6 +10,7 @@ const SECTION_HEADER_CONFIG = {
     roots: ['/web'],
   },
 };
+const MOBILE_DRAWER_LABEL = 'Section navigation';
 
 export function getTopSection() {
   const { pathname } = window.location;
@@ -96,6 +97,8 @@ class HubSectionSidenav extends LitElement {
     this._openFocusTrigger = null;
     this._trapKeyHandler = null;
     this._backToMenuActivated = false;
+    this._inertedSiblings = [];
+    this._focusSettled = false;
   }
 
   async connectedCallback() {
@@ -167,10 +170,22 @@ class HubSectionSidenav extends LitElement {
 
   updated(changed) {
     if (changed.has('_isOpen') || changed.has('_isMobile')) {
-      this.toggleAttribute('open', this._isOpen && this._isMobile);
+      const modalOpen = this._isOpen && this._isMobile;
+      this.toggleAttribute('open', modalOpen);
+      this._setBackgroundInert(modalOpen);
+      if (modalOpen) {
+        this.setAttribute('role', 'dialog');
+        this.setAttribute('aria-modal', 'true');
+        this.setAttribute('aria-label', MOBILE_DRAWER_LABEL);
+      } else {
+        this.removeAttribute('role');
+        this.removeAttribute('aria-modal');
+        this.removeAttribute('aria-label');
+      }
     }
     if (changed.has('_isOpen') && this._isMobile) {
       if (this._isOpen) {
+        this._focusSettled = false;
         requestAnimationFrame(() => this._setupFocusTrap());
       } else if (changed.get('_isOpen')) {
         this._teardownFocusTrap();
@@ -190,6 +205,15 @@ class HubSectionSidenav extends LitElement {
         }
       }
     }
+    // The section tree may still be loading when the drawer opens; once it
+    // arrives, move focus onto the first item unless it was already settled there.
+    // Items are nested hub-sidenav-item custom elements that render their own
+    // shadow DOM asynchronously — await the specific child's updateComplete
+    // rather than guessing at rAF/microtask timing.
+    if (changed.has('_tree') && this._isOpen && this._isMobile && !this._focusSettled) {
+      const item = this.shadowRoot.querySelector('.hub-section-sidenav__nav hub-sidenav-item');
+      (item?.updateComplete ?? Promise.resolve()).then(() => this._setupFocusTrap());
+    }
   }
 
   _setupFocusTrap() {
@@ -198,7 +222,13 @@ class HubSectionSidenav extends LitElement {
 
     const firstFocusable = nav.querySelector('hub-sidenav-item')
       ?.shadowRoot?.querySelector('a, button');
-    firstFocusable?.focus();
+    if (firstFocusable) {
+      firstFocusable.focus();
+      this._focusSettled = true;
+    } else if (!this._focusSettled) {
+      // No items loaded yet — fall back so focus isn't stranded outside the dialog.
+      nav.querySelector('.hub-section-sidenav__back')?.focus();
+    }
 
     if (this._trapKeyHandler) { return; } // Already installed.
 
@@ -232,6 +262,36 @@ class HubSectionSidenav extends LitElement {
     this._trapKeyHandler = null;
   }
 
+  // Makes everything outside this element's ancestor chain inert so the mobile
+  // drawer's aria-modal="true" is actually true for keyboard and AT users.
+  _setBackgroundInert(inert) {
+    if (!inert) {
+      this._inertedSiblings.forEach((sibling) => { sibling.inert = false; });
+      this._inertedSiblings = [];
+      return;
+    }
+
+    // hub-global-sidenav's own sweep may have already marked this element inert
+    // when it opened first — this component is now the active (topmost) dialog.
+    this.inert = false;
+
+    const siblings = [];
+    let node = this;
+    while (node && node !== document.body) {
+      const { parentElement } = node;
+      if (parentElement) {
+        [...parentElement.children].forEach((sibling) => {
+          if (sibling !== node && !sibling.inert) {
+            sibling.inert = true;
+            siblings.push(sibling);
+          }
+        });
+      }
+      node = parentElement;
+    }
+    this._inertedSiblings = siblings;
+  }
+
   _returnFocus() {
     this._openFocusTrigger?.focus();
     this._openFocusTrigger = null;
@@ -247,7 +307,7 @@ class HubSectionSidenav extends LitElement {
   _renderItem(node, depth = 1) {
     if (depth === 1 && this._sectionLabel && node.children.length) {
       return html`
-        <div class="hub-section-sidenav__group-header">${node.label}</div>
+        <h3 class="hub-section-sidenav__group-header">${node.label}</h3>
         ${node.children.map((child) => this._renderItem(child, depth + 1))}
       `;
     }
@@ -277,7 +337,9 @@ class HubSectionSidenav extends LitElement {
   }
 
   render() {
-    if (!this._tree.length) { return nothing; }
+    // While the mobile drawer is open, still render the shell (so there's
+    // always a way to dismiss it) even if the section tree hasn't loaded yet.
+    if (!this._tree.length && !(this._isMobile && this._isOpen)) { return nothing; }
 
     const navSection = this._selectedSection || getTopSection();
     return html`
@@ -287,12 +349,13 @@ class HubSectionSidenav extends LitElement {
         ?inert=${this._isMobile && !this._isOpen}
       >
         ${this._sectionLabel ? html`
-          <div class="hub-section-sidenav__section-header">${this._sectionLabel}</div>
+          <h2 class="hub-section-sidenav__section-header">${this._sectionLabel}</h2>
         ` : nothing}
         ${this._tree.map((node) => this._renderItem(node))}
         ${this._isMobile ? html`
           <button
             class="hub-section-sidenav__back"
+            type="button"
             @click=${this._backToMenu}
           >
             <span class="hub-section-sidenav__back-icon" aria-hidden="true"></span>

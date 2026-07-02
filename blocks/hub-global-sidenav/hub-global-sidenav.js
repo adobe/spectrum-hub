@@ -218,6 +218,10 @@ class HubGlobalSidenav extends LitElement {
       return;
     }
 
+    // hub-section-sidenav's own sweep may have already marked this element inert
+    // when it opened first — this component is now the active (topmost) dialog.
+    this.inert = false;
+
     const siblings = [];
     let node = this;
     while (node && node !== document.body) {

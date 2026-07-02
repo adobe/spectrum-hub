@@ -361,6 +361,18 @@ describe('hub-global-sidenav block', () => {
       expect(sibling.inert).to.be.false;
     });
 
+    it('clears any inert flag imposed on itself (e.g. by hub-section-sidenav\'s own sweep) when it opens', async () => {
+      const el = await mountAndWait(true, sandbox);
+      // Simulate hub-section-sidenav having already inerted this element as an
+      // ordinary sibling before this component became the active dialog.
+      el.inert = true;
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await el.updateComplete;
+
+      expect(el.inert).to.be.false;
+    });
+
     it('wraps Tab from the close button back to the first global sidenav item on mobile', async () => {
       const el = await mountAndWait(true, sandbox);
 
