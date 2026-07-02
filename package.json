@@ -43,6 +43,7 @@
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
+    "colorjs.io": "^0.5.2",
     "esbuild": "^0.28.0",
     "lit": "^3.3.1"
   }
