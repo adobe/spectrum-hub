@@ -1,3 +1,5 @@
+/* On mobile the drawer follows Dialog (Modal) APG: https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/ */
+
 import { LitElement, html, nothing } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
 import { getConfig } from '../../scripts/ak.js';
