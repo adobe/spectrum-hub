@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Button Group</title>
   <link rel="stylesheet" href="/deps/swc/bundled/swc.css" />
+  <script type="module" src="./shared/theme-sync.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -12,7 +13,8 @@
       margin: 0;
       padding: 1rem;
       font-family: sans-serif;
-      background: transparent;
+      color-scheme: light dark;
+      background: light-dark(#fff, #000);
       display: flex;
       align-items: flex-start;
       justify-content: flex-start;

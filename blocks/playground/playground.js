@@ -199,7 +199,26 @@ export default async function init(el) {
     });
   }
 
-  iframe.addEventListener('load', sendAllProps);
+  function getForcedScheme() {
+    const { classList } = document.body;
+    if (classList.contains('dark-scheme')) { return 'dark'; }
+    if (classList.contains('light-scheme')) { return 'light'; }
+    return null;
+  }
+
+  function postThemeUpdate() {
+    iframe.contentWindow?.postMessage({ type: 'theme-update', scheme: getForcedScheme() }, '*');
+  }
+
+  iframe.addEventListener('load', () => {
+    sendAllProps();
+    postThemeUpdate();
+  });
+
+  // The site's light/dark toggle (blocks/action-button) swaps a class on
+  // document.body without a page reload, so keep the iframe in sync live.
+  new MutationObserver(postThemeUpdate)
+    .observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
   const pre = document.createElement('pre');
   updateDisclosure(pre, buildSnippet, previewName, currentProps);
