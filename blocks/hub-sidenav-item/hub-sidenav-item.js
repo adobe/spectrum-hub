@@ -1,8 +1,14 @@
+/* Expandable items follow Disclosure Navigation Menu APG: https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/ */
+
 import { LitElement, html, nothing, ifDefined } from '../../deps/lit/dist/index.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
 
 const styles = await loadStyle(import.meta.url);
+
+function pathToId(path) {
+  return path ? path.replace(/\//g, '-').replace(/^-/, '') : '';
+}
 
 class HubSidenavItem extends LitElement {
   static properties = {
@@ -29,18 +35,27 @@ class HubSidenavItem extends LitElement {
 
   render() {
     if (this.expandable) {
+      const childrenId = `hub-sidenav-item-children-${pathToId(this.href)}`;
       return html`
         <button
+          id="hub-sidenav-item-toggle"
           class="hub-sidenav-item-toggle"
+          type="button"
           aria-expanded=${this.expanded ? 'true' : 'false'}
+          aria-controls=${childrenId}
           @click=${this._toggle}
         >
           <span class="hub-sidenav-item-label">${this.label}</span>
           <span class="hub-sidenav-item-chevron" aria-hidden="true"></span>
         </button>
-        <div class="hub-sidenav-item-children" .inert=${!this.expanded}>
+        <div id=${childrenId} class="hub-sidenav-item-children" .inert=${!this.expanded}>
           <slot></slot>
         </div>
+        ${this.collapsed ? html`
+          <swc-tooltip variant="neutral" for="hub-sidenav-item-toggle" placement="end" delay="500">
+            ${this.label}
+          </swc-tooltip>
+        ` : nothing}
       `;
     }
 
@@ -48,7 +63,7 @@ class HubSidenavItem extends LitElement {
       <a
         id="hub-sidenav-item-link"
         class="hub-sidenav-item-link"
-        href=${this.href || nothing}
+        href=${this.href || ''}
         aria-current=${ifDefined(this._isActive ? 'page' : undefined)}
       >
         ${this.iconPath ? html`
