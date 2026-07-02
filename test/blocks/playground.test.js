@@ -289,12 +289,23 @@ describe('playground block — init()', () => {
     expect(document.body.contains(el)).to.be.false;
   });
 
-  it('builds the iframe src with the component and implementation query params', async () => {
+  it('builds the iframe src pointing at the dev-owned static file for swc', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
     const iframe = el.querySelector('iframe');
+    expect(iframe.src).to.include('/component-playground/button.html');
+    expect(iframe.src).to.not.include('component=');
+  });
+
+  it('builds the iframe src with the component and implementation query params for non-swc implementations', async () => {
+    stubPlaygroundFetch(sandbox);
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+    const iframe = rspEl.querySelector('iframe');
+    expect(iframe.src).to.include('/component-playground/index.html');
     expect(iframe.src).to.include('component=button');
-    expect(iframe.src).to.include('implementation=swc');
+    expect(iframe.src).to.include('implementation=rsp');
   });
 
   it('uses the PascalCase RSP-style code disclosure for rsp implementation', async () => {

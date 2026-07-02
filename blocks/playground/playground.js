@@ -170,7 +170,12 @@ export default async function init(el) {
     return acc;
   }, []);
 
-  const iframeUrl = `${base}/component-playground/index.html?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
+  // "swc" pages are dev-owned static files (component-playground/<component>.html) so a
+  // component only needs its own bundle wired up, not the whole SWC set pre-vendored.
+  // Other implementations still go through the generic router.
+  const iframeUrl = implementation === 'swc'
+    ? `${base}/component-playground/${component}.html`
+    : `${base}/component-playground/index.html?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
 
   const iframe = document.createElement('iframe');
   iframe.src = iframeUrl;
