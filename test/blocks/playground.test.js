@@ -347,11 +347,10 @@ describe('playground block — init()', () => {
   it('updates the code disclosure when a control value changes', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
-    const select = el.querySelector('.playground-control select');
+    const picker = el.querySelector('.playground-control hub-picker');
     const pre = el.querySelector('pre');
     const before = pre.textContent;
-    select.value = 'yes';
-    select.dispatchEvent(new Event('change'));
+    picker.dispatchEvent(new CustomEvent('change', { detail: { value: 'yes' } }));
     expect(pre.textContent).to.not.equal(before);
     expect(pre.textContent.includes(' disabled')).to.be.true;
   });
@@ -376,9 +375,8 @@ describe('playground block — init()', () => {
     const postMessageSpy = sandbox.stub();
     sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => ({ postMessage: postMessageSpy }));
     await init(el);
-    const select = el.querySelector('.playground-control select');
-    select.value = 'yes';
-    select.dispatchEvent(new Event('change'));
+    const picker = el.querySelector('.playground-control hub-picker');
+    picker.dispatchEvent(new CustomEvent('change', { detail: { value: 'yes' } }));
     expect(postMessageSpy.calledWith(
       sinon.match({
         type: 'prop-update', property: 'isDisabled', attribute: 'disabled', value: true,

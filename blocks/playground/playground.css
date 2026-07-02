@@ -54,23 +54,6 @@
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--s2-gray-700);
   }
-
-  select {
-    inline-size: 100%;
-    padding-block: var(--s2-spacing-100);
-    padding-inline: var(--s2-spacing-200);
-    border: 1px solid var(--sandbox-border-color);
-    border-radius: var(--s2-corner-radius-100);
-    background-color: var(--s2-gray-25);
-    color: var(--s2-gray-800);
-    font-size: var(--s2-component-m-regular-font-size);
-    cursor: pointer;
-
-    &:focus-visible {
-      outline: 2px solid var(--s2-blue-800);
-      outline-offset: 2px;
-    }
-  }
 }
 
 @container (width >= 640px) {

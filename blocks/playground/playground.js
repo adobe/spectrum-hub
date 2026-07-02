@@ -6,6 +6,7 @@ import {
   resolveControl,
   findSwcProp,
 } from '../../scripts/utils/playground-data.js';
+import '../hub-picker/hub-picker.js';
 
 // --- Pure helpers (exported for testing) ------------------------------------
 
@@ -93,23 +94,15 @@ function buildPicker(label, options, currentValue, onChange) {
   wrapper.classList.add('playground-control');
 
   const labelEl = document.createElement('label');
-  const id = `playground-picker-${label}`;
-  labelEl.htmlFor = id;
   labelEl.textContent = label;
 
-  const select = document.createElement('select');
-  select.id = id;
+  const picker = document.createElement('hub-picker');
+  picker.label = label;
+  picker.options = options.map((opt) => ({ id: opt, label: opt }));
+  picker.value = currentValue;
 
-  options.forEach((opt) => {
-    const option = document.createElement('option');
-    option.value = opt;
-    option.textContent = opt;
-    if (opt === currentValue) { option.selected = true; }
-    select.appendChild(option);
-  });
-
-  select.addEventListener('change', () => onChange(select.value));
-  wrapper.append(labelEl, select);
+  picker.addEventListener('change', (e) => onChange(e.detail.value));
+  wrapper.append(labelEl, picker);
   return wrapper;
 }
 
