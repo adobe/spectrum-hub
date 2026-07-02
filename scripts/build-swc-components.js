@@ -38,8 +38,7 @@ const DEFINE_ELEMENT_IMPORT_RE = /defineElement\s+as\s+(\w+)\s*}\s*from\s*["']@s
 
 function findRegistration(source) {
   const importMatch = source.match(DEFINE_ELEMENT_IMPORT_RE);
-  if (!importMatch) return null;
-
+  if (!importMatch) { return null; }
   const alias = importMatch[1];
   const callMatch = source.match(new RegExp(`\\b${alias}\\(\\s*["']swc-([a-z0-9-]+)["']`));
   return callMatch ? callMatch[1] : null;
@@ -58,12 +57,16 @@ async function findComponentEntries(dir) {
     const full = join(dir, dirent.name);
 
     if (dirent.isDirectory()) {
-      if (full === CORE_PATH) continue; // shared runtime, not a bundlable component
+      if (full === CORE_PATH) {
+        continue; // shared runtime, not a bundlable component
+      }
       found.push(...(await findComponentEntries(full)));
       continue;
     }
 
-    if (!dirent.name.endsWith('.js') || dirent.name.endsWith('.d.ts')) continue;
+    if (!dirent.name.endsWith('.js') || dirent.name.endsWith('.d.ts')) {
+      continue;
+    }
 
     const source = await readFile(full, 'utf8');
     const component = findRegistration(source);
@@ -85,7 +88,9 @@ async function getComponentEntries() {
   // vendored under more than one path.
   const byName = new Map();
   for (const candidate of all) {
-    if (!byName.has(candidate.component)) byName.set(candidate.component, candidate);
+    if (!byName.has(candidate.component)) {
+      byName.set(candidate.component, candidate);
+    }
   }
   return [...byName.values()];
 }
