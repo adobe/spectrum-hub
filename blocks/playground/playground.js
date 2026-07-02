@@ -4,7 +4,7 @@ import {
   getComponentProperties,
   buildControlsMap,
   resolveControl,
-  normalizePropertyName,
+  findSwcProp,
 } from '../../scripts/utils/playground-data.js';
 
 // --- Pure helpers (exported for testing) ------------------------------------
@@ -48,10 +48,30 @@ export function buildSwcSnippet(tagName, currentProps) {
   return `<${tagName}${attrStr}>${label}</${tagName}>`;
 }
 
+export function buildRspSnippet(componentName, currentProps) {
+  const TEXT_KEYS = new Set(['text', 'label', 'children']);
+  const attrs = Object.entries(currentProps)
+    .filter(([prop, { value }]) => (
+      !TEXT_KEYS.has(prop)
+      && value !== undefined
+      && value !== ''
+      && value !== 'no'
+    ))
+    // RSP props are JSX prop names (camelCase), used as-authored — no attribute translation.
+    .map(([prop, { value }]) => (value === 'yes' ? prop : `${prop}="${value}"`))
+    .join(' ');
+
+  const textEntry = Object.entries(currentProps).find(([prop]) => TEXT_KEYS.has(prop));
+  const label = textEntry?.[1]?.value ?? 'Label';
+
+  const attrStr = attrs ? ` ${attrs}` : '';
+  return `<${componentName}${attrStr}>${label}</${componentName}>`;
+}
+
 // --- Code disclosure --------------------------------------------------------
 
-function updateDisclosure(pre, tagName, currentProps) {
-  pre.textContent = buildSwcSnippet(tagName, currentProps);
+function updateDisclosure(pre, buildSnippet, name, currentProps) {
+  pre.textContent = buildSnippet(name, currentProps);
 }
 
 // --- Controls ---------------------------------------------------------------
@@ -106,6 +126,8 @@ export default async function init(el) {
   const spreadsheetUrl = meta.spreadsheet ?? `${base}/playground-data.json`;
   const componentTitle = component.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
   const tagName = `swc-${component}`;
+  const buildSnippet = implementation === 'rsp' ? buildRspSnippet : buildSwcSnippet;
+  const previewName = implementation === 'rsp' ? componentTitle : tagName;
 
   let rspProps = [];
   let swcProps = [];
@@ -130,10 +152,16 @@ export default async function init(el) {
   const currentProps = {};
 
   const descriptors = authoredProps.reduce((acc, property) => {
-    const descriptor = resolveControl(property, implementation, controlsMap, rspProps, swcProps);
+    const descriptor = resolveControl(
+      property,
+      implementation,
+      controlsMap,
+      rspProps,
+      swcProps,
+      (message) => console.warn(`Playground (${component}): ${message}`),
+    );
     if (!descriptor) return acc;
-    const swcRow = swcProps.find((p) => p.property === property)
-      ?? swcProps.find((p) => p.property === normalizePropertyName(property));
+    const swcRow = findSwcProp(property, swcProps);
     const rspRow = rspProps.find((p) => p.property === property);
     const rawDefault = parseDefault(swcRow?.default ?? rspRow?.default) ?? descriptor.options[0];
     const defaultValue = rawDefault === 'true' ? 'yes' : rawDefault === 'false' ? 'no' : rawDefault;
@@ -163,7 +191,7 @@ export default async function init(el) {
   iframe.addEventListener('load', sendAllProps);
 
   const pre = document.createElement('pre');
-  updateDisclosure(pre, tagName, currentProps);
+  updateDisclosure(pre, buildSnippet, previewName, currentProps);
 
   const controlsPanel = document.createElement('div');
   controlsPanel.classList.add('playground-controls');
@@ -174,7 +202,7 @@ export default async function init(el) {
     const picker = buildPicker(property, options, defaultValue, (value) => {
       currentProps[property].value = value;
       postPropUpdate(property, attribute, value);
-      updateDisclosure(pre, tagName, currentProps);
+      updateDisclosure(pre, buildSnippet, previewName, currentProps);
     });
     controlsPanel.appendChild(picker);
   });

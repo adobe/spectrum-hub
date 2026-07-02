@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it, mock } from 'node:test';
 
 import {
   getComponentProperties,
@@ -8,6 +8,7 @@ import {
   resolvePickerOptions,
   resolveControl,
   normalizePropertyName,
+  findSwcProp,
 } from '../../scripts/utils/playground-data.js';
 
 const COMPONENTS_SHEET = [
@@ -157,6 +158,20 @@ describe('normalizePropertyName', () => {
   });
 });
 
+describe('findSwcProp', () => {
+  it('finds a row by exact property name', () => {
+    assert.deepEqual(findSwcProp('disabled', SWC_PROPS), SWC_PROPS.find((p) => p.property === 'disabled'));
+  });
+
+  it('falls back to the normalized name when there is no exact match', () => {
+    assert.deepEqual(findSwcProp('isDisabled', SWC_PROPS), SWC_PROPS.find((p) => p.property === 'disabled'));
+  });
+
+  it('returns undefined when neither the exact nor normalized name matches', () => {
+    assert.equal(findSwcProp('unknown', SWC_PROPS), undefined);
+  });
+});
+
 describe('resolveControl', () => {
   const controlsMap = buildControlsMap(CONTROLS_SHEET);
 
@@ -216,5 +231,36 @@ describe('resolveControl', () => {
     const result = resolveControl('isPending', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.attribute, 'pending');
+  });
+
+  describe('onSkip callback', () => {
+    it('is not called when a control resolves successfully', () => {
+      const onSkip = mock.fn();
+      resolveControl('variant', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      assert.equal(onSkip.mock.callCount(), 0);
+    });
+
+    it('is called with a plain-English reason when the property is absent from the implementation data', () => {
+      const onSkip = mock.fn();
+      resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      assert.equal(onSkip.mock.callCount(), 1);
+      const [message] = onSkip.mock.calls[0].arguments;
+      assert.match(message, /"truncate"/);
+      assert.match(message, /RSP data/);
+    });
+
+    it('is called with a plain-English reason when the property type cannot be resolved to options', () => {
+      const onSkip = mock.fn();
+      const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      assert.deepEqual(result.options, []);
+      assert.equal(onSkip.mock.callCount(), 1);
+      const [message] = onSkip.mock.calls[0].arguments;
+      assert.match(message, /"children"/);
+      assert.match(message, /ReactNode/);
+    });
+
+    it('does not throw when onSkip is omitted', () => {
+      assert.doesNotThrow(() => resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS));
+    });
   });
 });

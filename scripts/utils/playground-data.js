@@ -81,6 +81,34 @@ export function parsePickerOptions(typeString) {
 }
 
 /**
+ * Derives a candidate SWC property name from an RSP-style authored name.
+ * Strips a leading `is` or `has` prefix and lowercases the first character.
+ * e.g. "isDisabled" → "disabled", "isQuiet" → "quiet", "hasLabel" → "label"
+ * Returns the original name unchanged if no prefix is found.
+ * @param {string} name
+ * @returns {string}
+ */
+export function normalizePropertyName(name) {
+  const match = name.match(/^(?:is|has)([A-Z].*)/);
+  if (match) {
+    return match[1].charAt(0).toLowerCase() + match[1].slice(1);
+  }
+  return name;
+}
+
+/**
+ * Finds a component's SWC prop row by exact property name, falling back to the
+ * RSP-normalized name (e.g. "isDisabled" -> "disabled").
+ * @param {string} property
+ * @param {object[]} swcProps
+ * @returns {object | undefined}
+ */
+export function findSwcProp(property, swcProps) {
+  return swcProps.find((p) => p.property === property)
+    ?? swcProps.find((p) => p.property === normalizePropertyName(property));
+}
+
+/**
  * Resolves picker options for a property from RSP and SWC component data.
  * RSP data has inline union types; SWC data has named types that aren't resolvable,
  * so RSP is always tried first.
@@ -97,8 +125,7 @@ export function resolvePickerOptions(property, rspProps, swcProps) {
     if (rspRow.type === 'boolean') return ['no', 'yes'];
   }
 
-  const swcRow = swcProps.find((p) => p.property === property)
-    ?? swcProps.find((p) => p.property === normalizePropertyName(property));
+  const swcRow = findSwcProp(property, swcProps);
   if (swcRow?.type === 'boolean') return ['no', 'yes'];
 
   return [];
@@ -114,36 +141,34 @@ export function resolvePickerOptions(property, rspProps, swcProps) {
  * @param {Map<string, { v1: string, v1plus: string }>} controlsMap
  * @param {object[]} rspProps
  * @param {object[]} swcProps
+ * @param {(message: string) => void} [onSkip] Called with a plain-English reason
+ *   whenever a control is skipped (property missing from the implementation's
+ *   data, or its type can't be resolved into picker options).
  * @returns {{ controlType: string, options: string[], attribute: string|null } | null}
  */
-/**
- * Derives a candidate SWC property name from an RSP-style authored name.
- * Strips a leading `is` or `has` prefix and lowercases the first character.
- * e.g. "isDisabled" → "disabled", "isQuiet" → "quiet", "hasLabel" → "label"
- * Returns the original name unchanged if no prefix is found.
- * @param {string} name
- * @returns {string}
- */
-export function normalizePropertyName(name) {
-  const match = name.match(/^(?:is|has)([A-Z].*)/);
-  if (match) return match[1].charAt(0).toLowerCase() + match[1].slice(1);
-  return name;
-}
-
-export function resolveControl(property, implementation, controlsMap, rspProps, swcProps) {
+export function resolveControl(property, implementation, controlsMap, rspProps, swcProps, onSkip) {
   const existsInRsp = rspProps.some((p) => p.property === property);
-
-  const swcRow = swcProps.find((p) => p.property === property)
-    ?? swcProps.find((p) => p.property === normalizePropertyName(property));
+  const swcRow = findSwcProp(property, swcProps);
   const existsInSwc = Boolean(swcRow);
 
-  if (implementation === 'rsp' && !existsInRsp) return null;
-  if (implementation === 'swc' && !existsInSwc) return null;
+  if (implementation === 'rsp' && !existsInRsp) {
+    onSkip?.(`No control shown for "${property}": it isn't defined in the RSP data for this component.`);
+    return null;
+  }
+  if (implementation === 'swc' && !existsInSwc) {
+    onSkip?.(`No control shown for "${property}": it isn't defined in the SWC data for this component.`);
+    return null;
+  }
 
   const controlEntry = controlsMap.get(property);
   const controlType = controlEntry?.v1 ?? 'picker';
   const options = resolvePickerOptions(property, rspProps, swcProps);
   const attribute = swcRow?.attribute ?? null;
+
+  if (!options.length) {
+    const type = rspProps.find((p) => p.property === property)?.type ?? swcRow?.type ?? 'unknown';
+    onSkip?.(`No control shown for "${property}": its type ("${type}") isn't a boolean or a list of options, so there's nothing to build a picker from.`);
+  }
 
   return { controlType, options, attribute };
 }
