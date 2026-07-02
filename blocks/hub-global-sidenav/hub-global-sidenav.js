@@ -72,6 +72,8 @@ class HubGlobalSidenav extends LitElement {
     this._isHoverLocked = false;
     this._openFocusTrigger = null;
     this._trapKeyHandler = null;
+    this._inertedSiblings = [];
+    this._focusSettled = false;
   }
 
   async connectedCallback() {
@@ -125,7 +127,9 @@ class HubGlobalSidenav extends LitElement {
 
   updated(changed) {
     if (changed.has('_isOpen') || changed.has('_isMobile')) {
-      this.toggleAttribute('open', this._isOpen && this._isMobile);
+      const modalOpen = this._isOpen && this._isMobile;
+      this.toggleAttribute('open', modalOpen);
+      this._setBackgroundInert(modalOpen);
       if (this._isMobile && this._isOpen) {
         this.setAttribute('role', 'dialog');
         this.setAttribute('aria-modal', 'true');
@@ -141,11 +145,17 @@ class HubGlobalSidenav extends LitElement {
     }
     if (changed.has('_isOpen') && this._isMobile) {
       if (this._isOpen) {
+        this._focusSettled = false;
         requestAnimationFrame(() => this._setupFocusTrap());
       } else if (changed.get('_isOpen')) {
         this._teardownFocusTrap();
         this._returnFocus();
       }
+    }
+    // Items may still be loading when the drawer opens; once they arrive, move
+    // focus onto the first one unless it was already settled there.
+    if (changed.has('_items') && this._isOpen && this._isMobile && !this._focusSettled) {
+      this._setupFocusTrap();
     }
   }
 
@@ -162,7 +172,14 @@ class HubGlobalSidenav extends LitElement {
       const sectionNav = document.querySelector('hub-section-sidenav');
       if (sectionNav?.hasAttribute('open')) { return; }
 
-      getFirstFocusable()?.focus();
+      const firstItem = getFirstFocusable();
+      if (firstItem) {
+        firstItem.focus();
+        this._focusSettled = true;
+      } else if (!this._focusSettled) {
+        // No items loaded yet — fall back so focus isn't stranded outside the dialog.
+        nav.querySelector('.hub-global-sidenav-close')?.focus();
+      }
     }
 
     if (this._trapKeyHandler) { return; } // Already installed.
@@ -188,6 +205,32 @@ class HubGlobalSidenav extends LitElement {
       }
     };
     document.addEventListener('keydown', this._trapKeyHandler);
+  }
+
+  // Makes everything outside this element's ancestor chain inert so the mobile
+  // drawer's aria-modal="true" is actually true for keyboard and AT users.
+  _setBackgroundInert(inert) {
+    if (!inert) {
+      this._inertedSiblings.forEach((sibling) => { sibling.inert = false; });
+      this._inertedSiblings = [];
+      return;
+    }
+
+    const siblings = [];
+    let node = this;
+    while (node && node !== document.body) {
+      const { parentElement } = node;
+      if (parentElement) {
+        [...parentElement.children].forEach((sibling) => {
+          if (sibling !== node && !sibling.inert) {
+            sibling.inert = true;
+            siblings.push(sibling);
+          }
+        });
+      }
+      node = parentElement;
+    }
+    this._inertedSiblings = siblings;
   }
 
   _teardownFocusTrap() {
@@ -273,6 +316,7 @@ class HubGlobalSidenav extends LitElement {
           <button
             id="hub-global-sidenav-toggle"
             class="hub-global-sidenav-toggle-btn${this._isHoverLocked ? ' is-hover-locked' : ''}"
+            type="button"
             aria-label=${collapseLabel}
             @click=${this._toggleCollapse}
             @mouseleave=${this._unlockHover}
@@ -290,6 +334,7 @@ class HubGlobalSidenav extends LitElement {
         ${this._isMobile ? html`
           <button
             class="hub-global-sidenav-close"
+            type="button"
             aria-label="Close navigation"
             @click=${this._selfClose}
           >

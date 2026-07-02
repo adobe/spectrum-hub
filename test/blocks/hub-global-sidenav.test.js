@@ -135,6 +135,12 @@ describe('hub-global-sidenav block', () => {
       expect(el.shadowRoot.querySelector('#hub-global-sidenav-toggle')).to.not.be.null;
     });
 
+    it('the collapse toggle has type="button" so it cannot submit an ancestor form', async () => {
+      const el = await mountAndWait(false, sandbox);
+      const toggle = el.shadowRoot.querySelector('#hub-global-sidenav-toggle');
+      expect(toggle.getAttribute('type')).to.equal('button');
+    });
+
     it('does not render the collapse toggle on mobile', async () => {
       const el = await mountAndWait(true, sandbox);
       expect(el.shadowRoot.querySelector('#hub-global-sidenav-toggle')).to.be.null;
@@ -198,6 +204,12 @@ describe('hub-global-sidenav block', () => {
       expect(el.getAttribute('role')).to.equal('dialog');
       expect(el.getAttribute('aria-modal')).to.equal('true');
       expect(el.getAttribute('aria-label')).to.equal('Site navigation');
+    });
+
+    it('the close button has type="button" so it cannot submit an ancestor form', async () => {
+      const el = await mountAndWait(true, sandbox);
+      const closeBtn = el.shadowRoot.querySelector('.hub-global-sidenav-close');
+      expect(closeBtn.getAttribute('type')).to.equal('button');
     });
 
     it('backdrop has aria-hidden="true"', async () => {
@@ -280,6 +292,73 @@ describe('hub-global-sidenav block', () => {
       expect(el.shadowRoot.activeElement).to.equal(
         el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'),
       );
+    });
+
+    it('falls back to focusing the close button when no items are available yet', async () => {
+      stubAnimationFrame(sandbox);
+      stubMatchMedia(sandbox, true);
+      stubRailFetch(sandbox, '', false);
+
+      const el = document.createElement('hub-global-sidenav');
+      document.body.append(el);
+      await el.updateComplete;
+
+      el._isOpen = true;
+      await el.updateComplete;
+
+      expect(el.shadowRoot.querySelector('.hub-global-sidenav-item-btn')).to.be.null;
+      const closeBtn = el.shadowRoot.querySelector('.hub-global-sidenav-close');
+      expect(el.shadowRoot.activeElement === closeBtn).to.be.true;
+    });
+
+    it('moves focus to the first item once items finish loading, when the drawer was already open', async () => {
+      stubAnimationFrame(sandbox);
+      stubMatchMedia(sandbox, true);
+      let resolveFetch;
+      sandbox.stub(window, 'fetch').returns(new Promise((resolve) => { resolveFetch = resolve; }));
+
+      const el = document.createElement('hub-global-sidenav');
+      document.body.append(el);
+      await el.updateComplete;
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await el.updateComplete;
+
+      resolveFetch({ ok: true, text: () => Promise.resolve(RAIL_HTML) });
+      await flush(el, () => Boolean(el.shadowRoot.querySelector('.hub-global-sidenav-item-btn')));
+      const firstItem = el.shadowRoot.querySelector('.hub-global-sidenav-item-btn');
+      expect(firstItem).to.not.be.null;
+
+      await flush(el, () => el.shadowRoot.activeElement === firstItem);
+      expect(el.shadowRoot.activeElement === firstItem).to.be.true;
+    });
+
+    it('marks sibling page content inert while the mobile drawer is open', async () => {
+      const sibling = document.createElement('button');
+      document.body.append(sibling);
+
+      const el = await mountAndWait(true, sandbox);
+      expect(sibling.inert).to.be.false;
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await el.updateComplete;
+
+      expect(sibling.inert).to.be.true;
+    });
+
+    it('restores sibling page content when the drawer closes', async () => {
+      const sibling = document.createElement('button');
+      document.body.append(sibling);
+
+      const el = await mountAndWait(true, sandbox);
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await el.updateComplete;
+      expect(sibling.inert).to.be.true;
+
+      document.dispatchEvent(new CustomEvent('hub:sidenav-closed'));
+      await el.updateComplete;
+
+      expect(sibling.inert).to.be.false;
     });
 
     it('wraps Tab from the close button back to the first global sidenav item on mobile', async () => {
