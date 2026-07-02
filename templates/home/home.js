@@ -1,5 +1,3 @@
-import { loadBlock } from '../../scripts/ak.js';
-
 export default async function init() {
   const main = document.querySelector('main');
   const heading = main.querySelector('h1');
@@ -22,6 +20,4 @@ export default async function init() {
   navRail.append(sitenav);
   main.replaceWith(wrapper);
   wrapper.append(navRail, main);
-
-  await loadBlock(sitenav);
 }

@@ -19,7 +19,7 @@ export default async function init() {
 
   navRail.append(sitenav);
   main.replaceWith(wrapper);
-  wrapper.append(navRail, pageNav, main);
+  wrapper.append(navRail, main, pageNav);
 
-  await Promise.all([loadBlock(sitenav), loadBlock(pageNav)]);
+  await loadBlock(pageNav);
 }
