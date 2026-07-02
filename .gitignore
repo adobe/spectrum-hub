@@ -3,6 +3,12 @@ coverage/
 logs/
 node_modules/
 
+# Vendored 2nd-gen SWC dist — build input for scripts/build-swc-components.js.
+# Not published to npm yet, so this is a local manual copy; regenerate it
+# rather than committing it. The runtime CSS it produces (swc.css, tokens.css)
+# is copied into deps/swc/bundled/, which IS committed.
+deps/swc/swc-dist/
+
 helix-importer-ui
 .DS_Store
 *.bak
