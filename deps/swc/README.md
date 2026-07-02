@@ -119,6 +119,34 @@ This overwrites `data/swc-mixins.json`. Commit the result and re-run `extract-ce
 
 Confirm the final published path with the SWC team when the CEM is added to the npm package `files` list (today `package.json` points at `.storybook/custom-elements.json` but `files` may only include `dist/`).
 
+## Vendoring `swc-dist` (component playground bundler input)
+
+`deps/swc/swc-dist/` is a separate concern from the `data/` extraction covered above — it's the actual 2nd-gen SWC **build output**, used only as input to `scripts/build-swc-components.js`, which bundles each component into a self-contained ESM file under `deps/swc/bundled/` (that's what the component playground's static pages, e.g. `component-playground/button.html`, actually load in the browser).
+
+`swc-dist/` is **gitignored, not committed** — only `deps/swc/bundled/` (the bundled output) is. 2nd-gen SWC isn't published to npm yet, so there's no `npm install` for this; it has to be vendored by hand from a local checkout of the `spectrum-web-components` monorepo.
+
+**To (re)populate `deps/swc/swc-dist/`:**
+
+1. Check out `spectrum-web-components` (e.g. as a sibling directory to this repo) and build the 2nd-gen packages:
+   ```sh
+   cd spectrum-web-components/2nd-gen
+   yarn install
+   yarn build   # builds @spectrum-web-components/core and @adobe/spectrum-wc, each producing dist/
+   ```
+2. Copy both packages' `dist/` output into `deps/swc/swc-dist/`, merging `core`'s output under a nested `core/` directory — `scripts/build-swc-components.js` aliases `@spectrum-web-components/core` to `deps/swc/swc-dist/core` at bundle time, so this nesting is required:
+   ```sh
+   cd spectrum-hub
+   cp -r ../spectrum-web-components/2nd-gen/packages/swc/dist/. deps/swc/swc-dist/
+   cp -r ../spectrum-web-components/2nd-gen/packages/core/dist/. deps/swc/swc-dist/core/
+   ```
+3. Bundle whichever component(s) you need for the playground:
+   ```sh
+   node scripts/build-swc-components.js button   # single component
+   node scripts/build-swc-components.js          # every component found in swc-dist
+   ```
+
+If you don't have a `spectrum-web-components` checkout handy, ask a teammate who's already vendored `swc-dist` locally rather than reconstructing it from scratch.
+
 ## Future work
 
 - **TODO: Automate component discovery** — Add a script (similar to `deps/rsp/discover-components.js`) that reads the published or local CEM once, enumerates every declaration with a `tagName`, and regenerates `components.json`. Filter rules may be needed (for example skip internal or non-documented tags).
