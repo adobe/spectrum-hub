@@ -9,7 +9,7 @@
     "lint": "npm run lint:js && npm run lint:css",
     "test": "npm run test:unit; e1=$?; npm run test:extractions; e2=$?; exit $((e1 | e2))",
     "test:unit": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --concurrent-browsers 4",
-    "test:extractions": "node --test test/extractions/*.node.test.js",
+    "test:extractions": "node --test 'test/**/*.node.test.js'",
     "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
@@ -28,6 +28,8 @@
   "devDependencies": {
     "@adobe/eslint-config-helix": "^3.0.17",
     "@esm-bundle/chai": "4.3.4-fix.0",
+    "@floating-ui/dom": "^1.7.6",
+    "@lit-labs/observers": "^2.1.0",
     "@web/dev-server-import-maps": "^0.2.0",
     "@web/test-runner": "^0.20.0",
     "@web/test-runner-commands": "0.9.0",
