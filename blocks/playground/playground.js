@@ -13,7 +13,7 @@ export function parseBlockMetadata(el) {
   return [...el.children].reduce((acc, row) => {
     const key = row.children[0]?.textContent?.trim().toLowerCase();
     const valueCell = row.children[1];
-    if (!key || !valueCell) return acc;
+    if (!key || !valueCell) { return acc; }
     const link = valueCell.querySelector('a');
     acc[key] = link ? link.href : valueCell.textContent.trim();
     return acc;
@@ -21,11 +21,23 @@ export function parseBlockMetadata(el) {
 }
 
 export function parseDefault(raw) {
-  if (!raw) return undefined;
+  if (!raw) { return undefined; }
   const trimmed = raw.trim();
-  if (!trimmed) return undefined;
+  if (!trimmed) { return undefined; }
   const quoted = trimmed.match(/^'(.*)'$/);
   return quoted ? quoted[1] : trimmed;
+}
+
+export function booleanStringToYesNo(raw) {
+  if (raw === 'true') { return 'yes'; }
+  if (raw === 'false') { return 'no'; }
+  return raw;
+}
+
+export function yesNoToBoolean(value) {
+  if (value === 'yes') { return true; }
+  if (value === 'no') { return false; }
+  return value;
 }
 
 export function buildSwcSnippet(tagName, currentProps) {
@@ -92,7 +104,7 @@ function buildPicker(label, options, currentValue, onChange) {
     const option = document.createElement('option');
     option.value = opt;
     option.textContent = opt;
-    if (opt === currentValue) option.selected = true;
+    if (opt === currentValue) { option.selected = true; }
     select.appendChild(option);
   });
 
@@ -105,7 +117,7 @@ function buildPicker(label, options, currentValue, onChange) {
 
 async function fetchJson(url) {
   const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Failed to fetch ${url}: ${resp.status}`);
+  if (!resp.ok) { throw new Error(`Failed to fetch ${url}: ${resp.status}`); }
   return resp.json();
 }
 
@@ -158,13 +170,14 @@ export default async function init(el) {
       controlsMap,
       rspProps,
       swcProps,
+      // eslint-disable-next-line no-console
       (message) => console.warn(`Playground (${component}): ${message}`),
     );
-    if (!descriptor) return acc;
+    if (!descriptor) { return acc; }
     const swcRow = findSwcProp(property, swcProps);
     const rspRow = rspProps.find((p) => p.property === property);
     const rawDefault = parseDefault(swcRow?.default ?? rspRow?.default) ?? descriptor.options[0];
-    const defaultValue = rawDefault === 'true' ? 'yes' : rawDefault === 'false' ? 'no' : rawDefault;
+    const defaultValue = booleanStringToYesNo(rawDefault);
     currentProps[property] = { value: defaultValue, attribute: descriptor.attribute };
     acc.push({ property, ...descriptor, defaultValue });
     return acc;
@@ -183,7 +196,7 @@ export default async function init(el) {
   iframe.setAttribute('loading', 'lazy');
 
   function postPropUpdate(property, attribute, value) {
-    const normalized = value === 'yes' ? true : value === 'no' ? false : value;
+    const normalized = yesNoToBoolean(value);
     iframe.contentWindow?.postMessage({ type: 'prop-update', property, attribute, value: normalized }, '*');
   }
 
@@ -203,7 +216,7 @@ export default async function init(el) {
   controlsPanel.setAttribute('aria-label', 'Component controls');
 
   descriptors.forEach(({ property, options, defaultValue, attribute }) => {
-    if (!options.length) return;
+    if (!options.length) { return; }
     const picker = buildPicker(property, options, defaultValue, (value) => {
       currentProps[property].value = value;
       postPropUpdate(property, attribute, value);

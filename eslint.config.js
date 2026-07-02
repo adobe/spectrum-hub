@@ -74,5 +74,12 @@ export default defineConfig([
       'no-underscore-dangle': 0,
       'no-unused-expressions': 0,
     },
+  },
+  {
+    // CLI build script — console output is its progress/error reporting.
+    files: ['scripts/build-swc-components.js'],
+    rules: {
+      'no-console': 'off',
+    },
   }
 ]);

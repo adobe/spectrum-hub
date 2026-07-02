@@ -17,7 +17,7 @@
  */
 async function fetchSheet(url, sheet) {
   const resp = await fetch(`${url}?sheet=${sheet}`);
-  if (!resp.ok) throw new Error(`Failed to fetch sheet "${sheet}" from ${url}: ${resp.status}`);
+  if (!resp.ok) { throw new Error(`Failed to fetch sheet "${sheet}" from ${url}: ${resp.status}`); }
   const { data } = await resp.json();
   return data.map((row) => Object.fromEntries(
     Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]),
@@ -47,7 +47,7 @@ export async function fetchPlaygroundSheets(url) {
 export function getComponentProperties(name, componentsSheet) {
   const normalized = name.trim().toLowerCase();
   const row = componentsSheet.find((r) => r.component?.trim().toLowerCase() === normalized);
-  if (!row?.properties?.trim()) return [];
+  if (!row?.properties?.trim()) { return []; }
   return row.properties.split(',').map((p) => p.trim()).filter(Boolean);
 }
 
@@ -74,9 +74,9 @@ export function buildControlsMap(controlsSheet) {
  * @returns {string[]}
  */
 export function parsePickerOptions(typeString) {
-  if (!typeString) return [];
+  if (!typeString) { return []; }
   const matches = typeString.match(/'([^']+)'/g);
-  if (!matches) return [];
+  if (!matches) { return []; }
   return matches.map((m) => m.replace(/'/g, ''));
 }
 
@@ -121,12 +121,12 @@ export function resolvePickerOptions(property, rspProps, swcProps) {
   const rspRow = rspProps.find((p) => p.property === property);
   if (rspRow?.type) {
     const options = parsePickerOptions(rspRow.type);
-    if (options.length) return options;
-    if (rspRow.type === 'boolean') return ['no', 'yes'];
+    if (options.length) { return options; }
+    if (rspRow.type === 'boolean') { return ['no', 'yes']; }
   }
 
   const swcRow = findSwcProp(property, swcProps);
-  if (swcRow?.type === 'boolean') return ['no', 'yes'];
+  if (swcRow?.type === 'boolean') { return ['no', 'yes']; }
 
   return [];
 }

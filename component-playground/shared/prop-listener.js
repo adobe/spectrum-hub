@@ -6,7 +6,7 @@
  */
 export function listenForPropUpdates(handler) {
   window.addEventListener('message', (event) => {
-    if (event.data?.type !== 'prop-update') return;
+    if (event.data?.type !== 'prop-update') { return; }
     const { property, attribute, value } = event.data;
     handler({ property, attribute, value });
   });
