@@ -107,9 +107,16 @@ class HubGlobalSidenav extends LitElement {
     };
     document.addEventListener('keydown', this._escHandler);
 
-    // When hub-section-sidenav closes via "Back to main menu", install trap without moving focus.
+    // When hub-section-sidenav closes via "Back to main menu", move focus onto our
+    // first item (it was covering us, so focus needs to come back to this layer).
+    // It also just released everything it had marked inert (including our background,
+    // which we may have skipped sweeping ourselves while it was the topmost layer) —
+    // re-assert it now that we're the active dialog again.
     this._sectionNavBackHandler = () => {
-      if (this._isOpen && this._isMobile) { this._setupFocusTrap(true); }
+      if (this._isOpen && this._isMobile) {
+        this._setBackgroundInert(true);
+        this._setupFocusTrap();
+      }
     };
     document.addEventListener('hub:section-nav-back', this._sectionNavBackHandler);
 
@@ -131,7 +138,18 @@ class HubGlobalSidenav extends LitElement {
     if (changed.has('_isOpen') || changed.has('_isMobile')) {
       const modalOpen = this._isOpen && this._isMobile;
       this.toggleAttribute('open', modalOpen);
-      this._setBackgroundInert(modalOpen);
+      if (modalOpen) {
+        // Defer so hub-section-sidenav's own (synchronous) update has settled
+        // first — same reasoning as the focus-trap deferral below. If section
+        // is also open, it's the topmost layer and owns the background sweep;
+        // skip ours so the two don't race over which wrapper div ends up inert.
+        requestAnimationFrame(() => {
+          const sectionNav = document.querySelector('hub-section-sidenav');
+          if (!sectionNav?.hasAttribute('open')) { this._setBackgroundInert(true); }
+        });
+      } else {
+        this._setBackgroundInert(false);
+      }
       if (this._isMobile && this._isOpen) {
         this.setAttribute('role', 'dialog');
         this.setAttribute('aria-modal', 'true');
@@ -161,27 +179,24 @@ class HubGlobalSidenav extends LitElement {
     }
   }
 
-  // installOnly = true: install trap without moving focus (called after section nav closes).
-  _setupFocusTrap(installOnly = false) {
+  _setupFocusTrap() {
     const nav = this.shadowRoot.querySelector('.hub-global-sidenav-nav');
     if (!nav) { return; }
     const getFirstFocusable = () => nav.querySelector('.hub-global-sidenav-item-btn');
 
-    if (!installOnly) {
-      // Defer to hub-section-sidenav only when it is actually open on top.
-      // (It pre-fetches its tree on load, so "has content" is always true and
-      // can't tell us whether it is the visible layer.)
-      const sectionNav = document.querySelector('hub-section-sidenav');
-      if (sectionNav?.hasAttribute('open')) { return; }
+    // Defer to hub-section-sidenav only when it is actually open on top.
+    // (It pre-fetches its tree on load, so "has content" is always true and
+    // can't tell us whether it is the visible layer.)
+    const sectionNav = document.querySelector('hub-section-sidenav');
+    if (sectionNav?.hasAttribute('open')) { return; }
 
-      const firstItem = getFirstFocusable();
-      if (firstItem) {
-        firstItem.focus();
-        this._focusSettled = true;
-      } else if (!this._focusSettled) {
-        // No items loaded yet — fall back so focus isn't stranded outside the dialog.
-        nav.querySelector('.hub-global-sidenav-close')?.focus();
-      }
+    const firstItem = getFirstFocusable();
+    if (firstItem) {
+      firstItem.focus();
+      this._focusSettled = true;
+    } else if (!this._focusSettled) {
+      // No items loaded yet — fall back so focus isn't stranded outside the dialog.
+      nav.querySelector('.hub-global-sidenav-close')?.focus();
     }
 
     if (this._trapKeyHandler) { return; } // Already installed.
@@ -218,21 +233,22 @@ class HubGlobalSidenav extends LitElement {
       return;
     }
 
-    // hub-section-sidenav's own sweep may have already marked this element inert
-    // when it opened first — this component is now the active (topmost) dialog.
-    this.inert = false;
-
     const siblings = [];
     let node = this;
     while (node && node !== document.body) {
+      // hub-section-sidenav's own sweep may have already marked this element
+      // — or an ancestor, e.g. the block wrapper div — inert when it opened
+      // first. This branch is now the active (topmost) dialog, so clear it
+      // as we walk up rather than just the custom element itself.
+      node.inert = false;
       const { parentElement } = node;
       if (parentElement) {
-        [...parentElement.children].forEach((sibling) => {
+        for (const sibling of parentElement.children) {
           if (sibling !== node && !sibling.inert) {
             sibling.inert = true;
             siblings.push(sibling);
           }
-        });
+        }
       }
       node = parentElement;
     }

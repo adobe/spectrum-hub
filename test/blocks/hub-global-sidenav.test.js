@@ -280,7 +280,10 @@ describe('hub-global-sidenav block', () => {
       document.dispatchEvent(new CustomEvent('hub:sidenav-closed'));
       await el.updateComplete;
 
-      expect(document.activeElement).to.equal(trigger);
+      // Compare via boolean, not .to.equal() on the raw elements — chai's
+      // failure-message serialization can hang the whole session on a DOM
+      // element diff. See feedback_chai_dom_assertion_hangs memory.
+      expect(document.activeElement === trigger).to.be.true;
     });
 
     it('moves focus to the first global sidenav item when the mobile drawer opens', async () => {
@@ -289,9 +292,27 @@ describe('hub-global-sidenav block', () => {
       document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
       await flush(el, () => el.shadowRoot.activeElement === el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'));
 
-      expect(el.shadowRoot.activeElement).to.equal(
-        el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'),
-      );
+      const firstItem = el.shadowRoot.querySelector('.hub-global-sidenav-item-btn');
+      expect(el.shadowRoot.activeElement === firstItem).to.be.true;
+    });
+
+    it('moves focus back to the first global sidenav item when hub:section-nav-back fires (Back to main menu)', async () => {
+      const el = await mountAndWait(true, sandbox);
+      document.dispatchEvent(new CustomEvent('hub:sidenav-toggle', { detail: { open: true } }));
+      await flush(el, () => el.shadowRoot.activeElement === el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'));
+
+      // Simulate focus having moved elsewhere (e.g. into the section sidenav
+      // that was covering this one while it was on top).
+      const elsewhere = document.createElement('button');
+      document.body.append(elsewhere);
+      elsewhere.focus();
+      expect(document.activeElement === elsewhere).to.be.true;
+
+      document.dispatchEvent(new CustomEvent('hub:section-nav-back'));
+      await flush(el, () => el.shadowRoot.activeElement === el.shadowRoot.querySelector('.hub-global-sidenav-item-btn'));
+
+      const firstItem = el.shadowRoot.querySelector('.hub-global-sidenav-item-btn');
+      expect(el.shadowRoot.activeElement === firstItem).to.be.true;
     });
 
     it('falls back to focusing the close button when no items are available yet', async () => {
@@ -390,7 +411,7 @@ describe('hub-global-sidenav block', () => {
 
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
 
-      expect(el.shadowRoot.activeElement).to.equal(firstItem);
+      expect(el.shadowRoot.activeElement === firstItem).to.be.true;
     });
   });
 });

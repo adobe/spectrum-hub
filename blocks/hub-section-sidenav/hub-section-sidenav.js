@@ -193,13 +193,9 @@ class HubSectionSidenav extends LitElement {
         this._teardownFocusTrap();
         if (this._backToMenuActivated) {
           this._backToMenuActivated = false;
-          // Transfer focus to hub-global-sidenav's first item, then signal it to install its trap.
-          const globalNav = document.querySelector('hub-global-sidenav');
-          const navEl = globalNav?.shadowRoot?.querySelector('.hub-global-sidenav__nav');
-          const firstFocusable = navEl?.querySelector('hub-sidenav-item')
-            ?.shadowRoot?.querySelector('a, button');
+          // hub-global-sidenav owns moving focus onto its own first item once
+          // it's the active layer again — see its hub:section-nav-back handler.
           requestAnimationFrame(() => {
-            firstFocusable?.focus();
             document.dispatchEvent(new CustomEvent('hub:section-nav-back'));
           });
         } else {
@@ -273,21 +269,22 @@ class HubSectionSidenav extends LitElement {
       return;
     }
 
-    // hub-global-sidenav's own sweep may have already marked this element inert
-    // when it opened first — this component is now the active (topmost) dialog.
-    this.inert = false;
-
     const siblings = [];
     let node = this;
     while (node && node !== document.body) {
+      // hub-global-sidenav's own sweep may have already marked this element
+      // — or an ancestor, e.g. the block wrapper div — inert when it opened
+      // first. This branch is now the active (topmost) dialog, so clear it
+      // as we walk up rather than just the custom element itself.
+      node.inert = false;
       const { parentElement } = node;
       if (parentElement) {
-        [...parentElement.children].forEach((sibling) => {
+        for (const sibling of parentElement.children) {
           if (sibling !== node && !sibling.inert) {
             sibling.inert = true;
             siblings.push(sibling);
           }
-        });
+        }
       }
       node = parentElement;
     }
