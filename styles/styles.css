@@ -396,6 +396,7 @@ div[data-status],
         grid-area: nav-rail;
         display: grid;
         grid-template-columns: auto 1fr;
+        grid-template-rows: minmax(0, 1fr);
         gap: var(--s2-spacing-100);
         position: sticky;
         top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 32px); /* 32px equates to the margin beneath the header; 32px so the nav doesn't scroll */
@@ -406,12 +407,14 @@ div[data-status],
           position: relative;
           inset: 0;
           z-index: 1;
+          min-block-size: 0;
         }
 
         .hub-section-sidenav {
           display: block;
           position: relative;
           inset: 0;
+          min-block-size: 0;
         }
       }
 

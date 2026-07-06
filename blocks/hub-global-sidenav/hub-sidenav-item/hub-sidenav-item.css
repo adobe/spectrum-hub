@@ -138,7 +138,7 @@
 }
 
 :host([expanded]) .hub-sidenav-item-children {
-  max-block-size: 1000px;
+  max-block-size: 2500px; /* hardcoded to transition the max height */
   overflow: unset;
   margin-block-start: var(--s2-spacing-100);
 }
