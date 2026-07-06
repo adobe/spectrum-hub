@@ -93,6 +93,14 @@
     outline-offset: var(--s2-spacing-50);
     border-radius: var(--s2-corner-radius-600);
   }
+
+  &[aria-current="page"] {
+    font-weight: 700;
+  }
+
+  &[aria-current="page"]::before {
+    opacity: 1;
+  }
 }
 
 .hub-sidenav-item-chevron {
