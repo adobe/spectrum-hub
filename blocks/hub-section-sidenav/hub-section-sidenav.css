@@ -16,7 +16,7 @@
   pointer-events: auto;
 }
 
-.hub-section-sidenav__nav {
+.hub-section-sidenav-nav {
   position: fixed;
   inset-block: 0;
   inset-inline-start: 0;
@@ -41,8 +41,8 @@
   padding: var(--s2-spacing-200);
 }
 
-.hub-section-sidenav__section-header,
-.hub-section-sidenav__group-header {
+.hub-section-sidenav-section-header,
+.hub-section-sidenav-group-header {
   color: inherit;
   font-size: var(--s2-body-size-s);
   font-weight: var(--s2-heading-font-weight);
@@ -51,15 +51,15 @@
   pointer-events: none;
 }
 
-.hub-section-sidenav__section-header {
+.hub-section-sidenav-section-header {
   margin-block: var(--s2-spacing-100) var(--s2-spacing-200);
 }
 
-.hub-section-sidenav__group-header {
+.hub-section-sidenav-group-header {
   margin-block: var(--s2-spacing-300) var(--s2-spacing-100);
 }
 
-:host([open]) .hub-section-sidenav__nav {
+:host([open]) .hub-section-sidenav-nav {
   transform: translateX(0);
 }
 
@@ -71,7 +71,7 @@
     pointer-events: auto;
   }
 
-  .hub-section-sidenav__nav {
+  .hub-section-sidenav-nav {
     position: static;
     inset: unset;
     inline-size: unset;
@@ -85,7 +85,7 @@
 }
 
 /* Back button — last in DOM for Tab order, but visually first (in small screen drawer) via order: -1 */
-.hub-section-sidenav__back {
+.hub-section-sidenav-back {
   display: flex;
   align-items: center;
   gap: var(--s2-spacing-100);
@@ -133,7 +133,7 @@
   }
 }
 
-.hub-section-sidenav__back-icon {
+.hub-section-sidenav-back-icon {
   display: inline-block;
   flex-shrink: 0;
   inline-size: 20px;

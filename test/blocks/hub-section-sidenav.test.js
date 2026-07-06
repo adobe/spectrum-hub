@@ -183,9 +183,9 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
 
-      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__section-header'));
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav-section-header'));
 
-      expect(el.shadowRoot.querySelector('.hub-section-sidenav__section-header').textContent.trim()).to.equal('Web');
+      expect(el.shadowRoot.querySelector('.hub-section-sidenav-section-header').textContent.trim()).to.equal('Web');
     });
 
     it('renders authored subgroup headers for direct branch nodes', async () => {
@@ -195,9 +195,9 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
 
-      await flush(el, () => el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header').length);
+      await flush(el, () => el.shadowRoot.querySelectorAll('.hub-section-sidenav-group-header').length);
 
-      expect([...el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header')]
+      expect([...el.shadowRoot.querySelectorAll('.hub-section-sidenav-group-header')]
         .map((header) => header.textContent.trim())).to.deep.equal(['RSP', 'SWC']);
     });
 
@@ -208,9 +208,9 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
 
-      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__section-header'));
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav-section-header'));
 
-      const header = el.shadowRoot.querySelector('.hub-section-sidenav__section-header');
+      const header = el.shadowRoot.querySelector('.hub-section-sidenav-section-header');
       expect(header.tagName).to.equal('H2');
     });
 
@@ -221,9 +221,9 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
 
-      await flush(el, () => el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header').length);
+      await flush(el, () => el.shadowRoot.querySelectorAll('.hub-section-sidenav-group-header').length);
 
-      const headers = [...el.shadowRoot.querySelectorAll('.hub-section-sidenav__group-header')];
+      const headers = [...el.shadowRoot.querySelectorAll('.hub-section-sidenav-group-header')];
       expect(headers).to.have.length.above(0);
       headers.forEach((header) => expect(header.tagName).to.equal('H3'));
     });
@@ -271,7 +271,7 @@ describe('hub-section-sidenav block', () => {
       await flush(el, () => el.hasAttribute('open'));
 
       expect(el.shadowRoot.querySelector('nav')).to.not.be.null;
-      const backBtn = el.shadowRoot.querySelector('.hub-section-sidenav__back');
+      const backBtn = el.shadowRoot.querySelector('.hub-section-sidenav-back');
       expect(backBtn).to.not.be.null;
       expect(el.shadowRoot.activeElement === backBtn).to.be.true;
     });
@@ -308,8 +308,8 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
       document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
-      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__back'));
-      expect(el.shadowRoot.querySelector('.hub-section-sidenav__back')).to.not.be.null;
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav-back'));
+      expect(el.shadowRoot.querySelector('.hub-section-sidenav-back')).to.not.be.null;
     });
 
     it('the back button has type="button" so it cannot submit an ancestor form', async () => {
@@ -319,8 +319,8 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
       document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
-      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__back'));
-      const backBtn = el.shadowRoot.querySelector('.hub-section-sidenav__back');
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav-back'));
+      const backBtn = el.shadowRoot.querySelector('.hub-section-sidenav-back');
       expect(backBtn.getAttribute('type')).to.equal('button');
     });
 
@@ -331,8 +331,8 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
       document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
-      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__back'));
-      el.shadowRoot.querySelector('.hub-section-sidenav__back').click();
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav-back'));
+      el.shadowRoot.querySelector('.hub-section-sidenav-back').click();
       await el.updateComplete;
       expect(el.hasAttribute('open')).to.be.false;
     });
@@ -472,13 +472,13 @@ describe('hub-section-sidenav block', () => {
       const el = document.createElement('hub-section-sidenav');
       document.body.append(el);
       document.dispatchEvent(new CustomEvent('hub:section-selected', { detail: { section: 'foundations' } }));
-      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav__back'));
+      await flush(el, () => el.shadowRoot.querySelector('.hub-section-sidenav-back'));
       // Fake RAF after setup so the hub:section-nav-back RAF fires on demand,
       // not at the display's frame rate (background tabs throttle RAF to ~1fps).
       const clock = sandbox.useFakeTimers({ toFake: ['requestAnimationFrame'] });
       const spy = sandbox.spy();
       document.addEventListener('hub:section-nav-back', spy);
-      el.shadowRoot.querySelector('.hub-section-sidenav__back').click();
+      el.shadowRoot.querySelector('.hub-section-sidenav-back').click();
       await el.updateComplete;
       clock.runAll();
       document.removeEventListener('hub:section-nav-back', spy);

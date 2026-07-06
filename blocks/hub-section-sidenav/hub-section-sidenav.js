@@ -209,13 +209,13 @@ class HubSectionSidenav extends LitElement {
     // shadow DOM asynchronously — await the specific child's updateComplete
     // rather than guessing at rAF/microtask timing.
     if (changed.has('_tree') && this._isOpen && this._isMobile && !this._focusSettled) {
-      const item = this.shadowRoot.querySelector('.hub-section-sidenav__nav hub-sidenav-item');
+      const item = this.shadowRoot.querySelector('.hub-section-sidenav-nav hub-sidenav-item');
       (item?.updateComplete ?? Promise.resolve()).then(() => this._setupFocusTrap());
     }
   }
 
   _setupFocusTrap() {
-    const nav = this.shadowRoot.querySelector('.hub-section-sidenav__nav');
+    const nav = this.shadowRoot.querySelector('.hub-section-sidenav-nav');
     if (!nav) { return; }
 
     const firstFocusable = nav.querySelector('hub-sidenav-item')
@@ -225,7 +225,7 @@ class HubSectionSidenav extends LitElement {
       this._focusSettled = true;
     } else if (!this._focusSettled) {
       // No items loaded yet — fall back so focus isn't stranded outside the dialog.
-      nav.querySelector('.hub-section-sidenav__back')?.focus();
+      nav.querySelector('.hub-section-sidenav-back')?.focus();
     }
 
     if (this._trapKeyHandler) { return; } // Already installed.
@@ -236,7 +236,7 @@ class HubSectionSidenav extends LitElement {
       // Only act when focus is inside this component's nav.
       if (!nav.contains(this.shadowRoot.activeElement)) { return; }
 
-      const backBtn = nav.querySelector('.hub-section-sidenav__back');
+      const backBtn = nav.querySelector('.hub-section-sidenav-back');
       const deepActive = getDeepActiveElement();
       const firstNow = nav.querySelector('hub-sidenav-item')
         ?.shadowRoot?.querySelector('a, button');
@@ -306,7 +306,7 @@ class HubSectionSidenav extends LitElement {
   _renderItem(node, depth = 1) {
     if (depth === 1 && this._sectionLabel && node.children.length) {
       return html`
-        <h3 class="hub-section-sidenav__group-header">${node.label}</h3>
+        <h3 class="hub-section-sidenav-group-header">${node.label}</h3>
         ${node.children.map((child) => this._renderItem(child, depth + 1))}
       `;
     }
@@ -343,21 +343,21 @@ class HubSectionSidenav extends LitElement {
     const navSection = this._selectedSection || getTopSection();
     return html`
       <nav
-        class="hub-section-sidenav__nav"
+        class="hub-section-sidenav-nav"
         aria-label=${`${formatLabel(navSection || '')} navigation`}
         ?inert=${this._isMobile && !this._isOpen}
       >
         ${this._sectionLabel ? html`
-          <h2 class="hub-section-sidenav__section-header">${this._sectionLabel}</h2>
+          <h2 class="hub-section-sidenav-section-header">${this._sectionLabel}</h2>
         ` : nothing}
         ${this._tree.map((node) => this._renderItem(node))}
         ${this._isMobile ? html`
           <button
-            class="hub-section-sidenav__back"
+            class="hub-section-sidenav-back"
             type="button"
             @click=${this._backToMenu}
           >
-            <span class="hub-section-sidenav__back-icon" aria-hidden="true"></span>
+            <span class="hub-section-sidenav-back-icon" aria-hidden="true"></span>
             Back to main menu
           </button>
         ` : nothing}
