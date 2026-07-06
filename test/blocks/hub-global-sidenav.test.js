@@ -2,6 +2,7 @@ import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 // The named import also evaluates the module, which registers the custom element.
 import { pathToId, parseRailFragment } from '../../blocks/hub-global-sidenav/hub-global-sidenav.js';
+import { setConfig } from '../../scripts/ak.js';
 
 const RAIL_HTML = `
   <main><div><ul>
@@ -68,6 +69,7 @@ describe('hub-global-sidenav block', () => {
     document.body.innerHTML = '';
     localStorage.removeItem('hub-sidenav-collapsed');
     window.history.pushState({}, '', '/');
+    setConfig({ locales: { '': {} } });
   });
 
   describe('pathToId', () => {
@@ -128,6 +130,22 @@ describe('hub-global-sidenav block', () => {
       const el = await mountAndWait(false, sandbox);
       const btn = el.shadowRoot.querySelector('.hub-global-sidenav-item-btn');
       expect(btn.getAttribute('aria-label')).to.contain('opens section navigation');
+    });
+
+    it('sets aria-current="true" on the section button matching the current page', async () => {
+      window.history.pushState({}, '', '/web/overview');
+      const el = await mountAndWait(false, sandbox);
+      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav-item-btn');
+      expect(buttons[1].getAttribute('aria-current')).to.equal('true');
+      expect(buttons[0].hasAttribute('aria-current')).to.be.false;
+    });
+
+    it('sets aria-current="true" on the section button matching the current page under a locale prefix', async () => {
+      window.history.pushState({}, '', '/fr/web/overview');
+      setConfig({ locales: { '': {}, '/fr': { lang: 'fr' } } });
+      const el = await mountAndWait(false, sandbox);
+      const buttons = el.shadowRoot.querySelectorAll('.hub-global-sidenav-item-btn');
+      expect(buttons[1].getAttribute('aria-current')).to.equal('true');
     });
 
     it('renders the collapse toggle on desktop', async () => {

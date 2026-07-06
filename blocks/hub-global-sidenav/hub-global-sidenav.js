@@ -2,7 +2,7 @@
 
 import { LitElement, html, nothing } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
-import { getConfig } from '../../scripts/ak.js';
+import { getConfig, stripLocalePrefix } from '../../scripts/ak.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
 const styles = await loadStyle(import.meta.url);
@@ -271,7 +271,7 @@ class HubGlobalSidenav extends LitElement {
   }
 
   _isSectionActive(path) {
-    const { pathname } = window.location;
+    const pathname = stripLocalePrefix(window.location.pathname, getConfig().locale.prefix);
     return Boolean(path && (pathname === path || pathname.startsWith(`${path}/`)));
   }
 

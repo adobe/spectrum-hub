@@ -6,6 +6,7 @@ import {
   formatLabel,
   fetchSectionTree,
 } from '../../blocks/hub-section-sidenav/hub-section-sidenav.js';
+import { setConfig } from '../../scripts/ak.js';
 
 const PAGES = [
   { path: '/foundations/color', title: 'Color' },
@@ -77,6 +78,7 @@ describe('hub-section-sidenav block', () => {
     sandbox.restore();
     document.body.innerHTML = '';
     window.history.pushState({}, '', '/');
+    setConfig({ locales: { '': {} } });
   });
 
   describe('getTopSection', () => {
@@ -174,6 +176,31 @@ describe('hub-section-sidenav block', () => {
       expect(el.shadowRoot.querySelector('nav')).to.not.be.null;
       // Two top-level nodes: color (leaf) and visual-language (branch).
       expect(el.shadowRoot.querySelectorAll('hub-sidenav-item[data-nested="1"]')).to.have.lengthOf(3);
+    });
+
+    it('auto-expands the branch containing the current page', async () => {
+      window.history.pushState({}, '', '/foundations/visual-language/typography');
+      stubMatchMedia(sandbox);
+      stubIndexFetch(sandbox);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      await flush(el, () => el.shadowRoot.querySelector('hub-sidenav-item'));
+
+      const branch = el.shadowRoot.querySelector('hub-sidenav-item[href="/foundations/visual-language"]');
+      expect(branch.hasAttribute('expanded')).to.be.true;
+    });
+
+    it('auto-expands the branch containing the current page under a locale prefix', async () => {
+      window.history.pushState({}, '', '/fr/foundations/visual-language/typography');
+      setConfig({ locales: { '': {}, '/fr': { lang: 'fr' } } });
+      stubMatchMedia(sandbox);
+      stubIndexFetch(sandbox);
+      const el = document.createElement('hub-section-sidenav');
+      document.body.append(el);
+      await flush(el, () => el.shadowRoot.querySelector('hub-sidenav-item'));
+
+      const branch = el.shadowRoot.querySelector('hub-sidenav-item[href="/foundations/visual-language"]');
+      expect(branch.hasAttribute('expanded')).to.be.true;
     });
 
     it('renders the top-level section header for platform pages', async () => {

@@ -3,6 +3,7 @@
 import { LitElement, html, nothing, ifDefined } from '../../../deps/lit/dist/index.js';
 import '../../../deps/components/swc-tooltip/dist/index.js';
 import loadStyle from '../../../scripts/utils/styles.js';
+import { getConfig, stripLocalePrefix } from '../../scripts/ak.js';
 
 const styles = await loadStyle(import.meta.url);
 
@@ -26,7 +27,9 @@ class HubSidenavItem extends LitElement {
   }
 
   get _isActive() {
-    return Boolean(this.href && window.location.pathname === this.href);
+    const { locale } = getConfig();
+    const pathname = stripLocalePrefix(window.location.pathname, locale.prefix);
+    return Boolean(this.href && pathname === this.href);
   }
 
   _toggle() {

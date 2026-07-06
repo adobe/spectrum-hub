@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import {
   getMetadata,
   getLocale,
+  stripLocalePrefix,
   setConfig,
   getConfig,
   localizeUrl,
@@ -100,6 +101,20 @@ describe('ak.js', () => {
       const locale = getLocale({ '': {}, '/de': { lang: 'de' }, '/fr': { lang: 'fr' } });
       expect(locale.prefix).to.equal('/fr');
       meta.remove();
+    });
+  });
+
+  describe('stripLocalePrefix', () => {
+    it('returns the pathname unchanged when the prefix is empty (root locale)', () => {
+      expect(stripLocalePrefix('/foundations/color', '')).to.equal('/foundations/color');
+    });
+
+    it('strips a matching locale prefix from the pathname', () => {
+      expect(stripLocalePrefix('/fr/foundations/color', '/fr')).to.equal('/foundations/color');
+    });
+
+    it('returns the pathname unchanged when it does not start with the prefix', () => {
+      expect(stripLocalePrefix('/foundations/color', '/fr')).to.equal('/foundations/color');
     });
   });
 

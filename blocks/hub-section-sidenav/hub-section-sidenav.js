@@ -2,11 +2,10 @@
 
 import { LitElement, html, nothing } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
-import { getConfig } from '../../scripts/ak.js';
+import { getConfig, stripLocalePrefix } from '../../scripts/ak.js';
 import '../hub-sidenav-item/hub-sidenav-item.js';
 
 const styles = await loadStyle(import.meta.url);
-const { locale } = getConfig();
 const SECTION_HEADER_CONFIG = {
   web: {
     roots: ['/web'],
@@ -15,9 +14,7 @@ const SECTION_HEADER_CONFIG = {
 const MOBILE_DRAWER_LABEL = 'Section navigation';
 
 export function getTopSection() {
-  const { pathname } = window.location;
-  const stripped = pathname.startsWith(locale.prefix)
-    ? pathname.slice(locale.prefix.length) : pathname;
+  const stripped = stripLocalePrefix(window.location.pathname, getConfig().locale.prefix);
   const parts = stripped.split('/').filter(Boolean);
   const section = parts[0];
   return section || null;
@@ -312,7 +309,7 @@ class HubSectionSidenav extends LitElement {
     }
 
     if (node.children.length) {
-      const { pathname } = window.location;
+      const pathname = stripLocalePrefix(window.location.pathname, getConfig().locale.prefix);
       const isExpanded = pathname === node.path || pathname.startsWith(`${node.path}/`);
       return html`
         <hub-sidenav-item

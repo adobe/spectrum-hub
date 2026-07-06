@@ -26,6 +26,12 @@ export function getLocale(locales = { '': {} }) {
   return { prefix, ...locales[prefix] };
 }
 
+// Strips the active locale prefix from a pathname so it can be compared
+// against un-prefixed paths (e.g. from query-index.json or nav fragments).
+export function stripLocalePrefix(pathname, prefix) {
+  return prefix && pathname.startsWith(prefix) ? pathname.slice(prefix.length) : pathname;
+}
+
 export const [setConfig, getConfig] = (() => {
   let config;
   return [

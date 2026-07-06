@@ -1,5 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import '../../blocks/hub-global-sidenav/hub-sidenav-item/hub-sidenav-item.js';
+import { setConfig } from '../../scripts/ak.js';
 
 // Creates an upgraded <hub-sidenav-item>, applies reactive properties, mounts
 // it, and waits for the first render.
@@ -15,6 +16,7 @@ describe('hub-sidenav-item', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     window.history.pushState({}, '', '/');
+    setConfig({ locales: { '': {} } });
   });
 
   describe('anchor variant (default)', () => {
@@ -39,6 +41,13 @@ describe('hub-sidenav-item', () => {
 
     it('sets aria-current="page" when the href matches the current page', async () => {
       window.history.pushState({}, '', '/foundations/color');
+      const el = await mount({ label: 'Color', href: '/foundations/color' });
+      expect(el.shadowRoot.querySelector('a').getAttribute('aria-current')).to.equal('page');
+    });
+
+    it('sets aria-current="page" when the href matches the current page under a locale prefix', async () => {
+      window.history.pushState({}, '', '/fr/foundations/color');
+      setConfig({ locales: { '': {}, '/fr': { lang: 'fr' } } });
       const el = await mount({ label: 'Color', href: '/foundations/color' });
       expect(el.shadowRoot.querySelector('a').getAttribute('aria-current')).to.equal('page');
     });
