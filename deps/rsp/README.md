@@ -150,6 +150,6 @@ When upstream adds new RAC interfaces, rerun `extract-base-props.js` before `ext
 
 **Discovery coverage** — Only `export declare const` components in published `.d.ts` files are registered. Function-exported components need manual `components.json` entries.
 
-**Deprecated props** — Still extracted if present in `.d.ts` (e.g. deprecated `isQuiet` on Button). No display-layer filter yet.
+**Deprecated props** — S2 does not currently author `@deprecated` JSDoc tags (verified across `@react-spectrum/s2/src`, including Button), so none reach the extracted `.d.ts`. If S2 adds them later they are extracted as ordinary prop rows, but `parseJSDoc` keeps only the description and `@default` — the `@deprecated` tag itself is dropped — and there is no display-layer filter. See [../DATA-CONTRACT.md](../DATA-CONTRACT.md).
 
 **Performance** — `discover-components.js` and `extract-props.js` fetch types sequentially (~90+ components). `extract-base-props.js` parallelizes per-file fetches.

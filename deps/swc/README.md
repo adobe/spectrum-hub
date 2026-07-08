@@ -29,7 +29,7 @@ Each row in `data/swc-{tag}.json` maps a CEM attribute to:
 
 ### Component metadata (`status`, `since`)
 
-- **`status`** — Lifecycle and visibility from `@status` (`preview`, `deprecated`, `internal`). Components without `status` are implicitly stable and public. Rows keep this field for future use; the site's component options table does not render it as a column today.
+- **`status`** — Lifecycle and visibility from `@status`. The intended vocabulary is `preview` / `deprecated` / `internal`, but the current CEM emits only `internal` (on `swc-asset` and `swc-icon`); `preview` and `deprecated` are not populated yet. Components without `status` are implicitly stable and public. Rows keep this field for future use; the site's component options table does not render it as a column today. See [../DATA-CONTRACT.md](../DATA-CONTRACT.md).
 - **`since`** — Version from `@since` (for example `0.0.1` on early components, `2.0.0` after the convention was standardized).
 - **npm dist-tags** (`latest`, `next`, etc.) describe the package release channel, not per-component lifecycle. Use `status` for component-level visibility in docs.
 
