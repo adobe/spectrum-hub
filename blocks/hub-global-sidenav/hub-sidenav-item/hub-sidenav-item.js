@@ -1,8 +1,8 @@
 /* Expandable items follow Disclosure Navigation Menu APG: https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/ */
 
-import { LitElement, html, nothing, ifDefined } from '../../deps/lit/dist/index.js';
-import '../../deps/components/swc-tooltip/dist/index.js';
-import loadStyle from '../../scripts/utils/styles.js';
+import { LitElement, html, nothing, ifDefined } from '../../../deps/lit/dist/index.js';
+import '../../../deps/components/swc-tooltip/dist/index.js';
+import loadStyle from '../../../scripts/utils/styles.js';
 
 const styles = await loadStyle(import.meta.url);
 
@@ -89,5 +89,7 @@ if (!customElements.get('hub-sidenav-item')) {
 }
 
 export default async function init() {
-  // hub-sidenav-item is a shared dependency block — no standalone rendering.
+  // hub-sidenav-item is a shared subcomponent of hub-global-sidenav (and
+  // eventually hub-section-sidenav) — it is not an author-facing block and
+  // has no standalone rendering.
 }

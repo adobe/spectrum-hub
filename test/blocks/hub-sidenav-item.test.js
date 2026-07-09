@@ -1,5 +1,5 @@
 import { expect } from '@esm-bundle/chai';
-import '../../blocks/hub-sidenav-item/hub-sidenav-item.js';
+import '../../blocks/hub-global-sidenav/hub-sidenav-item/hub-sidenav-item.js';
 
 // Creates an upgraded <hub-sidenav-item>, applies reactive properties, mounts
 // it, and waits for the first render.
@@ -11,7 +11,7 @@ async function mount(props = {}) {
   return el;
 }
 
-describe('hub-sidenav-item block', () => {
+describe('hub-sidenav-item', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     window.history.pushState({}, '', '/');
