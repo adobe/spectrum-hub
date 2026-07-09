@@ -44,10 +44,11 @@ const decorateArea = ({ area = document }) => {
 };
 
 // Builds the common page chrome present on every page: the template wrapper,
-// the nav-rail, and the two sidenavs (global rail + section nav). The global
-// sidenav is a block, so it is loaded here; the section sidenav is populated in
-// response to `hub:section-selected`. Template-specific extras (e.g. the detail
-// template's page-nav) are added by the individual template init functions.
+// the nav-rail, and the two sidenavs (global rail + section nav). Both sidenavs
+// are blocks, so both are loaded here; the section nav then renders the current
+// section (from the URL) and updates in response to `hub:section-selected`.
+// Template-specific extras (e.g. the detail template's page-nav) are added by
+// the individual template init functions.
 export function decoratePage() {
   const main = document.querySelector('main');
   if (!main) { return; }
@@ -61,15 +62,16 @@ export function decoratePage() {
   const globalSidenav = document.createElement('div');
   globalSidenav.className = 'hub-global-sidenav';
 
-  const sitenav = document.createElement('div');
-  sitenav.className = 'hub-section-sidenav';
-  sitenav.setAttribute('aria-label', 'Second-level site navigation');
+  const sectionSidenav = document.createElement('div');
+  sectionSidenav.className = 'hub-section-sidenav';
+  sectionSidenav.setAttribute('aria-label', 'Second-level site navigation');
 
-  navRail.append(globalSidenav, sitenav);
+  navRail.append(globalSidenav, sectionSidenav);
   main.replaceWith(wrapper);
   wrapper.append(navRail, main);
 
   loadBlock(globalSidenav);
+  loadBlock(sectionSidenav);
 }
 
 export async function loadPage() {

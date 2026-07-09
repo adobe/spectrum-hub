@@ -121,8 +121,19 @@ describe('scripts.js', () => {
 
     it('labels the section sidenav "Second-level site navigation"', () => {
       decoratePage();
-      const sitenav = document.querySelector('.hub-section-sidenav');
-      expect(sitenav.getAttribute('aria-label')).to.equal('Second-level site navigation');
+      const sectionSidenav = document.querySelector('.hub-section-sidenav');
+      expect(sectionSidenav.getAttribute('aria-label')).to.equal('Second-level site navigation');
+    });
+
+    // loadBlock synchronously stamps data-block-name before its first await, so
+    // this asserts both sidenavs are actually loaded as blocks — not just that
+    // their host divs exist.
+    it('loads both sidenavs as blocks', () => {
+      decoratePage();
+      expect(document.querySelector('.hub-global-sidenav').dataset.blockName)
+        .to.equal('hub-global-sidenav');
+      expect(document.querySelector('.hub-section-sidenav').dataset.blockName)
+        .to.equal('hub-section-sidenav');
     });
 
     it('does not throw or build a wrapper when there is no main element', () => {
