@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prompt Field</title>
+  <!-- swc.css from a raw CDN so its relative @import "tokens.css" resolves -->
+  <link rel="stylesheet" href="https://unpkg.com/@adobe/spectrum-wc@0.3.0/dist/swc.css" />
+  <script type="module" src="./shared/theme-sync.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: sans-serif;
+      color-scheme: light dark;
+      background: light-dark(#fff, #000);
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      min-height: 100vh;
+    }
+
+    #mount {
+      display: contents;
+    }
+  </style>
+</head>
+<body class="swc-theme swc-theme--sizeM swc-theme--light">
+  <div id="mount"></div>
+
+  <script type="module">
+    import { listenForPropUpdates } from './shared/prop-listener.js';
+    import { defineSwc } from './shared/define-swc.js';
+
+    try {
+      await defineSwc('prompt-field');
+    } catch {
+      document.body.textContent = 'Failed to load SWC component: swc-prompt-field';
+      throw new Error('SWC import failed for swc-prompt-field');
+    }
+
+    const el = document.createElement('swc-prompt-field');
+    document.getElementById('mount').appendChild(el);
+
+    listenForPropUpdates(({ property, attribute, value }) => {
+      if (property === 'text' || property === 'label' || property === 'children') {
+        el.textContent = value;
+        return;
+      }
+
+      if (attribute) {
+        if (value === false || value === null || value === undefined) {
+          el.removeAttribute(attribute);
+        } else if (value === true) {
+          el.setAttribute(attribute, '');
+        } else {
+          el.setAttribute(attribute, value);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
