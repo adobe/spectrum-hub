@@ -383,7 +383,10 @@ div[data-status],
 @media (width >= 900px) {
     .template-wrapper {
       display: grid;
-      grid-template-columns: auto 1fr;
+      /* Reserve the collapsed rail width up front so main doesn't shift (CLS)
+         when the async global-sidenav block hydrates. minmax lets the rail
+         still grow when expanded or when the section nav populates. */
+      grid-template-columns: minmax(var(--sh-sitenav-rail-width), auto) 1fr;
       grid-template-areas: 'nav-rail main';
       gap: var(--s2-spacing-700);
       inline-size: 100%;
@@ -402,7 +405,6 @@ div[data-status],
           display: block;
           position: relative;
           inset: 0;
-          flex: 0 0 var(--sh-sitenav-rail-width);
           z-index: 1;
         }
 
@@ -410,7 +412,6 @@ div[data-status],
           display: block;
           position: relative;
           inset: 0;
-          flex: 1;
         }
       }
 
@@ -418,7 +419,7 @@ div[data-status],
         grid-area: main;
       }
     }
-  }
+}
 
 
 /* --- Spectrum Edge default styles --- */
