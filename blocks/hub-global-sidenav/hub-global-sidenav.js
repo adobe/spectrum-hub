@@ -348,9 +348,7 @@ class HubGlobalSidenav extends LitElement {
   }
 }
 
-if (!customElements.get('hub-global-sidenav')) {
-  customElements.define('hub-global-sidenav', HubGlobalSidenav);
-}
+customElements.define('hub-global-sidenav', HubGlobalSidenav);
 
 export default async function init(el) {
   el.append(document.createElement('hub-global-sidenav'));

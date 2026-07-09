@@ -84,12 +84,8 @@ class HubSidenavItem extends LitElement {
   }
 }
 
-if (!customElements.get('hub-sidenav-item')) {
-  customElements.define('hub-sidenav-item', HubSidenavItem);
-}
-
-export default async function init() {
-  // hub-sidenav-item is a shared subcomponent of hub-global-sidenav (and
-  // eventually hub-section-sidenav) — it is not an author-facing block and
-  // has no standalone rendering.
-}
+// hub-sidenav-item is a shared subcomponent of hub-global-sidenav (and
+// eventually hub-section-sidenav) — it is not an author-facing block and has
+// no standalone rendering, so it registers its tag on import with no default
+// export.
+customElements.define('hub-sidenav-item', HubSidenavItem);
