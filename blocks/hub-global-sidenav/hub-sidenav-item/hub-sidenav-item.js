@@ -3,7 +3,7 @@
 import { LitElement, html, nothing, ifDefined } from '../../../deps/lit/dist/index.js';
 import '../../../deps/components/swc-tooltip/dist/index.js';
 import loadStyle from '../../../scripts/utils/styles.js';
-import { getConfig, stripLocalePrefix } from '../../scripts/ak.js';
+import { getConfig, stripLocalePrefix } from '../../../scripts/ak.js';
 
 const styles = await loadStyle(import.meta.url);
 

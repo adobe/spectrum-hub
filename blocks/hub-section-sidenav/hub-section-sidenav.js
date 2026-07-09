@@ -3,7 +3,7 @@
 import { LitElement, html, nothing } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
 import { getConfig, stripLocalePrefix } from '../../scripts/ak.js';
-import '../hub-sidenav-item/hub-sidenav-item.js';
+import '../hub-global-sidenav/hub-sidenav-item/hub-sidenav-item.js';
 
 const styles = await loadStyle(import.meta.url);
 const SECTION_HEADER_CONFIG = {
