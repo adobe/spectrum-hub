@@ -4,19 +4,11 @@ body.home-template {
   }
 }
 
-.home-template {
-  .template-wrapper {
-    .hub-global-sidenav {
-      display: contents;
-    }
-  }
-}
-
 @media (width >= 900px) {
   .home-template {
     padding-inline-start: 0;
 
-    .template-wrapper {
+    /* .template-wrapper {
       display: grid;
       grid-template-columns: auto 1fr;
       grid-template-areas: 'nav-rail main';
@@ -31,7 +23,7 @@ body.home-template {
         gap: var(--s2-spacing-100);
         position: sticky;
         top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
-        block-size:calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 48px); /* 48px equates to the body margin + the margin beneath the header */
+        block-size:calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 48px); 48px equates to the body margin + the margin beneath the header
 
         .hub-global-sidenav {
           display: block;
@@ -52,6 +44,6 @@ body.home-template {
       main {
         grid-area: main;
       }
-    }
+    } */
   }
 }

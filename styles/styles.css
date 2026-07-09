@@ -373,6 +373,54 @@ div[data-status],
   }
 }
 
+/* page template styles */
+.template-wrapper {
+  .hub-global-sidenav {
+    display: contents;
+  }
+}
+
+@media (width >= 900px) {
+    .template-wrapper {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-areas: 'nav-rail main';
+      gap: var(--s2-spacing-700);
+      inline-size: 100%;
+      box-sizing: border-box;
+
+      .nav-rail {
+        grid-area: nav-rail;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: var(--s2-spacing-100);
+        position: sticky;
+        top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 32px); /* 32px equates to the margin beneath the header; 32px so the nav doesn't scroll */
+        block-size:calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 48px); /* 48px equates to the body margin + the margin beneath the header */
+
+        .hub-global-sidenav {
+          display: block;
+          position: relative;
+          inset: 0;
+          flex: 0 0 var(--sh-sitenav-rail-width);
+          z-index: 1;
+        }
+
+        .hub-section-sidenav {
+          display: block;
+          position: relative;
+          inset: 0;
+          flex: 1;
+        }
+      }
+
+      main {
+        grid-area: main;
+      }
+    }
+  }
+
+
 /* --- Spectrum Edge default styles --- */
 @layer spectrum-edge {
   html.spectrum-edge {

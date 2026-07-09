@@ -1,9 +1,5 @@
 .detail-template {
   .template-wrapper {
-    .hub-global-sidenav {
-      display: contents;
-    }
-
     main {
       grid-area: main;
     }
@@ -20,34 +16,8 @@
     padding-inline-start: 0;
 
     .template-wrapper {
-      display: grid;
       grid-template-columns: auto 1fr auto;
       grid-template-areas: 'nav-rail main pagenav';
-      inline-size: 100%;
-      gap: var(--s2-spacing-800);
-
-      .nav-rail {
-        grid-area: nav-rail;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: var(--s2-spacing-100);
-        position: sticky;
-        top: calc(var(--sh-header-height) + var(--s2-spacing-100) + 32px); /* 32px equates to the margin beneath the header */
-        block-size: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-100) - 48px); /* 48px equates to the body margin + the margin beneath the header */
-
-        .hub-global-sidenav {
-          display: block;
-          position: sticky;
-          flex: 0 0 var(--sh-sitenav-rail-width);
-          z-index: 1;
-        }
-
-        .hub-section-sidenav {
-          display: block;
-          position: sticky;
-          flex: 1;
-        }
-      }
 
       .page-nav {
         grid-area: pagenav;
@@ -55,7 +25,8 @@
         isolation: auto;
         inset-block-start: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
       }
-
+      /* TODO: .section.container is used on the pattern library page for cards.
+      Double check that this breakpoint doesn't conflict with the core layout blocks. */
       .section > .default-content {
         max-inline-size: 100%;
       }
