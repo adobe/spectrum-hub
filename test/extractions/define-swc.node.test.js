@@ -10,9 +10,9 @@ import {
   tagFor,
   registerElements,
   defineSwc,
-} from '../../component-playground/shared/define-swc.js';
+} from '../../blocks/playground/shared/define-swc.js';
 
-const SHELL_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../component-playground');
+const SHELL_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../blocks/playground/static-html');
 
 // A minimal stand-in for the browser custom element registry.
 function fakeRegistry() {
