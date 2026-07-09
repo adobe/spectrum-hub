@@ -280,6 +280,10 @@ function decorateHeader() {
 
 function decorateDoc() {
   decorateHeader();
+  // Build the common page scaffold before the template loads so template
+  // init functions can extend it (e.g. append their own page-nav).
+  const { decoratePage } = getConfig();
+  if (decoratePage) { decoratePage(); }
   loadTemplate();
 
   const scheme = localStorage.getItem('color-scheme');

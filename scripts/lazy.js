@@ -13,7 +13,6 @@ async function loadSidekick() {
   import('./utils/lazyhash.js');
   import('./utils/favicon.js');
   import('./utils/footer.js').then(({ default: footer }) => footer());
-  import('./utils/hub-global-sidenav.js').then(({ default: globalSidenav }) => globalSidenav());
 
   // Author facing tools
   if (ENV !== 'prod') {

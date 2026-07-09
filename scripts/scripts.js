@@ -1,4 +1,4 @@
-import { loadArea, setConfig } from './ak.js';
+import { loadArea, setConfig, loadBlock } from './ak.js';
 
 const hostnames = ['authorkit.dev'];
 
@@ -43,9 +43,40 @@ const decorateArea = ({ area = document }) => {
   }
 };
 
+// Builds the common page chrome present on every page: the template wrapper,
+// the nav-rail, and the two sidenavs (global rail + section nav). The global
+// sidenav is a block, so it is loaded here; the section sidenav is populated in
+// response to `hub:section-selected`. Template-specific extras (e.g. the detail
+// template's page-nav) are added by the individual template init functions.
+export function decoratePage() {
+  const main = document.querySelector('main');
+  if (!main) { return; }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'template-wrapper';
+
+  const navRail = document.createElement('div');
+  navRail.className = 'nav-rail';
+
+  const globalSidenav = document.createElement('div');
+  globalSidenav.className = 'hub-global-sidenav';
+
+  const sitenav = document.createElement('div');
+  sitenav.className = 'hub-section-sidenav';
+  sitenav.setAttribute('aria-label', 'Second-level site navigation');
+
+  navRail.append(globalSidenav, sitenav);
+  main.replaceWith(wrapper);
+  wrapper.append(navRail, main);
+
+  loadBlock(globalSidenav);
+}
+
 export async function loadPage() {
   document.documentElement.classList.add('spectrum-edge');
-  setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
+  setConfig({
+    hostnames, locales, linkBlocks, components, decorateArea, decoratePage,
+  });
   await loadArea();
 }
 await loadPage();
