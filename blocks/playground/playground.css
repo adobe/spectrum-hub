@@ -3,18 +3,24 @@
   --sandbox-controls-min-inline-size: 200px;
   --sandbox-border-color: var(--s2-gray-300);
   --sandbox-border-radius: var(--s2-corner-radius-300);
+  --sandbox-inner-radius: calc(var(--sandbox-border-radius) - 1px);
   --sandbox-control-gap: var(--s2-spacing-200);
 
   container-type: inline-size;
 }
 
+/*
+ * No `overflow: hidden` here — that would clip the picker dropdowns (which are
+ * absolutely positioned and can extend below/beyond a panel). Instead the iframe
+ * is clipped by .playground-preview and each panel rounds its own outward corners
+ * so their backgrounds still nest inside the rounded card border.
+ */
 .playground-layout {
   display: flex;
   flex-direction: column;
   gap: var(--s2-spacing-300);
   border: 1px solid var(--sandbox-border-color);
   border-radius: var(--sandbox-border-radius);
-  overflow: hidden;
 }
 
 .playground-preview {
@@ -25,6 +31,9 @@
   align-items: center;
   justify-content: center;
   padding: var(--s2-spacing-400);
+  overflow: hidden;
+  border-start-start-radius: var(--sandbox-inner-radius);
+  border-start-end-radius: var(--sandbox-inner-radius);
 
   iframe {
     border: 0;
@@ -42,6 +51,8 @@
   padding: var(--s2-spacing-300);
   background-color: var(--s2-gray-75);
   border-block-start: 1px solid var(--sandbox-border-color);
+  border-end-start-radius: var(--sandbox-inner-radius);
+  border-end-end-radius: var(--sandbox-inner-radius);
 }
 
 .playground-control {
@@ -66,11 +77,19 @@
     flex: 1 1 auto;
     border-block-start: 0;
     border-inline-end: 1px solid var(--sandbox-border-color);
+
+    /* left column: round the left corners, not the top-right */
+    border-start-end-radius: 0;
+    border-end-start-radius: var(--sandbox-inner-radius);
   }
 
   .playground-controls {
     flex: 0 0 var(--sandbox-controls-min-inline-size);
     border-block-start: 0;
+
+    /* right column: round the right corners, not the bottom-left */
+    border-end-start-radius: 0;
+    border-start-end-radius: var(--sandbox-inner-radius);
   }
 }
 
