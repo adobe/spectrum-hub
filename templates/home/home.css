@@ -4,6 +4,36 @@ body.home-template {
   }
 }
 
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2-spacing-400);
+  align-items: center;
+  
+  .home-banner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    max-inline-size: fit-content;
+    box-sizing: border-box;
+    padding-inline: var(--s2-spacing-300);
+    border-radius: 100px;
+    border: 1px solid rgb(from var(--s2-blue-500) r g b / .40); /*dark opacity is 59%*/
+    gap: var(--s2-spacing-200);
+    background-color: rgb(from var(--s2-blue-500) r g b / .14); /*dark opacity is 26%*/
+  }
+
+  p {
+    max-inline-size: 80ch;
+  }
+  
+  .home-banner p:has(svg) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2-spacing-100);
+  }
+}
+
 @media (width >= 900px) {
   .home-template {
     padding-inline-start: 0;
