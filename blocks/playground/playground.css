@@ -116,9 +116,15 @@
     transform: rotate(45deg);
   }
 
-  pre {
+  .playground-code {
+    position: relative;
     margin-block-start: var(--s2-spacing-200);
+  }
+
+  pre {
+    margin: 0;
     padding: var(--s2-spacing-300);
+    padding-inline-end: var(--s2-spacing-1000);
     background-color: var(--s2-gray-75);
     border: 1px solid var(--sandbox-border-color);
     border-radius: var(--sandbox-border-radius);
@@ -128,5 +134,33 @@
     color: var(--s2-gray-800);
     white-space: pre-wrap;
     word-break: break-all;
+  }
+
+  .playground-copy {
+    position: absolute;
+    inset-block-start: var(--s2-spacing-200);
+    inset-inline-end: var(--s2-spacing-200);
+    padding: var(--s2-spacing-75) var(--s2-spacing-100);
+    font-size: var(--s2-component-s-regular-font-size);
+    font-weight: var(--s2-component-m-bold-font-weight);
+    color: var(--s2-gray-800);
+    background-color: var(--s2-gray-25);
+    border: 1px solid var(--sandbox-border-color);
+    border-radius: var(--s2-corner-radius-200);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--s2-gray-50);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--s2-blue-800);
+      outline-offset: 2px;
+    }
+
+    &.is-copied {
+      color: var(--s2-green-900);
+      border-color: var(--s2-green-800);
+    }
   }
 }

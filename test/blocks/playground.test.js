@@ -384,4 +384,22 @@ describe('playground block — init()', () => {
       '*',
     )).to.be.true;
   });
+
+  it('renders a copy-code button inside the disclosure', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const button = el.querySelector('.playground-disclosure .playground-copy');
+    expect(button).to.exist;
+    expect(button.textContent).to.equal('Copy code');
+  });
+
+  it('copies the current code snippet to the clipboard when the copy button is clicked', async () => {
+    stubPlaygroundFetch(sandbox);
+    const writeText = sandbox.stub().resolves();
+    sandbox.stub(navigator, 'clipboard').value({ writeText });
+    await init(el);
+    const pre = el.querySelector('pre');
+    el.querySelector('.playground-copy').click();
+    expect(writeText.calledOnceWithExactly(pre.textContent)).to.be.true;
+  });
 });

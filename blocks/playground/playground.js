@@ -87,6 +87,36 @@ function updateDisclosure(pre, buildSnippet, name, currentProps) {
   pre.textContent = buildSnippet(name, currentProps);
 }
 
+function buildCopyButton(pre) {
+  const defaultLabel = 'Copy code';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.classList.add('playground-copy');
+  button.textContent = defaultLabel;
+
+  let resetTimer;
+  function flash(message, copied) {
+    button.textContent = message;
+    button.classList.toggle('is-copied', copied);
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      button.textContent = defaultLabel;
+      button.classList.remove('is-copied');
+    }, 2000);
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(pre.textContent);
+      flash('Copied!', true);
+    } catch {
+      flash('Copy failed', false);
+    }
+  });
+
+  return button;
+}
+
 // --- Controls ---------------------------------------------------------------
 
 function buildPicker(label, options, currentValue, onChange) {
@@ -241,7 +271,12 @@ export default async function init(el) {
   details.classList.add('playground-disclosure');
   const summary = document.createElement('summary');
   summary.textContent = 'View code';
-  details.append(summary, pre);
+
+  const codeWrapper = document.createElement('div');
+  codeWrapper.classList.add('playground-code');
+  codeWrapper.append(buildCopyButton(pre), pre);
+
+  details.append(summary, codeWrapper);
 
   const previewArea = document.createElement('div');
   previewArea.classList.add('playground-preview');
