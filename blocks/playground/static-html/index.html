@@ -52,55 +52,114 @@
 
   <script type="module">
     import { defineSwc } from '../shared/define-swc.js';
+    import { listenForPropUpdates } from '../shared/prop-listener.js';
+
+    const mount = document.getElementById('mount');
 
     const params = new URLSearchParams(window.location.search);
     const component = params.get('component')?.toLowerCase().trim();
     const implementation = params.get('implementation')?.toLowerCase().trim();
 
+    function showError(message) {
+      document.body.textContent = message;
+    }
+
     if (!component || !implementation) {
-      document.body.textContent = 'Missing required query params: component, implementation';
+      showError('Missing required query params: component, implementation');
       throw new Error('Missing required query params');
+    }
+
+    // `component` drives a relative fetch for the SWC fragment, so keep it to the
+    // safe custom-element charset — no slashes, dots, or traversal.
+    if (!/^[a-z0-9-]+$/.test(component)) {
+      showError(`Invalid component name: ${component}`);
+      throw new Error(`Invalid component name: ${component}`);
     }
 
     // --- SWC ----------------------------------------------------------------
 
-    // Generic SWC path. Per-component static pages (playground/<name>.html)
-    // are the primary SWC preview surface — this handles any component the block
-    // routes here directly. defineSwc loads the class from the pinned esm.sh CDN
-    // and registers the tag; theme-sync.js keeps the swc-theme light/dark class
-    // in step with the parent.
-    async function initSwc() {
-      let tagName;
-      try {
-        tagName = await defineSwc(component);
-      } catch {
-        document.body.textContent = `Failed to load SWC component: swc-${component}`;
-        throw new Error(`SWC import failed for swc-${component}`);
+    // Applies one prop-update message to a live custom element. Shared by the
+    // prop listener below; the (property, attribute, value) contract is defined
+    // by the block (see shared/prop-listener.js).
+    function applySwcProp(el, { property, attribute, value }) {
+      if (property === 'text' || property === 'label' || property === 'children') {
+        // NOTE: a blind textContent assignment clobbers slotted children, so no
+        // composite (tabs/accordion/…) currently authors a text control. When
+        // the "inject textfield input into a text slot" feature lands, this will
+        // need to target a specific text slot instead.
+        el.textContent = value;
+        return;
       }
 
-      const el = document.createElement(tagName);
-      el.textContent = component.charAt(0).toUpperCase() + component.slice(1);
-      document.getElementById('mount').appendChild(el);
+      if (!attribute) { return; }
 
-      window.addEventListener('message', (event) => {
-        if (event.data?.type !== 'prop-update') return;
-        const { property, attribute, value } = event.data;
+      if (value === false || value === null || value === undefined) {
+        el.removeAttribute(attribute);
+      } else if (value === true) {
+        el.setAttribute(attribute, '');
+      } else {
+        el.setAttribute(attribute, value);
+      }
+    }
 
-        if (property === 'text' || property === 'label' || property === 'children') {
-          el.textContent = value;
-          return;
-        }
+    // Per-component markup lives in a sibling fragment file (e.g. button.html)
+    // that holds ONLY the web-component HTML — no <head>, <script>, or shell
+    // boilerplate. This shell fetches it, injects it, registers whatever swc-*
+    // tags it contains (families included), and drives prop updates against the
+    // fragment's root element. Adding a component is a one-file markup edit.
+    async function initSwc() {
+      let markup;
+      try {
+        const resp = await fetch(`./${component}.html`);
+        if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
+        markup = await resp.text();
+      } catch (err) {
+        showError(`Failed to load preview markup for ${component} (${err.message})`);
+        throw err;
+      }
 
-        if (attribute) {
-          if (value === false || value === null || value === undefined) {
-            el.removeAttribute(attribute);
-          } else if (value === true) {
-            el.setAttribute(attribute, '');
-          } else {
-            el.setAttribute(attribute, value);
+      mount.innerHTML = markup;
+
+      const root = mount.firstElementChild;
+      if (!root) {
+        showError(`Preview markup for ${component} has no root element`);
+        throw new Error('Empty preview fragment');
+      }
+      const rootTag = root.localName;
+
+      // Register every swc-* tag the fragment uses. Families (tabs -> tab,
+      // tab-panel) are discovered from the markup itself, so there is no
+      // per-page define list to maintain. The root's tag is required — surface
+      // its failure — while secondary tags degrade softly (the root still
+      // renders), matching the old per-component shells.
+      const tags = [...new Set(
+        [...mount.querySelectorAll('*')]
+          .map((node) => node.localName)
+          .filter((name) => name.startsWith('swc-')),
+      )];
+
+      await Promise.all(tags.map(async (tag) => {
+        try {
+          await defineSwc(tag.slice(4));
+        } catch (err) {
+          if (tag === rootTag) {
+            showError(`Failed to load SWC component: ${rootTag}`);
+            throw err;
           }
+          // Secondary family member — the root shell still renders without it.
+        }
+      }));
+
+      // Some components (e.g. tooltip) only reveal via the Popover API, not the
+      // `open` attribute alone. Markup can't call showPopover(), so do it
+      // generically for any popover-capable element the fragment marked open.
+      mount.querySelectorAll('[open]').forEach((el) => {
+        if (typeof el.showPopover === 'function') {
+          try { el.showPopover(); } catch { /* already open or unsupported */ }
         }
       });
+
+      listenForPropUpdates((update) => applySwcProp(root, update));
     }
 
     // --- RSP ----------------------------------------------------------------
@@ -147,7 +206,7 @@
         const Component = RSP[exportName];
         if (!Component) throw new Error(`No RSP export named "${exportName}"`);
 
-        const root = createRoot(document.getElementById('mount'));
+        const root = createRoot(mount);
         // Default label so the preview isn't a blank button before the parent's
         // prop-update messages arrive (or if "children" isn't authored at all).
         const currentProps = { children: component.charAt(0).toUpperCase() + component.slice(1) };
@@ -159,14 +218,12 @@
 
         render();
 
-        window.addEventListener('message', (event) => {
-          if (event.data?.type !== 'prop-update') return;
-          const { property, value } = event.data;
+        listenForPropUpdates(({ property, value }) => {
           currentProps[property] = value;
           render();
         });
       } catch (err) {
-        document.body.textContent = `Failed to load RSP component: ${exportName} (${err.message})`;
+        showError(`Failed to load RSP component: ${exportName} (${err.message})`);
       }
     }
 
@@ -199,9 +256,7 @@
 
       updateImage();
 
-      window.addEventListener('message', (event) => {
-        if (event.data?.type !== 'prop-update') return;
-        const { property, value } = event.data;
+      listenForPropUpdates(({ property, value }) => {
         currentProps[property] = value;
         updateImage();
       });
@@ -216,7 +271,7 @@
     } else if (implementation === 'ios' || implementation === 'android') {
       initImageViewer();
     } else {
-      document.body.textContent = `Unsupported implementation: ${implementation}`;
+      showError(`Unsupported implementation: ${implementation}`);
     }
   </script>
 </body>
