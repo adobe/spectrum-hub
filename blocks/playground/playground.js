@@ -215,12 +215,11 @@ export default async function init(el) {
     return acc;
   }, []);
 
-  // "swc" pages are dev-owned static shells (blocks/playground/static-html/<component>.html)
-  // that import the component from the SWC CDN, so a page only wires up its own component.
-  // Other implementations still go through the generic router.
-  const iframeUrl = implementation === 'swc'
-    ? `${base}/blocks/playground/static-html/${component}.html`
-    : `${base}/blocks/playground/static-html/index.html?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
+  // Every implementation renders through the one generic shell, which reads
+  // ?component & ?implementation from the URL. For swc it fetches the matching
+  // markup fragment (blocks/playground/static-html/<component>.html); for rsp it
+  // loads from esm.sh; for ios/android it shows the image viewer.
+  const iframeUrl = `${base}/blocks/playground/static-html/index.html?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
 
   const iframe = document.createElement('iframe');
   iframe.src = iframeUrl;

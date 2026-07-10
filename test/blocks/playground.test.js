@@ -289,12 +289,13 @@ describe('playground block — init()', () => {
     expect(document.body.contains(el)).to.be.false;
   });
 
-  it('builds the iframe src pointing at the dev-owned static file for swc', async () => {
+  it('builds the iframe src pointing at the generic shell with query params for swc', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
     const iframe = el.querySelector('iframe');
-    expect(iframe.src).to.include('/blocks/playground/static-html/button.html');
-    expect(iframe.src).to.not.include('component=');
+    expect(iframe.src).to.include('/blocks/playground/static-html/index.html');
+    expect(iframe.src).to.include('component=button');
+    expect(iframe.src).to.include('implementation=swc');
   });
 
   it('builds the iframe src with the component and implementation query params for non-swc implementations', async () => {
