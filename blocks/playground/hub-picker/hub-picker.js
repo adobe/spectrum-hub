@@ -1,7 +1,7 @@
 /* Follows Select-Only Combobox APG: https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/ */
 
-import { LitElement, html, nothing } from '../../deps/lit/dist/index.js';
-import loadStyle from '../../scripts/utils/styles.js';
+import { LitElement, html, nothing } from '../../../deps/lit/dist/index.js';
+import loadStyle from '../../../scripts/utils/styles.js';
 
 const styles = await loadStyle(import.meta.url);
 

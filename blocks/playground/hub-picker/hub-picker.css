@@ -20,7 +20,6 @@ button {
   border-radius: var(--s2-corner-radius-500);
   cursor: pointer;
   text-align: start;
-  margin-block-start: var(--s2-spacing-300);
 
   &::after {
     content: '';
