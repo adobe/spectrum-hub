@@ -7,7 +7,7 @@ import {
   findSwcProp,
   findRspProp,
 } from './playground-data.js';
-import '../hub-picker/hub-picker.js';
+import './hub-picker/hub-picker.js';
 
 // --- Pure helpers (exported for testing) ------------------------------------
 
@@ -111,13 +111,13 @@ function buildCopyButton(pre) {
     resetTimer = setTimeout(() => {
       button.textContent = defaultLabel;
       button.classList.remove('is-copied');
-    }, 2000);
+    }, 3000);
   }
 
   button.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(pre.textContent);
-      flash('Copied!', true);
+      flash('Copied', true);
     } catch {
       flash('Copy failed', false);
     }
@@ -276,20 +276,28 @@ export default async function init(el) {
     controlsPanel.appendChild(picker);
   });
 
-  const details = document.createElement('details');
-  details.classList.add('playground-disclosure');
-  const summary = document.createElement('summary');
-  if (details.getAttribute('open')) {
-    summary.textContent = 'Collapse code';
-  } else {
-    summary.textContent = 'Expand code';
-  }
+  const disclosure = document.createElement('div');
+  disclosure.classList.add('playground-disclosure');
 
   const codeWrapper = document.createElement('div');
   codeWrapper.classList.add('playground-code');
   codeWrapper.append(buildCopyButton(pre), pre);
 
-  details.append(summary, codeWrapper);
+  // The code (and copy button) stay visible at all times; this button only
+  // grows/shrinks the visible height — collapsed to a max-height in CSS —
+  // rather than showing/hiding the code the way <details> would.
+  const expandButton = document.createElement('button');
+  expandButton.type = 'button';
+  expandButton.classList.add('playground-expand');
+  expandButton.textContent = 'Expand code';
+  expandButton.setAttribute('aria-expanded', 'false');
+  expandButton.addEventListener('click', () => {
+    const expanded = disclosure.classList.toggle('is-expanded');
+    expandButton.textContent = expanded ? 'Collapse code' : 'Expand code';
+    expandButton.setAttribute('aria-expanded', String(expanded));
+  });
+
+  disclosure.append(codeWrapper, expandButton);
 
   const previewArea = document.createElement('div');
   previewArea.classList.add('playground-preview');
@@ -299,5 +307,5 @@ export default async function init(el) {
   layout.classList.add('playground-layout');
   layout.append(previewArea, controlsPanel);
 
-  el.replaceChildren(layout, details);
+  el.replaceChildren(layout, disclosure);
 }
