@@ -17,7 +17,7 @@ export default async function init() {
   // is never scooped in regardless of how many intro elements authors add.
   const bannerChildrenElements = [];
   for (const child of homeHero.children) {
-    if (child === heading) break;
+    if (child === heading) { break; }
     bannerChildrenElements.push(child);
   }
   bannerChildrenElements.forEach((child) => banner.append(child));

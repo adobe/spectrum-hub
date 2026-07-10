@@ -543,6 +543,7 @@ div[data-status],
       text-decoration: none;
       max-inline-size:  inherit;
       padding-block-start: calc(var(--button-padding-block-start) - var(--button-border-width));
+      /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
       padding-block-end: calc(var(--button-padding-block-end) - var(--button-border-width));
       padding-inline: calc(var(--button-padding-inline) - var(--button-border-width));
       block-size: var(--s2-component-l-height);
