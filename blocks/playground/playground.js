@@ -5,6 +5,7 @@ import {
   buildControlsMap,
   resolveControl,
   findSwcProp,
+  findRspProp,
 } from './playground-data.js';
 import '../hub-picker/hub-picker.js';
 
@@ -206,7 +207,7 @@ export default async function init(el) {
     );
     if (!descriptor) { return acc; }
     const swcRow = findSwcProp(property, swcProps);
-    const rspRow = rspProps.find((p) => p.property === property);
+    const rspRow = findRspProp(property, rspProps);
     const rawDefault = parseDefault(swcRow?.default ?? rspRow?.default) ?? descriptor.options[0];
     const defaultValue = booleanStringToYesNo(rawDefault);
     currentProps[property] = { value: defaultValue, attribute: descriptor.attribute };
@@ -278,7 +279,11 @@ export default async function init(el) {
   const details = document.createElement('details');
   details.classList.add('playground-disclosure');
   const summary = document.createElement('summary');
-  summary.textContent = 'View code';
+  if (details.getAttribute('open')) {
+    summary.textContent = 'Collapse code';
+  } else {
+    summary.textContent = 'Expand code';
+  }
 
   const codeWrapper = document.createElement('div');
   codeWrapper.classList.add('playground-code');

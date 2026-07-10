@@ -316,6 +316,21 @@ describe('playground block — init()', () => {
     expect(rspEl.querySelector('pre').textContent).to.equal('<Button\n  variant="primary">\n  Label\n</Button>');
   });
 
+  it('uses the RSP default for a control authored with a swc-style name', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'disabled' }],
+      controls: [{ Property: 'disabled', v1: 'picker' }],
+      rsp: { props: [{ property: 'isDisabled', type: 'boolean', default: 'true' }] },
+      swc: [],
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+    const picker = rspEl.querySelector('.playground-control hub-picker');
+    expect(picker).to.exist;
+    expect(picker.value).to.equal('yes');
+  });
+
   it('renders a control only for the property that resolves to picker options', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
