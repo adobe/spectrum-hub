@@ -12,9 +12,19 @@ export default async function init() {
   const homeHero = document.querySelector('.home-hero');
   const banner = document.createElement('div');
   banner.classList.add('home-banner');
-  const bannerChildrenElements = [homeHero.firstElementChild, homeHero.children[1]];
+
+  // Move every element that precedes the heading into the banner, so the h1
+  // is never scooped in regardless of how many intro elements authors add.
+  const bannerChildrenElements = [];
+  for (const child of homeHero.children) {
+    if (child === heading) break;
+    bannerChildrenElements.push(child);
+  }
   bannerChildrenElements.forEach((child) => banner.append(child));
-  homeHero.prepend(banner);
+
+  if (banner.children.length) {
+    homeHero.prepend(banner);
+  }
 
   const wrapper = document.createElement('div');
   wrapper.className = 'template-wrapper';

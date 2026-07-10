@@ -7,8 +7,9 @@ function makeHomeDOM() {
   document.body.innerHTML = `
     <main>
       <div>
+        <p><span class="icon icon-color"></span>New figma library just released</p>
+        <p><em><strong><a href="https://spectrum-summer-release-2026.entapp.adproto.com/#">Take a peek</a></strong></em></p>
         <h1>Welcome</h1>
-        <p class="eyebrow"><svg></svg> Announcement</p>
         <p class="lead">Intro content</p>
       </div>
       <div class="block-content"></div>
@@ -69,12 +70,19 @@ describe('home template', () => {
       expect(hero.firstElementChild.classList.contains('home-banner')).to.be.true;
     });
 
-    it('moves the first two hero elements into the banner', async () => {
+    it('moves the first two announcement paragraphs into the banner', async () => {
       await init();
       const banner = document.querySelector('.home-banner');
       expect(banner.children).to.have.lengthOf(2);
-      expect(banner.querySelector('h1')).to.not.be.null;
-      expect(banner.querySelector('p.eyebrow')).to.not.be.null;
+      expect(banner.querySelector('.icon')).to.not.be.null;
+      expect(banner.querySelector('a[href*="spectrum-summer-release-2026"]')).to.not.be.null;
+    });
+
+    it('keeps the h1 in the hero, outside the banner', async () => {
+      await init();
+      const heading = document.querySelector('.home-hero h1');
+      expect(heading).to.not.be.null;
+      expect(heading.closest('.home-banner')).to.be.null;
     });
 
     it('leaves the remaining hero content outside the banner', async () => {
@@ -86,9 +94,42 @@ describe('home template', () => {
     });
 
     it('moves the existing elements rather than cloning them', async () => {
-      const originalHeading = document.querySelector('h1');
+      const originalLink = document.querySelector('a[href*="spectrum-summer-release-2026"]');
       await init();
-      expect(document.querySelector('.home-banner h1')).to.equal(originalHeading);
+      expect(document.querySelector('.home-banner a')).to.equal(originalLink);
+    });
+
+    it('moves every element preceding the heading, not just two', async () => {
+      document.body.innerHTML = `
+        <main>
+          <div>
+            <p class="a">one</p>
+            <p class="b">two</p>
+            <p class="c">three</p>
+            <h1>Welcome</h1>
+          </div>
+          <div class="block-content"></div>
+        </main>
+      `;
+      await init();
+      const banner = document.querySelector('.home-banner');
+      expect(banner.children).to.have.lengthOf(3);
+      expect(banner.querySelector('h1')).to.be.null;
+    });
+
+    it('never scoops the h1 into the banner when the heading leads the hero', async () => {
+      document.body.innerHTML = `
+        <main>
+          <div>
+            <h1>Welcome</h1>
+            <p class="lead">Intro content</p>
+          </div>
+          <div class="block-content"></div>
+        </main>
+      `;
+      await init();
+      expect(document.querySelector('.home-banner')).to.be.null;
+      expect(document.querySelector('.home-hero h1')).to.not.be.null;
     });
   });
 
