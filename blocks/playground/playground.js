@@ -41,6 +41,18 @@ export function yesNoToBoolean(value) {
   return value;
 }
 
+// Formats an element the way a code editor would: each attribute on its own
+// indented line, the closing bracket on the last attribute line, children
+// indented below, and the closing tag on its own line. Collapses to a single
+// line when there are no attributes.
+function formatElement(tag, attrs, label) {
+  if (!attrs.length) {
+    return `<${tag}>${label}</${tag}>`;
+  }
+  const attrLines = attrs.map((attr) => `  ${attr}`).join('\n');
+  return `<${tag}\n${attrLines}>\n  ${label}\n</${tag}>`;
+}
+
 export function buildSwcSnippet(tagName, currentProps) {
   const TEXT_KEYS = new Set(['text', 'label', 'children']);
   const attrs = Object.entries(currentProps)
@@ -51,14 +63,12 @@ export function buildSwcSnippet(tagName, currentProps) {
       && value !== ''
       && value !== 'no'
     ))
-    .map(([, { attribute, value }]) => (value === 'yes' ? attribute : `${attribute}="${value}"`))
-    .join(' ');
+    .map(([, { attribute, value }]) => (value === 'yes' ? attribute : `${attribute}="${value}"`));
 
   const textEntry = Object.entries(currentProps).find(([prop]) => TEXT_KEYS.has(prop));
   const label = textEntry?.[1]?.value ?? 'Label';
 
-  const attrStr = attrs ? ` ${attrs}` : '';
-  return `<${tagName}${attrStr}>${label}</${tagName}>`;
+  return formatElement(tagName, attrs, label);
 }
 
 export function buildRspSnippet(componentName, currentProps) {
@@ -71,14 +81,12 @@ export function buildRspSnippet(componentName, currentProps) {
       && value !== 'no'
     ))
     // RSP props are JSX prop names (camelCase), used as-authored — no attribute translation.
-    .map(([prop, { value }]) => (value === 'yes' ? prop : `${prop}="${value}"`))
-    .join(' ');
+    .map(([prop, { value }]) => (value === 'yes' ? prop : `${prop}="${value}"`));
 
   const textEntry = Object.entries(currentProps).find(([prop]) => TEXT_KEYS.has(prop));
   const label = textEntry?.[1]?.value ?? 'Label';
 
-  const attrStr = attrs ? ` ${attrs}` : '';
-  return `<${componentName}${attrStr}>${label}</${componentName}>`;
+  return formatElement(componentName, attrs, label);
 }
 
 // --- Code disclosure --------------------------------------------------------

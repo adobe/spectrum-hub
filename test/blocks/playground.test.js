@@ -110,7 +110,7 @@ describe('buildSwcSnippet', () => {
       variant: { attribute: 'variant', value: 'secondary' },
     };
     const snippet = buildSwcSnippet('swc-button', props);
-    expect(snippet.includes('>Click me<')).to.be.true;
+    expect(snippet.includes('>\n  Click me\n</swc-button>')).to.be.true;
   });
 
   it('omits attributes with null attribute names from the opening tag', () => {
@@ -136,7 +136,7 @@ describe('buildSwcSnippet', () => {
     const props = {
       variant: { attribute: 'variant', value: 'accent' },
     };
-    expect(buildSwcSnippet('swc-button', props).includes('>Label<')).to.be.true;
+    expect(buildSwcSnippet('swc-button', props).includes('>\n  Label\n</swc-button>')).to.be.true;
   });
 
   it('uses the tag name as both opening and closing tag', () => {
@@ -173,7 +173,7 @@ describe('buildRspSnippet', () => {
       children: { value: 'Action' },
     };
     const snippet = buildRspSnippet('ActionButton', props);
-    expect(snippet).to.equal('<ActionButton isDisabled variant="primary">Action</ActionButton>');
+    expect(snippet).to.equal('<ActionButton\n  isDisabled\n  variant="primary">\n  Action\n</ActionButton>');
   });
 
   it('omits a boolean-false prop entirely', () => {
@@ -193,7 +193,7 @@ describe('buildRspSnippet', () => {
 
   it('defaults inner text to "Label" when no text-type prop exists', () => {
     const props = { variant: { value: 'accent' } };
-    expect(buildRspSnippet('Badge', props).includes('>Label<')).to.be.true;
+    expect(buildRspSnippet('Badge', props).includes('>\n  Label\n</Badge>')).to.be.true;
   });
 
   it('uses the component name as both opening and closing tag', () => {
@@ -313,7 +313,7 @@ describe('playground block — init()', () => {
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
     document.body.append(rspEl);
     await init(rspEl);
-    expect(rspEl.querySelector('pre').textContent).to.equal('<Button variant="primary">Label</Button>');
+    expect(rspEl.querySelector('pre').textContent).to.equal('<Button\n  variant="primary">\n  Label\n</Button>');
   });
 
   it('renders a control only for the property that resolves to picker options', async () => {
