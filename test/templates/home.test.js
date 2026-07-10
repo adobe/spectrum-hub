@@ -6,8 +6,12 @@ import { setConfig } from '../../scripts/ak.js';
 function makeHomeDOM() {
   document.body.innerHTML = `
     <main>
-      <div><h1>Welcome</h1></div>
-      <div class="block-content"><p>Intro content</p></div>
+      <div>
+        <h1>Welcome</h1>
+        <p class="eyebrow"><svg></svg> Announcement</p>
+        <p class="lead">Intro content</p>
+      </div>
+      <div class="block-content"></div>
     </main>
   `;
 }
@@ -26,30 +30,65 @@ describe('home template', () => {
     document.body.innerHTML = '';
   });
 
-  describe('hero column', () => {
+  describe('hero', () => {
     it('adds heading-size-xxxxl class to the h1', async () => {
       await init();
       expect(document.querySelector('h1').classList.contains('heading-size-xxxxl')).to.be.true;
     });
 
-    it('sets home-column class on the h1 parent div', async () => {
+    it('sets home-hero class on the h1 parent div', async () => {
       await init();
-      expect(document.querySelector('.home-column')).to.not.be.null;
+      expect(document.querySelector('.home-hero')).to.not.be.null;
     });
 
-    it('home-column div contains the h1', async () => {
+    it('home-hero contains the h1', async () => {
       await init();
-      expect(document.querySelector('.home-column h1')).to.not.be.null;
+      expect(document.querySelector('.home-hero h1')).to.not.be.null;
     });
 
-    it('moves the home-column div inside its next sibling', async () => {
+    it('moves the home-hero div inside its next sibling', async () => {
       await init();
-      expect(document.querySelector('.block-content .home-column')).to.not.be.null;
+      expect(document.querySelector('.block-content .home-hero')).to.not.be.null;
     });
 
     it('does not throw when the expected DOM structure is present', async () => {
       await init();
       expect(document.querySelector('.template-wrapper')).to.not.be.null;
+    });
+  });
+
+  describe('hero banner', () => {
+    it('creates a div.home-banner inside the hero', async () => {
+      await init();
+      expect(document.querySelector('.home-hero .home-banner')).to.not.be.null;
+    });
+
+    it('makes the banner the first child of the hero', async () => {
+      await init();
+      const hero = document.querySelector('.home-hero');
+      expect(hero.firstElementChild.classList.contains('home-banner')).to.be.true;
+    });
+
+    it('moves the first two hero elements into the banner', async () => {
+      await init();
+      const banner = document.querySelector('.home-banner');
+      expect(banner.children).to.have.lengthOf(2);
+      expect(banner.querySelector('h1')).to.not.be.null;
+      expect(banner.querySelector('p.eyebrow')).to.not.be.null;
+    });
+
+    it('leaves the remaining hero content outside the banner', async () => {
+      await init();
+      const hero = document.querySelector('.home-hero');
+      const lead = hero.querySelector('p.lead');
+      expect(lead).to.not.be.null;
+      expect(lead.closest('.home-banner')).to.be.null;
+    });
+
+    it('moves the existing elements rather than cloning them', async () => {
+      const originalHeading = document.querySelector('h1');
+      await init();
+      expect(document.querySelector('.home-banner h1')).to.equal(originalHeading);
     });
   });
 
