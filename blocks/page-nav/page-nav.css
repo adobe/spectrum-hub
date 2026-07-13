@@ -1,18 +1,21 @@
+/* Desktop-only in-page table of contents. Below 900px the block is removed
+from the DOM and the accessibility tree (see page-nav.js). */
 .page-nav {
-  position: sticky;
-  inset-block-start: calc(var(--sh-header-height, 56px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
-  z-index: var(--sh-z-pagenav); /* above <main>; below sitenav mobile disclosure */
-  align-self: start;
-  font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
-  font-size: var(--s2-component-m-medium-font-size);
-  line-height: 1.4;
-  color: var(--se-body-color, var(--s2-gray-1000));
+  display: none;
+}
 
-  @media (width >= 1200px) {
+@media (width >= 900px) {
+  .page-nav {
+    display: block;
+    position: sticky;
+    inset-block-start: calc(var(--sh-header-height) + var(--s2-spacing-100) + 32px); /* match the margin beneath the header so the page nav sticks in place */
+    align-self: start;
     max-block-size: calc(100vh - var(--sh-header-height, 0px));
-    overflow-block: auto;
     padding-block: var(--s2-spacing-200);
-    inset-block-start: var(--sh-header-height, 56px);
+    font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
+    font-size: var(--s2-component-m-medium-font-size);
+    line-height: 1.4;
+    color: var(--se-body-color, var(--s2-gray-1000));
   }
 
   & ul {
@@ -24,117 +27,39 @@
   & li + li {
     margin-block-start: var(--s2-spacing-50);
   }
-}
 
-.page-nav > details {
-  position: relative;
+  .page-nav a {
+    display: block;
+    padding-block: var(--s2-spacing-100);
+    padding-inline: var(--s2-spacing-200);
+    border-radius: var(--s2-corner-radius-300);
+    color: inherit;
+    text-decoration: none;
 
-  @media (width >= 1200px) {
-    position: static;
-  }
-}
+    &:hover {
+      background-color: rgb(from var(--se-body-color) r g b / 8%);
+    }
 
-.page-nav > details[open] > ul {
-  position: absolute;
-  inset-block-start: 100%;
-  inset-inline: 0;
-  max-block-size: calc(100vh - var(--sh-header-height, 0px));
-  overflow-y: auto;
-  padding: var(--s2-spacing-200);
-  background-color: var(--se-body-background-color);
-  z-index: 1;
-
-  @media (width >= 1200px) {
-    position: static;
-    max-block-size: none;
-    overflow-y: visible;
-    padding: 0;
-    background-color: transparent;
-    z-index: auto;
-  }
-}
-
-/* The disclosure summary is the mobile-only approach: a full-width bar showing the current section name and a chevron.
-Hidden at desktop where the list renders inline in the rail. */
-.page-nav-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s2-spacing-200);
-  padding: var(--s2-spacing-300) var(--s2-spacing-400);
-  background-color: var(--se-body-color);
-  color: var(--se-body-background-color);
-  font-weight: var(--s2-component-m-bold-font-weight);
-  cursor: pointer;
-  user-select: none;
-  list-style: none; /* hides the native disclosure marker */
-
-  &::-webkit-details-marker {
-    display: none;
-  }
-
-  @media (width >= 1200px) {
-    display: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--s2-blue-900);
-    outline-offset: var(--s2-spacing-50);
-  }
-
-  &::after {
-    content: '';
-    mask-image: url('/img/icons/s2-icon-chevronright-20-n.svg');
-    background-color: currentcolor;
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    flex: 0 0 auto;
-    inline-size: 20px;
-    block-size: 20px;
-    transition: transform 0.15s ease;
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
+    &:focus-visible {
+      outline: 2px solid var(--s2-blue-900);
+      outline-offset: var(--s2-spacing-50);
     }
   }
-}
 
-.page-nav > details[open] > .page-nav-summary::after {
-  transform: rotate(90deg);
-}
-
-.page-nav a {
-  display: block;
-  padding-block: var(--s2-spacing-100);
-  padding-inline: var(--s2-spacing-200);
-  border-radius: var(--s2-corner-radius-300);
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    background-color: rgb(from var(--se-body-color) r g b / 8%);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--s2-blue-900);
-    outline-offset: var(--s2-spacing-50);
+  .page-nav a[aria-current="location"] {
+    background-color: rgb(from var(--s2-gray-1000) r g b / 16%);
+    font-weight: var(--s2-component-m-bold-font-weight);
   }
 }
 
-.page-nav a[aria-current="location"] {
-  background-color: rgb(from var(--s2-gray-1000) r g b / 16%);
-  font-weight: var(--s2-component-m-bold-font-weight);
-}
-
-/* Headings opted-in by the block (see init() in page-nav.js) get scroll-margin so anchor scrolls clear
-the sticky chrome. Mobile leaves room for the site header AND the page-nav summary bar; desktop only
-needs to clear the site header (the page-nav lives in the side rail, not above content). The 60px is an
-estimate of the summary's rendered height. */
+/* Headings opted-in by the block (see init() in page-nav.js) get scroll-margin so anchor scrolls
+clear the sticky chrome. Applied at every width because direct hash links still resolve even where the
+page-nav itself is absent: below 900px only the site header (and any collapsed sitenav summary) needs
+clearing; at >=900px the page-nav lives in the side rail, so only the site header matters. */
 .page-nav-target {
-  scroll-margin-block-start: calc(var(--sh-header-height, 56px) + var(--sitenav-summary-height, 0px) + 60px); /* TODO: account for height of the collapsed sitenav */
+  scroll-margin-block-start: calc(var(--sh-header-height, 56px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
 
-  @media (width >= 1200px) {
+  @media (width >= 900px) {
     scroll-margin-block-start: var(--sh-header-height, 56px);
   }
 }
