@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { mapRecord, mapRecords } from '../../tools/algolia/reindex.js';
+import { INDEX_SETTINGS, mapRecord, mapRecords } from '../../tools/algolia/reindex.js';
 
 describe('mapRecord', () => {
   it('uses path as the stable objectID', () => {
@@ -37,6 +37,25 @@ describe('mapRecord', () => {
     assert.equal(mapRecord({ path: '   ' }), null);
     assert.equal(mapRecord({ path: 42 }), null);
     assert.equal(mapRecord(null), null);
+  });
+});
+
+describe('INDEX_SETTINGS', () => {
+  it('ranks title and header ahead of description', () => {
+    assert.deepEqual(INDEX_SETTINGS.searchableAttributes, ['title,header', 'description']);
+  });
+
+  it('retrieves the fields the frontend needs to render a result', () => {
+    ['path', 'title', 'description', 'image'].forEach((field) => {
+      assert.ok(
+        INDEX_SETTINGS.attributesToRetrieve.includes(field),
+        `expected attributesToRetrieve to include ${field}`,
+      );
+    });
+  });
+
+  it('highlights the text fields shown in results', () => {
+    assert.deepEqual(INDEX_SETTINGS.attributesToHighlight, ['title', 'header', 'description']);
   });
 });
 

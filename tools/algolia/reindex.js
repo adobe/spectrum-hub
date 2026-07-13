@@ -20,6 +20,19 @@
 export const INDEXED_FIELDS = ['path', 'title', 'description', 'header', 'image'];
 
 /**
+ * Index-level relevance settings, applied once per reindex run.
+ *
+ * Mirrors the old block's two-tier matching: title and header rank equally and
+ * ahead of description (comma-joined attributes share a priority tier in
+ * Algolia). `path` and `image` are retrieved for rendering but not searched.
+ */
+export const INDEX_SETTINGS = {
+  searchableAttributes: ['title,header', 'description'],
+  attributesToHighlight: ['title', 'header', 'description'],
+  attributesToRetrieve: ['path', 'title', 'description', 'header', 'image'],
+};
+
+/**
  * Map a single query-index record to an Algolia record.
  *
  * Uses `path` as the stable `objectID` so re-running the job upserts existing
