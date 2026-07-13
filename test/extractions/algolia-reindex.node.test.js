@@ -8,10 +8,17 @@ import {
 
 import {
   INDEX_SETTINGS,
+  loadCredentials,
   loadQueryIndex,
   mapRecord,
   mapRecords,
 } from '../../tools/algolia/reindex.js';
+
+const FULL_ENV = {
+  ALGOLIA_APP_ID: 'app123',
+  ALGOLIA_ADMIN_KEY: 'super-secret-admin-key',
+  ALGOLIA_INDEX_NAME: 'spectrum_hub',
+};
 
 describe('mapRecord', () => {
   it('uses path as the stable objectID', () => {
@@ -109,6 +116,33 @@ describe('loadQueryIndex', () => {
 
   it('requires a non-empty source', async () => {
     await assert.rejects(loadQueryIndex(''), TypeError);
+  });
+});
+
+describe('loadCredentials', () => {
+  it('returns the credentials when every variable is present', () => {
+    assert.deepEqual(loadCredentials(FULL_ENV), {
+      appId: 'app123',
+      adminKey: 'super-secret-admin-key',
+      indexName: 'spectrum_hub',
+    });
+  });
+
+  it('throws listing the missing variable names', () => {
+    assert.throws(
+      () => loadCredentials({ ALGOLIA_APP_ID: 'app123' }),
+      /ALGOLIA_ADMIN_KEY.*ALGOLIA_INDEX_NAME|ALGOLIA_INDEX_NAME.*ALGOLIA_ADMIN_KEY/,
+    );
+  });
+
+  it('never includes a secret value in the error message', () => {
+    // admin key present but index name missing -> error must not echo the key
+    try {
+      loadCredentials({ ALGOLIA_APP_ID: 'app123', ALGOLIA_ADMIN_KEY: 'super-secret-admin-key' });
+      assert.fail('expected loadCredentials to throw');
+    } catch (err) {
+      assert.ok(!err.message.includes('super-secret-admin-key'));
+    }
   });
 });
 

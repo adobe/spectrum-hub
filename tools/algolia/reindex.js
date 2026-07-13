@@ -7,6 +7,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import process from 'node:process';
 
 /**
  * Shape of a record in the EDS query-index.json feed.
@@ -105,4 +106,29 @@ export async function loadQueryIndex(source) {
     throw new Error('query-index response is missing a data array');
   }
   return json.data;
+}
+
+/** Environment variables the reindex job reads for Algolia access. */
+export const REQUIRED_ENV = ['ALGOLIA_APP_ID', 'ALGOLIA_ADMIN_KEY', 'ALGOLIA_INDEX_NAME'];
+
+/**
+ * Read and validate Algolia credentials from the environment.
+ *
+ * The admin (write) key must only ever come from the environment — never from
+ * source, arguments, or logs. Fails closed, reporting which variables are
+ * missing by name only, so a secret value can never leak into an error message.
+ *
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {{ appId: string, adminKey: string, indexName: string }}
+ */
+export function loadCredentials(env = process.env) {
+  const missing = REQUIRED_ENV.filter((name) => !env[name]);
+  if (missing.length) {
+    throw new Error(`missing required environment variables: ${missing.join(', ')}`);
+  }
+  return {
+    appId: env.ALGOLIA_APP_ID,
+    adminKey: env.ALGOLIA_ADMIN_KEY,
+    indexName: env.ALGOLIA_INDEX_NAME,
+  };
 }
