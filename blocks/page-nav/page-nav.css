@@ -16,16 +16,16 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color: var(--se-body-color, var(--s2-gray-1000));
-  }
-
-  & ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  & li + li {
-    margin-block-start: var(--s2-spacing-50);
+    
+    & ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    
+    & li + li {
+      margin-block-start: var(--s2-spacing-50);
+    }
   }
 
   .page-nav a {
