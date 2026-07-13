@@ -5,6 +5,19 @@ body.home-template {
 }
 
 .home-hero {
+  --banner-background-opacity: 14%;
+  --banner-border-opacity: 40%;
+
+  body.dark-scheme & {
+    --banner-background-opacity: 26%;
+    --banner-border-opacity: 59%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    --banner-background-opacity: 26%;
+    --banner-border-opacity: 59%;
+  }
+
   display: flex;
   flex-direction: column;
   gap: var(--s2-spacing-400);
@@ -18,9 +31,9 @@ body.home-template {
     box-sizing: border-box;
     padding-inline: var(--s2-spacing-300);
     border-radius: 100px;
-    border: 1px solid rgb(from var(--s2-blue-500) r g b / .40); /*dark opacity is 59%*/
+    border: 1px solid rgb(from var(--s2-blue-500) r g b / var(--banner-border-opacity));
     gap: var(--s2-spacing-200);
-    background-color: rgb(from var(--s2-blue-500) r g b / .14); /*dark opacity is 26%*/
+    background-color: rgb(from var(--s2-blue-500) r g b / var(--banner-background-opacity));
   }
 
   p {
