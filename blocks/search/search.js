@@ -209,6 +209,34 @@ export async function localSearch(searchTerms, config) {
   return filterData(searchTerms, data ?? []);
 }
 
+/** Max results requested from Algolia per query. */
+export const SEARCH_HITS_PER_PAGE = 12;
+
+/**
+ * Search adapter: query an Algolia index.
+ *
+ * The client is taken from `config.algolia` so this stays unit-testable with a
+ * stub and carries no hard dependency on the client bundle. Expects an
+ * algoliasearch v5 client exposing `searchSingleIndex({ indexName, searchParams })`.
+ *
+ * Records are indexed under the same field names the query-index used
+ * (path/title/description/header/image), so hits render through the existing
+ * result template unchanged. Client-side `<mark>` highlighting still applies;
+ * moving to Algolia's `_highlightResult` is a later enhancement.
+ *
+ * @param {string[]} searchTerms lowercased query terms
+ * @param {{ algolia: { client: object, indexName: string } }} config
+ * @returns {Promise<object[]>} matching records (Algolia hits)
+ */
+export async function algoliaSearch(searchTerms, config) {
+  const { client, indexName } = config.algolia;
+  const { hits } = await client.searchSingleIndex({
+    indexName,
+    searchParams: { query: searchTerms.join(' '), hitsPerPage: SEARCH_HITS_PER_PAGE },
+  });
+  return hits;
+}
+
 async function handleSearch(e, block, config) {
   const searchValue = e.target.value;
   searchParams.set('q', searchValue);

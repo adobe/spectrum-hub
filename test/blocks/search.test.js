@@ -1,6 +1,10 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import init, { fetchData } from '../../blocks/search/search.js';
+import init, {
+  algoliaSearch,
+  fetchData,
+  SEARCH_HITS_PER_PAGE,
+} from '../../blocks/search/search.js';
 
 const originalHref = window.location.href;
 
@@ -67,6 +71,39 @@ describe('search block', () => {
       const stub = stubFetch(sandbox);
       await fetchData('/custom-index.json');
       expect(stub.calledOnceWith('/custom-index.json')).to.be.true;
+    });
+  });
+
+  describe('algoliaSearch', () => {
+    function fakeAlgoliaConfig(hits = []) {
+      const calls = [];
+      return {
+        calls,
+        algolia: {
+          indexName: 'spectrum_hub',
+          client: {
+            searchSingleIndex: async (args) => {
+              calls.push(args);
+              return { hits };
+            },
+          },
+        },
+      };
+    }
+
+    it('queries the configured index with the joined terms', async () => {
+      const config = fakeAlgoliaConfig();
+      await algoliaSearch(['page', 'one'], config);
+      expect(config.calls[0].indexName).to.equal('spectrum_hub');
+      expect(config.calls[0].searchParams.query).to.equal('page one');
+      expect(config.calls[0].searchParams.hitsPerPage).to.equal(SEARCH_HITS_PER_PAGE);
+    });
+
+    it('returns the hits from the response', async () => {
+      const hits = [{ path: '/a', title: 'A' }];
+      const config = fakeAlgoliaConfig(hits);
+      const results = await algoliaSearch(['a'], config);
+      expect(results).to.deep.equal(hits);
     });
   });
 
