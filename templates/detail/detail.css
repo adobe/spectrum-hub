@@ -11,7 +11,6 @@
 
     .page-nav {
       grid-area: pagenav;
-      z-index: var(--sh-z-pagenav);
     }
   }
 }
@@ -43,12 +42,6 @@
           z-index: auto;
           isolation: auto;
         }
-      }
-
-      .page-nav {
-        z-index: auto;
-        isolation: auto;
-        inset-block-start: calc(var(--sh-header-height) + var(--s2-spacing-100) + 8px);
       }
 
       .section > .default-content {
