@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import init, {
   algoliaSearch,
   fetchData,
+  SEARCH_DEBOUNCE_MS,
   SEARCH_HITS_PER_PAGE,
 } from '../../blocks/search/search.js';
 
@@ -38,7 +39,8 @@ async function typeIntoSearch(block, value) {
   const input = block.querySelector('.search-input');
   input.value = value;
   input.dispatchEvent(new Event('input'));
-  await new Promise((resolve) => { setTimeout(resolve, 0); });
+  // wait past the debounce interval so the search actually runs
+  await new Promise((resolve) => { setTimeout(resolve, SEARCH_DEBOUNCE_MS + 20); });
 }
 
 describe('search block', () => {
@@ -189,6 +191,17 @@ describe('search block', () => {
     it('fetches and renders results when 3 or more characters are typed', async () => {
       await typeIntoSearch(block, 'page');
       expect([...block.querySelectorAll('.search-results li')]).to.have.length(2);
+    });
+
+    it('debounces rapid input into a single search', async () => {
+      fetchStub.resetHistory();
+      const input = block.querySelector('.search-input');
+      ['pag', 'page', 'pages'].forEach((value) => {
+        input.value = value;
+        input.dispatchEvent(new Event('input'));
+      });
+      await new Promise((resolve) => { setTimeout(resolve, SEARCH_DEBOUNCE_MS + 20); });
+      expect(fetchStub.callCount).to.equal(1);
     });
 
     it('clears results when input drops below 3 characters after a search', async () => {

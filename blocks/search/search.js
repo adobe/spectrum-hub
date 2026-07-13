@@ -5,6 +5,22 @@ import loadIcons from '../../scripts/utils/svg.js';
 
 const searchParams = new URLSearchParams(window.location.search);
 
+/** Debounce interval for search input, in milliseconds. */
+export const SEARCH_DEBOUNCE_MS = 200;
+
+/**
+ * Return a debounced version of `fn` that runs once `wait` ms have elapsed
+ * since the last call. Keeps a paid search backend from being hit on every
+ * keystroke.
+ */
+function debounce(fn, wait) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+
 function findNextHeading(el) {
   let preceedingEl = el.parentElement.previousElement || el.parentElement.parentElement;
   let h = 'H2';
@@ -278,9 +294,9 @@ function searchInput(block, config) {
   input.placeholder = searchPlaceholder;
   input.setAttribute('aria-label', searchPlaceholder);
 
-  input.addEventListener('input', (e) => {
+  input.addEventListener('input', debounce((e) => {
     handleSearch(e, block, config);
-  });
+  }, SEARCH_DEBOUNCE_MS));
 
   input.addEventListener('keyup', (e) => { if (e.code === 'Escape') { clearSearch(block); } });
 
