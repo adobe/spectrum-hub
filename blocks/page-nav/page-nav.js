@@ -1,5 +1,3 @@
-/* Follows Disclosure Navigation Menu APG: https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/ */
-
 function slugify(text) {
   return text
     .toLowerCase()
@@ -8,14 +6,8 @@ function slugify(text) {
     .replace(/^-|-$/g, '');
 }
 
-function getPageName() {
-  const h1 = document.querySelector('main h1');
-  return h1?.textContent.trim() || document.title;
-}
-
-// Keeps the summary's current-section label and each link's aria-current in
-// sync with the heading the visitor is reading.
-function watchScrollSpy(headings, currentLabel, linkById, fallbackLabel) {
+// Keeps each link's aria-current in sync with the heading the visitor is reading.
+function watchScrollSpy(headings, linkById) {
   let activeId = null;
 
   const setActive = (id) => {
@@ -28,9 +20,6 @@ function watchScrollSpy(headings, currentLabel, linkById, fallbackLabel) {
     activeId = id;
     if (id && linkById.get(id)) {
       linkById.get(id).setAttribute('aria-current', 'location');
-      currentLabel.textContent = document.getElementById(id)?.textContent || fallbackLabel;
-    } else {
-      currentLabel.textContent = fallbackLabel;
     }
   };
 
@@ -102,22 +91,6 @@ export default async function init(el) {
     h1.classList.add('page-nav-target');
   }
 
-  const details = document.createElement('details');
-  const summary = document.createElement('summary');
-  summary.classList.add('page-nav-summary');
-  // TODO: VoiceOver announces a <summary> twice on navigation: once via
-  // its computed accessible name (e.g. "Button, summary, collapsed") and
-  // once via the descendant text node. Could be silenced with aria-label
-  // on the summary + aria-hidden on the inner span. Tradeoff would be to
-  // duplicate the label string across an attribute and the DOM. This is the
-  // same "accepted-as-is" stance as the sitenav's segment summaries.
-  const currentLabel = document.createElement('span');
-  currentLabel.classList.add('page-nav-current');
-  const pageName = getPageName();
-  currentLabel.textContent = pageName;
-  summary.append(currentLabel);
-  details.append(summary);
-
   const list = document.createElement('ul');
   const linkById = new Map();
   headings.forEach((h) => {
@@ -140,32 +113,23 @@ export default async function init(el) {
     list.append(topLi);
   }
 
-  details.append(list);
-  el.append(details);
+  el.append(list);
 
-  const desktopMql = window.matchMedia('(width >= 1200px)');
-  const syncDisclosure = () => {
-    details.open = desktopMql.matches;
+  // The nav is a desktop-only side rail (see detail template grid at >=900px).
+  // Below that it is removed from the DOM and the accessibility tree entirely: a
+  // comment placeholder holds its slot so the <nav> can be restored in place when
+  // the viewport widens again.
+  const desktopMql = window.matchMedia('(width >= 900px)');
+  const placeholder = document.createComment('page-nav');
+  const syncPresence = () => {
+    if (desktopMql.matches && placeholder.parentNode) {
+      placeholder.replaceWith(el);
+    } else if (!desktopMql.matches && el.parentNode) {
+      el.replaceWith(placeholder);
+    }
   };
-  syncDisclosure();
-  desktopMql.addEventListener('change', syncDisclosure);
+  syncPresence();
+  desktopMql.addEventListener('change', syncPresence);
 
-  // Close the overlay after a link is clicked at small screens
-  details.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href^="#"]');
-    if (!a) {
-      return;
-    }
-    if (!desktopMql.matches) {
-      details.open = false;
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (details.open && !desktopMql.matches && !el.contains(e.target)) {
-      details.open = false;
-    }
-  });
-
-  watchScrollSpy(h1 ? [...headings, h1] : headings, currentLabel, linkById, pageName);
+  watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
 }

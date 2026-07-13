@@ -17,8 +17,21 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
   document.body.append(main);
 }
 
+// matches=true simulates the >=900px desktop viewport where the nav renders;
+// false simulates the small screens where it is removed. The captured change
+// listener lets tests drive a viewport crossing.
 function stubMatchMedia(sandbox, matches = false) {
-  return sandbox.stub(window, 'matchMedia').returns({ matches, addEventListener: () => {} });
+  const listeners = [];
+  const mql = {
+    matches,
+    addEventListener: (_event, cb) => listeners.push(cb),
+    dispatch: (nextMatches) => {
+      mql.matches = nextMatches;
+      listeners.forEach((cb) => cb({ matches: nextMatches }));
+    },
+  };
+  sandbox.stub(window, 'matchMedia').returns(mql);
+  return mql;
 }
 
 describe('page-nav block', () => {
@@ -29,6 +42,7 @@ describe('page-nav block', () => {
     sandbox = sinon.createSandbox();
     el = document.createElement('nav');
     el.className = 'page-nav';
+    el.setAttribute('aria-label', 'On this page');
     document.body.append(el);
   });
 
@@ -39,36 +53,29 @@ describe('page-nav block', () => {
 
   describe('init leaves the nav empty when no h2 headings are present', () => {
     it('does not append content when main has no h2 headings', async () => {
-      stubMatchMedia(sandbox);
+      stubMatchMedia(sandbox, true);
       makeDOM({ h2Texts: [] });
       await init(el);
       expect(el.children.length).to.equal(0);
     });
 
     it('does not throw when main has no h2 headings', async () => {
-      stubMatchMedia(sandbox);
+      stubMatchMedia(sandbox, true);
       makeDOM({ h2Texts: [] });
       await init(el);
     });
   });
 
-  describe('init builds the disclosure widget and navigation links', () => {
+  describe('init builds the navigation links at the desktop viewport', () => {
     beforeEach(async () => {
-      stubMatchMedia(sandbox);
+      stubMatchMedia(sandbox, true);
       makeDOM();
       await init(el);
     });
 
-    it('appends a details element', () => {
-      expect(el.querySelector('details')).to.not.be.null;
-    });
-
-    it('appends a summary inside details', () => {
-      expect(el.querySelector('details summary')).to.not.be.null;
-    });
-
-    it('summary shows the h1 text as the current section label', () => {
-      expect(el.querySelector('.page-nav-current').textContent).to.equal('Page Title');
+    it('appends a list directly to the nav without a details wrapper', () => {
+      expect(el.querySelector('details')).to.be.null;
+      expect(el.querySelector(':scope > ul')).to.not.be.null;
     });
 
     it('creates one list item per h2 heading plus a back-to-top entry', () => {
@@ -101,17 +108,40 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('init when h1 is absent', () => {
-    it('summary falls back to document.title', async () => {
-      stubMatchMedia(sandbox);
-      document.title = 'Test Doc Title';
-      makeDOM({ h1Text: null });
+  describe('init removes the nav from the DOM below the desktop breakpoint', () => {
+    it('detaches the nav element from the document at a small-screen viewport', async () => {
+      stubMatchMedia(sandbox, false);
+      makeDOM();
       await init(el);
-      expect(el.querySelector('.page-nav-current').textContent).to.equal('Test Doc Title');
+      expect(el.isConnected).to.be.false;
+      expect(document.querySelector('nav.page-nav')).to.be.null;
     });
 
+    it('detaches the nav element when the viewport shrinks below the breakpoint', async () => {
+      const mql = stubMatchMedia(sandbox, true);
+      makeDOM();
+      await init(el);
+      expect(document.querySelector('nav.page-nav ul')).to.not.be.null;
+      mql.dispatch(false);
+      expect(el.isConnected).to.be.false;
+      expect(document.querySelector('nav.page-nav')).to.be.null;
+    });
+
+    it('restores the nav in place when the viewport grows past the breakpoint', async () => {
+      const mql = stubMatchMedia(sandbox, false);
+      makeDOM();
+      await init(el);
+      expect(el.isConnected).to.be.false;
+      mql.dispatch(true);
+      expect(el.isConnected).to.be.true;
+      expect(el.querySelector('ul')).to.not.be.null;
+      expect(el.querySelectorAll('ul li').length).to.equal(3);
+    });
+  });
+
+  describe('init when h1 is absent', () => {
     it('does not include a back-to-top link', async () => {
-      stubMatchMedia(sandbox);
+      stubMatchMedia(sandbox, true);
       makeDOM({ h1Text: null });
       await init(el);
       const links = [...el.querySelectorAll('ul a')];
@@ -119,9 +149,9 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('init assigns ids and accessibility attributes to headings', () => {
+  describe('init assigns ids and accessibility attributes to headings regardless of viewport', () => {
     beforeEach(() => {
-      stubMatchMedia(sandbox);
+      stubMatchMedia(sandbox, false);
     });
 
     it('assigns a slugified id to an h2 that has none', async () => {
@@ -183,55 +213,6 @@ describe('page-nav block', () => {
       makeDOM();
       await init(el);
       expect(document.querySelector('main h1').classList.contains('page-nav-target')).to.be.true;
-    });
-  });
-
-  describe('init syncs the details open state to the viewport width', () => {
-    it('details is open at desktop viewport width', async () => {
-      stubMatchMedia(sandbox, true);
-      makeDOM();
-      await init(el);
-      expect(el.querySelector('details').open).to.be.true;
-    });
-
-    it('details is closed at mobile viewport width', async () => {
-      stubMatchMedia(sandbox, false);
-      makeDOM();
-      await init(el);
-      expect(el.querySelector('details').open).to.be.false;
-    });
-  });
-
-  describe('init closes the overlay after a link is clicked on mobile', () => {
-    it('details closes when a nav link is clicked at mobile viewport', async () => {
-      stubMatchMedia(sandbox, false);
-      makeDOM();
-      await init(el);
-      const details = el.querySelector('details');
-      details.open = true;
-      el.querySelector('ul a').click();
-      expect(details.open).to.be.false;
-    });
-
-    it('details stays open when a nav link is clicked at desktop viewport', async () => {
-      stubMatchMedia(sandbox, true);
-      makeDOM();
-      await init(el);
-      const details = el.querySelector('details');
-      el.querySelector('ul a').click();
-      expect(details.open).to.be.true;
-    });
-
-    it('closes details when a click lands outside the nav on mobile', async () => {
-      stubMatchMedia(sandbox, false);
-      makeDOM();
-      await init(el);
-      const details = el.querySelector('details');
-      details.open = true;
-      const outside = document.createElement('button');
-      document.body.append(outside);
-      outside.click();
-      expect(details.open).to.be.false;
     });
   });
 });
