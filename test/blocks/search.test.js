@@ -14,7 +14,8 @@ const SAMPLE_DATA = [
   { path: '/page-two', title: 'Page Two', description: 'Second description' },
 ];
 
-// callsFake ensures a fresh Response body is created per call — Response body can only be consumed once.
+// callsFake ensures a fresh Response body is created per call —
+// a Response body can only be consumed once.
 function stubFetch(sandbox, data = SAMPLE_DATA, status = 200) {
   return sandbox.stub(window, 'fetch').callsFake(() => Promise.resolve(
     new Response(JSON.stringify({ data }), { status }),

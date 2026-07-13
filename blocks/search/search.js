@@ -39,7 +39,9 @@ function findNextHeading(el) {
 
 function highlightTextElements(terms, elements) {
   elements.forEach((element) => {
-    if (!element || !element.textContent) return;
+    if (!element || !element.textContent) {
+      return;
+    }
 
     const matches = [];
     const { textContent } = element;
@@ -60,7 +62,9 @@ function highlightTextElements(terms, elements) {
     matches.sort((a, b) => a.offset - b.offset);
     let currentIndex = 0;
     const fragment = matches.reduce((acc, { offset, term }) => {
-      if (offset < currentIndex) return acc;
+      if (offset < currentIndex) {
+        return acc;
+      }
       const textBefore = textContent.substring(currentIndex, offset);
       if (textBefore) {
         acc.appendChild(document.createTextNode(textBefore));
@@ -298,7 +302,11 @@ function searchInput(block, config) {
     handleSearch(e, block, config);
   }, SEARCH_DEBOUNCE_MS));
 
-  input.addEventListener('keyup', (e) => { if (e.code === 'Escape') { clearSearch(block); } });
+  input.addEventListener('keyup', (e) => {
+    if (e.code === 'Escape') {
+      clearSearch(block);
+    }
+  });
 
   return input;
 }
