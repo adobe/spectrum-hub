@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  afterEach, beforeEach, describe, it,
+} from 'node:test';
 
-import { INDEX_SETTINGS, mapRecord, mapRecords } from '../../tools/algolia/reindex.js';
+import {
+  INDEX_SETTINGS,
+  loadQueryIndex,
+  mapRecord,
+  mapRecords,
+} from '../../tools/algolia/reindex.js';
 
 describe('mapRecord', () => {
   it('uses path as the stable objectID', () => {
@@ -37,6 +47,68 @@ describe('mapRecord', () => {
     assert.equal(mapRecord({ path: '   ' }), null);
     assert.equal(mapRecord({ path: 42 }), null);
     assert.equal(mapRecord(null), null);
+  });
+});
+
+describe('loadQueryIndex', () => {
+  /** @type {typeof fetch} */
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  function mockFetch({ ok = true, status = 200, body = {} }) {
+    globalThis.fetch = async () => ({ ok, status, json: async () => body });
+  }
+
+  it('fetches and returns the data array from an https source', async () => {
+    mockFetch({ body: { data: [{ path: '/a' }] } });
+    const data = await loadQueryIndex('https://example.com/query-index.json');
+    assert.deepEqual(data, [{ path: '/a' }]);
+  });
+
+  it('throws when the fetch response is not ok', async () => {
+    mockFetch({ ok: false, status: 503 });
+    await assert.rejects(
+      loadQueryIndex('https://example.com/query-index.json'),
+      /503/,
+    );
+  });
+
+  it('rejects plain http sources', async () => {
+    await assert.rejects(
+      loadQueryIndex('http://example.com/query-index.json'),
+      /https/,
+    );
+  });
+
+  it('throws when the response has no data array', async () => {
+    mockFetch({ body: { notData: [] } });
+    await assert.rejects(
+      loadQueryIndex('https://example.com/query-index.json'),
+      /data array/,
+    );
+  });
+
+  it('reads a local file path', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'algolia-reindex-'));
+    const file = join(dir, 'query-index.json');
+    await writeFile(file, JSON.stringify({ data: [{ path: '/local' }] }));
+    try {
+      const data = await loadQueryIndex(file);
+      assert.deepEqual(data, [{ path: '/local' }]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('requires a non-empty source', async () => {
+    await assert.rejects(loadQueryIndex(''), TypeError);
   });
 });
 

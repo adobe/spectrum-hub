@@ -6,6 +6,8 @@
  * script, not browser code.
  */
 
+import { readFile } from 'node:fs/promises';
+
 /**
  * Shape of a record in the EDS query-index.json feed.
  * @typedef {object} QueryIndexRecord
@@ -70,4 +72,37 @@ export function mapRecords(data) {
     throw new TypeError('query-index data must be an array');
   }
   return data.map(mapRecord).filter(Boolean);
+}
+
+/**
+ * Load a query-index feed from an HTTPS URL or a local file path.
+ *
+ * Remote sources must use HTTPS; plain HTTP is rejected so the feed cannot be
+ * tampered with in transit. Returns the raw `data` array for {@link mapRecords}.
+ *
+ * @param {string} source HTTPS URL or local file path
+ * @returns {Promise<QueryIndexRecord[]>}
+ */
+export async function loadQueryIndex(source) {
+  if (typeof source !== 'string' || !source) {
+    throw new TypeError('query-index source is required');
+  }
+
+  let json;
+  if (/^https:\/\//i.test(source)) {
+    const response = await fetch(source);
+    if (!response.ok) {
+      throw new Error(`failed to fetch query-index (${response.status})`);
+    }
+    json = await response.json();
+  } else if (/^http:\/\//i.test(source)) {
+    throw new Error('query-index source must use https, not http');
+  } else {
+    json = JSON.parse(await readFile(source, 'utf8'));
+  }
+
+  if (!json || !Array.isArray(json.data)) {
+    throw new Error('query-index response is missing a data array');
+  }
+  return json.data;
 }
