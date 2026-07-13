@@ -8,6 +8,7 @@
 
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Shape of a record in the EDS query-index.json feed.
@@ -168,4 +169,52 @@ export async function reindex({ client, indexName, records }) {
   await client.saveObjects({ indexName, objects: records });
 
   return { indexName, count: records.length };
+}
+
+/**
+ * Create an algoliasearch v5 client.
+ *
+ * Imported dynamically so the rest of the module (and its unit tests) load
+ * without the `algoliasearch` package, which is only needed for a real run.
+ *
+ * TODO(creds): add `algoliasearch` as a devDependency once the Algolia app is
+ * provisioned. Until then, a real run stops here by design — the pure logic
+ * above is fully covered by tests.
+ *
+ * @param {string} appId
+ * @param {string} adminKey
+ */
+export async function createClient(appId, adminKey) {
+  // eslint-disable-next-line import/no-unresolved
+  const { algoliasearch } = await import('algoliasearch');
+  return algoliasearch(appId, adminKey);
+}
+
+/**
+ * CLI entry point: load the feed, map it, and push it to Algolia.
+ * The source is taken from the first argument or QUERY_INDEX_SOURCE.
+ */
+export async function main() {
+  const source = process.argv[2] || process.env.QUERY_INDEX_SOURCE;
+  if (!source) {
+    throw new Error('provide a query-index source (argument or QUERY_INDEX_SOURCE)');
+  }
+
+  const { appId, adminKey, indexName } = loadCredentials();
+  const data = await loadQueryIndex(source);
+  const records = mapRecords(data);
+  const client = await createClient(appId, adminKey);
+
+  const summary = await reindex({ client, indexName, records });
+  // eslint-disable-next-line no-console
+  console.log(`reindexed ${summary.count} records into "${summary.indexName}"`);
+}
+
+// Run only when invoked directly, never when imported by tests.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error(`reindex failed: ${err.message}`);
+    process.exit(1);
+  });
 }
