@@ -541,6 +541,11 @@ div[data-status],
       border-color: var(--button-background-color-hover);
     }
 
+    .btn:focus-visible {
+      outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+      outline-offset: 2px;
+    } 
+
     .visually-hidden {
       clip-path: inset(50%);
       height: 1px;
