@@ -191,6 +191,24 @@ function filterData(searchTerms, data) {
   ].map((item) => item.result);
 }
 
+/**
+ * Search adapter: the static query-index feed filtered client-side.
+ *
+ * This is the seam the Algolia migration hangs on. `handleSearch` calls
+ * `config.search`, so swapping the data source later is a one-line change in
+ * `decorate` rather than a rewrite of the query flow. This adapter preserves
+ * the original "dumb" behavior so the block keeps working before the Algolia
+ * index exists.
+ *
+ * @param {string[]} searchTerms lowercased query terms
+ * @param {{ source: string }} config
+ * @returns {Promise<object[]>} matching query-index records
+ */
+export async function localSearch(searchTerms, config) {
+  const data = await fetchData(config.source);
+  return filterData(searchTerms, data ?? []);
+}
+
 async function handleSearch(e, block, config) {
   const searchValue = e.target.value;
   searchParams.set('q', searchValue);
@@ -206,9 +224,8 @@ async function handleSearch(e, block, config) {
   }
   const searchTerms = searchValue.toLowerCase().split(/\s+/).filter((term) => !!term);
 
-  const data = await fetchData(config.source);
-  const filteredData = filterData(searchTerms, data);
-  await renderResults(block, config, filteredData, searchTerms);
+  const results = await config.search(searchTerms, config);
+  await renderResults(block, config, results, searchTerms);
 }
 
 function searchResultsContainer(block) {
@@ -262,9 +279,10 @@ function searchBox(block, config) {
 export default async function decorate(block) {
   const placeholders = {};
   const source = block.querySelector('a[href]') ? block.querySelector('a[href]').href : '/query-index.json';
+  const config = { source, placeholders, search: localSearch };
   block.innerHTML = '';
   block.append(
-    searchBox(block, { source, placeholders }),
+    searchBox(block, config),
     searchResultsContainer(block),
   );
 
