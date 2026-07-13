@@ -401,6 +401,8 @@ div[data-status],
       margin: 0;
       position: relative;
       z-index: 1;
+      background-image: url('/img/assets/background-image-light.png');
+      background-position: 0 -15vw;
       background-attachment: fixed, scroll;
       background-repeat: no-repeat, no-repeat;
       color: var(--se-body-color);
@@ -408,9 +410,7 @@ div[data-status],
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
 
-      @media (width >= 600px) {
-        background-position: 0 0;
-      }
+     
 
       header {
         visibility: hidden;
