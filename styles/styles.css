@@ -376,46 +376,9 @@ div[data-status],
 /* --- Spectrum Edge default styles --- */
 @layer spectrum-edge {
   html.spectrum-edge {
-    --s2-home-gradient: radial-gradient(
-      40% 20% at 40% 0%,
-      light-dark(rgb(from var(--s2-gray-75) r g b / 25%), rgb(from var(--s2-gray-25) r g b / 35%)) 0%,
-      light-dark(rgb(from var(--s2-cyan-400) r g b / 18%), rgb(from var(--s2-blue-100) r g b / 80%)) 25%,
-      light-dark(rgb(from var(--s2-cyan-800) r g b  / 18%), rgb(from var(--s2-cyan-100) r g b / 80%)) 40%,
-      light-dark(rgb(from var(--s2-blue-900) r g b / 14%), rgb(from var(--s2-cyan-100) r g b  / 85%)) 75%,
-      light-dark(rgb(from var(--s2-gray-25) r g b / 18%), rgb(from var(--s2-gray-25) r g b / 18%)) 100%
-    );
-
     scroll-behavior: smooth;
     position: relative;
     isolation: isolate;
-
-    &::before,
-    &::after {
-      content: '';
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(100px);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    &::before {
-      inline-size: 45vw;
-      block-size: 35vw;
-      inset-block-start: 50vw;
-      inset-inline-end: -15vw;
-      background-image: radial-gradient(circle, var(--s2-cyan-600), transparent 70%);
-      opacity: 0.4;
-    }
-
-    &::after {
-      inline-size: 55vw;
-      block-size: 45vw;
-      inset-block-start: 15vw;
-      inset-inline-start: -10vw;
-      background: radial-gradient(circle, var(--s2-blue-1100), transparent 70%);
-      opacity: 0.3;
-    }
 
     @media (width >= 900px) {
       &::before {
@@ -438,12 +401,8 @@ div[data-status],
       margin: 0;
       position: relative;
       z-index: 1;
-      background:
-        var(--s2-home-gradient),
-        var(--se-body-background-color);
       background-attachment: fixed, scroll;
       background-repeat: no-repeat, no-repeat;
-      background-position: 0 -15vw;
       color: var(--se-body-color);
       font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);
@@ -568,6 +527,11 @@ div[data-status],
       --button-background-color:  var(--s2-blue-900);
       --button-background-color-hover:  var(--s2-blue-1000);
       --button-text-color: var(--sh-content-color-white);
+
+      body.dark-scheme & {
+        --button-background-color:  var(--s2-blue-800);
+        --button-background-color-hover:  var(--s2-blue-700);
+      }
     }
 
     .btn:hover,
@@ -588,10 +552,14 @@ div[data-status],
 
     .light-scheme {
       color-scheme: light;
+      background-image: url('/img/assets/background-image-light.png');
+      background-position: 0 -15vw;
     }
 
     .dark-scheme {
       color-scheme: dark;
+      background-image: url('/img/assets/background-image-dark.png');
+      background-position: 0 -15vw;
     }
 
     @media (prefers-reduced-motion: reduce) {
