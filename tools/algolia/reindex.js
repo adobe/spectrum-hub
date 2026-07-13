@@ -132,3 +132,40 @@ export function loadCredentials(env = process.env) {
     indexName: env.ALGOLIA_INDEX_NAME,
   };
 }
+
+/**
+ * Apply index settings and push records to Algolia.
+ *
+ * The client is injected so this stays unit-testable without network access or
+ * credentials. Expects an algoliasearch v5 client exposing
+ * `setSettings({ indexName, indexSettings })` and
+ * `saveObjects({ indexName, objects })`.
+ *
+ * Refuses to run with zero records: an empty batch almost always means the feed
+ * failed to load, and silently reindexing nothing would mask that failure.
+ *
+ * @param {object} params
+ * @param {{ setSettings: Function, saveObjects: Function }} params.client
+ * @param {string} params.indexName
+ * @param {Record<string, string>[]} params.records
+ * @returns {Promise<{ indexName: string, count: number }>}
+ */
+export async function reindex({ client, indexName, records }) {
+  const usable = client
+    && typeof client.setSettings === 'function'
+    && typeof client.saveObjects === 'function';
+  if (!usable) {
+    throw new TypeError('a valid Algolia client is required');
+  }
+  if (!indexName) {
+    throw new TypeError('indexName is required');
+  }
+  if (!Array.isArray(records) || !records.length) {
+    throw new Error('refusing to reindex with zero records');
+  }
+
+  await client.setSettings({ indexName, indexSettings: INDEX_SETTINGS });
+  await client.saveObjects({ indexName, objects: records });
+
+  return { indexName, count: records.length };
+}

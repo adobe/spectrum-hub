@@ -12,7 +12,18 @@ import {
   loadQueryIndex,
   mapRecord,
   mapRecords,
+  reindex,
 } from '../../tools/algolia/reindex.js';
+
+/** Fake algoliasearch v5 client that records the calls it receives. */
+function fakeClient() {
+  const calls = { setSettings: [], saveObjects: [] };
+  return {
+    calls,
+    setSettings: async (args) => { calls.setSettings.push(args); },
+    saveObjects: async (args) => { calls.saveObjects.push(args); },
+  };
+}
 
 const FULL_ENV = {
   ALGOLIA_APP_ID: 'app123',
@@ -116,6 +127,45 @@ describe('loadQueryIndex', () => {
 
   it('requires a non-empty source', async () => {
     await assert.rejects(loadQueryIndex(''), TypeError);
+  });
+});
+
+describe('reindex', () => {
+  const records = [{ objectID: '/a', path: '/a', title: 'A' }];
+
+  it('applies index settings then saves the records', async () => {
+    const client = fakeClient();
+    const result = await reindex({ client, indexName: 'idx', records });
+
+    assert.deepEqual(client.calls.setSettings[0], {
+      indexName: 'idx',
+      indexSettings: INDEX_SETTINGS,
+    });
+    assert.deepEqual(client.calls.saveObjects[0], { indexName: 'idx', objects: records });
+    assert.deepEqual(result, { indexName: 'idx', count: 1 });
+  });
+
+  it('throws when the client is missing required methods', async () => {
+    await assert.rejects(
+      reindex({ client: {}, indexName: 'idx', records }),
+      TypeError,
+    );
+  });
+
+  it('throws when indexName is missing', async () => {
+    await assert.rejects(
+      reindex({ client: fakeClient(), indexName: '', records }),
+      TypeError,
+    );
+  });
+
+  it('refuses to run with zero records', async () => {
+    const client = fakeClient();
+    await assert.rejects(
+      reindex({ client, indexName: 'idx', records: [] }),
+      /zero records/,
+    );
+    assert.equal(client.calls.saveObjects.length, 0);
   });
 });
 
