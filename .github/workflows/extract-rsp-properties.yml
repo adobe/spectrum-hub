@@ -29,10 +29,15 @@ jobs:
       - name: Extract component properties
         run: node deps/rsp/extract-props.js
 
+      # Rebuilds the combined index from the freshly-extracted RSP data plus the
+      # currently-committed SWC data. Fails closed on an empty roster.
+      - name: Build combined status index
+        run: node deps/build-status-index.js
+
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/rsp/components.json deps/rsp/data/
-          git diff --staged --quiet || git commit -m "chore: update React Spectrum component properties"
+          git add deps/rsp/components.json deps/rsp/data/ deps/status-index.json
+          git diff --staged --quiet || git commit -m "chore: update React Spectrum component properties and status index"
           git push
