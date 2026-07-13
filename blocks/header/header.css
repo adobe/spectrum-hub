@@ -32,7 +32,7 @@ header {
     border-radius: var(--s2-corner-radius-300);
     padding: var(--s2-spacing-100) var(--s2-spacing-200);
     transform: translateY(calc(-100% - var(--s2-spacing-200))) translateX(var(--s2-spacing-75));
-    transition: transform 2s ease;
+    transition: transform 0.2s ease;
   }
 
   .skip-link:focus-visible {
