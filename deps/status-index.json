@@ -1,0 +1,1243 @@
+{
+  "implementations": {
+    "web": [
+      "rsp",
+      "swc"
+    ]
+  },
+  "components": [
+    {
+      "name": "Accordion",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ActionBar",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ActionButton",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ActionButtonGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ActionMenu",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AlertDialog",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Asset",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "Avatar",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "AvatarGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Badge",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "Breadcrumbs",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Button",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ButtonGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "Calendar",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Card",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "CardView",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Checkbox",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "CheckboxGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ClearButton",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "CloseButton",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "CoachMark",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorArea",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "experimental"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "experimental"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorLoupe",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorSlider",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "experimental"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorSwatch",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorSwatchPicker",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ColorWheel",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ComboBox",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ContextualHelp",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ConversationThread",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "ConversationTurn",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "CustomDialog",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "DateField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "DatePicker",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "DateRangePicker",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Dialog",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Disclosure",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Divider",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "DropZone",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "FullscreenDialog",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Icon",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "IllustratedMessage",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "Image",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "InlineAlert",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "LabeledValue",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Link",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "LinkButton",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ListView",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Menu",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageFeedback",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSources",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "Meter",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "Modal",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "NotificationBadge",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "NumberField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Picker",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Popover",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ProgressBar",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ProgressCircle",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "RadioGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "RangeCalendar",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "RangeSlider",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatus",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "SearchField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SegmentedControl",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SelectBoxGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SkeletonCollection",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Slider",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "StatusLight",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "SuggestionGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "SuggestionItem",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "Switch",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SystemMessage",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "Tab",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "TableView",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "TabPanel",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "Tabs",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "TagGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "TextArea",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "TextField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "TimeField",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ToggleButton",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ToggleButtonGroup",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Tooltip",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "TreeView",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "UploadArtifact",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    },
+    {
+      "name": "UserMessage",
+      "platforms": {
+        "web": {
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "experimental"
+          }
+        }
+      }
+    }
+  ]
+}
