@@ -1,79 +1,106 @@
-const INDICATORS = {
-  do: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path d="M14.72 3.72a1 1 0 0 0-1.44 0L6 10.94 2.72 7.72A1 1 0 0 0 1.28 9.16l4 4a1 1 0 0 0 1.44 0l8-8a1 1 0 0 0 0-1.44z"/>
-  </svg>`,
-  dont: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path d="M13.66 2.34a1 1 0 0 0-1.32 0L8 6.59 3.66 2.34A1 1 0 0 0 2.34 3.66L6.59 8l-4.25 4.34a1 1 0 0 0 1.32 1.32L8 9.41l4.34 4.25a1 1 0 0 0 1.32-1.32L9.41 8l4.25-4.34a1 1 0 0 0 0-1.32z"/>
-  </svg>`,
-  neutral: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path d="M14 7H2a1 1 0 0 0 0 2h12a1 1 0 0 0 0-2z"/>
-  </svg>`,
+const INDICATOR_TYPES = {
+  docheck: 'do',
+  dontcross: 'dont',
+  neutralminus: 'neutral',
 };
 
-function makeIndicator(type) {
-  const span = document.createElement('span');
-  span.className = `do-dont-indicator do-dont-indicator-${type}`;
-  span.innerHTML = INDICATORS[type];
-  return span;
+function findIndicatorType(cell) {
+  const icon = cell?.querySelector('.icon');
+  if (!icon) { return undefined; }
+  const match = [...icon.classList]
+    .map((c) => /^icon-(docheck|dontcross|neutralminus)$/.exec(c))
+    .find(Boolean);
+  return match ? INDICATOR_TYPES[match[1]] : undefined;
 }
 
-function buildPanel(type, cell) {
-  const panel = document.createElement('div');
-  panel.className = `do-dont-panel do-dont-panel-${type}`;
-  panel.append(makeIndicator(type));
+function buildPanel(mediaCell, captionCell, indicatorCell) {
+  const type = findIndicatorType(indicatorCell) ?? 'do';
 
-  if (!cell) return panel;
+  const figure = document.createElement('figure');
+  figure.className = `usage-panel usage-panel-${type}`;
+  if (mediaCell) { figure.append(...mediaCell.childNodes); }
 
-  const pic = cell.querySelector('picture');
-  if (pic) {
-    const wrapper = pic.closest('p');
-    panel.append(pic);
-    wrapper?.remove();
+  const badge = document.createElement('span');
+  badge.className = 'usage-indicator';
+  figure.append(badge);
+
+  const captionText = captionCell?.textContent.trim();
+  if (captionText) {
+    const figcaption = document.createElement('figcaption');
+    figcaption.className = 'usage-caption';
+    figcaption.textContent = captionText;
+    figure.append(figcaption);
   }
 
-  [...cell.querySelectorAll('p')].forEach((p) => {
-    p.classList.add('do-dont-caption');
-    panel.append(p);
-  });
-
-  return panel;
+  return figure;
 }
 
-function decorateSinglePanel(el) {
-  const type = ['do', 'dont', 'neutral'].find((t) => el.classList.contains(t)) ?? 'do';
-  const row = el.querySelector(':scope > div');
-  if (!row) return;
+/*
+ * Stacked shape (default): rows come in groups of three per panel —
+ * [media (+ leading content cell on the very first row)], [caption], [indicator].
+ * A single panel is just the one-group case of this same pattern.
+ */
+function buildStackedPanels(rows, content) {
+  const panels = [];
+  for (let i = 0; i < rows.length; i += 3) {
+    const mediaRow = rows[i];
+    if (!mediaRow) { break; }
+    const cells = [...mediaRow.children];
+    const hasLeadingContent = i === 0 && cells.length > 1;
+    if (hasLeadingContent) { content.append(...cells[0].childNodes); }
+    const mediaCell = hasLeadingContent ? cells[1] : cells[0];
 
-  const [textCell, imageCell] = [...row.children];
-
-  const content = document.createElement('div');
-  content.className = 'do-dont-content';
-  if (textCell) content.append(...textCell.childNodes);
-
-  const panel = buildPanel(type, imageCell);
-
-  el.replaceChildren(content, panel);
+    panels.push(buildPanel(mediaCell, rows[i + 1]?.children[0], rows[i + 2]?.children[0]));
+  }
+  return panels;
 }
 
-function decorateMultiPanel(el) {
-  const types = el.classList.contains('do-dont-neutral')
-    ? ['do', 'dont', 'neutral']
-    : ['do', 'dont'];
+/*
+ * Side-by-side shape: a single group of three rows — [media, caption, indicator] —
+ * where each row holds one cell per panel, plus an optional leading content cell
+ * in the media row. A panel column always carries a semantic indicator icon, so
+ * the content column (if any) is whichever one doesn't.
+ */
+function buildSideBySidePanels([mediaRow, captionRow, indicatorRow], content) {
+  if (!mediaRow) { return []; }
+  const mediaCells = [...mediaRow.children];
+  const captionCells = [...(captionRow?.children ?? [])];
+  const indicatorCells = [...(indicatorRow?.children ?? [])];
 
-  const row = el.querySelector(':scope > div');
-  if (!row) return;
+  const contentIndex = mediaCells.findIndex((_, i) => !findIndicatorType(indicatorCells[i]));
+  if (contentIndex !== -1) { content.append(...mediaCells[contentIndex].childNodes); }
 
-  const cells = [...row.children];
-  const panels = types.map((type, i) => buildPanel(type, cells[i]));
+  return mediaCells
+    .map((cell, i) => (
+      i === contentIndex ? null : buildPanel(cell, captionCells[i], indicatorCells[i])
+    ))
+    .filter(Boolean);
+}
 
-  el.replaceChildren(...panels);
+/*
+ * Side-by-side is a shape, not just an authored variant class: if the caption
+ * and indicator rows each hold more than one cell, those rows describe more
+ * than one panel, so the whole three-row group is shared across N columns
+ * rather than each panel getting its own row-group.
+ */
+function isSideBySideShape(rows) {
+  return rows.length === 3
+    && (rows[1]?.children.length ?? 0) > 1
+    && (rows[2]?.children.length ?? 0) > 1;
 }
 
 export default function init(el) {
-  const isSingle = ['do', 'dont', 'neutral'].some((t) => el.classList.contains(t));
-  if (isSingle) {
-    decorateSinglePanel(el);
-  } else {
-    decorateMultiPanel(el);
-  }
+  const rows = [...el.children];
+  const content = document.createElement('div');
+  content.className = 'usage-content';
+
+  const isSideBySide = isSideBySideShape(rows);
+  const panels = isSideBySide
+    ? buildSideBySidePanels(rows, content)
+    : buildStackedPanels(rows, content);
+
+  el.classList.toggle('side-by-side', isSideBySide);
+  el.classList.toggle('has-content', content.childNodes.length > 0);
+  el.style.setProperty('--usage-panel-count', panels.length);
+  el.replaceChildren(...(content.childNodes.length ? [content] : []), ...panels);
 }

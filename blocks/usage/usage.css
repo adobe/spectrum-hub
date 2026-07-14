@@ -1,34 +1,45 @@
-.do-dont {
-  --do-dont-gap: var(--s2-spacing-400);
-  --do-dont-indicator-size: 28px;
-  --do-dont-indicator-color-do: var(--s2-green-800, #1a7f4b);
-  --do-dont-indicator-color-dont: var(--s2-red-800, #c9252d);
-  --do-dont-indicator-color-neutral: var(--s2-gray-600, #6e6e6e);
+.usage {
+  --usage-gap: 56px;
+  --usage-panel-width: clamp(280px, 40vw, 420px);
+  --usage-indicator-size: 32px;
 
-  /* Multi-panel default: equal columns side by side */
+  /* Content spans every panel row; panels stack in the second column. */
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--do-dont-gap);
+  grid-template-columns: 1fr var(--usage-panel-width);
+  column-gap: var(--usage-gap);
+  /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+  row-gap: var(--s2-spacing-400);
+  align-items: start;
 
-  &.do-dont-neutral {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  /* Side-by-side: one shared [media, caption, indicator] row-group, N columns —
+     each column is a full panel instead of each panel getting its own rows. */
+  &.side-by-side {
+    grid-template-columns: repeat(var(--usage-panel-count, 2), 1fr);
 
-  &.stacked {
-    grid-template-columns: 1fr;
-  }
+    &.has-content {
+      grid-template-columns: 1fr repeat(var(--usage-panel-count, 2), 1fr);
+    }
 
-  /* Single-panel: text left, image right */
-  &:is(.do, .dont, .neutral) {
-    grid-template-columns: 1fr auto;
-    align-items: start;
+    .usage-content {
+      grid-row: 1 / span 3;
+    }
 
-    &.stacked {
+    .usage-panel {
+      grid-column: auto;
+    }
+
+    @media (width < 600px) {
       grid-template-columns: 1fr;
     }
   }
 
-  .do-dont-content {
+  @media (width < 600px) {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-content {
+    grid-column: 1;
+    grid-row: 1 / span var(--usage-panel-count, 1);
     display: flex;
     flex-direction: column;
 
@@ -41,58 +52,62 @@
     }
   }
 
-  .do-dont-panel {
+  .usage-panel {
+    grid-column: 2;
+    position: relative;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--s2-spacing-200);
+    gap: var(--s2-spacing-100);
 
     picture {
       display: block;
       overflow: hidden;
-      border-radius: var(--s2-corner-radius-400, 12px);
+      border-radius: 32px;
     }
 
     img {
       display: block;
       inline-size: 100%;
       block-size: auto;
+      object-fit: cover;
     }
   }
 
-  .do-dont-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: var(--do-dont-indicator-size);
-    block-size: var(--do-dont-indicator-size);
-    border-radius: 50%;
+  @media (width < 600px) {
+    .usage-panel {
+      grid-column: 1;
+    }
+  }
+
+  /* These icons ship as fully-baked circular badges (color + glyph) */
+  .usage-indicator {
+    position: absolute;
+    inset-block-start: var(--s2-spacing-500);
+    inset-inline-start: var(--s2-spacing-500);
+    inline-size: var(--usage-indicator-size);
+    block-size: var(--usage-indicator-size);
+    background-repeat: no-repeat;
+    background-size: contain;
     flex-shrink: 0;
-
-    svg {
-      inline-size: 55%;
-      block-size: 55%;
-      fill: currentcolor;
-    }
   }
 
-  .do-dont-panel-do .do-dont-indicator {
-    background-color: var(--do-dont-indicator-color-do);
-    color: #fff;
+  .usage-panel-do .usage-indicator {
+    background-image: url('/img/icons/s2-icon-docheck-20-n.svg');
   }
 
-  .do-dont-panel-dont .do-dont-indicator {
-    background-color: var(--do-dont-indicator-color-dont);
-    color: #fff;
+  .usage-panel-dont .usage-indicator {
+    background-image: url('/img/icons/s2-icon-dontcross-20-n.svg');
   }
 
-  .do-dont-panel-neutral .do-dont-indicator {
-    background-color: var(--do-dont-indicator-color-neutral);
-    color: #fff;
+  .usage-panel-neutral .usage-indicator {
+    background-image: url('/img/icons/s2-icon-neutralminus-20-n.svg');
   }
 
-  .do-dont-caption {
+  .usage-caption {
     margin: 0;
-    font-size: var(--s2-font-size-75, 0.75rem);
-    color: var(--s2-gray-600, #6e6e6e);
+    font-size: var(--s2-component-m-medium-font-size, 14px);
+    line-height: var(--s2-component-m-medium-line-height);
+    color: var(--s2-gray-1000, #000);
   }
 }
