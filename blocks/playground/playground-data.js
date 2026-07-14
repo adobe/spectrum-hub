@@ -3,7 +3,8 @@
  *
  * Fetches two tabs from an AEM spreadsheet workbook:
  *   - "components" tab: maps component names to their authored property lists
- *   - "controls"   tab: maps property names to UI control types (v1, v1+)
+ *   - "controls"   tab: maps property names to UI control types (control),
+ *     e.g. "textfield", "picker", "segmentedControl", "slider", "switch"
  *
  * Also resolves picker options from the per-component RSP / SWC JSON files
  * that live in deps/rsp/data/ and deps/swc/data/.
@@ -53,17 +54,17 @@ export function getComponentProperties(name, componentsSheet) {
 
 /**
  * Builds a lookup map from property name to its control types.
- * Expects rows with "property", "v1", and "v1+" columns. Property keys are
+ * Expects rows with "property" and "control" columns. Property keys are
  * trimmed so lookups match the (already-trimmed) names from
  * getComponentProperties even if the sheet has stray whitespace.
  * @param {object[]} controlsSheet
- * @returns {Map<string, { v1: string, v1plus: string }>}
+ * @returns {Map<string, { control: string, v1plus: string }>}
  */
 export function buildControlsMap(controlsSheet) {
   return new Map(
     controlsSheet.map((row) => [
       row.property?.trim(),
-      { v1: row.v1, v1plus: row['v1+'] },
+      { control: row.control?.trim() },
     ]),
   );
 }
@@ -178,18 +179,36 @@ export function resolvePickerOptions(property, rspProps, swcProps) {
 }
 
 /**
+ * Control types that take a freeform value instead of a fixed option list
+ * (rendered as `se-input`), so they don't need `resolvePickerOptions` to
+ * resolve anything before they can render.
+ * @type {Set<string>}
+ */
+export const FREEFORM_CONTROLS = new Set(['textfield', 'slider']);
+
+/**
+ * Control types named in the "control" column that don't have a component
+ * built yet. Properties assigned one of these are skipped with a warning
+ * rather than silently falling back to a different control.
+ * @type {Set<string>}
+ */
+const UNIMPLEMENTED_CONTROLS = new Set(['switch']);
+
+/**
  * Resolves a single control descriptor for a property in a given implementation.
  * Returns null when the property doesn't exist in that implementation's data,
- * which signals the block to skip rendering a control for it.
+ * or when its control type isn't implemented yet, which signals the block to
+ * skip rendering a control for it.
  *
  * @param {string} property camelCase property name
  * @param {'swc'|'rsp'} implementation
- * @param {Map<string, { v1: string, v1plus: string }>} controlsMap
+ * @param {Map<string, {control: string }>} controlsMap
  * @param {object[]} rspProps
  * @param {object[]} swcProps
  * @param {(message: string) => void} [onSkip] Called with a plain-English reason
  *   whenever a control is skipped (property missing from the implementation's
- *   data, or its type can't be resolved into picker options).
+ *   data, its control type isn't built yet, or its type can't be resolved into
+ *   picker options).
  * @returns {{ controlType: string, options: string[], attribute: string|null } | null}
  */
 export function resolveControl(property, implementation, controlsMap, rspProps, swcProps, onSkip) {
@@ -208,11 +227,17 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   }
 
   const controlEntry = controlsMap.get(property);
-  const controlType = controlEntry?.v1 ?? 'picker';
+  const controlType = controlEntry?.control ?? 'picker';
+
+  if (UNIMPLEMENTED_CONTROLS.has(controlType)) {
+    onSkip?.(`No control shown for "${property}": the "${controlType}" control isn't built yet.`);
+    return null;
+  }
+
   const options = resolvePickerOptions(property, rspProps, swcProps);
   const attribute = swcRow?.attribute ?? null;
 
-  if (!options.length) {
+  if (!options.length && !FREEFORM_CONTROLS.has(controlType)) {
     const type = rspRow?.type ?? swcRow?.type ?? 'unknown';
     onSkip?.(`No control shown for "${property}": its type ("${type}") isn't a boolean or a list of options, so there's nothing to build a picker from.`);
   }
