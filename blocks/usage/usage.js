@@ -4,6 +4,12 @@ const INDICATOR_TYPES = {
   neutralminus: 'neutral',
 };
 
+const INDICATOR_LABELS = {
+  do: 'Recommended',
+  dont: 'Not recommended',
+  neutral: 'Use with care',
+};
+
 function findIndicatorType(cell) {
   const icon = cell?.querySelector('.icon');
   if (!icon) { return undefined; }
@@ -22,6 +28,10 @@ function buildPanel(mediaCell, captionCell, indicatorCell) {
 
   const badge = document.createElement('span');
   badge.className = 'usage-indicator';
+  const label = document.createElement('span');
+  label.className = 'visually-hidden';
+  label.textContent = INDICATOR_LABELS[type];
+  badge.append(label);
   figure.append(badge);
 
   const captionText = captionCell?.textContent.trim();

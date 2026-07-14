@@ -189,6 +189,13 @@ describe('usage block', () => {
       expect(panel.querySelector('.usage-indicator')).to.exist;
     });
 
+    it('gives the indicator badge an accessible name', () => {
+      const badge = el.querySelector('.usage-indicator');
+      const label = badge.querySelector('.visually-hidden');
+      expect(label).to.exist;
+      expect(label.textContent).to.equal('Recommended');
+    });
+
     it('adds a figcaption with the caption text', () => {
       const figcaption = el.querySelector('figcaption');
       expect(figcaption).to.exist;
@@ -265,6 +272,12 @@ describe('usage block', () => {
 
     it('sets --usage-panel-count to 3', () => {
       expect(el.style.getPropertyValue('--usage-panel-count')).to.equal('3');
+    });
+
+    it('gives each indicator badge the accessible name for its type', () => {
+      const labels = [...el.querySelectorAll('.usage-indicator .visually-hidden')]
+        .map((l) => l.textContent);
+      expect(labels).to.deep.equal(['Recommended', 'Not recommended', 'Use with care']);
     });
   });
 
