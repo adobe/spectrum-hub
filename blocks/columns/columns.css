@@ -99,9 +99,8 @@
     margin: 0;
     border-radius: var(--image-corner-radius);
     min-inline-size: var(--image-size);
-    block-size: var(--image-size);
+    block-size: auto;
     max-inline-size: var(--image-size);
-    max-block-size: var(--image-size);
     align-items: center;
     justify-content: center;
     overflow: hidden;

@@ -5,14 +5,14 @@
 
   /* Content spans every panel row; panels stack in the second column. */
   display: grid;
-  grid-template-columns: 1fr var(--usage-panel-width);
+  grid-template-columns: 1fr 1fr;
   column-gap: var(--usage-gap);
   /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
   row-gap: var(--s2-spacing-400);
   align-items: start;
 
-  /* Side-by-side: one shared [media, caption, indicator] row-group, N columns —
-     each column is a full panel instead of each panel getting its own rows. */
+  /* Side-by-side: one shared [media, caption, indicator] row-group, N columns.
+  each column is a full panel instead of each panel getting its own rows. */
   &.side-by-side {
     grid-template-columns: repeat(var(--usage-panel-count, 2), 1fr);
 
@@ -26,6 +26,17 @@
 
     .usage-panel {
       grid-column: auto;
+
+      /* Panels/images share a row (unlike stacked mode, where each panel is its own row), so stretch to the tallest image's height */
+      align-self: stretch;
+
+      picture {
+        flex: 1;
+      }
+
+      img {
+        block-size: 100%;
+      }
     }
 
     @media (width < 600px) {
@@ -59,8 +70,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--s2-spacing-100);
-
+    
     picture {
+      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
       display: block;
       overflow: hidden;
       border-radius: 32px;
@@ -70,7 +82,6 @@
       display: block;
       inline-size: 100%;
       block-size: auto;
-      object-fit: cover;
     }
   }
 
