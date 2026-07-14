@@ -10,7 +10,7 @@ import {
   tagFor,
   registerElements,
   defineSwc,
-} from '../../blocks/playground/shared/define-swc.js';
+} from '../../deps/swc/playground/define-swc.js';
 
 const SHELL_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../blocks/playground/static-html');
 

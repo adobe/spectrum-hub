@@ -8,7 +8,7 @@
        which only resolves when the file is served verbatim. esm.sh would rewrite
        the import and break it. -->
   <link rel="stylesheet" href="https://unpkg.com/@adobe/spectrum-wc@0.3.0/dist/swc.css" />
-  <script type="module" src="../shared/theme-sync.js"></script>
+  <script type="module" src="../../../deps/swc/playground/theme-sync.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -51,8 +51,8 @@
   </div>
 
   <script type="module">
-    import { defineSwc } from '../shared/define-swc.js';
-    import { listenForPropUpdates } from '../shared/prop-listener.js';
+    import { defineSwc } from '../../../deps/swc/playground/define-swc.js';
+    import { listenForPropUpdates } from '../../../deps/swc/playground/prop-listener.js';
 
     const mount = document.getElementById('mount');
 

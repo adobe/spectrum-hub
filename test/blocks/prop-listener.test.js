@@ -1,5 +1,5 @@
 import { expect } from '@esm-bundle/chai';
-import { listenForPropUpdates } from '../../blocks/playground/shared/prop-listener.js';
+import { listenForPropUpdates } from '../../deps/swc/playground/prop-listener.js';
 
 // listenForPropUpdates wires a window 'message' listener; message events are
 // delivered synchronously via dispatchEvent, so no awaiting is needed.
