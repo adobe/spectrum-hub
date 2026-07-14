@@ -92,6 +92,78 @@ const IMAGE_LEFT_BARE_IMG = `
   </div>
 `;
 
+const DEFAULT_WITH_CAPTION = `
+  <div>
+    <div><h3>Title</h3><p>Content</p></div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+  <div>
+    <div></div>
+    <div>image caption here</div>
+  </div>
+`;
+
+const IMAGE_RIGHT_WITH_CAPTION = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+    <div><h3>Title</h3><p>Content</p></div>
+  </div>
+  <div>
+    <div>image caption here</div>
+    <div></div>
+  </div>
+`;
+
+const SINGLE_IMAGE_NO_CAPTION_ROW = `
+  <div>
+    <div><h3>Title</h3><p>Content</p></div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+`;
+
+const BARE_IMG_WITH_CAPTION = `
+  <div>
+    <div><h3>Title</h3><p>Content</p></div>
+    <div><img src="hero.jpg" alt="" loading="lazy"></div>
+  </div>
+  <div>
+    <div></div>
+    <div>bare img caption</div>
+  </div>
+`;
+
+const CAPTION_ROW_COLUMN_COUNT_MISMATCH = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+  <div>
+    <div>caption text</div>
+    <div></div>
+  </div>
+`;
+
+const REAL_SECOND_ROW_NOT_A_CAPTION = `
+  <div>
+    <div><h3>Title</h3><p>Content</p></div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+  <div>
+    <div><p>Second row text</p></div>
+    <div><p>Second row more text</p></div>
+  </div>
+`;
+
+const MULTI_IMAGE_ROW_WITH_TRAILING_ROW = `
+  <div>
+    <div><picture><img src="a.jpg" alt=""></picture></div>
+    <div><picture><img src="b.jpg" alt=""></picture></div>
+  </div>
+  <div>
+    <div>caption a</div>
+    <div></div>
+  </div>
+`;
+
 describe('columns block', () => {
   let el;
 
@@ -238,6 +310,90 @@ describe('columns block', () => {
       el = makeEl(ALL_SINGLE_COL_ROWS);
       init(el);
       expect(el.classList.contains('grid-layout')).to.be.false;
+    });
+  });
+
+  describe('image caption extraction', () => {
+    it('wraps every image column in a .col-image figure, captioned or not', () => {
+      el = makeEl(SINGLE_IMAGE_NO_CAPTION_ROW);
+      init(el);
+      const figure = el.querySelector('.col-image');
+      expect(figure).to.exist;
+      expect(figure.tagName).to.equal('FIGURE');
+      expect(figure.querySelector('picture img')).to.exist;
+      expect(el.querySelector('figcaption')).to.not.exist;
+    });
+
+    it('extracts a trailing caption row into a figcaption next to the image', () => {
+      el = makeEl(DEFAULT_WITH_CAPTION);
+      init(el);
+      const [row] = el.querySelectorAll('.row');
+      const imageCol = row.children[1];
+      const figcaption = imageCol.querySelector('figcaption');
+      expect(figcaption).to.exist;
+      expect(figcaption.textContent).to.equal('image caption here');
+      expect(figcaption.classList.contains('col-caption')).to.be.true;
+      // figcaption sits beside the .col-image figure, not clipped inside it
+      expect(figcaption.parentElement).to.equal(imageCol);
+      expect(imageCol.querySelector('.col-image picture')).to.exist;
+    });
+
+    it('removes the caption row entirely from the DOM once extracted', () => {
+      el = makeEl(DEFAULT_WITH_CAPTION);
+      init(el);
+      expect(el.querySelectorAll('.row').length).to.equal(1);
+    });
+
+    it('matches the caption to the image column position when the image is on the left', () => {
+      el = makeEl(IMAGE_RIGHT_WITH_CAPTION);
+      init(el);
+      const [row] = el.querySelectorAll('.row');
+      const imageCol = row.children[0];
+      const textCol = row.children[1];
+      expect(imageCol.querySelector('figcaption').textContent).to.equal('image caption here');
+      expect(textCol.querySelector('figcaption')).to.not.exist;
+    });
+
+    it('extracts a caption for a bare img (no picture wrapper)', () => {
+      el = makeEl(BARE_IMG_WITH_CAPTION);
+      init(el);
+      const [row] = el.querySelectorAll('.row');
+      const imageCol = row.children[1];
+      expect(imageCol.querySelector('.col-image img')).to.exist;
+      expect(imageCol.querySelector('figcaption').textContent).to.equal('bare img caption');
+    });
+
+    it('does not treat a row as a caption when its column count differs from the image row', () => {
+      el = makeEl(CAPTION_ROW_COLUMN_COUNT_MISMATCH);
+      init(el);
+      expect(el.querySelectorAll('.row').length).to.equal(2);
+      expect(el.querySelector('figcaption')).to.not.exist;
+    });
+
+    it('does not treat a genuine two-column content row as a caption row', () => {
+      el = makeEl(REAL_SECOND_ROW_NOT_A_CAPTION);
+      init(el);
+      expect(el.querySelectorAll('.row').length).to.equal(2);
+      expect(el.querySelector('figcaption')).to.not.exist;
+      const [, row2] = el.querySelectorAll('.row');
+      expect(row2.children[0].textContent).to.equal('Second row text');
+      expect(row2.children[1].textContent).to.equal('Second row more text');
+    });
+
+    it('does not pair a caption row with a multi-image row', () => {
+      el = makeEl(MULTI_IMAGE_ROW_WITH_TRAILING_ROW);
+      init(el);
+      expect(el.querySelectorAll('.row').length).to.equal(2);
+      expect(el.querySelector('figcaption')).to.not.exist;
+    });
+
+    it('can run init twice without duplicating the figcaption or the .col-image wrapper', () => {
+      el = makeEl(DEFAULT_WITH_CAPTION);
+      init(el);
+      init(el);
+      expect(el.querySelectorAll('figcaption').length).to.equal(1);
+      expect(el.querySelectorAll('.col-image').length).to.equal(1);
+      expect(el.querySelectorAll('.row').length).to.equal(1);
     });
   });
 

@@ -1,4 +1,55 @@
 /* These columns represent the "Core layout" block along with 2- and 3-column grid layouts. */
+
+/* Remove empty cols so they don't create phantom grid gaps, especially on mobile. */
+function isEmptyCol(col) {
+  return !col.textContent.trim() && !col.querySelector('picture, img');
+}
+
+/* The fixed-size image crop box lives on this wrapper (not .col directly) so a
+ * caption can sit below it without being clipped by the box's own overflow. */
+function wrapColumnImage(col) {
+  const media = col.querySelector('picture, img');
+  if (!media || col.querySelector('.col-image')) { return null; }
+  const figure = document.createElement('figure');
+  figure.className = 'col-image';
+  media.replaceWith(figure);
+  figure.append(media);
+  return figure;
+}
+
+/*
+ * Captions are authored as a trailing row: same column count as the image row
+ * it describes, with the caption text in the same column index as the image
+ */
+function extractCaptions(el) {
+  let lastImageRow = null;
+
+  for (const row of [...el.children]) {
+    const cols = [...row.children];
+    const { row: imageRow, imgIndex } = lastImageRow ?? {};
+    const captionCol = imageRow && cols.length === imageRow.children.length ? cols[imgIndex] : null;
+    const isCaptionRow = captionCol
+      && captionCol.textContent.trim()
+      && !captionCol.querySelector('picture, img')
+      && cols.every((c, i) => i === imgIndex || isEmptyCol(c));
+
+    if (isCaptionRow) {
+      const figure = wrapColumnImage(imageRow.children[imgIndex]);
+      if (figure) {
+        const figcaption = document.createElement('figcaption');
+        figcaption.className = 'col-caption';
+        figcaption.textContent = captionCol.textContent.trim();
+        figure.after(figcaption);
+      }
+      row.remove();
+      lastImageRow = null;
+    } else {
+      const imageCols = cols.filter((c) => c.querySelector('picture, img'));
+      lastImageRow = imageCols.length === 1 ? { row, imgIndex: cols.indexOf(imageCols[0]) } : null;
+    }
+  }
+}
+
 function decorateCols(cols) {
   for (const [idx, col] of cols.entries()) {
     col.classList.add('col', `col-${idx + 1}`);
@@ -60,10 +111,12 @@ function applyGridLayout(el, rows) {
 }
 
 export default function init(el) {
-  // Remove empty cols so they don't create phantom grid gaps on mobile.
+  // Pair caption rows with their image
+  extractCaptions(el);
+
   for (const row of [...el.children]) {
     for (const col of [...row.children]) {
-      if (!col.textContent.trim() && !col.querySelector('picture, img')) {
+      if (isEmptyCol(col)) {
         col.remove();
       }
     }
@@ -74,6 +127,12 @@ export default function init(el) {
   }
 
   const rows = [...el.children];
+  for (const row of rows) {
+    for (const col of row.children) {
+      wrapColumnImage(col);
+    }
+  }
+
   decorateRows(el, rows);
   detectImageRight(el, rows);
   applyGridLayout(el, rows);

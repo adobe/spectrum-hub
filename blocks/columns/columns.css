@@ -94,7 +94,9 @@
     }
   }
 
-  .col:has(img, picture) {
+  .col-image {
+    display: flex;
+    margin: 0;
     border-radius: var(--image-corner-radius);
     min-inline-size: var(--image-size);
     block-size: var(--image-size);
@@ -114,15 +116,21 @@
       block-size: 100%;
       box-sizing: border-box;
     }
-  
+
     img {
       display: block;
       box-sizing: border-box;
       inline-size: var(--image-size);
       block-size: auto;
-      object-fit: contain;
+      object-fit: cover;
       aspect-ratio: auto;
     }
+  }
+
+  .col-caption {
+    margin: 0;
+    font-size: var(--s2-body-size-s, 14px);
+    color: var(--s2-gray-1000, #000);
   }
 
   .col:not(:has(img, picture)) {
