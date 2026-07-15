@@ -344,9 +344,16 @@ class SESegmentedControl extends LitElement {
     this.shadowRoot.adoptedStyleSheets = [style];
   }
 
+  handleChange() {
+    this._segmentWrapper.querySelectorAll('input[type="radio"]').forEach((radio) => {
+      radio.toggleAttribute('checked', radio.checked);
+    });
+  }
+
   firstUpdated() {
     // Adopt light DOM options into the shadow
     this._segmentWrapper.prepend(...this.childNodes);
+    this._segmentWrapper.addEventListener('change', () => this.handleChange());
   }
 
   get _segmentWrapper() {
