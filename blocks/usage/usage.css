@@ -36,6 +36,7 @@
 
       img {
         block-size: 100%;
+        object-fit: cover;
       }
     }
 
