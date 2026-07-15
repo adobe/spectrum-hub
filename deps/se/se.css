@@ -74,7 +74,7 @@ svg.icon {
     width: 100%;
     display: block;
     padding: 0 12px;
-    background: var(--s2-gray-50);
+    background: var(--s2-gray-25);
     line-height: var(--se-field-height);
     font-family: var(--s2-font-family);
     font-size: var(--s2-component-m-regular-font-size);
@@ -83,7 +83,7 @@ svg.icon {
     outline-offset: 0;
     border-width: var(--se-border-width-200);
     border-style: solid;
-    border-color: var(--s2-gray-200);
+    border-color: var(--s2-gray-300);
     transition: border-color 0.2s, outline-offset 0.2s;
     box-sizing: border-box;
 
@@ -115,9 +115,8 @@ svg.icon {
 
     &:disabled {
       opacity: 1;
-      background: var(--s2-gray-75);
       border: none;
-      color: var(--s2-gray-500);
+      color: var(--s2-gray-300);
     }
 
     &[resize="none"] {
@@ -137,9 +136,9 @@ svg.icon {
 
   input[type="range"]::after {
     content: "";
-    height: 2px;
-    border-radius: 1px;
-    background: rgb(143 143 143);
+    height: 4px;
+    border-radius: 4px;
+    background: var(--s2-gray-300);
     position: absolute;
     left: 0;
     right: 0;
@@ -155,12 +154,12 @@ svg.icon {
   input[type="range"]::-webkit-slider-thumb {
     position: relative;
     appearance: none;
-    border: 2px solid #464646;
+    border: 2px solid var(--s2-gray-800);
     margin-top: 2px;
     background: #fff;
-    width: 16px;
-    height: 16px;
-    border-radius: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
     z-index: 1;
   }
 
@@ -218,12 +217,12 @@ svg.icon {
   }
 
   select::picker(select) {
-    background-color: var(--s2-gray-50);
+    background-color: var(--s2-gray-25);
     color: var(--s2-gray-1000);
     border: none;
     border-radius: var(--s2-corner-radius-700);
     padding: 8px;
-    margin-block: 14px;
+    margin-block: 6px;
     opacity: 1;
     translate: 0 0;
     box-shadow: var(--s2-elevated-shadow);
@@ -307,7 +306,7 @@ svg.icon {
 
   label {
     font-family: var(--s2-font-family);
-    font-size: var(--s2-body-size-xs);
+    font-size: var(--s2-component-m-regular-font-size);
     color: var(--s2-gray-900);
     margin-bottom: 0;
     order: 1;
@@ -317,6 +316,88 @@ svg.icon {
   .se-inputfield-error {
     flex-basis: 100%;
     order: 2;
+    font-size: var(--s2-body-size-xs);
+    color: var(--s2-red-900);
+    margin: 0;
+  }
+}
+
+.se-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+
+  input[type="checkbox"] {
+    position: absolute;
+    inline-size: 100%;
+    block-size: auto;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  label {
+    display: flex;;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--s2-font-family);
+    font-size: var(--s2-component-m-regular-font-size);
+    color: var(--s2-gray-900);
+    cursor: pointer;
+  }
+
+  .se-switch-track {
+    position: relative;
+    flex-shrink: 0;
+    width: 26px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 2px solid var(--s2-gray-900);
+    border-radius: var(--s2-corner-radius-full, 999px);
+    background: var(--s2-gray-25);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .se-switch-thumb {
+    position: absolute;
+    top: 50%;
+    left: 2px; /* 2px spacing from border to thumb */
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--s2-gray-900);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 5%), 0 1px 2px rgb(0 0 0 / 15%);
+    transform: translateY(-50%);
+    transition: transform 0.2s, background-color 0.2s, left 0.2s, width 0.2s, height 0.2s;
+  }
+
+  input[type="checkbox"]:checked + label .se-switch-track {
+    background: var(--s2-gray-900);
+    border-color: var(--s2-gray-900);
+  }
+
+  input[type="checkbox"]:checked + label .se-switch-thumb {
+    background: var(--s2-gray-25);
+    box-shadow: none;
+    transform: translateY(-50%) translateX(16px);
+    width: 10px;
+    height: 10px;
+    left: -4px;
+  }
+
+  input[type="checkbox"]:focus-visible + label .se-switch-track {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+    outline-offset: 2px;
+  }
+
+  input[type="checkbox"].has-error + label .se-switch-track {
+    outline: var(--se-focus-indicator-width) solid var(--s2-red-900);
+    outline-offset: 2px;
+  }
+
+  .se-inputfield-error-text {
+    flex-basis: 100%;
     font-size: var(--s2-body-size-xs);
     color: var(--s2-red-900);
     margin: 0;
@@ -375,10 +456,10 @@ svg.icon {
       --se-button-background-color: var(--s2-gray-300);
       --se-button-border-color: var(--s2-gray-300);
 
-      /* &.outline {
+      &.outline {
         --se-button-background-color: transparent;
         --se-button-color: var(--se-button-border-color);
-      } */
+      }
     }
 
     &.negative {
@@ -389,11 +470,6 @@ svg.icon {
       &:hover, &:focus-visible {
         --se-button-background-color: var(--s2-red-800);
         --se-button-border-color: var(--s2-red-800);
-      }
-
-      &.outline {
-        --se-button-background-color: transparent;
-        --se-button-color: var(--se-button-border-color);
       }
     }
 
@@ -416,7 +492,7 @@ svg.icon {
   border-radius: 16px;
   z-index: 100000;
   transform: translateY(12px);
-  background: var(--s2-gray-75);
+  background: var(--s2-gray-25);
   opacity: 0;
   overflow: hidden;
   transition:

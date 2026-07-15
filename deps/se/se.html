@@ -6,9 +6,6 @@
   <meta name="description" content="Spectrum for Edge Delivery semantic content."/>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
-  <script type="importmap">
-      { "imports": { "lit": "/deps/lit/dist/index.js" } }
-    </script>
   <link rel="stylesheet" href="/styles/styles.css">
   <style>
     body {
@@ -79,6 +76,12 @@
           <se-textarea name="my-area" label="Textarea" placeholder="Fill me out" rows="5" cols="40"></se-textarea>
         </div>
         <div>
+          <se-checkbox name="my-checkbox" label="Checkbox">Tiny checkbox</se-checkbox>
+        </div>
+        <div>
+          <se-switch name="my-switch">Switch</se-switch>
+        </div>
+        <div>
           <se-segmentedcontrol>
             <fieldset>
               <legend>Segmented Control</legend>
@@ -99,7 +102,7 @@
         </div>
         <div class="form-actions">
           <se-button class="negative">Destroy</se-button>
-          <se-button class="negative outline">Destroy outline</se-button>
+          <se-button>Save outline</se-button>
           <se-button class="secondary">Secondary</se-button>
           <se-button class="primary">Primary</se-button>
           <se-button class="primary outline">Primary outline</se-button>
