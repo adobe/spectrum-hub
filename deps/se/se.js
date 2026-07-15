@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from '../lit/dist/index.js';
+import { LitElement, html, nothing } from 'lit';
 import loadStyle from '../../scripts/utils/styles.js';
 
 const style = await loadStyle(import.meta.url);
