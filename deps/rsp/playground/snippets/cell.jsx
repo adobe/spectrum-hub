@@ -1,0 +1,15 @@
+<!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
+     in static-html/index.html reads this same fragment) — RSP has no preview
+     markup file of its own to source this from, since it renders via
+     React.createElement rather than an HTML string. No static-html/*.html
+     counterpart exists for this component, so there's no SWC shape to
+     mirror; text reuses table-view.jsx's first cell value.
+
+     A leaf-with-text fragment: Cell's own prop data marks `children`
+     required (ReactNode, inherited from ColumnProps — the extraction reuses
+     the same shared interface Column uses).
+
+     Cell is normally used only nested inside <Row>. Loaded standalone,
+     assume the same graceful-degradation behavior verified live for
+     AccordionItem: some real, unstyled DOM rather than a crash. -->
+<Cell>Budget.xlsx</Cell>

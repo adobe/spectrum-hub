@@ -1,0 +1,21 @@
+<!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
+     in static-html/index.html reads this same fragment) — RSP has no preview
+     markup file of its own to source this from, since it renders via
+     React.createElement rather than an HTML string. No static-html/*.html
+     counterpart exists for this component yet, so there's no SWC shape to
+     mirror. UserCard.json exposes only the same props Card.json does
+     (children/size/density/variant, all `inheritedFrom: "CardProps"`) — no
+     user-specific slots (avatar/name/role/etc.) show up in the extracted
+     data, so this fragment reuses the exact Card+CardPreview shape from
+     card.jsx/card-view.jsx rather than inventing an untested subcomponent
+     composition.
+
+     GENUINELY UNSURE: UserCard is documented as a ready-made Card preset
+     meant to be used directly (unlike the plain Card, which normally needs a
+     CardView parent), so it's expected to be fine fully standalone. But
+     whether real usage composes something richer inside it (e.g. an Avatar
+     plus a name/role Text) isn't confirmed by this component's own JSON —
+     flagging for a live double-check against the real component. -->
+<UserCard id="jane-doe">
+  <CardPreview>Jane Doe</CardPreview>
+</UserCard>
