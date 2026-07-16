@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Component Playground — SWC</title>
+  <link rel="stylesheet" href="../../../blocks/playground/preview-shell.css" />
+  <link rel="stylesheet" href="../../shared/playground/shared-fonts.css" />
+  <script type="module" src="../../shared/playground/theme-sync.js"></script>
+</head>
+<body class="swc-theme swc-theme--sizeM swc-theme--light">
+  <div id="mount"></div>
+
+  <script type="module">
+    import { defineSwc } from './define-swc.js';
+    import { listenForPropUpdates, notifyPreviewReady } from '../../shared/playground/prop-listener.js';
+    import { applyAttribute } from '../../shared/playground/apply-attribute.js';
+    import { applyLabelProp } from './apply-label-prop.js';
+    import { buildIconSvg, buildIconUse } from '../../shared/playground/build-icon-svg.js';
+    import { NO_ICON } from '../../shared/playground/icon-options.js';
+    import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
+
+    const mount = document.getElementById('mount');
+    const { component, implementation } = resolvePreviewParams();
+
+    // Applies one prop-update message from the block to a live custom element.
+    function applySwcProp(el, { property, attribute, value }) {
+      // "label" prefers a real attribute or a `slot="label"` element over
+      // flat textContent — see apply-label-prop.js.
+      if (property === 'label' && applyLabelProp(el, attribute, value)) {
+        return;
+      }
+
+      if (property === 'text' || property === 'label' || property === 'children') {
+        el.textContent = value;
+        return;
+      }
+
+      if (property === 'icon') {
+        // swc-icon IS the icon (no separate slot element to reserve space).
+        if (el.localName === 'swc-icon') {
+          if (value === NO_ICON) { el.replaceChildren(); } else { el.replaceChildren(buildIconSvg(value)); }
+          return;
+        }
+        // Remove (not just clear) the slot element for "No icon" — an empty
+        // slotted element still reserves the icon's box and gap.
+        if (value === NO_ICON) {
+          el.querySelector('[slot="icon"]')?.remove();
+          return;
+        }
+        // Fill the existing `<svg slot="icon">` in place, recreating it if a
+        // prior "No icon" removed it.
+        const existing = el.querySelector('[slot="icon"]');
+        if (existing) {
+          if (!existing.hasAttribute('viewBox')) { existing.setAttribute('viewBox', '0 0 20 20'); }
+          existing.replaceChildren(buildIconUse(value));
+        } else {
+          const svg = buildIconSvg(value);
+          svg.setAttribute('slot', 'icon');
+          el.prepend(svg);
+        }
+        return;
+      }
+
+      applyAttribute(el, attribute, value);
+    }
+
+    // Per-component markup lives in snippets/<component>.html (bare
+    // web-component HTML, no shell boilerplate). Adding a component is a
+    // one-file markup edit.
+    // Loaded from a raw CDN (not esm.sh) since swc.css's relative @import of
+    // tokens.css only resolves when served verbatim. Loaded here (not
+    // statically in <head>) so its unscoped `:root { font-size }` rule only
+    // applies to the SWC route, not RSP/native previews.
+    function loadSwcCss() {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/@adobe/spectrum-wc@0.3.0/dist/swc.css';
+      document.head.appendChild(link);
+    }
+
+    async function initSwc() {
+      loadSwcCss();
+
+      let markup;
+      try {
+        const resp = await fetch(`./snippets/${component}.html`);
+        if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
+        markup = await resp.text();
+      } catch (err) {
+        showError(`Failed to load preview markup for ${component} (${err.message})`);
+        throw err;
+      }
+
+      mount.innerHTML = markup;
+
+      const root = mount.firstElementChild;
+      if (!root) {
+        showError(`Preview markup for ${component} has no root element`);
+        throw new Error('Empty preview fragment');
+      }
+      const rootTag = root.localName;
+
+      // Register every swc-* tag the fragment uses (families like tabs ->
+      // tab/tab-panel are discovered from the markup, not a define list).
+      const tags = [...new Set(
+        [...mount.querySelectorAll('*')]
+          .map((node) => node.localName)
+          .filter((name) => name.startsWith('swc-')),
+      )];
+
+      await Promise.all(tags.map(async (tag) => {
+        try {
+          await defineSwc(tag.slice(4));
+        } catch (err) {
+          if (tag === rootTag) {
+            showError(`Failed to load SWC component: ${rootTag}`);
+            throw err;
+          }
+          // Secondary family member — root still renders without it.
+        }
+      }));
+
+      // Some components (e.g. tooltip) only reveal via the Popover API, not
+      // the `open` attribute alone — markup can't call showPopover() itself.
+      mount.querySelectorAll('[open]').forEach((el) => {
+        if (typeof el.showPopover === 'function') {
+          try { el.showPopover(); } catch { /* already open or unsupported */ }
+        }
+      });
+
+      listenForPropUpdates((update) => applySwcProp(root, update));
+      notifyPreviewReady();
+    }
+
+    if (implementation === 'swc') {
+      await initSwc();
+    } else {
+      showError(`Unsupported implementation: ${implementation}`);
+    }
+  </script>
+</body>
+</html>

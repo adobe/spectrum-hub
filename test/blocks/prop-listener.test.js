@@ -1,5 +1,6 @@
 import { expect } from '@esm-bundle/chai';
-import { listenForPropUpdates } from '../../deps/swc/playground/prop-listener.js';
+import sinon from 'sinon';
+import { listenForPropUpdates, notifyPreviewReady } from '../../deps/shared/playground/prop-listener.js';
 
 // listenForPropUpdates wires a window 'message' listener; message events are
 // delivered synchronously via dispatchEvent, so no awaiting is needed.
@@ -41,5 +42,17 @@ describe('prop-listener — listenForPropUpdates', () => {
     expect(calls).to.have.length(2);
     expect(calls[0]).to.deep.equal({ property: undefined, attribute: 'disabled', value: false });
     expect(calls[1]).to.deep.equal({ property: 'label', attribute: undefined, value: '' });
+  });
+});
+
+describe('notifyPreviewReady', () => {
+  it('posts a preview-ready message to the parent frame', () => {
+    const postMessageSpy = sinon.stub(window.parent, 'postMessage');
+    try {
+      notifyPreviewReady();
+      expect(postMessageSpy.calledWith({ type: 'preview-ready' }, '*')).to.be.true;
+    } finally {
+      postMessageSpy.restore();
+    }
   });
 });

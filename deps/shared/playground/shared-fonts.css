@@ -1,0 +1,47 @@
+/*
+ * The site's font stack names Adobe Clean web fonts (adobe-clean-spectrum-vf)
+ * that ship with neither @adobe/spectrum-wc nor swc.css / tokens.css, nor
+ * @react-spectrum/s2 — those only *name* the family, they never load it, so
+ * every preview implementation falls back to a system font without this.
+ * Alias that family name to the Adobe Clean woff2 files the site already
+ * self-hosts under /styles/fonts/, so every preview shell (SWC, RSP, and the
+ * generic ios/android one) renders in the correct typeface with no external
+ * (Typekit) request. Root-relative URLs resolve the same on the local dev
+ * server and in production.
+ */
+
+@font-face {
+  font-family: 'adobe-clean-spectrum-vf';
+  src: url('/styles/fonts/adobe-clean-regular.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'adobe-clean-spectrum-vf';
+  src: url('/styles/fonts/adobe-clean-italic.woff2') format('woff2');
+  font-display: swap;
+  font-style: italic;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'adobe-clean-spectrum-vf';
+  src: url('/styles/fonts/adobe-clean-bold.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'adobe-clean-spectrum-vf';
+  src: url('/styles/fonts/adobe-clean-bold-italic.woff2') format('woff2');
+  font-display: swap;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: normal;
+}

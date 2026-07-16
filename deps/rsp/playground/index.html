@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Component Playground — RSP</title>
+  <link rel="stylesheet" href="../../../blocks/playground/preview-shell.css" />
+  <link rel="stylesheet" href="../../shared/playground/shared-fonts.css" />
+  <script type="module" src="../../shared/playground/theme-sync.js"></script>
+</head>
+<body >
+  <div id="mount"></div>
+
+  <script type="module">
+    import { listenForPropUpdates, notifyPreviewReady } from '../../shared/playground/prop-listener.js';
+    import { applyAttribute } from '../../shared/playground/apply-attribute.js';
+    import { iconHref } from '../../shared/playground/build-icon-svg.js';
+    import { NO_ICON } from '../../shared/playground/icon-options.js';
+    import { resolveRspPropKey, hasLabelProp } from './apply-rsp-prop.js';
+    import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
+    import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
+    import { capitalize, pascalCase } from './pascal-case.js';
+    import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
+
+    const mount = document.getElementById('mount');
+    const { component, implementation } = resolvePreviewParams();
+
+    // React version pinned via esm.sh's `?deps=` param so the app's React and
+    // RSP's internal React are the same module instance.
+
+    // XML (case-sensitive) parsing so PascalCase tags like `TabList` round-trip.
+    async function fetchCompositeRoot(name) {
+      try {
+        const resp = await fetch(`./snippets/${name}.jsx`);
+        if (!resp.ok) { return null; }
+        const markup = await resp.text();
+        const doc = new DOMParser().parseFromString(markup.trim(), 'application/xml');
+        return doc.querySelector('parsererror') ? null : doc.documentElement;
+      } catch {
+        return null;
+      }
+    }
+    // Virtualized — silently render zero rows without a real sized box.
+    const VIRTUALIZED_RSP_COMPONENTS = new Set(['card-view', 'table-view']);
+
+    // Listened for at module top-level, before initRsp()'s awaited network
+    // calls, so the first `theme-update` isn't missed mid-flight.
+    let currentScheme = null;
+    let rerenderRsp = null;
+    window.addEventListener('message', (event) => {
+      if (event.data?.type !== 'theme-update') { return; }
+      currentScheme = event.data.scheme;
+      rerenderRsp?.();
+    });
+
+    // `colorScheme` only accepts 'light'/'dark', no "follow OS" value.
+    function resolveRspColorScheme() {
+      return currentScheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+
+    async function initRsp() {
+      const PKG = '@react-spectrum/s2';
+      const exportName = pascalCase(component);
+
+      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
+        // CardView shrink-to-fits to 0 width under #mount's flex layout.
+        mount.style.display = 'block';
+        mount.style.width = 'min(90vw, 400px)';
+        mount.style.height = '20rem';
+      }
+
+      try {
+        const [pkg, compositeRoot, ownRspProps] = await Promise.all([
+          fetch(`https://esm.sh/${PKG}/package.json`).then((r) => r.json()),
+          fetchCompositeRoot(component),
+          // A 404 or malformed file just means "no label prop" — see apply-rsp-prop.js.
+          fetch(`../data/${exportName}.json`)
+            .then((r) => (r.ok ? r.json() : []))
+            .then((d) => (Array.isArray(d) ? d : (d.props ?? [])))
+            .catch(() => []),
+        ]);
+        const hasRealLabelProp = hasLabelProp(ownRspProps);
+        const reactVersion = (pkg.peerDependencies?.react ?? '19').replace(/^[^0-9]*/, '');
+        const deps = `react@${reactVersion},react-dom@${reactVersion}`;
+
+        // Otherwise only the root component tree-shakes in.
+        const extraExports = compositeRoot
+          ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
+          : [];
+        const exports = [exportName, 'Provider', ...extraExports].join(',');
+
+        // `?bundle` drops CSS side-effect imports — a bare import() can't load
+        // them (wrong MIME type). Visual CSS is loaded separately below.
+        const [{ createElement }, { createRoot }, RSP] = await Promise.all([
+          import(`https://esm.sh/react@${reactVersion}`),
+          import(`https://esm.sh/react-dom@${reactVersion}/client`),
+          import(`https://esm.sh/${PKG}@${pkg.version}?bundle&exports=${exports}&deps=${deps}`),
+        ]);
+
+        // No single "all styles" bundle exists — a composed sub-component
+        // (e.g. ActionButton -> ProgressCircle) ships its own CSS file.
+        let packageFiles;
+        try {
+          const listing = await (await fetch(`https://data.jsdelivr.com/v1/package/npm/${PKG}@${pkg.version}/flat`)).json();
+          packageFiles = listing.files?.map((f) => f.name);
+        } catch {
+          packageFiles = null;
+        }
+
+        resolveStylesheetHrefs(PKG, pkg.version, exportName, packageFiles).forEach((href) => {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          document.head.appendChild(link);
+        });
+
+        const Component = RSP[exportName];
+        if (!Component) throw new Error(`No RSP export named "${exportName}"`);
+
+        const root = createRoot(mount);
+        // Covers required props with no matching control (e.g. Tabs' aria-label).
+        const currentProps = compositeRoot
+          ? Object.fromEntries(
+            [...compositeRoot.attributes].map((attr) => [attr.name, attr.value === '' ? true : attr.value]),
+          )
+          : { children: capitalize(component) };
+
+        // render() must read currentProps.children live, not as a frozen
+        // child arg, or a text control's prop-updates never reach the preview.
+        const compositeChildren = [...(compositeRoot?.children ?? [])];
+        if (!compositeChildren.length && compositeRoot?.textContent) {
+          currentProps.children = compositeRoot.textContent;
+        }
+        const rootChildArgs = compositeChildren.length
+          ? compositeChildren.map((child) => buildCompositeElement(child, RSP, createElement))
+          : [];
+
+        function render() {
+          const scheme = resolveRspColorScheme();
+          const rootElement = compositeChildren.length
+            ? createElement(Component, currentProps, ...rootChildArgs)
+            : createElement(Component, currentProps);
+          // Forces a full remount — an in-place update leaves `light-dark()`
+          // descendant styles stuck on their old value. Confirmed live.
+          const key = `${scheme}-${currentProps.staticColor ?? 'none'}`;
+          root.render(createElement(
+            RSP.Provider,
+            { key, colorScheme: scheme, background: 'base' },
+            rootElement,
+          ));
+        }
+
+        rerenderRsp = render;
+
+        // Both render through the single `children` prop — track separately
+        // so one doesn't clobber the other. Leaf components only.
+        let iconChild = null;
+        let textChild = currentProps.children ?? null;
+        function composeChildren() {
+          if (iconChild && textChild != null) { return [iconChild, textChild]; }
+          return iconChild ?? textChild;
+        }
+
+        render();
+
+        listenForPropUpdates(({ property, attribute, value }) => {
+          if (property === 'icon') {
+            // Explicit size + `currentColor` fill: unlike SWC's slotted <svg>
+            // (sized by the component), a bare RSP <svg> has no wrapper and
+            // renders 0×0 in black without them. Confirmed live.
+            iconChild = value === NO_ICON ? null : createElement('svg', {
+              key: 'icon', viewBox: '0 0 20 20', width: 20, height: 20, fill: 'currentColor',
+            }, createElement('use', { href: iconHref(value) }));
+            currentProps.children = composeChildren();
+          } else {
+            const key = resolveRspPropKey(property, hasRealLabelProp);
+            if (key === 'children') {
+              // A text/label control that resolves to `children`: keep it
+              // separate from any icon so the two compose rather than overwrite.
+              textChild = value;
+              currentProps.children = composeChildren();
+            } else {
+              currentProps[key] = value;
+            }
+          }
+          // RSP doesn't reflect most props as real DOM attributes, so mirror
+          // onto #mount for CSS that keys off one (e.g. static-color backdrop).
+          applyAttribute(mount, attribute, value);
+          render();
+        });
+        notifyPreviewReady();
+      } catch (err) {
+        showError(`Failed to load RSP component: ${exportName} (${err.message})`);
+      }
+    }
+
+    if (implementation === 'rsp') {
+      await initRsp();
+    } else {
+      showError(`Unsupported implementation: ${implementation}`);
+    }
+  </script>
+</body>
+</html>

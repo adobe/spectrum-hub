@@ -1,23 +1,10 @@
-/**
- * Loads a 2nd-gen SWC component from the esm.sh CDN and registers it.
- *
- * esm.sh is a *rewriting* CDN: it resolves the bare specifiers
- * (`import "lit"`, `@spectrum-web-components/core/...`) in the published
- * modules that a raw CDN (unpkg / jsDelivr-raw) would leave unresolvable. The
- * version is pinned in the URL, so there is no local vendoring to maintain.
- *
- * A module often ships a whole family: `components/tabs` exports `Tabs`, `Tab`,
- * and `TabPanel`; `components/accordion` exports `Accordion` and
- * `AccordionItem`. So the tag → module map below is many-to-one, and importing
- * one module registers every element class it exports (each tag derived from
- * the PascalCase export name). Some pattern modules auto-register on import; the
- * `registry.get` guard makes the explicit define a no-op in that case.
- *
- * `swc-color-loupe` is a known exception: `components/color-loupe` fails to load
- * from the CDN (a bug in the published dependency graph). Its shell surfaces the
- * load failure until that's fixed upstream or the one component is vendored.
- */
+// esm.sh resolves bare specifiers a raw CDN (unpkg/jsDelivr-raw) can't.
+// `swc-color-loupe` is a known exception — components/color-loupe fails to
+// load from the CDN (upstream bug); its shell surfaces the load failure.
 export const BASE = 'https://esm.sh/@adobe/spectrum-wc@0.3.0';
+
+// Many-to-one: a module often ships a whole family (components/tabs exports
+// Tabs, Tab, TabPanel), so importing one module registers every tag it owns.
 
 export const MODULES = {
   // components/* — standard components (some are families)
@@ -57,12 +44,8 @@ export const MODULES = {
 // PascalCase export name -> custom element tag, e.g. TabPanel -> swc-tab-panel.
 export const tagFor = (exportName) => `swc-${exportName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`;
 
-/**
- * Register every custom-element class a module namespace exports, deriving each
- * tag from its export name. Guarded so a module that already auto-registered (or
- * a family member defined by an earlier call) doesn't trip "already used with
- * this registry". Returns the tags it saw. `registry` is injectable for tests.
- */
+// Guarded so an already-registered tag (auto-registered, or an earlier family
+// member) doesn't trip "already used with this registry".
 export function registerElements(mod, registry = customElements) {
   const tags = [];
   for (const [name, value] of Object.entries(mod)) {
@@ -75,11 +58,7 @@ export function registerElements(mod, registry = customElements) {
   return tags;
 }
 
-/**
- * Import the module that owns `swc-<component>` and register its elements.
- * `load` is injectable so tests can exercise the resolution logic without the
- * network. Resolves to the registered tag name.
- */
+// `load` is injectable so tests can exercise this without the network.
 export async function defineSwc(component, load = (url) => import(url)) {
   const tagName = `swc-${component}`;
   if (customElements.get(tagName)) { return tagName; }

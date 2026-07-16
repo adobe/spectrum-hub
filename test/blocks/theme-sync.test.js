@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 // Importing the module registers its window 'message' listener (side effect).
-import '../../deps/swc/playground/theme-sync.js';
+import '../../deps/shared/playground/theme-sync.js';
 
 function sendTheme(scheme) {
   window.dispatchEvent(new MessageEvent('message', { data: { type: 'theme-update', scheme } }));

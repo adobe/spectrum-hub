@@ -12,7 +12,7 @@ import {
   defineSwc,
 } from '../../deps/swc/playground/define-swc.js';
 
-const SHELL_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../blocks/playground/static-html');
+const SHELL_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../deps/swc/playground/snippets');
 
 // A minimal stand-in for the browser custom element registry.
 function fakeRegistry() {
