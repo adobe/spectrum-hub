@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Component Playground</title>
+  <!-- swc.css is loaded conditionally by initSwc() below, not here: it sets an
+       unscoped `:root { font-size: var(--swc-font-size) }` (Spectrum classic's
+       14px base) that would silently shrink every rem-sized RSP/S2 dimension
+       (which assumes the browser's 16px default) if it were always present. -->
+  <link rel="stylesheet" href="../../../../deps/swc/playground/swc-fonts.css" />
+  <script type="module" src="../../../deps/swc/playground/theme-sync.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: adobe-clean-spectrum-vf, sans-serif;
+      color-scheme: light dark;
+      background: light-dark(#fff, #000);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* staticColor previews need a contrasting backdrop, independent of theme */
+    body:has([static-color="black"]) { background: #fff; }
+    body:has([static-color="white"]) { background: #000; }
+
+    /* RSP's Provider wraps every preview in its own opaque box (light or dark
+       depending on colorScheme, NOT staticColor) — it sits directly on top of
+       body and completely covers the contrasting backdrop above, so a
+       staticColor button (always translucent-surface-over-real-photo by
+       design) renders white-on-white or black-on-black regardless of the
+       body rule. Only #mount itself gets `static-color` mirrored onto it (see
+       applyAttribute(mount, ...) in initRsp() below) — SWC's route never
+       sets this attribute here, only on its own root element — so this is
+       RSP-only. Found via live inspection: Provider's own background was
+       rgb(255,255,255) while body was correctly rgb(0,0,0) underneath it. */
+    #mount[static-color] > * {
+      background: transparent !important;
+    }
+
+    /* A definite width, not `display: contents`: components like tabs/accordion
+       size their tab-row and their currently-visible panel both at `width: 100%`
+       of their own host, which has no width of its own. Centering it directly as
+       a `body` flex item (shrink-to-fit / auto main-size) makes the browser
+       compute that width from whichever descendant's content is currently
+       widest — including the visible panel's text. Switching panels (different
+       text length) then recomputes and snaps the whole component's width on
+       every selection change, while only the selection-indicator's own
+       transform is actually transitioned — the two visibly desync ("jiggle").
+       A fixed-width canvas (matching how react-spectrum.adobe.com's own demos
+       wrap Tabs/Accordion in an explicit width) gives every `width: 100%`
+       descendant a stable value to resolve against, independent of content.
+       Verified by reproducing the jiggle in complete isolation (just the real
+       component + its own CSS, no playground code) and confirming it disappears
+       once the host's width is definite rather than shrink-to-fit. */
+    #mount {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: min(90vw, 400px);
+    }
+
+    /* Image viewer — ios / android */
+    #image-viewer {
+      display: none;
+    }
+
+    #image-viewer.active {
+      display: block;
+    }
+
+    #image-viewer img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body class="swc-theme swc-theme--sizeM swc-theme--light">
+  <div id="mount"></div>
+  <div id="image-viewer" aria-label="Component preview image">
+    <img id="preview-image" src="" alt="" />
+  </div>
+
+  <script type="module">
+    import { defineSwc } from '../../../deps/swc/playground/define-swc.js';
+    import { listenForPropUpdates, notifyPreviewReady } from '../../../deps/swc/playground/prop-listener.js';
+    import { applyAttribute } from '../../../deps/swc/playground/apply-attribute.js';
+    import { applyLabelProp } from '../../../deps/swc/playground/apply-label-prop.js';
+    import { iconHref, buildIconSvg, buildIconUse } from '../../../deps/swc/playground/build-icon-svg.js';
+    import { NO_ICON } from './icon-options.js';
+    import { resolveRspPropKey, hasLabelProp } from '../../../deps/rsp/playground/apply-rsp-prop.js';
+    import { resolveStylesheetHrefs } from '../../../deps/rsp/playground/resolve-stylesheet-hrefs.js';
+    import { collectFragmentTagNames, buildCompositeElement } from '../../../deps/rsp/playground/build-composite-element.js';
+
+    const mount = document.getElementById('mount');
+
+    const params = new URLSearchParams(window.location.search);
+    const component = params.get('component')?.toLowerCase().trim();
+    const implementation = params.get('implementation')?.toLowerCase().trim();
+
+    function showError(message) {
+      document.body.textContent = message;
+    }
+
+    if (!component || !implementation) {
+      showError('Missing required query params: component, implementation');
+      throw new Error('Missing required query params');
+    }
+
+    // `component` drives a relative fetch for the SWC fragment, so keep it to the
+    // safe custom-element charset — no slashes, dots, or traversal.
+    if (!/^[a-z0-9-]+$/.test(component)) {
+      showError(`Invalid component name: ${component}`);
+      throw new Error(`Invalid component name: ${component}`);
+    }
+
+    // --- SWC ----------------------------------------------------------------
+
+    // Applies one prop-update message to a live custom element. Shared by the
+    // prop listener below; the (property, attribute, value) contract is defined
+    // by the block (see shared/prop-listener.js).
+    function applySwcProp(el, { property, attribute, value }) {
+      // "label" prefers a real attribute (e.g. swc-progress-circle's
+      // accessible `label`) or a nested `slot="label"` element (e.g.
+      // swc-meter's/swc-accordion-item's visible label) over the flat
+      // textContent convention below — see apply-label-prop.js. Only when
+      // neither exists does it fall through to that same flat convention,
+      // unchanged, exactly like "text"/"children" always have.
+      if (property === 'label' && applyLabelProp(el, attribute, value)) {
+        return;
+      }
+
+      if (property === 'text' || property === 'label' || property === 'children') {
+        // NOTE: a blind textContent assignment clobbers slotted children, so no
+        // composite (tabs/accordion/…) currently authors a text control. When
+        // the "inject textfield input into a text slot" feature lands, this will
+        // need to target a specific text slot instead.
+        el.textContent = value;
+        return;
+      }
+
+      if (property === 'icon') {
+        // swc-icon IS the icon — its default slot holds the <svg> directly, so
+        // there's no separate slot element whose presence would reserve space.
+        if (el.localName === 'swc-icon') {
+          if (value === NO_ICON) { el.replaceChildren(); } else { el.replaceChildren(buildIconSvg(value)); }
+          return;
+        }
+        // Otherwise the icon sits in a `slot="icon"` element beside other
+        // content. For "No icon" (see icon-options.js) REMOVE that element, not
+        // just its children: an empty-but-present slot element still counts as
+        // slotted content, so the component keeps reserving the icon's box and
+        // gap. Removing it collapses that space.
+        if (value === NO_ICON) {
+          el.querySelector('[slot="icon"]')?.remove();
+          return;
+        }
+        // A real icon: fill the fragment's own `<svg slot="icon">` in place
+        // (nesting a second <svg> inside it wouldn't be sized by the component's
+        // slotted-icon CSS), recreating it if a prior "No icon" removed it.
+        const existing = el.querySelector('[slot="icon"]');
+        if (existing) {
+          if (!existing.hasAttribute('viewBox')) { existing.setAttribute('viewBox', '0 0 20 20'); }
+          existing.replaceChildren(buildIconUse(value));
+        } else {
+          const svg = buildIconSvg(value);
+          svg.setAttribute('slot', 'icon');
+          el.prepend(svg);
+        }
+        return;
+      }
+
+      applyAttribute(el, attribute, value);
+    }
+
+    // Per-component markup lives in deps/swc/playground/snippets/<component>.html
+    // (e.g. button.html) that holds ONLY the web-component HTML — no <head>,
+    // <script>, or shell boilerplate. This shell fetches it, injects it,
+    // registers whatever swc-* tags it contains (families included), and
+    // drives prop updates against the fragment's root element. Adding a
+    // component is a one-file markup edit.
+    // `@adobe/spectrum-wc`'s swc.css from a RAW CDN (not esm.sh): it relatively
+    // `@import`s tokens.css, which only resolves when the file is served
+    // verbatim — esm.sh would rewrite the import and break it. Loaded here
+    // (rather than statically in <head>) so its unscoped `:root { font-size }`
+    // rule only ever applies to the SWC route, not RSP/native previews.
+    function loadSwcCss() {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/@adobe/spectrum-wc@0.3.0/dist/swc.css';
+      document.head.appendChild(link);
+    }
+
+    async function initSwc() {
+      loadSwcCss();
+
+      let markup;
+      try {
+        const resp = await fetch(`../../../deps/swc/playground/snippets/${component}.html`);
+        if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
+        markup = await resp.text();
+      } catch (err) {
+        showError(`Failed to load preview markup for ${component} (${err.message})`);
+        throw err;
+      }
+
+      mount.innerHTML = markup;
+
+      const root = mount.firstElementChild;
+      if (!root) {
+        showError(`Preview markup for ${component} has no root element`);
+        throw new Error('Empty preview fragment');
+      }
+      const rootTag = root.localName;
+
+      // Register every swc-* tag the fragment uses. Families (tabs -> tab,
+      // tab-panel) are discovered from the markup itself, so there is no
+      // per-page define list to maintain. The root's tag is required — surface
+      // its failure — while secondary tags degrade softly (the root still
+      // renders), matching the old per-component shells.
+      const tags = [...new Set(
+        [...mount.querySelectorAll('*')]
+          .map((node) => node.localName)
+          .filter((name) => name.startsWith('swc-')),
+      )];
+
+      await Promise.all(tags.map(async (tag) => {
+        try {
+          await defineSwc(tag.slice(4));
+        } catch (err) {
+          if (tag === rootTag) {
+            showError(`Failed to load SWC component: ${rootTag}`);
+            throw err;
+          }
+          // Secondary family member — the root shell still renders without it.
+        }
+      }));
+
+      // Some components (e.g. tooltip) only reveal via the Popover API, not the
+      // `open` attribute alone. Markup can't call showPopover(), so do it
+      // generically for any popover-capable element the fragment marked open.
+      mount.querySelectorAll('[open]').forEach((el) => {
+        if (typeof el.showPopover === 'function') {
+          try { el.showPopover(); } catch { /* already open or unsupported */ }
+        }
+      });
+
+      listenForPropUpdates((update) => applySwcProp(root, update));
+      notifyPreviewReady();
+    }
+
+    // --- RSP ----------------------------------------------------------------
+
+    // Loaded from esm.sh at preview time (no local vendoring, unlike SWC).
+    // The React version is resolved from @react-spectrum/s2's own peerDependencies
+    // at runtime and used to pin every react/react-dom import via esm.sh's `?deps=`
+    // param, so the app's React copy and RSP's internal React copy are the same
+    // module instance. @react-spectrum/s2 currently peers on a React 19 RC — this
+    // preview requires network access to esm.sh and breaks if esm.sh is unreachable
+    // or a future S2 release changes its export/Provider shape.
+    // Most components — composites (accordion, tabs, button-group, ...) AND
+    // plain leaf components (button, avatar, badge, ...) alike — have a
+    // dev-authored JSX fragment describing their real default markup:
+    // deps/rsp/playground/snippets/<component>.jsx, the RSP counterpart to
+    // SWC's deps/swc/playground/snippets fragments (RSP has no live-preview markup file of its
+    // own to source this from, since it renders via React.createElement, not
+    // an HTML string — see blocks/playground/playground.js's buildRspSnippet
+    // for the code-disclosure side of this same fragment). Despite the
+    // function/variable name, "composite root" here just means "this
+    // fragment's root element" — a leaf fragment's root has no element
+    // children, only its own attributes and/or plain text (see the
+    // currentProps/rootChildArgs construction in initRsp() below). Parsed as
+    // XML (case-sensitive) so PascalCase tag names like `TabList` round-trip
+    // exactly. Returns null when there's no fragment for this component at
+    // all — a 404, malformed XML, or simply never authored (e.g. `asset`/
+    // `icon`, which have no matching @react-spectrum/s2 export regardless) —
+    // initRsp() falls back to a generic capitalized-name label in that case.
+    async function fetchCompositeRoot(name) {
+      try {
+        const resp = await fetch(`../../../deps/rsp/playground/snippets/${name}.jsx`);
+        if (!resp.ok) { return null; }
+        const markup = await resp.text();
+        const doc = new DOMParser().parseFromString(markup.trim(), 'application/xml');
+        return doc.querySelector('parsererror') ? null : doc.documentElement;
+      } catch {
+        return null;
+      }
+    }
+    // Components whose live preview needs a real sized box instead of
+    // #mount's ordinary shrink-to-fit layout: CardView and TableView are
+    // virtualized and silently render zero rows without one — no console
+    // error, just an empty screen. See the branch using this set in initRsp()
+    // below for the full story (both width AND height, for different reasons
+    // per component, found via live browser reproduction).
+    const VIRTUALIZED_RSP_COMPONENTS = new Set(['card-view', 'table-view']);
+
+    // @react-spectrum/s2's Provider takes its light/dark theme as an explicit
+    // `colorScheme` prop — it's what actually drives every internal color
+    // token (background AND text/border/icon colors, not just the wrapper's
+    // own background), so it has to track the site's forced scheme the same
+    // way theme-sync.js keeps swc-theme--dark/light in sync for SWC. Listened
+    // for at module top-level (synchronous, before any of initRsp()'s awaited
+    // network calls) so the very first `theme-update` — posted on the
+    // iframe's `load` event, not re-sent after `preview-ready` the way
+    // prop-updates are — isn't silently missed while esm.sh imports are still
+    // in flight. `rerenderRsp` is populated once initRsp() has a `render` to
+    // call; a message arriving before that just updates `currentScheme` for
+    // the eventual first render to read.
+    let currentScheme = null;
+    let rerenderRsp = null;
+    window.addEventListener('message', (event) => {
+      if (event.data?.type !== 'theme-update') { return; }
+      currentScheme = event.data.scheme;
+      rerenderRsp?.();
+    });
+
+    // No forced override (site follows the OS) has no direct Provider
+    // equivalent — `colorScheme` only accepts 'light'/'dark', unlike the CSS
+    // `color-scheme: light dark` the rest of this shell relies on — so fall
+    // back to the same OS preference the CSS would resolve to.
+    function resolveRspColorScheme() {
+      return currentScheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+
+    async function initRsp() {
+      const PKG = '@react-spectrum/s2';
+      const exportName = component.split('-').map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+
+      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
+        // #mount's flex layout (set above) only gives its child a definite
+        // WIDTH when that child's own CSS claims `width: 100%` against it —
+        // true for TableView's root class, but CardView's isn't, so as a
+        // flex item on the main (row) axis it defaults to shrink-to-fit: 0,
+        // same chicken-and-egg problem as the height one below. A `block`
+        // child of a `block` parent instead fills the parent's width by
+        // default, with no CSS cooperation required from the RSP component's
+        // own styles — real per-component 0-size repro confirmed live for
+        // both CardView (width AND height stuck at 0) and TableView (height
+        // only, width happened to already resolve via its own CSS).
+        mount.style.display = 'block';
+        mount.style.width = 'min(90vw, 400px)';
+        mount.style.height = '20rem';
+      }
+
+      try {
+        const [pkg, compositeRoot, ownRspProps] = await Promise.all([
+          fetch(`https://esm.sh/${PKG}/package.json`).then((r) => r.json()),
+          fetchCompositeRoot(component),
+          // This component's own RSP prop data (the same
+          // deps/rsp/data/<ExportName>.json blocks/playground/playground.js
+          // already fetches for its controls) — read independently here so a
+          // "label" prop-update below can tell whether to route to a real
+          // "label" prop (e.g. Meter, AvatarGroup) or fall back to "children"
+          // (see hasLabelProp/resolveRspPropKey in apply-rsp-prop.js). A 404
+          // or malformed file (e.g. a bare array instead of `{ props: [...] }`)
+          // just means "no label prop", not an error.
+          fetch(`../../../deps/rsp/data/${exportName}.json`)
+            .then((r) => (r.ok ? r.json() : []))
+            .then((d) => (Array.isArray(d) ? d : (d.props ?? [])))
+            .catch(() => []),
+        ]);
+        const hasRealLabelProp = hasLabelProp(ownRspProps);
+        const reactVersion = (pkg.peerDependencies?.react ?? '19').replace(/^[^0-9]*/, '');
+        const deps = `react@${reactVersion},react-dom@${reactVersion}`;
+
+        // A composite fragment's subcomponents (TabList, Tab, TabPanel, ...)
+        // need their own real exports requested from esm.sh too — otherwise
+        // only the root component is tree-shaken in, and RSP.TabList etc.
+        // would be undefined.
+        const extraExports = compositeRoot
+          ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
+          : [];
+        const exports = [exportName, 'Provider', ...extraExports].join(',');
+
+        // @react-spectrum/s2's unbundled output has `import "./Foo.css.mjs"`
+        // side-effect imports that esm.sh redirects to real .css files, which a
+        // bare browser `import()` refuses to load as a module (wrong MIME type) —
+        // it fails with an opaque "Failed to fetch dynamically imported module"
+        // and no further detail. `?bundle` drops those CSS side-effect imports
+        // from the JS graph so it can load at all, but doesn't inline the styles —
+        // so the actual visual CSS is loaded separately as real <link> stylesheets
+        // below.
+        const [{ createElement }, { createRoot }, RSP] = await Promise.all([
+          import(`https://esm.sh/react@${reactVersion}`),
+          import(`https://esm.sh/react-dom@${reactVersion}/client`),
+          import(`https://esm.sh/${PKG}@${pkg.version}?bundle&exports=${exports}&deps=${deps}`),
+        ]);
+
+        // The requested component (e.g. ActionButton) often internally composes
+        // other private sub-components (e.g. ProgressCircle for its pending
+        // spinner) whose CSS — including @keyframes an animation depends on —
+        // lives in THEIR OWN separate stylesheet, never the top-level
+        // component's. There's no single published "all styles" bundle, so
+        // loading just `<exportName>.css` silently drops any nested
+        // sub-component's styles. Instead, list every file the package
+        // actually ships (jsdelivr's data API can list an npm package's
+        // contents) and load every private CSS file found — covering any
+        // component's internal composition, current or future, without having
+        // to know its dependency graph. Falls back to the single component's
+        // own CSS if that listing can't be fetched.
+        let packageFiles;
+        try {
+          const listing = await (await fetch(`https://data.jsdelivr.com/v1/package/npm/${PKG}@${pkg.version}/flat`)).json();
+          packageFiles = listing.files?.map((f) => f.name);
+        } catch {
+          packageFiles = null;
+        }
+
+        resolveStylesheetHrefs(PKG, pkg.version, exportName, packageFiles).forEach((href) => {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          document.head.appendChild(link);
+        });
+
+        const Component = RSP[exportName];
+        if (!Component) throw new Error(`No RSP export named "${exportName}"`);
+
+        const root = createRoot(mount);
+        // Any component with an authored fragment — composite or leaf alike —
+        // gets its root attributes seeded as prop defaults here (e.g. a
+        // required aria-label with no matching authored control) — a
+        // prop-update message below still overrides them, same as any other
+        // default. Found via a live browser reproduction: @react-spectrum/s2's
+        // real Tabs throws "An aria-label or aria-labelledby prop is required
+        // on Tabs for accessibility" without this. Only a component with NO
+        // fragment at all falls back to a generic capitalized-name label, so
+        // the preview isn't a blank button before the parent's prop-update
+        // messages arrive (or if "children" isn't authored at all).
+        const currentProps = compositeRoot
+          ? Object.fromEntries(
+            [...compositeRoot.attributes].map((attr) => [attr.name, attr.value === '' ? true : attr.value]),
+          )
+          : { children: component.charAt(0).toUpperCase() + component.slice(1) };
+
+        // The fragment's real element children (TabList/Tab/TabPanel, ...),
+        // built via buildCompositeElement — only for genuine composite
+        // structure. A leaf fragment (e.g. action-button.jsx's plain
+        // `<ActionButton>Action Button</ActionButton>`) has no element
+        // children, so its text is seeded onto currentProps.children instead
+        // of frozen here — a text/label control's prop-update sets
+        // currentProps.children on every keystroke (see resolveRspPropKey
+        // below), and that only takes effect if render() reads it live each
+        // time rather than passing a one-time-computed child arg. Found via a
+        // live browser reproduction: typing in a textfield control updated the
+        // code snippet (which reads currentProps directly) but never the
+        // iframe preview, because render() used to pass this fragment's
+        // ORIGINAL text as an explicit createElement child arg unconditionally
+        // whenever any fragment existed — permanently shadowing whatever
+        // currentProps.children held.
+        const compositeChildren = [...(compositeRoot?.children ?? [])];
+        if (!compositeChildren.length && compositeRoot?.textContent) {
+          currentProps.children = compositeRoot.textContent;
+        }
+        const rootChildArgs = compositeChildren.length
+          ? compositeChildren.map((child) => buildCompositeElement(child, RSP, createElement))
+          : [];
+
+        function render() {
+          const scheme = resolveRspColorScheme();
+          const rootElement = compositeChildren.length
+            ? createElement(Component, currentProps, ...rootChildArgs)
+            : createElement(Component, currentProps);
+          // `key` forces React to unmount/remount the whole subtree instead of
+          // patching it in place whenever a prop that drives the component's
+          // own `light-dark()`-based styling changes. Found live: an in-place
+          // update (Provider/component re-rendered with a new colorScheme or
+          // staticColor prop, same element identity) correctly updates
+          // `color-scheme` and any plain CSS-rule-driven background (e.g. the
+          // `body:has([static-color])` backdrop swap), but every descendant
+          // style actually built from `light-dark()` — text, borders, icons,
+          // most of a component's real appearance — stays stuck on its
+          // original value. A component whose FIRST render already resolves
+          // to the target scheme/staticColor renders correctly, so this isn't
+          // a props-plumbing bug — something about `light-dark()`
+          // re-evaluation doesn't get invalidated by an in-place DOM update
+          // the way it does on initial paint. Reproduced live for both: a
+          // dark-mode toggle (ActionButton, Tabs) and a static-color toggle
+          // (ActionButton white->black kept the white-variant button styling
+          // even though the page backdrop correctly flipped). staticColor
+          // isn't reflected as a real prop key until now — mirroring the same
+          // `resolveRspPropKey` name used for the actual `currentProps` entry.
+          const key = `${scheme}-${currentProps.staticColor ?? 'none'}`;
+          root.render(createElement(
+            RSP.Provider,
+            { key, colorScheme: scheme, background: 'base' },
+            rootElement,
+          ));
+        }
+
+        rerenderRsp = render;
+
+        // An "icon" control and a text/label control on the same component are
+        // complementary — an icon typically sits NEXT TO the label, not in
+        // place of it — but @react-spectrum/s2 renders both through the single
+        // `children` prop. So track each separately and recompose `children`
+        // (icon first, then text — Spectrum's icon-before-label default)
+        // whenever either changes, instead of letting the later prop-update
+        // clobber the earlier one. Seeded from the fragment's already-computed
+        // default children so the first paint (before any prop-update) is
+        // unchanged. Composites drive their children via rootChildArgs, not
+        // currentProps.children, so this only ever affects leaf components.
+        let iconChild = null;
+        let textChild = currentProps.children ?? null;
+        function composeChildren() {
+          if (iconChild && textChild != null) { return [iconChild, textChild]; }
+          return iconChild ?? textChild;
+        }
+
+        render();
+
+        listenForPropUpdates(({ property, attribute, value }) => {
+          if (property === 'icon') {
+            // Converts an authored "icon" control's icon name into a real
+            // <svg><use> element — the same shape deps/swc/playground/snippets/icon.html's SWC
+            // counterpart fills its icon slot with. NOTE: this can't fire for
+            // the RSP `icon` route itself — @react-spectrum/s2 has no generic
+            // `Icon` export (individual glyphs are separate named exports), so
+            // `?component=icon&implementation=rsp` fails before any prop update
+            // arrives. This only matters for some OTHER component that authors
+            // an "icon" control of its own (e.g. a button).
+            // The "No icon" sentinel (see icon-options.js) clears any icon so
+            // only the text/label remains — matching the SWC route, which
+            // removes its slot element for the same value.
+            // Explicit size + `currentColor` fill because — unlike the SWC
+            // route, where the slotted <svg> is sized by the component — a bare
+            // RSP <svg> has no wrapper, so without them it renders 0×0 in black
+            // (invisible next to the label). Confirmed live.
+            iconChild = value === NO_ICON ? null : createElement('svg', {
+              key: 'icon', viewBox: '0 0 20 20', width: 20, height: 20, fill: 'currentColor',
+            }, createElement('use', { href: iconHref(value) }));
+            currentProps.children = composeChildren();
+          } else {
+            const key = resolveRspPropKey(property, hasRealLabelProp);
+            if (key === 'children') {
+              // A text/label control that resolves to `children`: keep it
+              // separate from any icon so the two compose rather than overwrite.
+              textChild = value;
+              currentProps.children = composeChildren();
+            } else {
+              currentProps[key] = value;
+            }
+          }
+          // @react-spectrum/s2 doesn't reflect most props back as real DOM
+          // attributes (it renders internal classes/tokens instead), so CSS
+          // that keys off one — e.g. the static-color contrasting-backdrop
+          // rule above — needs it mirrored onto the mount container itself.
+          applyAttribute(mount, attribute, value);
+          render();
+        });
+        notifyPreviewReady();
+      } catch (err) {
+        showError(`Failed to load RSP component: ${exportName} (${err.message})`);
+      }
+    }
+
+    // --- iOS / Android image viewer -----------------------------------------
+
+    function buildImagePath(props) {
+      const sorted = Object.entries(props)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => `${k}-${v}`)
+        .join('--');
+      const base = `/playground/${component}/images/${implementation}`;
+      return sorted ? `${base}/${sorted}.png` : `${base}/default.png`;
+    }
+
+    function initImageViewer() {
+      const viewer = document.getElementById('image-viewer');
+      const img = document.getElementById('preview-image');
+      viewer.classList.add('active');
+
+      const currentProps = {};
+
+      function updateImage() {
+        const preferred = buildImagePath(currentProps);
+        const fallback = `/playground/${component}/images/${implementation}/default.png`;
+
+        img.onerror = () => { img.src = fallback; img.onerror = null; };
+        img.src = preferred;
+        img.alt = `${component} — ${Object.entries(currentProps).map(([k, v]) => `${k}: ${v}`).join(', ')}`;
+      }
+
+      updateImage();
+
+      listenForPropUpdates(({ property, value }) => {
+        currentProps[property] = value;
+        updateImage();
+      });
+      notifyPreviewReady();
+    }
+
+    // --- Route ---------------------------------------------------------------
+
+    if (implementation === 'swc') {
+      await initSwc();
+    } else if (implementation === 'rsp') {
+      await initRsp();
+    } else if (implementation === 'ios' || implementation === 'android') {
+      initImageViewer();
+    } else {
+      showError(`Unsupported implementation: ${implementation}`);
+    }
+  </script>
+</body>
+</html>
