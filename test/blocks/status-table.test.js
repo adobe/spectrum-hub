@@ -168,7 +168,7 @@ describe('status-table block', () => {
     });
   });
 
-  describe('legend', () => {
+  describe('status cards', () => {
     let el;
     beforeEach(async () => {
       stubFetchOk();
@@ -176,14 +176,167 @@ describe('status-table block', () => {
       await init(el);
     });
 
-    it('always renders every unified status with its definition', () => {
-      const legend = el.querySelector('.status-table__legend');
-      expect(legend).to.not.be.null;
-      const text = legend.textContent;
-      Object.values(STATUSES).forEach(({ label, definition }) => {
-        expect(text).to.include(label);
-        expect(text).to.include(definition);
-      });
+    it('renders a card for each status present in the data, in canonical order', () => {
+      const statuses = [...el.querySelectorAll('.status-table__card')]
+        .map((card) => card.getAttribute('data-status'));
+      // MOCK_INDEX exercises available, experimental, and not-available only.
+      expect(statuses).to.deep.equal(['available', 'experimental', 'not-available']);
+    });
+
+    it('does not render cards for statuses absent from the data', () => {
+      const statuses = [...el.querySelectorAll('.status-table__card')]
+        .map((card) => card.getAttribute('data-status'));
+      expect(statuses).to.not.include('deprecated');
+      expect(statuses).to.not.include('removed');
+    });
+
+    it('shows each status label and definition on its card', () => {
+      const card = [...el.querySelectorAll('.status-table__card')]
+        .find((c) => c.getAttribute('data-status') === 'available');
+      expect(card).to.not.be.undefined;
+      expect(card.textContent).to.include(STATUSES.available.label);
+      expect(card.textContent).to.include(STATUSES.available.definition);
+    });
+
+    it('replaces the old inline legend list', () => {
+      expect(el.querySelector('.status-table__legend')).to.be.null;
+    });
+  });
+
+  describe('toolbar — search', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    it('renders a search input (se-input type=search)', () => {
+      const input = el.querySelector('.status-table__search');
+      expect(input).to.not.be.null;
+      expect(input.tagName.toLowerCase()).to.equal('se-input');
+      expect(input.getAttribute('type')).to.equal('search');
+    });
+
+    it('keeps an accessible label but hides it visually', () => {
+      const input = el.querySelector('.status-table__search');
+      expect(input.getAttribute('label')).to.equal('Search components');
+      expect(input.hasAttribute('hide-label')).to.be.true;
+    });
+
+    it('filters rows to those whose component name matches the query', () => {
+      const input = el.querySelector('.status-table__search');
+      input.value = 'color';
+      input.dispatchEvent(new Event('input'));
+      const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
+      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal(['Color Area']);
+    });
+
+    it('is case-insensitive and matches on substrings', () => {
+      const input = el.querySelector('.status-table__search');
+      input.value = 'BUTTON';
+      input.dispatchEvent(new Event('input'));
+      const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
+      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal(['Button']);
+    });
+
+    it('restores every row when the query is cleared', () => {
+      const input = el.querySelector('.status-table__search');
+      input.value = 'button';
+      input.dispatchEvent(new Event('input'));
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      const hidden = [...el.querySelectorAll('tbody tr')].filter((tr) => tr.hidden);
+      expect(hidden).to.have.length(0);
+    });
+  });
+
+  describe('toolbar — show details toggle', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    it('renders a show-details switch (se-switch)', () => {
+      const sw = el.querySelector('.status-table__details-toggle');
+      expect(sw).to.not.be.null;
+      expect(sw.tagName.toLowerCase()).to.equal('se-switch');
+    });
+
+    it('hides secondary detail lines by default', () => {
+      expect(el.classList.contains('status-table--show-details')).to.be.false;
+    });
+
+    it('reveals details when toggled on and hides them again when toggled off', () => {
+      const sw = el.querySelector('.status-table__details-toggle');
+      sw.checked = true;
+      sw.dispatchEvent(new Event('change'));
+      expect(el.classList.contains('status-table--show-details')).to.be.true;
+      sw.checked = false;
+      sw.dispatchEvent(new Event('change'));
+      expect(el.classList.contains('status-table--show-details')).to.be.false;
+    });
+  });
+
+  describe('toolbar — column filter', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    it('renders a filter button wired to a popover panel', () => {
+      const button = el.querySelector('.status-table__filter-button');
+      const popover = el.querySelector('.status-table__filter-popover');
+      expect(button).to.not.be.null;
+      expect(popover).to.not.be.null;
+      expect(popover.hasAttribute('popover')).to.be.true;
+      expect(button.getAttribute('popovertarget')).to.equal(popover.id);
+    });
+
+    it('starts with the popover closed', () => {
+      const popover = el.querySelector('.status-table__filter-popover');
+      expect(popover.matches(':popover-open')).to.be.false;
+    });
+
+    it('is icon-only with a visually hidden accessible name', () => {
+      const button = el.querySelector('.status-table__filter-button');
+      const label = button.querySelector('.visually-hidden');
+      expect(label).to.not.be.null;
+      expect(label.textContent).to.equal('Filter columns');
+    });
+
+    it('offers one checkbox per implementation column, in column order', () => {
+      const toggles = [...el.querySelectorAll('.status-table__column-toggle')];
+      expect(toggles.map((c) => c.getAttribute('data-col'))).to.deep.equal(['figma', 'rsp', 'swc']);
+    });
+
+    it('checks every column by default', () => {
+      const toggles = [...el.querySelectorAll('.status-table__column-toggle')];
+      expect(toggles.every((c) => c.checked)).to.be.true;
+    });
+
+    it('hides a column\'s cells when its checkbox is unchecked', () => {
+      const figmaToggle = el.querySelector('.status-table__column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      const figmaCells = el.querySelectorAll('.status-table__table [data-col="figma"]');
+      expect([...figmaCells].every((c) => c.hidden)).to.be.true;
+      const rspCells = el.querySelectorAll('.status-table__table [data-col="rsp"]');
+      expect([...rspCells].some((c) => c.hidden)).to.be.false;
+    });
+
+    it('re-shows a column when its checkbox is re-checked', () => {
+      const figmaToggle = el.querySelector('.status-table__column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      figmaToggle.checked = true;
+      figmaToggle.dispatchEvent(new Event('change'));
+      const figmaCells = el.querySelectorAll('.status-table__table [data-col="figma"]');
+      expect([...figmaCells].some((c) => c.hidden)).to.be.false;
     });
   });
 

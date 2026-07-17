@@ -1,3 +1,4 @@
+import '../../deps/se/se.js';
 import { getConfig } from '../../scripts/ak.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
 import { toCsv, downloadCsv } from '../../scripts/utils/csv.js';
@@ -66,9 +67,10 @@ const buildTable = (index) => {
   componentHead.scope = 'col';
   componentHead.textContent = 'Component';
   headRow.append(componentHead);
-  for (const { label } of columns) {
+  for (const { id, label } of columns) {
     const th = withRole(document.createElement('th'), 'columnheader');
     th.scope = 'col';
+    th.dataset.col = id;
     th.textContent = label;
     headRow.append(th);
   }
@@ -88,7 +90,9 @@ const buildTable = (index) => {
 
     const web = component.platforms?.web ?? {};
     for (const { id } of columns) {
-      row.append(buildStatusCell(web[id]));
+      const cell = buildStatusCell(web[id]);
+      cell.dataset.col = id;
+      row.append(cell);
     }
     tbody.append(row);
   }
@@ -99,32 +103,49 @@ const buildTable = (index) => {
   return table;
 };
 
-/** Always-visible legend defining every unified status. */
-const buildLegend = () => {
-  const legend = document.createElement('ul');
-  legend.className = 'status-table__legend';
-  for (const { id, label, definition, color } of Object.values(STATUSES)) {
-    const item = document.createElement('li');
-    item.className = 'status-table__legend-item';
+/**
+ * The status ids that actually occur in the rendered table, in canonical STATUSES order.
+ * Mirrors the cell fallback so a missing cell counts as Not available, matching the table.
+ */
+const presentStatusIds = (index) => {
+  const columns = index.implementations?.web ?? [];
+  const present = new Set();
+  for (const component of index.components ?? []) {
+    const web = component.platforms?.web ?? {};
+    for (const { id } of columns) {
+      present.add(web[id]?.status ?? NOT_AVAILABLE);
+    }
+  }
+  return Object.keys(STATUSES).filter((id) => present.has(id));
+};
 
-    const dot = document.createElement('span');
-    dot.className = 'status-table__dot';
-    dot.setAttribute('data-status', id);
-    dot.style.setProperty('--status-color', `var(${color})`);
-    dot.setAttribute('aria-hidden', 'true');
+/**
+ * Always-visible status definition cards — one per status present in the data. Absent
+ * statuses (e.g. Deprecated/Removed today) get no card, so the key only explains what
+ * the table actually shows.
+ */
+const buildStatusCards = (index) => {
+  const cards = document.createElement('ul');
+  cards.className = 'status-table__cards';
+  for (const id of presentStatusIds(index)) {
+    const { label, definition, color } = STATUSES[id];
+    const card = document.createElement('li');
+    card.className = 'status-table__card';
+    card.setAttribute('data-status', id);
+    card.style.setProperty('--status-color', `var(${color})`);
 
     const term = document.createElement('span');
-    term.className = 'status-table__legend-label';
+    term.className = 'status-table__card-label';
     term.textContent = label;
 
     const desc = document.createElement('span');
-    desc.className = 'status-table__legend-definition';
+    desc.className = 'status-table__card-definition';
     desc.textContent = definition;
 
-    item.append(dot, term, desc);
-    legend.append(item);
+    card.append(term, desc);
+    cards.append(card);
   }
-  return legend;
+  return cards;
 };
 
 /** Text for one status cell in the CSV export: the unified label plus any guidance. */
@@ -147,6 +168,93 @@ const buildCsvRows = (index) => {
   return [header, ...body];
 };
 
+/**
+ * A search field that filters the table down to rows whose component name matches the
+ * query (case-insensitive substring). Clearing the field restores every row.
+ */
+const buildSearch = (table) => {
+  const input = document.createElement('se-input');
+  input.className = 'status-table__search';
+  input.setAttribute('type', 'search');
+  // Keep the label as the field's accessible name, but hide it visually — the search
+  // icon and placeholder make the field self-evident.
+  input.setAttribute('label', 'Search components');
+  input.setAttribute('hide-label', '');
+  input.setAttribute('placeholder', 'Search components…');
+  input.addEventListener('input', () => {
+    const query = (input.value ?? '').trim().toLowerCase();
+    for (const row of table.querySelectorAll('tbody tr')) {
+      const name = row.querySelector('th')?.textContent.toLowerCase() ?? '';
+      row.hidden = query !== '' && !name.includes(query);
+    }
+  });
+  return input;
+};
+
+/**
+ * A switch that reveals the muted secondary-status guidance lines. Details are hidden by
+ * default; the toggle just flips a modifier class the CSS keys off of.
+ */
+const buildDetailsToggle = (el) => {
+  const toggle = document.createElement('se-switch');
+  toggle.className = 'status-table__details-toggle';
+  toggle.name = 'status-table-details';
+  toggle.textContent = 'Show details';
+  toggle.addEventListener('change', () => {
+    el.classList.toggle('status-table--show-details', toggle.checked);
+  });
+  return toggle;
+};
+
+/** Shows or hides every header and body cell belonging to one implementation column. */
+const setColumnVisible = (table, id, visible) => {
+  for (const cell of table.querySelectorAll(`[data-col="${id}"]`)) {
+    cell.hidden = !visible;
+  }
+};
+
+/**
+ * A "Columns" button that opens a popover of checkboxes, one per implementation column,
+ * letting readers hide columns they don't care about. The Component column always stays.
+ */
+const buildColumnFilter = (columns, table) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'status-table__filter';
+
+  const popoverId = `status-table-columns-${Math.random().toString(36).slice(2)}`;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'status-table__filter-button';
+  button.classList.add('btn', 'btn-secondary');
+  button.setAttribute('popovertarget', popoverId);
+  // Icon-only button: the filter glyph rides on a CSS ::before mask, so the label is
+  // visually hidden but stays the button's accessible name.
+  const buttonLabel = document.createElement('span');
+  buttonLabel.className = 'visually-hidden';
+  buttonLabel.textContent = 'Filter columns';
+  button.append(buttonLabel);
+
+  const popover = document.createElement('div');
+  popover.className = 'status-table__filter-popover';
+  popover.id = popoverId;
+  popover.setAttribute('popover', '');
+
+  for (const { id, label } of columns) {
+    const toggle = document.createElement('se-checkbox');
+    toggle.className = 'status-table__column-toggle';
+    toggle.name = `status-table-col-${id}`;
+    toggle.setAttribute('data-col', id);
+    toggle.checked = true;
+    toggle.textContent = label;
+    toggle.addEventListener('change', () => setColumnVisible(table, id, toggle.checked));
+    popover.append(toggle);
+  }
+
+  wrap.append(button, popover);
+  return wrap;
+};
+
 /** An "Export CSV" control that downloads the current table as a CSV file. */
 const buildExportButton = (index) => {
   const button = document.createElement('button');
@@ -156,6 +264,20 @@ const buildExportButton = (index) => {
   button.classList.add('btn', 'btn-primary');
   button.addEventListener('click', () => downloadCsv(CSV_FILENAME, toCsv(buildCsvRows(index))));
   return button;
+};
+
+/** The controls row above the table: search, show-details, column filter, and export. */
+const buildToolbar = (index, table, el) => {
+  const columns = index.implementations?.web ?? [];
+  const toolbar = document.createElement('div');
+  toolbar.className = 'status-table__toolbar';
+  toolbar.append(
+    buildSearch(table),
+    buildDetailsToggle(el),
+    buildColumnFilter(columns, table),
+    buildExportButton(index),
+  );
+  return toolbar;
 };
 
 /**
@@ -192,6 +314,6 @@ export default async function init(el) {
   const table = buildTable(index);
   labelTable(el, table);
 
-  el.replaceChildren(buildExportButton(index), buildLegend(), table);
+  el.replaceChildren(buildStatusCards(index), buildToolbar(index, table, el), table);
   el.tabIndex = 0;
 }

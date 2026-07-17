@@ -72,13 +72,27 @@
     flex: 0 0 auto;
   }
 
-  /* secondary guidance line beneath the badge */
+  /* secondary guidance line beneath the badge — hidden until the "Show details" toggle */
   .status-table__secondary {
-    display: block;
+    display: none;
     margin-block-start: var(--s2-spacing-50);
     color: var(--s2-gray-600);
     font-size: var(--s2-component-s-regular-font-size);
     line-height: var(--s2-component-s-regular-line-height);
+  }
+
+  &.status-table--show-details .status-table__secondary {
+    display: block;
+  }
+
+  /* rows filtered out by search, and cells in columns toggled off, drop out entirely.
+     attribute-selector specificity beats the responsive display rules below. */
+  tbody tr[hidden] {
+    display: none;
+  }
+
+  [data-col][hidden] {
+    display: none;
   }
 
   @media (width >= 900px) {
@@ -149,26 +163,112 @@
     }
   }
 
-  /* legend — always visible */
-  .status-table__legend {
+  /* status definition cards — always visible, one per status present in the table */
+  .status-table__cards {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s2-spacing-200) var(--s2-spacing-400);
+    gap: var(--s2-spacing-300);
     list-style: none;
-    margin: var(--s2-spacing-300) 0 0;
+    margin: var(--s2-spacing-400) 0 0;
     padding: 0;
   }
 
-  .status-table__legend-item {
+  .status-table__card {
+    flex: 1 1 240px;
     display: flex;
-    align-items: baseline;
+    flex-direction: column;
     gap: var(--s2-spacing-100);
-    color: var(--s2-gray-700);
-    font-size: var(--s2-component-s-regular-font-size);
+    padding: var(--s2-spacing-400);
+    border-radius: 24px;
+    /* tint the card with a faint wash of its own status color */
+    background-color: rgb(from var(--status-color) r g b / 10%);
   }
 
-  .status-table__legend-label {
+  .status-table__card-label {
     font-weight: var(--s2-component-m-bold-font-weight);
+    color: var(--status-color);
+  }
+
+  /* the Not available status color is a mid-gray dot hue — read the label darker for contrast */
+  .status-table__card[data-status='not-available'] .status-table__card-label {
     color: var(--s2-gray-900);
+  }
+
+  .status-table__card-definition {
+    color: var(--s2-gray-700);
+    font-size: var(--s2-component-s-regular-font-size);
+    line-height: var(--s2-component-s-regular-line-height);
+  }
+
+  /* toolbar — search, show-details toggle, column filter, and CSV export */
+  .status-table__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s2-spacing-300);
+    margin-block-end: var(--s2-spacing-200);
+  }
+
+  .status-table__search {
+    flex: 1 1 220px;
+    max-inline-size: 360px;
+  }
+
+  /* push the export control to the trailing edge of the toolbar */
+  .status-table__export {
+    margin-inline-start: auto;
+  }
+
+  /* column filter: a button anchoring a popover of per-column checkboxes */
+  .status-table__filter-button {
+    anchor-name: --status-table-columns;
+
+    /* icon-only: label is visually hidden, so trim the text padding to a square */
+    &:has(.visually-hidden) {
+      padding-inline: var(--s2-spacing-100);
+    }
+
+    /* filter glyph tinted to the button's text color via mask (mirrors sitenav) */
+    &::before {
+      content: '';
+      display: inline-block;
+      mask-image: url('/img/icons/s2-icon-filter-20-n.svg');
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+      background-color: currentcolor;
+      inline-size: 20px;
+      block-size: 20px;
+    }
+  }
+
+  .status-table__filter-popover {
+    margin: 0;
+    padding: var(--s2-spacing-300);
+    border: var(--status-table-border-width) solid var(--s2-gray-300);
+    border-radius: var(--s2-corner-radius-300);
+    background-color: light-dark(var(--s2-gray-25), var(--s2-gray-50));
+    box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+    flex-direction: column;
+    gap: var(--s2-spacing-200);
+    min-inline-size: 200px;
+  }
+
+  /* Only claim `display` once open — otherwise an author display value would override
+     the UA `[popover]:not(:popover-open)` rule and leave the panel visible on load.
+     An open popover lives in the top layer, so it floats above the table and is never
+     clipped by the block's overflow scroll, even while the table is scrolled. */
+  .status-table__filter-popover:popover-open {
+    display: flex;
+  }
+
+  /* anchor the popover under its button where supported; otherwise the UA centers it */
+  @supports (position-area: bottom) {
+    .status-table__filter-popover {
+      inset: auto;
+      position-anchor: --status-table-columns;
+      position-area: bottom span-inline-start;
+      margin-block-start: var(--s2-spacing-100);
+    }
   }
 }
