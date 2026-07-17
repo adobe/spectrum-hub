@@ -169,7 +169,7 @@
     flex-wrap: wrap;
     gap: var(--s2-spacing-300);
     list-style: none;
-    margin: var(--s2-spacing-400) 0 0;
+    margin-block: var(--s2-spacing-400) var(--s2-spacing-800);
     padding: 0;
   }
 
@@ -265,9 +265,9 @@
   /* anchor the popover under its button where supported; otherwise the UA centers it */
   @supports (position-area: bottom) {
     .status-table__filter-popover {
-      inset: auto;
+      inset: 0 -32px; /* TODO: magic numbers to roughly position our popover*/
       position-anchor: --status-table-columns;
-      position-area: bottom span-inline-start;
+      position-area: bottom x-end;
       margin-block-start: var(--s2-spacing-100);
     }
   }
