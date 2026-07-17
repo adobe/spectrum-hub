@@ -82,7 +82,8 @@
         const extraExports = compositeRoot
           ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
           : [];
-        const exports = [exportName, 'Provider', ...extraExports].join(',');
+        // `Text` lets an icon+label composition wrap the label for real TextContext styling.
+        const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports])].join(',');
 
         // `?bundle` drops CSS side-effect imports — a bare import() can't load
         // them (wrong MIME type). Visual CSS is loaded separately below.
@@ -151,20 +152,28 @@
         // so one doesn't clobber the other. Leaf components only.
         let iconChild = null;
         let textChild = currentProps.children ?? null;
+        // Button only auto-wraps a *lone* string child in <Text>; wrap explicitly once an
+        // icon is present so the label still gets real TextContext styling.
+        const composeLabeledChildren = () => composeChildren(
+          iconChild,
+          iconChild && typeof textChild === 'string'
+            ? createElement(RSP.Text, { key: 'text' }, textChild)
+            : textChild,
+        );
 
         render();
 
         listenForPropUpdates(({ property, attribute, value }) => {
           if (property === 'icon') {
             iconChild = buildIconChild(createElement, value);
-            currentProps.children = composeChildren(iconChild, textChild);
+            currentProps.children = composeLabeledChildren();
           } else {
             const key = resolveRspPropKey(property, hasRealLabelProp);
             if (key === 'children') {
               // A text/label control that resolves to `children`: keep it
               // separate from any icon so the two compose rather than overwrite.
               textChild = value;
-              currentProps.children = composeChildren(iconChild, textChild);
+              currentProps.children = composeLabeledChildren();
             } else {
               currentProps[key] = value;
             }
