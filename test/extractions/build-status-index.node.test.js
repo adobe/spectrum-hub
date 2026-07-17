@@ -2,11 +2,15 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  normalizeName,
   swcTagToPascal,
   canonicalNameForSwc,
+  canonicalNameForFigma,
   joinRosters,
   filterRoster,
   toIndexStatus,
+  readSecondaries,
+  applySecondaries,
   applyOverrides,
   buildIndex,
 } from '../../deps/build-status-index.js';
@@ -36,40 +40,71 @@ describe('canonicalNameForSwc', () => {
   });
 });
 
+describe('normalizeName', () => {
+  it('title-cases and strips separators and parentheses to a canonical key', () => {
+    assert.equal(normalizeName('Bar panel and toolbar'), 'BarPanelAndToolbar');
+    assert.equal(normalizeName('App frame (Browsing)'), 'AppFrameBrowsing');
+  });
+});
+
+describe('canonicalNameForFigma', () => {
+  it('normalizes a Figma display name by default', () => {
+    assert.equal(canonicalNameForFigma('Action button', {}), 'ActionButton');
+  });
+
+  it('lets an alias merge a Figma name into an existing canonical row', () => {
+    assert.equal(canonicalNameForFigma('Table', { Table: 'TableView' }), 'TableView');
+  });
+});
+
 describe('joinRosters', () => {
-  it('joins RSP and SWC entries that share a canonical name', () => {
-    const roster = joinRosters(['ActionButton'], ['swc-action-button'], {});
+  it('joins RSP, SWC, and Figma entries that share a canonical name', () => {
+    const roster = joinRosters(['ActionButton'], ['swc-action-button'], ['Action button'], {});
     assert.deepEqual(roster, [
-      { name: 'ActionButton', sources: { rsp: 'ActionButton', swc: 'swc-action-button' } },
+      {
+        name: 'ActionButton',
+        sources: { rsp: 'ActionButton', swc: 'swc-action-button', figma: 'Action button' },
+      },
     ]);
   });
 
-  it('keeps an RSP-only component as a single-impl row', () => {
-    const roster = joinRosters(['TableView'], [], {});
+  it('keeps an RSP-only component as a single-source row', () => {
+    const roster = joinRosters(['TableView'], [], [], {});
     assert.deepEqual(roster, [
       { name: 'TableView', sources: { rsp: 'TableView' } },
     ]);
   });
 
-  it('keeps a SWC-only component as a single-impl row', () => {
-    const roster = joinRosters([], ['swc-color-loupe'], {});
+  it('keeps a SWC-only component as a single-source row', () => {
+    const roster = joinRosters([], ['swc-color-loupe'], [], {});
     assert.deepEqual(roster, [
       { name: 'ColorLoupe', sources: { swc: 'swc-color-loupe' } },
     ]);
   });
 
-  it('redirects a mismatched SWC tag via the alias file', () => {
-    const roster = joinRosters(['Asset'], ['swc-asset'], { 'swc-asset': 'AssetView' });
+  it('keeps a Figma-only design as a single-source row (union membership)', () => {
+    const roster = joinRosters([], [], ['Bar panel and toolbar'], {});
+    assert.deepEqual(roster, [
+      { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' } },
+    ]);
+  });
+
+  it('merges a Figma name into an existing row via the figma alias map', () => {
+    const roster = joinRosters(['TableView'], [], ['Table'], { figma: { Table: 'TableView' } });
+    assert.deepEqual(roster, [
+      { name: 'TableView', sources: { rsp: 'TableView', figma: 'Table' } },
+    ]);
+  });
+
+  it('redirects a mismatched SWC tag via the swc alias map', () => {
+    const roster = joinRosters(['Asset'], ['swc-asset'], [], { swc: { 'swc-asset': 'AssetView' } });
     const names = roster.map((r) => r.name).sort();
     assert.deepEqual(names, ['Asset', 'AssetView']);
-    const assetView = roster.find((r) => r.name === 'AssetView');
-    assert.deepEqual(assetView.sources, { swc: 'swc-asset' });
-    const asset = roster.find((r) => r.name === 'Asset');
-    assert.deepEqual(asset.sources, { rsp: 'Asset' });
+    assert.deepEqual(roster.find((r) => r.name === 'AssetView').sources, { swc: 'swc-asset' });
   });
 
   it('returns rows sorted by canonical name', () => {
-    const roster = joinRosters(['Zebra', 'Alpha'], ['swc-mango'], {});
+    const roster = joinRosters(['Zebra', 'Alpha'], ['swc-mango'], [], {});
     assert.deepEqual(roster.map((r) => r.name), ['Alpha', 'Mango', 'Zebra']);
   });
 });
@@ -127,16 +162,18 @@ describe('toIndexStatus', () => {
 });
 
 describe('buildIndex', () => {
-  const implementations = [
+  const columns = [
+    { id: 'figma', label: 'Figma' },
     { id: 'rsp', label: 'React Spectrum' },
     { id: 'swc', label: 'Spectrum Web Components' },
   ];
 
   const roster = [
-    { name: 'ActionButton', sources: { rsp: 'ActionButton', swc: 'swc-action-button' } },
+    { name: 'ActionButton', sources: { rsp: 'ActionButton', swc: 'swc-action-button', figma: 'Action button' } },
     { name: 'Modal', sources: { rsp: 'Modal' } },
     { name: 'PromptField', sources: { swc: 'swc-prompt-field' } },
     { name: 'TableView', sources: { rsp: 'TableView' } },
+    { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' } },
   ];
 
   const dataById = {
@@ -147,42 +184,96 @@ describe('buildIndex', () => {
     // Present in the SWC roster but no `since` — the bridge yields null.
     'swc:swc-prompt-field': [{ attribute: 'mode' }, { attribute: 'label' }],
     'rsp:TableView': { props: [], status: 'stable' },
+    // Figma has no per-component data files; the reader always returns null for it.
   };
   const readData = (source, name) => dataById[`${source}:${name}`] ?? null;
 
-  it('declares the implementations present for the platform', () => {
-    const { index } = buildIndex({ roster, readData, implementations });
-    assert.deepEqual(index.implementations, { web: ['rsp', 'swc'] });
+  it('declares the columns (with labels) present for the platform', () => {
+    const { index } = buildIndex({ roster, readData, columns });
+    assert.deepEqual(index.implementations, { web: columns });
   });
 
-  it('resolves each implementation column from the roster + reader', () => {
-    const { index } = buildIndex({ roster, readData, implementations });
+  it('resolves each column from the roster + reader', () => {
+    const { index } = buildIndex({ roster, readData, columns });
     const ab = index.components.find((c) => c.name === 'ActionButton');
     assert.deepEqual(ab.platforms.web.rsp, { status: 'available', context: 'Stable' });
     assert.deepEqual(ab.platforms.web.swc, { status: 'experimental' });
   });
 
-  it('emits Not available for an implementation a component lacks', () => {
-    const { index } = buildIndex({ roster, readData, implementations });
+  it('emits Not available for a source a component lacks', () => {
+    const { index } = buildIndex({ roster, readData, columns });
     const tv = index.components.find((c) => c.name === 'TableView');
     assert.deepEqual(tv.platforms.web.swc, { status: 'not-available' });
+    assert.deepEqual(tv.platforms.web.figma, { status: 'not-available' });
+  });
+
+  it('floors a present Figma design to Available (no data files)', () => {
+    const { index } = buildIndex({ roster, readData, columns });
+    const bpt = index.components.find((c) => c.name === 'BarPanelAndToolbar');
+    assert.deepEqual(bpt.platforms.web.figma, { status: 'available' });
+    assert.deepEqual(bpt.platforms.web.rsp, { status: 'not-available' });
+    assert.deepEqual(bpt.platforms.web.swc, { status: 'not-available' });
   });
 
   it('floors an SWC roster member with no maturity signal to Experimental', () => {
-    const { index } = buildIndex({ roster, readData, implementations });
+    const { index } = buildIndex({ roster, readData, columns });
     const pf = index.components.find((c) => c.name === 'PromptField');
-    // Present in SWC (in the roster) but the bridge could not derive maturity.
     assert.deepEqual(pf.platforms.web.swc, { status: 'experimental' });
-    // The implementation that does not ship it still reads Not available.
     assert.deepEqual(pf.platforms.web.rsp, { status: 'not-available' });
   });
 
   it('floors an RSP roster member with no doc page to Available (no context)', () => {
-    const { index } = buildIndex({ roster, readData, implementations });
+    const { index } = buildIndex({ roster, readData, columns });
     const modal = index.components.find((c) => c.name === 'Modal');
-    // Ships in stable S2; no doc page is not a maturity signal.
     assert.deepEqual(modal.platforms.web.rsp, { status: 'available' });
-    assert.deepEqual(modal.platforms.web.swc, { status: 'not-available' });
+  });
+
+  it('de-PascalCases RSP/SWC row labels and title-cases Figma-only row labels', () => {
+    const { index } = buildIndex({ roster, readData, columns });
+    assert.equal(index.components.find((c) => c.name === 'ActionButton').label, 'Action Button');
+    assert.equal(index.components.find((c) => c.name === 'BarPanelAndToolbar').label, 'Bar Panel and Toolbar');
+  });
+
+  it('layers secondary guidance onto the matching cell', () => {
+    const secondaries = { swc: { TableView: 'Use Gen1' } };
+    const { index } = buildIndex({
+      roster, readData, columns, secondaries,
+    });
+    const tv = index.components.find((c) => c.name === 'TableView');
+    assert.equal(tv.platforms.web.swc.secondary, 'Use Gen1');
+  });
+});
+
+describe('readSecondaries', () => {
+  const columns = [{ id: 'rsp' }, { id: 'swc' }, { id: 'figma' }];
+
+  it('keys each overlay entry by canonical name, applying figma aliases', () => {
+    const overlays = {
+      rsp: [{ name: 'Alert Dialog', context: 'Use Dialog component' }],
+      swc: [{ name: 'Table', context: 'Use Gen1' }],
+      figma: null,
+    };
+    const secondaries = readSecondaries(columns, (id) => overlays[id], { figma: { Table: 'TableView' } });
+    assert.equal(secondaries.rsp.AlertDialog, 'Use Dialog component');
+    assert.equal(secondaries.swc.TableView, 'Use Gen1');
+    assert.ok(!('figma' in secondaries));
+  });
+});
+
+describe('applySecondaries', () => {
+  const components = () => [
+    { name: 'TableView', platforms: { web: { swc: { status: 'not-available' } } } },
+  ];
+
+  it('sets the secondary line on a matched cell', () => {
+    const comps = components();
+    applySecondaries(comps, { swc: { TableView: 'Use Gen1' } });
+    assert.equal(comps[0].platforms.web.swc.secondary, 'Use Gen1');
+  });
+
+  it('warns when an overlay entry matches no component', () => {
+    const warnings = applySecondaries(components(), { swc: { Nonexistent: 'x' } });
+    assert.ok(warnings.some((w) => /unmatched/i.test(w) && /Nonexistent/.test(w)));
   });
 });
 
