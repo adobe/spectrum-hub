@@ -11,7 +11,12 @@
  */
 
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
+import { TEXT_KEYS } from '../../deps/shared/playground/text-keys.js';
 import { capitalize } from '../../deps/rsp/playground/pascal-case.js';
+
+// Re-exported so existing consumers (playground.js) keep importing it from
+// here — text-keys.js is the shared definition, this is just the local name.
+export { TEXT_KEYS };
 
 // A page commonly renders more than one playground block — every one of them
 // needs this same workbook (and often the same per-component prop-data/markup
@@ -151,11 +156,6 @@ export function resolvePickerOptions(property, rspProps, swcProps) {
 
   return [];
 }
-
-// Property names that stand in for a component's slot/children text content
-// rather than a real named prop — never appear in RSP/SWC prop-data JSON, so
-// resolveControl's existence check must not gate them.
-export const TEXT_KEYS = new Set(['text', 'label', 'children']);
 
 // Control types that take a freeform value instead of a fixed option list
 // (rendered as `se-input`), so they don't need resolvePickerOptions to
