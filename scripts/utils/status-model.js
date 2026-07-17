@@ -32,31 +32,31 @@ export const STATUSES = {
     id: 'available',
     label: 'Available',
     color: '--s2-green-900',
-    definition: 'Released and ready to use in production.',
+    definition: 'Ready for use. Fidelity may vary.',
   },
   experimental: {
     id: 'experimental',
     label: 'Experimental',
     color: '--s2-blue-900',
-    definition: 'Available for early evaluation and may change before release.',
+    definition: 'Available for exploration and testing, but not recommended for production use.',
   },
   'not-available': {
     id: 'not-available',
     label: 'Not available',
     color: '--s2-gray-500',
-    definition: 'Not implemented for this implementation.',
+    definition: 'Not currently available or applicable for this implementation or design library.',
   },
   deprecated: {
     id: 'deprecated',
     label: 'Deprecated',
     color: '--s2-orange-900',
-    definition: 'Still available but no longer recommended; plan to migrate away from it.',
+    definition: 'Still available today, but scheduled for removal.',
   },
   removed: {
     id: 'removed',
     label: 'Removed',
     color: '--s2-red-900',
-    definition: 'Previously available and since removed.',
+    definition: 'No longer supported or maintained. Use an alternative component instead.',
   },
 };
 
