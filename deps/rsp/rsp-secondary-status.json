@@ -1,0 +1,11 @@
+[
+  { "name": "Alert Dialog",    "context": "Use Dialog component" },
+  { "name": "Close Button",    "context": "In package, not RSP docs" },
+  { "name": "Color Handle",    "context": "Use color components" },
+  { "name": "Color Loupe",     "context": "Use color components" },
+  { "name": "Field Label",     "context": "Use Form component" },
+  { "name": "Help Text",       "context": "Use Form component" },
+  { "name": "Standard Dialog", "context": "Use Dialog component" },
+  { "name": "Takeover Dialog", "context": "Use Dialog component" },
+  { "name": "Thumbnail",       "context": "Use image" }
+]
