@@ -1,7 +1,7 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
-     React.createElement rather than an HTML string. No static-html/*.html
+     React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component yet, so there's no SWC shape to
      mirror — this is a fresh two-item default, matching table-view.jsx/
      card-view.jsx's file shape.
@@ -18,7 +18,7 @@
      default size with no shell changes needed — its GridList apparently
      doesn't hit the same 0-height virtualizer chicken-and-egg problem, so it
      was deliberately left OUT of VIRTUALIZED_RSP_COMPONENTS in
-     static-html/index.html. -->
+     deps/rsp/playground/index.html. -->
 <ListView aria-label="Files">
   <ListViewItem id="budget">Budget.xlsx</ListViewItem>
   <ListViewItem id="roadmap">Roadmap.pdf</ListViewItem>

@@ -1,10 +1,10 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. This is a leaf component
      (no real subcomponent structure), so the ONLY reason this file exists is
      to fix the label and give it a working channel/color. No
-     static-html/color-slider.html counterpart exists yet, so there's no SWC
+     deps/swc/playground/snippets/color-slider.html counterpart exists yet, so there's no SWC
      shape to mirror.
 
      ColorSlider.json documents `label` directly, so that's a real authored

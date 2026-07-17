@@ -1,12 +1,12 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. This is a leaf component
      (no real subcomponent structure), so the ONLY reason this file exists is
      to fix the label: without it, initRsp()'s generic fallback capitalizes
      just the first letter of the whole hyphenated component name — "Calendar"
      (already fine standalone, but this still gives it a real accessible
-     name). No static-html/calendar.html counterpart exists yet, so there's no
+     name). No deps/swc/playground/snippets/calendar.html counterpart exists yet, so there's no
      SWC shape to mirror.
 
      Unlike the text/date/time fields above, Calendar.json has no `label`

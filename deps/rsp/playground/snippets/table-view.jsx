@@ -1,7 +1,7 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
-     React.createElement rather than an HTML string. No static-html/*.html
+     React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component yet, so there's no SWC shape to
      mirror — this is a fresh two-row default.
 
@@ -13,7 +13,7 @@
      required for at least one column to identify each row accessibly.
      Written as `isRowHeader=""` rather than the bare-attribute JSX shorthand
      — this fragment is parsed as strict XML (see fetchCompositeRoot in
-     static-html/index.html), which has no concept of a valueless attribute;
+     deps/rsp/playground/index.html), which has no concept of a valueless attribute;
      an empty string round-trips to `true` the same way (see
      buildCompositeElement/buildRspSnippet's `value === '' ? true : value`). -->
 <TableView aria-label="Files">

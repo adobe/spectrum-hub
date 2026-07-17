@@ -1,7 +1,7 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
-     React.createElement rather than an HTML string. No static-html/*.html
+     React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component yet, so there's no SWC shape to
      mirror — this is a fresh two-card default.
 
@@ -9,7 +9,7 @@
      (a GridList) throws an accessible-name error at render time without an
      aria-label or aria-labelledby. Each Card's own children are exactly one
      CardPreview element, not CardPreview-plus-sibling-text: buildCompositeElement
-     (static-html/index.html) walks a fragment node's Element children only
+     (deps/rsp/playground/index.html) walks a fragment node's Element children only
      (`[...node.children]`), so a bare text node next to CardPreview would be
      silently dropped rather than rendered — found via a live browser
      reproduction where the filename text never appeared in the DOM at all,

@@ -1,12 +1,12 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. This is a leaf component
      (no real subcomponent structure), so the ONLY reason this file exists is
      to fix the props: Avatar has no `children` prop at all (it renders
      `src`/`alt` as an <img>), so without this fragment initRsp()'s generic
      `{ children: 'Avatar' }` fallback is silently ignored and the preview is
-     a blank circle. Reuses static-html/avatar.html's inline data-URI so the
+     a blank circle. Reuses deps/swc/playground/snippets/avatar.html's inline data-URI so the
      preview never depends on an external image host. -->
 <Avatar
   alt="User avatar"

@@ -1,9 +1,9 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. There is no plain "Asset"
-     @react-spectrum/s2 export — AssetCard is the real one. static-html/
-     asset.html DOES exist (`<swc-asset variant="file" label="Document.pdf">`)
+     @react-spectrum/s2 export — AssetCard is the real one.
+     deps/swc/playground/snippets/asset.html DOES exist (`<swc-asset variant="file" label="Document.pdf">`)
      but it's a DIFFERENT, non-matching SWC route — not this component's
      counterpart — so there's nothing to mirror here. AssetCard.json exposes
      only the same props Card.json does (children/size/density/variant, all

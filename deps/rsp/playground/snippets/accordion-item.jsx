@@ -1,7 +1,7 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
-     React.createElement rather than an HTML string. static-html/accordion-item.html
+     React.createElement rather than an HTML string. deps/swc/playground/snippets/accordion-item.html
      exists (a swc-accordion-item with label "Accordion item" and text "Item
      content goes here."); mirrored here as the title/panel text so SWC and
      RSP show comparable content.

@@ -1,10 +1,10 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. This is a leaf component
      (no real subcomponent structure), so the ONLY reason this file exists is
      to fix the label and give it a usable default color. No
-     static-html/color-area.html counterpart exists yet, so there's no SWC
+     deps/swc/playground/snippets/color-area.html counterpart exists yet, so there's no SWC
      shape to mirror.
 
      ColorArea.json documents nothing but `styles` (status: alpha), and

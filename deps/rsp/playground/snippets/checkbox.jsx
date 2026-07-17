@@ -1,12 +1,12 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. This is a leaf component
      (no real subcomponent structure), so the ONLY reason this file exists is
      to fix the label: without it, initRsp()'s generic fallback capitalizes
      just the first letter of the whole hyphenated component name — "Checkbox"
      (already fine standalone, but this still gives it real visible text).
-     No static-html/checkbox.html counterpart exists yet, so there's no SWC
+     No deps/swc/playground/snippets/checkbox.html counterpart exists yet, so there's no SWC
      shape to mirror.
 
      This is a STANDALONE Checkbox, not one nested in a CheckboxGroup (see

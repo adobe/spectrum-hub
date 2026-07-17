@@ -1,8 +1,8 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no preview
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
      markup file of its own to source this from, since it renders via
-     React.createElement rather than an HTML string. No static-html/
-     picker.html counterpart exists yet, so there's no SWC shape to mirror —
+     React.createElement rather than an HTML string. No
+     deps/swc/playground/snippets/picker.html counterpart exists yet, so there's no SWC shape to mirror —
      this is a fresh four-item default.
 
      `label` isn't in Picker.json's own prop list — same as TextField, it's

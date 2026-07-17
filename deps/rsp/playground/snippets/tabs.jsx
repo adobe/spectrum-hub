@@ -1,8 +1,8 @@
 <!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in static-html/index.html reads this same fragment) — RSP has no
+     in deps/rsp/playground/index.html reads this same fragment) — RSP has no
      preview markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. Mirrors
-     static-html/tabs.html's three-tab shape.
+     deps/swc/playground/snippets/tabs.html's three-tab shape.
 
      aria-label is required here: @react-spectrum/s2's real Tabs throws "An
      aria-label or aria-labelledby prop is required on Tabs for
