@@ -5,7 +5,9 @@ import init, {
   parseDefault,
   buildSwcSnippet,
   buildRspSnippet,
+  debounce,
 } from '../../blocks/playground/playground.js';
+import { clearFetchCache } from '../../blocks/playground/playground-data.js';
 import { setConfig } from '../../scripts/ak.js';
 
 // Minimal DOM-like helpers — just enough structure for the pure-function tests.
@@ -89,6 +91,65 @@ describe('parseDefault', () => {
   });
 });
 
+// --- debounce -----------------------------------------------------------
+
+describe('debounce', () => {
+  let clock;
+
+  beforeEach(() => {
+    clock = sinon.useFakeTimers();
+  });
+
+  afterEach(() => {
+    clock.restore();
+  });
+
+  it('does not call fn before the delay has passed', () => {
+    const fn = sinon.stub();
+    debounce(fn, 200)();
+    clock.tick(199);
+    expect(fn.called).to.be.false;
+  });
+
+  it('calls fn once the delay has passed', () => {
+    const fn = sinon.stub();
+    debounce(fn, 200)();
+    clock.tick(200);
+    expect(fn.calledOnce).to.be.true;
+  });
+
+  it('collapses a burst of calls into a single trailing call', () => {
+    const fn = sinon.stub();
+    const debounced = debounce(fn, 200);
+    debounced();
+    clock.tick(100);
+    debounced();
+    clock.tick(100);
+    debounced();
+    clock.tick(200);
+    expect(fn.calledOnce).to.be.true;
+  });
+
+  it('calls fn with the arguments from the most recent call', () => {
+    const fn = sinon.stub();
+    const debounced = debounce(fn, 200);
+    debounced('first');
+    debounced('second');
+    clock.tick(200);
+    expect(fn.calledOnceWith('second')).to.be.true;
+  });
+
+  it('allows a new call after the delay has already elapsed', () => {
+    const fn = sinon.stub();
+    const debounced = debounce(fn, 200);
+    debounced();
+    clock.tick(200);
+    debounced();
+    clock.tick(200);
+    expect(fn.calledTwice).to.be.true;
+  });
+});
+
 // --- buildSwcSnippet --------------------------------------------------------
 
 describe('buildSwcSnippet', () => {
@@ -163,6 +224,123 @@ describe('buildSwcSnippet', () => {
   });
 });
 
+// --- buildSwcSnippet — "label" property routing -----------------------------
+//
+// "text" and "children" always push to flat text content (the tests above
+// already cover this and are unchanged). "label" is different: it routes to
+// a real attribute or a `slot="label"` element when the component has one
+// (found via currentProps.label.attribute, already resolved by
+// resolveControl), and only falls back to flat text content — identical to
+// "text"/"children" — when neither exists.
+describe('buildSwcSnippet — "label" property routing', () => {
+  it('applies "label" as a real attribute when currentProps.label.attribute is set (e.g. swc-progress-circle)', () => {
+    const props = { label: { attribute: 'label', value: 'Loading' } };
+    const snippet = buildSwcSnippet('swc-progress-circle', props);
+    expect(snippet).to.equal('<swc-progress-circle\n  label="Loading">\n  Label\n</swc-progress-circle>');
+  });
+
+  it('does not duplicate a real "label" attribute into the element\'s text content', () => {
+    const props = { label: { attribute: 'label', value: 'Loading' } };
+    const snippet = buildSwcSnippet('swc-progress-circle', props);
+    expect(snippet.includes('>\n  Loading\n<')).to.be.false;
+  });
+
+  it('syncs a fragment\'s [slot="label"] element from currentProps.label when there is no real attribute (e.g. swc-meter)', () => {
+    const meterMarkup = '<swc-meter value="60"><span slot="label">Storage used</span></swc-meter>';
+    const props = {
+      label: { attribute: null, value: 'Disk space' },
+      value: { attribute: 'value', value: '60' },
+    };
+    const snippet = buildSwcSnippet('swc-meter', props, meterMarkup);
+    // The slot span has its own attribute, so serializeElement always
+    // multi-lines it (see the tabs/tab-panel composite tests above).
+    expect(snippet.includes('<span\n    slot="label">\n    Disk space\n  </span>')).to.be.true;
+    expect(snippet.includes('Storage used')).to.be.false;
+  });
+
+  it('falls back to flat text content for "label" when neither a real attribute nor a label slot exists', () => {
+    const props = { label: { attribute: null, value: 'Click me' } };
+    const snippet = buildSwcSnippet('swc-button', props);
+    expect(snippet).to.equal('<swc-button>Click me</swc-button>');
+  });
+});
+
+// --- buildSwcSnippet — composite components ---------------------------------
+
+describe('buildSwcSnippet — composite components', () => {
+  // Mirrors deps/swc/playground/snippets/tabs.html — the same fragment the
+  // preview iframe fetches to render the live swc-tabs preview.
+  const tabsMarkup = `
+    <swc-tabs selected="overview">
+      <swc-tab tab-id="overview">Overview</swc-tab>
+      <swc-tab tab-id="details">Details</swc-tab>
+      <swc-tab-panel tab-id="overview" selected>Overview panel content.</swc-tab-panel>
+      <swc-tab-panel tab-id="details">Details panel content.</swc-tab-panel>
+    </swc-tabs>
+  `;
+
+  it('embeds the static markup fragment\'s subcomponents instead of a flat label', () => {
+    const props = { selected: { attribute: 'selected', value: 'overview' } };
+    const snippet = buildSwcSnippet('swc-tabs', props, tabsMarkup);
+    expect(snippet).to.equal([
+      '<swc-tabs',
+      '  selected="overview">',
+      '  <swc-tab',
+      '    tab-id="overview">',
+      '    Overview',
+      '  </swc-tab>',
+      '  <swc-tab',
+      '    tab-id="details">',
+      '    Details',
+      '  </swc-tab>',
+      '  <swc-tab-panel',
+      '    tab-id="overview"',
+      '    selected>',
+      '    Overview panel content.',
+      '  </swc-tab-panel>',
+      '  <swc-tab-panel',
+      '    tab-id="details">',
+      '    Details panel content.',
+      '  </swc-tab-panel>',
+      '</swc-tabs>',
+    ].join('\n'));
+  });
+
+  it('still drives the root element\'s own attributes from currentProps, not the markup\'s defaults', () => {
+    const props = { selected: { attribute: 'selected', value: 'details' } };
+    const snippet = buildSwcSnippet('swc-tabs', props, tabsMarkup);
+    expect(snippet.startsWith('<swc-tabs\n  selected="details">')).to.be.true;
+  });
+
+  it('falls back to the flat text/label behavior when the fragment has no element children', () => {
+    const props = { text: { attribute: null, value: 'Click me' } };
+    const snippet = buildSwcSnippet('swc-button', props, '<swc-button>Button</swc-button>');
+    expect(snippet).to.equal('<swc-button>Click me</swc-button>');
+  });
+
+  it('falls back to the flat text/label behavior when no markup fragment is given at all', () => {
+    const props = { text: { attribute: null, value: 'Click me' } };
+    expect(buildSwcSnippet('swc-button', props)).to.equal('<swc-button>Click me</swc-button>');
+  });
+
+  // Found via a live browser reproduction: the fragment's own root attributes
+  // (e.g. a required accessible-label) were never read at all, only its
+  // children — so a required attribute authored on the fragment silently
+  // never made it into the snippet, even though there's no authored control
+  // for it (nothing in currentProps to carry it).
+  it('carries a fragment-authored root attribute through when no control overrides it', () => {
+    const markupWithLabel = `
+      <swc-tabs accessible-label="Example tabs" selected="overview">
+        <swc-tab tab-id="overview">Overview</swc-tab>
+        <swc-tab-panel tab-id="overview" selected>Overview panel content.</swc-tab-panel>
+      </swc-tabs>
+    `;
+    const props = { selected: { attribute: 'selected', value: 'overview' } };
+    const snippet = buildSwcSnippet('swc-tabs', props, markupWithLabel);
+    expect(snippet.includes('accessible-label="Example tabs"')).to.be.true;
+  });
+});
+
 // --- buildRspSnippet ---------------------------------------------------------
 
 describe('buildRspSnippet', () => {
@@ -203,7 +381,159 @@ describe('buildRspSnippet', () => {
   });
 });
 
+// --- buildRspSnippet — "label" property routing -----------------------------
+//
+// "children" (and "text") always push to flat children content (the tests
+// above already cover this and are unchanged). "label" is different: when
+// the caller passes hasRealLabelProp: true (resolved via apply-rsp-prop.js's
+// hasLabelProp, from the component's own RSP data — e.g. Meter, AvatarGroup),
+// it routes to a real "label" prop instead, and only falls back to flat
+// children content — identical to before this existed — when
+// hasRealLabelProp is false or omitted.
+describe('buildRspSnippet — "label" property routing', () => {
+  it('sets a real "label" prop instead of children when hasRealLabelProp is true (e.g. Meter)', () => {
+    const props = { label: { value: 'Storage used' }, value: { value: '60' } };
+    const snippet = buildRspSnippet('Meter', props, undefined, true);
+    expect(snippet).to.equal('<Meter\n  label="Storage used"\n  value="60">\n  Label\n</Meter>');
+  });
+
+  it('falls back to children for "label" when hasRealLabelProp is false', () => {
+    const props = { label: { value: 'Click me' } };
+    const snippet = buildRspSnippet('ActionButton', props, undefined, false);
+    expect(snippet).to.equal('<ActionButton>Click me</ActionButton>');
+  });
+
+  it('falls back to children for "label" when hasRealLabelProp is omitted entirely (backward-compatible default)', () => {
+    const props = { label: { value: 'Click me' } };
+    const snippet = buildRspSnippet('ActionButton', props);
+    expect(snippet).to.equal('<ActionButton>Click me</ActionButton>');
+  });
+
+  it('does not affect "children" routing even when hasRealLabelProp is true', () => {
+    const props = { children: { value: 'Action' } };
+    const snippet = buildRspSnippet('ActionButton', props, undefined, true);
+    expect(snippet).to.equal('<ActionButton>Action</ActionButton>');
+  });
+});
+
+// --- buildRspSnippet — composite components ---------------------------------
+
+describe('buildRspSnippet — composite components', () => {
+  // Mirrors deps/rsp/playground/snippets/tabs.jsx — a dev-authored JSX
+  // fragment (RSP has no live-preview markup file to source this from, unlike
+  // SWC's deps/swc/playground/snippets fragments, since the RSP preview renders via
+  // React.createElement rather than an HTML string).
+  const tabsMarkup = `
+    <Tabs>
+      <TabList>
+        <Tab id="overview">Overview</Tab>
+        <Tab id="details">Details</Tab>
+      </TabList>
+      <TabPanel id="overview">Overview panel content.</TabPanel>
+      <TabPanel id="details">Details panel content.</TabPanel>
+    </Tabs>
+  `;
+
+  it('embeds the JSX fragment\'s subcomponents, preserving their PascalCase tag names', () => {
+    const props = { density: { value: 'compact' } };
+    const snippet = buildRspSnippet('Tabs', props, tabsMarkup);
+    expect(snippet).to.equal([
+      '<Tabs',
+      '  density="compact">',
+      '  <TabList>',
+      '    <Tab',
+      '      id="overview">',
+      '      Overview',
+      '    </Tab>',
+      '    <Tab',
+      '      id="details">',
+      '      Details',
+      '    </Tab>',
+      '  </TabList>',
+      '  <TabPanel',
+      '    id="overview">',
+      '    Overview panel content.',
+      '  </TabPanel>',
+      '  <TabPanel',
+      '    id="details">',
+      '    Details panel content.',
+      '  </TabPanel>',
+      '</Tabs>',
+    ].join('\n'));
+  });
+
+  it('falls back to the flat children/label behavior when no JSX fragment is given', () => {
+    const props = { children: { value: 'Action' } };
+    expect(buildRspSnippet('ActionButton', props)).to.equal('<ActionButton>Action</ActionButton>');
+  });
+
+  // Found via a live browser reproduction: RSP.Tabs throws
+  // "An aria-label or aria-labelledby prop is required on Tabs for
+  // accessibility" — a real runtime requirement with no authored control to
+  // satisfy it. The fragment's own root attributes were never read at all
+  // (only its children), so this was silently missing from both the live
+  // preview and the copy-pasteable snippet.
+  it('carries a fragment-authored root attribute through when no control overrides it', () => {
+    const markupWithAriaLabel = `
+      <Tabs aria-label="Example tabs">
+        <TabList>
+          <Tab id="overview">Overview</Tab>
+        </TabList>
+        <TabPanel id="overview">Overview panel content.</TabPanel>
+      </Tabs>
+    `;
+    const snippet = buildRspSnippet('Tabs', { density: { value: 'compact' } }, markupWithAriaLabel);
+    expect(snippet.includes('aria-label="Example tabs"')).to.be.true;
+  });
+});
+
+// Guards against a typo/malformed-markup regression in the real committed
+// fragment files, which have no other build-time validation. Real (unmocked)
+// fetches — window.fetch is only stubbed inside the init() describe block below.
+describe('composite snippet fragments — real committed files', () => {
+  it('parses the real snippet tabs fragment and embeds swc-tab/swc-tab-panel', async () => {
+    const markup = await (await fetch('/deps/swc/playground/snippets/tabs.html')).text();
+    const snippet = buildSwcSnippet('swc-tabs', { selected: { attribute: 'selected', value: 'overview' } }, markup);
+    expect(snippet.includes('<swc-tab')).to.be.true;
+    expect(snippet.includes('<swc-tab-panel')).to.be.true;
+  });
+
+  it('parses the real snippet accordion fragment and embeds swc-accordion-item', async () => {
+    const markup = await (await fetch('/deps/swc/playground/snippets/accordion.html')).text();
+    const snippet = buildSwcSnippet('swc-accordion', {}, markup);
+    expect(snippet.includes('<swc-accordion-item')).to.be.true;
+  });
+
+  it('parses the real RSP tabs JSX snippet and embeds TabList/Tab/TabPanel', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/tabs.jsx')).text();
+    const snippet = buildRspSnippet('Tabs', { density: { value: 'compact' } }, markup);
+    expect(snippet.includes('<TabList>')).to.be.true;
+    expect(snippet.includes('<Tab\n')).to.be.true;
+    expect(snippet.includes('<TabPanel')).to.be.true;
+  });
+
+  it('parses the real RSP accordion JSX snippet and embeds AccordionItemTitle/Panel', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/accordion.jsx')).text();
+    const snippet = buildRspSnippet('Accordion', {}, markup);
+    expect(snippet.includes('<AccordionItemTitle>')).to.be.true;
+    expect(snippet.includes('<AccordionItemPanel>')).to.be.true;
+  });
+
+  it('parses the real RSP button-group JSX snippet and embeds Button', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/button-group.jsx')).text();
+    const snippet = buildRspSnippet('ButtonGroup', {}, markup);
+    expect(snippet.includes('<Button\n')).to.be.true;
+  });
+});
+
 // --- init() (default export) -------------------------------------------------
+
+// The code disclosure rebuild is debounced (see DISCLOSURE_DEBOUNCE_MS in
+// playground.js) — tests that assert on `pre.textContent` after a control
+// change need to wait past that window first.
+function waitPastDisclosureDebounce() {
+  return new Promise((resolve) => { setTimeout(resolve, 250); });
+}
 
 function makeMetaEl(rows) {
   const el = document.createElement('div');
@@ -232,9 +562,9 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
     ?? [{ Component: 'Button', Properties: 'variant, size, isDisabled' }];
   const controlsSheet = overrides.controls
     ?? [
-      { Property: 'variant', v1: 'picker' },
-      { Property: 'size', v1: 'picker' },
-      { Property: 'isDisabled', v1: 'picker' },
+      { Property: 'variant', control: 'picker' },
+      { Property: 'size', control: 'picker' },
+      { Property: 'isDisabled', control: 'picker' },
     ];
   const rspBody = overrides.rsp
     ?? { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] };
@@ -268,6 +598,10 @@ describe('playground block — init()', () => {
     document.body.innerHTML = '';
     el = makeMetaEl({ implementation: 'swc', component: 'button' });
     document.body.append(el);
+    // Every test below hits the same URLs (same codeBase + mostly the same
+    // component) with its own per-test mocked responses — without this, a
+    // test would get a previous test's cached response instead of its own.
+    clearFetchCache();
   });
 
   afterEach(() => {
@@ -289,24 +623,35 @@ describe('playground block — init()', () => {
     expect(document.body.contains(el)).to.be.false;
   });
 
-  it('builds the iframe src pointing at the generic shell with query params for swc', async () => {
+  it('builds the iframe src pointing at the SWC shell with query params for swc', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
     const iframe = el.querySelector('iframe');
-    expect(iframe.src).to.include('/blocks/playground/static-html/index.html');
+    expect(iframe.src).to.include('/deps/swc/playground/index.html');
     expect(iframe.src).to.include('component=button');
     expect(iframe.src).to.include('implementation=swc');
   });
 
-  it('builds the iframe src with the component and implementation query params for non-swc implementations', async () => {
+  it('builds the iframe src pointing at the RSP shell with query params for rsp', async () => {
     stubPlaygroundFetch(sandbox);
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
     document.body.append(rspEl);
     await init(rspEl);
     const iframe = rspEl.querySelector('iframe');
-    expect(iframe.src).to.include('/blocks/playground/static-html/index.html');
+    expect(iframe.src).to.include('/deps/rsp/playground/index.html');
     expect(iframe.src).to.include('component=button');
     expect(iframe.src).to.include('implementation=rsp');
+  });
+
+  it('falls back to the generic shell for an implementation that is neither rsp nor swc', async () => {
+    stubPlaygroundFetch(sandbox);
+    const iosEl = makeMetaEl({ implementation: 'ios', component: 'button' });
+    document.body.append(iosEl);
+    await init(iosEl);
+    const iframe = iosEl.querySelector('iframe');
+    expect(iframe.src).to.include('/blocks/playground/index.html');
+    expect(iframe.src).to.include('component=button');
+    expect(iframe.src).to.include('implementation=ios');
   });
 
   it('uses the PascalCase RSP-style code disclosure for rsp implementation', async () => {
@@ -320,14 +665,14 @@ describe('playground block — init()', () => {
   it('uses the RSP default for a control authored with a swc-style name', async () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'disabled' }],
-      controls: [{ Property: 'disabled', v1: 'picker' }],
+      controls: [{ Property: 'disabled', control: 'picker' }],
       rsp: { props: [{ property: 'isDisabled', type: 'boolean', default: 'true' }] },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
     document.body.append(rspEl);
     await init(rspEl);
-    const picker = rspEl.querySelector('.playground-control hub-picker');
+    const picker = rspEl.querySelector('.playground-control se-select');
     expect(picker).to.exist;
     expect(picker.value).to.equal('yes');
   });
@@ -335,7 +680,8 @@ describe('playground block — init()', () => {
   it('renders a control only for the property that resolves to picker options', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
-    const labels = [...el.querySelectorAll('.playground-control label')].map((l) => l.textContent);
+    const labels = [...el.querySelectorAll('.playground-control')]
+      .map((wrapper) => wrapper.firstElementChild.label);
     expect(labels).to.deep.equal(['isDisabled']);
   });
 
@@ -363,21 +709,42 @@ describe('playground block — init()', () => {
   it('updates the code disclosure when a control value changes', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
-    const picker = el.querySelector('.playground-control hub-picker');
+    const picker = el.querySelector('.playground-control se-select');
+    await picker.updateComplete;
     const pre = el.querySelector('pre');
     const before = pre.textContent;
-    picker.dispatchEvent(new CustomEvent('change', { detail: { value: 'yes' } }));
+    const native = picker.shadowRoot.querySelector('select');
+    native.value = 'yes';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
     expect(pre.textContent).to.not.equal(before);
     expect(pre.textContent.includes(' disabled')).to.be.true;
   });
 
-  it('sends the current prop values into the iframe once it loads', async () => {
+  // The iframe's own document does an async fetch (per-component markup) before
+  // it registers its prop-update listener, so the outer iframe's `load` event
+  // fires well before that listener exists. Sending on `load` alone silently
+  // drops the very first batch of prop values (including e.g. a textfield's
+  // default label) — the iframe must explicitly signal readiness instead.
+  it('does not send prop updates to the iframe on load alone', async () => {
     stubPlaygroundFetch(sandbox);
-    const postMessageSpy = sandbox.stub();
-    sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => ({ postMessage: postMessageSpy }));
     await init(el);
     const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
     iframe.dispatchEvent(new Event('load'));
+    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'prop-update')).to.be.false;
+  });
+
+  it('sends the current prop values once the iframe signals it is ready', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    iframe.dispatchEvent(new Event('load'));
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'preview-ready' },
+      source: iframe.contentWindow,
+    }));
     expect(postMessageSpy.calledWith(
       sinon.match({
         type: 'prop-update', property: 'isDisabled', attribute: 'disabled', value: false,
@@ -386,13 +753,31 @@ describe('playground block — init()', () => {
     )).to.be.true;
   });
 
+  it('ignores a preview-ready message from an unrelated frame', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const otherFrame = document.createElement('iframe');
+    document.body.append(otherFrame);
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'preview-ready' },
+      source: otherFrame.contentWindow,
+    }));
+    otherFrame.remove();
+    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'prop-update')).to.be.false;
+  });
+
   it('posts an updated prop value to the iframe when a control changes', async () => {
     stubPlaygroundFetch(sandbox);
     const postMessageSpy = sandbox.stub();
     sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => ({ postMessage: postMessageSpy }));
     await init(el);
-    const picker = el.querySelector('.playground-control hub-picker');
-    picker.dispatchEvent(new CustomEvent('change', { detail: { value: 'yes' } }));
+    const picker = el.querySelector('.playground-control se-select');
+    await picker.updateComplete;
+    const native = picker.shadowRoot.querySelector('select');
+    native.value = 'yes';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
     expect(postMessageSpy.calledWith(
       sinon.match({
         type: 'prop-update', property: 'isDisabled', attribute: 'disabled', value: true,
@@ -417,5 +802,274 @@ describe('playground block — init()', () => {
     const pre = el.querySelector('pre');
     el.querySelector('.playground-copy').click();
     expect(writeText.calledOnceWithExactly(pre.textContent)).to.be.true;
+  });
+
+  // --- Control type -> se-* component mapping --------------------------------
+
+  it('renders se-input type="text" for a textfield control', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      swc: [{ property: 'label', attribute: 'label', type: 'string', default: "'Click me'" }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const input = el.querySelector('.playground-control se-input');
+    expect(input).to.exist;
+    expect(input.type).to.equal('text');
+    expect(input.value).to.equal('Click me');
+  });
+
+  it('does not warn about an unresolved options list for a textfield control', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      swc: [{ property: 'label', attribute: 'label', type: 'string' }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const messages = warnStub.getCalls().map((c) => c.args.join(' '));
+    expect(messages.some((m) => m.includes('"label"'))).to.be.false;
+  });
+
+  it('falls back to "Label" for a textfield control with no authored default', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      swc: [{ property: 'label', attribute: 'label', type: 'string' }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const input = el.querySelector('.playground-control se-input');
+    expect(input.value).to.equal('Label');
+  });
+
+  it('updates the code disclosure live as the user types, without needing blur', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      swc: [{ property: 'label', attribute: 'label', type: 'string', default: "'Click me'" }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const input = el.querySelector('.playground-control se-input');
+    await input.updateComplete;
+    const pre = el.querySelector('pre');
+    const before = pre.textContent;
+    const native = input.shadowRoot.querySelector('input');
+    native.value = 'Typing...';
+    // 'input' fires on every keystroke; 'change' only fires on blur/submit —
+    // typing must not require the field to lose focus to see a live update.
+    native.dispatchEvent(new Event('input', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+    expect(pre.textContent).to.not.equal(before);
+    expect(pre.textContent.includes('Typing...')).to.be.true;
+  });
+
+  it('renders se-input type="range" for a slider control', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'weight' }],
+      controls: [{ Property: 'weight', control: 'slider' }],
+      swc: [{ property: 'weight', attribute: 'weight', type: 'number', default: '50' }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const input = el.querySelector('.playground-control se-input');
+    expect(input).to.exist;
+    expect(input.type).to.equal('range');
+    expect(input.value).to.equal('50');
+  });
+
+  it('renders se-segmentedcontrol with a radio per option for a segmentedControl control', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'variant' }],
+      controls: [{ Property: 'variant', control: 'segmentedControl' }],
+      rsp: { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] },
+      swc: [],
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+    const segmented = rspEl.querySelector('.playground-control se-segmentedcontrol');
+    expect(segmented).to.exist;
+    await segmented.updateComplete;
+    const radios = [...segmented.shadowRoot.querySelectorAll('input[type="radio"]')];
+    expect(radios.map((r) => r.value)).to.deep.equal(['primary', 'secondary']);
+    expect(radios.find((r) => r.checked).value).to.equal('primary');
+  });
+
+  it('updates the code disclosure when a segmentedControl radio changes', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'variant' }],
+      controls: [{ Property: 'variant', control: 'segmentedControl' }],
+      rsp: { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] },
+      swc: [],
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+    const segmented = rspEl.querySelector('.playground-control se-segmentedcontrol');
+    await segmented.updateComplete;
+    const pre = rspEl.querySelector('pre');
+    const before = pre.textContent;
+    const secondaryRadio = [...segmented.shadowRoot.querySelectorAll('input[type="radio"]')]
+      .find((r) => r.value === 'secondary');
+    secondaryRadio.checked = true;
+    secondaryRadio.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+    expect(pre.textContent).to.not.equal(before);
+    expect(pre.textContent.includes('variant="secondary"')).to.be.true;
+  });
+
+  it('renders se-switch for a switch control, checked from the boolean default', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'isDisabled' }],
+      controls: [{ Property: 'isDisabled', control: 'switch' }],
+      swc: [{ property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'true' }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const sw = el.querySelector('.playground-control se-switch');
+    expect(sw).to.exist;
+    await sw.updateComplete;
+    expect(sw.checked).to.be.true;
+    expect(sw.textContent.trim()).to.equal('isDisabled');
+  });
+
+  it('updates the code disclosure when a switch is toggled', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'isDisabled' }],
+      controls: [{ Property: 'isDisabled', control: 'switch' }],
+      swc: [{ property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'false' }],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const sw = el.querySelector('.playground-control se-switch');
+    await sw.updateComplete;
+    const pre = el.querySelector('pre');
+    const before = pre.textContent;
+    const native = sw.shadowRoot.querySelector('input');
+    native.checked = true;
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+    expect(pre.textContent).to.not.equal(before);
+    expect(pre.textContent.includes('disabled')).to.be.true;
+  });
+
+  // "icon" has no real prop for resolvePickerOptions to introspect (no "icon"
+  // row in either dataset) — its options come from the controls sheet, so swc
+  // and rsp are both left empty here to prove the existence check doesn't gate it.
+  it('renders se-select for an icon control, with options from the controls sheet', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'icon' }],
+      controls: [{ Property: 'icon', control: 'icon', Options: 'search, copy, checkmarkcircle' }],
+      swc: [],
+      rsp: { props: [] },
+    });
+    await init(el);
+    const select = el.querySelector('.playground-control se-select');
+    expect(select).to.exist;
+    await select.updateComplete;
+    const native = select.shadowRoot.querySelector('select');
+    const optionValues = [...native.querySelectorAll('option')].map((o) => o.value);
+    expect(optionValues).to.deep.equal(['No icon', 'search', 'copy', 'checkmarkcircle']);
+    expect(select.value).to.equal('No icon');
+  });
+
+  it('posts a prop-update with the icon name as the value (no attribute) when the selection changes', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'icon' }],
+      controls: [{ Property: 'icon', control: 'icon', Options: 'search, copy' }],
+      swc: [],
+      rsp: { props: [] },
+    });
+    const postMessageSpy = sandbox.stub();
+    sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => ({ postMessage: postMessageSpy }));
+    await init(el);
+    const select = el.querySelector('.playground-control se-select');
+    await select.updateComplete;
+    const native = select.shadowRoot.querySelector('select');
+    native.value = 'copy';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'icon', attribute: null, value: 'copy',
+      }),
+      '*',
+    )).to.be.true;
+  });
+
+  // --- Composite components ---------------------------------------------------
+
+  it('renders composite subcomponents in the code disclosure for a swc composite component', async () => {
+    const tabsMarkup = `
+      <swc-tabs selected="overview">
+        <swc-tab tab-id="overview">Overview</swc-tab>
+        <swc-tab tab-id="details">Details</swc-tab>
+        <swc-tab-panel tab-id="overview" selected>Overview panel content.</swc-tab-panel>
+        <swc-tab-panel tab-id="details">Details panel content.</swc-tab-panel>
+      </swc-tabs>
+    `;
+    sandbox.stub(window, 'fetch').callsFake(async (input) => {
+      const url = String(input);
+      if (url.includes('sheet=components')) {
+        return jsonResponse({ data: [{ Component: 'Tabs', Properties: 'selected' }] });
+      }
+      if (url.includes('sheet=controls')) {
+        return jsonResponse({ data: [{ Property: 'selected', control: 'picker' }] });
+      }
+      if (url.includes('/deps/rsp/data/')) { return jsonResponse({ props: [] }); }
+      if (url.includes('/deps/swc/data/')) {
+        return jsonResponse([{ property: 'selected', attribute: 'selected', type: 'string', default: "'overview'" }]);
+      }
+      if (url.includes('/deps/swc/playground/snippets/tabs.html')) {
+        return new Response(tabsMarkup, { status: 200 });
+      }
+      return new Response('', { status: 404 });
+    });
+    const tabsEl = makeMetaEl({ implementation: 'swc', component: 'tabs' });
+    document.body.append(tabsEl);
+    await init(tabsEl);
+    const pre = tabsEl.querySelector('pre');
+    expect(pre.textContent.includes('<swc-tab')).to.be.true;
+    expect(pre.textContent.includes('<swc-tab-panel')).to.be.true;
+    expect(pre.textContent.includes('Details panel content.')).to.be.true;
+  });
+
+  it('renders composite subcomponents in the code disclosure for an rsp composite component', async () => {
+    const tabsMarkup = `
+      <Tabs>
+        <TabList>
+          <Tab id="overview">Overview</Tab>
+          <Tab id="details">Details</Tab>
+        </TabList>
+        <TabPanel id="overview">Overview panel content.</TabPanel>
+        <TabPanel id="details">Details panel content.</TabPanel>
+      </Tabs>
+    `;
+    sandbox.stub(window, 'fetch').callsFake(async (input) => {
+      const url = String(input);
+      if (url.includes('sheet=components')) {
+        return jsonResponse({ data: [{ Component: 'Tabs', Properties: 'density' }] });
+      }
+      if (url.includes('sheet=controls')) {
+        return jsonResponse({ data: [{ Property: 'density', control: 'picker' }] });
+      }
+      if (url.includes('/deps/rsp/data/')) {
+        return jsonResponse({ props: [{ property: 'density', type: "'compact' | 'regular'", default: "'regular'" }] });
+      }
+      if (url.includes('/deps/swc/data/')) { return jsonResponse([]); }
+      if (url.includes('/deps/rsp/playground/snippets/tabs.jsx')) {
+        return new Response(tabsMarkup, { status: 200 });
+      }
+      return new Response('', { status: 404 });
+    });
+    const tabsEl = makeMetaEl({ implementation: 'rsp', component: 'tabs' });
+    document.body.append(tabsEl);
+    await init(tabsEl);
+    const pre = tabsEl.querySelector('pre');
+    expect(pre.textContent.includes('<TabList>')).to.be.true;
+    expect(pre.textContent.includes('<TabPanel')).to.be.true;
+    expect(pre.textContent.includes('Details panel content.')).to.be.true;
   });
 });

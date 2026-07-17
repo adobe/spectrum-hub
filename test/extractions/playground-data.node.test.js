@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it, mock } from 'node:test';
+import { describe, it, mock, beforeEach } from 'node:test';
 
 import {
   fetchPlaygroundSheets,
@@ -12,7 +12,10 @@ import {
   propertyNameCandidates,
   findSwcProp,
   findRspProp,
+  cachedFetch,
+  clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
+import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
 
 const COMPONENTS_SHEET = [
   { component: 'Button', properties: 'variant, staticColor, text, fillStyle, size, isDisabled' },
@@ -21,12 +24,12 @@ const COMPONENTS_SHEET = [
 ];
 
 const CONTROLS_SHEET = [
-  { property: 'variant', v1: 'picker', 'v1+': 'picker' },
-  { property: 'staticColor', v1: 'picker', 'v1+': 'radio' },
-  { property: 'text', v1: 'picker', 'v1+': 'textfield' },
-  { property: 'fillStyle', v1: 'picker', 'v1+': 'radio' },
-  { property: 'size', v1: 'picker', 'v1+': 'radio' },
-  { property: 'isDisabled', v1: 'picker', 'v1+': 'switch' },
+  { property: 'variant', control: 'picker' },
+  { property: 'staticColor', control: 'segmentedControl' },
+  { property: 'text', control: 'textfield' },
+  { property: 'fillStyle', control: 'segmentedControl' },
+  { property: 'size', control: 'segmentedControl' },
+  { property: 'isDisabled', control: 'switch' },
 ];
 
 const RSP_PROPS = [
@@ -54,6 +57,11 @@ const SWC_PROPS = [
 describe('fetchPlaygroundSheets', () => {
   const SHEET_URL = 'https://example.com/playground.json';
 
+  // Every test below reuses SHEET_URL — without this, the second test to run
+  // would get the first test's cached (mocked) response instead of hitting
+  // its own newly-mocked fetch.
+  beforeEach(() => clearFetchCache());
+
   // Raw rows as an AEM workbook returns them: capitalized column headers that
   // the utility is expected to lowercase.
   const RAW_COMPONENTS = [
@@ -61,7 +69,7 @@ describe('fetchPlaygroundSheets', () => {
     { Component: 'Accordion', Properties: '' },
   ];
   const RAW_CONTROLS = [
-    { Property: 'variant', V1: 'picker', 'V1+': 'picker' },
+    { Property: 'variant', Control: 'picker' },
   ];
 
   function respondBySheet(t) {
@@ -85,7 +93,7 @@ describe('fetchPlaygroundSheets', () => {
       { component: 'Accordion', properties: '' },
     ]);
     assert.deepEqual(controlsSheet, [
-      { property: 'variant', v1: 'picker', 'v1+': 'picker' },
+      { property: 'variant', control: 'picker' },
     ]);
   });
 
@@ -103,9 +111,9 @@ describe('fetchPlaygroundSheets', () => {
 
     const { controlsSheet } = await fetchPlaygroundSheets(SHEET_URL);
 
-    // buildControlsMap keys off the lowercased "property"/"v1"/"v1+" columns.
+    // buildControlsMap keys off the lowercased "property"/"control" columns.
     const map = buildControlsMap(controlsSheet);
-    assert.deepEqual(map.get('variant'), { v1: 'picker', v1plus: 'picker' });
+    assert.deepEqual(map.get('variant'), { control: 'picker', options: [] });
   });
 
   it('throws with the sheet name and status when a response is not ok', async (t) => {
@@ -115,6 +123,64 @@ describe('fetchPlaygroundSheets', () => {
       fetchPlaygroundSheets(SHEET_URL),
       /Failed to fetch sheet ".+" from .+: 404/,
     );
+  });
+});
+
+describe('cachedFetch', () => {
+  beforeEach(() => clearFetchCache());
+
+  it('runs the given function on the first call for a URL', async () => {
+    const run = mock.fn(async () => 'value');
+    await cachedFetch('https://example.com/a', run);
+    assert.equal(run.mock.callCount(), 1);
+  });
+
+  it('does not re-run the function for a URL it has already resolved', async () => {
+    const run = mock.fn(async () => 'value');
+    await cachedFetch('https://example.com/a', run);
+    await cachedFetch('https://example.com/a', run);
+    await cachedFetch('https://example.com/a', run);
+    assert.equal(run.mock.callCount(), 1);
+  });
+
+  it('returns the same resolved value to every caller', async () => {
+    const run = mock.fn(async () => ({ some: 'data' }));
+    const first = await cachedFetch('https://example.com/a', run);
+    const second = await cachedFetch('https://example.com/a', run);
+    assert.equal(first, second);
+  });
+
+  it('shares a single in-flight call across concurrent callers, not one per caller', async () => {
+    const run = mock.fn(async () => 'value');
+    const [a, b, c] = await Promise.all([
+      cachedFetch('https://example.com/a', run),
+      cachedFetch('https://example.com/a', run),
+      cachedFetch('https://example.com/a', run),
+    ]);
+    assert.equal(run.mock.callCount(), 1);
+    assert.deepEqual([a, b, c], ['value', 'value', 'value']);
+  });
+
+  it('runs the function separately for different URLs', async () => {
+    const run = mock.fn(async () => 'value');
+    await cachedFetch('https://example.com/a', run);
+    await cachedFetch('https://example.com/b', run);
+    assert.equal(run.mock.callCount(), 2);
+  });
+
+  it('does not cache a rejection, so a later call can retry', async () => {
+    let calls = 0;
+    const run = mock.fn(async () => {
+      calls += 1;
+      if (calls === 1) { throw new Error('network blip'); }
+      return 'recovered';
+    });
+
+    await assert.rejects(cachedFetch('https://example.com/a', run), /network blip/);
+    const result = await cachedFetch('https://example.com/a', run);
+
+    assert.equal(result, 'recovered');
+    assert.equal(run.mock.callCount(), 2);
   });
 });
 
@@ -145,8 +211,8 @@ describe('getComponentProperties', () => {
 describe('buildControlsMap', () => {
   it('builds a map keyed by property name', () => {
     const map = buildControlsMap(CONTROLS_SHEET);
-    assert.deepEqual(map.get('variant'), { v1: 'picker', v1plus: 'picker' });
-    assert.deepEqual(map.get('isDisabled'), { v1: 'picker', v1plus: 'switch' });
+    assert.deepEqual(map.get('variant'), { control: 'picker', options: [] });
+    assert.deepEqual(map.get('isDisabled'), { control: 'switch', options: [] });
   });
 
   it('contains all rows from the sheet', () => {
@@ -155,8 +221,18 @@ describe('buildControlsMap', () => {
   });
 
   it('trims surrounding whitespace from the property key so lookups match', () => {
-    const map = buildControlsMap([{ property: '  variant  ', v1: 'picker', 'v1+': 'radio' }]);
-    assert.deepEqual(map.get('variant'), { v1: 'picker', v1plus: 'radio' });
+    const map = buildControlsMap([{ property: '  variant  ', control: 'picker' }]);
+    assert.deepEqual(map.get('variant'), { control: 'picker', options: [] });
+  });
+
+  it('parses a comma-separated options column into a trimmed array', () => {
+    const map = buildControlsMap([{ property: 'icon', control: 'picker', options: 'search, copy , checkmark' }]);
+    assert.deepEqual(map.get('icon'), { control: 'picker', options: ['search', 'copy', 'checkmark'] });
+  });
+
+  it('defaults options to an empty array when the column is absent or empty', () => {
+    const map = buildControlsMap([{ property: 'variant', control: 'picker', options: '' }]);
+    assert.deepEqual(map.get('variant'), { control: 'picker', options: [] });
   });
 });
 
@@ -297,7 +373,8 @@ describe('resolveControl', () => {
     const result = resolveControl('fillStyle', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.attribute, 'fill-style');
-    assert.equal(result.controlType, 'picker');
+    // CONTROLS_SHEET authors fillStyle as a segmentedControl, not the picker default.
+    assert.equal(result.controlType, 'segmentedControl');
   });
 
   it('returns null for a swc-only property when implementation is rsp', () => {
@@ -313,8 +390,19 @@ describe('resolveControl', () => {
     });
   });
 
-  it('returns null for a property absent from both datasets when implementation is swc', () => {
-    assert.equal(resolveControl('children', 'swc', controlsMap, RSP_PROPS, SWC_PROPS), null);
+  // A property literally named "icon" is always treated as the icon slot
+  // property (resolveControl's isIcon check is keyed purely on the property
+  // name) — the same by-name existence-check exemption TEXT_KEYS gets — even
+  // with no authored "icon" row in the controls sheet at all. With no row to
+  // read from, it still resolves: controlType defaults to "picker" and its
+  // options fall back to the shared ICON_OPTIONS catalog (see the "icon"
+  // control describe block below for the case where a row IS authored).
+  it('resolves a property literally named "icon" even with no authored control row', () => {
+    const result = resolveControl('icon', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    assert.notEqual(result, null);
+    assert.equal(result.controlType, 'picker');
+    assert.equal(result.attribute, null);
+    assert.deepEqual(result.options, [NO_ICON, ...ICON_OPTIONS]);
   });
 
   it('defaults controlType to picker when property is not in the controls sheet', () => {
@@ -395,6 +483,88 @@ describe('resolveControl', () => {
 
     it('does not throw when onSkip is omitted', () => {
       assert.doesNotThrow(() => resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS));
+    });
+  });
+
+  // "text"/"label"/"children" represent a component's slot/children content,
+  // not a real named prop — extraction tools generally never emit an entry for
+  // them in the RSP/SWC prop-data JSON (there's nothing to introspect, it's
+  // just default slot content). Real production data confirmed this: neither
+  // ActionButton.json nor swc-action-button.json has a "text" row, so the
+  // existence check must not gate these three names the way it gates a real
+  // prop like "icon".
+  describe('text-content properties bypass the implementation-data existence check', () => {
+    const textControlsMap = buildControlsMap([{ property: 'text', control: 'textfield' }]);
+
+    it('resolves a "text" control for rsp even when absent from the RSP prop data', () => {
+      const result = resolveControl('text', 'rsp', textControlsMap, RSP_PROPS, SWC_PROPS);
+      assert.notEqual(result, null);
+      assert.equal(result.controlType, 'textfield');
+    });
+
+    it('resolves a "text" control for swc even when absent from the SWC prop data', () => {
+      const result = resolveControl('text', 'swc', textControlsMap, RSP_PROPS, SWC_PROPS);
+      assert.notEqual(result, null);
+      assert.equal(result.controlType, 'textfield');
+    });
+
+    it('does not warn that "text" is missing from the implementation data', () => {
+      const onSkip = mock.fn();
+      resolveControl('text', 'rsp', textControlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      const messages = onSkip.mock.calls.map((c) => c.arguments[0]);
+      assert.ok(!messages.some((m) => m.includes('RSP data')));
+    });
+
+    it('also bypasses the existence check for "label" and "children"', () => {
+      const labelMap = buildControlsMap([{ property: 'label', control: 'textfield' }]);
+      assert.notEqual(resolveControl('label', 'swc', labelMap, RSP_PROPS, SWC_PROPS), null);
+
+      const childrenMap = buildControlsMap([{ property: 'children', control: 'textfield' }]);
+      assert.notEqual(resolveControl('children', 'swc', childrenMap, RSP_PROPS, SWC_PROPS), null);
+    });
+  });
+
+  // The "icon" control has no real prop to introspect a type from (there's no
+  // "icon" row in either ActionButton.json or swc-action-button.json), so —
+  // once a property is actually authored with control "icon" — its options
+  // come straight from the controls sheet instead of resolvePickerOptions, and
+  // it gets the same implementation-data existence-check bypass as TEXT_KEYS.
+  describe('"icon" control', () => {
+    const iconMap = buildControlsMap([{ property: 'icon', control: 'icon', options: 'search, copy, checkmarkcircle' }]);
+
+    it('resolves options from the controls sheet, not RSP/SWC data', () => {
+      const result = resolveControl('icon', 'swc', iconMap, RSP_PROPS, SWC_PROPS);
+      // NO_ICON always leads the list, ahead of the sheet's curated options —
+      // it's the default value, see resolveControl's own comment on this.
+      assert.deepEqual(result, {
+        controlType: 'icon',
+        options: [NO_ICON, 'search', 'copy', 'checkmarkcircle'],
+        attribute: null,
+      });
+    });
+
+    it('bypasses the existence check for both implementations', () => {
+      assert.notEqual(resolveControl('icon', 'swc', iconMap, RSP_PROPS, SWC_PROPS), null);
+      assert.notEqual(resolveControl('icon', 'rsp', iconMap, RSP_PROPS, SWC_PROPS), null);
+    });
+
+    it('always returns a null attribute, since the value flows to a slot, not a real attribute', () => {
+      const result = resolveControl('icon', 'rsp', iconMap, RSP_PROPS, SWC_PROPS);
+      assert.equal(result.attribute, null);
+    });
+
+    // The controls-sheet row leaves "options" blank here — resolveControl
+    // falls back to the shared ICON_OPTIONS catalog (icon-options.js) rather
+    // than warning, since that catalog is the intended default for most
+    // components. The "no icon options are configured" warning only fires
+    // when BOTH the sheet row and ICON_OPTIONS are empty, which isn't
+    // reachable through this catalog as long as it ships at least one icon.
+    it('falls back to the shared ICON_OPTIONS catalog when the sheet configures no icon options', () => {
+      const emptyIconMap = buildControlsMap([{ property: 'icon', control: 'icon' }]);
+      const onSkip = mock.fn();
+      const result = resolveControl('icon', 'swc', emptyIconMap, RSP_PROPS, SWC_PROPS, onSkip);
+      assert.deepEqual(result.options, [NO_ICON, ...ICON_OPTIONS]);
+      assert.equal(onSkip.mock.callCount(), 0);
     });
   });
 });

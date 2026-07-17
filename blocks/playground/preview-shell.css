@@ -1,0 +1,52 @@
+/*
+ * Shared by every preview shell (deps/rsp/playground/index.html,
+ * deps/swc/playground/index.html, and this block's own generic shell for
+ * ios/android) — the same base layout, forced-scheme handling, and
+ * mount/image-viewer boxes regardless of which one loads. A shell that
+ * doesn't use one of #mount/#image-viewer just never renders that id, so
+ * its rules simply never match — no behavior difference from splitting
+ * this out of each shell's own <style> block.
+ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 1rem;
+  font-family: adobe-clean-spectrum-vf, sans-serif;
+  color-scheme: light dark;
+  background: light-dark(#fff, #000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* staticColor previews need a contrasting backdrop, independent of theme */
+body:has([static-color="black"]) { background: #fff; }
+body:has([static-color="white"]) { background: #000; }
+
+#mount[static-color] > * {
+  background: transparent !important;
+}
+
+#mount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(90vw, 400px);
+}
+
+/* Image viewer — ios / android */
+#image-viewer {
+  display: none;
+}
+
+#image-viewer.active {
+  display: block;
+}
+
+#image-viewer img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
