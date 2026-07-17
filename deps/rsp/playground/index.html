@@ -14,11 +14,11 @@
   <script type="module">
     import { listenForPropUpdates, notifyPreviewReady } from '../../shared/playground/prop-listener.js';
     import { applyAttribute } from '../../shared/playground/apply-attribute.js';
-    import { iconHref } from '../../shared/playground/build-icon-svg.js';
-    import { NO_ICON } from '../../shared/playground/icon-options.js';
     import { resolveRspPropKey, hasLabelProp } from './apply-rsp-prop.js';
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
+    import { composeChildren, buildIconChild } from './compose-preview-children.js';
+    import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
 
@@ -52,11 +52,6 @@
       currentScheme = event.data.scheme;
       rerenderRsp?.();
     });
-
-    // `colorScheme` only accepts 'light'/'dark', no "follow OS" value.
-    function resolveRspColorScheme() {
-      return currentScheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    }
 
     async function initRsp() {
       const PKG = '@react-spectrum/s2';
@@ -136,7 +131,7 @@
           : [];
 
         function render() {
-          const scheme = resolveRspColorScheme();
+          const scheme = resolveColorScheme(currentScheme, matchMedia('(prefers-color-scheme: dark)').matches);
           const rootElement = compositeChildren.length
             ? createElement(Component, currentProps, ...rootChildArgs)
             : createElement(Component, currentProps);
@@ -156,29 +151,20 @@
         // so one doesn't clobber the other. Leaf components only.
         let iconChild = null;
         let textChild = currentProps.children ?? null;
-        function composeChildren() {
-          if (iconChild && textChild != null) { return [iconChild, textChild]; }
-          return iconChild ?? textChild;
-        }
 
         render();
 
         listenForPropUpdates(({ property, attribute, value }) => {
           if (property === 'icon') {
-            // Explicit size + `currentColor` fill: unlike SWC's slotted <svg>
-            // (sized by the component), a bare RSP <svg> has no wrapper and
-            // renders 0×0 in black without them. Confirmed live.
-            iconChild = value === NO_ICON ? null : createElement('svg', {
-              key: 'icon', viewBox: '0 0 20 20', width: 20, height: 20, fill: 'currentColor',
-            }, createElement('use', { href: iconHref(value) }));
-            currentProps.children = composeChildren();
+            iconChild = buildIconChild(createElement, value);
+            currentProps.children = composeChildren(iconChild, textChild);
           } else {
             const key = resolveRspPropKey(property, hasRealLabelProp);
             if (key === 'children') {
               // A text/label control that resolves to `children`: keep it
               // separate from any icon so the two compose rather than overwrite.
               textChild = value;
-              currentProps.children = composeChildren();
+              currentProps.children = composeChildren(iconChild, textChild);
             } else {
               currentProps[key] = value;
             }
