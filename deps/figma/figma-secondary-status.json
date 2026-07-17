@@ -1,0 +1,11 @@
+[
+  { "name": "Action Menu",       "context": "Use action button and menu" },
+  { "name": "Calendar",          "context": "Use date and time component" },
+  { "name": "Date Field",        "context": "Use date and time component" },
+  { "name": "Date Picker",       "context": "Use date and time component" },
+  { "name": "Date Range Picker", "context": "Use date and time component" },
+  { "name": "Labeled Value",     "context": "Reference documentation" },
+  { "name": "Link Button",       "context": "Use button component" },
+  { "name": "Range Calendar",    "context": "Use date and time component" },
+  { "name": "Time Field",        "context": "Use date and time component" }
+]
