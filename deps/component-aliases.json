@@ -1,1 +1,27 @@
-{}
+{
+  "swc": {},
+  "figma": {
+    "Table": "TableView",
+    "In-line alert": "InlineAlert",
+    "In Line Alert": "InlineAlert",
+    "Cards": "Card",
+    "Cards (Asset)": "Card",
+    "Cards (Collection)": "Card",
+    "Cards (Gallery)": "Card",
+    "Cards (Horizontal)": "Card",
+    "Cards (Product)": "Card",
+    "Cards (User)": "Card",
+    "Badge (Notification + Indicator)": "Badge",
+    "Button (Gradient)": "Button",
+    "Slider (Offset)": "Slider",
+    "Slider (Ramp)": "Slider",
+    "Slider (Range)": "Slider",
+    "Action group": "ActionButtonGroup",
+    "Action Group": "ActionButtonGroup",
+    "Standard dialog": "Dialog",
+    "Takeover dialog": "Dialog",
+    "Swatch": "ColorSwatch",
+    "Swatch group": "ColorSwatchPicker",
+    "Swatch Group": "ColorSwatchPicker"
+  }
+}
