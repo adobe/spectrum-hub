@@ -15,7 +15,11 @@
 
   @media (width >= 1200px) {
     max-inline-size: unset;
-  }  
+  }
+
+  .section > .block-content > &:last-child {
+    margin-block-end: 0;
+  }
 
   /* extra-small */
   &:not(.small, .medium, .large) {

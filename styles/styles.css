@@ -395,6 +395,14 @@ main > div,
 div[data-status],
 .template-loading {
   display: none;
+} 
+
+main > .section {
+   padding-block: 120px;
+
+  &:not(:last-child) {
+    border-block-end: 1px solid var(--s2-gray-300);
+  }
 }
 
 .section {
