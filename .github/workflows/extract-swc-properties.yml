@@ -1,9 +1,8 @@
 name: Update Component Properties
 
 on:
-  # Re-add the daily schedule after @adobe/spectrum-wc publishes custom-elements.json.
-  # schedule:
-  #   - cron: '0 6 * * *' # Daily at 6am UTC
+  schedule:
+    - cron: '0 6 * * *' # Daily at 6am UTC
   workflow_dispatch: # Allow manual trigger
 
 permissions:

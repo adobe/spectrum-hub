@@ -6,7 +6,7 @@ Extracts component property metadata from [Spectrum Web Components](https://gith
 
 2nd-gen SWC publishes one Custom Elements Manifest (CEM) for all components. Tag names use the `swc-*` prefix (for example `swc-button`, not 1st-gen `sp-*`). The extractor reads that manifest once, then filters declarations by `tagName`.
 
-For now, the CEM is built locally in the SWC repo. It is not published with `@adobe/spectrum-wc` yet. When it ships on npm, the same script can fetch it from unpkg or jsDelivr.
+The CEM is published with `@adobe/spectrum-wc` at `dist/custom-elements.json`, so the extractor fetches it from a CDN (unpkg or jsDelivr) by default. A locally built CEM path can still be passed as an argument to manually regenerate `data/` — for example when validating an unreleased SWC change.
 
 | Script | Role |
 | ------ | ---- |
@@ -29,7 +29,7 @@ Each row in `data/swc-{tag}.json` maps a CEM attribute to:
 
 ### Component metadata (`status`, `since`)
 
-- **`status`** — Lifecycle and visibility from `@status`. The intended vocabulary is `preview` / `deprecated` / `internal`, but the current CEM emits only `internal` (on `swc-asset` and `swc-icon`); `preview` and `deprecated` are not populated yet. Components without `status` are implicitly stable and public. Rows keep this field for future use; the site's component options table does not render it as a column today. See [../DATA-CONTRACT.md](../DATA-CONTRACT.md).
+- **`status`** — Lifecycle and visibility from `@status` (`preview`, `deprecated`, `internal`). Components without `status` are implicitly stable and public. Rows keep this field for future use; the site's component options table does not render it as a column today.
 - **`since`** — Version from `@since` (for example `0.0.1` on early components, `2.0.0` after the convention was standardized).
 - **npm dist-tags** (`latest`, `next`, etc.) describe the package release channel, not per-component lifecycle. Use `status` for component-level visibility in docs.
 
@@ -39,28 +39,28 @@ The table block (`blocks/table/table.js`) hides **`status`** and **`since`** col
 
 ## Running the extraction
 
-**Manual CEM (current workflow):**
+**Published package CEM (default):**
+
+```sh
+node deps/swc/extract-cem-components.js
+npm run test:extractions
+```
+
+This fetches the CEM from the CDN with no arguments. The package is currently pinned to a snapshot (`@adobe/spectrum-wc@0.4.0-snapshot-test.20260717104105`) in `extract-cem-components.js`; drop the pin once a stable release ships `dist/custom-elements.json`.
+
+**Manual CEM regeneration (local build):**
+
+Use this only to regenerate `data/` from an unreleased SWC change, by passing a locally built CEM path:
 
 ```sh
 cd ../spectrum-web-components/2nd-gen/packages/swc
 yarn analyze
 cd ../../../../spectrum-hub
 node deps/swc/extract-cem-components.js ../spectrum-web-components/2nd-gen/packages/swc/.storybook/custom-elements.json
-node deps/build-status-index.js   # rebuild the combined status index from the new data
 npm run test:extractions
 ```
 
-Commit both `deps/swc/data/` **and** `deps/status-index.json` — the index is derived from the SWC (and RSP) data and goes stale otherwise. See [../build-status-index.js](../build-status-index.js) and [../status-index.json](../status-index.json).
-
-**Published package CEM (when available):**
-
-```sh
-node deps/swc/extract-cem-components.js
-node deps/build-status-index.js
-npm run test:extractions
-```
-
-**In GitHub Actions:** The `Update Component Properties` workflow runs `node deps/swc/extract-cem-components.js`, then `node deps/build-status-index.js`, and commits `deps/swc/data/` plus `deps/status-index.json` on manual dispatch. The daily schedule is disabled until `custom-elements.json` is included in the published `@adobe/spectrum-wc` package — otherwise the job fails when CDN fetch misses the CEM. Until then, update `data/` with the local CEM path above. (The daily RSP workflow also rebuilds the index, so it does not go stale relative to committed SWC data — but a fresh SWC refresh should rebuild it immediately rather than waiting for the next RSP run.)
+**In GitHub Actions:** The `Update Component Properties` workflow runs `node deps/swc/extract-cem-components.js` on a daily schedule and on manual dispatch, fetching the published CEM from the CDN.
 
 Extraction tests live under `test/extractions/` and run with the repo's Node test runner (`npm run test:extractions`), which is also part of `npm test` in CI.
 
@@ -82,7 +82,7 @@ There is no per-component npm package suffix (1st-gen used `"sp-button": "button
 
 ## Adding or fixing a component
 
-**Preferred (today):** Add the `swc-*` tag to `components.json`, rebuild the CEM in the SWC repo (`yarn analyze`), rerun `extract-cem-components.js` with the local manifest path, then rebuild the status index (`node deps/build-status-index.js`). A brand-new tag with no RSP peer becomes a single-implementation row automatically; if the mechanical `swc-<kebab>` → PascalCase name is wrong, add an entry to [../component-aliases.json](../component-aliases.json).
+**Preferred:** Add the `swc-*` tag to `components.json`, then rerun `extract-cem-components.js` against the published CEM. To validate a tag that is not yet in a published release, rebuild the CEM in the SWC repo (`yarn analyze`) and rerun with the local manifest path.
 
 **When the tag is missing from output:**
 
@@ -92,7 +92,7 @@ There is no per-component npm package suffix (1st-gen used `"sp-button": "button
 
 Spot-check JSON against [2nd-gen Storybook](https://github.com/adobe/spectrum-web-components/tree/main/2nd-gen/packages/swc) or component docs (for example confirm `size` on `swc-button`).
 
-**Not yet in 2nd-gen:** `swc-action-button` is not implemented; add it to `components.json` when that component ships.
+**Missing from a release:** If a `swc-*` tag in `components.json` is not yet in the published package, the CDN CEM will not contain it. Validate it with a local `yarn analyze` build until it ships.
 
 ## Updating mixins (legacy)
 
@@ -117,21 +117,20 @@ This overwrites `data/swc-mixins.json`. Commit the result and re-run `extract-ce
 
 `extract-cem-components.js` tries these URLs until one succeeds:
 
-- `https://unpkg.com/@adobe/spectrum-wc/custom-elements.json`
-- `https://unpkg.com/@adobe/spectrum-wc/.storybook/custom-elements.json`
-- Same paths on jsDelivr
+- `https://unpkg.com/@adobe/spectrum-wc@<version>/dist/custom-elements.json`
+- Same path on jsDelivr
 
-Confirm the final published path with the SWC team when the CEM is added to the npm package `files` list (today `package.json` points at `.storybook/custom-elements.json` but `files` may only include `dist/`).
+The package ships `dist/custom-elements.json` (`files: ["dist/"]`, `customElements: "dist/custom-elements.json"`). The `<version>` is currently pinned to a snapshot in the script; remove the pin once a stable release includes the CEM.
 
 ## Future work
 
 - **TODO: Automate component discovery** — Add a script (similar to `deps/rsp/discover-components.js`) that reads the published or local CEM once, enumerates every declaration with a `tagName`, and regenerates `components.json`. Filter rules may be needed (for example skip internal or non-documented tags).
-- Re-enable daily GitHub Actions extraction after the CEM is on npm CDNs.
+- **TODO: Remove the snapshot pin** — Drop the pinned `@0.4.0-snapshot-test.*` version in `extract-cem-components.js` once a stable `@adobe/spectrum-wc` release ships `dist/custom-elements.json`.
 - Render `status` in docs if product needs component lifecycle labels in the table.
 
 ## Known limitations
 
-**Unpublished CEM** — CI and CDN-only runs fail until `custom-elements.json` is published; local `yarn analyze` is required.
+**Snapshot pin** — The published CEM is currently only available on a snapshot tag, so `extract-cem-components.js` pins that exact version. CDN runs will break if that snapshot is unpublished before the pin moves to a stable release. Components not yet in that snapshot require a local `yarn analyze` build.
 
 **Manual allow list** — New `swc-*` tags must be added to `components.json` until discovery is automated.
 
