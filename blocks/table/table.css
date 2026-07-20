@@ -45,12 +45,28 @@
     padding-block: var(--table-body-row-padding-block);
   }
 
+  tbody td svg {
+    display: inline-block;
+    padding-inline-end: 8px;
+    inline-size: 20px;
+    block-size: 20px;
+    vertical-align: bottom;
+  }
+
+  .icon-checkmarkcircle {
+    color: var(--s2-green-900);
+  }
+
+  .icon-closecircle {
+    color: var(--s2-red-900);
+  }
+
   table {
     inline-size: 100%;
     position: relative;
   }
 
-  @media (width >= 768px) {
+  @media (width >= 900px) {
     overflow-x: auto;
 
     table {
@@ -147,7 +163,7 @@
     padding-inline: var(--s2-spacing-300) var(--s2-spacing-100);
     overflow-wrap: break-word;
 
-    @media (width >= 930px) {
+    @media (width >= 900px) {
       overflow-wrap: normal;
     }
   }
@@ -179,5 +195,11 @@
     background-color: transparent;
     border-inline: 0;
     border-radius: 0;
+  }
+
+  &.quiet thead th,
+  &.quiet thead tr {
+    border-block-start: none;
+    background-color: transparent;
   }
 }
