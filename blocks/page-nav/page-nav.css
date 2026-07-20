@@ -15,10 +15,10 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
-    border-inline-start: 2px solid rgb(from var(--s2-gray-1000) r g b / 12%);
     margin-inline: var(--pagenav-inline-start-margin) var(--pagenav-inline-end-margin);
     
     & ul {
+      border-inline-start: 2px solid rgb(from var(--s2-gray-1000) r g b / 12%);
       list-style: none;
       margin: 0;
       padding: 0;
@@ -29,7 +29,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     }
   }
 
-  .page-nav a {
+  .page-nav ul a {
     display: block;
     padding-block: var(--s2-spacing-100);
     padding-inline: var(--s2-spacing-200);
@@ -62,13 +62,21 @@ from the DOM and the accessibility tree (see page-nav.js). */
     }
   }
 
-  .page-nav a[aria-current="location"] {
+  .page-nav ul a[aria-current="location"] {
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--s2-gray-1000);
 
     &::after {
       background-color: var(--s2-gray-1000);
     }
+  }
+
+  .page-nav > .page-nav-widgets {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s2-spacing-100);
+    margin-block-start: var(--s2-spacing-700);
   }
 }
 

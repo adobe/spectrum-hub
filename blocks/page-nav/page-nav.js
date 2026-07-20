@@ -1,3 +1,38 @@
+import { loadFragment } from '../fragment/fragment.js';
+
+// Authored once with every widget option; page-nav renders the subset the
+// current URL calls for (see renderWidgets).
+const WIDGETS_FRAGMENT = '/fragments/drafts/page-nav';
+
+// Widgets shown on every interior page.
+const GLOBAL_WIDGETS = new Set(['copy-markdown']);
+
+export function isComponentPath(pathname) {
+  return pathname.split('/').includes('components');
+}
+
+export function shouldRenderWidget(name, isComponentPage) {
+  return isComponentPage || GLOBAL_WIDGETS.has(name);
+}
+
+// Loads the shared widgets fragment and appends the URL-appropriate widget
+// buttons below the nav's table of contents.
+async function renderWidgets(el) {
+  const { fragment } = await loadFragment(WIDGETS_FRAGMENT);
+  if (!fragment) { return; }
+
+  const isComponentPage = isComponentPath(window.location.pathname);
+  const widgets = [...fragment.querySelectorAll('[data-widget]')].filter(
+    ({ dataset }) => shouldRenderWidget(dataset.widget, isComponentPage),
+  );
+  if (!widgets.length) { return; }
+
+  const group = document.createElement('div');
+  group.className = 'page-nav-widgets';
+  group.append(...widgets);
+  el.append(group);
+}
+
 function slugify(text) {
   return text
     .toLowerCase()
@@ -30,25 +65,44 @@ function watchScrollSpy(headings, linkById) {
     .getPropertyValue('--sh-header-height').trim() || '56px';
   const rootMargin = `-${navHeight} 0px -50% 0px`;
 
+  // Without this, clicking a link whose heading is already in the band (e.g.
+  // the first section while at the top of the page) produces only an "exit"
+  // event for the heading scrolling away
+  const visible = new Set();
+
   const observer = new IntersectionObserver((entries) => {
-    const visible = entries.filter((e) => e.isIntersecting).map((e) => e.target);
-    if (!visible.length) {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        visible.add(e.target);
+      } else {
+        visible.delete(e.target);
+      }
+    });
+    if (!visible.size) {
       return;
     }
-    visible.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-    setActive(visible[0].id);
+    const topmost = [...visible].sort(
+      (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+    )[0];
+    setActive(topmost.id);
   }, { rootMargin });
 
   headings.forEach((h) => observer.observe(h));
 }
 
 export default async function init(el) {
+  // Guard against a second decoration
+  if (el.dataset.pageNav) {
+    return;
+  }
+
   const headings = [...document.querySelectorAll('main h2')].filter(
     (h) => !el.contains(h),
   );
   if (!headings.length) {
     return;
   }
+  el.dataset.pageNav = 'ready';
 
   // Assign ids and make headings focusable. Tabindex="-1" is set
   // on every heading so clicking a page-nav link moves focus to the target
@@ -114,6 +168,10 @@ export default async function init(el) {
   }
 
   el.append(list);
+
+  // URL-scoped widgets (copy markdown, and later see-in-figma / go-to-impl)
+  // sit below the table of contents.
+  await renderWidgets(el);
 
   // The nav is a desktop-only side rail (see detail template grid at >=900px).
   // Below that it is removed from the DOM and the accessibility tree entirely: a
