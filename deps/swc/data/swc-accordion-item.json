@@ -5,23 +5,23 @@
     "type": "boolean",
     "description": "Whether the accordion item panel is expanded.",
     "inheritedFrom": "AccordionItemBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
     "default": "false",
-    "description": "Whether the accordion item is disabled. A disabled item keeps its header\r\nin the tab order but blocks toggling.",
+    "description": "Whether the accordion item is disabled. A disabled item keeps its header\nin the tab order but blocks toggling.",
     "inheritedFrom": "AccordionItemBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
     "property": "size",
     "type": "AccordionSize | undefined",
-    "description": "The size of the item. Inherited from the parent accordion; controls which\r\nchevron icon is displayed. Has no effect when the item is used standalone.",
+    "description": "The size of the item. Inherited from the parent accordion; controls which\nchevron icon is displayed. Has no effect when the item is used standalone.",
     "inheritedFrom": "AccordionItemBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]

@@ -5,23 +5,23 @@
     "type": "ElementSize",
     "description": "Size applied to all items.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "allowMultiple",
     "type": "boolean",
     "description": "Reflected as `allow-multiple`. When set, multiple items may be open at the same time.",
     "inheritedFrom": "AccordionBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "level",
     "property": "level",
     "type": "AccordionHeadingLevel",
     "default": "3",
-    "description": "Heading level applied to every item header (2–6). Defaults to 3.\r\nValues outside that range are clamped.",
+    "description": "Heading level applied to every item header (2–6). Defaults to 3.\nValues outside that range are clamped.",
     "inheritedFrom": "AccordionBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "density",
@@ -30,7 +30,7 @@
     "default": "'regular'",
     "description": "Controls vertical spacing between items.",
     "inheritedFrom": "AccordionBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "quiet",
@@ -39,24 +39,24 @@
     "default": "false",
     "description": "Renders the accordion in its quiet (no-border) visual variant.",
     "inheritedFrom": "AccordionBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
     "default": "false",
-    "description": "Disables all items in the accordion. Individual items may also be\r\ndisabled independently.",
+    "description": "Disables all items in the accordion. Individual items may also be\ndisabled independently.",
     "inheritedFrom": "AccordionBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "allow-multiple",
     "property": "allowMultiple",
     "type": "boolean",
     "default": "false",
-    "description": "When set, multiple items may be open at the same time. By default only\r\none item can be open.",
+    "description": "When set, multiple items may be open at the same time. By default only\none item can be open.",
     "inheritedFrom": "AccordionBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]

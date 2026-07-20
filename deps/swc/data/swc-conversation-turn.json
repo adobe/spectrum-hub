@@ -4,13 +4,13 @@
     "property": "type",
     "type": "'system' | 'user'",
     "default": "'user'",
-    "description": "`user` — end-aligned; `system` — start-aligned, full width of the column.\r\nDrives the accessible name of the turn (`User message` vs `System message`)."
+    "description": "`user` — end-aligned; `system` — start-aligned, full width of the column.\nDrives the accessible name of the turn (`User message` vs `System message`)."
   },
   {
     "attribute": "accessible-label",
     "property": "accessibleLabel",
     "type": "string",
     "default": "''",
-    "description": "Optional accessible label override for the turn group.\r\nWhen omitted, the label falls back to `type` (\"User message\" / \"System message\")."
+    "description": "Optional accessible label override for the turn group.\nWhen omitted, the label falls back to `type` (\"User message\" / \"System message\")."
   }
 ]

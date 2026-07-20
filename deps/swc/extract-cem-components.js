@@ -28,7 +28,7 @@ const CDN_URLS = [
   () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}@0.4.0-snapshot-test.20260717104105/dist/custom-elements.json`,
 ];
 
-async function fetchCEM() {
+export async function fetchCEM() {
   for (const buildUrl of CDN_URLS) {
     const url = buildUrl();
     try {

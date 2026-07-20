@@ -5,7 +5,7 @@
     "type": "ElementSize",
     "description": "The size of the divider.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "vertical",
@@ -14,7 +14,7 @@
     "default": "false",
     "description": "Whether the divider is vertical. If false, the divider is horizontal. The default is false.",
     "inheritedFrom": "DividerBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "static-color",
@@ -22,6 +22,6 @@
     "type": "DividerStaticColor | undefined",
     "description": "The static color variant to use for the divider.",
     "inheritedFrom": "DividerBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]
