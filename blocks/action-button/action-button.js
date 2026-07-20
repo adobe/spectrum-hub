@@ -1,5 +1,6 @@
 import { getScheme, getConfig, setScheme } from '../../scripts/ak.js';
 import { setColorScheme as setSectionScheme } from '../section-metadata/section-metadata.js';
+import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
 
 const { log } = getConfig();
 const LAZY_TIMEOUT = 3000;
@@ -34,6 +35,64 @@ function handleSettings() {
   log('You clicked settings');
 }
 
+// Per-button revert timers so a repeated click restarts the "Copied" flash
+// rather than leaving a stale timeout from a previous copy.
+const copyResetTimers = new WeakMap();
+
+// Every interior page is available as Markdown by appending `.md` to its path.
+function markdownPathForCurrentPage() {
+  const { pathname } = window.location;
+  return `${pathname.replace(/\/$/, '')}.md`;
+}
+
+// The icon shown while the "Copied" confirmation is up.
+const COPIED_ICON = 'checkmarkcircle';
+
+// Swaps the button's authored icon (an <svg class="icon"><use href=".../
+// s2-icon-<name>-20-n.svg#icon"> from scripts/utils/svg.js) to the checkmark on
+// success and back on revert.
+function setCopiedIcon(button, copied) {
+  const use = button.querySelector('svg.icon use');
+  if (!use) { return; }
+  if (!('defaultHref' in use.dataset)) {
+    use.dataset.defaultHref = use.getAttribute('href');
+  }
+  use.setAttribute('href', copied
+    ? use.dataset.defaultHref.replace(/s2-icon-[^/]+?-20-n\.svg/, `s2-icon-${COPIED_ICON}-20-n.svg`)
+    : use.dataset.defaultHref);
+}
+
+// Copies the current page's Markdown to the clipboard.
+async function handleCopyMarkdown(e) {
+  const button = e.currentTarget;
+  const label = button.querySelector('span') ?? button;
+  if (!('defaultLabel' in label.dataset)) {
+    label.dataset.defaultLabel = label.textContent;
+  }
+
+  const successfulCopy = (message, copied) => {
+    label.textContent = message;
+    button.classList.toggle('is-copied', copied);
+    setCopiedIcon(button, copied);
+    clearTimeout(copyResetTimers.get(button));
+    copyResetTimers.set(button, setTimeout(() => {
+      label.textContent = label.dataset.defaultLabel;
+      button.classList.remove('is-copied');
+      setCopiedIcon(button, false);
+    }, 3000));
+  };
+
+  try {
+    const resp = await fetch(markdownPathForCurrentPage());
+    if (!resp.ok) { throw new Error(`Failed to fetch markdown: ${resp.status}`); }
+    const markdown = await resp.text();
+    await navigator.clipboard.writeText(markdown);
+    successfulCopy('Copied', true);
+  } catch {
+    successfulCopy('Copy failed', false);
+  }
+}
+
 const BUTTONS = {
   scheme: {
     click: handleColorScheme,
@@ -44,11 +103,109 @@ const BUTTONS = {
   settings: {
     click: handleSettings,
   },
+  '/tools/widgets/copy-markdown': {
+    click: handleCopyMarkdown,
+  },
   search: {
     click: handleSearch,
     lazy: loadSearch,
   },
   action: {},
+};
+
+// Each web implementation's docs site, keyed by the URL slug used in
+// /web/<implementation>/components/<component>. `href` deep-links to the
+// current component's page.
+const IMPLEMENTATIONS = {
+  swc: {
+    label: 'SWC',
+    href: (component) => `https://spectrum-web-components.adobe.com/?path=/docs/components-${component}--docs`,
+  },
+  rsp: {
+    label: 'RSP',
+    href: (component) => `https://react-spectrum.adobe.com/${pascalCase(component)}.html`,
+  },
+};
+
+
+export function resolveImplementation(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf('components');
+  if (idx < 1) { return null; }
+  const impl = IMPLEMENTATIONS[parts[idx - 1]];
+  const component = parts[idx + 1];
+  if (!impl || !component) { return null; }
+  return { label: impl.label, href: impl.href(component) };
+}
+
+//  if the page has no resolvable implementation the widget removes itself.
+function decorateGoToImpl(a, span) {
+  const target = resolveImplementation(window.location.pathname);
+  if (!target) {
+    a.remove();
+    return;
+  }
+  a.href = target.href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  span.textContent = `Go to ${target.label}`;
+}
+
+// TODO: ensure this actually works once the status-table block has merged
+// The S2 Figma file; each component's frame is addressed by node id.
+const FIGMA_FILE_URL = 'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web';
+const FIGMA_STATUS_PATH = '/deps/figma/component-status.json';
+
+function slugifyName(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function componentSlugFromPath(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf('components');
+  return idx >= 1 ? parts[idx + 1] ?? null : null;
+}
+
+// The stored id uses a colon (e.g. "9230:3620"); Figma node ids in URLs are hyphenated 
+// ("9230-3620").
+export function resolveFigmaUrl(componentSlug, data) {
+  if (!componentSlug) { return null; }
+  const entry = data.find((row) => slugifyName(row.name) === componentSlug);
+  if (!entry?.figmaPageId) { return null; }
+  const nodeId = entry.figmaPageId.replace(':', '-');
+  return `${FIGMA_FILE_URL}?node-id=${nodeId}&m=dev`;
+}
+
+async function fetchFigmaData() {
+  const { codeBase = '' } = getConfig();
+  try {
+    const resp = await fetch(`${codeBase}${FIGMA_STATUS_PATH}`);
+    return resp.ok ? resp.json() : [];
+  } catch {
+    return [];
+  }
+}
+
+// the widget removes itself when the component has no entry (or the data is unavailable).
+async function decorateSeeInFigma(a, span) {
+  const componentSlug = componentSlugFromPath(window.location.pathname);
+  const data = componentSlug ? await fetchFigmaData() : [];
+  const href = resolveFigmaUrl(componentSlug, data);
+  if (!href) {
+    a.remove();
+    return;
+  }
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  span.textContent = 'See in Figma';
+}
+
+// Link widgets keep their anchor (native navigation) instead of becoming a
+// <button>; each entry decorates the anchor in place.
+const LINKS = {
+  '/tools/widgets/go-to-impl': decorateGoToImpl,
+  '/tools/widgets/see-in-figma': decorateSeeInFigma,
 };
 
 function getLinkProps(a) {
@@ -64,7 +221,7 @@ function getLinkProps(a) {
   }, {});
 }
 
-export default function actionButton(a) {
+export default async function actionButton(a) {
   const props = getLinkProps(a);
   if (props.style) { a.classList.add(`action-button-${props.style}`); }
 
@@ -74,10 +231,26 @@ export default function actionButton(a) {
   if (props.label === 'hide') { span.classList.add('visually-hidden'); }
   a.lastChild.replaceWith(span);
 
+  // The widget name (last path segment) is stamped as data-widget so consumers
+  // like page-nav can identify and filter widgets after decoration.
+  const widget = a.pathname.split('/').filter(Boolean).pop();
+
+  // Link widgets keep the anchor (native navigation); button widgets swap it
+  // for a <button> with a click handler. Awaited so async link widgets (e.g.
+  // see-in-figma, which fetches its target) are fully resolved — href set or
+  // element removed — before callers like page-nav read the decorated DOM.
+  const decorateLinkWidget = LINKS[a.pathname];
+  if (decorateLinkWidget) {
+    a.dataset.widget = widget;
+    await decorateLinkWidget(a, span);
+    return;
+  }
+
   const buttonProps = BUTTONS[a.hash.replace('#', '')];
   if (buttonProps) {
     const button = document.createElement('button');
     button.className = a.className;
+    button.dataset.widget = widget;
     if (buttonProps.click) {
       button.addEventListener('click', buttonProps.click);
     }

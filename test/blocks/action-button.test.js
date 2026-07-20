@@ -8,7 +8,11 @@ import { setConfig } from '../../scripts/ak.js';
 const logStub = sinon.stub();
 setConfig({ log: logStub });
 
-const { default: actionButton } = await import('../../blocks/action-button/action-button.js');
+const {
+  default: actionButton,
+  resolveImplementation,
+  resolveFigmaUrl,
+} = await import('../../blocks/action-button/action-button.js');
 
 function makeAnchor({ href = '/unknown', title = 'label:Button', text = 'Click' } = {}) {
   const a = document.createElement('a');
@@ -136,6 +140,13 @@ describe('action-button block', () => {
       expect(document.body.querySelector('button span').textContent).to.equal('Action');
     });
 
+    it('stamps the widget name (last path segment) onto the button as data-widget', () => {
+      const a = makeAnchor({ href: '/tools/widgets/action' });
+      document.body.append(a);
+      actionButton(a);
+      expect(document.body.querySelector('button').dataset.widget).to.equal('action');
+    });
+
     it('click does not throw (no handler is attached)', () => {
       const a = makeAnchor({ href: '/tools/widgets/action#action' });
       document.body.append(a);
@@ -254,6 +265,321 @@ describe('action-button block', () => {
       actionButton(a);
       document.body.querySelector('button').click();
       expect(logStub.calledWith('You clicked settings')).to.be.true;
+    });
+  });
+
+  describe('/tools/widgets/copy-markdown', () => {
+    let fetchStub;
+    let clipboardStub;
+    let clock;
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers();
+      fetchStub = sinon.stub(window, 'fetch').resolves({
+        ok: true,
+        text: async () => '# Page markdown',
+      });
+      clipboardStub = sinon.stub(navigator.clipboard, 'writeText').resolves();
+    });
+
+    afterEach(() => {
+      fetchStub.restore();
+      clipboardStub.restore();
+      clock.restore();
+    });
+
+    function makeCopyButton() {
+      const a = makeAnchor({ href: '/tools/widgets/copy-markdown', text: 'Copy markdown' });
+      document.body.append(a);
+      actionButton(a);
+      return document.body.querySelector('button');
+    }
+
+    it('replaces the anchor with a <button>', () => {
+      const button = makeCopyButton();
+      expect(button).to.not.be.null;
+      expect(document.body.querySelector('a')).to.be.null;
+    });
+
+    it('fetches the current page markdown (pathname + .md)', async () => {
+      makeCopyButton().click();
+      await clock.tickAsync(0);
+      expect(fetchStub.calledOnce).to.be.true;
+      expect(fetchStub.firstCall.args[0]).to.match(/\.md$/);
+    });
+
+    it('writes the fetched markdown to the clipboard', async () => {
+      makeCopyButton().click();
+      await clock.tickAsync(0);
+      expect(clipboardStub.calledOnceWith('# Page markdown')).to.be.true;
+    });
+
+    it('flashes "Copied" on success', async () => {
+      const button = makeCopyButton();
+      button.click();
+      await clock.tickAsync(0);
+      expect(button.querySelector('span').textContent).to.equal('Copied');
+      expect(button.classList.contains('is-copied')).to.be.true;
+    });
+
+    it('reverts to the original label after 3s', async () => {
+      const button = makeCopyButton();
+      button.click();
+      await clock.tickAsync(0);
+      await clock.tickAsync(3000);
+      expect(button.querySelector('span').textContent).to.equal('Copy markdown');
+      expect(button.classList.contains('is-copied')).to.be.false;
+    });
+
+    it('flashes "Copy failed" and skips the clipboard when the fetch fails', async () => {
+      fetchStub.resolves({ ok: false, status: 404 });
+      const button = makeCopyButton();
+      button.click();
+      await clock.tickAsync(0);
+      expect(button.querySelector('span').textContent).to.equal('Copy failed');
+      expect(clipboardStub.called).to.be.false;
+    });
+
+    it('flashes "Copy failed" when writing to the clipboard rejects', async () => {
+      clipboardStub.rejects(new Error('denied'));
+      const button = makeCopyButton();
+      button.click();
+      await clock.tickAsync(0);
+      expect(button.querySelector('span').textContent).to.equal('Copy failed');
+    });
+
+    // Authored icons render as <svg class="icon icon-<name>"><use href=".../
+    // s2-icon-<name>-20-n.svg#icon"></use></svg> (see scripts/utils/svg.js).
+    function makeCopyButtonWithIcon(iconName = 'copy') {
+      const a = makeAnchor({ href: '/tools/widgets/copy-markdown', text: 'Copy markdown' });
+      a.insertAdjacentHTML(
+        'afterbegin',
+        `<svg class="icon icon-${iconName}"><use href="/img/icons/s2-icon-${iconName}-20-n.svg#icon"></use></svg>`,
+      );
+      document.body.append(a);
+      actionButton(a);
+      return document.body.querySelector('button');
+    }
+
+    const iconHref = (button) => button.querySelector('svg.icon use').getAttribute('href');
+
+    it('swaps the authored icon to the checkmark icon on success', async () => {
+      const button = makeCopyButtonWithIcon();
+      button.click();
+      await clock.tickAsync(0);
+      expect(iconHref(button)).to.equal('/img/icons/s2-icon-checkmarkcircle-20-n.svg#icon');
+    });
+
+    it('restores the original icon after the revert delay', async () => {
+      const button = makeCopyButtonWithIcon();
+      button.click();
+      await clock.tickAsync(0);
+      await clock.tickAsync(3000);
+      expect(iconHref(button)).to.equal('/img/icons/s2-icon-copy-20-n.svg#icon');
+    });
+
+    it('preserves a multi-word authored icon name when reverting', async () => {
+      const button = makeCopyButtonWithIcon('copy-outline');
+      button.click();
+      await clock.tickAsync(0);
+      expect(iconHref(button)).to.equal('/img/icons/s2-icon-checkmarkcircle-20-n.svg#icon');
+      await clock.tickAsync(3000);
+      expect(iconHref(button)).to.equal('/img/icons/s2-icon-copy-outline-20-n.svg#icon');
+    });
+
+    it('leaves the icon unchanged when the copy fails', async () => {
+      fetchStub.resolves({ ok: false, status: 404 });
+      const button = makeCopyButtonWithIcon();
+      button.click();
+      await clock.tickAsync(0);
+      expect(iconHref(button)).to.equal('/img/icons/s2-icon-copy-20-n.svg#icon');
+    });
+
+    it('does not throw for a label-only button with no icon', async () => {
+      const button = makeCopyButton();
+      button.click();
+      await clock.tickAsync(0);
+      expect(button.querySelector('span').textContent).to.equal('Copied');
+    });
+  });
+
+  describe('resolveImplementation — component page → impl docs URL', () => {
+    it('maps swc to the Spectrum Web Components Storybook docs URL', () => {
+      expect(resolveImplementation('/web/swc/components/action-button')).to.deep.equal({
+        label: 'SWC',
+        href: 'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
+      });
+    });
+
+    it('maps rsp to the PascalCase react-spectrum docs URL', () => {
+      expect(resolveImplementation('/web/rsp/components/action-button')).to.deep.equal({
+        label: 'RSP',
+        href: 'https://react-spectrum.adobe.com/ActionButton.html',
+      });
+    });
+
+    it('returns null when there is no components segment', () => {
+      expect(resolveImplementation('/web/swc/get-started')).to.equal(null);
+    });
+
+    it('returns null for an unknown implementation', () => {
+      expect(resolveImplementation('/web/ios/components/button')).to.equal(null);
+    });
+
+    it('returns null for the home page', () => {
+      expect(resolveImplementation('/')).to.equal(null);
+    });
+  });
+
+  describe('/tools/widgets/go-to-impl — link widget', () => {
+    let originalUrl;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    function makeGoToImpl() {
+      const a = makeAnchor({ href: '/tools/widgets/go-to-impl', text: 'Go to implementation' });
+      document.body.append(a);
+      actionButton(a);
+      return document.body.querySelector('[data-widget="go-to-impl"]');
+    }
+
+    it('stays an anchor (never converted to a button)', () => {
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      makeGoToImpl();
+      expect(document.body.querySelector('button')).to.be.null;
+      expect(document.body.querySelector('a[data-widget="go-to-impl"]')).to.not.be.null;
+    });
+
+    it('sets the SWC label and deep-links to the SWC docs in a new tab', () => {
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      const a = makeGoToImpl();
+      expect(a.querySelector('span').textContent).to.equal('Go to SWC');
+      expect(a.getAttribute('href')).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
+      );
+      expect(a.target).to.equal('_blank');
+      expect(a.rel).to.equal('noopener noreferrer');
+    });
+
+    it('sets the RSP label and a PascalCase deep-link', () => {
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+      const a = makeGoToImpl();
+      expect(a.querySelector('span').textContent).to.equal('Go to RSP');
+      expect(a.getAttribute('href')).to.equal('https://react-spectrum.adobe.com/ActionButton.html');
+    });
+
+    it('removes itself when the page is not a component page', () => {
+      window.history.pushState({}, '', '/web/swc/get-started');
+      makeGoToImpl();
+      expect(document.body.querySelector('[data-widget="go-to-impl"]')).to.be.null;
+    });
+
+    it('removes itself when the implementation is unknown', () => {
+      window.history.pushState({}, '', '/web/ios/components/button');
+      makeGoToImpl();
+      expect(document.body.querySelector('[data-widget="go-to-impl"]')).to.be.null;
+    });
+  });
+
+  describe('resolveFigmaUrl — component slug → Figma dev-mode URL', () => {
+    const data = [
+      { name: 'Accordion', figmaPageId: '10093:987' },
+      { name: 'Action bar', figmaPageId: '9892:747' },
+      { name: 'Action button', figmaPageId: '9230:3620' },
+    ];
+
+    it('builds a dev-mode URL with the node id hyphenated', () => {
+      expect(resolveFigmaUrl('action-button', data)).to.equal(
+        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
+      );
+    });
+
+    it('matches the URL slug against the slugified component name', () => {
+      expect(resolveFigmaUrl('action-bar', data)).to.equal(
+        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9892-747&m=dev',
+      );
+    });
+
+    it('returns null when the component is absent from the data', () => {
+      expect(resolveFigmaUrl('nonexistent', data)).to.equal(null);
+    });
+
+    it('returns null for an empty component slug', () => {
+      expect(resolveFigmaUrl('', data)).to.equal(null);
+    });
+  });
+
+  describe('/tools/widgets/see-in-figma — link widget', () => {
+    let originalUrl;
+    let fetchStub;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      fetchStub = sinon.stub(window, 'fetch');
+    });
+
+    afterEach(() => {
+      fetchStub.restore();
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    function stubFigmaData(rows) {
+      fetchStub.resolves({ ok: true, json: async () => rows });
+    }
+
+    async function makeSeeInFigma() {
+      const a = makeAnchor({ href: '/tools/widgets/see-in-figma', text: 'See in Figma' });
+      document.body.append(a);
+      await actionButton(a);
+      return document.body.querySelector('[data-widget="see-in-figma"]');
+    }
+
+    it('deep-links to the component Figma node in dev mode, in a new tab', async () => {
+      stubFigmaData([{ name: 'Action button', figmaPageId: '9230:3620' }]);
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      const a = await makeSeeInFigma();
+      expect(a).to.not.be.null;
+      expect(a.getAttribute('href')).to.equal(
+        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
+      );
+      expect(a.target).to.equal('_blank');
+      expect(a.rel).to.equal('noopener noreferrer');
+      expect(a.querySelector('span').textContent).to.equal('See in Figma');
+    });
+
+    it('stays an anchor (never converted to a button)', async () => {
+      stubFigmaData([{ name: 'Action button', figmaPageId: '9230:3620' }]);
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+      await makeSeeInFigma();
+      expect(document.body.querySelector('button')).to.be.null;
+      expect(document.body.querySelector('a[data-widget="see-in-figma"]')).to.not.be.null;
+    });
+
+    it('removes itself when the component has no Figma entry', async () => {
+      stubFigmaData([{ name: 'Accordion', figmaPageId: '10093:987' }]);
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      await makeSeeInFigma();
+      expect(document.body.querySelector('[data-widget="see-in-figma"]')).to.be.null;
+    });
+
+    it('removes itself when the data file cannot be fetched', async () => {
+      fetchStub.resolves({ ok: false, status: 404 });
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      await makeSeeInFigma();
+      expect(document.body.querySelector('[data-widget="see-in-figma"]')).to.be.null;
+    });
+
+    it('removes itself (and skips the fetch) when not on a component page', async () => {
+      window.history.pushState({}, '', '/web/swc/get-started');
+      await makeSeeInFigma();
+      expect(document.body.querySelector('[data-widget="see-in-figma"]')).to.be.null;
+      expect(fetchStub.called).to.be.false;
     });
   });
 });
