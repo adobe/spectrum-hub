@@ -40,7 +40,7 @@ const CDN_URLS = [
   () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}/.storybook/custom-elements.json`,
 ];
 
-async function fetchCEM() {
+export async function fetchCEM() {
   for (const buildUrl of CDN_URLS) {
     const url = buildUrl();
     try {

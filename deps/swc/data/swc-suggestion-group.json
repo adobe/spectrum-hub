@@ -4,6 +4,6 @@
     "property": "accessibleLabel",
     "type": "string",
     "default": "''",
-    "description": "Accessible name override for the host `role=\"group\"`. When set, it takes\r\nprecedence over `aria-labelledby` from the heading slot."
+    "description": "Accessible name override for the host `role=\"group\"`. When set, it takes\nprecedence over `aria-labelledby` from the heading slot."
   }
 ]

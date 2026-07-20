@@ -151,23 +151,10 @@
       "description": "Whether the button is disabled. Removes focusability and prevents\ninteraction."
     },
     {
-      "attribute": "pending",
-      "property": "pending",
-      "type": "boolean",
-      "default": "false",
-      "description": "Whether the button is in a pending (busy) state. The button remains\nfocusable but activation is suppressed."
-    },
-    {
       "attribute": "accessible-label",
       "property": "accessibleLabel",
       "type": "string | undefined",
       "description": "Accessible label forwarded to the internal `<button>` element as\n`aria-label`. Required for icon-only buttons, which have no visible text."
-    },
-    {
-      "attribute": "pending-label",
-      "property": "pendingLabel",
-      "type": "string | undefined",
-      "description": "Custom accessible label used during the pending state. When omitted,\nthe pending label is derived from the resolved non-busy accessible name\nplus a busy suffix (e.g. \"Save, busy\")."
     }
   ],
   "ButtonGroupBase": [
@@ -191,6 +178,43 @@
       "type": "ButtonGroupAlignment",
       "default": "'start'",
       "description": "The alignment of buttons within the group along the main axis."
+    }
+  ],
+  "ColorHandleBase": [
+    {
+      "attribute": "color",
+      "property": "color",
+      "type": "string",
+      "default": "'rgba(255, 0, 0, 0.5)'",
+      "description": "The CSS color value shown inside the handle. Supports any valid CSS color\nstring, including alpha transparency (which reveals the checkerboard).\n\nDefault is semi-transparent red so the opacity checkerboard is visible\nwhen the component is rendered without a `color` attribute."
+    },
+    {
+      "attribute": "disabled",
+      "property": "disabled",
+      "type": "boolean",
+      "default": "false",
+      "description": "Reflected. Suppresses the loupe (`open && !disabled`)."
+    },
+    {
+      "attribute": "focused",
+      "property": "focused",
+      "type": "boolean",
+      "default": "false",
+      "description": "Reflected. Set by the parent color component when the parent picker is\nfocused (keyboard or programmatic); enlarges the handle as the focus\nindicator."
+    },
+    {
+      "attribute": "open",
+      "property": "open",
+      "type": "boolean",
+      "default": "false",
+      "description": "Reflected. Shows the built-in loupe; auto-toggled by touch pointers."
+    },
+    {
+      "attribute": "fill",
+      "property": "fill",
+      "type": "boolean",
+      "default": "true",
+      "description": "Reflected. `true` shows the inner color swatch (1st-gen behavior);\n`false` renders an outline-only handle."
     }
   ],
   "ColorLoupeBase": [
@@ -307,6 +331,107 @@
       "description": "The variant of the meter. Drives the bar fill color."
     }
   ],
+  "PendingMixin": [
+    {
+      "attribute": "pending",
+      "property": "pending",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the element is in a pending (busy) state. The element remains\nfocusable but activation is suppressed."
+    },
+    {
+      "attribute": "pending-label",
+      "property": "pendingLabel",
+      "type": "string | undefined",
+      "description": "Custom accessible label used during the pending state. When omitted, the\npending label is derived from the resolved non-busy accessible name plus\na busy suffix (e.g. \"Save, busy\")."
+    }
+  ],
+  "PopoverBase": [
+    {
+      "attribute": "open",
+      "property": "open",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the popover is open."
+    },
+    {
+      "attribute": "modal",
+      "property": "modal",
+      "type": "boolean",
+      "default": "false",
+      "description": "Opt in to blocking modal behavior (`<dialog>.showModal()`): focus trap,\nbackground inert, native `role=\"dialog\"`. When unset, the popover uses\n`popover=\"auto\"` light-dismiss behavior."
+    },
+    {
+      "attribute": "accessible-label",
+      "property": "accessibleLabel",
+      "type": "string",
+      "default": "''",
+      "description": "Accessible name for the popover's dialog surface, forwarded as `aria-label`\nto the internal element. Required in both modes (the surface is a dialog);\nthe component dev-warns when opened without one."
+    },
+    {
+      "attribute": "placement",
+      "property": "placement",
+      "type": "Placement",
+      "default": "'bottom'",
+      "description": "The placement of the popover relative to its trigger."
+    },
+    {
+      "attribute": "size",
+      "property": "size",
+      "type": "PopoverSize | undefined",
+      "description": "Optional fixed size. When set, the popover uses a fixed inline size\n(`s` → 336px, `m` → 416px, `l` → 576px); when unset, it fits its contents."
+    },
+    {
+      "attribute": "hide-arrow",
+      "property": "hideArrow",
+      "type": "boolean",
+      "default": "false",
+      "description": "Hide the popover's arrow (tip). The arrow is shown by default."
+    },
+    {
+      "attribute": "offset",
+      "property": "offset",
+      "type": "number",
+      "default": "8",
+      "description": "Main-axis offset in pixels from the trigger."
+    },
+    {
+      "attribute": "cross-offset",
+      "property": "crossOffset",
+      "type": "number",
+      "default": "0",
+      "description": "Cross-axis offset in pixels from the trigger."
+    },
+    {
+      "attribute": "should-flip",
+      "property": "shouldFlip",
+      "type": "boolean",
+      "default": "true",
+      "description": "Allow the popover to flip to the opposite side when constrained. When\n`false`, the popover stays in the requested placement."
+    },
+    {
+      "attribute": "for",
+      "property": "for",
+      "type": "string | undefined",
+      "description": "ID of the trigger element in the same document tree root."
+    },
+    {
+      "attribute": "manual",
+      "property": "manual",
+      "type": "boolean",
+      "default": "false",
+      "description": "Suppress the automatic click-to-toggle wiring on the resolved trigger. When\nset, control visibility through the `open` property instead. ARIA\nrelationship wiring still applies."
+    }
+  ],
+  "ProgressBarBase": [
+    {
+      "attribute": "indeterminate",
+      "property": "indeterminate",
+      "type": "boolean",
+      "default": "false",
+      "description": "When true, the bar runs a looping fill animation and all four\n`aria-value*` attributes are omitted from the DOM. The visible\nvalue text is also omitted."
+    }
+  ],
   "ProgressCircleBase": [
     {
       "attribute": "label",
@@ -381,7 +506,7 @@
       "attribute": "keyboard-activation",
       "property": "keyboardActivation",
       "type": "KeyboardActivation",
-      "description": "Whether selection follows keyboard focus (`automatic`) or the user\nmust press Enter or Space to activate (`manual`, default)."
+      "description": "Whether selection follows keyboard focus (`automatic`, default) or the\nuser must press Enter or Space to activate (`manual`). Prefer `manual`\nwhen tab panels are expensive to render or not fully present in the DOM."
     },
     {
       "attribute": "density",
@@ -394,7 +519,7 @@
       "property": "direction",
       "type": "TabsDirection",
       "default": "'horizontal'",
-      "description": "The layout direction of the tab list.\n\n**Breaking change:** `'vertical-right'` is no longer supported.\nUse `'vertical'` instead."
+      "description": "The layout direction of the tab list: `horizontal` (default) or `vertical`."
     },
     {
       "attribute": "disabled",

@@ -4,7 +4,8 @@
     "property": "variant",
     "type": "BadgeVariant",
     "default": "'neutral'",
-    "since": "2.0.0"
+    "description": "The semantic or non-semantic color variant of the badge.",
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
@@ -12,7 +13,7 @@
     "type": "ElementSize",
     "description": "The size of the badge.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "fixed",
@@ -20,7 +21,7 @@
     "type": "FixedValues | undefined",
     "description": "The fixed position of the badge.",
     "inheritedFrom": "BadgeBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "subtle",
@@ -29,15 +30,15 @@
     "default": "false",
     "description": "Whether the badge is subtle.",
     "inheritedFrom": "BadgeBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "outline",
     "property": "outline",
     "type": "boolean",
     "default": "false",
-    "description": "Whether the badge is outlined.\r\n\r\nCan only be used with semantic variants.",
+    "description": "Whether the badge is outlined.\n\nCan only be used with semantic variants.",
     "inheritedFrom": "BadgeBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]

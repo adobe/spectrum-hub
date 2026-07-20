@@ -5,25 +5,25 @@
     "type": "ElementSize",
     "description": "The size of the button group and its children.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "orientation",
     "property": "orientation",
     "type": "ButtonGroupOrientation",
     "default": "'horizontal'",
-    "description": "The layout direction of the button group.\r\n\r\nNote: this property does NOT set `aria-orientation` on the host because\r\n`aria-orientation` is only meaningful for roles that manage arrow-key\r\nnavigation (e.g. `toolbar`, `listbox`). Since button-group uses\r\nsequential Tab navigation (not roving tabindex), the attribute would\r\nbe invalid.",
+    "description": "The layout direction of the button group.\n\nNote: this property does NOT set `aria-orientation` on the host because\n`aria-orientation` is only meaningful for roles that manage arrow-key\nnavigation (e.g. `toolbar`, `listbox`). Since button-group uses\nsequential Tab navigation (not roving tabindex), the attribute would\nbe invalid.",
     "inheritedFrom": "ButtonGroupBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
     "default": "false",
-    "description": "Whether all buttons in the group are disabled. When `true`, forces\r\nevery slotted button child to `disabled`. When `false`, children\r\nretain their individual disabled state — a button slotted with\r\n`disabled` remains disabled even when the group is enabled.",
+    "description": "Whether all buttons in the group are disabled. When `true`, forces\nevery slotted button child to `disabled`. When `false`, children\nretain their individual disabled state — a button slotted with\n`disabled` remains disabled even when the group is enabled.",
     "inheritedFrom": "ButtonGroupBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "align",
@@ -32,6 +32,6 @@
     "default": "'start'",
     "description": "The alignment of buttons within the group along the main axis.",
     "inheritedFrom": "ButtonGroupBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]
