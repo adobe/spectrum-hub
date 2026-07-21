@@ -398,14 +398,6 @@ div[data-status],
   display: none;
 } 
 
-main > .section {
-   padding-block: 120px;
-
-  &:not(:last-child) {
-    border-block-end: 1px solid rgb(from var(--s2-gray-1000) r g b / 10%);
-  }
-}
-
 .section {
   display: block;
 
