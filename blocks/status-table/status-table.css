@@ -6,7 +6,7 @@
 
   margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
 
-  .status-table__table {
+  .status-table-table {
     inline-size: 100%;
     position: relative;
     margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
@@ -56,7 +56,7 @@
   }
 
   /* status badge: colored dot + unified label */
-  .status-table__badge {
+  .status-table-badge {
     display: inline-flex;
     align-items: center;
     gap: var(--s2-spacing-100);
@@ -64,7 +64,7 @@
     font-weight: var(--s2-component-m-medium-font-weight);
   }
 
-  .status-table__dot {
+  .status-table-dot {
     inline-size: var(--status-table-dot-size);
     block-size: var(--status-table-dot-size);
     border-radius: 50%;
@@ -73,7 +73,7 @@
   }
 
   /* secondary guidance line beneath the badge — hidden until the "Show details" toggle */
-  .status-table__secondary {
+  .status-table-secondary {
     display: none;
     margin-block-start: var(--s2-spacing-50);
     color: var(--s2-gray-600);
@@ -81,7 +81,7 @@
     line-height: var(--s2-component-s-regular-line-height);
   }
 
-  &.status-table--show-details .status-table__secondary {
+  &.status-table-show-details .status-table-secondary {
     display: block;
   }
 
@@ -98,7 +98,7 @@
   @media (width >= 900px) {
     overflow-x: auto;
 
-    .status-table__table {
+    .status-table-table {
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
@@ -164,7 +164,7 @@
   }
 
   /* status definition cards — always visible, one per status present in the table */
-  .status-table__cards {
+  .status-table-cards {
     display: flex;
     flex-wrap: wrap;
     gap: var(--s2-spacing-300);
@@ -173,7 +173,7 @@
     padding: 0;
   }
 
-  .status-table__card {
+  .status-table-card {
     flex: 1 1 240px;
     display: flex;
     flex-direction: column;
@@ -184,24 +184,24 @@
     background-color: rgb(from var(--status-color) r g b / 10%);
   }
 
-  .status-table__card-label {
+  .status-table-card-label {
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--status-color);
   }
 
   /* the Not available status color is a mid-gray dot hue — read the label darker for contrast */
-  .status-table__card[data-status='not-available'] .status-table__card-label {
+  .status-table-card[data-status='not-available'] .status-table-card-label {
     color: var(--s2-gray-900);
   }
 
-  .status-table__card-definition {
+  .status-table-card-definition {
     color: var(--s2-gray-700);
     font-size: var(--s2-component-s-regular-font-size);
     line-height: var(--s2-component-s-regular-line-height);
   }
 
   /* toolbar — search, show-details toggle, column filter, and CSV export */
-  .status-table__toolbar {
+  .status-table-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -209,29 +209,29 @@
     margin-block-end: var(--s2-spacing-200);
   }
 
-  .status-table__search {
+  .status-table-search {
     flex: 1 1 220px;
     max-inline-size: 360px;
   }
 
   /* push the export control to the trailing edge of the toolbar */
-  .status-table__export {
+  .status-table-export {
     margin-inline-start: auto;
   }
 
   /* sort: the "Sort by" control is shown only on small screens, where the stacked layout
      hides the header row. On wide screens sorting rides on the clickable headers instead. */
-  .status-table__sort {
+  .status-table-sort {
     display: flex;
     align-items: end;
     gap: var(--s2-spacing-100);
   }
 
-  .status-table__sort-select {
+  .status-table-sort-select {
     min-inline-size: 150px;
   }
 
-  .status-table__sort-direction {
+  .status-table-sort-direction {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -267,13 +267,13 @@
   }
 
   @media (width >= 900px) {
-    .status-table__sort {
+    .status-table-sort {
       display: none;
     }
   }
 
   /* clickable sort headers — the wide-screen sort mechanism */
-  .status-table__sort-header {
+  .status-table-sort-header {
     display: inline-flex;
     align-items: center;
     gap: var(--s2-spacing-100);
@@ -288,7 +288,7 @@
   /* the glyph is decorative (aria-sort conveys the state): a muted neutral sort icon marks
      every sortable column and brightens on hover/focus; the active column swaps in the
      directional glyph at full strength. */
-  .status-table__sort-icon {
+  .status-table-sort-icon {
     inline-size: 16px;
     block-size: 16px;
     mask-image: url('/img/icons/s2-icon-sort-20-n.svg');
@@ -299,26 +299,26 @@
     opacity: 0.5;
   }
 
-  .status-table__sort-header:hover .status-table__sort-icon,
-  .status-table__sort-header:focus-visible .status-table__sort-icon {
+  .status-table-sort-header:hover .status-table-sort-icon,
+  .status-table-sort-header:focus-visible .status-table-sort-icon {
     opacity: 1;
   }
 
-  thead th[data-sort='ascending'] .status-table__sort-icon,
-  thead th[data-sort='descending'] .status-table__sort-icon {
+  thead th[data-sort='ascending'] .status-table-sort-icon,
+  thead th[data-sort='descending'] .status-table-sort-icon {
     opacity: 1;
   }
 
-  thead th[data-sort='ascending'] .status-table__sort-icon {
+  thead th[data-sort='ascending'] .status-table-sort-icon {
     mask-image: url('/img/icons/s2-icon-sortup-20-n.svg');
   }
 
-  thead th[data-sort='descending'] .status-table__sort-icon {
+  thead th[data-sort='descending'] .status-table-sort-icon {
     mask-image: url('/img/icons/s2-icon-sortdown-20-n.svg');
   }
 
   /* column filter: a button anchoring a popover of per-column checkboxes */
-  .status-table__filter-button {
+  .status-table-filter-button {
     anchor-name: --status-table-columns;
 
     /* icon-only: label is visually hidden, so trim the text padding to a square */
@@ -340,7 +340,7 @@
     }
   }
 
-  .status-table__filter-popover {
+  .status-table-filter-popover {
     margin: 0;
     padding: var(--s2-spacing-300);
     border: var(--status-table-border-width) solid var(--s2-gray-300);
@@ -356,13 +356,13 @@
      the UA `[popover]:not(:popover-open)` rule and leave the panel visible on load.
      An open popover lives in the top layer, so it floats above the table and is never
      clipped by the block's overflow scroll, even while the table is scrolled. */
-  .status-table__filter-popover:popover-open {
+  .status-table-filter-popover:popover-open {
     display: flex;
   }
 
   /* anchor the popover under its button where supported; otherwise the UA centers it */
   @supports (position-area: bottom) {
-    .status-table__filter-popover {
+    .status-table-filter-popover {
       inset: 0 -32px; /* TODO: magic numbers to roughly position our popover*/
       position-anchor: --status-table-columns;
       position-area: bottom x-end;

@@ -26,16 +26,16 @@ const buildBadge = (cell) => {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
 
   const badge = document.createElement('span');
-  badge.className = 'status-table__badge';
+  badge.className = 'status-table-badge';
 
   const dot = document.createElement('span');
-  dot.className = 'status-table__dot';
+  dot.className = 'status-table-dot';
   dot.setAttribute('data-status', status.id);
   dot.style.setProperty('--status-color', `var(${status.color})`);
   dot.setAttribute('aria-hidden', 'true');
 
   const label = document.createElement('span');
-  label.className = 'status-table__label';
+  label.className = 'status-table-label';
   label.textContent = status.label;
 
   badge.append(dot, label);
@@ -48,7 +48,7 @@ const buildStatusCell = (cell) => {
   td.append(buildBadge(cell));
   if (cell?.secondary) {
     const secondary = document.createElement('span');
-    secondary.className = 'status-table__secondary';
+    secondary.className = 'status-table-secondary';
     secondary.textContent = cell.secondary;
     td.append(secondary);
   }
@@ -98,7 +98,7 @@ const buildTable = (index) => {
   }
 
   const table = withRole(document.createElement('table'), 'table');
-  table.className = 'status-table__table';
+  table.className = 'status-table-table';
   table.append(thead, tbody);
   return table;
 };
@@ -126,20 +126,20 @@ const presentStatusIds = (index) => {
  */
 const buildStatusCards = (index) => {
   const cards = document.createElement('ul');
-  cards.className = 'status-table__cards';
+  cards.className = 'status-table-cards';
   for (const id of presentStatusIds(index)) {
     const { label, definition, color } = STATUSES[id];
     const card = document.createElement('li');
-    card.className = 'status-table__card';
+    card.className = 'status-table-card';
     card.setAttribute('data-status', id);
     card.style.setProperty('--status-color', `var(${color})`);
 
     const term = document.createElement('span');
-    term.className = 'status-table__card-label';
+    term.className = 'status-table-card-label';
     term.textContent = label;
 
     const desc = document.createElement('span');
-    desc.className = 'status-table__card-definition';
+    desc.className = 'status-table-card-definition';
     desc.textContent = definition;
 
     card.append(term, desc);
@@ -174,7 +174,7 @@ const buildCsvRows = (index) => {
  */
 const buildSearch = (table, announce) => {
   const input = document.createElement('se-input');
-  input.className = 'status-table__search';
+  input.className = 'status-table-search';
   input.setAttribute('type', 'search');
   // Keep the label as the field's accessible name, but hide it visually — the search
   // icon and placeholder make the field self-evident.
@@ -202,11 +202,11 @@ const buildSearch = (table, announce) => {
  */
 const buildDetailsToggle = (el) => {
   const toggle = document.createElement('se-switch');
-  toggle.className = 'status-table__details-toggle';
+  toggle.className = 'status-table-details-toggle';
   toggle.name = 'status-table-details';
   toggle.textContent = 'Show details';
   toggle.addEventListener('change', () => {
-    el.classList.toggle('status-table--show-details', toggle.checked);
+    el.classList.toggle('status-table-show-details', toggle.checked);
   });
   return toggle;
 };
@@ -224,13 +224,13 @@ const setColumnVisible = (table, id, visible) => {
  */
 const buildColumnFilter = (columns, table, announce) => {
   const wrap = document.createElement('div');
-  wrap.className = 'status-table__filter';
+  wrap.className = 'status-table-filter';
 
   const popoverId = `status-table-columns-${Math.random().toString(36).slice(2)}`;
 
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'status-table__filter-button';
+  button.className = 'status-table-filter-button';
   button.classList.add('btn', 'btn-secondary');
   button.setAttribute('popovertarget', popoverId);
   // Icon-only button: the filter glyph rides on a CSS ::before mask, so the label is
@@ -241,13 +241,13 @@ const buildColumnFilter = (columns, table, announce) => {
   button.append(buttonLabel);
 
   const popover = document.createElement('div');
-  popover.className = 'status-table__filter-popover';
+  popover.className = 'status-table-filter-popover';
   popover.id = popoverId;
   popover.setAttribute('popover', '');
 
   for (const { id, label } of columns) {
     const toggle = document.createElement('se-checkbox');
-    toggle.className = 'status-table__column-toggle';
+    toggle.className = 'status-table-column-toggle';
     toggle.name = `status-table-col-${id}`;
     toggle.setAttribute('data-col', id);
     toggle.checked = true;
@@ -267,7 +267,7 @@ const buildColumnFilter = (columns, table, announce) => {
 const buildExportButton = (index) => {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'status-table__export';
+  button.className = 'status-table-export';
   button.textContent = 'Export CSV';
   button.classList.add('btn', 'btn-primary');
   button.addEventListener('click', () => downloadCsv(CSV_FILENAME, toCsv(buildCsvRows(index))));
@@ -293,7 +293,7 @@ const buildSorting = (table, columns, announce) => {
 
   const sortKey = (row, id) => (id === COMPONENT
     ? row.querySelector('th[scope="row"]')?.textContent
-    : row.querySelector(`td[data-col="${id}"] .status-table__label`)?.textContent) ?? '';
+    : row.querySelector(`td[data-col="${id}"] .status-table-label`)?.textContent) ?? '';
 
   // Reflect the current sort onto both affordances (headers' aria-sort + the control).
   const reflect = () => {
@@ -326,11 +326,11 @@ const buildSorting = (table, columns, announce) => {
   const wireHeader = (th, id) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'status-table__sort-header';
+    button.className = 'status-table-sort-header';
     const text = document.createElement('span');
     text.textContent = th.textContent;
     const icon = document.createElement('span');
-    icon.className = 'status-table__sort-icon';
+    icon.className = 'status-table-sort-icon';
     icon.setAttribute('aria-hidden', 'true');
     button.append(text, icon);
     button.addEventListener('click', () => {
@@ -347,9 +347,9 @@ const buildSorting = (table, columns, announce) => {
 
   // The small-screen "Sort by" control: a column select plus a direction toggle.
   const control = document.createElement('div');
-  control.className = 'status-table__sort';
+  control.className = 'status-table-sort';
   select = document.createElement('se-select');
-  select.className = 'status-table__sort-select';
+  select.className = 'status-table-sort-select';
   select.setAttribute('label', 'Sort by');
   for (const { id, label } of sortable) {
     const option = document.createElement('option');
@@ -360,7 +360,7 @@ const buildSorting = (table, columns, announce) => {
   select.addEventListener('change', () => sortBy(select.value, direction));
   dirButton = document.createElement('button');
   dirButton.type = 'button';
-  dirButton.className = 'status-table__sort-direction';
+  dirButton.className = 'status-table-sort-direction';
   dirButton.addEventListener('click', () => {
     sortBy(activeId, direction === 'ascending' ? 'descending' : 'ascending');
   });
@@ -389,7 +389,7 @@ const buildAnnouncer = () => {
 const buildToolbar = (index, table, el, announce) => {
   const columns = index.implementations?.web ?? [];
   const toolbar = document.createElement('div');
-  toolbar.className = 'status-table__toolbar';
+  toolbar.className = 'status-table-toolbar';
   toolbar.append(
     buildSearch(table, announce),
     buildSorting(table, columns, announce),
