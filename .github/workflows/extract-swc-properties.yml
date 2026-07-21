@@ -24,10 +24,15 @@ jobs:
       - name: Extract component properties from published CEM
         run: node deps/swc/extract-cem-components.js
 
+      # Rebuilds the combined index from the freshly-extracted SWC data plus the
+      # currently-committed RSP data. Fails closed on an empty roster.
+      - name: Build combined status index
+        run: node deps/build-status-index.js
+
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deps/swc/data/
-          git diff --staged --quiet || git commit -m "chore: update component properties from CEM"
+          git add deps/swc/data/ deps/status-index.json
+          git diff --staged --quiet || git commit -m "chore: update component properties from CEM and status index"
           git push

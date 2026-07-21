@@ -29,7 +29,7 @@ Each row in `data/swc-{tag}.json` maps a CEM attribute to:
 
 ### Component metadata (`status`, `since`)
 
-- **`status`** — Lifecycle and visibility from `@status` (`preview`, `deprecated`, `internal`). Components without `status` are implicitly stable and public. Rows keep this field for future use; the site's component options table does not render it as a column today.
+- **`status`** — Lifecycle and visibility from `@status`. The intended vocabulary is `preview` / `deprecated` / `internal`, but the current CEM emits only `internal` (on `swc-asset` and `swc-icon`); `preview` and `deprecated` are not populated yet. Components without `status` are implicitly stable and public. Rows keep this field for future use; the site's component options table does not render it as a column today. See [../DATA-CONTRACT.md](../DATA-CONTRACT.md).
 - **`since`** — Version from `@since` (for example `0.0.1` on early components, `2.0.0` after the convention was standardized).
 - **npm dist-tags** (`latest`, `next`, etc.) describe the package release channel, not per-component lifecycle. Use `status` for component-level visibility in docs.
 
@@ -46,17 +46,21 @@ cd ../spectrum-web-components/2nd-gen/packages/swc
 yarn analyze
 cd ../../../../spectrum-hub
 node deps/swc/extract-cem-components.js ../spectrum-web-components/2nd-gen/packages/swc/.storybook/custom-elements.json
+node deps/build-status-index.js   # rebuild the combined status index from the new data
 npm run test:extractions
 ```
+
+Commit both `deps/swc/data/` **and** `deps/status-index.json` — the index is derived from the SWC (and RSP) data and goes stale otherwise. See [../build-status-index.js](../build-status-index.js) and [../status-index.json](../status-index.json).
 
 **Published package CEM (when available):**
 
 ```sh
 node deps/swc/extract-cem-components.js
+node deps/build-status-index.js
 npm run test:extractions
 ```
 
-**In GitHub Actions:** The `Update Component Properties` workflow runs `node deps/swc/extract-cem-components.js` on manual dispatch. The daily schedule is disabled until `custom-elements.json` is included in the published `@adobe/spectrum-wc` package — otherwise the job fails when CDN fetch misses the CEM. Until then, update `data/` with the local CEM path above.
+**In GitHub Actions:** The `Update Component Properties` workflow runs `node deps/swc/extract-cem-components.js`, then `node deps/build-status-index.js`, and commits `deps/swc/data/` plus `deps/status-index.json` on manual dispatch. The daily schedule is disabled until `custom-elements.json` is included in the published `@adobe/spectrum-wc` package — otherwise the job fails when CDN fetch misses the CEM. Until then, update `data/` with the local CEM path above. (The daily RSP workflow also rebuilds the index, so it does not go stale relative to committed SWC data — but a fresh SWC refresh should rebuild it immediately rather than waiting for the next RSP run.)
 
 Extraction tests live under `test/extractions/` and run with the repo's Node test runner (`npm run test:extractions`), which is also part of `npm test` in CI.
 
@@ -78,7 +82,7 @@ There is no per-component npm package suffix (1st-gen used `"sp-button": "button
 
 ## Adding or fixing a component
 
-**Preferred (today):** Add the `swc-*` tag to `components.json`, rebuild the CEM in the SWC repo (`yarn analyze`), then rerun `extract-cem-components.js` with the local manifest path.
+**Preferred (today):** Add the `swc-*` tag to `components.json`, rebuild the CEM in the SWC repo (`yarn analyze`), rerun `extract-cem-components.js` with the local manifest path, then rebuild the status index (`node deps/build-status-index.js`). A brand-new tag with no RSP peer becomes a single-implementation row automatically; if the mechanical `swc-<kebab>` → PascalCase name is wrong, add an entry to [../component-aliases.json](../component-aliases.json).
 
 **When the tag is missing from output:**
 

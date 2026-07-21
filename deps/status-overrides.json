@@ -1,0 +1,11 @@
+{
+  "RadioButton": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
+      }
+    }
+  }
+}

@@ -19,6 +19,18 @@
   }
 }
 
+/* Opt-in: keep the label wired to the field for assistive tech, but hide it visually
+   (mirrors the global .visually-hidden utility). Use on icon-only / self-evident fields. */
+:host([hide-label]) label {
+  clip-path: inset(50%);
+  block-size: 1px;
+  inline-size: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+}
+
 :host(:state(keyboard-focus)) :is(
   input[type="text"],
   input[type="search"],
