@@ -12,6 +12,7 @@
   margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
   container-type: inline-size;
   container-name: columns;
+  display: block;
 
   @media (width >= 1200px) {
     max-inline-size: unset;
@@ -228,8 +229,6 @@
 Small screens: single-column grid with CSS order grouping same-position cols together.
 Large screens: N-column grid driven by container queries on the inner grid wrapper. */
 .columns.grid-layout {
-  --image-size: var(--s-image-size);
-
   .grid-container {
     display: grid;
     grid-template-columns: 1fr;
@@ -245,6 +244,8 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
 
   &.grid-layout-2 {
+    --image-size: var(--m-image-size);
+
     @container columns (width >= 800px) {
       .grid-container {
         grid-template-columns: repeat(2, 1fr);
@@ -257,6 +258,8 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
 
   &.grid-layout-3 {
+    --image-size: var(--s-image-size);
+
     @container columns (width >= 1000px) {
       .grid-container {
         grid-template-columns: repeat(3, 1fr);
