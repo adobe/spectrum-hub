@@ -149,6 +149,7 @@
       border-end-start-radius: var(--s2-corner-radius-300);
     
     }
+
     thead tr th:last-child {
      border-start-end-radius: var(--s2-corner-radius-300);
      border-end-end-radius: var(--s2-corner-radius-300);
@@ -180,6 +181,7 @@
     gap: var(--s2-spacing-100);
     padding: var(--s2-spacing-400);
     border-radius: 24px;
+
     /* tint the card with a faint wash of its own status color */
     background-color: rgb(from var(--status-color) r g b / 10%);
   }
@@ -363,7 +365,7 @@
   /* anchor the popover under its button where supported; otherwise the UA centers it */
   @supports (position-area: bottom) {
     .status-table-filter-popover {
-      inset: 0 -32px; /* TODO: magic numbers to roughly position our popover*/
+      inset: 0 -32px; /* TODO: magic numbers to roughly position our popover */
       position-anchor: --status-table-columns;
       position-area: bottom x-end;
       margin-block-start: var(--s2-spacing-100);
