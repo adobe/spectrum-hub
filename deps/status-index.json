@@ -1,4 +1,26 @@
 {
+  "statuses": {
+    "available": {
+      "label": "Available",
+      "definition": "Ready for use. Fidelity may vary."
+    },
+    "experimental": {
+      "label": "Experimental",
+      "definition": "Available for exploration and testing, but not recommended for production use."
+    },
+    "not-available": {
+      "label": "Not available",
+      "definition": "Not currently available or applicable for this implementation or design library."
+    },
+    "deprecated": {
+      "label": "Deprecated",
+      "definition": "Still available today, but scheduled for removal."
+    },
+    "removed": {
+      "label": "Removed",
+      "definition": "No longer supported or maintained. Use an alternative component instead."
+    }
+  },
   "implementations": {
     "web": [
       {

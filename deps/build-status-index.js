@@ -17,6 +17,9 @@
  *   Figma = Available, RSP/SWC = Not available).
  * - Raw implementation vocabulary never reaches the output; it is unified in the adapter
  *   (scripts/utils/status-model.js) via the data-shape bridge (component-status.js).
+ * - The output is self-describing: a top-level `statuses` legend embeds the full status
+ *   vocabulary (id → label + definition) so a single fetch of status-index.json is
+ *   interpretable by downstream / AI-assisted consumers without also reading the adapter.
  * - The output carries no timestamp so the committed index is a clean git diff — the
  *   deferred Removed-detection story baselines against the previously-committed file
  *   (see deps/REMOVED-DETECTION.md).
@@ -305,6 +308,20 @@ export function applyOverrides(components, overrides = {}) {
 }
 
 /**
+ * The status vocabulary embedded in the index so a single fetch of status-index.json is
+ * self-describing: every `status` id a cell can carry, mapped to its human label and
+ * legend definition. This is the machine-readable legend for downstream / AI-assisted
+ * consumers that read the JSON directly rather than importing status-model.js.
+ *
+ * @returns {Record<string, { label: string, definition: string }>}
+ */
+export function statusLegend() {
+  return Object.fromEntries(
+    Object.entries(STATUSES).map(([id, { label, definition }]) => [id, { label, definition }]),
+  );
+}
+
+/**
  * Builds the index object from an injected roster and data reader (pure — no file I/O).
  *
  * @param {object} args
@@ -339,6 +356,7 @@ export function buildIndex({
   const { warnings: overrideWarnings } = applyOverrides(components, overrides);
 
   const index = {
+    statuses: statusLegend(),
     implementations: { [PLATFORM]: columns },
     components,
   };

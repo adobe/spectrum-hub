@@ -13,7 +13,9 @@ import {
   applySecondaries,
   applyOverrides,
   buildIndex,
+  statusLegend,
 } from '../../deps/build-status-index.js';
+import { STATUSES } from '../../scripts/utils/status-model.js';
 
 describe('swcTagToPascal', () => {
   it('strips the swc- prefix and converts kebab to Pascal', () => {
@@ -241,6 +243,19 @@ describe('buildIndex', () => {
     });
     const tv = index.components.find((c) => c.name === 'TableView');
     assert.equal(tv.platforms.web.swc.secondary, 'Use Gen1');
+  });
+
+  it('embeds a self-describing status legend for every status in the model', () => {
+    const { index } = buildIndex({ roster, readData, columns });
+    assert.deepEqual(Object.keys(index.statuses), Object.keys(STATUSES));
+    assert.deepEqual(index.statuses.available, {
+      label: STATUSES.available.label,
+      definition: STATUSES.available.definition,
+    });
+  });
+
+  it('omits the presentation-only color token from the legend', () => {
+    assert.ok(!('color' in statusLegend().available));
   });
 });
 
