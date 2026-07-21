@@ -244,10 +244,13 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
 
   &.grid-layout-2 {
-    --image-size: var(--m-image-size);
+    --image-size: var(--s-image-size);
 
     @container columns (width >= 800px) {
+      
       .grid-container {
+        --image-size: var(--m-image-size);
+        
         grid-template-columns: repeat(2, 1fr);
       }
 
