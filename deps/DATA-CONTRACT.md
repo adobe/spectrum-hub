@@ -59,6 +59,33 @@ raw extraction files ─► per-implementation adapter ─► unified index ─�
 2. **Unified index — `deps/status-index.json`** (build-time, emitted by the daily action): the single surface downstream binds to. Shape is platform → implementation, so a vocabulary change is contained in the adapter and never reaches the UI.
 3. **UI** renders columns *from* the index structure, not hard-coded RSP/SWC columns.
 
+### Index shape (self-describing)
+
+The index is emitted so a single fetch is interpretable without also reading `status-model.js` — this is what makes it consumable by AI-assisted tools and workflows, not just the block:
+
+```jsonc
+{
+  // Machine-readable legend: the full status vocabulary a cell can carry, in canonical
+  // order. Consumers read a cell's `status` id and look up its meaning here — no need to
+  // import the adapter. Presentation-only fields (CSS color tokens) are intentionally
+  // omitted; the complete enum is always emitted, even statuses not currently present.
+  "statuses": {
+    "available": { "label": "Available", "definition": "Ready for use. Fidelity may vary." }
+    // …experimental, not-available, deprecated, removed
+  },
+  "implementations": { "web": [ { "id": "figma", "label": "Figma" }, /* … */ ] },
+  "components": [
+    {
+      "name": "ActionButton",
+      "label": "Action Button",
+      "platforms": { "web": { "figma": { "status": "available" }, /* … */ } }
+    }
+  ]
+}
+```
+
+The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](./build-status-index.js), so the embedded definitions never drift from the adapter.
+
 Starter mapping (values to be confirmed in the status-model story; shown to illustrate the boundary, not to finalize):
 
 | Impl | Raw value | Unified status |
