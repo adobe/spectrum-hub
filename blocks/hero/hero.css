@@ -5,7 +5,6 @@
   --min-height: var(--default-min-height);
 
   position: relative;
-  color: var(--se-body-color);
   overflow: hidden;
   border-radius: 32px;
   background-color: var(--se-body-background-color);
@@ -115,11 +114,14 @@
     .hero-detail {
       margin-block-end: var(--s2-spacing-200);
       font-size: var(--s2-body-size-xs);
+      color: var(--se-body-color);
     }
 
     .hero-heading {
       margin-block: var(--s2-spacing-200) var(--s2-spacing-300);
       font-size: var(--s2-heading-size-xxl);
+      color: var(--se-heading-color);
+      font-weight: 700;
     }
   }
 
