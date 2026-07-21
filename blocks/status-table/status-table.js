@@ -172,7 +172,7 @@ const buildCsvRows = (index) => {
  * A search field that filters the table down to rows whose component name matches the
  * query (case-insensitive substring). Clearing the field restores every row.
  */
-const buildSearch = (table) => {
+const buildSearch = (table, announce) => {
   const input = document.createElement('se-input');
   input.className = 'status-table__search';
   input.setAttribute('type', 'search');
@@ -183,10 +183,15 @@ const buildSearch = (table) => {
   input.setAttribute('placeholder', 'Search components…');
   input.addEventListener('input', () => {
     const query = (input.value ?? '').trim().toLowerCase();
+    let visible = 0;
     for (const row of table.querySelectorAll('tbody tr')) {
       const name = row.querySelector('th')?.textContent.toLowerCase() ?? '';
       row.hidden = query !== '' && !name.includes(query);
+      if (!row.hidden) { visible += 1; }
     }
+    // WAI-ARIA ARIA22 (Using role=status to present status messages): report the result
+    // count so screen-reader users hear the filtered total without moving focus off the field.
+    announce(`${visible} component${visible === 1 ? '' : 's'}`);
   });
   return input;
 };
@@ -217,7 +222,7 @@ const setColumnVisible = (table, id, visible) => {
  * A "Columns" button that opens a popover of checkboxes, one per implementation column,
  * letting readers hide columns they don't care about. The Component column always stays.
  */
-const buildColumnFilter = (columns, table) => {
+const buildColumnFilter = (columns, table, announce) => {
   const wrap = document.createElement('div');
   wrap.className = 'status-table__filter';
 
@@ -247,7 +252,10 @@ const buildColumnFilter = (columns, table) => {
     toggle.setAttribute('data-col', id);
     toggle.checked = true;
     toggle.textContent = label;
-    toggle.addEventListener('change', () => setColumnVisible(table, id, toggle.checked));
+    toggle.addEventListener('change', () => {
+      setColumnVisible(table, id, toggle.checked);
+      announce(`${label} column ${toggle.checked ? 'shown' : 'hidden'}`);
+    });
     popover.append(toggle);
   }
 
@@ -266,15 +274,127 @@ const buildExportButton = (index) => {
   return button;
 };
 
+/**
+ * Sorting for the table, shared by two affordances that drive a single sort state:
+ *  - Clickable column headers — the mechanism on wide screens. Follows the WAI-ARIA APG
+ *    "Sortable Table" pattern
+ *  - A "Sort by" toolbar control (a column `se-select` + a direction button) — the only
+ *    affordance below 900px, where the stacked layout clips the `<thead>` out of view.
+ */
+const buildSorting = (table, columns, announce) => {
+  const COMPONENT = 'component';
+  const sortable = [{ id: COMPONENT, label: 'Component' }, ...columns];
+  let activeId = COMPONENT;
+  let direction = 'ascending';
+
+  const headers = new Map();
+  let select;
+  let dirButton;
+
+  const sortKey = (row, id) => (id === COMPONENT
+    ? row.querySelector('th[scope="row"]')?.textContent
+    : row.querySelector(`td[data-col="${id}"] .status-table__label`)?.textContent) ?? '';
+
+  // Reflect the current sort onto both affordances (headers' aria-sort + the control).
+  const reflect = () => {
+    for (const [id, th] of headers) {
+      th.setAttribute('aria-sort', id === activeId ? direction : 'none');
+      th.dataset.sort = id === activeId ? direction : '';
+    }
+    if (select) { select.value = activeId; }
+    if (dirButton) {
+      dirButton.dataset.direction = direction;
+      dirButton.setAttribute('aria-label', direction === 'ascending' ? 'Sort ascending' : 'Sort descending');
+    }
+  };
+
+  const sortBy = (id, dir) => {
+    activeId = id;
+    direction = dir;
+    const tbody = table.querySelector('tbody');
+    const rows = [...tbody.querySelectorAll('tr')].sort(
+      (a, b) => sortKey(a, id).localeCompare(sortKey(b, id), undefined, { numeric: true, sensitivity: 'base' }),
+    );
+    if (dir === 'descending') { rows.reverse(); }
+    tbody.append(...rows);
+    reflect();
+    announce(`Sorted by ${sortable.find((c) => c.id === id)?.label ?? id}, ${dir}`);
+  };
+
+  // Wire one sortable header into a button. A repeat click on the active column flips
+  // the direction; a click on a new column starts it ascending.
+  const wireHeader = (th, id) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'status-table__sort-header';
+    const text = document.createElement('span');
+    text.textContent = th.textContent;
+    const icon = document.createElement('span');
+    icon.className = 'status-table__sort-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    button.append(text, icon);
+    button.addEventListener('click', () => {
+      sortBy(id, activeId === id && direction === 'ascending' ? 'descending' : 'ascending');
+    });
+    th.replaceChildren(button);
+    headers.set(id, th);
+  };
+
+  for (const th of table.querySelectorAll('thead th')) {
+    const id = th.dataset.col ?? COMPONENT;
+    if (sortable.some((c) => c.id === id)) { wireHeader(th, id); }
+  }
+
+  // The small-screen "Sort by" control: a column select plus a direction toggle.
+  const control = document.createElement('div');
+  control.className = 'status-table__sort';
+  select = document.createElement('se-select');
+  select.className = 'status-table__sort-select';
+  select.setAttribute('label', 'Sort by');
+  for (const { id, label } of sortable) {
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = label;
+    select.append(option);
+  }
+  select.addEventListener('change', () => sortBy(select.value, direction));
+  dirButton = document.createElement('button');
+  dirButton.type = 'button';
+  dirButton.className = 'status-table__sort-direction';
+  dirButton.addEventListener('click', () => {
+    sortBy(activeId, direction === 'ascending' ? 'descending' : 'ascending');
+  });
+  control.append(select, dirButton);
+
+  // Load sorted by Component ascending so the shown order matches the control's state.
+  sortBy(COMPONENT, 'ascending');
+  return control;
+};
+
+/**
+ * A visually-hidden polite live region plus an `announce` fn that writes into it.
+ *
+ * WAI-ARIA APG live-region pattern via `role="status"` (WCAG 4.1.3 Status Messages):
+ * `role="status"` carries an implicit `aria-live="polite"` + `aria-atomic="true"`
+ */
+const buildAnnouncer = () => {
+  const region = document.createElement('div');
+  region.className = 'visually-hidden';
+  region.setAttribute('role', 'status');
+  const announce = (message) => { region.textContent = message; };
+  return { region, announce };
+};
+
 /** The controls row above the table: search, show-details, column filter, and export. */
-const buildToolbar = (index, table, el) => {
+const buildToolbar = (index, table, el, announce) => {
   const columns = index.implementations?.web ?? [];
   const toolbar = document.createElement('div');
   toolbar.className = 'status-table__toolbar';
   toolbar.append(
-    buildSearch(table),
+    buildSearch(table, announce),
+    buildSorting(table, columns, announce),
     buildDetailsToggle(el),
-    buildColumnFilter(columns, table),
+    buildColumnFilter(columns, table, announce),
     buildExportButton(index),
   );
   return toolbar;
@@ -314,6 +434,18 @@ export default async function init(el) {
   const table = buildTable(index);
   labelTable(el, table);
 
-  el.replaceChildren(buildStatusCards(index), buildToolbar(index, table, el), table);
+  const { region, announce } = buildAnnouncer();
+  el.replaceChildren(
+    buildStatusCards(index),
+    buildToolbar(index, table, el, announce),
+    table,
+    region,
+  );
+
+  // Scrollable-region pattern (WAI-ARIA APG + WCAG 2.1.1 Keyboard, 4.1.2 Name/Role/Value):
+  // the table scrolls horizontally on wide viewports, so the block is exposed as a named
+  // landmark region and made focusable
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-label', 'Component availability');
   el.tabIndex = 0;
 }

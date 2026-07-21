@@ -219,6 +219,104 @@
     margin-inline-start: auto;
   }
 
+  /* sort: the "Sort by" control is shown only on small screens, where the stacked layout
+     hides the header row. On wide screens sorting rides on the clickable headers instead. */
+  .status-table__sort {
+    display: flex;
+    align-items: end;
+    gap: var(--s2-spacing-100);
+  }
+
+  .status-table__sort-select {
+    min-inline-size: 150px;
+  }
+
+  .status-table__sort-direction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 32px;
+    block-size: 32px;
+    padding: 0;
+    border: var(--status-table-border-width) solid var(--s2-gray-300);
+    border-radius: var(--s2-corner-radius-200, 8px);
+    background-color: transparent;
+    color: var(--s2-gray-800);
+    cursor: pointer;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      mask-image: url('/img/icons/s2-icon-sortup-20-n.svg');
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+      background-color: currentcolor;
+      inline-size: 20px;
+      block-size: 20px;
+    }
+
+    /* dedicated glyph per direction */
+    &[data-direction='ascending']::before {
+      mask-image: url('/img/icons/s2-icon-sortup-20-n.svg');
+    }
+
+    &[data-direction='descending']::before {
+      mask-image: url('/img/icons/s2-icon-sortdown-20-n.svg');
+    }
+  }
+
+  @media (width >= 900px) {
+    .status-table__sort {
+      display: none;
+    }
+  }
+
+  /* clickable sort headers — the wide-screen sort mechanism */
+  .status-table__sort-header {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2-spacing-100);
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  /* the glyph is decorative (aria-sort conveys the state): a muted neutral sort icon marks
+     every sortable column and brightens on hover/focus; the active column swaps in the
+     directional glyph at full strength. */
+  .status-table__sort-icon {
+    inline-size: 16px;
+    block-size: 16px;
+    mask-image: url('/img/icons/s2-icon-sort-20-n.svg');
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    background-color: currentcolor;
+    opacity: 0.5;
+  }
+
+  .status-table__sort-header:hover .status-table__sort-icon,
+  .status-table__sort-header:focus-visible .status-table__sort-icon {
+    opacity: 1;
+  }
+
+  thead th[data-sort='ascending'] .status-table__sort-icon,
+  thead th[data-sort='descending'] .status-table__sort-icon {
+    opacity: 1;
+  }
+
+  thead th[data-sort='ascending'] .status-table__sort-icon {
+    mask-image: url('/img/icons/s2-icon-sortup-20-n.svg');
+  }
+
+  thead th[data-sort='descending'] .status-table__sort-icon {
+    mask-image: url('/img/icons/s2-icon-sortdown-20-n.svg');
+  }
+
   /* column filter: a button anchoring a popover of per-column checkboxes */
   .status-table__filter-button {
     anchor-name: --status-table-columns;

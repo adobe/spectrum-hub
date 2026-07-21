@@ -141,15 +141,19 @@ describe('status-table block', () => {
       await init(el);
     });
 
+    // The table loads sorted by Component ascending, so target rows by name, not position.
+    const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
+      .find((tr) => tr.querySelector('th').textContent === name);
+
     it('renders the unified status label per column cell, in index column order', () => {
-      const calendarCells = el.querySelectorAll('tbody tr:first-child td');
+      const calendarCells = rowByName(el, 'Calendar').querySelectorAll('td');
       expect(calendarCells[0].textContent).to.include('Not available'); // figma
       expect(calendarCells[1].textContent).to.include('Available'); // rsp
       expect(calendarCells[2].textContent).to.include('Not available'); // swc
     });
 
     it('tags each status with a data-status hook for its color', () => {
-      const cells = el.querySelectorAll('tbody tr:first-child td');
+      const cells = rowByName(el, 'Calendar').querySelectorAll('td');
       expect(cells[0].querySelector('[data-status]').getAttribute('data-status')).to.equal('not-available'); // figma
       expect(cells[1].querySelector('[data-status]').getAttribute('data-status')).to.equal('available'); // rsp
     });
@@ -163,7 +167,7 @@ describe('status-table block', () => {
     });
 
     it('omits the secondary line when absent', () => {
-      const calendarRow = el.querySelector('tbody tr:first-child');
+      const calendarRow = rowByName(el, 'Calendar');
       expect(calendarRow.querySelector('.status-table__secondary')).to.be.null;
     });
   });
@@ -248,6 +252,17 @@ describe('status-table block', () => {
       input.dispatchEvent(new Event('input'));
       const hidden = [...el.querySelectorAll('tbody tr')].filter((tr) => tr.hidden);
       expect(hidden).to.have.length(0);
+    });
+
+    it('announces the matching component count in the live region', () => {
+      const input = el.querySelector('.status-table__search');
+      const region = el.querySelector('[role="status"]');
+      input.value = 'color';
+      input.dispatchEvent(new Event('input'));
+      expect(region.textContent).to.equal('1 component');
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      expect(region.textContent).to.equal('3 components');
     });
   });
 
@@ -338,6 +353,70 @@ describe('status-table block', () => {
       const figmaCells = el.querySelectorAll('.status-table__table [data-col="figma"]');
       expect([...figmaCells].some((c) => c.hidden)).to.be.false;
     });
+
+    it('announces a column show/hide change in the live region', () => {
+      const region = el.querySelector('[role="status"]');
+      const figmaToggle = el.querySelector('.status-table__column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      expect(region.textContent).to.match(/figma column hidden/i);
+      figmaToggle.checked = true;
+      figmaToggle.dispatchEvent(new Event('change'));
+      expect(region.textContent).to.match(/figma column shown/i);
+    });
+  });
+
+  describe('toolbar — sort', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    const names = (root) => [...root.querySelectorAll('tbody tr')]
+      .map((tr) => tr.querySelector('th').textContent);
+
+    it('loads sorted by Component ascending', () => {
+      expect(names(el)).to.deep.equal(['Button', 'Calendar', 'Color Area']);
+      expect(el.querySelector('thead th:first-child').getAttribute('aria-sort')).to.equal('ascending');
+    });
+
+    it('turns each sortable header into a button', () => {
+      expect(el.querySelectorAll('thead th .status-table__sort-header')).to.have.length(4);
+    });
+
+    it('reverses to descending when the active header is clicked again', () => {
+      const header = el.querySelector('thead th:first-child');
+      header.querySelector('.status-table__sort-header').click();
+      expect(header.getAttribute('aria-sort')).to.equal('descending');
+      expect(names(el)).to.deep.equal(['Color Area', 'Calendar', 'Button']);
+    });
+
+    it('moves aria-sort onto a newly clicked column and resets the others', () => {
+      const figmaHeader = el.querySelector('thead th[data-col="figma"]');
+      figmaHeader.querySelector('.status-table__sort-header').click();
+      expect(figmaHeader.getAttribute('aria-sort')).to.equal('ascending');
+      expect(el.querySelector('thead th:first-child').getAttribute('aria-sort')).to.equal('none');
+    });
+
+    it('renders a mobile Sort by control (se-select + direction button)', () => {
+      const control = el.querySelector('.status-table__sort');
+      expect(control).to.not.be.null;
+      expect(control.querySelector('se-select')).to.not.be.null;
+      expect(control.querySelector('.status-table__sort-direction')).to.not.be.null;
+    });
+
+    it('keeps the header and the control in one shared state', () => {
+      el.querySelector('thead th[data-col="figma"] .status-table__sort-header').click();
+      expect(el.querySelector('.status-table__sort-select').value).to.equal('figma');
+    });
+
+    it('announces the sort in the live region', () => {
+      const region = el.querySelector('[role="status"]');
+      el.querySelector('thead th[data-col="figma"] .status-table__sort-header').click();
+      expect(region.textContent).to.match(/sorted by figma, ascending/i);
+    });
   });
 
   describe('accessibility', () => {
@@ -355,6 +434,23 @@ describe('status-table block', () => {
       const el = makeEl();
       await init(el);
       expect(el.tabIndex).to.equal(0);
+    });
+
+    it('exposes the scrollable block as a named region landmark', async () => {
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      expect(el.getAttribute('role')).to.equal('region');
+      expect(el.getAttribute('aria-label')).to.have.length.greaterThan(0);
+    });
+
+    it('renders a polite status live region for filter feedback', async () => {
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const region = el.querySelector('[role="status"]');
+      expect(region).to.not.be.null;
+      expect(region.classList.contains('visually-hidden')).to.be.true;
     });
 
     it('labels the table from the nearest preceding heading', async () => {
