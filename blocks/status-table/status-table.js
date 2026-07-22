@@ -211,64 +211,12 @@ const buildDetailsToggle = (el) => {
   return toggle;
 };
 
-/** Shows or hides every header and body cell belonging to one implementation column. */
-const setColumnVisible = (table, id, visible) => {
-  for (const cell of table.querySelectorAll(`[data-col="${id}"]`)) {
-    cell.hidden = !visible;
-  }
-};
-
-/**
- * A "Columns" button that opens a popover of checkboxes, one per implementation column,
- * letting readers hide columns they don't care about. The Component column always stays.
- */
-const buildColumnFilter = (columns, table, announce) => {
-  const wrap = document.createElement('div');
-  wrap.className = 'status-table-filter';
-
-  const popoverId = `status-table-columns-${Math.random().toString(36).slice(2)}`;
-
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'status-table-filter-button';
-  button.classList.add('btn', 'btn-secondary');
-  button.setAttribute('popovertarget', popoverId);
-  // Icon-only button: the filter glyph rides on a CSS ::before mask, so the label is
-  // visually hidden but stays the button's accessible name.
-  const buttonLabel = document.createElement('span');
-  buttonLabel.className = 'visually-hidden';
-  buttonLabel.textContent = 'Filter columns';
-  button.append(buttonLabel);
-
-  const popover = document.createElement('div');
-  popover.className = 'status-table-filter-popover';
-  popover.id = popoverId;
-  popover.setAttribute('popover', '');
-
-  for (const { id, label } of columns) {
-    const toggle = document.createElement('se-checkbox');
-    toggle.className = 'status-table-column-toggle';
-    toggle.name = `status-table-col-${id}`;
-    toggle.setAttribute('data-col', id);
-    toggle.checked = true;
-    toggle.textContent = label;
-    toggle.addEventListener('change', () => {
-      setColumnVisible(table, id, toggle.checked);
-      announce(`${label} column ${toggle.checked ? 'shown' : 'hidden'}`);
-    });
-    popover.append(toggle);
-  }
-
-  wrap.append(button, popover);
-  return wrap;
-};
-
 /** An "Export CSV" control that downloads the current table as a CSV file. */
 const buildExportButton = (index) => {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'status-table-export';
-  button.textContent = 'Export CSV';
+  button.textContent = 'Download CSV';
   button.classList.add('btn', 'btn-primary');
   button.addEventListener('click', () => downloadCsv(CSV_FILENAME, toCsv(buildCsvRows(index))));
   return button;
@@ -394,7 +342,6 @@ const buildToolbar = (index, table, el, announce) => {
     buildSearch(table, announce),
     buildSorting(table, columns, announce),
     buildDetailsToggle(el),
-    buildColumnFilter(columns, table, announce),
     buildExportButton(index),
   );
   return toolbar;
