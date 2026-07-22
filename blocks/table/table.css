@@ -5,10 +5,10 @@
   --table-head-row-padding-block: 7px;
   --table-body-row-padding-block: 11px;
 
-  margin-block-start: var(--s2-spacing-500);
+  margin-block: var(--s2-spacing-500) var(--s2-spacing-800);
 
-  .section > .block-content:not(:last-child) & {
-      margin-block-end: var(--s2-spacing-800);
+  .section > .block-content:last-child & {
+      padding-block-end: var(--s2-spacing-800);
   }
 
   /* stacked layout for small screens */
