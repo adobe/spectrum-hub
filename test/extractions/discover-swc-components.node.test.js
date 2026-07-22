@@ -1,59 +1,90 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { collectTags } from '../../deps/swc/discover-components.js';
+import { collectComponents } from '../../deps/swc/discover-components.js';
 
-describe('collectTags', () => {
-  it('collects tagName declarations, sorted and deduped', () => {
+describe('collectComponents', () => {
+  it('maps each bare name to the directory of its module path, sorted', () => {
+    const cem = {
+      modules: [
+        { path: 'components/button/Button.ts', declarations: [{ tagName: 'swc-button' }] },
+        { path: 'components/badge/Badge.ts', declarations: [{ tagName: 'swc-badge' }] },
+      ],
+    };
+
+    assert.deepEqual(collectComponents(cem), {
+      badge: 'components/badge',
+      button: 'components/button',
+    });
+  });
+
+  it('gives every tag in a family module the same subpath', () => {
     const cem = {
       modules: [
         {
+          path: 'components/tabs/Tabs.ts',
           declarations: [
-            { name: 'Button', tagName: 'swc-button' },
-            { name: 'Badge', tagName: 'swc-badge' },
-          ],
-        },
-        {
-          declarations: [
-            // Duplicate tagName from a base declaration — collapsed to one entry.
-            { name: 'ButtonBase', tagName: 'swc-button' },
-            { name: 'Accordion', tagName: 'swc-accordion' },
+            { tagName: 'swc-tabs' },
+            { tagName: 'swc-tab' },
+            { tagName: 'swc-tab-panel' },
           ],
         },
       ],
     };
 
-    assert.deepEqual(collectTags(cem), [
-      'swc-accordion',
-      'swc-badge',
-      'swc-button',
-    ]);
+    assert.deepEqual(collectComponents(cem), {
+      tab: 'components/tabs',
+      'tab-panel': 'components/tabs',
+      tabs: 'components/tabs',
+    });
+  });
+
+  it('derives pattern subpaths, including the divergent suggestion-group folder', () => {
+    const cem = {
+      modules: [
+        {
+          path: 'patterns/conversational-ai/suggestion/SuggestionGroup.ts',
+          declarations: [{ tagName: 'swc-suggestion-group' }],
+        },
+      ],
+    };
+
+    assert.deepEqual(collectComponents(cem), {
+      'suggestion-group': 'patterns/conversational-ai/suggestion',
+    });
+  });
+
+  it('skips ../core base-class modules so the in-package declaration wins', () => {
+    const cem = {
+      modules: [
+        { path: 'components/color-loupe/ColorLoupe.ts', declarations: [{ tagName: 'swc-color-loupe' }] },
+        { path: '../core/components/color-loupe/ColorLoupe.base.ts', declarations: [{ tagName: 'swc-color-loupe' }] },
+      ],
+    };
+
+    assert.deepEqual(collectComponents(cem), {
+      'color-loupe': 'components/color-loupe',
+    });
   });
 
   it('includes declarations regardless of status (e.g. internal)', () => {
     const cem = {
       modules: [
-        {
-          declarations: [
-            { name: 'Button', tagName: 'swc-button' },
-            // swc-asset / swc-icon are internal but still documented in the hub.
-            { name: 'Asset', tagName: 'swc-asset', status: 'internal' },
-          ],
-        },
+        { path: 'components/asset/Asset.ts', declarations: [{ tagName: 'swc-asset', status: 'internal' }] },
       ],
     };
 
-    assert.deepEqual(collectTags(cem), ['swc-asset', 'swc-button']);
+    assert.deepEqual(collectComponents(cem), { asset: 'components/asset' });
   });
 
   it('ignores declarations without a tagName and handles empty modules', () => {
     const cem = {
       modules: [
-        { declarations: [{ name: 'ButtonBase' }] },
+        { path: 'components/button/Button.base.ts', declarations: [{ name: 'ButtonBase' }] },
         {},
       ],
     };
 
-    assert.deepEqual(collectTags(cem), []);
+    assert.deepEqual(collectComponents(cem), {});
   });
 });
