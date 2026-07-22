@@ -53,6 +53,22 @@ describe('getSwcComponentStatus', () => {
     ];
     assert.equal(getSwcComponentStatus(props), 'stable');
   });
+
+  it('surfaces a uniform preview status', () => {
+    const props = [
+      { attribute: 'a', since: '2.0.0', status: 'preview' },
+      { attribute: 'b', since: '2.0.0', status: 'preview' },
+    ];
+    assert.equal(getSwcComponentStatus(props), 'preview');
+  });
+
+  it('surfaces a uniform deprecated status', () => {
+    const props = [
+      { attribute: 'a', since: '2.0.0', status: 'deprecated' },
+      { attribute: 'b', since: '2.0.0', status: 'deprecated' },
+    ];
+    assert.equal(getSwcComponentStatus(props), 'deprecated');
+  });
 });
 
 describe('getComponentStatus', () => {
