@@ -3,10 +3,12 @@
  *
  * - RSP (`deps/rsp/data/*.json`): `{ props: [...], status?: "stable" | "alpha" | "beta" | "rc" }`
  *   where `status` is doc maturity from the S2 docs site (see extract-doc-status.js).
- * - SWC (`deps/swc/data/*.json`): a flat prop array; when CEM includes `since`, status is
- *   derived from those fields (`internal` when every released prop is internal-only).
+ * - SWC (`deps/swc/data/*.json`): a flat prop array. The extractor stamps the component
+ *   declaration's `@status` (`internal` | `preview` | `deprecated`) and `@since` onto every
+ *   row (see deps/swc/extract-cem-components.js), so a released component's rows share one
+ *   uniform status; a component with no `@status` is implicitly stable and public.
  *
- * Prop-level `status: "internal"` on SWC rows is not the same field as RSP top-level `status`.
+ * Prop-level `status` on SWC rows is not the same field as RSP top-level `status`.
  */
 
 const PRERELEASE_TAGS = new Set(['alpha', 'beta', 'rc']);
@@ -30,12 +32,18 @@ export function normalizeComponentExtraction(data) {
   return { props: [], docStatus: null };
 }
 
-/** @param {object[]} props */
+/**
+ * Resolves the component-level SWC status from its extracted prop rows.
+ *
+ * @param {object[]} props
+ * @returns {'internal' | 'preview' | 'deprecated' | 'stable' | null}
+ */
 export function getSwcComponentStatus(props) {
   const released = props.filter((prop) => prop.since);
   if (!released.length) { return null; }
-  const isInternal = released.every((prop) => prop.status === 'internal');
-  return isInternal ? 'internal' : 'stable';
+  const [first] = released;
+  const uniform = first.status && released.every((prop) => prop.status === first.status);
+  return uniform ? first.status : 'stable';
 }
 
 /**
