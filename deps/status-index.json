@@ -172,23 +172,6 @@
       }
     },
     {
-      "name": "AppFrameBrowsing",
-      "label": "App Frame (Browsing)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Asset",
       "label": "Asset",
       "platforms": {
@@ -360,7 +343,7 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "available"
+            "status": "not-available"
           },
           "rsp": {
             "status": "available",
@@ -369,6 +352,108 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Asset)",
+      "label": "Cards (Asset)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Collection)",
+      "label": "Cards (Collection)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Gallery)",
+      "label": "Cards (Gallery)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Horizontal)",
+      "label": "Cards (Horizontal)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Product)",
+      "label": "Cards (Product)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (User)",
+      "label": "Cards (User)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -509,7 +594,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "experimental"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",
@@ -527,7 +613,8 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "experimental"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",
@@ -545,8 +632,10 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use color components"
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use color components",
+            "note": "Built into color components instead."
           },
           "swc": {
             "status": "not-available",
@@ -564,8 +653,10 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use color components"
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use color components",
+            "note": "Built into color components instead."
           },
           "swc": {
             "status": "available",
@@ -583,7 +674,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "experimental"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",
@@ -699,7 +791,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -716,7 +808,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -747,7 +839,9 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable",
+            "note": "React Spectrum splits this into separate Date Field, Date Picker, Date Range Picker, and Time Field components; this row mirrors their availability."
           },
           "swc": {
             "status": "not-available"
@@ -896,8 +990,10 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use Form component"
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use Form component",
+            "note": "Built into Form components instead."
           },
           "swc": {
             "status": "not-available",
@@ -932,8 +1028,10 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use Form component"
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use Form component",
+            "note": "Built into Form components instead."
           },
           "swc": {
             "status": "not-available",
@@ -1138,7 +1236,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1155,7 +1253,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1202,7 +1300,7 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "not-available"
+            "status": "available"
           },
           "rsp": {
             "status": "available"
@@ -1320,7 +1418,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1431,7 +1529,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1499,7 +1597,9 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable",
+            "note": "A select box is not a standalone component; it mirrors Select Box Group's availability."
           },
           "swc": {
             "status": "not-available"
@@ -1645,7 +1745,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1662,7 +1762,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1698,7 +1798,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1712,7 +1812,9 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable",
+            "note": "A tab is not a standalone component; it mirrors Tabs' availability."
           },
           "swc": {
             "status": "available",
@@ -1749,7 +1851,9 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable",
+            "note": "A tab panel is not a standalone component; it mirrors Tabs' availability."
           },
           "swc": {
             "status": "available",
@@ -1916,7 +2020,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",
@@ -2011,7 +2116,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -2028,7 +2133,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }

@@ -29,6 +29,13 @@ describe('parseStatusFromHtml', () => {
   it('returns stable when no badge is present', () => {
     assert.equal(parseStatusFromHtml('<h1>Button</h1>'), 'stable');
   });
+
+  it('ignores a demo control option that merely echoes its own value (e.g. an alpha color channel)', () => {
+    assert.equal(
+      parseStatusFromHtml('<select><option value="alpha">alpha</option></select>'),
+      'stable',
+    );
+  });
 });
 
 describe('fetchComponentDocStatus', () => {

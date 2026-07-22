@@ -2,6 +2,7 @@ import { applyAttribute } from '../../shared/playground/apply-attribute.js';
 import { applyLabelProp } from './apply-label-prop.js';
 import { buildIconSvg, buildIconUse } from '../../shared/playground/build-icon-svg.js';
 import { NO_ICON } from '../../shared/playground/icon-options.js';
+import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
 
 // Applies one prop-update message from the block to a live SWC custom element.
 export function applySwcProp(el, { property, attribute, value }) {
@@ -43,6 +44,12 @@ export function applySwcProp(el, { property, attribute, value }) {
       svg.setAttribute('slot', 'icon');
       el.prepend(svg);
     }
+    return;
+  }
+
+  // staticColor has no real "unset" value of its own — remove the attribute entirely 
+  if (property === 'staticColor' && value === NO_STATIC_COLOR) {
+    applyAttribute(el, attribute, null);
     return;
   }
 

@@ -61,12 +61,11 @@ export const WEB_COLUMNS = [
 //
 // - figma: a design in the library. There is no maturity vocabulary, so presence = Available.
 // - rsp: in the published types with no S2 doc page — ships in stable S2, so Available.
-// - swc: a CEM declaration with no `since` (the AI/chat cohort); maturity unconfirmed, so
-//   Experimental.
+// - swc: a CEM declaration with no `since` (the AI/chat cohort); it still ships, so Available.
 const PRESENT_FLOOR = {
   figma: { status: 'available' },
   rsp: { status: 'available' },
-  swc: { status: 'experimental' },
+  swc: { status: 'available' },
 };
 const DEFAULT_FLOOR = { status: 'experimental' };
 
@@ -112,6 +111,13 @@ export function swcTagToPascal(tag) {
 /** Resolves the canonical name for an SWC tag, letting the alias map override. */
 export function canonicalNameForSwc(tag, aliases = {}) {
   return Object.hasOwn(aliases, tag) ? aliases[tag] : swcTagToPascal(tag);
+}
+
+/**
+ * Resolves the canonical name for an RSP export, letting the alias map override.
+ */
+export function canonicalNameForRsp(name, aliases = {}) {
+  return Object.hasOwn(aliases, name) ? aliases[name] : name;
 }
 
 /** Resolves the canonical name for a Figma display name, letting the alias map override. */
@@ -160,7 +166,7 @@ function displayLabel(canonical, sources) {
  * @param {string[]} rspNames - RSP PascalCase component names (allow-list keys).
  * @param {string[]} swcTags - SWC `swc-<kebab>` tags (allow list).
  * @param {string[]} figmaNames - Figma component-set display names.
- * @param {{ swc?: object, figma?: object }} aliases
+ * @param {{ rsp?: object, swc?: object, figma?: object }} aliases
  * @returns {{ name: string, sources: { rsp?: string, swc?: string, figma?: string } }[]}
  */
 export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
@@ -171,7 +177,7 @@ export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
     byName.set(canonical, entry);
   };
 
-  for (const name of rspNames) { add(name, 'rsp', name); }
+  for (const name of rspNames) { add(canonicalNameForRsp(name, aliases.rsp), 'rsp', name); }
   for (const tag of swcTags) { add(canonicalNameForSwc(tag, aliases.swc), 'swc', tag); }
   for (const name of figmaNames) { add(canonicalNameForFigma(name, aliases.figma), 'figma', name); }
 

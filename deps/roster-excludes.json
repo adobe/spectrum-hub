@@ -3,17 +3,13 @@
   "AccordionItemHeader",
   "AccordionItemPanel",
   "AccordionItemTitle",
-  "AssetCard",
   "Breadcrumb",
-  "CardPreview",
   "Cell",
-  "CollectionCardPreview",
   "Column",
   "DisclosurePanel",
   "DisclosureTitle",
   "EditableCell",
   "PopoverBase",
-  "ProductCard",
   "Radio",
   "Row",
   "SegmentedControlItem",
@@ -24,5 +20,5 @@
   "TreeViewItem",
   "TreeViewItemContent",
   "TreeViewLoadMoreItem",
-  "UserCard"
+  "AppFrameBrowsing"
 ]

@@ -18,6 +18,7 @@
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
+    import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
@@ -82,7 +83,8 @@
         const extraExports = compositeRoot
           ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
           : [];
-        const exports = [exportName, 'Provider', ...extraExports].join(',');
+        // `Text` lets an icon+label composition wrap the label for real TextContext styling.
+        const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports])].join(',');
 
         // `?bundle` drops CSS side-effect imports — a bare import() can't load
         // them (wrong MIME type). Visual CSS is loaded separately below.
@@ -135,9 +137,9 @@
           const rootElement = compositeChildren.length
             ? createElement(Component, currentProps, ...rootChildArgs)
             : createElement(Component, currentProps);
-          // Forces a full remount — an in-place update leaves `light-dark()`
-          // descendant styles stuck on their old value. Confirmed live.
-          const key = `${scheme}-${currentProps.staticColor ?? 'none'}`;
+          // Forces a full remount — an in-place update leaves `light-dark()` descendant
+          // styles stuck on their old value
+          const key = `${scheme}-${currentProps.staticColor ?? 'none'}-${currentProps.variant ?? 'none'}`;
           root.render(createElement(
             RSP.Provider,
             { key, colorScheme: scheme, background: 'base' },
@@ -151,27 +153,38 @@
         // so one doesn't clobber the other. Leaf components only.
         let iconChild = null;
         let textChild = currentProps.children ?? null;
+        // Button only auto-wraps a *lone* string child in <Text>; wrap explicitly once an
+        // icon is present so the label still gets real TextContext styling.
+        const composeLabeledChildren = () => composeChildren(
+          iconChild,
+          iconChild && typeof textChild === 'string'
+            ? createElement(RSP.Text, { key: 'text' }, textChild)
+            : textChild,
+        );
 
         render();
 
         listenForPropUpdates(({ property, attribute, value }) => {
           if (property === 'icon') {
             iconChild = buildIconChild(createElement, value);
-            currentProps.children = composeChildren(iconChild, textChild);
+            currentProps.children = composeLabeledChildren();
           } else {
             const key = resolveRspPropKey(property, hasRealLabelProp);
             if (key === 'children') {
               // A text/label control that resolves to `children`: keep it
               // separate from any icon so the two compose rather than overwrite.
               textChild = value;
-              currentProps.children = composeChildren(iconChild, textChild);
+              currentProps.children = composeLabeledChildren();
+            } else if (property === 'staticColor' && value === NO_STATIC_COLOR) {
+              // staticColor has no real "unset" value of its own — omit the prop entirely
+              delete currentProps[key];
             } else {
               currentProps[key] = value;
             }
           }
           // RSP doesn't reflect most props as real DOM attributes, so mirror
           // onto #mount for CSS that keys off one (e.g. static-color backdrop).
-          applyAttribute(mount, attribute, value);
+          applyAttribute(mount, attribute, property === 'staticColor' && value === NO_STATIC_COLOR ? null : value);
           render();
         });
         notifyPreviewReady();

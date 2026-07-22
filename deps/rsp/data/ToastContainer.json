@@ -1,0 +1,11 @@
+{
+  "props": [
+    {
+      "property": "placement",
+      "type": "ToastPlacement",
+      "default": "'bottom'",
+      "description": "Placement of the toast container on the page."
+    }
+  ],
+  "status": "stable"
+}
