@@ -9,6 +9,7 @@ import {
   canonicalNameForRsp,
   joinRosters,
   filterRoster,
+  standaloneSwcTags,
   excludeInternalSwc,
   toIndexStatus,
   readSecondaries,
@@ -194,6 +195,25 @@ describe('filterRoster', () => {
 
   it('ignores exclusion names not present in the roster', () => {
     assert.equal(filterRoster(roster, ['Nonexistent']).length, 3);
+  });
+});
+
+describe('standaloneSwcTags', () => {
+  it('keeps components/* tags and drops patterns/* tags', () => {
+    const components = {
+      button: 'components/button',
+      tabs: 'components/tabs',
+      'suggestion-group': 'patterns/conversational-ai/suggestion',
+      'response-status-step': 'patterns/conversational-ai/response-status/response-status-step',
+    };
+    assert.deepEqual(standaloneSwcTags(components), ['swc-button', 'swc-tabs']);
+  });
+
+  it('returns tags in components.json key order', () => {
+    assert.deepEqual(
+      standaloneSwcTags({ tabs: 'components/tabs', accordion: 'components/accordion' }),
+      ['swc-tabs', 'swc-accordion'],
+    );
   });
 });
 

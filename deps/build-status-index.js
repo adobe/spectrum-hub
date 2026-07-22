@@ -199,6 +199,19 @@ export function filterRoster(roster, excludes = []) {
 }
 
 /**
+ * Selects the standalone SWC components from the generated components.json, as tags. Pattern
+ * members (subpath under `patterns/`, e.g. the conversational-ai set) are dropped
+ *
+ * @param {Record<string, string>} components - components.json: bare name -> module subpath.
+ * @returns {string[]} standalone-component tags (`swc-<name>`).
+ */
+export function standaloneSwcTags(components) {
+  return Object.entries(components)
+    .filter(([, subpath]) => !subpath.startsWith('patterns/'))
+    .map(([name]) => `swc-${name}`);
+}
+
+/**
  * Drops SWC internal primitives
  *
  * @param {string[]} tags - SWC tags (`swc-<kebab>`).
@@ -410,7 +423,7 @@ function main() {
     ...figmaOverlay.map((entry) => entry.name),
   ])];
   const swcTags = excludeInternalSwc(
-    Object.keys(swcComponents).map((name) => `swc-${name}`),
+    standaloneSwcTags(swcComponents),
     (tag) => readExtraction('swc', tag),
   );
   const joined = joinRosters(Object.keys(rspComponents), swcTags, figmaNames, aliases);
