@@ -172,23 +172,6 @@
       }
     },
     {
-      "name": "Asset",
-      "label": "Asset",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "experimental"
-          }
-        }
-      }
-    },
-    {
       "name": "Avatar",
       "label": "Avatar",
       "platforms": {
@@ -544,7 +527,8 @@
             "secondary": "In package, not RSP docs"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -638,7 +622,8 @@
             "note": "Built into color components instead."
           },
           "swc": {
-            "status": "not-available",
+            "status": "available",
+            "context": "Stable",
             "secondary": "Use Gen1"
           }
         }
@@ -775,40 +760,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "ConversationThread",
-      "label": "Conversation Thread",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
-          }
-        }
-      }
-    },
-    {
-      "name": "ConversationTurn",
-      "label": "Conversation Turn",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
           }
         }
       }
@@ -1041,23 +992,6 @@
       }
     },
     {
-      "name": "Icon",
-      "label": "Icon",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "experimental"
-          }
-        }
-      }
-    },
-    {
       "name": "IllustratedMessage",
       "label": "Illustrated Message",
       "platforms": {
@@ -1225,40 +1159,6 @@
       }
     },
     {
-      "name": "MessageFeedback",
-      "label": "Message Feedback",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
-          }
-        }
-      }
-    },
-    {
-      "name": "MessageSources",
-      "label": "Message Sources",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
-          }
-        }
-      }
-    },
-    {
       "name": "Meter",
       "label": "Meter",
       "platforms": {
@@ -1362,7 +1262,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available",
+            "status": "available",
+            "context": "Stable",
             "secondary": "Use Gen1"
           }
         }
@@ -1381,7 +1282,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available",
+            "status": "available",
+            "context": "Stable",
             "secondary": "Use Gen1"
           }
         }
@@ -1402,23 +1304,6 @@
           "swc": {
             "status": "available",
             "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "PromptField",
-      "label": "Prompt Field",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
           }
         }
       }
@@ -1513,23 +1398,6 @@
           },
           "swc": {
             "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "ResponseStatus",
-      "label": "Response Status",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
           }
         }
       }
@@ -1734,40 +1602,6 @@
       }
     },
     {
-      "name": "SuggestionGroup",
-      "label": "Suggestion Group",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
-          }
-        }
-      }
-    },
-    {
-      "name": "SuggestionItem",
-      "label": "Suggestion Item",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
-          }
-        }
-      }
-    },
-    {
       "name": "Switch",
       "label": "Switch",
       "platforms": {
@@ -1782,23 +1616,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "SystemMessage",
-      "label": "System Message",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
           }
         }
       }
@@ -2099,40 +1916,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "UploadArtifact",
-      "label": "Upload Artifact",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
-          }
-        }
-      }
-    },
-    {
-      "name": "UserMessage",
-      "label": "User Message",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available"
           }
         }
       }
