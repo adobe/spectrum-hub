@@ -11,6 +11,7 @@
  */
 
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
+import { NO_STATIC_COLOR } from '../../deps/shared/playground/static-color-options.js';
 import { TEXT_KEYS } from '../../deps/shared/playground/text-keys.js';
 import { capitalize } from '../../deps/rsp/playground/pascal-case.js';
 
@@ -178,6 +179,7 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   // "icon" is a slot property (like TEXT_KEYS), not a real attribute.
   const isIcon = property === 'icon';
   const isSlotProperty = TEXT_KEYS.has(property) || isIcon;
+  const isStaticColor = property === 'staticColor';
 
   // Any other implementation (e.g. ios/android) skips this gate entirely.
   const existsByImplementation = { rsp: existsInRsp, swc: existsInSwc };
@@ -194,9 +196,12 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
 
   // NO_ICON leads the list (so it's the default). A controls-sheet row may
   // curate its own icon subset; otherwise falls back to ICON_OPTIONS.
+  // NO_STATIC_COLOR leads the same way
   const options = isIcon
     ? [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)]
-    : resolvePickerOptions(property, rspProps, swcProps);
+    : isStaticColor
+      ? [NO_STATIC_COLOR, ...resolvePickerOptions(property, rspProps, swcProps)]
+      : resolvePickerOptions(property, rspProps, swcProps);
   const attribute = isIcon ? null : (swcRow?.attribute ?? null);
 
   if (!options.length && !FREEFORM_CONTROLS.has(controlType)) {

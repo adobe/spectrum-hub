@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import { applySwcProp } from '../../deps/swc/playground/apply-swc-prop.js';
 import { NO_ICON } from '../../deps/shared/playground/icon-options.js';
+import { NO_STATIC_COLOR } from '../../deps/shared/playground/static-color-options.js';
 
 // Exercises the single dispatch point deps/swc/playground/index.html wires
 // every prop-update message through — see its applySwcProp import.
@@ -111,6 +112,13 @@ describe('applySwcProp', () => {
       el.setAttribute('quiet', '');
       applySwcProp(el, { property: 'isQuiet', attribute: 'quiet', value: false });
       expect(el.hasAttribute('quiet')).to.be.false;
+    });
+
+    it('removes the static-color attribute for NO_STATIC_COLOR rather than reflecting the sentinel', () => {
+      const el = document.createElement('swc-button');
+      el.setAttribute('static-color', 'white');
+      applySwcProp(el, { property: 'staticColor', attribute: 'static-color', value: NO_STATIC_COLOR });
+      expect(el.hasAttribute('static-color')).to.be.false;
     });
   });
 });

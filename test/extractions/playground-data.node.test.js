@@ -16,6 +16,7 @@ import {
   clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
+import { NO_STATIC_COLOR } from '../../deps/shared/playground/static-color-options.js';
 
 const COMPONENTS_SHEET = [
   { component: 'Button', properties: 'variant, staticColor, text, fillStyle, size, isDisabled' },
@@ -408,6 +409,13 @@ describe('resolveControl', () => {
   it('defaults controlType to picker when property is not in the controls sheet', () => {
     const result = resolveControl('variant', 'rsp', new Map(), RSP_PROPS, SWC_PROPS);
     assert.equal(result.controlType, 'picker');
+  });
+
+  // staticColor has no documented default (unlike variant/fillStyle/size), so
+  // NO_STATIC_COLOR leads its options the same way NO_ICON leads icon's.
+  it('leads staticColor\'s options with NO_STATIC_COLOR', () => {
+    const result = resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result.options, [NO_STATIC_COLOR, 'white', 'black', 'auto']);
   });
 
   it('returns null attribute when property has no swc equivalent even after normalization', () => {
