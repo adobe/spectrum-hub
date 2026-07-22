@@ -9,6 +9,7 @@ import {
   canonicalNameForRsp,
   joinRosters,
   filterRoster,
+  excludeInternalSwc,
   toIndexStatus,
   readSecondaries,
   applySecondaries,
@@ -196,6 +197,24 @@ describe('filterRoster', () => {
   });
 });
 
+describe('excludeInternalSwc', () => {
+  const dataByTag = {
+    'swc-asset': [{ attribute: 'a', since: '2.0.0', status: 'internal' }],
+    'swc-button': [{ attribute: 'b', since: '2.0.0' }],
+    'swc-prompt-field': [{ attribute: 'c' }], // no since -> no maturity signal
+  };
+  const readData = (tag) => dataByTag[tag] ?? null;
+
+  it('drops a tag whose extraction resolves to internal', () => {
+    const tags = ['swc-asset', 'swc-button', 'swc-prompt-field'];
+    assert.deepEqual(excludeInternalSwc(tags, readData), ['swc-button', 'swc-prompt-field']);
+  });
+
+  it('keeps a tag with no extraction data (floored later)', () => {
+    assert.deepEqual(excludeInternalSwc(['swc-missing'], readData), ['swc-missing']);
+  });
+});
+
 describe('toIndexStatus', () => {
   it('maps RSP stable data to Available with a Stable context', () => {
     assert.deepEqual(toIndexStatus('rsp', { props: [], status: 'stable' }), {
@@ -211,9 +230,11 @@ describe('toIndexStatus', () => {
     });
   });
 
-  it('maps SWC internal-only data to Experimental', () => {
+  it('maps SWC internal-only data to Not available (internal is unmapped)', () => {
+    // Internal components are excluded upstream (excludeInternalSwc), so the adapter no
+    // longer maps `internal`; a stray value falls through to Not available.
     const data = [{ attribute: 'x', since: '2.0.0', status: 'internal' }];
-    assert.deepEqual(toIndexStatus('swc', data), { status: 'experimental' });
+    assert.deepEqual(toIndexStatus('swc', data), { status: 'not-available' });
   });
 
   it('maps SWC released public data to Available', () => {
@@ -244,7 +265,7 @@ describe('buildIndex', () => {
 
   const dataById = {
     'rsp:ActionButton': { props: [], status: 'stable' },
-    'swc:swc-action-button': [{ attribute: 'x', since: '2.0.0', status: 'internal' }],
+    'swc:swc-action-button': [{ attribute: 'x', since: '2.0.0' }],
     // Present in the RSP roster but no doc page — the bridge yields null.
     'rsp:Modal': { props: [] },
     // Present in the SWC roster but no `since` — the bridge yields null.
@@ -263,7 +284,7 @@ describe('buildIndex', () => {
     const { index } = buildIndex({ roster, readData, columns });
     const ab = index.components.find((c) => c.name === 'ActionButton');
     assert.deepEqual(ab.platforms.web.rsp, { status: 'available', context: 'Stable' });
-    assert.deepEqual(ab.platforms.web.swc, { status: 'experimental' });
+    assert.deepEqual(ab.platforms.web.swc, { status: 'available', context: 'Stable' });
   });
 
   it('emits Not available for a source a component lacks', () => {
