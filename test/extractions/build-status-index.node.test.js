@@ -58,6 +58,16 @@ describe('canonicalNameForFigma', () => {
   it('lets an alias merge a Figma name into an existing canonical row', () => {
     assert.equal(canonicalNameForFigma('Table', { Table: 'TableView' }), 'TableView');
   });
+
+  it('lets an identity alias preserve a name normalizeName would otherwise mangle', () => {
+    // Without the alias, `normalizeName` strips the parens to `CardsAsset`, splitting the
+    // row from the RSP export that aliases to `Cards (Asset)`.
+    assert.equal(canonicalNameForFigma('Cards (Asset)', {}), 'CardsAsset');
+    assert.equal(
+      canonicalNameForFigma('Cards (Asset)', { 'Cards (Asset)': 'Cards (Asset)' }),
+      'Cards (Asset)',
+    );
+  });
 });
 
 describe('canonicalNameForRsp', () => {
@@ -132,6 +142,36 @@ describe('joinRosters', () => {
     const roster = joinRosters(['Zebra', 'Alpha'], ['swc-mango'], [], {});
     assert.deepEqual(roster.map((r) => r.name), ['Alpha', 'Mango', 'Zebra']);
   });
+
+  it('joins a parenthesized Figma card with its differently-named RSP export via aliases', () => {
+    const roster = joinRosters(
+      ['AssetCard'],
+      [],
+      ['Cards (Asset)'],
+      {
+        rsp: { AssetCard: 'Cards (Asset)' },
+        figma: { 'Cards (Asset)': 'Cards (Asset)' },
+      },
+    );
+    assert.deepEqual(roster, [
+      { name: 'Cards (Asset)', sources: { rsp: 'AssetCard', figma: 'Cards (Asset)' } },
+    ]);
+  });
+
+  it('splits a card into duplicate rows when the Figma identity alias is missing', () => {
+    // Regression guard: without the figma identity alias, `normalizeName` yields `CardsAsset`
+    // while the RSP alias yields `Cards (Asset)`, so the two never merge.
+    const roster = joinRosters(
+      ['AssetCard'],
+      [],
+      ['Cards (Asset)'],
+      { rsp: { AssetCard: 'Cards (Asset)' } },
+    );
+    const names = roster.map((r) => r.name);
+    assert.equal(names.length, 2);
+    assert.ok(names.includes('CardsAsset'), 'Figma name normalizes to CardsAsset');
+    assert.ok(names.includes('Cards (Asset)'), 'RSP alias stays Cards (Asset)');
+  });
 });
 
 describe('filterRoster', () => {
@@ -164,9 +204,10 @@ describe('toIndexStatus', () => {
     });
   });
 
-  it('maps RSP alpha data to Experimental with no context', () => {
+  it('maps RSP alpha data to Available with an Alpha context', () => {
     assert.deepEqual(toIndexStatus('rsp', { props: [], status: 'alpha' }), {
-      status: 'experimental',
+      status: 'available',
+      context: 'Alpha',
     });
   });
 
@@ -240,10 +281,10 @@ describe('buildIndex', () => {
     assert.deepEqual(bpt.platforms.web.swc, { status: 'not-available' });
   });
 
-  it('floors an SWC roster member with no maturity signal to Experimental', () => {
+  it('floors an SWC roster member with no maturity signal to Available', () => {
     const { index } = buildIndex({ roster, readData, columns });
     const pf = index.components.find((c) => c.name === 'PromptField');
-    assert.deepEqual(pf.platforms.web.swc, { status: 'experimental' });
+    assert.deepEqual(pf.platforms.web.swc, { status: 'available' });
     assert.deepEqual(pf.platforms.web.rsp, { status: 'not-available' });
   });
 

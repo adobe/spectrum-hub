@@ -61,10 +61,10 @@ describe('getUnifiedStatus — RSP source', () => {
     assert.equal(context, 'RC');
   });
 
-  it('maps alpha to Experimental with no context', () => {
+  it('maps alpha to Available with an Alpha context', () => {
     const { status, context } = getUnifiedStatus('rsp', 'alpha');
-    assert.equal(status.id, 'experimental');
-    assert.equal(context, null);
+    assert.equal(status.id, 'available');
+    assert.equal(context, 'Alpha');
   });
 
   it('maps a deprecated marker to Deprecated', () => {

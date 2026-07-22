@@ -61,8 +61,7 @@ export const WEB_COLUMNS = [
 //
 // - figma: a design in the library. There is no maturity vocabulary, so presence = Available.
 // - rsp: in the published types with no S2 doc page — ships in stable S2, so Available.
-// - swc: a CEM declaration with no `since` (the AI/chat cohort); maturity unconfirmed, so
-//   Experimental.
+// - swc: a CEM declaration with no `since` (the AI/chat cohort); it still ships, so Available.
 const PRESENT_FLOOR = {
   figma: { status: 'available' },
   rsp: { status: 'available' },
