@@ -197,11 +197,14 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   // NO_ICON leads the list (so it's the default). A controls-sheet row may
   // curate its own icon subset; otherwise falls back to ICON_OPTIONS.
   // NO_STATIC_COLOR leads the same way
-  const options = isIcon
-    ? [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)]
-    : isStaticColor
-      ? [NO_STATIC_COLOR, ...resolvePickerOptions(property, rspProps, swcProps)]
-      : resolvePickerOptions(property, rspProps, swcProps);
+  let options;
+  if (isIcon) {
+    options = [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)];
+  } else if (isStaticColor) {
+    options = [NO_STATIC_COLOR, ...resolvePickerOptions(property, rspProps, swcProps)];
+  } else {
+    options = resolvePickerOptions(property, rspProps, swcProps);
+  }
   const attribute = isIcon ? null : (swcRow?.attribute ?? null);
 
   if (!options.length && !FREEFORM_CONTROLS.has(controlType)) {
