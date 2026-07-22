@@ -10,6 +10,11 @@
   /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
   row-gap: var(--s2-spacing-400);
   align-items: start;
+  margin-block: var(--s2-spacing-500) var(--s2-spacing-600);
+
+  .section > .block-content:last-child & {
+      padding-block-end: var(--s2-spacing-600);
+  }
 
   /* Side-by-side: one shared [media, caption, indicator] row-group, N columns.
   each column is a full panel instead of each panel getting its own rows. */
