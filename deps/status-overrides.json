@@ -7,5 +7,77 @@
         "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
       }
     }
+  },
+  "FieldLabel": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "Built into Form components instead."
+      }
+    }
+  },
+  "HelpText": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "Built into Form components instead."
+      }
+    }
+  },
+  "ColorHandle": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "Built into color components instead."
+      }
+    }
+  },
+  "ColorLoupe": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "Built into color components instead."
+      }
+    }
+  },
+  "SelectBox": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "A select box is not a standalone component; it mirrors Select Box Group's availability."
+      }
+    }
+  },
+  "Tab": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "A tab is not a standalone component; it mirrors Tabs' availability."
+      }
+    }
+  },
+  "TabPanel": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "A tab panel is not a standalone component; it mirrors Tabs' availability."
+      }
+    }
+  },
+  "DateAndTimeField": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "context": "Stable",
+        "note": "React Spectrum splits this into separate Date Field, Date Picker, Date Range Picker, and Time Field components; this row mirrors their availability."
+      }
+    }
   }
 }

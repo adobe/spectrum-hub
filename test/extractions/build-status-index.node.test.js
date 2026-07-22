@@ -6,6 +6,7 @@ import {
   swcTagToPascal,
   canonicalNameForSwc,
   canonicalNameForFigma,
+  canonicalNameForRsp,
   joinRosters,
   filterRoster,
   toIndexStatus,
@@ -59,6 +60,16 @@ describe('canonicalNameForFigma', () => {
   });
 });
 
+describe('canonicalNameForRsp', () => {
+  it('uses the RSP export name as-is by default', () => {
+    assert.equal(canonicalNameForRsp('DatePicker', {}), 'DatePicker');
+  });
+
+  it('lets an alias merge a differently-named RSP export into an existing canonical row', () => {
+    assert.equal(canonicalNameForRsp('ToastContainer', { ToastContainer: 'Toast' }), 'Toast');
+  });
+});
+
 describe('joinRosters', () => {
   it('joins RSP, SWC, and Figma entries that share a canonical name', () => {
     const roster = joinRosters(['ActionButton'], ['swc-action-button'], ['Action button'], {});
@@ -103,6 +114,18 @@ describe('joinRosters', () => {
     const names = roster.map((r) => r.name).sort();
     assert.deepEqual(names, ['Asset', 'AssetView']);
     assert.deepEqual(roster.find((r) => r.name === 'AssetView').sources, { swc: 'swc-asset' });
+  });
+
+  it('merges a differently-named RSP export into an existing row via the rsp alias map', () => {
+    const roster = joinRosters(
+      ['ToastContainer'],
+      [],
+      ['Toast'],
+      { rsp: { ToastContainer: 'Toast' } },
+    );
+    assert.deepEqual(roster, [
+      { name: 'Toast', sources: { rsp: 'ToastContainer', figma: 'Toast' } },
+    ]);
   });
 
   it('returns rows sorted by canonical name', () => {

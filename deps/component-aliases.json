@@ -1,5 +1,8 @@
 {
   "swc": {},
+  "rsp": {
+    "ToastContainer": "Toast"
+  },
   "figma": {
     "Table": "TableView",
     "In-line alert": "InlineAlert",
@@ -11,7 +14,7 @@
     "Cards (Horizontal)": "Card",
     "Cards (Product)": "Card",
     "Cards (User)": "Card",
-    "Badge (Notification + Indicator)": "Badge",
+    "Badge (Notification + Indicator)": "NotificationBadge",
     "Button (Gradient)": "Button",
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",

@@ -114,6 +114,13 @@ export function canonicalNameForSwc(tag, aliases = {}) {
   return Object.hasOwn(aliases, tag) ? aliases[tag] : swcTagToPascal(tag);
 }
 
+/**
+ * Resolves the canonical name for an RSP export, letting the alias map override.
+ */
+export function canonicalNameForRsp(name, aliases = {}) {
+  return Object.hasOwn(aliases, name) ? aliases[name] : name;
+}
+
 /** Resolves the canonical name for a Figma display name, letting the alias map override. */
 export function canonicalNameForFigma(name, aliases = {}) {
   return Object.hasOwn(aliases, name) ? aliases[name] : normalizeName(name);
@@ -160,7 +167,7 @@ function displayLabel(canonical, sources) {
  * @param {string[]} rspNames - RSP PascalCase component names (allow-list keys).
  * @param {string[]} swcTags - SWC `swc-<kebab>` tags (allow list).
  * @param {string[]} figmaNames - Figma component-set display names.
- * @param {{ swc?: object, figma?: object }} aliases
+ * @param {{ rsp?: object, swc?: object, figma?: object }} aliases
  * @returns {{ name: string, sources: { rsp?: string, swc?: string, figma?: string } }[]}
  */
 export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
@@ -171,7 +178,7 @@ export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
     byName.set(canonical, entry);
   };
 
-  for (const name of rspNames) { add(name, 'rsp', name); }
+  for (const name of rspNames) { add(canonicalNameForRsp(name, aliases.rsp), 'rsp', name); }
   for (const tag of swcTags) { add(canonicalNameForSwc(tag, aliases.swc), 'swc', tag); }
   for (const name of figmaNames) { add(canonicalNameForFigma(name, aliases.figma), 'figma', name); }
 
