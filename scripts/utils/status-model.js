@@ -88,6 +88,7 @@ const SOURCE_MAPPINGS = {
     stable: { status: 'available', context: 'Stable' },
     internal: { status: 'experimental' },
     deprecated: { status: 'deprecated' },
+    preview: { status: 'available', context: 'Preview' },
   },
 };
 
