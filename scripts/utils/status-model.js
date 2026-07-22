@@ -80,7 +80,7 @@ const SOURCE_MAPPINGS = {
     stable: { status: 'available', context: 'Stable' },
     beta: { status: 'available', context: 'Beta' },
     rc: { status: 'available', context: 'RC' },
-    alpha: { status: 'experimental' },
+    alpha: { status: 'available', context: 'Alpha' },
     deprecated: { status: 'deprecated' },
   },
   // Spectrum Web Components CEM lifecycle.
