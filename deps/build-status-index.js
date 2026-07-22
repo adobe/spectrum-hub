@@ -22,7 +22,7 @@
  *   interpretable by downstream / AI-assisted consumers without also reading the adapter.
  * - The output carries no timestamp so the committed index is a clean git diff — the
  *   deferred Removed-detection story baselines against the previously-committed file
- *   (see deps/REMOVED-DETECTION.md).
+ *   (see deps/docs/REMOVED-DETECTION.md).
  *
  * Usage: node deps/build-status-index.js
  */
@@ -196,6 +196,17 @@ export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
 export function filterRoster(roster, excludes = []) {
   const excluded = new Set(excludes);
   return roster.filter((entry) => !excluded.has(entry.name));
+}
+
+/**
+ * Drops SWC internal primitives
+ *
+ * @param {string[]} tags - SWC tags (`swc-<kebab>`).
+ * @param {(tag: string) => unknown} readData - Reads a tag's raw extraction JSON, or null.
+ * @returns {string[]} the tags with internal components removed.
+ */
+export function excludeInternalSwc(tags, readData) {
+  return tags.filter((tag) => getComponentStatus(readData(tag)) !== 'internal');
 }
 
 /**
@@ -384,7 +395,8 @@ function readExtraction(source, name) {
 
 function main() {
   const rspComponents = readJson(join(__dirname, 'rsp', 'components.json'), {});
-  const swcComponents = readJson(join(__dirname, 'swc', 'components.json'), []);
+  // swc/components.json maps bare name -> module subpath; the roster is its keys as tags.
+  const swcComponents = readJson(join(__dirname, 'swc', 'components.json'), {});
   const figmaRoster = readJson(join(__dirname, 'figma', 'component-status.json'), []);
   // The secondary overlay lists Figma designs that carry redirect guidance; some are not
   // in the roster export but still exist in the library, so they count toward membership.
@@ -397,11 +409,15 @@ function main() {
     ...figmaRoster.map((component) => component.name),
     ...figmaOverlay.map((entry) => entry.name),
   ])];
-  const joined = joinRosters(Object.keys(rspComponents), swcComponents, figmaNames, aliases);
+  const swcTags = excludeInternalSwc(
+    Object.keys(swcComponents).map((name) => `swc-${name}`),
+    (tag) => readExtraction('swc', tag),
+  );
+  const joined = joinRosters(Object.keys(rspComponents), swcTags, figmaNames, aliases);
   const roster = filterRoster(joined, excludes);
 
   // Fail-closed guard: an empty roster means an upstream extraction produced nothing.
-  // Refuse to overwrite a good index with an empty one (see deps/REMOVED-DETECTION.md).
+  // Refuse to overwrite a good index with an empty one (see deps/docs/REMOVED-DETECTION.md).
   if (!roster.length) {
     console.error('Refusing to write an empty status index — every roster is empty.');
     process.exit(1);

@@ -88,9 +88,11 @@ describe('getUnifiedStatus — SWC source', () => {
     assert.equal(context, 'Stable');
   });
 
-  it('maps internal to Experimental with no context', () => {
+  it('leaves internal unmapped so it falls through to Not available', () => {
+    // Internal primitives are dropped from the roster before the adapter (see
+    // excludeInternalSwc), so `internal` is intentionally not a mapped SWC value.
     const { status, context } = getUnifiedStatus('swc', 'internal');
-    assert.equal(status.id, 'experimental');
+    assert.equal(status.id, 'not-available');
     assert.equal(context, null);
   });
 

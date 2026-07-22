@@ -7,7 +7,7 @@
  * unified statuses, never to raw implementation values — so a change in an upstream
  * vocabulary is absorbed here and never reaches the UI.
  *
- * See deps/DATA-CONTRACT.md (SPDOCS-351) for how the raw RSP/SWC values are sourced.
+ * See deps/docs/DATA-CONTRACT.md (SPDOCS-351) for how the raw RSP/SWC values are sourced.
  *
  * Mapping is keyed by implementation source (`rsp`, `swc`, ...). A new platform's
  * implementations add their own entry without touching existing mappings.
@@ -69,9 +69,8 @@ const NOT_AVAILABLE = 'not-available';
  * is an optional Level 2 label that preserves the source's own term (e.g. an
  * `Available` component that is specifically `Beta`).
  *
- * `deprecated → Deprecated` is present per the SPDOCS-351 go/no-go, but no source emits
- * a `deprecated` value today — it stays dormant until an upstream marker appears or the
- * override file sets it (see deps/DATA-CONTRACT.md). Any value not listed here falls
+ * `deprecated → Deprecated` is stays dormant until an upstream marker appears or the
+ * override file sets it (see deps/docs/DATA-CONTRACT.md). Any value not listed here falls
  * back to Not available.
  */
 const SOURCE_MAPPINGS = {
@@ -83,10 +82,9 @@ const SOURCE_MAPPINGS = {
     alpha: { status: 'available', context: 'Alpha' },
     deprecated: { status: 'deprecated' },
   },
-  // Spectrum Web Components CEM lifecycle.
+  // `internal` is intentionally unmapped and dropped (see excludeInternalSwc)
   swc: {
     stable: { status: 'available', context: 'Stable' },
-    internal: { status: 'experimental' },
     deprecated: { status: 'deprecated' },
     preview: { status: 'available', context: 'Preview' },
   },
