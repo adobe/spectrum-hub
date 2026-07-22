@@ -66,7 +66,7 @@ export const WEB_COLUMNS = [
 const PRESENT_FLOOR = {
   figma: { status: 'available' },
   rsp: { status: 'available' },
-  swc: { status: 'experimental' },
+  swc: { status: 'available' },
 };
 const DEFAULT_FLOOR = { status: 'experimental' };
 

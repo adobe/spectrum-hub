@@ -706,7 +706,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -723,7 +723,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1151,7 +1151,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1168,7 +1168,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1333,7 +1333,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1444,7 +1444,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1660,7 +1660,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1677,7 +1677,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -1713,7 +1713,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -2031,7 +2031,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
@@ -2048,7 +2048,7 @@
             "status": "not-available"
           },
           "swc": {
-            "status": "experimental"
+            "status": "available"
           }
         }
       }
