@@ -29,7 +29,9 @@ const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
 const PACKAGE_NAME = '@adobe/spectrum-wc';
 
-const ALLOW_LIST = JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8'));
+// components.json maps bare component name -> module subpath; extraction only
+// needs the roster of names. Tags carry the `swc-` prefix in the CEM.
+const ALLOW_LIST = Object.keys(JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8')));
 
 // Currently, the CEM for 2nd-gen SWC is generated in the .storybook directory, 
 // so .storybook is included in the url path in case that is what is actually published.
@@ -113,7 +115,8 @@ async function main() {
   }
 
   let count = 0;
-  for (const tag of ALLOW_LIST) {
+  for (const name of ALLOW_LIST) {
+    const tag = `swc-${name}`;
     console.log(`Extracting properties for ${tag}...`);
     const attrs = collectComponentData(cem, tag);
     if (!attrs) {
