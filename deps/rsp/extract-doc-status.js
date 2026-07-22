@@ -13,7 +13,9 @@ export const S2_DOCS_BASE = 'https://react-spectrum.adobe.com';
 export const s2MdxUrl = (component) =>
   `https://cdn.jsdelivr.net/gh/adobe/react-spectrum@main/packages/dev/s2-docs/pages/s2/${component}.mdx`;
 const VERSION_EXPORT = /export\s+const\s+version\s*=\s*['"](alpha|beta|rc)['"]/;
-const HTML_BADGE = />(alpha|beta|rc)</;
+// Excludes `<option value="alpha">alpha</option>, whose value literally reads
+// the color's alpha/transparency channel, which false-positives as a version badge.
+const HTML_BADGE = /(?<!value="(?:alpha|beta|rc)")>(alpha|beta|rc)</;
 
 async function fetchText(url) {
   const res = await fetch(url);

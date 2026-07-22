@@ -509,7 +509,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "experimental"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",
@@ -527,7 +528,8 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "experimental"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",
@@ -545,8 +547,10 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use color components"
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use color components",
+            "note": "Built into color components instead."
           },
           "swc": {
             "status": "not-available",
@@ -564,8 +568,10 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use color components"
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use color components",
+            "note": "Built into color components instead."
           },
           "swc": {
             "status": "available",
@@ -583,7 +589,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "experimental"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available",

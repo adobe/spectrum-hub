@@ -36,5 +36,5 @@
       "inheritedFrom": "InputProps"
     }
   ],
-  "status": "alpha"
+  "status": "stable"
 }
