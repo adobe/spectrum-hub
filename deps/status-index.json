@@ -172,23 +172,6 @@
       }
     },
     {
-      "name": "AppFrameBrowsing",
-      "label": "App Frame (Browsing)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Asset",
       "label": "Asset",
       "platforms": {
@@ -360,7 +343,7 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "available"
+            "status": "not-available"
           },
           "rsp": {
             "status": "available",
@@ -369,6 +352,108 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Asset)",
+      "label": "Cards (Asset)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Collection)",
+      "label": "Cards (Collection)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Gallery)",
+      "label": "Cards (Gallery)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Horizontal)",
+      "label": "Cards (Horizontal)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (Product)",
+      "label": "Cards (Product)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Cards (User)",
+      "label": "Cards (User)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
