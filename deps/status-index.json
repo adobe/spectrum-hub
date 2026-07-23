@@ -2020,8 +2020,7 @@
             "status": "available"
           },
           "rsp": {
-            "status": "available",
-            "context": "Stable"
+            "status": "not-available"
           },
           "swc": {
             "status": "not-available",

@@ -658,10 +658,6 @@
       "StyleProps"
     ]
   },
-  "ToastContainer": {
-    "interface": "ToastContainerProps",
-    "file": "Toast"
-  },
   "ToggleButton": {
     "interface": "ToggleButtonProps",
     "includes": [
