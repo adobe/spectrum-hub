@@ -1,7 +1,7 @@
 import '../../deps/se/se.js';
 import { getConfig } from '../../scripts/ak.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
-import { getImplementationById } from '../../scripts/utils/implementations.js';
+import { getImplementationsByPlatform } from '../../scripts/utils/implementations.js';
 import { toCsv, downloadCsv } from '../../scripts/utils/csv.js';
 
 const config = getConfig();
@@ -19,10 +19,12 @@ const NOT_AVAILABLE = 'not-available';
 // Web-scoped today; hoisted here for when per-platform tables (mobile, desktop) arrive.
 const PLATFORM = 'web';
 
-// A cell links to its internal component page; a column links when it's a registered
-// code implementation
+// A cell links to its component page when its column is a code implementation of this
+// platform (scripts/utils/implementations.js) and its status ships a page. Deriving the
+// linkable columns from the registry keeps design-only columns like Figma out for free.
 const LINKED_STATUSES = new Set(['available', 'experimental']);
-const isLinkableColumn = (columnId) => getImplementationById(columnId) !== null;
+const linkableColumnIds = new Set(getImplementationsByPlatform(PLATFORM).map((impl) => impl.id));
+const isLinkableColumn = (columnId) => linkableColumnIds.has(columnId);
 
 /** `ActionButton` > `action-button`: the kebab slug used in component page URLs. */
 const toSlug = (name) => name
