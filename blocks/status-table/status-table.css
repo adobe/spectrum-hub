@@ -4,12 +4,12 @@
   --status-table-cell-padding-block: 18px;
   --status-table-cell-padding-inline: 20px;
 
-  margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
+  margin-block: var(--s2-spacing-500) var(--s2-spacing-1000);
 
   .status-table-table {
     inline-size: 100%;
     position: relative;
-    margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
+    margin-block-start: var(--s2-spacing-600);
   }
 
   /* stacked layout for small screens */
@@ -170,7 +170,7 @@
     flex-wrap: wrap;
     gap: var(--s2-spacing-300);
     list-style: none;
-    margin-block: var(--s2-spacing-400) var(--s2-spacing-800);
+    margin-block: 0 var(--s2-spacing-800);
     padding: 0;
   }
 
@@ -181,6 +181,7 @@
     gap: var(--s2-spacing-100);
     padding: var(--s2-spacing-400);
     border-radius: 24px;
+    max-inline-size: 200px;
 
     /* tint the card with a faint wash of its own status color */
     background-color: rgb(from var(--status-color) r g b / 10%);
@@ -205,26 +206,36 @@
   /* toolbar — search, show-details toggle, column filter, and CSV export */
   .status-table-toolbar {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-flow: column wrap;
     gap: var(--s2-spacing-300);
     margin-block-end: var(--s2-spacing-200);
+
+    @media (width >= 900px) {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+
+  .status-table-toolbar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2-spacing-300);
+
+    @media (width >= 900px) {
+      flex-direction: row;
+      align-items: center;
+    }
   }
 
   .status-table-search {
-    flex: 1 1 220px;
+    flex: 1 1 32px;
     max-inline-size: 360px;
-  }
-
-  /* push the export control to the trailing edge of the toolbar */
-  .status-table-export {
-    margin-inline-start: auto;
   }
 
   /* sort: the "Sort by" control is shown only on small screens, where the stacked layout
      hides the header row. On wide screens sorting rides on the clickable headers instead. */
   .status-table-sort {
-    display: flex;
+    display: none; /* TODO: the filter is turned off (display: flex) until a future release */
     align-items: end;
     gap: var(--s2-spacing-100);
   }
