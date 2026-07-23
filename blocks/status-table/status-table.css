@@ -55,8 +55,8 @@
     color: var(--s2-gray-900);
   }
 
-  /* status badge: colored dot + unified label */
-  .status-table-badge {
+  /* colored dot + unified label */
+  .status-table-status-light {
     display: inline-flex;
     align-items: center;
     gap: var(--s2-spacing-100);
@@ -70,6 +70,63 @@
     border-radius: 50%;
     background-color: var(--status-color);
     flex: 0 0 auto;
+  }
+
+  .status-table-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: var(--status-color);
+  }
+
+  .status-table-link .status-table-label::after {
+    position: absolute;
+    content: '';
+    mask-image: url('/img/icons/s2-icon-chevronright-20-n.svg');
+    background-color: var(--s2-gray-700);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    inline-size: 12px;
+    block-size: 12px;
+    transition: transform 0.15s ease;
+    inset-inline-start: calc(100% + 4px);
+  }
+
+  /* Implementation cells for components link to their internal component page. */
+  tbody td:has(.status-table-link) {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .status-table-link {
+    display: inline-flex;
+    text-decoration: none;
+    color: inherit;
+    align-items: center;
+    outline: none;
+  }
+
+  .status-table-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  .status-table-link:hover::after,
+  .status-table-link:focus-visible::after {
+    background-color: rgb(from var(--status-color) r g b / 10%);
+  }
+
+  .status-table-link:hover .status-table-label::after {
+    transform: translateX(3px);
+  }
+
+  .status-table-link:focus-visible::after {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+    outline-offset: var(--s2-spacing-75);
+    border-radius: 9px;
   }
 
   /* secondary guidance line beneath the badge — hidden until the "Show details" toggle */
@@ -128,16 +185,13 @@
       background-color: transparent !important;
     }
 
-    thead tr {
-      background-color: light-dark(rgb(from var(--s2-gray-25) r g b / 70%), rgb(from var(--s2-gray-1000) r g b / 12%));
-    }
-
     thead th {
       text-align: start;
       font-weight: var(--s2-component-m-bold-font-weight);
-      color: var(--s2-gray-800);
+      color: var(--s2-gray-700);
       padding: var(--s2-spacing-200) var(--s2-spacing-300);
       border: none;
+      background-color: light-dark(rgb(from var(--s2-gray-25) r g b / 70%), rgb(from var(--s2-gray-1000) r g b / 12%));
     }
 
     th, td {
@@ -296,6 +350,13 @@
     font: inherit;
     color: inherit;
     cursor: pointer;
+    outline: none;
+  }
+
+  .status-table-sort-header:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+    outline-offset: var(--s2-spacing-75);
+    border-radius: 9px;
   }
 
   /* the glyph is decorative (aria-sort conveys the state): a muted neutral sort icon marks
