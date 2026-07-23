@@ -184,6 +184,13 @@
       "StyleProps"
     ]
   },
+  "CoachMarkTrigger": {
+    "interface": "CoachMarkTriggerProps",
+    "file": "CoachMark",
+    "extends": [
+      "DialogTriggerProps"
+    ]
+  },
   "CollectionCardPreview": {
     "interface": "CardPreviewProps",
     "file": "Card"
@@ -249,6 +256,14 @@
       "InputProps"
     ]
   },
+  "ComboBoxItem": {
+    "interface": "ComboBoxItemProps",
+    "file": "ComboBox",
+    "extends": [
+      "ListBoxItemProps",
+      "StyleProps"
+    ]
+  },
   "ContextualHelp": {
     "interface": "ContextualHelpProps",
     "includes": [
@@ -257,6 +272,10 @@
     "extends": [
       "StyleProps"
     ]
+  },
+  "ContextualHelpPopover": {
+    "interface": "ContextualHelpPopoverProps",
+    "file": "ContextualHelp"
   },
   "CustomDialog": {
     "interface": "CustomDialogProps",
@@ -295,6 +314,15 @@
       "StyleProps"
     ]
   },
+  "DialogContainer": {
+    "interface": "DialogContainerProps"
+  },
+  "DialogTrigger": {
+    "interface": "DialogTriggerProps",
+    "extends": [
+      "DialogTriggerProps"
+    ]
+  },
   "Disclosure": {
     "interface": "DisclosureProps",
     "extends": [
@@ -322,6 +350,9 @@
       "SeparatorProps",
       "StyleProps"
     ]
+  },
+  "DragPreview": {
+    "interface": "DragPreviewProps"
   },
   "DropZone": {
     "interface": "DropZoneProps",
@@ -394,10 +425,25 @@
       "GridListProps"
     ]
   },
+  "ListViewItem": {
+    "interface": "ListViewItemProps",
+    "file": "ListView",
+    "extends": [
+      "GridListItemProps"
+    ]
+  },
   "Menu": {
     "interface": "MenuProps",
     "extends": [
       "MenuProps",
+      "StyleProps"
+    ]
+  },
+  "MenuItem": {
+    "interface": "MenuItemProps",
+    "file": "Menu",
+    "extends": [
+      "MenuItemProps",
       "StyleProps"
     ]
   },
@@ -444,6 +490,14 @@
       "StyleProps",
       "ListBoxProps",
       "PopoverProps"
+    ]
+  },
+  "PickerItem": {
+    "interface": "PickerItemProps",
+    "file": "TabsPicker",
+    "extends": [
+      "ListBoxItemProps",
+      "StyleProps"
     ]
   },
   "Popover": {
@@ -541,12 +595,22 @@
       "StyleProps"
     ]
   },
+  "SelectBox": {
+    "interface": "SelectBoxProps",
+    "file": "SelectBoxGroup",
+    "extends": [
+      "StyleProps"
+    ]
+  },
   "SelectBoxGroup": {
     "interface": "SelectBoxGroupProps",
     "extends": [
       "StyleProps",
       "ListBoxProps"
     ]
+  },
+  "Skeleton": {
+    "interface": "SkeletonProps"
   },
   "SkeletonCollection": {
     "interface": "SkeletonCollectionProps"
@@ -573,6 +637,14 @@
     ],
     "extends": [
       "SwitchFieldProps",
+      "StyleProps"
+    ]
+  },
+  "Tab": {
+    "interface": "TabProps",
+    "file": "Tabs",
+    "extends": [
+      "TabProps",
       "StyleProps"
     ]
   },
@@ -604,6 +676,13 @@
     ],
     "extends": [
       "TableProps"
+    ]
+  },
+  "TabPanel": {
+    "interface": "TabPanelProps",
+    "file": "Tabs",
+    "extends": [
+      "TabPanelProps"
     ]
   },
   "Tabs": {
@@ -658,6 +737,13 @@
       "StyleProps"
     ]
   },
+  "ToastContainer": {
+    "interface": "ToastContainerProps",
+    "file": "Toast",
+    "extends": [
+      "ToastRegionProps"
+    ]
+  },
   "ToggleButton": {
     "interface": "ToggleButtonProps",
     "includes": [
@@ -680,6 +766,14 @@
   "Tooltip": {
     "interface": "TooltipProps",
     "extends": [
+      "TooltipProps"
+    ]
+  },
+  "TooltipTrigger": {
+    "interface": "TooltipTriggerProps",
+    "file": "Tooltip",
+    "extends": [
+      "TooltipTriggerComponentProps",
       "TooltipProps"
     ]
   },

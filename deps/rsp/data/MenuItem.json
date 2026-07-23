@@ -1,0 +1,58 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The contents of the item."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this item represents. When using dynamic collections, this is set automatically.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the item's contents, used for features like typeahead.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "An accessibility label for this item.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when the item is selected.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "description": "Whether the menu should close when the menu item is selected.",
+      "inheritedFrom": "MenuItemProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ]
+}

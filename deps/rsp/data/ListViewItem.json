@@ -1,0 +1,45 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The contents of the item."
+    },
+    {
+      "property": "hasChildItems",
+      "type": "boolean",
+      "description": "Whether the item has child items (renders a chevron indicator)."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this item represents. When using dynamic collections, this is set automatically.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the item's contents, used for features like typeahead.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
+      "inheritedFrom": "GridListItemProps"
+    }
+  ]
+}

@@ -5,7 +5,26 @@
       "type": "ToastPlacement",
       "default": "'bottom'",
       "description": "Placement of the toast container on the page."
+    },
+    {
+      "property": "queue",
+      "type": "ToastQueue<T>",
+      "required": true,
+      "description": "The queue of toasts to display.",
+      "inheritedFrom": "ToastRegionProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode | ((renderProps: {",
+      "required": true,
+      "description": "A function to render each toast, or children containing a `<ToastList>`.",
+      "inheritedFrom": "ToastRegionProps"
+    },
+    {
+      "property": "toast",
+      "type": "QueuedToast<T>",
+      "required": true,
+      "inheritedFrom": "ToastRegionProps"
     }
-  ],
-  "status": "stable"
+  ]
 }

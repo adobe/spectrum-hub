@@ -1,0 +1,15 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
+    },
+    {
+      "property": "isLoading",
+      "type": "boolean",
+      "required": true
+    }
+  ],
+  "status": "stable"
+}

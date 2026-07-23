@@ -1,0 +1,10 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The children of the contextual help popover. Supports Heading, Content, and Footer elements."
+    }
+  ]
+}

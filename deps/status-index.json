@@ -570,6 +570,23 @@
       }
     },
     {
+      "name": "CoachMarkTrigger",
+      "label": "Coach Mark Trigger",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "ColorArea",
       "label": "Color Area",
       "platforms": {
@@ -746,6 +763,23 @@
       }
     },
     {
+      "name": "ComboBoxItem",
+      "label": "Combo Box Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "ContextualHelp",
       "label": "Contextual Help",
       "platforms": {
@@ -760,6 +794,23 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "ContextualHelpPopover",
+      "label": "Contextual Help Popover",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -876,6 +927,40 @@
       }
     },
     {
+      "name": "DialogContainer",
+      "label": "Dialog Container",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "DialogTrigger",
+      "label": "Dialog Trigger",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Disclosure",
       "label": "Disclosure",
       "platforms": {
@@ -909,6 +994,23 @@
           "swc": {
             "status": "available",
             "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "DragPreview",
+      "label": "Drag Preview",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -1140,6 +1242,23 @@
       }
     },
     {
+      "name": "ListViewItem",
+      "label": "List View Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Menu",
       "label": "Menu",
       "platforms": {
@@ -1154,6 +1273,23 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "MenuItem",
+      "label": "Menu Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -1245,6 +1381,23 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "PickerItem",
+      "label": "Picker Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -1507,6 +1660,24 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "Skeleton",
+      "label": "Skeleton",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -1837,7 +2008,7 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available"
           },
           "swc": {
             "status": "not-available",
@@ -1897,6 +2068,23 @@
           "swc": {
             "status": "available",
             "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "TooltipTrigger",
+      "label": "Tooltip Trigger",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }

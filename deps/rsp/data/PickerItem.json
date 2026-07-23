@@ -1,0 +1,51 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the item.",
+      "inheritedFrom": "ListBoxItemProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this item represents. When using dynamic collections, this is set automatically.",
+      "inheritedFrom": "ListBoxItemProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the item's contents, used for features like typeahead.",
+      "inheritedFrom": "ListBoxItemProps"
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "An accessibility label for this item.",
+      "inheritedFrom": "ListBoxItemProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled.",
+      "inheritedFrom": "ListBoxItemProps"
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
+      "inheritedFrom": "ListBoxItemProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ]
+}
