@@ -608,6 +608,62 @@ div[data-status],
       height: 20px;
     }
 
+    .btn {
+      --button-border-width: var(--se-border-width-200);
+      --button-padding-block-start: 7px;
+      --button-padding-block-end: 9px;
+      --button-padding-inline: 20px;
+      --button-gap: 6px;
+
+      gap: var(--button-gap);
+      box-sizing: border-box;
+      text-decoration: none;
+      max-inline-size:  inherit;
+      padding-block-start: calc(var(--button-padding-block-start) - var(--button-border-width));
+      /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+      padding-block-end: calc(var(--button-padding-block-end) - var(--button-border-width));
+       padding-inline: calc(var(--button-padding-inline) - var(--button-border-width));
+      block-size: var(--s2-component-l-height);
+      font-size: var(--s2-component-l-bold-font-size);
+      font-weight: var(--s2-component-l-bold-font-weight);
+      line-height: var(--s2-component-l-bold-line-height);
+      border-radius: calc(var(--s2-component-l-height) / 2);
+      color: var(--button-text-color);
+      background-color: var(--button-background-color);
+      border: var(--button-background-color, transparent) solid var(--button-border-width);
+      transition-timing-function: cubic-bezier(.45, 0, .4, 1);
+      transition-duration: 130ms;
+    }
+
+    .btn.btn-primary {
+      --button-background-color: var(--s2-gray-800);
+      --button-background-color-hover: var(--s2-gray-900);
+      --button-text-color: var(--s2-gray-25);
+    }
+
+    .btn.btn-accent {
+      --button-background-color:  var(--s2-blue-900);
+      --button-background-color-hover:  var(--s2-blue-1000);
+      --button-text-color: var(--sh-content-color-white);
+
+      body.dark-scheme & {
+        --button-background-color:  var(--s2-blue-800);
+        --button-background-color-hover:  var(--s2-blue-700);
+      }
+    }
+
+    .btn:focus-visible {
+      outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+      outline-offset: 2px;
+    } 
+
+    .btn:hover,
+    .btn:focus-visible,
+    .btn:active {
+      background-color: var(--button-background-color-hover);
+      border-color: var(--button-background-color-hover);
+    }
+
     .visually-hidden {
       clip-path: inset(50%);
       height: 1px;
