@@ -3,8 +3,8 @@
     "attribute": "static-color",
     "property": "staticColor",
     "type": "ProgressCircleStaticColor | undefined",
-    "description": "Static color variant for use on different backgrounds.\r\n\r\nWhen set to 'white', the component uses white styling for images with a dark tinted background.\r\n\r\nWhen set to 'black', the component uses black styling for images with a light tinted background.",
-    "since": "2.0.0"
+    "description": "Static color variant for use on different backgrounds.\n\nWhen set to 'white', the component uses white styling for images with a dark tinted background.\n\nWhen set to 'black', the component uses black styling for images with a light tinted background.",
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
@@ -12,24 +12,24 @@
     "type": "ElementSize",
     "description": "The size of the progress circle.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "label",
     "property": "label",
     "type": "string",
     "default": "''",
-    "description": "Accessible label for the progress circle.\r\n\r\nUsed to provide context about what is loading or progressing.\r\nWhen no accessible name is provided (no label, aria-label, or\r\naria-labelledby), a default \"Loading\" label is applied.",
+    "description": "Accessible label for the progress circle.\n\nUsed to provide context about what is loading or progressing.\nWhen no accessible name is provided (no label, aria-label, or\naria-labelledby), a default \"Loading\" label is applied.",
     "inheritedFrom": "ProgressCircleBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "progress",
     "property": "progress",
     "type": "number | null",
     "default": "null",
-    "description": "Progress value from 0 to 100.\r\n\r\nWhen `null` (indeterminate), the component shows a loading animation.\r\nSetting a number switches to determinate mode. Removing the `progress`\r\nattribute or setting this property to `null` returns to indeterminate.\r\nValues outside 0–100 or non-finite numbers are clamped (non-finite becomes 0).\r\n\r\nReflected to the `progress` attribute when set; the attribute is omitted when indeterminate.",
+    "description": "Progress value from 0 to 100.\n\nWhen `null` (indeterminate), the component shows a loading animation.\nSetting a number switches to determinate mode. Removing the `progress`\nattribute or setting this property to `null` returns to indeterminate.\nValues outside 0–100 or non-finite numbers are clamped (non-finite becomes 0).\n\nReflected to the `progress` attribute when set; the attribute is omitted when indeterminate.",
     "inheritedFrom": "ProgressCircleBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]

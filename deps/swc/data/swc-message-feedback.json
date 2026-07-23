@@ -3,7 +3,7 @@
     "attribute": "status",
     "property": "status",
     "type": "'positive' | 'negative' | undefined",
-    "description": "The currently selected feedback status.\r\n- `positive`: positive feedback selected\r\n- `negative`: negative feedback selected\r\n- `undefined`: no feedback selected\r\n\r\nThis is controlled by the consumer. The component dispatches `swc-message-feedback-change`\r\non click and expects the parent to update `status`."
+    "description": "The currently selected feedback status.\n- `positive`: positive feedback selected\n- `negative`: negative feedback selected\n- `undefined`: no feedback selected\n\nThis is controlled by the consumer. The component dispatches `swc-message-feedback-change`\non click and expects the parent to update `status`."
   },
   {
     "attribute": "group-label",

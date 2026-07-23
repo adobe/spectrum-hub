@@ -2,22 +2,13 @@
  * Extracts component properties from the 2nd-gen Spectrum Web Components package
  * and writes per-component JSON files.
  * 
- * CURRENT: Run this when SWC updates its shared base classes or mixins.
- * Requires a locally generated custom-elements.json from the 2nd-gen SWC repo
- * (cd spectrum-web-components/2nd-gen/packages/swc && yarn analyze). In 2nd-gen,
- * inherited and mixin-provided attributes are already included on the component 
- * declaration.
- * 
- * Usage:
- *   node deps/swc/extract-cem-components.js <path-to-custom-elements.json> (CURRENT: manual workflow for using the unpublished CEM)
- * 
- * 
- * TODO: Fetches or reads the 2nd-gen CEM from @adobe/spectrum-wc, then formats
+ * Fetches or reads the 2nd-gen CEM from @adobe/spectrum-wc, then formats
  * each component declaration's attributes. In 2nd-gen, inherited and
  * mixin-provided attributes are already included on the component declaration.
  *
  * Usage:
- *   node deps/swc/extract-cem-components.js (TODO: can be used once the CEM is published)
+ *   node deps/swc/extract-cem-components.js 
+ *   node deps/swc/extract-cem-components.js <path-to-custom-elements.json> (manual workflow)
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
@@ -29,18 +20,16 @@ const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
 const PACKAGE_NAME = '@adobe/spectrum-wc';
 
-const ALLOW_LIST = JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8'));
+// components.json maps bare component name -> module subpath; extraction only
+// needs the roster of names. Tags carry the `swc-` prefix in the CEM.
+const ALLOW_LIST = Object.keys(JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8')));
 
-// Currently, the CEM for 2nd-gen SWC is generated in the .storybook directory, 
-// so .storybook is included in the url path in case that is what is actually published.
 const CDN_URLS = [
-  () => `https://unpkg.com/${PACKAGE_NAME}/custom-elements.json`,
-  () => `https://unpkg.com/${PACKAGE_NAME}/.storybook/custom-elements.json`,
-  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}/custom-elements.json`,
-  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}/.storybook/custom-elements.json`,
+  () => `https://unpkg.com/${PACKAGE_NAME}@beta/dist/custom-elements.json`,
+  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}@beta/dist/custom-elements.json`,
 ];
 
-async function fetchCEM() {
+export async function fetchCEM() {
   for (const buildUrl of CDN_URLS) {
     const url = buildUrl();
     try {
@@ -113,7 +102,8 @@ async function main() {
   }
 
   let count = 0;
-  for (const tag of ALLOW_LIST) {
+  for (const name of ALLOW_LIST) {
+    const tag = `swc-${name}`;
     console.log(`Extracting properties for ${tag}...`);
     const attrs = collectComponentData(cem, tag);
     if (!attrs) {

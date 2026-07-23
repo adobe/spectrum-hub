@@ -1,0 +1,9 @@
+[
+  {
+    "attribute": "status",
+    "property": "status",
+    "type": "'active' | 'complete' | 'stopped'",
+    "default": "'active'",
+    "description": "Timeline state for connector icons."
+  }
+]

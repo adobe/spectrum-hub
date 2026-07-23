@@ -1,37 +1,23 @@
 [
   {
-    "attribute": "loading",
-    "property": "loading",
-    "type": "boolean",
-    "default": "false",
-    "description": "`true`: progress circle + status label, `false`: checkmark + status label."
-  },
-  {
-    "attribute": "loadingLabel",
-    "property": "loadingLabel",
-    "type": "string",
-    "default": "'Generating response'",
-    "description": "Status row label text shown while `loading=true`."
-  },
-  {
-    "attribute": "completeLabel",
-    "property": "completeLabel",
-    "type": "string",
-    "default": "'Response generated'",
-    "description": "Status row label text shown while `loading=false`."
-  },
-  {
-    "attribute": "reasoning-label",
-    "property": "reasoningLabel",
-    "type": "string",
-    "default": "'Reasoning'",
-    "description": "Accessible label for the reasoning content group."
+    "attribute": "status",
+    "property": "status",
+    "type": "ResponseStatusStatus",
+    "default": "'active'",
+    "description": "Whole response lifecycle status."
   },
   {
     "attribute": "open",
     "property": "open",
     "type": "boolean",
     "default": "false",
-    "description": "`true`: reasoning expanded; `false`: reasoning collapsed.\r\nIgnored while `loading` is `true`. If reasoning slot content is removed,\r\n`open` is automatically set to `false` and no `swc-response-status-toggle` event is emitted."
+    "description": "`true`: step timeline open."
+  },
+  {
+    "attribute": "accessible-label",
+    "property": "accessibleLabel",
+    "type": "string",
+    "default": "''",
+    "description": "Accessible name for the step list panel."
   }
 ]

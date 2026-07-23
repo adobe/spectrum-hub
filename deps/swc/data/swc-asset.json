@@ -6,7 +6,7 @@
     "description": "The variant of the asset. When not provided, slot content is rendered (e.g., an image).",
     "inheritedFrom": "AssetBase",
     "status": "internal",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "label",
@@ -16,6 +16,6 @@
     "description": "Accessible label for the asset’s file or folder variant.",
     "inheritedFrom": "AssetBase",
     "status": "internal",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]

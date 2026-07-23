@@ -1,11 +1,11 @@
 [
   {
     "attribute": "aria-haspopup",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "aria-expanded",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "quiet",
@@ -13,14 +13,31 @@
     "type": "boolean",
     "default": "false",
     "description": "Applies the quiet (low-emphasis) visual treatment.",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "static-color",
     "property": "staticColor",
     "type": "ActionButtonStaticColor | undefined",
     "description": "Static color treatment for display over colored or image backgrounds.",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "attribute": "pending",
+    "property": "pending",
+    "type": "boolean",
+    "default": "false",
+    "description": "Whether the element is in a pending (busy) state. The element remains\nfocusable but activation is suppressed.",
+    "inheritedFrom": "PendingMixin",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "attribute": "pending-label",
+    "property": "pendingLabel",
+    "type": "string | undefined",
+    "description": "Custom accessible label used during the pending state. When omitted, the\npending label is derived from the resolved non-busy accessible name plus\na busy suffix (e.g. \"Save, busy\").",
+    "inheritedFrom": "PendingMixin",
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
@@ -28,40 +45,23 @@
     "type": "ElementSize",
     "description": "The size of the button.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
     "default": "false",
-    "description": "Whether the button is disabled. Removes focusability and prevents\r\ninteraction.",
+    "description": "Whether the button is disabled. Removes focusability and prevents\ninteraction.",
     "inheritedFrom": "ButtonBase",
-    "since": "2.0.0"
-  },
-  {
-    "attribute": "pending",
-    "property": "pending",
-    "type": "boolean",
-    "default": "false",
-    "description": "Whether the button is in a pending (busy) state. The button remains\r\nfocusable but activation is suppressed.",
-    "inheritedFrom": "ButtonBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "accessible-label",
     "property": "accessibleLabel",
     "type": "string | undefined",
-    "description": "Accessible label forwarded to the internal `<button>` element as\r\n`aria-label`. Required for icon-only buttons, which have no visible text.",
+    "description": "Accessible label forwarded to the internal `<button>` element as\n`aria-label`. Required for icon-only buttons, which have no visible text.",
     "inheritedFrom": "ButtonBase",
-    "since": "2.0.0"
-  },
-  {
-    "attribute": "pending-label",
-    "property": "pendingLabel",
-    "type": "string | undefined",
-    "description": "Custom accessible label used during the pending state. When omitted,\r\nthe pending label is derived from the resolved non-busy accessible name\r\nplus a busy suffix (e.g. \"Save, busy\").",
-    "inheritedFrom": "ButtonBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]

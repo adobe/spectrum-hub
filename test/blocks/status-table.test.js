@@ -172,6 +172,59 @@ describe('status-table block', () => {
     });
   });
 
+  describe('status cell links', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
+      .find((tr) => tr.querySelector('th').textContent === name);
+    const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
+
+    it('links an available RSP cell to that implementation\'s component page', () => {
+      const link = cell(el, 'Calendar', 'rsp').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/web/rsp/components/calendar');
+    });
+
+    it('links an available SWC cell to that implementation\'s component page', () => {
+      const link = cell(el, 'Button', 'swc').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/web/swc/components/button');
+    });
+
+    it('links an experimental cell too (available and experimental both link)', () => {
+      const link = cell(el, 'Color Area', 'rsp').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      // multi-word canonical name (ColorArea) slugs to kebab-case
+      expect(link.getAttribute('href')).to.equal('/web/rsp/components/color-area');
+    });
+
+    it('does not link a not-available cell', () => {
+      expect(cell(el, 'Calendar', 'swc').querySelector('a')).to.be.null;
+    });
+
+    it('does not link Figma cells, only RSP and SWC', () => {
+      expect(cell(el, 'Button', 'figma').querySelector('a')).to.be.null;
+    });
+
+    it('keeps the status badge (dot + label) as the link content', () => {
+      const link = cell(el, 'Button', 'rsp').querySelector('a.status-table-link');
+      expect(link.querySelector('.status-table-dot')).to.not.be.null;
+      expect(link.querySelector('.status-table-label').textContent).to.equal('Available');
+    });
+
+    it('gives each link a descriptive accessible name naming the component and implementation', () => {
+      const link = cell(el, 'Button', 'swc').querySelector('a.status-table-link');
+      const name = link.getAttribute('aria-label');
+      expect(name).to.include('Button');
+      expect(name).to.include('Spectrum Web Components');
+    });
+  });
+
   describe('status cards', () => {
     let el;
     beforeEach(async () => {
@@ -292,6 +345,77 @@ describe('status-table block', () => {
       sw.checked = false;
       sw.dispatchEvent(new Event('change'));
       expect(el.classList.contains('status-table-show-details')).to.be.false;
+    });
+  });
+
+  describe.skip('toolbar — column filter', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    it('renders a filter button wired to a popover panel', () => {
+      const button = el.querySelector('.status-table-filter-button');
+      const popover = el.querySelector('.status-table-filter-popover');
+      expect(button).to.not.be.null;
+      expect(popover).to.not.be.null;
+      expect(popover.hasAttribute('popover')).to.be.true;
+      expect(button.getAttribute('popovertarget')).to.equal(popover.id);
+    });
+
+    it('starts with the popover closed', () => {
+      const popover = el.querySelector('.status-table-filter-popover');
+      expect(popover.matches(':popover-open')).to.be.false;
+    });
+
+    it('is icon-only with a visually hidden accessible name', () => {
+      const button = el.querySelector('.status-table-filter-button');
+      const label = button.querySelector('.visually-hidden');
+      expect(label).to.not.be.null;
+      expect(label.textContent).to.equal('Filter columns');
+    });
+
+    it('offers one checkbox per implementation column, in column order', () => {
+      const toggles = [...el.querySelectorAll('.status-table-column-toggle')];
+      expect(toggles.map((c) => c.getAttribute('data-col'))).to.deep.equal(['figma', 'rsp', 'swc']);
+    });
+
+    it('checks every column by default', () => {
+      const toggles = [...el.querySelectorAll('.status-table-column-toggle')];
+      expect(toggles.every((c) => c.checked)).to.be.true;
+    });
+
+    it('hides a column\'s cells when its checkbox is unchecked', () => {
+      const figmaToggle = el.querySelector('.status-table-column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      const figmaCells = el.querySelectorAll('.status-table-table [data-col="figma"]');
+      expect([...figmaCells].every((c) => c.hidden)).to.be.true;
+      const rspCells = el.querySelectorAll('.status-table-table [data-col="rsp"]');
+      expect([...rspCells].some((c) => c.hidden)).to.be.false;
+    });
+
+    it('re-shows a column when its checkbox is re-checked', () => {
+      const figmaToggle = el.querySelector('.status-table-column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      figmaToggle.checked = true;
+      figmaToggle.dispatchEvent(new Event('change'));
+      const figmaCells = el.querySelectorAll('.status-table-table [data-col="figma"]');
+      expect([...figmaCells].some((c) => c.hidden)).to.be.false;
+    });
+
+    it('announces a column show/hide change in the live region', () => {
+      const region = el.querySelector('[role="status"]');
+      const figmaToggle = el.querySelector('.status-table-column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      expect(region.textContent).to.match(/figma column hidden/i);
+      figmaToggle.checked = true;
+      figmaToggle.dispatchEvent(new Event('change'));
+      expect(region.textContent).to.match(/figma column shown/i);
     });
   });
 

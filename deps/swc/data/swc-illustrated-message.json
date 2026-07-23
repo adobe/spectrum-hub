@@ -6,7 +6,7 @@
     "default": "'m'",
     "description": "The size of the message",
     "inheritedFrom": "IllustratedMessageBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "orientation",
@@ -15,6 +15,6 @@
     "default": "'vertical'",
     "description": "The layout orientation",
     "inheritedFrom": "IllustratedMessageBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.1"
   }
 ]
