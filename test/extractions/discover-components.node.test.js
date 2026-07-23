@@ -4,8 +4,34 @@ import { describe, it } from 'node:test';
 import {
   buildEntry,
   buildIncludeFiles,
+  findExportedNames,
   findIncludeImportPath,
 } from '../../deps/rsp/discover-components.js';
+
+describe('findExportedNames', () => {
+  it('finds forwardRef-style const exports', () => {
+    const source = 'export declare const ToggleButton: ForwardRefExoticComponent<ToggleButtonProps>;';
+
+    assert.deepEqual(findExportedNames(source), ['ToggleButton']);
+  });
+
+  it('finds plain function-declaration exports', () => {
+    // Regression: S2 moved ToastContainer from a const/forwardRef export to a plain
+    // function declaration, which silently dropped it from components.json.
+    const source = 'export declare function ToastContainer(props: ToastContainerProps): ReactNode;';
+
+    assert.deepEqual(findExportedNames(source), ['ToastContainer']);
+  });
+
+  it('finds both styles in the same file without duplicates', () => {
+    const source = `
+      export declare const ToggleButton: ForwardRefExoticComponent<ToggleButtonProps>;
+      export declare function ToastContainer(props: ToastContainerProps): ReactNode;
+    `;
+
+    assert.deepEqual(findExportedNames(source), ['ToggleButton', 'ToastContainer']);
+  });
+});
 
 describe('findIncludeImportPath', () => {
   it('returns the sibling .d.ts basename for a relative import', () => {
@@ -72,5 +98,20 @@ describe('buildEntry', () => {
     assert.deepEqual(entry.includes, ['ActionButtonStyleProps']);
     assert.deepEqual(entry.includeFiles, { ActionButtonStyleProps: 'ActionButton' });
     assert.ok(entry.extends?.includes('StyleProps'));
+  });
+
+  it('resolves the interface for a plain function-declaration component', () => {
+    const source = `
+      export interface ToastContainerProps {
+        placement?: ToastPlacement;
+      }
+
+      export declare function ToastContainer(props: ToastContainerProps): ReactNode;
+    `;
+
+    const entry = buildEntry('ToastContainer', 'Toast', source);
+
+    assert.equal(entry.interface, 'ToastContainerProps');
+    assert.equal(entry.file, 'Toast');
   });
 });
