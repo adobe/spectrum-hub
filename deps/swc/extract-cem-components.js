@@ -33,13 +33,11 @@ const PACKAGE_NAME = '@adobe/spectrum-wc';
 // needs the roster of names. Tags carry the `swc-` prefix in the CEM.
 const ALLOW_LIST = Object.keys(JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8')));
 
-// Currently, the CEM for 2nd-gen SWC is generated in the .storybook directory, 
-// so .storybook is included in the url path in case that is what is actually published.
+// Currently, the CEM for 2nd-gen SWC is generated in the dist directory, 
+// so dist is included in the url path in case that is what is actually published.
 const CDN_URLS = [
-  () => `https://unpkg.com/${PACKAGE_NAME}/custom-elements.json`,
-  () => `https://unpkg.com/${PACKAGE_NAME}/.storybook/custom-elements.json`,
-  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}/custom-elements.json`,
-  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}/.storybook/custom-elements.json`,
+  () => `https://unpkg.com/${PACKAGE_NAME}/dist/custom-elements.json`,
+  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}/dist/custom-elements.json`,
 ];
 
 export async function fetchCEM() {
