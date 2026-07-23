@@ -391,12 +391,19 @@ const buildToolbar = (index, table, el, announce) => {
   const columns = index.implementations?.web ?? [];
   const toolbar = document.createElement('div');
   toolbar.className = 'status-table-toolbar';
+
+  const toggleAndExportWrapper = document.createElement('div');
+  toggleAndExportWrapper.className = 'status-table-toolbar-wrapper';
+  toggleAndExportWrapper.append(
+    buildDetailsToggle(el),
+    // TODO: uncomment when filters are ready for post-V1
+    // buildColumnFilter(columns, table, announce)
+    buildExportButton(index),
+  );
   toolbar.append(
     buildSearch(table, announce),
     buildSorting(table, columns, announce),
-    buildDetailsToggle(el),
-    // buildColumnFilter(columns, table, announce),
-    buildExportButton(index),
+    toggleAndExportWrapper,
   );
   return toolbar;
 };
