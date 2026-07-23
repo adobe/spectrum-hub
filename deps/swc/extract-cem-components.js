@@ -24,10 +24,9 @@ const PACKAGE_NAME = '@adobe/spectrum-wc';
 // needs the roster of names. Tags carry the `swc-` prefix in the CEM.
 const ALLOW_LIST = Object.keys(JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8')));
 
-// TODO: remove the snapshot test when SWC releases next.
 const CDN_URLS = [
-  () => `https://unpkg.com/${PACKAGE_NAME}@0.4.0-snapshot-test.20260717104105/dist/custom-elements.json`,
-  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}@0.4.0-snapshot-test.20260717104105/dist/custom-elements.json`,
+  () => `https://unpkg.com/${PACKAGE_NAME}@beta/dist/custom-elements.json`,
+  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}@beta/dist/custom-elements.json`,
 ];
 
 export async function fetchCEM() {
