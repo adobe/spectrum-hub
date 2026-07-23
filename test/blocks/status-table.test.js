@@ -295,6 +295,77 @@ describe('status-table block', () => {
     });
   });
 
+  describe.skip('toolbar — column filter', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    it('renders a filter button wired to a popover panel', () => {
+      const button = el.querySelector('.status-table-filter-button');
+      const popover = el.querySelector('.status-table-filter-popover');
+      expect(button).to.not.be.null;
+      expect(popover).to.not.be.null;
+      expect(popover.hasAttribute('popover')).to.be.true;
+      expect(button.getAttribute('popovertarget')).to.equal(popover.id);
+    });
+
+    it('starts with the popover closed', () => {
+      const popover = el.querySelector('.status-table-filter-popover');
+      expect(popover.matches(':popover-open')).to.be.false;
+    });
+
+    it('is icon-only with a visually hidden accessible name', () => {
+      const button = el.querySelector('.status-table-filter-button');
+      const label = button.querySelector('.visually-hidden');
+      expect(label).to.not.be.null;
+      expect(label.textContent).to.equal('Filter columns');
+    });
+
+    it('offers one checkbox per implementation column, in column order', () => {
+      const toggles = [...el.querySelectorAll('.status-table-column-toggle')];
+      expect(toggles.map((c) => c.getAttribute('data-col'))).to.deep.equal(['figma', 'rsp', 'swc']);
+    });
+
+    it('checks every column by default', () => {
+      const toggles = [...el.querySelectorAll('.status-table-column-toggle')];
+      expect(toggles.every((c) => c.checked)).to.be.true;
+    });
+
+    it('hides a column\'s cells when its checkbox is unchecked', () => {
+      const figmaToggle = el.querySelector('.status-table-column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      const figmaCells = el.querySelectorAll('.status-table-table [data-col="figma"]');
+      expect([...figmaCells].every((c) => c.hidden)).to.be.true;
+      const rspCells = el.querySelectorAll('.status-table-table [data-col="rsp"]');
+      expect([...rspCells].some((c) => c.hidden)).to.be.false;
+    });
+
+    it('re-shows a column when its checkbox is re-checked', () => {
+      const figmaToggle = el.querySelector('.status-table-column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      figmaToggle.checked = true;
+      figmaToggle.dispatchEvent(new Event('change'));
+      const figmaCells = el.querySelectorAll('.status-table-table [data-col="figma"]');
+      expect([...figmaCells].some((c) => c.hidden)).to.be.false;
+    });
+
+    it('announces a column show/hide change in the live region', () => {
+      const region = el.querySelector('[role="status"]');
+      const figmaToggle = el.querySelector('.status-table-column-toggle[data-col="figma"]');
+      figmaToggle.checked = false;
+      figmaToggle.dispatchEvent(new Event('change'));
+      expect(region.textContent).to.match(/figma column hidden/i);
+      figmaToggle.checked = true;
+      figmaToggle.dispatchEvent(new Event('change'));
+      expect(region.textContent).to.match(/figma column shown/i);
+    });
+  });
+
   describe('toolbar — sort', () => {
     let el;
     beforeEach(async () => {
