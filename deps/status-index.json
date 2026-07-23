@@ -570,23 +570,6 @@
       }
     },
     {
-      "name": "CoachMarkTrigger",
-      "label": "Coach Mark Trigger",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "ColorArea",
       "label": "Color Area",
       "platforms": {
@@ -927,40 +910,6 @@
       }
     },
     {
-      "name": "DialogContainer",
-      "label": "Dialog Container",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "DialogTrigger",
-      "label": "Dialog Trigger",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Disclosure",
       "label": "Disclosure",
       "platforms": {
@@ -1242,23 +1191,6 @@
       }
     },
     {
-      "name": "ListViewItem",
-      "label": "List View Item",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Menu",
       "label": "Menu",
       "platforms": {
@@ -1381,23 +1313,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "PickerItem",
-      "label": "Picker Item",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -1618,9 +1533,7 @@
             "status": "available"
           },
           "rsp": {
-            "status": "available",
-            "context": "Stable",
-            "note": "A select box is not a standalone component; it mirrors Select Box Group's availability."
+            "status": "available"
           },
           "swc": {
             "status": "not-available"
@@ -1800,9 +1713,7 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "available",
-            "context": "Stable",
-            "note": "A tab is not a standalone component; it mirrors Tabs' availability."
+            "status": "available"
           },
           "swc": {
             "status": "available",
@@ -1839,9 +1750,7 @@
             "status": "not-available"
           },
           "rsp": {
-            "status": "available",
-            "context": "Stable",
-            "note": "A tab panel is not a standalone component; it mirrors Tabs' availability."
+            "status": "available"
           },
           "swc": {
             "status": "available",
@@ -2068,23 +1977,6 @@
           "swc": {
             "status": "available",
             "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "TooltipTrigger",
-      "label": "Tooltip Trigger",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
