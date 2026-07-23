@@ -172,6 +172,59 @@ describe('status-table block', () => {
     });
   });
 
+  describe('status cell links', () => {
+    let el;
+    beforeEach(async () => {
+      stubFetchOk();
+      el = makeEl();
+      await init(el);
+    });
+
+    const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
+      .find((tr) => tr.querySelector('th').textContent === name);
+    const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
+
+    it('links an available RSP cell to that implementation\'s component page', () => {
+      const link = cell(el, 'Calendar', 'rsp').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/web/rsp/components/calendar');
+    });
+
+    it('links an available SWC cell to that implementation\'s component page', () => {
+      const link = cell(el, 'Button', 'swc').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/web/swc/components/button');
+    });
+
+    it('links an experimental cell too (available and experimental both link)', () => {
+      const link = cell(el, 'Color Area', 'rsp').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      // multi-word canonical name (ColorArea) slugs to kebab-case
+      expect(link.getAttribute('href')).to.equal('/web/rsp/components/color-area');
+    });
+
+    it('does not link a not-available cell', () => {
+      expect(cell(el, 'Calendar', 'swc').querySelector('a')).to.be.null;
+    });
+
+    it('does not link Figma cells, only RSP and SWC', () => {
+      expect(cell(el, 'Button', 'figma').querySelector('a')).to.be.null;
+    });
+
+    it('keeps the status badge (dot + label) as the link content', () => {
+      const link = cell(el, 'Button', 'rsp').querySelector('a.status-table-link');
+      expect(link.querySelector('.status-table-dot')).to.not.be.null;
+      expect(link.querySelector('.status-table-label').textContent).to.equal('Available');
+    });
+
+    it('gives each link a descriptive accessible name naming the component and implementation', () => {
+      const link = cell(el, 'Button', 'swc').querySelector('a.status-table-link');
+      const name = link.getAttribute('aria-label');
+      expect(name).to.include('Button');
+      expect(name).to.include('Spectrum Web Components');
+    });
+  });
+
   describe('status cards', () => {
     let el;
     beforeEach(async () => {

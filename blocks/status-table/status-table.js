@@ -1,6 +1,7 @@
 import '../../deps/se/se.js';
 import { getConfig } from '../../scripts/ak.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
+import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { toCsv, downloadCsv } from '../../scripts/utils/csv.js';
 
 const config = getConfig();
@@ -14,6 +15,31 @@ const DEFAULT_INDEX = '/deps/status-index.json';
 
 const NOT_AVAILABLE = 'not-available';
 
+// The platform segment of the component-page route `/<platform>/<impl>/components/<slug>`.
+// Web-scoped today; hoisted here for when per-platform tables (mobile, desktop) arrive.
+const PLATFORM = 'web';
+
+// A cell links to its internal component page; a column links when it's a registered
+// code implementation
+const LINKED_STATUSES = new Set(['available', 'experimental']);
+const isLinkableColumn = (columnId) => getImplementationById(columnId) !== null;
+
+/** `ActionButton` > `action-button`: the kebab slug used in component page URLs. */
+const toSlug = (name) => name
+  .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+  .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+  .toLowerCase();
+
+/**
+ * The internal component-page URL for an implementation cell, or null when the cell
+ * shouldn't link (non-implementation column, absent component, or a status with no page).
+ */
+const componentPageHref = (columnId, status, name) => (
+  isLinkableColumn(columnId) && LINKED_STATUSES.has(status) && name
+    ? `/${PLATFORM}/${columnId}/components/${toSlug(name)}`
+    : null
+);
+
 // explicitly reset table roles so that when the CSS display property changes on small
 // screens the accessibility tree is unaffected — WCAG 1.3.1 (Info and Relationships).
 const withRole = (node, role) => {
@@ -26,7 +52,7 @@ const buildBadge = (cell) => {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
 
   const badge = document.createElement('span');
-  badge.className = 'status-table-badge';
+  badge.className = 'status-table-status-light';
 
   const dot = document.createElement('span');
   dot.className = 'status-table-dot';
@@ -37,15 +63,37 @@ const buildBadge = (cell) => {
   const label = document.createElement('span');
   label.className = 'status-table-label';
   label.textContent = status.label;
+  label.style.setProperty('--status-color', `var(${status.color})`);
 
   badge.append(dot, label);
   return badge;
 };
 
 /** One implementation cell: the status badge plus an optional secondary guidance line. */
-const buildStatusCell = (cell) => {
+const buildStatusCell = (cell, context = {}) => {
+  const {
+    columnId, columnLabel, componentName, componentLabel,
+  } = context;
   const td = withRole(document.createElement('td'), 'cell');
-  td.append(buildBadge(cell));
+
+  const badge = buildBadge(cell);
+  const href = componentPageHref(columnId, cell?.status, componentName);
+  if (href) {
+    const status = STATUSES[cell.status];
+    const link = document.createElement('a');
+    link.className = 'status-table-link';
+    link.href = href;
+    // Expose the status color at the link level so the CSS hover/focus styles can apply
+    link.style.setProperty('--status-color', `var(${status.color})`);
+    // give each link an accessible name that says where it goes — WCAG 2.4.4 (Link Purpose,
+    // In Context).
+    link.setAttribute('aria-label', `${componentLabel}, ${status.label} in ${columnLabel}`);
+    link.append(badge);
+    td.append(link);
+  } else {
+    td.append(badge);
+  }
+
   if (cell?.secondary) {
     const secondary = document.createElement('span');
     secondary.className = 'status-table-secondary';
@@ -89,8 +137,13 @@ const buildTable = (index) => {
     row.append(nameCell);
 
     const web = component.platforms?.web ?? {};
-    for (const { id } of columns) {
-      const cell = buildStatusCell(web[id]);
+    for (const { id, label } of columns) {
+      const cell = buildStatusCell(web[id], {
+        columnId: id,
+        columnLabel: label,
+        componentName: component.name,
+        componentLabel: component.label ?? component.name,
+      });
       cell.dataset.col = id;
       row.append(cell);
     }
