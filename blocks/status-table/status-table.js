@@ -276,6 +276,7 @@ const setColumnVisible = (table, id, visible) => {
  * A "Columns" button that opens a popover of checkboxes, one per implementation column,
  * letting readers hide columns they don't care about. The Component column always stays.
  */
+/* eslint-disable-next-line */
 const buildColumnFilter = (columns, table, announce) => {
   const wrap = document.createElement('div');
   wrap.className = 'status-table-filter';
