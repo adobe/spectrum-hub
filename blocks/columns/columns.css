@@ -247,7 +247,6 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
     --image-size: var(--s-image-size);
 
     @container columns (width >= 800px) {
-      
       .grid-container {
         --image-size: var(--m-image-size);
         
