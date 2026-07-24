@@ -166,7 +166,7 @@ function componentSlugFromPath(pathname) {
   return idx >= 1 ? parts[idx + 1] ?? null : null;
 }
 
-// The stored id uses a colon (e.g. "9230:3620"); Figma node ids in URLs are hyphenated 
+// The stored id uses a colon (e.g. "9230:3620"); Figma node ids in URLs are hyphenated
 // ("9230-3620").
 export function resolveFigmaUrl(componentSlug, data) {
   if (!componentSlug) { return null; }

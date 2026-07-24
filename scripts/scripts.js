@@ -1,4 +1,11 @@
-import { loadArea, loadBlock, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
+import {
+  loadArea,
+  loadBlock,
+  getMetadata,
+  setConfig,
+  setScheme,
+  makePicture,
+} from './ak.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
