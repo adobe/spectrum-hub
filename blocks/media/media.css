@@ -3,7 +3,10 @@
   --opacity: 100%;
 
   opacity: var(--opacity);
-  margin-block: var(--s2-spacing-300);
+
+  .section:not(.has-background) > .block-content & {
+    margin-block: var(--s2-spacing-1000);
+  }
 
   img {
     max-width: var(--media-width);
