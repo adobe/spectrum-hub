@@ -2,6 +2,8 @@ import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import {
   getMetadata,
+  getScheme,
+  setScheme,
   getLocale,
   setConfig,
   getConfig,
@@ -64,6 +66,61 @@ describe('ak.js', () => {
       document.head.append(meta);
       expect(getMetadata('template')).to.equal('');
       meta.remove();
+    });
+  });
+
+  describe('getScheme / setScheme', () => {
+    afterEach(() => {
+      localStorage.removeItem('color-scheme');
+      document.body.classList.remove('dark-scheme', 'light-scheme');
+    });
+
+    it('returns a valid stored scheme', () => {
+      localStorage.setItem('color-scheme', 'light-scheme');
+      sandbox.stub(window, 'matchMedia').returns({ matches: true });
+      expect(getScheme()).to.equal('light-scheme');
+    });
+
+    it('falls back to matchMedia when nothing is stored', () => {
+      sandbox.stub(window, 'matchMedia').returns({ matches: true });
+      expect(getScheme()).to.equal('dark-scheme');
+    });
+
+    it('ignores an invalid stored value and falls back to matchMedia', () => {
+      localStorage.setItem('color-scheme', 'banana');
+      sandbox.stub(window, 'matchMedia').returns({ matches: false });
+      expect(getScheme()).to.equal('light-scheme');
+    });
+
+    it('applies the scheme class and removes the opposite one', () => {
+      document.body.classList.add('light-scheme');
+      setScheme(document.body, 'dark-scheme');
+      expect(document.body.classList.contains('dark-scheme')).to.be.true;
+      expect(document.body.classList.contains('light-scheme')).to.be.false;
+    });
+
+    it('persists an explicit scheme set on the body', () => {
+      setScheme(document.body, 'dark-scheme');
+      expect(localStorage.getItem('color-scheme')).to.equal('dark-scheme');
+    });
+
+    it('does not persist the computed default on the body', () => {
+      sandbox.stub(window, 'matchMedia').returns({ matches: true });
+      setScheme(document.body);
+      expect(document.body.classList.contains('dark-scheme')).to.be.true;
+      expect(localStorage.getItem('color-scheme')).to.be.null;
+    });
+
+    it('does not persist a scheme set on a non-body element', () => {
+      const el = document.createElement('div');
+      setScheme(el, 'dark-scheme');
+      expect(el.classList.contains('dark-scheme')).to.be.true;
+      expect(localStorage.getItem('color-scheme')).to.be.null;
+    });
+
+    it('does nothing for a falsy element', () => {
+      expect(() => setScheme(null, 'dark-scheme')).to.not.throw();
+      expect(localStorage.getItem('color-scheme')).to.be.null;
     });
   });
 

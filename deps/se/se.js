@@ -41,6 +41,7 @@ class SEFormElement extends LitElement {
   }
 
   handleFocusIn() {
+    if (this._programmaticFocus) return;
     if (lastInput === 'keyboard') this._internals.states.add('keyboard-focus');
   }
 
@@ -54,15 +55,32 @@ class SEFormElement extends LitElement {
 }
 
 class SEInput extends SEFormElement {
-  focus() {
-    this.shadowRoot.querySelector('input').focus();
+  async focus() {
+    this._programmaticFocus = true;
+    await this.updateComplete;
+    this.shadowRoot.querySelector('input')?.focus();
+    this._programmaticFocus = false;
   }
 
   handleEvent(event) {
     this.value = event.target.value;
     this._internals.setFormValue(this.value);
-    const wcEvent = new event.constructor(event.type, event);
-    this.dispatchEvent(wcEvent);
+    if (event instanceof Event) {
+      const wcEvent = new event.constructor(event.type, event);
+      this.dispatchEvent(wcEvent);
+    }
+  }
+
+  handleClear() {
+    // clear out the value
+    this.input.value = '';
+    // propegate the change
+    const event = { target: this.input };
+    this.handleEvent(event);
+    // bubble out the WC
+    const opts = { detail: event, bubbles: true, composed: true };
+    const clearEvent = new CustomEvent('clear', opts);
+    this.dispatchEvent(clearEvent);
   }
 
   handleKeyDown(event) {
@@ -70,7 +88,7 @@ class SEInput extends SEFormElement {
 
     if (!this.form) return;
 
-    const submitEvent = new SubmitEvent('submit', { bubbles: true, cancelable: true });
+    const submitEvent = new SubmitEvent('submit', { bubbles: false, cancelable: true });
 
     this.form.dispatchEvent(submitEvent);
 
@@ -81,11 +99,24 @@ class SEInput extends SEFormElement {
     this.form.submit();
   }
 
+  get input() {
+    return this.shadowRoot.querySelector('input');
+  }
+
   renderSearchIcon() {
     return html`
-      <svg viewBox="0 0 20 20">
+      <svg class="icon icon-search" viewBox="0 0 20 20">
         <use href="/img/icons/s2-icon-search-20-n.svg#icon"></use>
       </svg>`;
+  }
+
+  renderSearchClear() {
+    return html`
+      <button @click=${this.handleClear}>
+        <svg class="icon icon-close" viewBox="0 0 10 10">
+          <use href="/img/icons/s2-icon-close-10-n.svg#icon"></use>
+        </svg>
+      </button>`;
   }
 
   render() {
@@ -93,6 +124,7 @@ class SEInput extends SEFormElement {
       <div class="se-inputfield">
         ${this.label ? html`<label for="${this._idHash}">${this.label}</label>` : nothing}
         <div class="se-input-wrapper">
+          ${this.type === 'search' ? this.renderSearchIcon() : nothing}
           <input
             type=${this.type}
             name=${this.name}
@@ -105,7 +137,7 @@ class SEInput extends SEFormElement {
             @focusin=${this.handleFocusIn}
             @focusout=${this.handleFocusOut}
             class="${this.class} ${this.error ? 'has-error' : ''}" />
-          ${this.type === 'search' ? this.renderSearchIcon() : nothing}
+          ${this.type === 'search' ? this.renderSearchClear() : nothing}
         </div>
         ${this.error ? html`<p class="se-inputfield-error-text">${this.error}</p>` : nothing}
       </div>

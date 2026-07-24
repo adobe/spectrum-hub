@@ -55,11 +55,17 @@ export function setColorScheme(section) {
 }
 
 function handleBackground(background, section) {
-  const pic = background.content.querySelector('picture');
-  if (pic) {
+  const pics = background.content.querySelectorAll('picture');
+  // if media only has one image, it works for both schemes
+  if (pics.length > 1) {
+    if (pics[1]) { pics[1].classList.add('scheme-aware-pic', 'dark-pic'); }
+    pics[0].classList.add('scheme-aware-pic', 'light-pic');
+  }
+
+  if (pics.length > 0) {
     section.classList.add('has-background');
-    pic.classList.add('section-background');
-    section.prepend(pic);
+    pics.forEach((pic) => pic.classList.add('section-background'));
+    section.prepend(...pics);
     return;
   }
   const color = background.text;
@@ -109,6 +115,7 @@ export default async function init(el) {
   if (metadata.style?.text) { await handleStyle(metadata.style.text, section); }
   if (metadata.grid?.text) { handleLayout(metadata.grid.text, section, 'grid'); }
   if (metadata.gap?.text) { handleLayout(metadata.gap.text, section, 'gap'); }
+  if (metadata.radius?.text) { handleLayout(metadata.radius.text, section, 'radius'); }
   if (metadata.spacing?.text) { handleLayout(metadata.spacing.text, section, 'spacing'); }
   if (metadata.container?.text) { handleLayout(metadata.container.text, section, 'container'); }
   if (metadata.layout?.text) { handleLayout(metadata.layout.text, section, 'layout'); }
