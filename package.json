@@ -17,14 +17,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aemsites/author-kit.git"
+    "url": "git+https://github.com/adobe/spectrum-hub.git"
   },
   "author": "Adobe",
   "license": "Apache License 2.0",
   "bugs": {
-    "url": "https://github.com/aemsites/author-kit/issues"
+    "url": "https://github.com/adobe/spectrum-hub/issues"
   },
-  "homepage": "https://github.com/aemsites/author-kit#readme",
+  "homepage": "https://github.com/adobe/spectrum-hub#readme",
   "devDependencies": {
     "@adobe/eslint-config-helix": "^3.0.17",
     "@esm-bundle/chai": "4.3.4-fix.0",

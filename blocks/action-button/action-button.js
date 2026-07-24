@@ -1,30 +1,30 @@
-import { getConfig } from '../../scripts/ak.js';
-import { setColorScheme } from '../section-metadata/section-metadata.js';
+import { getScheme, getConfig, setScheme } from '../../scripts/ak.js';
+import { setColorScheme as setSectionScheme } from '../section-metadata/section-metadata.js';
 
 const { log } = getConfig();
+const LAZY_TIMEOUT = 3000;
+
+const loadSearch = () => import('../search/search.js');
 
 function handleColorScheme() {
-  const { body } = document;
-
-  let currPref = localStorage.getItem('color-scheme');
-  if (!currPref) {
-    currPref = matchMedia('(prefers-color-scheme: dark)')
-      .matches ? 'dark-scheme' : 'light-scheme';
-  }
-
-  const theme = currPref === 'dark-scheme'
-    ? { add: 'light-scheme', remove: 'dark-scheme' }
-    : { add: 'dark-scheme', remove: 'light-scheme' };
-
-  body.classList.remove(theme.remove);
-  body.classList.add(theme.add);
-  localStorage.setItem('color-scheme', theme.add);
+  const scheme = getScheme() === 'dark-scheme' ? 'light-scheme' : 'dark-scheme';
+  setScheme(document.body, scheme);
   // Re-calculate section schemes
   const sections = document.querySelectorAll('.section');
   for (const section of sections) {
-    setColorScheme(section);
+    setSectionScheme(section);
   }
 }
+
+const handleSearch = async (e) => {
+  await loadSearch();
+  const shSearch = document.createElement('sh-search');
+  const btn = e.target.closest('.action-button');
+  btn.insertAdjacentElement('beforebegin', shSearch);
+  shSearch.addEventListener('clear', () => {
+    shSearch.remove();
+  });
+};
 
 function handleAi() {
   log('You asked AI something');
@@ -35,16 +35,20 @@ function handleSettings() {
 }
 
 const BUTTONS = {
-  '/tools/widgets/scheme': {
+  scheme: {
     click: handleColorScheme,
   },
-  '/tools/widgets/ask-ai': {
+  chat: {
     click: handleAi,
   },
-  '/tools/widgets/settings': {
+  settings: {
     click: handleSettings,
   },
-  '/tools/widgets/action': {},
+  search: {
+    click: handleSearch,
+    lazy: loadSearch,
+  },
+  action: {},
 };
 
 function getLinkProps(a) {
@@ -70,12 +74,15 @@ export default function actionButton(a) {
   if (props.label === 'hide') { span.classList.add('visually-hidden'); }
   a.lastChild.replaceWith(span);
 
-  const buttonProps = BUTTONS[a.pathname];
+  const buttonProps = BUTTONS[a.hash.replace('#', '')];
   if (buttonProps) {
     const button = document.createElement('button');
     button.className = a.className;
     if (buttonProps.click) {
       button.addEventListener('click', buttonProps.click);
+    }
+    if (buttonProps.lazy) {
+      setTimeout(buttonProps.lazy, LAZY_TIMEOUT);
     }
     button.append(...a.childNodes);
     a.replaceWith(button);

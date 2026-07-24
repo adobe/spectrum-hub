@@ -110,9 +110,9 @@ describe('action-button block', () => {
     });
   });
 
-  describe('/tools/widgets/action — button with no click handler', () => {
+  describe('#action — button with no click handler', () => {
     it('replaces the anchor with a <button>', () => {
-      const a = makeAnchor({ href: '/tools/widgets/action' });
+      const a = makeAnchor({ href: '/tools/widgets/action#action' });
       document.body.append(a);
       actionButton(a);
       expect(document.body.querySelector('button')).to.not.be.null;
@@ -120,7 +120,7 @@ describe('action-button block', () => {
     });
 
     it('copies existing classes onto the button', () => {
-      const a = makeAnchor({ href: '/tools/widgets/action', title: 'style:quiet' });
+      const a = makeAnchor({ href: '/tools/widgets/action#action', title: 'style:quiet' });
       a.classList.add('action-button');
       document.body.append(a);
       actionButton(a);
@@ -130,23 +130,23 @@ describe('action-button block', () => {
     });
 
     it('moves the text span into the button', () => {
-      const a = makeAnchor({ href: '/tools/widgets/action', text: 'Action' });
+      const a = makeAnchor({ href: '/tools/widgets/action#action', text: 'Action' });
       document.body.append(a);
       actionButton(a);
       expect(document.body.querySelector('button span').textContent).to.equal('Action');
     });
 
     it('click does not throw (no handler is attached)', () => {
-      const a = makeAnchor({ href: '/tools/widgets/action' });
+      const a = makeAnchor({ href: '/tools/widgets/action#action' });
       document.body.append(a);
       actionButton(a);
       expect(() => document.body.querySelector('button').click()).to.not.throw();
     });
   });
 
-  describe('/tools/widgets/scheme — color scheme toggle', () => {
+  describe('#scheme — color scheme toggle', () => {
     it('replaces the anchor with a <button>', () => {
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      const a = makeAnchor({ href: '/tools/widgets/scheme#scheme' });
       document.body.append(a);
       actionButton(a);
       expect(document.body.querySelector('button')).to.not.be.null;
@@ -155,7 +155,7 @@ describe('action-button block', () => {
     it('click switches body from light-scheme to dark-scheme', () => {
       localStorage.setItem('color-scheme', 'light-scheme');
       document.body.classList.add('light-scheme');
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      const a = makeAnchor({ href: '/tools/widgets/scheme#scheme' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -166,7 +166,7 @@ describe('action-button block', () => {
     it('click switches body from dark-scheme to light-scheme', () => {
       localStorage.setItem('color-scheme', 'dark-scheme');
       document.body.classList.add('dark-scheme');
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      const a = makeAnchor({ href: '/tools/widgets/scheme#scheme' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -176,7 +176,7 @@ describe('action-button block', () => {
 
     it('click persists the new scheme in localStorage', () => {
       localStorage.setItem('color-scheme', 'light-scheme');
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      const a = makeAnchor({ href: '/tools/widgets/scheme#scheme' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -186,7 +186,7 @@ describe('action-button block', () => {
     it('falls back to matchMedia when localStorage has no entry and saves the result', () => {
       expect(localStorage.getItem('color-scheme')).to.be.null;
       const matchMediaStub = sinon.stub(window, 'matchMedia').returns({ matches: true });
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      const a = makeAnchor({ href: '/tools/widgets/scheme#scheme' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -197,7 +197,7 @@ describe('action-button block', () => {
     it('a synthetic click (keyboard-equivalent activation) produces the same result', () => {
       localStorage.setItem('color-scheme', 'dark-scheme');
       document.body.classList.add('dark-scheme');
-      const a = makeAnchor({ href: '/tools/widgets/scheme' });
+      const a = makeAnchor({ href: '/tools/widgets/scheme#scheme' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').dispatchEvent(
@@ -207,16 +207,16 @@ describe('action-button block', () => {
     });
   });
 
-  describe('/tools/widgets/ask-ai', () => {
+  describe('#chat — ask ai', () => {
     it('replaces the anchor with a <button>', () => {
-      const a = makeAnchor({ href: '/tools/widgets/ask-ai' });
+      const a = makeAnchor({ href: '/tools/widgets/ask-ai#chat' });
       document.body.append(a);
       actionButton(a);
       expect(document.body.querySelector('button')).to.not.be.null;
     });
 
     it('click calls the configured log function', () => {
-      const a = makeAnchor({ href: '/tools/widgets/ask-ai' });
+      const a = makeAnchor({ href: '/tools/widgets/ask-ai#chat' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -224,7 +224,7 @@ describe('action-button block', () => {
     });
 
     it('click passes the expected message to log', () => {
-      const a = makeAnchor({ href: '/tools/widgets/ask-ai' });
+      const a = makeAnchor({ href: '/tools/widgets/ask-ai#chat' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -232,16 +232,16 @@ describe('action-button block', () => {
     });
   });
 
-  describe('/tools/widgets/settings', () => {
+  describe('#settings', () => {
     it('replaces the anchor with a <button>', () => {
-      const a = makeAnchor({ href: '/tools/widgets/settings' });
+      const a = makeAnchor({ href: '/tools/widgets/settings#settings' });
       document.body.append(a);
       actionButton(a);
       expect(document.body.querySelector('button')).to.not.be.null;
     });
 
     it('click calls the configured log function', () => {
-      const a = makeAnchor({ href: '/tools/widgets/settings' });
+      const a = makeAnchor({ href: '/tools/widgets/settings#settings' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();
@@ -249,7 +249,7 @@ describe('action-button block', () => {
     });
 
     it('click passes the expected message to log', () => {
-      const a = makeAnchor({ href: '/tools/widgets/settings' });
+      const a = makeAnchor({ href: '/tools/widgets/settings#settings' });
       document.body.append(a);
       actionButton(a);
       document.body.querySelector('button').click();

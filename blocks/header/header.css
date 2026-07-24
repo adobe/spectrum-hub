@@ -1,232 +1,47 @@
 header {
-  --header-border-radius: 12px;
-  --header-inner-shadow: light-dark(rgb(255 255 255), rgb(248 248 248));
-  --header-outer-shadow: light-dark(rgb(255 255 255), var(--s2-gray-800));
-
-  visibility: unset;
-  position: sticky;
-  inset: var(--s2-spacing-100); /* matches the margin around the `body` so the header doesn't scroll */
-  z-index: var(--sh-z-header);
-  background-color: rgb(from var(--s2-gray-25) r g b / 25%);
-  border-radius: var(--header-border-radius);
-  padding-inline: var(--s2-spacing-300);
-  margin-block-end: var(--s2-spacing-500);
-  box-shadow:
-    inset 0 0 3px 0 rgb(from var(--header-inner-shadow) r g b / 65%),
-    0 0 1px 0 rgb(from var(--header-outer-shadow) r g b / 10%),
-    0 9px 95px 0 rgb(from var(--header-outer-shadow) r g b / 5%);
-  backdrop-filter: blur(128px);
-
-  .skip-link {
-    position: absolute;
-    z-index: 1;
-    inset-inline-start: var(--s2-spacing-75);
-    inset-block-start: var(--s2-spacing-75);
-    inline-size: auto;
-    block-size: auto;
-    overflow: visible;
-    white-space: normal;
-    clip-path: none;
-    background-color: var(--s2-gray-25);
-    border-radius: var(--s2-corner-radius-300);
-    padding: var(--s2-spacing-100) var(--s2-spacing-200);
-    transform: translateY(calc(-100% - var(--s2-spacing-200))); /* matches the top offset around the header */
-    transition: transform 0.2s ease;
-  }
-
-  .skip-link:focus-visible {
-    transform: translateY(0);
-    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-    outline-offset: var(--s2-spacing-50);
-  }
+  visibility: visible;
+  z-index: 200;
 
   p {
-    margin: 0;
+    margin-block: 0;
   }
 
   a {
-    text-decoration: none;
-    color: var(--s2-gray-1000);
-    box-sizing: border-box;
+    color: var(--se-body-color);
+  }
+
+  .section > .default-content {
+    margin: 0;
+    max-width: unset;
   }
 
   .header-content {
-    min-block-size: var(--sh-header-height);
-    block-size: 100%;
-    margin-inline: auto;
+    width: 100%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: var(--s2-spacing-100);
   }
-}
 
-.brand-section {
-  margin-right: auto;
-
-    .default-content {
-      margin: 0;
-    }
-
-    picture, svg {
-      flex: 0 0 auto;
-      display: block;
-      inline-size: 32px;
-      block-size: var(--se-component-m-height);
-    }
-
+  .brand-section {
     a {
-      display: flex;
-      align-items: center;
-      gap: var(--s2-spacing-200);
-      font-family: var(--s2-font-display-family);
-      font-size: var(--s2-heading-size-xs);
-      font-weight: 900;
-      inline-size: fit-content;
-      position: relative;
-      outline: none;
+      display: block;
+    }
 
-      &::after {
-        position: absolute;
-        content: '';
-        inset: -6px;
-      }
-
-      &:focus-visible::after {
-        border: var(--se-border-width-200) solid var(--s2-blue-800);
-        border-radius: var(--s2-corner-radius-700);
-      }
+    svg {
+      display: block;
+      width: 56px;
+      height: 56px;
     }
   }
 
-  .main-nav-section {
-    display: flex;
-    flex: 0 1 auto;
-    align-items: center;
-    font-size: var(--s2-body-size-s);
-    gap: var(--s2-spacing-300);
-
-    ul {
-      align-items: center;
-      gap: var(--s2-spacing-200);
+  .actions-section {
+    ul.action-list {
       margin: 0;
       padding: 0;
-      list-style: none;
-    }
-
-    a {
       display: flex;
       align-items: center;
-      min-block-size: var(--s2-component-xl-height);
-      border-radius: 24px;
-      padding-inline: var(--s2-spacing-300);
-      transition: background-color 0.2s ease-in-out;
-
-      &:hover {
-        background-color: rgb(from var(--s2-gray-500) r g b / 20%);
-      }
-
-      &:focus-visible {
-        outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-        outline-offset: var(--s2-spacing-50);
-      }
+      gap: var(--s2-spacing-100);
+      list-style: none;
     }
-
-    .default-content {
-      max-width: unset;
-      display: none;
-
-      @media (width >= 900px) {
-        display: flex;
-      }
-    }
-  }
-
-  /* mobile button wrapper */
-  .mobile-nav {
-    display: flex;
-    align-items: center;
-
-    @media (width >= 900px) {
-      display: none;
-    }
-  }
-
-  .mobile-nav-button {
-    background-color: rgb(from var(--s2-gray-25) r g b / 25%);
-    box-shadow:
-      inset 0 0 3px 0 rgb(from var(--header-inner-shadow) r g b / 65%),
-      0 0 1px 0 rgb(from var(--header-outer-shadow) r g b / 10%),
-      0 9px 95px 0 rgb(from var(--header-outer-shadow) r g b / 5%);
-    backdrop-filter: blur(128px);
-    display: flex;
-    place-items: center;
-    justify-content: center;
-    min-inline-size: 44px;
-    min-block-size: 44px;
-    padding: 6px;
-    border-radius: var(--s2-corner-radius-500);
-    border: 1px solid transparent;
-    position: relative;
-    transition: all ease-in-out 0.2s;
-
-    &:hover,
-    &:focus-visible {
-      background-color: rgb(from var(--s2-gray-25) r g b / 55%);
-    }
-
-    &:focus-visible {
-      outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-      outline-offset: var(--s2-spacing-50);
-    }
-  }
-
-.actions-section {
-  @media (width >= 900px) {
-    display: flex;
-  }
-
-  & button {
-    outline: none;
-  }
-
-  & button:focus-visible {
-    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-    outline-offset: var(--s2-spacing-50);
-  }
-
-  ul {
-    display: flex;
-    align-items: center;
-    gap: var(--s2-spacing-100);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  a {
-    display: block;
-    outline: none;
-
-    &:focus-visible {
-      outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-      outline-offset: var(--s2-spacing-50);
-    }
-  }
-}
-
-@media (width >= 900px) {
-  .main-nav-section {
-    ul {
-      display: flex;
-    }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  header .skip-link,
-  header .skip-link:focus-visible,
-  header .main-nav-section a,
-  header .mobile-nav-button {
-    transition: none;
   }
 }

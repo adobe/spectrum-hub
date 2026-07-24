@@ -5,18 +5,13 @@ import { loadFragment } from '../fragment/fragment.js';
 const { locale } = getConfig();
 
 const HEADER_PATH = '/fragments/nav/header';
-const HAMBURGER_MENU_ICON = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" fill="currentColor">
-    <path d="m16.25,14H3.75c-.41406,0-.75.33594-.75.75s.33594.75.75.75h12.5c.41406,0,.75-.33594.75-.75s-.33594-.75-.75-.75Z"/>
-    <path d="m3.75,5.5h12.5c.41406,0,.75-.33594.75-.75s-.33594-.75-.75-.75H3.75c-.41406,0-.75.33594-.75.75s.33594.75.75.75Z"/>
-    <path d="m16.25,9H3.75c-.41406,0-.75.33594-.75.75s.33594.75.75.75h12.5c.41406,0,.75-.33594.75-.75s-.33594-.75-.75-.75Z"/>
-  </svg>`;
 
 function createSkipLink() {
   const skipLink = document.createElement('a');
-  skipLink.classList.add('skip-link');
-  skipLink.classList.add('visually-hidden');
-  skipLink.href = '#main-content';
+  skipLink.classList.add('skip-link', 'visually-hidden');
+  const main = document.querySelector('main');
+  if (!main.id) { main.id = 'main-content'; }
+  skipLink.href = `#${main.id}`;
   skipLink.innerText = 'Skip to main content';
   return skipLink;
 }
@@ -31,108 +26,12 @@ async function decorateBrandSection(section) {
   }
 }
 
-function decorateNavSection(section) {
-  const navElement = document.createElement('nav');
-  navElement.setAttribute('aria-label', 'Main navigation');
-  navElement.classList.add('main-nav-section');
-
-  const sectionLinks = section.querySelectorAll('a');
-  sectionLinks.forEach((link) => {
-    if (window.location.pathname === link.pathname) {
-      link.setAttribute('aria-current', 'page');
-    }
-  });
-  navElement.append(...Array.from(section.childNodes));
-  section.replaceWith(navElement);
-  return navElement;
-}
-
 async function decorateActionSection(section) {
   section.classList.add('actions-section');
   section.setAttribute('role', 'region');
   section.setAttribute('aria-label', 'Additional site actions');
-}
-
-function addMobileNavListeners(button, navElement) {
-  let isOpen = false;
-  button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-controls', 'main-nav-list');
-  button.setAttribute('aria-label', 'Open mobile navigation');
-
-  function closeNav() {
-    isOpen = false;
-    navElement.classList.remove('open');
-    navElement.classList.add('closed');
-    button.setAttribute('aria-expanded', 'false');
-    button.setAttribute('aria-label', 'Open mobile navigation');
-  }
-
-  button.addEventListener('click', () => {
-    if (isOpen) {
-      closeNav();
-    } else {
-      isOpen = true;
-      navElement.classList.add('open');
-      navElement.classList.remove('closed');
-      button.setAttribute('aria-expanded', 'true');
-      button.setAttribute('aria-label', 'Close mobile navigation');
-    }
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isOpen) {
-      closeNav();
-      button.focus();
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (isOpen && !navElement.contains(e.target)) { closeNav(); }
-  });
-
-  navElement.addEventListener('focusout', (e) => {
-    if (isOpen && !navElement.contains(e.relatedTarget)) { closeNav(); }
-  });
-
-  window.matchMedia('(width >= 800px)').addEventListener('change', (e) => {
-    if (e.matches && isOpen) { closeNav(); }
-  });
-}
-
-function createMobileNavButton(fragment) {
-  const mainNav = fragment.querySelector('.main-nav-section');
-
-  const mobileNavButton = document.createElement('button');
-  mobileNavButton.classList.add('mobile-nav-button');
-  mobileNavButton.setAttribute('aria-controls', 'main-nav-list');
-  mobileNavButton.innerHTML = `${HAMBURGER_MENU_ICON}`;
-  addMobileNavListeners(mobileNavButton, mainNav);
-
-  mainNav.prepend(mobileNavButton);
-}
-
-function createMobileNavItems(nav, actions) {
-  const mobileNav = document.createElement('nav');
-  mobileNav.classList.add('mobile-nav');
-  mobileNav.setAttribute('id', 'main-nav-list');
-  mobileNav.setAttribute('aria-label', 'Mobile navigation');
-
-  const navList = document.createElement('ul');
-  navList.setAttribute('aria-label', 'Main navigation');
-  nav.querySelectorAll('li').forEach((item) => {
-    navList.append(item.cloneNode(true));
-  });
-
-  const divider = document.createElement('hr');
-
-  const actionsList = document.createElement('ul');
-  actionsList.setAttribute('aria-label', 'Site actions');
-  actions.querySelectorAll('li').forEach((item) => {
-    actionsList.append(item.cloneNode(true));
-  });
-
-  mobileNav.append(navList, divider, actionsList);
-  nav.append(mobileNav);
+  const list = section.querySelector('ul');
+  if (list) { list.classList.add('action-list'); }
 }
 
 async function decorateHeader(fragment) {
@@ -141,19 +40,9 @@ async function decorateHeader(fragment) {
   const brand = sections.shift();
   // Actions will always be last
   const actions = sections.pop();
-  // Nav is anything left over
-  const nav = sections[0];
 
   if (brand) { await decorateBrandSection(brand); }
-
-  let navElement;
-  if (nav) {
-    navElement = decorateNavSection(nav);
-    createMobileNavButton(fragment);
-  }
   if (actions) { decorateActionSection(actions); }
-
-  if (navElement && actions) { createMobileNavItems(navElement, actions); }
 }
 
 /**

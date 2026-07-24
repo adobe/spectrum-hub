@@ -32,6 +32,15 @@
 
 @font-face {
   font-family: adobe-clean;
+  src: url("fonts/adobe-clean-medium.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: adobe-clean;
   src: url("fonts/adobe-clean-bold.woff2") format("woff2");
   font-display: swap;
   font-style: normal;
@@ -45,6 +54,24 @@
   font-display: swap;
   font-style: italic;
   font-weight: 700;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: adobe-clean;
+  src: url("fonts/adobe-clean-extrabold.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: adobe-clean;
+  src: url("fonts/adobe-clean-extrabold-italic.woff2") format("woff2");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 800;
   font-stretch: normal;
 }
 
@@ -306,8 +333,18 @@
 
   /* --- End generated --- */
 
+  /* Future S2 generation candidates */
+  --s2-elevated-shadow:
+      0 0 2px rgb(0 0 0 / 12%),
+      0 2px 6px rgb(0 0 0 / 4%),
+      0 4px 12px rgb(0 0 0 / 8%);
+  --s2-corner-radius-850: 20px;
+  --s2-corner-radius-950: 32px;
+  --s2-corner-radius-1050: 40px;
+  --s2-spacing-85: 6px;
+
   /* fonts */
-  --s2-font-family: 'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif;
+  --s2-font-family: adobe-clean, 'Adobe Clean', 'Trebuchet MS', sans-serif;
   --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
 
   /* se etc conveniences */
@@ -317,17 +354,15 @@
   --se-body-color: light-dark(#000, #fff);
   --se-border-width-200: 2px;
   --se-focus-indicator-width: 2px;
+  --se-component-m-height: 32px;
 
   /* grid */
   --se-grid-container-width: 83.4%;
   --se-grid-column-width: calc(var(--se-grid-container-width) / 12);
   --se-grid-gutter-width: 8.3%;
 
-  /* nav */
-  --sh-header-height: 56px;
-  --sh-z-pagenav: 1; /* in-page TOC */
-  --sh-z-sitenav: 2; /* section nav mobile disclosure; above page-nav */
-  --sh-z-header: 3; /* header mobile-nav drawer; above all section chrome */
+  /* header */
+  --sh-header-height: 104px;
 
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);
@@ -372,91 +407,113 @@ div[data-status],
 
 /* --- Spectrum Edge default styles --- */
 @layer spectrum-edge {
+  @property --sitenav-nav-width {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 56px;
+  }
+
+  @property --sitenav-level-2-width {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 0;
+  }
+
   html.spectrum-edge {
-    --s2-home-gradient: radial-gradient(
-      40% 20% at 40% 0%,
-      light-dark(rgb(from var(--s2-gray-75) r g b / 25%), rgb(from var(--s2-gray-25) r g b / 35%)) 0%,
-      light-dark(rgb(from var(--s2-cyan-400) r g b / 18%), rgb(from var(--s2-blue-100) r g b / 80%)) 25%,
-      light-dark(rgb(from var(--s2-cyan-800) r g b  / 18%), rgb(from var(--s2-cyan-100) r g b / 80%)) 40%,
-      light-dark(rgb(from var(--s2-blue-900) r g b / 14%), rgb(from var(--s2-cyan-100) r g b  / 85%)) 75%,
-      light-dark(rgb(from var(--s2-gray-25) r g b / 18%), rgb(from var(--s2-gray-25) r g b / 18%)) 100%
-    );
+    /* sitenav */
+    --sitenav-inline-start-margin: 24px;
+    --sitenav-inline-end-margin: 56px;
+    --sitenav-nav-width: 56px;
+    --sitenav-nav-expanded-width: 180px;
+    --sitenav-gap: 6px;
+    --sitenav-level-2-width: 0;
+    --sitenav-level-2-expanded-width: 264px;
+    --sitenav-layout-transition-duration: 300ms;
+    --sitenav-layout-transition-ease: cubic-bezier(0.8, 0, 0.2, 1);
 
+    /* deep link scrollling */
     scroll-behavior: smooth;
-    position: relative;
-    isolation: isolate;
 
-    &::before,
-    &::after {
-      content: '';
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(100px);
-      pointer-events: none;
-      z-index: 0;
+    /* Set the sitenav track to prevent CLS */
+    --sitenav-track-width:
+      calc(
+        var(--sitenav-inline-start-margin) +
+        var(--sitenav-nav-width) +
+        var(--sitenav-gap) +
+        var(--sitenav-level-2-width) +
+        var(--sitenav-inline-end-margin));
+
+    /* Only allow transition once sitenav is in the DOM */
+    &:has(#sitenav) {
+      transition:
+        --sitenav-nav-width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease),
+        --sitenav-level-2-width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
     }
 
-    &::before {
-      inline-size: 45vw;
-      block-size: 35vw;
-      inset-block-start: 50vw;
-      inset-inline-end: -15vw;
-      background-image: radial-gradient(circle, var(--s2-cyan-600), transparent 70%);
-      opacity: 0.4;
+    &:has(meta[name="template"][content="marketing"]) {
+      --sitenav-track-width: auto;
     }
 
-    &::after {
-      inline-size: 55vw;
-      block-size: 45vw;
-      inset-block-start: 15vw;
-      inset-inline-start: -10vw;
-      background: radial-gradient(circle, var(--s2-blue-1100), transparent 70%);
-      opacity: 0.3;
+    &[expand-sitenav],
+    &:has(#sitenav [aria-expanded="true"]) {
+      --sitenav-level-2-width: var(--sitenav-level-2-expanded-width);
     }
 
-    @media (width >= 900px) {
-      &::before {
-        block-size: 25vw;
-        inset-block-start: -5vw;
-        inset-inline-end: -5vw;
-      }
-
-      &::after {
-        inline-size: 35vw;
-        block-size: 35vw;
-        inset-block-start: -5vw;
-      }
+    &:has(#sitenav[is-open]) {
+      --sitenav-nav-width: var(--sitenav-nav-expanded-width);
     }
 
     body {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template:
+        'header header header' var(--sh-header-height)
+        'sitenav main pagenav' 1fr
+        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(56px, auto);
       min-height: 100svh;
-      margin: var(--s2-spacing-100);
-      position: relative;
-      z-index: 1;
-      background:
-        var(--s2-home-gradient),
-        var(--se-body-background-color);
-      background-attachment: fixed, scroll;
-      background-repeat: no-repeat, no-repeat;
-      background-position: 0 -15vw;
+      margin: 0;
       color: var(--se-body-color);
       font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
 
-      @media (width >= 600px) {
-        background-position: 0 0;
-      }
-
       header {
         visibility: hidden;
+        position: fixed;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
         block-size: var(--sh-header-height);
+        padding-inline: var(--s2-spacing-400);
+      }
+
+      main {
+        grid-area: main;
       }
 
       footer {
         display: none;
+        grid-area: footer;
+      }
+
+      .bg-img {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+
+        img {
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: top;
+          transition: opacity 0.2s ease-in-out;
+
+          &.decoded {
+            opacity: 1;
+          }
+        }
       }
 
       /* Don't let fonts load unless there's a session */
@@ -467,6 +524,18 @@ div[data-status],
       &.no-header {
         --sh-header-height: 0;
       }
+    }
+
+    .scheme-aware-pic {
+      display: none;
+    }
+
+    .light-scheme .light-pic {
+      display: revert;
+    }
+
+    .dark-scheme .dark-pic {
+      display: revert;
     }
 
     /* Semantic elements */
@@ -514,7 +583,7 @@ div[data-status],
     }
 
     img {
-      width: 100%;
+      max-width: 100%;
       height: auto;
     }
 
@@ -548,5 +617,12 @@ div[data-status],
     @media (prefers-reduced-motion: reduce) {
       scroll-behavior: auto;
     }
+  }
+}
+
+@media (width >= 900px) {
+  .section > .default-content {
+    max-width: revert;
+    margin: revert;
   }
 }

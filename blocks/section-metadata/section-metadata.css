@@ -2,8 +2,10 @@
   --top-bottom-spacing: 0;
   --section-container-width: var(--se-grid-container-width);
   --section-column-width: var(--se-grid-column-width);
+  --section-radius: 0;
 
   padding: var(--top-bottom-spacing) 0;
+  border-radius: var(--section-radius);
 
   > * {
     color: light-dark(var(--color-dark), var(--color-light));
@@ -108,16 +110,24 @@
     }
 
     &.container-2 {
-      --section-container-width: calc(var(--grid-column-width) * 4);
+      --section-container-width: calc(var(--se-grid-column-width) * 4);
     }
 
     &.container-4 {
-      --section-container-width: calc(var(--grid-column-width) * 8);
+      --section-container-width: calc(var(--se-grid-column-width) * 8);
     }
 
     &.container-6 {
-      --section-container-width: var(--grid-container-width);
+      --section-container-width: var(--se-grid-container-width);
     }
+  }
+
+  &[class*="radius"] {
+    overflow: hidden;
+  }
+
+  &.radius-1050 {
+    --section-radius: var(--s2-corner-radius-1050)
   }
 
   &.has-background {
@@ -130,10 +140,13 @@
   }
 
   picture.section-background {
-    display: block;
     position: absolute;
     inset: 0;
     z-index: 0;
+  }
+
+  picture.section-background:not(.scheme-aware-pic) {
+    display: block;
   }
 
   .section-background img {
@@ -173,11 +186,23 @@
     }
 
     &.container.container-4 {
-      --section-container-width: calc(var(--grid-column-width) * 4);
+      --section-container-width: calc(var(--se-grid-column-width) * 4);
     }
 
     &.container.container-6 {
-      --section-container-width: calc(var(--grid-column-width) * 6);
+      --section-container-width: calc(var(--se-grid-column-width) * 6);
+    }
+
+    &.container.container-8 {
+      --section-container-width: calc(var(--se-grid-column-width) * 8);
+    }
+
+    &.container.container-9 {
+      --section-container-width: calc(var(--se-grid-column-width) * 9);
+    }
+
+    &.container.container-10 {
+      --section-container-width: calc(var(--se-grid-column-width) * 10);
     }
 
     &.peek-background {

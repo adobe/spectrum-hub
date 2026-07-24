@@ -1,0 +1,30 @@
+.media {
+  --media-width: 100%;
+  --opacity: 100%;
+
+  opacity: var(--opacity);
+
+  img {
+    max-width: var(--media-width);
+  }
+
+  &.align-center {
+    text-align: center;
+  }
+
+  &.align-right {
+    text-align: right;
+  }
+
+  &.style-round {
+    img {
+      border-radius: 12px;
+    }
+  }
+}
+
+.section.center {
+  .media {
+    text-align: center;
+  }
+}

@@ -18,6 +18,27 @@ export function getMetadata(name) {
   return meta && meta.content;
 }
 
+export function getScheme() {
+  const stored = localStorage.getItem('color-scheme');
+  if (stored === 'dark-scheme' || stored === 'light-scheme') { return stored; }
+  return matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark-scheme'
+    : 'light-scheme';
+}
+
+export function setScheme(el, scheme) {
+  // Only persist an explicit selection
+  if (el === document.body && scheme) {
+    localStorage.setItem('color-scheme', scheme);
+  }
+  const newScheme = scheme || getScheme();
+  if (el) {
+    el.classList.remove('dark-scheme', 'light-scheme');
+    el.classList.add(newScheme);
+  }
+  return newScheme;
+}
+
 export function getLocale(locales = { '': {} }) {
   const { pathname } = window.location;
   const matches = Object.keys(locales).filter((locale) => pathname.startsWith(`${locale}/`));
@@ -42,7 +63,9 @@ export const [setConfig, getConfig] = (() => {
   ];
 })();
 
-export async function loadStyle(href) {
+export async function loadStyle(path) {
+  const href = path.startsWith('/') ? `${getConfig().codeBase}${path}` : path;
+
   return new Promise((resolve) => {
     if (!document.querySelector(`head > link[href="${href}"]`)) {
       const link = document.createElement('link');
@@ -84,14 +107,52 @@ export async function loadBlock(block) {
   return block;
 }
 
-async function loadTemplate() {
-  const name = getMetadata('template');
-  if (!name) { return; }
-  document.body.classList.toggle('template-loading');
-  await loadExperience(document.body, 'templates', name, true);
-  document.body.classList.add(`${name}-template`);
-  document.body.classList.toggle('template-loading');
-}
+export const makePicture = (path, opts = {}) => {
+  const { format = 'webp', loading = 'lazy', sizes = [1000, 2000] } = opts;
+  const url = path.startsWith('/') ? new URL(path, window.location.origin) : new URL(path);
+  const base = `${url.origin}${url.pathname}`;
+
+  // DNF will give a picture without any optimizations
+  const makeUrl = (params) => `${base}?${new URLSearchParams(params)}`;
+
+  // Smallest rendition is served at reduced quality
+  // doubles as mobile <source> and the <img> fallback.
+  const mobile = opts.dnf ? base : makeUrl({ width: 750, format, quality: 100 });
+
+  const picture = document.createElement('picture');
+  if (opts.class) { picture.className = opts.class; }
+
+  const img = document.createElement('img');
+  img.alt = opts.alt ?? '';
+  if (loading) { img.loading = loading; }
+  if (opts.width) { img.width = opts.width; }
+  if (opts.height) { img.height = opts.height; }
+  img.src = mobile;
+
+  if (!opts.dnf) {
+    img.sizes = 'auto';
+    img.srcset = [
+      `${mobile} 750w`,
+      ...sizes.map((size) => `${makeUrl({ width: size, format, quality: 100 })} ${size}w`),
+    ].join(',');
+
+    const source = document.createElement('source');
+    source.media = '(width < 600px)';
+    source.srcset = mobile;
+    picture.append(source);
+  }
+
+  picture.append(img);
+  return picture;
+};
+
+export const toClassName = (name) => (typeof name === 'string'
+  ? name
+    .toLowerCase()
+    .replace(/[^0-9a-z]/gi, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+  : '');
 
 function decoratePictures(el) {
   const pics = el.querySelectorAll('picture');
@@ -251,6 +312,7 @@ function groupChildren(section) {
 function decorateSections(parent, isDoc) {
   const selector = isDoc ? 'main > div' : ':scope > div';
   return [...parent.querySelectorAll(selector)].map((section) => {
+    decoratePictures(section);
     const groups = groupChildren(section);
     section.append(...groups);
     section.classList.add('section');
@@ -271,19 +333,17 @@ function decorateHeader() {
     return;
   }
   header.className = meta;
-  const breadcrumbs = document.body.querySelector('breadcrumbs');
-  const breadcrumbsPath = getMetadata('breadcrumbs');
-  if (!(breadcrumbs || breadcrumbsPath)) { return; }
-  document.body.classList.add('has-breadcrumbs');
-  if (breadcrumbs) { header.append(breadcrumbs); }
+}
+
+async function decorateNav() {
+  const meta = getMetadata('sitenav');
+  if (meta === 'off') { return; }
+  await import('../blocks/sitenav/sitenav.js');
 }
 
 function decorateDoc() {
   decorateHeader();
-  loadTemplate();
-
-  const scheme = localStorage.getItem('color-scheme');
-  if (scheme) { document.body.classList.add(scheme); }
+  decorateNav();
 
   const pageId = window.location.hash?.replace('#', '');
   if (pageId) { localStorage.setItem('lazyhash', pageId); }
@@ -292,15 +352,12 @@ function decorateDoc() {
 async function loadSession() {
   sessionStorage.setItem('session', true);
   document.body.classList.add('session');
-  const header = document.querySelector('header');
-  if (header) { await loadBlock(header); }
 }
 
 export async function loadArea({ area } = { area: document }) {
   const isDoc = area === document;
   const isSession = sessionStorage.getItem('session');
   if (isDoc) { decorateDoc(); }
-  decoratePictures(area);
   const { decorateArea } = getConfig();
   if (decorateArea) { decorateArea({ area }); }
   const sections = decorateSections(area, isDoc);
@@ -312,6 +369,8 @@ export async function loadArea({ area } = { area: document }) {
     delete section.dataset.status;
     if (isDoc && idx === 0) {
       if (!isSession) { loadSession(); }
+      const header = document.querySelector('header');
+      if (header) { await loadBlock(header); }
     }
   }
   if (isDoc) { import('./lazy.js'); }

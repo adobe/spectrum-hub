@@ -1,22 +1,10 @@
-import { loadArea, setConfig } from './ak.js';
+import { loadArea, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
 
-const hostnames = ['authorkit.dev'];
-
-const locales = {
-  '': { lang: 'en' },
-  '/de': { lang: 'de' },
-  '/es': { lang: 'es' },
-  '/fr': { lang: 'fr' },
-  '/hi': { lang: 'hi' },
-  '/ja': { lang: 'ja' },
-  '/zh': { lang: 'zh' },
-};
+const hostnames = ['spectrum.adobe.com'];
 
 const linkBlocks = [
-  { 'action-button': '/tools/widgets/scheme' },
-  { 'action-button': '/tools/widgets/ask-ai' },
-  { 'action-button': '/tools/widgets/settings' },
-  { 'action-button': '/tools/widgets/action' },
+  { 'action-button': '/tools/widgets/action-button' },
+  { search: '/tools/widgets/search-bar' },
   { fragment: '/fragments/' },
   { schedule: '/schedules/' },
   { youtube: 'https://www.youtube' },
@@ -43,9 +31,48 @@ const decorateArea = ({ area = document }) => {
   }
 };
 
+const decorateBackground = async (scheme) => {
+  const currColor = scheme.replace('-scheme', '');
+
+  const getPic = (color) => {
+    const path = getMetadata(`${color}-bg`);
+    const opts = {
+      sizes: [1000, 2000],
+      class: `bg-img scheme-aware-pic ${color}-pic`,
+      loading: currColor === color ? 'eager' : 'lazy',
+    };
+    return makePicture(path, opts);
+  };
+
+  const pics = [getPic('light'), getPic('dark')];
+  document.body.prepend(...pics);
+  pics.forEach((pic) => {
+    const img = pic.querySelector('img');
+    img.decode()
+      .then(() => img.classList.add('decoded'))
+      .catch(() => img.classList.add('decoded'));
+  });
+};
+
+const setSiteNav = () => {
+  const template = getMetadata('template');
+  if (template === 'marketing') { return; }
+  const { pathname } = window.location;
+  if (pathname !== '/') {
+    document.documentElement.toggleAttribute('expand-sitenav');
+  }
+};
+
 export async function loadPage() {
   document.documentElement.classList.add('spectrum-edge');
-  setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
+
+  const scheme = setScheme(document.body);
+  decorateBackground(scheme);
+
+  setSiteNav();
+
+  setConfig({ hostnames, linkBlocks, components, decorateArea });
+
   await loadArea();
 }
 await loadPage();
