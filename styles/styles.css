@@ -433,6 +433,11 @@ div[data-status],
     --sitenav-layout-transition-duration: 300ms;
     --sitenav-layout-transition-ease: cubic-bezier(0.8, 0, 0.2, 1);
 
+    /* pagenav */
+    --pagenav-inline-start-margin: 56px;
+    --pagenav-inline-end-margin: 24px;
+    --pagenav-min-inline-size: 150px;
+
     /* deep link scrollling */
     scroll-behavior: smooth;
 
@@ -444,6 +449,12 @@ div[data-status],
         var(--sitenav-gap) +
         var(--sitenav-level-2-width) +
         var(--sitenav-inline-end-margin));
+
+    /* Set the pagenav track to prevent CLS too */
+    --pagenav-track-width: calc(
+        var(--pagenav-min-inline-size) +
+        var(--pagenav-inline-start-margin) +
+        var(--pagenav-inline-end-margin));
 
     /* Only allow transition once sitenav is in the DOM */
     &:has(#sitenav) {
@@ -470,7 +481,7 @@ div[data-status],
       grid-template:
         'header header header' var(--sh-header-height)
         'sitenav main pagenav' 1fr
-        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(56px, auto);
+        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(var(--pagenav-track-width), auto);
       min-height: 100svh;
       margin: 0;
       color: var(--se-body-color);
@@ -495,6 +506,15 @@ div[data-status],
 
       main {
         grid-area: main;
+      }
+
+      .page-nav {
+        display: none;
+
+        @media (width >= 900px) {
+          display: block;
+          grid-area: pagenav;
+        }
       }
 
       footer {
