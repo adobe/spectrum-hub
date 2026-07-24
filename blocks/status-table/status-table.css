@@ -153,7 +153,9 @@
   }
 
   @media (width >= 900px) {
-    overflow-x: auto;
+    overflow: auto;
+    padding: var(--s2-spacing-100);
+    margin: calc(var(--s2-spacing-100) * -1);
 
     .status-table-table {
       border-collapse: separate;
