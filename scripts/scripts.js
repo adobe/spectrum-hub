@@ -1,4 +1,4 @@
-import { loadArea, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
+import { loadArea, loadBlock, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -63,6 +63,18 @@ const setSiteNav = () => {
   }
 };
 
+const buildPageNav = async () => {
+  const template = getMetadata('template');
+  if (template === 'marketing') { return; }
+  const body = document.querySelector('body');
+  if (!body) { return; }
+  const pageNav = document.createElement('nav');
+  pageNav.className = 'page-nav';
+  pageNav.setAttribute('aria-label', 'On this page');
+  body.append(pageNav);
+  await loadBlock(pageNav);
+};
+
 const getSession = () => {
   const isSession = sessionStorage.getItem('session');
   if (isSession) { document.body.classList.add('is-returning'); }
@@ -76,9 +88,10 @@ export async function loadPage() {
   const scheme = setScheme(document.body);
   decorateBackground(scheme);
 
-  setSiteNav();
-
   setConfig({ hostnames, linkBlocks, components, decorateArea });
+
+  setSiteNav();
+  buildPageNav();
 
   await loadArea();
 }
