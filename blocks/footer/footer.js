@@ -21,8 +21,5 @@ export default async function init(el) {
   const copyright = sections.pop();
   copyright.classList.add('section-copyright');
 
-  const legal = sections.pop();
-  legal.classList.add('section-legal');
-
   el.append(fragment);
 }

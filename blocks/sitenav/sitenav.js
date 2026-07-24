@@ -171,6 +171,7 @@ const findCurrentPageInNav = (navList) => {
     const li = currentLink.closest(`.level-${level}`);
     if (!li) { return; }
     const button = li.querySelector(`.level-${level}-button`);
+    if (!button) { return; }
     button.setAttribute('aria-expanded', true);
   });
 };

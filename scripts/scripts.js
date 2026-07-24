@@ -63,7 +63,14 @@ const setSiteNav = () => {
   }
 };
 
+const getSession = () => {
+  const isSession = sessionStorage.getItem('session');
+  if (isSession) { document.body.classList.add('is-returning'); }
+};
+
 export async function loadPage() {
+  getSession();
+
   document.documentElement.classList.add('spectrum-edge');
 
   const scheme = setScheme(document.body);
