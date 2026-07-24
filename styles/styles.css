@@ -610,6 +610,14 @@ div[data-status],
       color: var(--s2-blue-900);
     }
 
+    code {
+      background-color: rgb(from var(--s2-gray-1000) r g b / 8%);
+      padding: 2px;
+      border-radius: 3px;
+      font-size: var(--s2-component-s-medium-font-size);
+      color: var(--se-body-color);
+    }
+
     input,
     textarea,
     select,
