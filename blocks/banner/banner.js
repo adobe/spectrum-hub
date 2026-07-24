@@ -4,5 +4,5 @@ export default async (el) => {
   const btn = el.querySelector('.btn');
   if (!btn) { return; }
   btn.closest('div').classList.add('se-button', 'size-s');
-  await loadStyle('/deps/se/se.css');
+  await loadStyle('/deps/se/buttons.css');
 };

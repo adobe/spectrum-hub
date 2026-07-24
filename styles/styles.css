@@ -469,6 +469,17 @@ div[data-status],
     &:has(meta[name="template"][content="marketing"]) {
       --sitenav-track-width: auto;
       --pagenav-track-width: auto;
+
+      .section h1 {
+        font-size: 64px;
+        font-weight: 500;
+        line-height: 1;
+
+        em {
+          font-style: normal;
+          opacity: 0.5;
+        }
+      }
     }
 
     &[expand-sitenav],

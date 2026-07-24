@@ -1,7 +1,10 @@
 import { LitElement, html, nothing } from 'lit';
 import loadStyle from '../../scripts/utils/styles.js';
 
-const style = await loadStyle(import.meta.url);
+const styles = await Promise.all([
+  loadStyle(import.meta.url),
+  loadStyle(import.meta.url.replace('se.js', 'buttons.js')),
+]);
 
 /**
  * Reliably know when an interaction was keyboard or pointer based.
@@ -36,7 +39,7 @@ class SEFormElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.shadowRoot.adoptedStyleSheets = [style];
+    this.shadowRoot.adoptedStyleSheets = styles;
     this._internals.setFormValue(this.value);
   }
 
@@ -195,7 +198,7 @@ class SECheckbox extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.shadowRoot.adoptedStyleSheets = [style];
+    this.shadowRoot.adoptedStyleSheets = styles;
     this._updateFormValue();
   }
 
@@ -336,7 +339,7 @@ class SEButton extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.shadowRoot.adoptedStyleSheets = [style];
+    this.shadowRoot.adoptedStyleSheets = styles;
   }
 
   get _attrs() {
@@ -373,7 +376,7 @@ class SEButton extends LitElement {
 class SESegmentedControl extends LitElement {
   connectedCallback() {
     super.connectedCallback();
-    this.shadowRoot.adoptedStyleSheets = [style];
+    this.shadowRoot.adoptedStyleSheets = styles;
   }
 
   handleChange() {
@@ -413,7 +416,7 @@ class SEDialog extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.shadowRoot.adoptedStyleSheets = [style];
+    this.shadowRoot.adoptedStyleSheets = styles;
     // Automatically show if added to the dom
     setTimeout(() => { this.showModal(); }, 20);
   }
