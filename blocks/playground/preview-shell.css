@@ -14,7 +14,7 @@ body {
   padding: 1rem;
   font-family: adobe-clean-spectrum-vf, sans-serif;
   color-scheme: light dark;
-  background: light-dark(#fff, #000);
+  background: light-dark(rgb(255 255 255), rgb(17 17 17));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,8 +22,8 @@ body {
 }
 
 /* staticColor previews need a contrasting backdrop, independent of theme */
-body:has([static-color="black"]) { background: #fff; }
-body:has([static-color="white"]) { background: #000; }
+body:has([static-color="black"]) { background: rgb(255 255 255); }
+body:has([static-color="white"]) { background: rgb(17 17 17); }
 
 #mount[static-color] > * {
   background: transparent !important;
