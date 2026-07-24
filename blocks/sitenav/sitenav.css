@@ -66,8 +66,19 @@
     all: unset;
     cursor: pointer;
     font-size: inherit;
+    position: relative;
+
+    &::after {
+      position: absolute;
+      content: '';
+      inline-size: 2px;
+      block-size: 100%;
+      border-radius: 2px;
+      inset: 0 0 -2px;
+    }
 
     &:hover,
+    &:focus-visible,
     &[aria-expanded="true"] {
       color: var(--s2-gray-800);
 
@@ -75,9 +86,20 @@
         color: var(--s2-gray-800);
       }
     }
-
+    
     &[aria-expanded="true"] {
       font-weight: 700;
+    }
+    
+    &[aria-expanded="true"]::after,
+    &[aria-expanded="true"]:hover::after,
+    &[aria-expanded="true"]:focus-visible::after {
+      background-color: var(--s2-gray-800);
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+      background-color: rgb(from var(--s2-gray-1000) r g b / 24%);
     }
   }
 
