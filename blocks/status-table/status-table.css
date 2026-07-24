@@ -83,7 +83,7 @@
     position: absolute;
     content: '';
     mask-image: url('/img/icons/s2-icon-chevronright-20-n.svg');
-    background-color: var(--s2-gray-700);
+    background-color: var(--status-color);
     mask-repeat: no-repeat;
     mask-position: center;
     mask-size: contain;
@@ -248,7 +248,7 @@
 
   /* the Not available status color is a mid-gray dot hue — read the label darker for contrast */
   .status-table-card[data-status='not-available'] .status-table-card-label {
-    color: var(--s2-gray-900);
+    color: var(--s2-gray-700);
   }
 
   .status-table-card-definition {
