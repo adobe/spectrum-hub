@@ -15,7 +15,11 @@
 
   @media (width >= 1200px) {
     max-inline-size: unset;
-  }  
+ }
+
+  .section > .block-content > &:last-child {
+    margin-block-end: 0;
+  } 
 
   /* extra-small */
   &:not(.small, .medium, .large) {
@@ -224,25 +228,27 @@
 Small screens: single-column grid with CSS order grouping same-position cols together.
 Large screens: N-column grid driven by container queries on the inner grid wrapper. */
 .columns.grid-layout {
-  --image-size: var(--s-image-size);
-
   .grid-container {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--columns-gap);
   }
-
+  
   .row {
     display: contents;
   }
-
+  
   .col {
     margin-block-end: calc(56px - var(--columns-gap)); /* we want a total of 56px between images and their text, so include any authored gap value. */
   }
-
+  
   &.grid-layout-2 {
+    --image-size: var(--s-image-size);
+
     @container columns (width >= 800px) {
       .grid-container {
+        --image-size: var(--m-image-size);
+
         grid-template-columns: repeat(2, 1fr);
       }
 
@@ -253,6 +259,8 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
 
   &.grid-layout-3 {
+    --image-size: var(--s-image-size);
+
     @container columns (width >= 1000px) {
       .grid-container {
         grid-template-columns: repeat(3, 1fr);
