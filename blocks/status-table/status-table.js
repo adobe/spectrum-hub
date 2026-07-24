@@ -1,6 +1,7 @@
 import '../../deps/se/se.js';
 import { getConfig } from '../../scripts/ak.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
+import { fetchSvgEl } from '../../scripts/utils/svg.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { toCsv, downloadCsv } from '../../scripts/utils/csv.js';
 
@@ -319,12 +320,16 @@ const buildColumnFilter = (columns, table, announce) => {
 };
 
 /** An "Export CSV" control that downloads the current table as a CSV file. */
-const buildExportButton = (index) => {
+const buildExportButton = async (index) => {
   const button = document.createElement('button');
+  const downloadIcon = await fetchSvgEl('/img/icons/s2-icon-download-20-n.svg');
+  downloadIcon.setAttribute('aria-hidden', 'true');
   button.type = 'button';
-  button.className = 'status-table-export';
+  button.classList.add('status-table-export', 'action-button', 'action-button-quiet');
   button.textContent = 'Download CSV';
-  button.classList.add('btn', 'btn-primary');
+
+  button.prepend(downloadIcon);
+
   button.addEventListener('click', () => downloadCsv(CSV_FILENAME, toCsv(buildCsvRows(index))));
   return button;
 };
@@ -441,7 +446,7 @@ const buildAnnouncer = () => {
 };
 
 /** The controls row above the table: search, show-details, column filter, and export. */
-const buildToolbar = (index, table, el, announce) => {
+const buildToolbar = async (index, table, el, announce) => {
   const columns = index.implementations?.web ?? [];
   const toolbar = document.createElement('div');
   toolbar.className = 'status-table-toolbar';
@@ -452,7 +457,7 @@ const buildToolbar = (index, table, el, announce) => {
     buildDetailsToggle(el),
     // TODO: uncomment when filters are ready for post-V1
     // buildColumnFilter(columns, table, announce)
-    buildExportButton(index),
+    await buildExportButton(index),
   );
   toolbar.append(
     buildSearch(table, announce),
@@ -499,7 +504,7 @@ export default async function init(el) {
   const { region, announce } = buildAnnouncer();
   el.replaceChildren(
     buildStatusCards(index),
-    buildToolbar(index, table, el, announce),
+    await buildToolbar(index, table, el, announce),
     table,
     region,
   );
