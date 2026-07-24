@@ -281,9 +281,65 @@
     }
   }
 
-  .status-table-search {
+  .status-table-search-wrap {
+    display: flex;
+    align-items: center;
     flex: 1 1 32px;
     max-inline-size: 360px;
+  }
+
+  /* icon-only button shown until the field is opened — mirrors .status-table-filter-button */
+  .status-table-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    inline-size: 32px;
+    block-size: var(--s2-component-m-height);
+    padding: 0;
+    border-radius: var(--s2-corner-radius-500);
+    background-color: transparent;
+    color: var(--s2-gray-800);
+    cursor: pointer;
+    outline: none;
+    border: none;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      mask-image: url('/img/icons/s2-icon-search-20-n.svg');
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+      background-color: currentcolor;
+      inline-size: 20px;
+      block-size: 20px;
+    }
+
+    &:hover {
+      background-color: rgb(from var(--s2-gray-1000) r g b / 12%);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--s2-blue-900);
+      outline-offset: var(--s2-spacing-50);
+      border-radius: 9px;
+    }
+  }
+
+  .status-table-search {
+    display: none;
+    flex: 1 1 auto;
+  }
+
+  .status-table-search-wrap.status-table-search-active {
+    .status-table-search-toggle {
+      display: none;
+    }
+
+    .status-table-search {
+      display: block;
+    }
   }
 
   /* sort: the "Sort by" control is shown only on small screens, where the stacked layout

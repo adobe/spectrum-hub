@@ -223,10 +223,21 @@ const buildCsvRows = (index) => {
 };
 
 /**
- * A search field that filters the table down to rows whose component name matches the
- * query (case-insensitive substring). Clearing the field restores every row.
+ * A search control that filters the table down to rows by compoenent name.
  */
 const buildSearch = (table, announce) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'status-table-search-wrap';
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'status-table-search-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  const toggleLabel = document.createElement('span');
+  toggleLabel.className = 'visually-hidden';
+  toggleLabel.textContent = 'Search components';
+  toggle.append(toggleLabel);
+
   const input = document.createElement('se-input');
   input.className = 'status-table-search';
   input.setAttribute('type', 'search');
@@ -235,19 +246,40 @@ const buildSearch = (table, announce) => {
   input.setAttribute('label', 'Search components');
   input.setAttribute('hide-label', '');
   input.setAttribute('placeholder', 'Search components…');
-  input.addEventListener('input', () => {
-    const query = (input.value ?? '').trim().toLowerCase();
+
+  const filter = (query) => {
     let visible = 0;
     for (const row of table.querySelectorAll('tbody tr')) {
       const name = row.querySelector('th')?.textContent.toLowerCase() ?? '';
       row.hidden = query !== '' && !name.includes(query);
       if (!row.hidden) { visible += 1; }
     }
-    // WAI-ARIA ARIA22 (Using role=status to present status messages): report the result
-    // count so screen-reader users hear the filtered total without moving focus off the field.
+    // report the result count so screen-reader users hear the filtered total without moving focus.
     announce(`${visible} component${visible === 1 ? '' : 's'}`);
-  });
-  return input;
+  };
+
+  const open = async () => {
+    wrap.classList.add('status-table-search-active');
+    toggle.setAttribute('aria-expanded', 'true');
+    await input.updateComplete;
+    input.focus();
+  };
+
+  const close = () => {
+    wrap.classList.remove('status-table-search-active');
+    toggle.setAttribute('aria-expanded', 'false');
+    filter('');
+    toggle.focus();
+  };
+
+  toggle.addEventListener('click', open);
+  input.addEventListener('input', () => filter((input.value ?? '').trim().toLowerCase()));
+  // se-input's built-in clear ("x") button fires this — same event blocks/search listens
+  // for to collapse the header search back down to its icon button.
+  input.addEventListener('clear', close);
+
+  wrap.append(toggle, input);
+  return wrap;
 };
 
 /**
