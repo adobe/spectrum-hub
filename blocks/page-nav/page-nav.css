@@ -6,6 +6,8 @@ from the DOM and the accessibility tree (see page-nav.js). */
 
 @media (width >= 900px) {
   .page-nav {
+    --pagenav-clamp-preferred-width: calc(100% - var(--pagenav-track-width));
+
     display: block;
     position: sticky;
     inset-block-start: var(--sh-header-height); /* match the header so the page nav sticks in place */
@@ -15,7 +17,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
-    margin-inline: var(--pagenav-inline-start-margin) var(--pagenav-inline-end-margin);
+    margin-inline-start: clamp(var(--pagenav-inline-start-margin), var(--pagenav-clamp-preferred-width), 100%);
     
     & ul {
       border-inline-start: 2px solid rgb(from var(--s2-gray-1000) r g b / 12%);
