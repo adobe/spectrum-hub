@@ -3,6 +3,7 @@
   --opacity: 100%;
 
   opacity: var(--opacity);
+  margin-block: var(--s2-spacing-300);
 
   img {
     max-width: var(--media-width);
