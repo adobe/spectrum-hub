@@ -1,0 +1,30 @@
+.banner {
+  --s2-banner-blue: rgb(130 180 255);
+
+  display: flex;
+  justify-content: center;
+  font-size: var(--s2-body-size-s);
+  margin-block: var(--s2-spacing-300);
+
+  /* Row */
+  > div {
+    flex: 0 1 auto;
+    display: flex;
+    gap: 32px;
+    backdrop-filter: blur(12px);
+    background: light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
+    border: 1px solid light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
+    color: light-dark(var(--s2-blue-900), var(--s2-banner-blue));
+    border-radius: 100px;
+    align-items: center;
+    padding: 8px 8px 8px 16px;
+    box-sizing: border-box;
+
+    /* Column */
+    > div {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+}

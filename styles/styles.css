@@ -398,11 +398,23 @@ div[data-status],
 }
 
 .section {
+  --section-justify-align: start;
+
   display: block;
 
   > .default-content {
     max-width: var(--se-grid-container-width);
     margin: 0 auto;
+
+    > .btn-group {
+      display: flex;
+      justify-content: var(--section-justify-align);
+      gap: var(--s2-spacing-200);
+    }
+  }
+
+  &.center {
+    --section-justify-align: center;
   }
 }
 
@@ -444,6 +456,9 @@ div[data-status],
         var(--sitenav-level-2-width) +
         var(--sitenav-inline-end-margin));
 
+    /* Right-nav / page nav */
+    --pagenav-track-width: 56px;
+
     /* Only allow transition once sitenav is in the DOM */
     &:has(#sitenav) {
       transition:
@@ -453,11 +468,16 @@ div[data-status],
 
     &:has(meta[name="template"][content="marketing"]) {
       --sitenav-track-width: auto;
+      --pagenav-track-width: auto;
     }
 
     &[expand-sitenav],
     &:has(#sitenav [aria-expanded="true"]) {
       --sitenav-level-2-width: var(--sitenav-level-2-expanded-width);
+
+      &:has(#sitenav):not(:has(#sitenav [aria-expanded="true"])) {
+        --sitenav-level-2-width: 0;
+      }
     }
 
     &:has(#sitenav[is-open]) {
@@ -469,7 +489,7 @@ div[data-status],
       grid-template:
         'header header header' var(--sh-header-height)
         'sitenav main pagenav' 1fr
-        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(56px, auto);
+        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(var(--pagenav-track-width), auto);
       min-height: 100svh;
       margin: 0;
       color: var(--se-body-color);

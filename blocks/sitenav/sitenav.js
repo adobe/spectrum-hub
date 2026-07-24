@@ -202,12 +202,6 @@ const getExpandButton = async (sitenav) => {
   // Build the expand button
   const expandBtn = await getExpandButton(sitenav);
 
-  // Append it all
-  nav.append(navList, expandBtn);
-  const main = document.querySelector('main');
-  if (!main) { return; }
-  main.before(sitenav);
-
   // Stitch index-based nav post DOM injection
   const index = await fetchRes(`${codeBase}/query-index.json`);
   if (index) { decorateIndexBasedNav(navList, index); }
@@ -217,4 +211,10 @@ const getExpandButton = async (sitenav) => {
 
   // Find current page
   findCurrentPageInNav(navList);
+
+  // Append it all
+  nav.append(navList, expandBtn);
+  const main = document.querySelector('main');
+  if (!main) { return; }
+  main.before(sitenav);
 })();
