@@ -366,6 +366,7 @@
 
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);
+  --sh-decode-transition: opacity 0.2s ease-in-out;
 
   /* color schemes */
   color-scheme: light dark;
@@ -487,6 +488,10 @@ div[data-status],
         padding-inline: var(--s2-spacing-400);
       }
 
+      #sitenav {
+        display: none;
+      }
+
       main {
         grid-area: main;
       }
@@ -508,7 +513,7 @@ div[data-status],
           height: 100%;
           object-fit: cover;
           object-position: top;
-          transition: opacity 0.2s ease-in-out;
+          transition: --sh-decode-transition;
 
           &.decoded {
             opacity: 1;
@@ -523,6 +528,10 @@ div[data-status],
 
       &.no-header {
         --sh-header-height: 0;
+      }
+
+      &.is-returning {
+        --sh-decode-transition: none;
       }
     }
 
