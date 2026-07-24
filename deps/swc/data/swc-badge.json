@@ -4,6 +4,7 @@
     "property": "variant",
     "type": "BadgeVariant",
     "default": "'neutral'",
+    "description": "The semantic or non-semantic color variant of the badge.",
     "since": "2.0.0-beta.1"
   },
   {

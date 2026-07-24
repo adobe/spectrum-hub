@@ -6,7 +6,7 @@
     "default": "false",
     "description": "Whether the popover is open.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "modal",
@@ -15,7 +15,7 @@
     "default": "false",
     "description": "Opt in to blocking modal behavior (`<dialog>.showModal()`): focus trap,\nbackground inert, native `role=\"dialog\"`. When unset, the popover uses\n`popover=\"auto\"` light-dismiss behavior.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "accessible-label",
@@ -24,7 +24,7 @@
     "default": "''",
     "description": "Accessible name for the popover's dialog surface, forwarded as `aria-label`\nto the internal element. Required in both modes (the surface is a dialog);\nthe component dev-warns when opened without one.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "placement",
@@ -33,7 +33,7 @@
     "default": "'bottom'",
     "description": "The placement of the popover relative to its trigger.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
@@ -41,7 +41,7 @@
     "type": "PopoverSize | undefined",
     "description": "Optional fixed size. When set, the popover uses a fixed inline size\n(`s` → 336px, `m` → 416px, `l` → 576px); when unset, it fits its contents.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "hide-arrow",
@@ -50,7 +50,7 @@
     "default": "false",
     "description": "Hide the popover's arrow (tip). The arrow is shown by default.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "offset",
@@ -59,7 +59,7 @@
     "default": "8",
     "description": "Main-axis offset in pixels from the trigger.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "cross-offset",
@@ -68,7 +68,7 @@
     "default": "0",
     "description": "Cross-axis offset in pixels from the trigger.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "should-flip",
@@ -77,7 +77,7 @@
     "default": "true",
     "description": "Allow the popover to flip to the opposite side when constrained. When\n`false`, the popover stays in the requested placement.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "for",
@@ -85,7 +85,7 @@
     "type": "string | undefined",
     "description": "ID of the trigger element in the same document tree root.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   },
   {
     "attribute": "manual",
@@ -94,6 +94,6 @@
     "default": "false",
     "description": "Suppress the automatic click-to-toggle wiring on the resolved trigger. When\nset, control visibility through the `open` property instead. ARIA\nrelationship wiring still applies.",
     "inheritedFrom": "PopoverBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0-beta.1"
   }
 ]

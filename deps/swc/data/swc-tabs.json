@@ -20,7 +20,7 @@
     "property": "direction",
     "type": "TabsDirection",
     "default": "'horizontal'",
-    "description": "The layout direction of the tab list.\n\n**Breaking change:** `'vertical-right'` is no longer supported.\nUse `'vertical'` instead.",
+    "description": "The layout direction of the tab list: `horizontal` (default) or `vertical`.",
     "inheritedFrom": "TabsBase",
     "since": "2.0.0-beta.1"
   },
