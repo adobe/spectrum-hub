@@ -147,7 +147,7 @@
       inset: 0;
       block-size: 100%;
       inline-size: 100%;
-      background: linear-gradient(to bottom, transparent, var(--se-body-background-color));
+      background: linear-gradient(to bottom, transparent, var(--s2-gray-25));
     }
   }
 
@@ -192,14 +192,20 @@
     gap: 6px;
 
     &::before {
-      content: url('/img/icons/s2-icon-copy-20-n.svg');
+      content: '';
+      mask-image: url('/img/icons/s2-icon-copy-20-n.svg');
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+      background-color: currentcolor;
       display: inline-block;
       inline-size: 20px;
       block-size: 20px;
     }
 
     &.is-copied::before {
-      content: url('/img/icons/s2-icon-checkmarkcircle-20-n.svg');
+      content: '';
+      mask-image: url('/img/icons/s2-icon-checkmarkcircle-20-n.svg');
     }
 
     &:hover {
