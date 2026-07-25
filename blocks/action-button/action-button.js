@@ -103,7 +103,7 @@ const BUTTONS = {
   settings: {
     click: handleSettings,
   },
-  '/tools/widgets/copy-markdown': {
+  copy: {
     click: handleCopyMarkdown,
   },
   search: {
@@ -126,7 +126,6 @@ const IMPLEMENTATIONS = {
     href: (component) => `https://react-spectrum.adobe.com/${pascalCase(component)}.html`,
   },
 };
-
 
 export function resolveImplementation(pathname) {
   const parts = pathname.split('/').filter(Boolean);
