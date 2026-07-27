@@ -2,6 +2,29 @@ header {
   visibility: visible;
   z-index: 200;
 
+  .skip-link {
+    position: absolute;
+    z-index: 1;
+    inset-inline-start: var(--s2-spacing-75);
+    inset-block-start: var(--s2-spacing-75);
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    white-space: normal;
+    clip-path: none;
+    background-color: var(--s2-gray-25);
+    border-radius: var(--s2-corner-radius-300);
+    padding: var(--s2-spacing-100) var(--s2-spacing-200);
+    transform: translateY(calc(-100% - var(--s2-spacing-200)));
+    transition: transform 0.2s ease;
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+    outline-offset: var(--s2-spacing-50);
+  }
+
   p {
     margin-block: 0;
   }
@@ -25,6 +48,19 @@ header {
   .brand-section {
     a {
       display: block;
+      position: relative;
+      outline: none;
+
+      &::after {
+        position: absolute;
+        content: '';
+        inset: -6px;
+      }
+    }
+
+    a:focus-visible::after {
+      border: var(--se-border-width-200) solid var(--s2-blue-800);
+      border-radius: var(--s2-corner-radius-700);
     }
 
     svg {
@@ -43,5 +79,23 @@ header {
       gap: var(--s2-spacing-100);
       list-style: none;
     }
+  }
+  
+   button {
+    outline: none;
+  }
+
+  & button:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+    outline-offset: var(--s2-spacing-50);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  header .skip-link,
+  header .skip-link:focus-visible,
+  header .main-nav-section a,
+  header .mobile-nav-button {
+    transition: none;
   }
 }
