@@ -96,6 +96,11 @@ async function handleCopyMarkdown(e) {
   const label = button.querySelector('span') ?? button;
   if (!('defaultLabel' in label.dataset)) {
     label.dataset.defaultLabel = label.textContent;
+    // Announce the Copied/Copy failed status to screen readers without
+    // moving focus (WCAG 4.1.3 Status Messages) — works for icon-only
+    // buttons too, since the visually-hidden label is what's made live.
+    label.setAttribute('aria-live', 'polite');
+    label.setAttribute('aria-atomic', 'true');
   }
 
   const successfulCopy = (message, copied) => {

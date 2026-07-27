@@ -323,6 +323,15 @@ describe('action-button block', () => {
       expect(button.classList.contains('is-copied')).to.be.true;
     });
 
+    it('marks the label as a live region so the status is announced without moving focus', async () => {
+      const button = makeCopyButton();
+      button.click();
+      await clock.tickAsync(0);
+      const label = button.querySelector('span');
+      expect(label.getAttribute('aria-live')).to.equal('polite');
+      expect(label.getAttribute('aria-atomic')).to.equal('true');
+    });
+
     it('reverts to the original label after 3s', async () => {
       const button = makeCopyButton();
       button.click();
