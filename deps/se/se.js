@@ -29,6 +29,7 @@ class SEFormElement extends LitElement {
     placeholder: { type: String },
     disabled: { type: Boolean },
     _idHash: { state: true },
+    labelPosition: { type: String },
   };
 
   constructor() {
@@ -124,7 +125,7 @@ class SEInput extends SEFormElement {
 
   render() {
     return html`
-      <div class="se-inputfield">
+      <div class="se-inputfield ${this.labelPosition === 'side' ? 'side-label' : ''}">
         ${this.label ? html`<label for="${this._idHash}">${this.label}</label>` : nothing}
         <div class="se-input-wrapper">
           ${this.type === 'search' ? this.renderSearchIcon() : nothing}
@@ -163,7 +164,7 @@ class SETextarea extends SEFormElement {
 
   render() {
     return html`
-      <div class="se-inputfield se-inputarea">
+      <div class="se-inputfield se-inputarea ${this.labelPosition === 'side' ? 'side-label' : ''}">
         ${this.label ? html`<label for="${this.name}">${this.label}</label>` : nothing}
         <textarea
           name=${this.name}
@@ -244,9 +245,13 @@ class SECheckbox extends LitElement {
 }
 
 class SESwitch extends SECheckbox {
+  static properties = {
+    labelPosition: { type: String },
+  };
+
   render() {
     return html`
-      <div class="se-switch">
+      <div class="se-switch ${this.labelPosition === 'side' ? 'side-label' : ''}">
         <input
           type="checkbox"
           role="switch"
@@ -301,7 +306,7 @@ class SESelect extends SEFormElement {
 
   render() {
     return html`
-      <div class="se-inputfield">
+      <div class="se-inputfield ${this.labelPosition === 'side' ? 'side-label' : ''}">
         ${this.label ? html`<label for="${this._idHash}">${this.label}</label>` : nothing}
         <div class="se-inputfield-select-wrapper">
           <select
@@ -374,6 +379,17 @@ class SEButton extends LitElement {
 }
 
 class SESegmentedControl extends LitElement {
+  static properties = {
+    label: { type: String },
+    labelPosition: { type: String },
+    _idHash: { state: true },
+  };
+
+  constructor() {
+    super();
+    this._idHash = getHash();
+  }
+
   connectedCallback() {
     super.connectedCallback();
     this.shadowRoot.adoptedStyleSheets = styles;
@@ -389,6 +405,21 @@ class SESegmentedControl extends LitElement {
     // Adopt light DOM options into the shadow
     this._segmentWrapper.prepend(...this.childNodes);
     this._segmentWrapper.addEventListener('change', () => this.handleChange());
+    this._linkLabelToGroup();
+  }
+
+  // The group's accessible name normally comes from a slotted <fieldset><legend>.
+  // When the caller instead uses our own `label` (e.g. for side-label layout),
+  // wire it up via aria-labelledby so the group still has a name — but only if
+  // the caller didn't already supply their own legend.
+  _linkLabelToGroup() {
+    if (!this.label) return;
+    const fieldset = this._segmentWrapper.querySelector('fieldset');
+    if (!fieldset || fieldset.querySelector('legend')) return;
+    const labelEl = this.shadowRoot.querySelector('.se-segmentedcontrol-field > label');
+    if (!labelEl) return;
+    labelEl.id = `se-segmentedcontrol-label-${this._idHash}`;
+    fieldset.setAttribute('aria-labelledby', labelEl.id);
   }
 
   get _segmentWrapper() {
@@ -397,8 +428,11 @@ class SESegmentedControl extends LitElement {
 
   render() {
     return html`
-      <div class="se-segmentedcontrol">
-        <div class="indicator"></div>
+      <div class="se-segmentedcontrol-field ${this.labelPosition === 'side' ? 'side-label' : ''}">
+        ${this.label ? html`<label>${this.label}</label>` : nothing}
+        <div class="se-segmentedcontrol">
+          <div class="indicator"></div>
+        </div>
       </div>
       <slot></slot>
     `;
