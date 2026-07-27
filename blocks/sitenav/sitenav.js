@@ -79,6 +79,18 @@ const decorateLevel = (ul, depth) => {
     const menuWrapper = document.createElement('div');
     menuWrapper.classList.add(`level-${depth + 1}-menu`, 'can-expand');
     if (depth < 2) {
+      // Mobile-only: lets folks step back from the level-2 list to level-1
+      // without fully closing the sitenav (see .sitenav-back-btn in CSS).
+      const backBtn = document.createElement('button');
+      backBtn.classList.add('sitenav-back-btn');
+      backBtn.append(getSvgRef('chevronleft', 'icon', 10, '0 0 10 10'));
+      const backLabel = document.createElement('span');
+      backLabel.classList.add('list-item-label');
+      backLabel.textContent = 'Back';
+      backBtn.append(backLabel);
+      backBtn.addEventListener('click', () => btn.setAttribute('aria-expanded', 'false'));
+      menuWrapper.append(backBtn);
+
       menuWrapper.append(label.cloneNode(true));
     }
     menuWrapper.append(childList);
@@ -176,6 +188,8 @@ const findCurrentPageInNav = (navList) => {
   });
 };
 
+const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
+
 const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
   btn.classList.add('sitenav-expand-btn');
@@ -184,6 +198,15 @@ const getExpandButton = async (sitenav) => {
   btn.append(svg);
 
   btn.addEventListener('click', () => {
+    // On mobile, when a level-2 list is drilled into, close it along with the
+    // sitenav rather than toggling the (desktop-only) expanded rail width.
+    const expandedLevel1 = isMobileViewport()
+      && sitenav.querySelector('.level-1-button[aria-expanded="true"]');
+    if (expandedLevel1) {
+      expandedLevel1.setAttribute('aria-expanded', 'false');
+      sitenav.removeAttribute('is-open');
+      return;
+    }
     sitenav.toggleAttribute('is-open');
   });
 
