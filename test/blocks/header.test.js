@@ -84,11 +84,13 @@ describe('header block', () => {
       expect(el.querySelector('.brand-section')).to.not.be.null;
     });
 
-    it('replaces the nav section with a <nav class="main-nav-section"> element', () => {
+    // Nav-section decoration was removed from header.js in c529b47 pending
+    // migration to blocks/sitenav; re-enable once that migration lands.
+    it.skip('replaces the nav section with a <nav class="main-nav-section"> element', () => {
       expect(el.querySelector('nav.main-nav-section')).to.not.be.null;
     });
 
-    it('adds aria-label="Main navigation" to the nav element', () => {
+    it.skip('adds aria-label="Main navigation" to the nav element', () => {
       expect(el.querySelector('nav.main-nav-section').getAttribute('aria-label')).to.equal('Main navigation');
     });
 
@@ -130,7 +132,9 @@ describe('header block', () => {
     });
   });
 
-  describe('aria-current on nav links', () => {
+  // aria-current on nav links was removed from header.js in c529b47 pending
+  // migration to blocks/sitenav; re-enable once that migration lands.
+  describe.skip('aria-current on nav links', () => {
     it('sets aria-current="page" on the link matching the current pathname', async () => {
       const currentPath = window.location.pathname;
       stubFetch(sandbox, makeFragmentHTML({
