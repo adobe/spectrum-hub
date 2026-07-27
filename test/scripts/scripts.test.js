@@ -62,4 +62,37 @@ describe('scripts.js', () => {
       await loadPage();
     });
   });
+
+  describe('decorateArea — breadcrumbs', () => {
+    const originalHref = window.location.href;
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+      window.history.pushState({}, '', originalHref);
+    });
+
+    it('prepends a breadcrumbs nav as the first child of main on a component page', async () => {
+      window.history.pushState({}, '', '/web/swc/components/button');
+      document.body.innerHTML = '<main><h1>Button</h1></main>';
+      await loadPage();
+      const main = document.querySelector('main');
+      expect(main.firstElementChild.classList.contains('breadcrumbs')).to.be.true;
+      expect(main.firstElementChild.textContent).to.include('SWC');
+    });
+
+    it('does not add a breadcrumbs nav when the path is not a component page', async () => {
+      window.history.pushState({}, '', '/web/overview');
+      document.body.innerHTML = '<main><h1>Overview</h1></main>';
+      await loadPage();
+      expect(document.querySelector('main .breadcrumbs')).to.be.null;
+    });
+
+    it('does not add a second breadcrumbs nav when one is already present', async () => {
+      window.history.pushState({}, '', '/web/swc/components/button');
+      document.body.innerHTML = '<main><h1>Button</h1></main>';
+      await loadPage();
+      await loadPage();
+      expect(document.querySelectorAll('main .breadcrumbs').length).to.equal(1);
+    });
+  });
 });

@@ -36,6 +36,15 @@ const decorateArea = ({ area = document }) => {
   if (main && !main.id) {
     main.id = 'main-content';
   }
+
+  // automatic breadcrumbs — only on the top-level document, and only once
+  if (area === document && main && !main.querySelector(':scope > .breadcrumbs')) {
+    const breadcrumbs = document.createElement('nav');
+    breadcrumbs.className = 'breadcrumbs';
+    breadcrumbs.setAttribute('aria-label', 'Breadcrumb');
+    main.prepend(breadcrumbs);
+    loadBlock(breadcrumbs);
+  }
 };
 
 const decorateBackground = async (scheme) => {

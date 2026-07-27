@@ -11,8 +11,8 @@
  */
 
 export const IMPLEMENTATIONS = [
-  { id: 'rsp', label: 'React Spectrum' },
-  { id: 'swc', label: 'Spectrum Web Components' },
+  { id: 'rsp', label: 'React Spectrum', shortLabel: 'RSP' },
+  { id: 'swc', label: 'Spectrum Web Components', shortLabel: 'SWC' },
 ];
 
 /**
@@ -23,7 +23,7 @@ export const ALL_OPTION = { id: 'all', label: 'All' };
 
 /**
  * @param {string} id
- * @returns {{ id: string, label: string } | null}
+ * @returns {{ id: string, label: string, shortLabel: string } | null}
  */
 export function getImplementationById(id) {
   return IMPLEMENTATIONS.find((impl) => impl.id === id) || null;
@@ -31,7 +31,7 @@ export function getImplementationById(id) {
 
 /**
  * @param {string} currentId
- * @returns {{ id: string, label: string }[]}
+ * @returns {{ id: string, label: string, shortLabel: string }[]}
  */
 export function getOtherImplementations(currentId) {
   return IMPLEMENTATIONS.filter((impl) => impl.id !== currentId);
