@@ -391,7 +391,7 @@
 
 /* --- Spectrum Edge specific decoration hiding --- */
 main > div,
-div[data-status],
+main > div[data-status],
 .template-loading {
   display: none;
 }

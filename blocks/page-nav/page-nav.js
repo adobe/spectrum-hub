@@ -134,78 +134,98 @@ export default async function init(el) {
     return;
   }
 
+  const { pathname } = window.location;
+  const isComponent = isComponentPath(pathname);
+
   const headings = [...document.querySelectorAll('main h2')].filter(
     (h) => !el.contains(h),
   );
-  if (!headings.length) {
+
+  // Nothing to place in the rail — no in-page headings and not a component page.
+  if (!headings.length && !isComponent) {
     return;
   }
   el.dataset.pageNav = 'ready';
 
-  // Assign ids and make headings focusable. Tabindex="-1" is set
-  // on every heading so clicking a page-nav link moves focus to the target
-  const usedIds = new Set();
-  headings.forEach((h) => {
-    if (!h.id) {
-      const base = slugify(h.textContent);
-      let id = base;
-      let suffix = 2;
-      while (usedIds.has(id) || document.getElementById(id)) {
-        id = `${base}-${suffix}`;
-        suffix += 1;
-      }
-      h.id = id;
-    }
-    usedIds.add(h.id);
-    h.setAttribute('tabindex', '-1');
-    // .page-nav-target opts the heading into scroll-margin compensation
-    // so anchor scrolls clear the sticky header/sitenav
-    h.classList.add('page-nav-target');
-  });
-
-  // The page's h1 acts as the "top" of the page for the back-to-top link.
-  // Same id/tabindex/class treatment as the h2 targets so anchor scroll,
-  // focus, and scroll-margin all behave the same way.
-  const h1 = document.querySelector('main h1');
-  if (h1) {
-    if (!h1.id) {
-      const base = slugify(h1.textContent);
-      let id = base;
-      let suffix = 2;
-      while (usedIds.has(id) || document.getElementById(id)) {
-        id = `${base}-${suffix}`;
-        suffix += 1;
-      }
-      h1.id = id;
-    }
-    usedIds.add(h1.id);
-    h1.setAttribute('tabindex', '-1');
-    h1.classList.add('page-nav-target');
+  // The per-component status card sits at the very top of the rail. It's created
+  // and loaded here (its JS + CSS load lazily via loadBlock, only on component
+  // pages) before the TOC — so the rail composes in a single pass and the card
+  // and list appear together, avoiding layout shift. The block removes this
+  // element itself when the component isn't indexed (render nothing).
+  if (isComponent) {
+    const statusEl = document.createElement('div');
+    statusEl.className = 'component-status';
+    el.append(statusEl);
+    await loadBlock(statusEl);
   }
 
-  const list = document.createElement('ul');
-  const linkById = new Map();
-  headings.forEach((h) => {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.href = `#${h.id}`;
-    a.textContent = h.textContent;
-    li.append(a);
-    list.append(li);
-    linkById.set(h.id, a);
-  });
+  let scrollTargets = null;
+  let linkById = null;
+  if (headings.length) {
+    // Assign ids and make headings focusable. Tabindex="-1" is set
+    // on every heading so clicking a page-nav link moves focus to the target
+    const usedIds = new Set();
+    headings.forEach((h) => {
+      if (!h.id) {
+        const base = slugify(h.textContent);
+        let id = base;
+        let suffix = 2;
+        while (usedIds.has(id) || document.getElementById(id)) {
+          id = `${base}-${suffix}`;
+          suffix += 1;
+        }
+        h.id = id;
+      }
+      usedIds.add(h.id);
+      h.setAttribute('tabindex', '-1');
+      // .page-nav-target opts the heading into scroll-margin compensation
+      // so anchor scrolls clear the sticky header/sitenav
+      h.classList.add('page-nav-target');
+    });
 
-  // Append the back-to-top item after the section links.
-  if (h1) {
-    const topLi = document.createElement('li');
-    const topLink = document.createElement('a');
-    topLink.href = `#${h1.id}`;
-    topLink.textContent = 'Back to top';
-    topLi.append(topLink);
-    list.append(topLi);
-  }
+    // The page's h1 acts as the "top" of the page for the back-to-top link.
+    // Same id/tabindex/class treatment as the h2 targets so anchor scroll,
+    // focus, and scroll-margin all behave the same way.
+    const h1 = document.querySelector('main h1');
+    if (h1) {
+      if (!h1.id) {
+        const base = slugify(h1.textContent);
+        let id = base;
+        let suffix = 2;
+        while (usedIds.has(id) || document.getElementById(id)) {
+          id = `${base}-${suffix}`;
+          suffix += 1;
+        }
+        h1.id = id;
+      }
+      usedIds.add(h1.id);
+      h1.setAttribute('tabindex', '-1');
+      h1.classList.add('page-nav-target');
+    }
 
-  el.append(list);
+    const list = document.createElement('ul');
+    linkById = new Map();
+    headings.forEach((h) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${h.id}`;
+      a.textContent = h.textContent;
+      li.append(a);
+      list.append(li);
+      linkById.set(h.id, a);
+    });
+
+    // Append the back-to-top item after the section links.
+    if (h1) {
+      const topLi = document.createElement('li');
+      const topLink = document.createElement('a');
+      topLink.href = `#${h1.id}`;
+      topLink.textContent = 'Back to top';
+      topLi.append(topLink);
+      list.append(topLi);
+    }
+
+    el.append(list);
 
   // URL-scoped widgets (copy markdown / see-in-figma / go-to-impl)
   // sit below the table of contents.
@@ -227,5 +247,7 @@ export default async function init(el) {
   syncPresence();
   desktopMql.addEventListener('change', syncPresence);
 
-  watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+  if (scrollTargets) {
+    watchScrollSpy(scrollTargets, linkById);
+  }
 }
