@@ -3,7 +3,6 @@
   justify-content: center;
   align-items: center;
   gap: var(--s2-spacing-75);
-  padding-block: 6px var(--s2-spacing-100);
   padding-inline: var(--s2-spacing-100);
   height: var(--se-component-m-height);
   min-width: 32px;
@@ -17,13 +16,20 @@
   color: inherit;
   text-decoration: none;
   cursor: pointer;
+  outline: none;
 
   &.action-button-quiet {
     background-color: transparent;
 
-    &:hover {
+    &:hover,
+    &:focus-visible {
         background-color: rgb(from var(--s2-gray-1000) r g b / 12%);
     }
+  }
+
+  &:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+    outline-offset: var(--s2-spacing-50);
   }
 
   &:has(.visually-hidden) {
