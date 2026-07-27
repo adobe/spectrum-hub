@@ -62,6 +62,29 @@ function setCopiedIcon(button, copied) {
     : use.dataset.defaultHref);
 }
 
+function whenPageDecorated() {
+  return new Promise((resolve) => {
+    const check = () => (document.querySelector('[data-status]')
+      ? requestAnimationFrame(check)
+      : resolve());
+    check();
+  });
+}
+
+// Converts the live, fully-decorated <main> to MD
+async function pageMarkdown() {
+  await whenPageDecorated();
+  const main = document.querySelector('main');
+  if (!main) { throw new Error('No main content found'); }
+  const clone = main.cloneNode(true);
+  clone.querySelectorAll('[data-widget]').forEach((el) => el.remove());
+
+  const { TurndownService, gfm } = await import('../../deps/turndown/dist/index.js');
+  const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+  turndownService.use(gfm);
+  return turndownService.turndown(clone.innerHTML);
+}
+
 // Copies the current page's Markdown to the clipboard.
 async function handleCopyMarkdown(e) {
   const button = e.currentTarget;
@@ -81,6 +104,13 @@ async function handleCopyMarkdown(e) {
       setCopiedIcon(button, false);
     }, 3000));
   };
+
+  try {
+    const markdown = await pageMarkdown();
+    await navigator.clipboard.writeText(markdown);
+    successfulCopy('Copied', true);
+    return;
+  } catch { /* fall through to the .md fetch fallback */ }
 
   try {
     const resp = await fetch(markdownPathForCurrentPage());

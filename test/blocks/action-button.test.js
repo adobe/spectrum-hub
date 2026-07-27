@@ -401,6 +401,71 @@ describe('action-button block', () => {
       await clock.tickAsync(0);
       expect(button.querySelector('span').textContent).to.equal('Copied');
     });
+
+    describe('primary path — Turndown conversion of <main>', () => {
+      beforeEach(() => { clock.restore(); });
+
+      async function waitFor(fn, { timeout = 2000, interval = 20 } = {}) {
+        const start = Date.now();
+        while (!fn()) {
+          if (Date.now() - start > timeout) { throw new Error('waitFor timed out'); }
+          await new Promise((resolve) => { setTimeout(resolve, interval); });
+        }
+      }
+
+      function setMain(html) {
+        const main = document.createElement('main');
+        main.innerHTML = html;
+        document.body.append(main);
+        return main;
+      }
+
+      it('converts <main> to Markdown via Turndown and skips the .md fetch', async () => {
+        setMain('<h1>Title</h1><p>Hello <strong>world</strong></p>');
+        makeCopyButton().click();
+        await waitFor(() => clipboardStub.called);
+        expect(fetchStub.called).to.be.false;
+        const markdown = clipboardStub.firstCall.args[0];
+        expect(markdown).to.include('# Title');
+        expect(markdown).to.include('Hello **world**');
+      });
+
+      it('converts a table using GFM syntax', async () => {
+        setMain('<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>');
+        makeCopyButton().click();
+        await waitFor(() => clipboardStub.called);
+        expect(clipboardStub.firstCall.args[0]).to.include('| A | B |');
+      });
+
+      it('strips elements carrying [data-widget] from the copied Markdown', async () => {
+        setMain('<h1>Title</h1><span data-widget="copy-markdown">Copy markdown</span>');
+        makeCopyButton().click();
+        await waitFor(() => clipboardStub.called);
+        expect(clipboardStub.firstCall.args[0]).to.not.include('Copy markdown');
+      });
+
+      it('falls back to the .md fetch when there is no <main>', async () => {
+        makeCopyButton().click();
+        await waitFor(() => clipboardStub.called);
+        expect(fetchStub.calledOnce).to.be.true;
+        expect(clipboardStub.calledOnceWith('# Page markdown')).to.be.true;
+      });
+
+      it('waits for in-flight sections before reading <main>', async () => {
+        setMain('<h1>Loaded</h1>');
+        const section = document.createElement('div');
+        section.dataset.status = 'decorated';
+        document.body.append(section);
+
+        makeCopyButton().click();
+        await new Promise((resolve) => { setTimeout(resolve, 50); });
+        expect(clipboardStub.called).to.be.false;
+
+        delete section.dataset.status;
+        await waitFor(() => clipboardStub.called);
+        expect(clipboardStub.firstCall.args[0]).to.include('# Loaded');
+      });
+    });
   });
 
   describe('resolveImplementation — component page → impl docs URL', () => {
