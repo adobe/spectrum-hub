@@ -204,6 +204,7 @@ function buildCopyButton(pre) {
 function buildPickerControl(property, options, currentValue, onChange) {
   const select = document.createElement('se-select');
   select.label = property;
+  select.labelPosition = 'side';
   select.append(...options.map((opt) => {
     const option = document.createElement('option');
     option.value = opt;
@@ -223,6 +224,7 @@ function buildSwitchControl(property, currentValue, onChange) {
   switchToggle.name = property;
   switchToggle.checked = currentValue === 'yes';
   switchToggle.textContent = property;
+  switchToggle.labelPosition = 'side';
   switchToggle.addEventListener('change', (e) => onChange(e.target.checked ? 'yes' : 'no'));
   return switchToggle;
 }
@@ -231,6 +233,7 @@ function buildSwitchControl(property, currentValue, onChange) {
 // se-input that differs only in `type` and which event fires the update.
 function buildSeInputControl(inputType, eventName, property, currentValue, onChange) {
   const input = document.createElement('se-input');
+  input.labelPosition = 'side';
   input.type = inputType;
   input.label = property;
   input.value = currentValue ?? '';
@@ -240,6 +243,7 @@ function buildSeInputControl(inputType, eventName, property, currentValue, onCha
 
 function buildSegmentedControl(property, options, currentValue, onChange) {
   const control = document.createElement('se-segmentedcontrol');
+  control.labelPosition = 'side';
   const fieldset = document.createElement('fieldset');
   const legend = document.createElement('legend');
   legend.textContent = property;

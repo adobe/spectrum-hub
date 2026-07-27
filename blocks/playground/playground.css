@@ -4,7 +4,6 @@
   --playground-border-color: var(--s2-gray-300);
   --playground-border-radius: 32px;
   --playground-inner-radius: calc(var(--playground-border-radius) - 1px);
-  --playground-control-gap: var(--s2-spacing-300);
 
   display: flex;
   flex-direction: column;
@@ -49,7 +48,6 @@
 .playground-controls {
   display: flex;
   flex-direction: column;
-  gap: var(--playground-control-gap);
   padding-inline: var(--s2-spacing-300);
 }
 
@@ -82,6 +80,15 @@
     /* right column: round the right corners, not the bottom-left */
     border-end-start-radius: 0;
     border-start-end-radius: var(--playground-inner-radius);
+  }
+
+  .playground-control:not(:last-child) {
+    padding-block: var(--s2-spacing-200);
+    border-block-end: 1px solid var(--s2-gray-100);
+  }
+
+  .playground-control:last-child {
+    padding-block: var(--s2-spacing-200) 0;
   }
 }
 
