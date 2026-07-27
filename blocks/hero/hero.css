@@ -1,12 +1,15 @@
 .hero {
   --gradient-start: rgb(var(--color-dark-base) / 80%);
   --gradient-end: rgb(var(--color-dark-base) / 20%);
-  --default-min-height: 360px;
+  --default-min-height: 200px;
   --min-height: var(--default-min-height);
 
   position: relative;
-  color: #fff;
   overflow: hidden;
+  border-radius: 32px;
+  background-color: var(--se-body-background-color);
+  padding: var(--s2-spacing-800);
+  margin-block-end: var(--s2-spacing-300);
 
   &.small {
     --min-height: 180px;
@@ -91,6 +94,8 @@
 
     p {
       margin: 8px 0;
+      font-size: var(--s2-body-size-m);
+      max-inline-size: 80ch;
     }
 
     .fg-text {
@@ -107,11 +112,16 @@
     }
 
     .hero-detail {
-      margin: 0;
+      margin-block-end: var(--s2-spacing-200);
+      font-size: var(--s2-body-size-xs);
+      color: var(--se-body-color);
     }
 
     .hero-heading {
-      margin: 0;
+      margin-block: var(--s2-spacing-200) var(--s2-spacing-300);
+      font-size: var(--s2-heading-size-xxl);
+      color: var(--se-heading-color);
+      font-weight: 700;
     }
   }
 
@@ -158,7 +168,6 @@
   .hero {
     .hero-foreground {
       display: grid;
-      grid-template-columns: 45% 45%;
       justify-content: space-between;
       max-width: var(--grid-container-width);
       margin: 0 auto;
@@ -205,21 +214,5 @@
 @container (width < 400px) {
   .layout-bento .hero .hero-foreground {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (width >= 900px) {
-  .hero {
-    .hero-foreground {
-      grid-template-columns: 40% 40%;
-    }
-  }
-}
-
-@media (width >= 1200px) {
-  .hero {
-    .hero-foreground {
-      grid-template-columns: 33% 33%;
-    }
   }
 }
