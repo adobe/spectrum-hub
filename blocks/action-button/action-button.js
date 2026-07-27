@@ -103,7 +103,7 @@ const BUTTONS = {
   settings: {
     click: handleSettings,
   },
-  copy: {
+  'copy-markdown': {
     click: handleCopyMarkdown,
   },
   search: {
@@ -245,7 +245,9 @@ export default async function actionButton(a) {
     return;
   }
 
-  const buttonProps = BUTTONS[a.hash.replace('#', '')];
+  // Hash-based widgets (#action, #scheme, ...) key off the hash; path-based
+  // widgets (e.g. copy-markdown) carry no hash and key off the widget name.
+  const buttonProps = BUTTONS[a.hash.replace('#', '')] ?? BUTTONS[widget];
   if (buttonProps) {
     const button = document.createElement('button');
     button.className = a.className;
