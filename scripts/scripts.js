@@ -112,21 +112,19 @@ const buildPageNav = async () => {
   await loadBlock(pageNav);
 };
 
-// Injects the per-component status pills into the page intro. The placeholder is
-// added as the last child of the <h1>'s section *before* loadArea runs, so
-// loadArea's own section decoration discovers and loads it as a block — a single
-// decoration, in the natural load flow, before first paint (no layout shift).
-// The block itself removes the element on non-component pages (render nothing).
-const buildComponentStatus = () => {
+// Injects the per-component status pills into the hero. Runs after loadArea so the
+// hero is decorated and its text column is present. The block itself removes the element on
+// non-component pages (render nothing).
+const buildComponentStatus = async () => {
   const template = getMetadata('template');
   if (template === 'marketing') { return; }
   if (!window.location.pathname.split('/').includes('components')) { return; }
-  const h1 = document.querySelector('main h1');
-  const section = h1?.closest('main > div');
-  if (!section || section.querySelector('.component-status')) { return; }
+  const heroText = document.querySelector('main h1')?.closest('.fg-text');
+  if (!heroText || heroText.querySelector('.component-status')) { return; }
   const el = document.createElement('div');
   el.className = 'component-status';
-  section.append(el);
+  heroText.append(el);
+  await loadBlock(el);
 };
 
 const getSession = () => {
@@ -146,9 +144,11 @@ export async function loadPage() {
 
   setSiteNav();
   buildPageNav();
-  buildComponentStatus();
 
   await loadArea();
+
+  // After decoration so the hero/<h1> is present and the pills mount reliably.
+  buildComponentStatus();
 }
 await loadPage();
 

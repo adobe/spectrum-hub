@@ -1,89 +1,67 @@
-# Per-component Dev + Design status section — implementation plan
+# Per-component Dev + Design status pills — implementation plan
 
 ## Context
 
-On each implementation's component page (`/web/<impl>/components/<slug>`, e.g. `/web/rsp/components/action-button`) we want a color-coded status card at the **top of the right rail, above the page-nav table of contents**. It shows two rows — **Dev** (the current implementation's status) and **Design** (the Figma status) — each with an icon, a status-colored label, and the status definition (per the design screenshot).
+On each implementation's component page (`/web/<impl>/components/<slug>`, e.g. `/web/rsp/components/action-button`) we show the component's Development and Design status as two button-styled pills in the page intro (inside `<main>`, beneath the description). Each pill is an icon + a `"<kind> <status>"` label — e.g. **Development available** / **Design available**. The data layer already exists (`deps/status-index.json` + `scripts/utils/status-model.js`), so this is a UI feature.
 
-This is the Epic C "per-component Design/Dev status" work. The data layer already exists (`deps/status-index.json` + `scripts/utils/status-model.js`), so this is a pure UI addition.
-
-Decisions confirmed:
+Design decisions (confirmed):
 
 - **Not authored** — injected by code so it appears on every component page automatically.
-- **Separated** into its own module (own JS/CSS/test), not inlined in page-nav.
-- Shows **Dev + Design** (two rows).
-- **Render nothing** when the path doesn't resolve to a known implementation + component in the index.
+- **Rendered in `<main>`** (page intro), not the page-nav rail.
+- **Button-styled pills**, neutral coloring (gray, like `action-button`) — status is conveyed by the label + icon, not color.
+- **Per-status icon + label**: `checkmarkcircle` for `available`; a distinct glyph per other status. Label is `"<kind> <status>"` with the status lowercased (`Development available`, `Development experimental`, `Design not available`, …). No status description.
+- **Interactive links**: Development links to the implementation's docs (the `go-to-impl` URL); Design links to the component's Figma node (the `see-in-figma` URL). Reuses the exact same URL logic as those page-nav widgets. A pill whose link can't be resolved falls back to a static span.
+- **Render nothing** when the path doesn't resolve to an indexed component.
 
 ## LCP / CLS assessment
 
-- **LCP: no risk.** The card lives in the `pagenav` rail, which is desktop-only (`display: none` below 900px) and is not the LCP element — the LCP element is main-column content (hero / h1 / live component), painted independently. Adding a small deferred side-rail card and one extra fetch of a small static JSON does not touch the LCP path.
-- **CLS: controlled.** The only shift risk is the injected card pushing the TOC down within the rail. We avoid it by composing the rail in a **single insertion pass**: `page-nav` runs an `async init`, so it appends the card element and `await`s `loadBlock(statusEl)` (which fetches the index and populates or removes the card) **before** it builds and appends the TOC `<ul>` — so the card and list enter the DOM together, before the rail's first paint. Nothing shifts because the rail is laid out once. Because the rail is deferred and non-LCP, awaiting the small JSON before the rail paints has no user-visible cost. Separation into its own module does **not** add CLS risk — the risk is the same async-injection question regardless of where the code lives, and it is solved by the single-pass composition.
+- **LCP: no risk.** The pills are a small text row in the intro. The placeholder is injected before `loadArea` and decorated inline, so the pills are part of the initial layout, not spliced in after paint. They don't gate or delay the LCP element (the `<h1>`/hero).
+- **CLS: minor, accepted for reliability.** `scripts.js` mounts the pills **after `loadArea`** (so the decorated hero/`<h1>` is reliably present), appending one small row to the intro. An earlier before-`loadArea` injection avoided the shift but was fragile — it depended on `main h1` being queryable that early and on section decoration nesting the placeholder correctly, which didn't hold on every page. The pills are a single intro row and their fetches are small/cached, so the shift is minimal; on non-component pages the block removes its element (render nothing).
 
 ## Approach
 
-A new self-contained module **`blocks/component-status/`** renders the card; **`blocks/page-nav/page-nav.js`** orchestrates the fetch and mounts it in one pass so CLS stays at zero.
+A new self-contained block **`blocks/component-status/`** renders the pills; **`scripts.js`** injects the placeholder into `main` so `loadArea` decorates it.
 
-### 1. `blocks/component-status/component-status.js` (new)
+### 1. `blocks/component-status/component-status.js`
 
-Pure, testable helpers plus a builder. Reuses existing utilities rather than re-deriving:
+- Imports `STATUSES` (`status-model.js`), `getImplementationById` (`implementations.js`), `getSvgRef` (`svg.js`), and — to reuse the widget URL logic verbatim — `resolveImplementation`, `resolveFigmaUrl`, `fetchFigmaData` from `blocks/action-button/action-button.js`.
+- `toSlug(name)` — kebab of canonical PascalCase.
+- `resolveContext(pathname)` → `{ impl, slug } | null` — matches `/…/components/<slug>` under a registered code implementation (rsp/swc, never figma), validated via `getImplementationById`.
+- `findComponent(index, slug)` — index row whose canonical name kebab-matches `slug`.
+- `buildPill({ kind, label }, cell, link)` → one pill, or `null` when the cell is absent. Renders `<a>` when `link` resolves (`href`, `target="_blank"`, `rel="noopener noreferrer"`, and an `aria-label` naming the destination + new tab for WCAG 2.4.4 while keeping the visible label per 2.5.3), otherwise a static `<span>`. Icon via `getSvgRef(STATUS_ICONS[status.id], …)`, label `"<kind> <status.label lowercased>"`.
+- `buildPills(pathname, index, figmaData)` → `HTMLElement[]`. Resolves context/component; builds the Development pill (`platforms.web[impl]`, link = `resolveImplementation(pathname).href`) and Design pill (`platforms.web.figma`, link = `resolveFigmaUrl(slug, figmaData)`); omits a pill whose cell is missing; returns `[]` when nothing resolves.
+- `export default async function init(el)` — the block entry point. `el.remove()`s when `resolveContext` is null; otherwise fetches the index and the Figma roster in parallel, builds pills, and either `el.replaceChildren(...pills)` (with `role="group"` + `aria-label="Component status"`) or `el.remove()`s (render nothing).
 
-- Import `STATUSES` from `scripts/utils/status-model.js` (single source for label + `color` token + `definition`; the index has no color, so we read `STATUSES` like `status-table.js` does).
-- `toSlug(name)` — kebab of canonical PascalCase (same logic as `status-table.js` `toSlug`).
-- `resolveContext(pathname)` → `{ impl, slug } | null`. Parses `/web/<impl>/components/<slug>` (mirrors `action-button.js` `componentSlugFromPath` / `resolveImplementation`). `impl` must be a registered code implementation — validated via `getImplementationById` from `scripts/utils/implementations.js` (so only `rsp` / `swc`, never `figma`, drive the Dev row).
-- `findComponent(index, slug)` → `index.components.find((c) => toSlug(c.name) === slug) ?? null`.
-- `buildRows(pathname, index)` → `HTMLElement[]` (pure, no fetch): resolves the context, finds the component, and returns the **Dev** row (`platforms.web[impl]`) and **Design** row (`platforms.web.figma`). Each row is built only when its cell is present (a missing cell omits that row, never fabricates a status); returns `[]` when the path doesn't resolve, the index is null, or the component isn't indexed. A row renders an icon, a status-colored label `"<Dev|Design> • <status.label>"` (via `--status-color: var(<STATUSES[status].color>)`, same pattern as `status-table.js` `buildBadge`), and `STATUSES[status].definition` beneath.
-- `export default async function init(el)` — the standard block entry point (`el` is the `<div class="component-status">` page-nav created). Returns early and `el.remove()`s when `resolveContext(window.location.pathname)` is null; otherwise fetches `${codeBase}/deps/status-index.json` (reuse `getConfig().codeBase` + the index-path convention from `status-table.js`), builds rows via `buildRows`, and either `el.replaceChildren(...rows)` or `el.remove()`s when there are none (**render nothing**).
+**Icons** (`STATUS_ICONS`, `s2-icon-<name>`): `available` = `checkmarkcircle`, `experimental` = `magicwand`, `not-available` = `closecircle`, `deprecated` = `minus`, `removed` = `removecircle`.
 
-Labels are the fixed strings **"Dev"** and **"Design"** (matching the screenshot), not the implementation's full name. Definitions come from `STATUSES` (canonical) so they never drift from the adapter.
+### 2. `blocks/component-status/component-status.css`
 
-**Icons:** the screenshot shows a `</>` (dev) glyph and a palette/brush (design) glyph. Icons use the established `getSvgRef(name, className)` helper (`scripts/utils/svg.js`) — the `s2-icon-<name>` `<use>` pattern — not inline SVG. The exact S2 icon names for the dev/design glyphs aren't verifiable locally (the CDN icon set isn't in the repo); `code` / `brush` are in place as best-guess names pending confirmation.
+- `.component-status` — a wrapping flex row of pills with a small top margin under the description.
+- `.component-status-pill` — the button pill (matches `action-button`): `--s2-gray-100` background, `--s2-corner-radius-500`, icon + label, `--s2-gray-900` text, `text-decoration: none`.
+- `a.component-status-pill` — interactive affordances only for the linked pills: pointer cursor, hover (`--s2-gray-200`), and a `--s2-blue-900` focus ring.
+- `.component-status-icon` — `display: block`, 20×20 (an empty inline `<svg>` collapses to 0).
 
-### 2. `blocks/component-status/component-status.css` (new)
+### 3. `scripts.js` (edit)
 
-- Layout for the card: two rows, each `icon | (label + definition)`, using `--s2-spacing-*` and `--s2-font-*` tokens like the rail.
-- Status-colored label via `color: var(--status-color)`; definition muted (`--s2-gray-700`).
-- The icon `<svg>` is `display: block` at a fixed 20×20 so its box is honored even when the glyph is empty (an inline `<svg>` collapses to 0).
-- No `display: none` media query needed — the card lives inside `.page-nav`, which is already desktop-only, so it inherits the rail's show/hide.
+Add `buildComponentStatus()` (alongside `buildPageNav`): on a component path (and non-`marketing` template), append an empty `<div class="component-status">` to the hero's text column (`.fg-text` — the `<h1>`'s container, holding the breadcrumb, heading, and description) and `await loadBlock(el)`. Call it in `loadPage` **after** `await loadArea()` so the decorated hero is present. Appending as `.fg-text`'s last child places the pills inside the hero card, beneath the description (matching the design).
 
-### 3. `blocks/page-nav/page-nav.js` (edit)
+### 4. Tests
 
-- `import { loadBlock } from '../../scripts/ak.js';` (no static import of component-status — it loads lazily, only on component pages).
-- Early in `init`, compute `isComponent = isComponentPath(pathname)`. Gather headings; return only when there are **no headings and it isn't a component page**.
-- On a component page, create `<div class="component-status">`, `el.append` it, and `await loadBlock(statusEl)` — the canonical loader lazy-loads the block's JS **and** CSS and runs its `init`. This happens **before** the TOC `<ul>` is built/appended, so card + list + widgets compose in one pass (CLS-safe). The block removes its own element when the component isn't indexed.
-- The TOC-building branch is now guarded by `if (headings.length)`, so the card renders even on a component page with no `h2` headings. A final `if (!el.children.length) return;` guard leaves nothing behind when both the TOC and the card are absent. The card rides `syncPresence` automatically because it is a child of `el`.
-
-### 4. `test/blocks/component-status.test.js` (new)
-
-Follows `test/blocks/status-table.test.js` (web-test-runner browser suite). Covers:
-
-- `resolveContext` parses rsp/swc component paths; returns null for non-component / figma / malformed paths.
-- `findComponent` matches by kebab slug (ActionButton ↔ action-button).
-- `buildRows` returns two rows with correct labels / colors / definitions for a fixture index; omits a row for a missing cell (Figma-only component → Design only); returns `[]` when the component isn't in the index or the path doesn't resolve.
-- `init` fills its element on a component page and `el.remove()`s it when the path doesn't resolve, the fetch fails, or the component isn't indexed.
-- `page-nav` mounts the card (via `loadBlock`) as the first child above the `<ul>` on a component page and omits it elsewhere.
-
-### 5. `styles/styles.css` (edit)
-
-The global Spectrum-edge decoration-hider was `div[data-status] { display: none; }`, which also matched the card's `.component-status-row` elements (they carry `data-status`). Scope it to `main > div[data-status]` so it only hides top-level section/block placeholders, not the nested status rows.
+- `test/blocks/component-status.test.js` — `resolveContext`, `findComponent`, `buildPills` (labels, per-status icon, Development→go-to-impl href, Design→see-in-figma href, `target`/`rel`/`aria-label`, static-span fallback with no Figma entry, cell omission), and `init` (fills element / removes on non-resolve / fetch fail / absent component).
+- `test/blocks/action-button.test.js` — unchanged; `fetchFigmaData` is now exported (single-line change).
 
 ## Files
 
-- `blocks/component-status/component-status.js` (new — `toSlug`, `resolveContext`, `findComponent`, `buildRows`, default `init`)
+- `blocks/component-status/component-status.js` (new)
 - `blocks/component-status/component-status.css` (new)
-- `blocks/page-nav/page-nav.js` (edit — `loadBlock` mount, single-pass)
-- `styles/styles.css` (edit — scope the `data-status` hider to `main > div[data-status]`)
+- `scripts/scripts.js` (edit — `buildComponentStatus` injects the placeholder into `main`)
+- `blocks/action-button/action-button.js` (edit — export `fetchFigmaData` for reuse)
 - `test/blocks/component-status.test.js` (new)
-- `test/blocks/page-nav.test.js` (edit — assert the mount)
 
-Reused as-is: `scripts/utils/status-model.js` (`STATUSES`), `scripts/utils/implementations.js` (`getImplementationById`), `scripts/utils/svg.js` (`getSvgRef`), `scripts/ak.js` (`loadBlock`), the `toSlug` / badge / `--status-color` patterns from `blocks/status-table/status-table.js`, and the codeBase / index-path convention.
-
-## Open item
-
-- **Icons:** the block uses `getSvgRef` with the best-guess S2 names `code` (dev) and `brush` (design). Confirm the exact `s2-icon-<name>` names against the live icon set — a wrong name renders a blank 20×20 box, not a layout break.
+Reused as-is: `STATUSES`, `getImplementationById`, `getSvgRef`, and `resolveImplementation` / `resolveFigmaUrl` / `fetchFigmaData` from `action-button.js`; the `action-button` pill styling; the `codeBase` / index-path convention from `status-table.js`.
 
 ## Verification
 
-- **TDD** per repo convention: write `test/blocks/component-status.test.js` red first, implement to green, then `npm run test:unit` (web-test-runner). Status: implemented — `component-status` 26 tests + `page-nav` 38 tests green, full unit suite 556 passing.
-- **Visual check**: real `/web/<impl>/components/<slug>` pages are served by AEM, so the local `http-server` can't render them; the block was verified in isolation against a mock index (both status colors, definitions, row omission, and the 20×20 icon box confirmed in the browser). Confirm the in-rail mount on an AEM preview.
-- Confirm **no CLS**: with the rail visible, the TOC should not jump after load (card + list appear together).
-- Confirm **render-nothing**: a non-component interior page shows no card; a component absent from the index shows no card.
-- `stylelint` can't run locally on Node 20.5.1 (import-attributes) — lint CSS in a real terminal or rely on CI.
+- **Tests**: `npm run test:unit`. Status: `component-status` + `action-button` green; full unit suite passing.
+- **Visual**: real `/web/<impl>/components/<slug>` pages are AEM-served, so the local `http-server` can't render them; the block was verified in isolation against a mock index + Figma roster — pill styling, per-status labels/icons, Development→`react-spectrum.adobe.com/…` and Design→`figma.com/…?node-id=…` links (`target="_blank"`, aria-labels), and the static-span fallback all confirmed in the browser. Confirm the in-`main` placement on an AEM preview.
+- `stylelint` can't run locally on Node 20.5.1 (import-attributes) — lint CSS in CI.
