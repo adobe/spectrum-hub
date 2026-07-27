@@ -71,6 +71,11 @@ function whenPageDecorated() {
   });
 }
 
+// Wrapped in an object (rather than exported directly) so tests can stub
+export const turndownLoader = {
+  load: () => import('../../deps/turndown/dist/index.js'),
+};
+
 // Converts the live, fully-decorated <main> to MD
 async function pageMarkdown() {
   await whenPageDecorated();
@@ -79,7 +84,7 @@ async function pageMarkdown() {
   const clone = main.cloneNode(true);
   clone.querySelectorAll('[data-widget]').forEach((el) => el.remove());
 
-  const { TurndownService, gfm } = await import('../../deps/turndown/dist/index.js');
+  const { TurndownService, gfm } = await turndownLoader.load();
   const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
   turndownService.use(gfm);
   return turndownService.turndown(clone.innerHTML);

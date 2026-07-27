@@ -12,6 +12,7 @@ const {
   default: actionButton,
   resolveImplementation,
   resolveFigmaUrl,
+  turndownLoader,
 } = await import('../../blocks/action-button/action-button.js');
 
 function makeAnchor({ href = '/unknown', title = 'label:Button', text = 'Click' } = {}) {
@@ -403,15 +404,34 @@ describe('action-button block', () => {
     });
 
     describe('primary path — Turndown conversion of <main>', () => {
-      beforeEach(() => { clock.restore(); });
+      // Stub the loader rather than letting pageMarkdown() actually fetch/run
+      const FAKE_GFM = Symbol('gfm');
+      let loaderStub;
+      let lastInstance;
 
-      async function waitFor(fn, { timeout = 2000, interval = 20 } = {}) {
-        const start = Date.now();
-        while (!fn()) {
-          if (Date.now() - start > timeout) { throw new Error('waitFor timed out'); }
-          await new Promise((resolve) => { setTimeout(resolve, interval); });
+      class FakeTurndownService {
+        constructor(options) {
+          this.options = options;
+          this.plugins = [];
+          lastInstance = this;
         }
+
+        use(plugin) { this.plugins.push(plugin); }
+
+        turndown(html) { return `MARKDOWN(${html})`; }
       }
+
+      beforeEach(() => {
+        lastInstance = undefined;
+        loaderStub = sinon.stub(turndownLoader, 'load').resolves({
+          TurndownService: FakeTurndownService,
+          gfm: FAKE_GFM,
+        });
+      });
+
+      afterEach(() => {
+        loaderStub.restore();
+      });
 
       function setMain(html) {
         const main = document.createElement('main');
@@ -420,33 +440,42 @@ describe('action-button block', () => {
         return main;
       }
 
-      it('converts <main> to Markdown via Turndown and skips the .md fetch', async () => {
-        setMain('<h1>Title</h1><p>Hello <strong>world</strong></p>');
+      it('calls the Turndown loader and writes its output to the clipboard', async () => {
+        setMain('<h1>Title</h1>');
         makeCopyButton().click();
-        await waitFor(() => clipboardStub.called);
+        await clock.tickAsync(0);
+        expect(loaderStub.calledOnce).to.be.true;
         expect(fetchStub.called).to.be.false;
-        const markdown = clipboardStub.firstCall.args[0];
-        expect(markdown).to.include('# Title');
-        expect(markdown).to.include('Hello **world**');
+        expect(clipboardStub.calledOnceWith('MARKDOWN(<h1>Title</h1>)')).to.be.true;
       });
 
-      it('converts a table using GFM syntax', async () => {
-        setMain('<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>');
+      it('registers the GFM plugin on the Turndown instance', async () => {
+        setMain('<h1>Title</h1>');
         makeCopyButton().click();
-        await waitFor(() => clipboardStub.called);
-        expect(clipboardStub.firstCall.args[0]).to.include('| A | B |');
+        await clock.tickAsync(0);
+        expect(lastInstance.plugins).to.include(FAKE_GFM);
       });
 
-      it('strips elements carrying [data-widget] from the copied Markdown', async () => {
+      it('strips elements carrying [data-widget] before conversion', async () => {
         setMain('<h1>Title</h1><span data-widget="copy-markdown">Copy markdown</span>');
         makeCopyButton().click();
-        await waitFor(() => clipboardStub.called);
-        expect(clipboardStub.firstCall.args[0]).to.not.include('Copy markdown');
+        await clock.tickAsync(0);
+        expect(clipboardStub.firstCall.args[0]).to.equal('MARKDOWN(<h1>Title</h1>)');
       });
 
-      it('falls back to the .md fetch when there is no <main>', async () => {
+      it('falls back to the .md fetch when there is no <main> (and never calls the loader)', async () => {
         makeCopyButton().click();
-        await waitFor(() => clipboardStub.called);
+        await clock.tickAsync(0);
+        expect(loaderStub.called).to.be.false;
+        expect(fetchStub.calledOnce).to.be.true;
+        expect(clipboardStub.calledOnceWith('# Page markdown')).to.be.true;
+      });
+
+      it('falls back to the .md fetch when the Turndown loader rejects', async () => {
+        loaderStub.rejects(new Error('network error'));
+        setMain('<h1>Title</h1>');
+        makeCopyButton().click();
+        await clock.tickAsync(0);
         expect(fetchStub.calledOnce).to.be.true;
         expect(clipboardStub.calledOnceWith('# Page markdown')).to.be.true;
       });
@@ -458,12 +487,12 @@ describe('action-button block', () => {
         document.body.append(section);
 
         makeCopyButton().click();
-        await new Promise((resolve) => { setTimeout(resolve, 50); });
+        await clock.tickAsync(0);
         expect(clipboardStub.called).to.be.false;
 
         delete section.dataset.status;
-        await waitFor(() => clipboardStub.called);
-        expect(clipboardStub.firstCall.args[0]).to.include('# Loaded');
+        await clock.tickAsync(100);
+        expect(clipboardStub.calledOnceWith('MARKDOWN(<h1>Loaded</h1>)')).to.be.true;
       });
     });
   });
