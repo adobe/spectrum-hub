@@ -96,8 +96,8 @@
       }
     },
     {
-      "name": "ActionButtonGroup",
-      "label": "Action Button Group",
+      "name": "ActionGroup",
+      "label": "Action Group",
       "platforms": {
         "web": {
           "figma": {
@@ -321,12 +321,12 @@
       }
     },
     {
-      "name": "Card",
-      "label": "Card",
+      "name": "Cards",
+      "label": "Cards",
       "platforms": {
         "web": {
           "figma": {
-            "status": "not-available"
+            "status": "available"
           },
           "rsp": {
             "status": "available",
@@ -335,126 +335,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "Cards (Asset)",
-      "label": "Cards (Asset)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Cards (Collection)",
-      "label": "Cards (Collection)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Cards (Gallery)",
-      "label": "Cards (Gallery)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Cards (Horizontal)",
-      "label": "Cards (Horizontal)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Cards (Product)",
-      "label": "Cards (Product)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Cards (User)",
-      "label": "Cards (User)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "CardView",
-      "label": "Card View",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -493,23 +373,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "ClearButton",
-      "label": "Clear Button",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -670,44 +533,6 @@
       }
     },
     {
-      "name": "ColorSwatch",
-      "label": "Color Swatch",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "ColorSwatchPicker",
-      "label": "Color Swatch Picker",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
       "name": "ColorWheel",
       "label": "Color Wheel",
       "platforms": {
@@ -777,40 +602,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "ContextualHelpPopover",
-      "label": "Contextual Help Popover",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "CustomDialog",
-      "label": "Custom Dialog",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -892,43 +683,6 @@
       }
     },
     {
-      "name": "Dialog",
-      "label": "Dialog",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Disclosure",
-      "label": "Disclosure",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "N/A"
-          }
-        }
-      }
-    },
-    {
       "name": "Divider",
       "label": "Divider",
       "platforms": {
@@ -943,23 +697,6 @@
           "swc": {
             "status": "available",
             "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "DragPreview",
-      "label": "Drag Preview",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -1062,24 +799,6 @@
       }
     },
     {
-      "name": "Image",
-      "label": "Image",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "InlineAlert",
       "label": "Inline Alert",
       "platforms": {
@@ -1148,26 +867,6 @@
           },
           "swc": {
             "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "LinkButton",
-      "label": "Link Button",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "secondary": "Use button component"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "N/A"
           }
         }
       }
@@ -1377,26 +1076,6 @@
       }
     },
     {
-      "name": "RadioButton",
-      "label": "Radio Button",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable",
-            "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
       "name": "RadioGroup",
       "label": "Radio Group",
       "platforms": {
@@ -1525,41 +1204,6 @@
       }
     },
     {
-      "name": "SelectBox",
-      "label": "Select Box",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "SelectBoxGroup",
-      "label": "Select Box Group",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "SideNavigation",
       "label": "Side Navigation",
       "platforms": {
@@ -1596,23 +1240,6 @@
       }
     },
     {
-      "name": "SkeletonCollection",
-      "label": "Skeleton Collection",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Slider",
       "label": "Slider",
       "platforms": {
@@ -1627,6 +1254,26 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "StandardDialog",
+      "label": "Standard Dialog",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable",
+            "secondary": "Use Dialog component"
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "Use Dialog"
           }
         }
       }
@@ -1686,6 +1333,44 @@
       }
     },
     {
+      "name": "Swatch",
+      "label": "Swatch",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "SwatchGroup",
+      "label": "Swatch Group",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
       "name": "Switch",
       "label": "Switch",
       "platforms": {
@@ -1705,26 +1390,8 @@
       }
     },
     {
-      "name": "Tab",
-      "label": "Tab",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "available",
-            "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "TableView",
-      "label": "Table View",
+      "name": "Table",
+      "label": "Table",
       "platforms": {
         "web": {
           "figma": {
@@ -1737,24 +1404,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "TabPanel",
-      "label": "Tab Panel",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "available",
-            "context": "Stable"
           }
         }
       }
@@ -1828,6 +1477,25 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "TakeoverDialog",
+      "label": "Takeover Dialog",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "not-available",
+            "secondary": "Use Dialog component"
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "Use Dialog"
           }
         }
       }
@@ -1922,42 +1590,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "ToggleButton",
-      "label": "Toggle Button",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "ToggleButtonGroup",
-      "label": "Toggle Button Group",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
