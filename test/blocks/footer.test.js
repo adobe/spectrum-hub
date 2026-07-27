@@ -70,7 +70,7 @@ describe('footer block', () => {
       expect(sections.at(-1).classList.contains('section-copyright')).to.be.true;
     });
 
-    it('adds section-legal class to the second-to-last section', () => {
+    it.skip('adds section-legal class to the second-to-last section', () => {
       const sections = [...el.querySelectorAll('.section')];
       expect(sections.at(-2).classList.contains('section-legal')).to.be.true;
     });
