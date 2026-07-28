@@ -6,30 +6,6 @@ const getRedirect = (resp, savedSearch) => {
   }
 };
 
-const formatSchedule = async (response) => {
-  const schedule2Response = (json) => new Response(JSON.stringify(json), response);
-
-  const json = await response.json();
-  if (!json.data?.[0]?.fragment) { return schedule2Response(json); }
-
-  const data = [];
-  for (const [idx, schedule] of json.data.entries()) {
-    const { start, end } = schedule;
-
-    // Presumably the default fragment
-    if (!start && !end) {
-      data.push(json.data[idx]);
-    } else {
-      const now = Date.now();
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      if (startDate < now && endDate > now) { data.push(json.data[idx]); }
-    }
-  }
-
-  return schedule2Response({ ...json, data });
-};
-
 export const fetchFromAem = async ({ request, cache, savedSearch }) => {
   let resp = await fetch(request, { method: request.method, cf: { cacheEverything: cache } });
 
@@ -54,5 +30,5 @@ export async function fetchSchedule({ request, cache, savedSearch }) {
 
   if (resp.status === 301 || resp.status === 304) { return resp; }
 
-  return formatSchedule(resp);
+  return resp;
 }

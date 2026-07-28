@@ -1,9 +1,9 @@
-name = "ak-website"
+name = "spectrum-hub-website"
 main = "index.js"
 compatibility_date = "2025-02-14"
 keep_vars = true
 
-vars = { AEM_ORG = "aemsites", AEM_SITE = "author-kit" }
+vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub" }
 
 [env.dev]
-vars = { AEM_ORG = "aemsites", AEM_SITE = "author-kit" }
+vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub" }

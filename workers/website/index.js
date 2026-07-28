@@ -10,20 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import { fetchSchedule, fetchFromAem } from './handlers/aem.js';
-import fetchDaSc from './handlers/dasc.js';
+import { fetchFromAem } from './handlers/aem.js';
 
 const ROUTES = [
-  // Handle schedule manifests
-  {
-    match: (path) => path.includes('/schedules/') && path.endsWith('json'),
-    handler: fetchSchedule,
-  },
-  // Handle structured content
-  {
-    match: (path) => path.includes('/dasc/') && path.endsWith('json'),
-    handler: fetchDaSc,
-  },
   // Handle drafts
   {
     match: (path) => path.startsWith('/drafts'),
@@ -87,7 +76,13 @@ const formatSearchParams = (url) => {
   return search;
 };
 
-const formatRequest = (env, request, url) => {
+const getValidLogin = async (env, request, url) => {
+  const { pathname } = url;
+  if (pathname.endsWith('.css') || pathname.endsWith('.js')) { return true; }
+  return true;
+};
+
+const formatRequest = async (env, request, url) => {
   const aemUrl = new URL(url.href);
   aemUrl.hostname = `main--${env.AEM_SITE}--${env.AEM_ORG}.aem.live`;
   aemUrl.port = '';
@@ -98,7 +93,8 @@ const formatRequest = (env, request, url) => {
   if (env.PUSH_INVALIDATION !== 'disabled') {
     req.headers.set('x-push-invalidation', 'enabled');
   }
-  if (env.ORIGIN_AUTHENTICATION) {
+  const validLogin = await getValidLogin(env, request, url);
+  if (validLogin) {
     req.headers.set('authorization', `token ${env.ORIGIN_AUTHENTICATION}`);
   }
   return req;
@@ -114,7 +110,7 @@ export default {
     const rumResp = getRUMRequest(req, url);
     if (rumResp) { return rumResp; }
 
-    const request = formatRequest(env, req, url);
+    const request = await formatRequest(env, req, url);
 
     const savedSearch = formatSearchParams(url);
 
