@@ -25,7 +25,7 @@
   tbody tr {
     display: block; /* Technically breaks a11y relationships, which is why the roles are set again in JS */
     background-color: var(--s2-gray-25);
-    border: var(--table-border-width) solid var(--s2-gray-300);
+    border: var(--table-border-width) solid rgb(from var(--s2-gray-1000) r g b / 20%);
 
     & + tr {
       border-block-start: 0;
@@ -44,6 +44,7 @@
 
   tbody td {
     display: block;
+    font-size: var(--s2-body-size-s);
     color: var(--s2-gray-700);
     font-weight: var(--s2-component-m-regular-font-weight);
     padding-block: var(--table-body-row-padding-block);
@@ -103,16 +104,16 @@
 
     /* borders between rows */
     th, td {
-      border-block-end: var(--table-border-width) solid var(--s2-gray-300);
+      border-block-end: var(--table-border-width) solid rgb(from var(--s2-gray-1000) r g b / 20%);
     }
 
     /* inline borders for non-quiet variant */
     th:first-child, td:first-child {
-      border-inline-start: var(--table-border-width) solid var(--s2-gray-300);
+      border-inline-start: var(--table-border-width) solid rgb(from var(--s2-gray-1000) r g b / 20%);
     }
 
     th:last-child, td:last-child {
-      border-inline-end: var(--table-border-width) solid var(--s2-gray-300);
+      border-inline-end: var(--table-border-width) solid rgb(from var(--s2-gray-1000) r g b / 20%);
     }
 
     /* table corners are rounded in non-quiet variant */
@@ -173,7 +174,7 @@
   }
 
   thead th {
-    border-block-start: var(--table-border-width) solid var(--s2-gray-300);
+    border-block-start: var(--table-border-width) solid rgb(from var(--s2-gray-1000) r g b / 20%);
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--s2-gray-800);
     font-size: var(--s2-component-m-regular-font-size);
