@@ -253,16 +253,16 @@
   --s2-corner-radius-800: 16px;
 
   /* heading */
-  --s2-heading-size-xs: 18px;
-  --s2-heading-size-s: 20px;
+  --s2-heading-size-xs: 16px;
+  --s2-heading-size-s: 18px;
   --s2-heading-size-m: 22px;
   --s2-heading-size-l: 28px;
   --s2-heading-size-xl: 36px;
-  --s2-heading-size-xxl: 45px;
+  --s2-heading-size-xxl: 40px;
   --s2-heading-size-xxxl: 58px;
   --s2-heading-size-xxxxl: 73px;
-  --s2-heading-font-weight: 700;
-  --s2-heading-line-height: 1.3;
+  --s2-heading-font-weight: 500;
+  --s2-heading-line-height: 1.2;
   --s2-heading-margin-top-multiplier: 0.8889;
   --s2-heading-margin-bottom-multiplier: 0.25;
 
