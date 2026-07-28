@@ -58,7 +58,7 @@
   <main>
     <form>
         <div>
-          <se-select label="Select (picker)" name="hello">
+          <se-select label="Select (picker)" name="hello" labelPosition="side">
             <option>Doc</option>
             <option>Grumpy</option>
             <option>Happy</option>
@@ -87,9 +87,8 @@
           <se-switch name="my-switch">Switch</se-switch>
         </div>
         <div>
-          <se-segmentedcontrol>
+          <se-segmentedcontrol labelPosition="side" label="Segmented Control">
             <fieldset>
-              <legend>Segmented Control</legend>
               <label>
                 <input type="radio" name="view" value="map" checked>
                 <span>Map</span>
