@@ -201,6 +201,7 @@ svg.icon {
   select {
     display: block;
     width: 100%;
+    min-inline-size: 104px;
     padding: 0 12px;
     background: var(--s2-gray-100);
     font-family: var(--s2-font-family);
@@ -558,6 +559,20 @@ svg.icon {
       opacity: 0;
     }
   }
+}
+
+/* Side-label layout */
+.se-inputfield.side-label,
+.se-switch.side-label label,
+.se-segmentedcontrol-field.side-label {
+  display: flex;
+  inline-size: 100%;
+  gap: var(--s2-spacing-300);
+  justify-content: space-between;
+}
+
+.se-switch.side-label label {
+  flex-direction: row-reverse;
 }
 
 /* Pulled from styles.css */

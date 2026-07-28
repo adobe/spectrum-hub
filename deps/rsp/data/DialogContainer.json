@@ -1,0 +1,16 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The Dialog to display, if any."
+    },
+    {
+      "property": "onDismiss",
+      "type": "() => void",
+      "required": true,
+      "description": "Handler that is called when the 'x' button of a dismissable Dialog is clicked."
+    }
+  ]
+}

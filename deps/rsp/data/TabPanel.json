@@ -1,0 +1,22 @@
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to display in the tab panels."
+    },
+    {
+      "property": "shouldForceMount",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether to mount the tab panel in the DOM even when it is not currently selected. Inactive tab panels are inert and cannot be interacted with. They must be styled appropriately so this is clear to the user visually.",
+      "inheritedFrom": "TabPanelProps"
+    }
+  ]
+}

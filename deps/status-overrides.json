@@ -44,33 +44,6 @@
       }
     }
   },
-  "SelectBox": {
-    "web": {
-      "rsp": {
-        "status": "available",
-        "context": "Stable",
-        "note": "A select box is not a standalone component; it mirrors Select Box Group's availability."
-      }
-    }
-  },
-  "Tab": {
-    "web": {
-      "rsp": {
-        "status": "available",
-        "context": "Stable",
-        "note": "A tab is not a standalone component; it mirrors Tabs' availability."
-      }
-    }
-  },
-  "TabPanel": {
-    "web": {
-      "rsp": {
-        "status": "available",
-        "context": "Stable",
-        "note": "A tab panel is not a standalone component; it mirrors Tabs' availability."
-      }
-    }
-  },
   "DateAndTimeField": {
     "web": {
       "rsp": {

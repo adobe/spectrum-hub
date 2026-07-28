@@ -149,6 +149,16 @@ function resolveExtends(header, racImports) {
   return out;
 }
 
+/**
+ * Finds component export names in a `.d.ts` source as `export declare const X:` 
+ * `ForwardRefExoticComponent<...>` or as a plain `export declare function X(...)`
+ */
+export function findExportedNames(source) {
+  const consts = [...source.matchAll(/export declare const (\w+):/g)].map((m) => m[1]);
+  const funcs = [...source.matchAll(/export declare function (\w+)\(/g)].map((m) => m[1]);
+  return [...new Set([...consts, ...funcs])];
+}
+
 export function buildEntry(componentName, fileName, source) {
   const iface = findComponentInterface(source, componentName);
   if (!iface) return null;
@@ -182,8 +192,7 @@ async function main() {
   for (const fileName of files) {
     const source = await fetchFirst(TYPES_BASE_URLS.map((b) => b(`${fileName}.d.ts`)));
 
-    const exports = [...source.matchAll(/export declare const (\w+):/g)].map((m) => m[1]);
-    for (const componentName of exports) {
+    for (const componentName of findExportedNames(source)) {
       const entry = buildEntry(componentName, fileName, source);
       if (entry) components[componentName] = entry;
     }

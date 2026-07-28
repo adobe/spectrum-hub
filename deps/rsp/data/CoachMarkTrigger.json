@@ -1,0 +1,10 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "inheritedFrom": "DialogTriggerProps"
+    }
+  ]
+}
