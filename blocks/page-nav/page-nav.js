@@ -1,8 +1,4 @@
-import { loadFragment } from '../fragment/fragment.js';
-
-// Authored once with every widget option; page-nav renders the subset the
-// current URL calls for (see renderWidgets).
-const WIDGETS_FRAGMENT = '/fragments/drafts/page-nav';
+import { getSvgRef } from '../../scripts/utils/svg.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -15,21 +11,63 @@ export function shouldRenderWidget(name, isComponentPage) {
   return isComponentPage || GLOBAL_WIDGETS.has(name);
 }
 
-// Loads the shared widgets fragment and appends the URL-appropriate widget
-// buttons below the nav's table of contents.
-async function renderWidgets(el) {
-  const { fragment } = await loadFragment(WIDGETS_FRAGMENT);
-  if (!fragment) { return; }
+function makeWidgetElement(tag, name, label, icon) {
+  const widgetEl = document.createElement(tag);
+  widgetEl.className = 'action-button action-button-quiet';
+  widgetEl.dataset.widget = name;
+  widgetEl.append(getSvgRef(icon, 'icon'));
+  const span = document.createElement('span');
+  span.textContent = label;
+  widgetEl.append(span);
+  return widgetEl;
+}
 
+// Each widget's per-page decoration
+async function decorateCopyMarkdown(button) {
+  const { handleCopyMarkdown } = await import('../copy-md/copy-md.js');
+  button.addEventListener('click', handleCopyMarkdown);
+}
+
+async function decorateGoToImplWidget(a) {
+  const { decorateGoToImpl } = await import('../go-to-impl/go-to-impl.js');
+  await decorateGoToImpl(a, a.querySelector('span'));
+}
+
+async function decorateSeeInFigmaWidget(a) {
+  const { decorateSeeInFigma } = await import('../figma/figma.js');
+  await decorateSeeInFigma(a, a.querySelector('span'));
+}
+
+const WIDGETS = [
+  {
+    name: 'copy-markdown', tag: 'button', label: 'Copy markdown', icon: 'copy', decorate: decorateCopyMarkdown,
+  },
+  {
+    name: 'go-to-impl', tag: 'a', label: 'Go to implementation', icon: 'openin', decorate: decorateGoToImplWidget,
+  },
+  {
+    name: 'see-in-figma', tag: 'a', label: 'See in Figma', icon: 'vectordraw', decorate: decorateSeeInFigmaWidget,
+  },
+];
+
+// Builds and decorates the URL-appropriate widget buttons/links and appends
+// them below the nav's table of contents. Widgets that decorate themselves away
+async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
-  const widgets = [...fragment.querySelectorAll('[data-widget]')].filter(
-    ({ dataset }) => shouldRenderWidget(dataset.widget, isComponentPage),
-  );
-  if (!widgets.length) { return; }
+  const candidates = WIDGETS.filter(({ name }) => shouldRenderWidget(name, isComponentPage));
+  if (!candidates.length) { return; }
 
   const group = document.createElement('div');
   group.className = 'page-nav-widgets';
-  group.append(...widgets);
+
+  const elements = candidates.map(
+    ({ tag, name, label, icon }) => makeWidgetElement(tag, name, label, icon),
+  );
+  group.append(...elements);
+
+  await Promise.all(candidates.map(({ decorate }, i) => decorate(elements[i])));
+
+  if (!group.children.length) { return; }
   el.append(group);
 }
 
@@ -169,7 +207,7 @@ export default async function init(el) {
 
   el.append(list);
 
-  // URL-scoped widgets (copy markdown, and later see-in-figma / go-to-impl)
+  // URL-scoped widgets (copy markdown / see-in-figma / go-to-impl)
   // sit below the table of contents.
   await renderWidgets(el);
 
