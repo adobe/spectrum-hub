@@ -14,7 +14,10 @@
     backdrop-filter: blur(12px);
     background: light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
     border: 1px solid light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
-    color: light-dark(var(--s2-blue-900), var(--s2-banner-blue));
+
+    /* --s2-blue-1000, not -900: -900 composited against the tinted background only
+       reaches ~4.32:1, short of the 4.5:1 minimum for normal text (WCAG 1.4.3 AA). */
+    color: light-dark(var(--s2-blue-1000), var(--s2-banner-blue));
     border-radius: 100px;
     align-items: center;
     padding: 8px 8px 8px 16px;

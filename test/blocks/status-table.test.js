@@ -72,16 +72,20 @@ describe('status-table block', () => {
   });
 
   function stubFetchOk(index = MOCK_INDEX) {
-    return sandbox.stub(window, 'fetch').resolves(
-      new Response(JSON.stringify(index), { status: 200 }),
-    );
+    return sandbox.stub(window, 'fetch').callsFake(async (input) => {
+      const url = typeof input === 'string' ? input : input?.url ?? '';
+      if (url.endsWith('.svg')) {
+        return new Response('<svg xmlns="http://www.w3.org/2000/svg"><path/></svg>', { status: 200 });
+      }
+      return new Response(JSON.stringify(index), { status: 200 });
+    });
   }
 
   describe('data source', () => {
     it('fetches the build-time status index by default', async () => {
       const stub = stubFetchOk();
       await init(makeEl());
-      expect(stub.calledOnce).to.be.true;
+      expect(stub.called).to.be.true;
       expect(stub.firstCall.args[0]).to.match(/status-index\.json$/);
     });
 
@@ -469,6 +473,56 @@ describe('status-table block', () => {
       const region = el.querySelector('[role="status"]');
       el.querySelector('thead th[data-col="figma"] .status-table-sort-header').click();
       expect(region.textContent).to.match(/sorted by figma, ascending/i);
+    });
+  });
+
+  function stubMatchMedia(activeSandbox, matches = true) {
+    const listeners = [];
+    const mql = {
+      matches,
+      addEventListener: (_event, cb) => listeners.push(cb),
+      dispatch: (nextMatches) => {
+        mql.matches = nextMatches;
+        listeners.forEach((cb) => cb({ matches: nextMatches }));
+      },
+    };
+    activeSandbox.stub(window, 'matchMedia').returns(mql);
+    return mql;
+  }
+
+  describe('toolbar — sort header focusability at narrow widths', () => {
+    it('keeps sort-header buttons out of the tab order below 900px', async () => {
+      stubMatchMedia(sandbox, false);
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const buttons = [...el.querySelectorAll('.status-table-sort-header')];
+      expect(buttons.length).to.be.greaterThan(0);
+      expect(buttons.every((b) => b.tabIndex === -1)).to.be.true;
+    });
+
+    it('keeps sort-header buttons focusable at/above 900px', async () => {
+      stubMatchMedia(sandbox, true);
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const buttons = [...el.querySelectorAll('.status-table-sort-header')];
+      expect(buttons.every((b) => b.tabIndex === 0)).to.be.true;
+    });
+
+    it('updates focusability live when the viewport crosses the breakpoint', async () => {
+      const mql = stubMatchMedia(sandbox, true);
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const button = el.querySelector('.status-table-sort-header');
+      expect(button.tabIndex).to.equal(0);
+
+      mql.dispatch(false);
+      expect(button.tabIndex).to.equal(-1);
+
+      mql.dispatch(true);
+      expect(button.tabIndex).to.equal(0);
     });
   });
 

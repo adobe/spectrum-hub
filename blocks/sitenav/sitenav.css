@@ -224,8 +224,9 @@
         align-items: center;
 
         button {
+          /* WCAG 2.2 2.5.8 Target Size (Minimum): 24x24px */
           justify-content: end;
-          width: 22px;
+          width: 24px;
           height: 32px;
         }
 

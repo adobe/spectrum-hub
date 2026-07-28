@@ -14,7 +14,7 @@ const INDEX_BASED_NAV = [
   { prefix: '/mobile/android', count: 0 },
 ];
 
-const decorateLevel = (ul, depth) => {
+export const decorateLevel = (ul, depth) => {
   ul.classList.add(`level-${depth}-list`);
 
   const listItems = [...ul.querySelectorAll(':scope > li')];
@@ -47,6 +47,8 @@ const decorateLevel = (ul, depth) => {
     if (a) {
       li.prepend(a);
       li.classList.add('linked-list');
+      // The link carries the visible label here
+      btn.setAttribute('aria-label', labelText);
     } else {
       btn.append(label);
     }
@@ -160,7 +162,7 @@ const fetchRes = async (path) => {
   return dom.querySelector('ul') ?? document.createElement('ul');
 };
 
-const getSiteNav = () => {
+export const getSiteNav = () => {
   const sitenav = document.createElement('div');
   sitenav.id = 'sitenav';
 
@@ -188,11 +190,30 @@ const findCurrentPageInNav = (navList) => {
   });
 };
 
-const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
+export const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
 
-const getExpandButton = async (sitenav) => {
+// On mobile the open sitenav is a full-screen tray covering everything underneath
+export const syncBackgroundInert = (sitenav) => {
+  const trapped = sitenav.hasAttribute('is-open') && isMobileViewport();
+  document.querySelectorAll('body > main, body > header, body > footer')
+    .forEach((el) => el.toggleAttribute('inert', trapped));
+};
+
+// Escape and clicking outside behave the same way
+// regardless of how deep the sitenav is currently open.
+export const closeSitenav = (sitenav) => {
+  sitenav.querySelector('.level-1-button[aria-expanded="true"]')
+    ?.setAttribute('aria-expanded', 'false');
+  sitenav.removeAttribute('is-open');
+  syncBackgroundInert(sitenav);
+};
+
+export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
   btn.classList.add('sitenav-expand-btn');
+  btn.setAttribute('aria-label', 'Toggle site navigation');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', sitenav.id);
 
   const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');
   btn.append(svg);
@@ -203,12 +224,26 @@ const getExpandButton = async (sitenav) => {
     const expandedLevel1 = isMobileViewport()
       && sitenav.querySelector('.level-1-button[aria-expanded="true"]');
     if (expandedLevel1) {
-      expandedLevel1.setAttribute('aria-expanded', 'false');
-      sitenav.removeAttribute('is-open');
-      return;
+      closeSitenav(sitenav);
+    } else {
+      sitenav.toggleAttribute('is-open');
+      syncBackgroundInert(sitenav);
     }
-    sitenav.toggleAttribute('is-open');
+    btn.setAttribute('aria-expanded', String(sitenav.hasAttribute('is-open')));
   });
+
+  // Escape always closes, regardless of viewport — matches the disclosure
+  // pattern used throughout the rest of the sitenav (level-1/2/3 buttons).
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !sitenav.hasAttribute('is-open')) { return; }
+    closeSitenav(sitenav);
+    btn.setAttribute('aria-expanded', 'false');
+    btn.focus();
+  });
+
+  // A resize (or orientation change) can cross the mobile breakpoint while
+  // open, so re-evaluate rather than leaving stale inert state behind.
+  window.matchMedia('(width < 900px)').addEventListener('change', () => syncBackgroundInert(sitenav));
 
   return btn;
 };
