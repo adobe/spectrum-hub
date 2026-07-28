@@ -1,7 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import init, { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
-import { setConfig } from '../../scripts/ak.js';
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
   const main = document.createElement('main');
@@ -342,77 +341,19 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('renderWidgets — fragment wiring', () => {
-    it('appends only URL-allowed widgets from the fragment, above the TOC', async () => {
-      stubMatchMedia(sandbox, true);
-      setConfig({
-        log: () => {}, linkBlocks: [], components: [], decorateArea: null,
-      });
-      const fragmentHtml = `<body><main><div>
-        <button data-widget="copy-markdown"><span>Copy markdown</span></button>
-        <button data-widget="see-in-figma"><span>See in Figma</span></button>
-      </div></main></body>`;
-      sandbox.stub(window, 'fetch').resolves({ ok: true, text: async () => fragmentHtml });
-
-      makeDOM();
-      await init(el);
-
-      const group = el.querySelector('.page-nav-widgets');
-      expect(group).to.not.be.null;
-      // widgets group sits below the heading TOC list
-      expect(group.previousElementSibling).to.equal(el.querySelector('ul'));
-
-      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
-      expect(rendered).to.include('copy-markdown');
-      // see-in-figma is component-only; its presence must track the current path
-      expect(rendered.includes('see-in-figma')).to.equal(isComponentPath(window.location.pathname));
-    });
-
-    it('adds no widgets group when the fragment cannot be fetched', async () => {
-      stubMatchMedia(sandbox, true);
-      sandbox.stub(window, 'fetch').resolves({ ok: false, status: 404 });
-      makeDOM();
-      await init(el);
-      expect(el.querySelector('.page-nav-widgets')).to.be.null;
-    });
-  });
-
-  // End-to-end: authored widget links flow through the real action-button
-  // decoration (loadFragment -> loadArea -> actionButton) and out the other
-  // side as page-nav's [data-widget] filter sees them — not pre-built fixtures.
-  describe('renderWidgets — real action-button decoration', () => {
-    const WIDGET_LINK_BLOCKS = [
-      { 'action-button': '/tools/widgets/copy-markdown' },
-      { 'action-button': '/tools/widgets/go-to-impl' },
-      { 'action-button': '/tools/widgets/see-in-figma' },
-    ];
-    const FRAGMENT_HTML = [
-      '<body><main><div>',
-      '<p><a href="/tools/widgets/copy-markdown">Copy markdown</a></p>',
-      '<p><a href="/tools/widgets/go-to-impl">Go to implementation</a></p>',
-      '<p><a href="/tools/widgets/see-in-figma">See in Figma</a></p>',
-      '</div></main></body>',
-    ].join('');
+  // page-nav builds and decorates its widgets directly (no fragment, no
+  // action-button dispatch) — each widget's own decoration is lazily loaded
+  // from its code-split block module (copy-md.js / go-to-impl.js / figma.js).
+  describe('renderWidgets', () => {
     let originalUrl;
+    let fetchStub;
 
     beforeEach(() => {
       originalUrl = window.location.pathname + window.location.search + window.location.hash;
       stubMatchMedia(sandbox, true);
-      setConfig({
-        log: () => {},
-        hostnames: [],
-        components: [],
-        decorateArea: null,
-        linkBlocks: WIDGET_LINK_BLOCKS,
-      });
-      sandbox.stub(window, 'fetch').callsFake((url) => {
-        if (String(url).includes('component-status.json')) {
-          return Promise.resolve({
-            ok: true,
-            json: async () => [{ name: 'Action button', figmaPageId: '9230:3620' }],
-          });
-        }
-        return Promise.resolve({ ok: true, text: async () => FRAGMENT_HTML });
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true,
+        json: async () => [{ name: 'Action button', figmaPageId: '9230:3620' }],
       });
       makeDOM();
     });
@@ -421,12 +362,14 @@ describe('page-nav block', () => {
       window.history.pushState({}, '', originalUrl);
     });
 
-    it('renders all three decorated widgets on a component page', async () => {
+    it('renders all three decorated widgets, above the TOC, on a component page', async () => {
       window.history.pushState({}, '', '/web/swc/components/action-button');
       await init(el);
 
       const group = el.querySelector('.page-nav-widgets');
       expect(group).to.not.be.null;
+      // widgets group sits below the heading TOC list
+      expect(group.previousElementSibling).to.equal(el.querySelector('ul'));
 
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl', 'see-in-figma']);
@@ -447,10 +390,20 @@ describe('page-nav block', () => {
       await init(el);
 
       const group = el.querySelector('.page-nav-widgets');
-      const rendered = group
-        ? [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget)
-        : [];
+      expect(group).to.not.be.null;
+      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown']);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
+      fetchStub.resolves({ ok: true, json: async () => [] });
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      await init(el);
+
+      const group = el.querySelector('.page-nav-widgets');
+      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
+      expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
     });
   });
 });
