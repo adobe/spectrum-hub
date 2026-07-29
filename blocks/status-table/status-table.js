@@ -351,7 +351,10 @@ const buildColumnFilter = (columns, table, announce) => {
   return wrap;
 };
 
-/** An "Export CSV" control that downloads the current table as a CSV file. */
+/**
+ * An "Export CSV" control that downloads the current table as a CSV file.
+ * Note for test doubles: this is init()'s second fetch, after the status index.
+ */
 const buildExportButton = async (index) => {
   const button = document.createElement('button');
   const downloadIcon = await fetchSvgEl('/img/icons/s2-icon-download-20-n.svg');
@@ -428,6 +431,9 @@ const buildSorting = (table, columns, announce) => {
     button.addEventListener('click', () => {
       sortBy(id, activeId === id && direction === 'ascending' ? 'descending' : 'ascending');
     });
+    // Named independently of the button's content, so hiding the button below
+    // 900px (see syncHeaderAccessibility) doesn't blank out the column's name.
+    th.setAttribute('aria-label', text.textContent);
     th.replaceChildren(button);
     headers.set(id, th);
   };
@@ -436,6 +442,21 @@ const buildSorting = (table, columns, announce) => {
     const id = th.dataset.col ?? COMPONENT;
     if (sortable.some((c) => c.id === id)) { wireHeader(th, id); }
   }
+
+  // Below 900px the thead is visually clipped to 1px; tabindex=-1 and
+  // aria-hidden to remove it from the accessibility tree. (WCAG 2.4.7).
+  const desktopMql = window.matchMedia('(width >= 900px)');
+  const syncHeaderAccessibility = () => {
+    for (const [, th] of headers) {
+      const button = th.querySelector('.status-table-sort-header');
+      if (button) {
+        button.tabIndex = desktopMql.matches ? 0 : -1;
+        button.setAttribute('aria-hidden', String(!desktopMql.matches));
+      }
+    }
+  };
+  syncHeaderAccessibility();
+  desktopMql.addEventListener('change', syncHeaderAccessibility);
 
   // The small-screen "Sort by" control: a column select plus a direction toggle.
   const control = document.createElement('div');

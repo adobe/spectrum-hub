@@ -175,10 +175,17 @@ function buildCopyButton(pre) {
   button.classList.add('playground-copy');
   button.textContent = defaultLabel;
 
+  // Button-text-only feedback isn't reliably announced once the button already
+  // has focus — this live region backs it up (mirrors status-table.js's announcer).
+  const status = document.createElement('span');
+  status.className = 'visually-hidden';
+  status.setAttribute('role', 'status');
+
   let resetTimer;
   function flash(message, copied) {
     button.textContent = message;
     button.classList.toggle('is-copied', copied);
+    status.textContent = message;
     clearTimeout(resetTimer);
     resetTimer = setTimeout(() => {
       button.textContent = defaultLabel;
@@ -195,12 +202,13 @@ function buildCopyButton(pre) {
     }
   });
 
-  return button;
+  const fragment = document.createDocumentFragment();
+  fragment.append(button, status);
+  return fragment;
 }
 
 // Maps a property's "control" type (from the controls sheet) to a rendered
 // `se-*` element (deps/se/se.js).
-
 function buildPickerControl(property, options, currentValue, onChange) {
   const select = document.createElement('se-select');
   select.label = property;
@@ -244,10 +252,8 @@ function buildSeInputControl(inputType, eventName, property, currentValue, onCha
 function buildSegmentedControl(property, options, currentValue, onChange) {
   const control = document.createElement('se-segmentedcontrol');
   control.labelPosition = 'side';
+  control.label = property;
   const fieldset = document.createElement('fieldset');
-  const legend = document.createElement('legend');
-  legend.textContent = property;
-  fieldset.append(legend);
 
   options.forEach((opt) => {
     const label = document.createElement('label');

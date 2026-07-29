@@ -804,7 +804,26 @@ describe('playground block — init()', () => {
     expect(writeText.calledOnceWithExactly(pre.textContent)).to.be.true;
   });
 
-  // --- Control type -> se-* component mapping --------------------------------
+  it('announces a successful copy via a status live region', async () => {
+    stubPlaygroundFetch(sandbox);
+    sandbox.stub(navigator, 'clipboard').value({ writeText: sandbox.stub().resolves() });
+    await init(el);
+    el.querySelector('.playground-copy').click();
+    await Promise.resolve();
+    const status = el.querySelector('.playground-disclosure [role="status"]');
+    expect(status).to.exist;
+    expect(status.textContent).to.equal('Copied');
+  });
+
+  it('announces a failed copy via the status live region', async () => {
+    stubPlaygroundFetch(sandbox);
+    sandbox.stub(navigator, 'clipboard').value({ writeText: sandbox.stub().rejects() });
+    await init(el);
+    el.querySelector('.playground-copy').click();
+    await Promise.resolve();
+    const status = el.querySelector('.playground-disclosure [role="status"]');
+    expect(status.textContent).to.equal('Copy failed');
+  });
 
   it('renders se-input type="text" for a textfield control', async () => {
     stubPlaygroundFetch(sandbox, {

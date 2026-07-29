@@ -10,8 +10,9 @@ function createSkipLink() {
   const skipLink = document.createElement('a');
   skipLink.classList.add('skip-link', 'visually-hidden');
   const main = document.querySelector('main');
-  if (!main.id) { main.id = 'main-content'; }
-  skipLink.href = `#${main.id}`;
+  const id = main?.id || 'main-content';
+  if (main) { main.id = id; }
+  skipLink.href = `#${id}`;
   skipLink.innerText = 'Skip to main content';
   return skipLink;
 }

@@ -456,6 +456,13 @@ div[data-status],
         var(--sitenav-level-2-width) +
         var(--sitenav-inline-end-margin));
 
+    /* Below 900px the sitenav becomes a fixed overlay (see sitenav.css) rather
+    than a rail that pushes main content over, so its track shouldn't grow
+    when it opens or drills into a level-2 list. */
+    @media (width < 900px) {
+      --sitenav-track-width: calc(var(--sitenav-inline-start-margin) + 32px);
+    }
+
     /* Right-nav / page nav */
     --pagenav-track-width: 56px;
 

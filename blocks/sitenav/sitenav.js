@@ -14,7 +14,7 @@ const INDEX_BASED_NAV = [
   { prefix: '/mobile/android', count: 0 },
 ];
 
-const decorateLevel = (ul, depth) => {
+export const decorateLevel = (ul, depth) => {
   ul.classList.add(`level-${depth}-list`);
 
   const listItems = [...ul.querySelectorAll(':scope > li')];
@@ -47,6 +47,8 @@ const decorateLevel = (ul, depth) => {
     if (a) {
       li.prepend(a);
       li.classList.add('linked-list');
+      // The link carries the visible label here
+      btn.setAttribute('aria-label', labelText);
     } else {
       btn.append(label);
     }
@@ -79,6 +81,18 @@ const decorateLevel = (ul, depth) => {
     const menuWrapper = document.createElement('div');
     menuWrapper.classList.add(`level-${depth + 1}-menu`, 'can-expand');
     if (depth < 2) {
+      // Mobile-only: lets folks step back from the level-2 list to level-1
+      // without fully closing the sitenav (see .sitenav-back-btn in CSS).
+      const backBtn = document.createElement('button');
+      backBtn.classList.add('sitenav-back-btn');
+      backBtn.append(getSvgRef('chevronleft', 'icon', 10, '0 0 10 10'));
+      const backLabel = document.createElement('span');
+      backLabel.classList.add('list-item-label');
+      backLabel.textContent = 'Back';
+      backBtn.append(backLabel);
+      backBtn.addEventListener('click', () => btn.setAttribute('aria-expanded', 'false'));
+      menuWrapper.append(backBtn);
+
       menuWrapper.append(label.cloneNode(true));
     }
     menuWrapper.append(childList);
@@ -148,7 +162,7 @@ const fetchRes = async (path) => {
   return dom.querySelector('ul') ?? document.createElement('ul');
 };
 
-const getSiteNav = () => {
+export const getSiteNav = () => {
   const sitenav = document.createElement('div');
   sitenav.id = 'sitenav';
 
@@ -176,16 +190,91 @@ const findCurrentPageInNav = (navList) => {
   });
 };
 
-const getExpandButton = async (sitenav) => {
+export const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
+
+// On mobile the open sitenav is a full-screen tray covering everything underneath
+export const syncBackgroundInert = (sitenav) => {
+  const trapped = sitenav.hasAttribute('is-open') && isMobileViewport();
+  document.querySelectorAll('body > main, body > header, body > footer')
+    .forEach((el) => el.toggleAttribute('inert', trapped));
+};
+
+// Escape and clicking outside behave the same way
+// regardless of how deep the sitenav is currently open.
+export const closeSitenav = (sitenav) => {
+  sitenav.querySelector('.level-1-button[aria-expanded="true"]')
+    ?.setAttribute('aria-expanded', 'false');
+  sitenav.removeAttribute('is-open');
+  syncBackgroundInert(sitenav);
+};
+
+const getFocusableEls = (container) => [...container.querySelectorAll(
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+)].filter((el) => el.checkVisibility());
+
+export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
   btn.classList.add('sitenav-expand-btn');
+  btn.setAttribute('aria-label', 'Toggle site navigation');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', sitenav.id);
 
   const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');
   btn.append(svg);
 
   btn.addEventListener('click', () => {
-    sitenav.toggleAttribute('is-open');
+    // On mobile, when a level-2 list is drilled into, close it along with the
+    // sitenav rather than toggling the (desktop-only) expanded rail width.
+    // is-open is required here too so that any pre-expanded state alone makes the very first tap
+    // "close" the tray.
+    const expandedLevel1 = isMobileViewport()
+      && sitenav.hasAttribute('is-open')
+      && sitenav.querySelector('.level-1-button[aria-expanded="true"]');
+    if (expandedLevel1) {
+      closeSitenav(sitenav);
+    } else {
+      sitenav.toggleAttribute('is-open');
+      syncBackgroundInert(sitenav);
+      // send focus into the full-screen mobile tray rather than leaving it on the trigger
+      if (isMobileViewport() && sitenav.hasAttribute('is-open')) {
+        getFocusableEls(sitenav).find((el) => el !== btn)?.focus();
+      }
+    }
+    btn.setAttribute('aria-expanded', String(sitenav.hasAttribute('is-open')));
   });
+
+  document.addEventListener('keydown', (e) => {
+    if (!sitenav.hasAttribute('is-open')) { return; }
+
+    // Escape always closes, regardless of viewport — matches the disclosure
+    // pattern used throughout the rest of the sitenav (level-1/2/3 buttons).
+    if (e.key === 'Escape') {
+      closeSitenav(sitenav);
+      btn.setAttribute('aria-expanded', 'false');
+      btn.focus();
+      return;
+    }
+
+    // Loop focus within the full-screen mobile tray so Tab/Shift+Tab never
+    // escapes to inert background content or out of the document.
+    if (e.key === 'Tab' && isMobileViewport()) {
+      const focusable = getFocusableEls(sitenav);
+      if (!focusable.length) { return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  // A resize (or orientation change) can cross the mobile breakpoint while
+  // open, so re-evaluate rather than leaving stale inert state behind.
+  window.matchMedia('(width < 900px)').addEventListener('change', () => syncBackgroundInert(sitenav));
 
   return btn;
 };

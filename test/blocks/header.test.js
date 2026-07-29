@@ -84,11 +84,13 @@ describe('header block', () => {
       expect(el.querySelector('.brand-section')).to.not.be.null;
     });
 
-    it('replaces the nav section with a <nav class="main-nav-section"> element', () => {
+    // Nav-section decoration was removed from header.js in c529b47 pending
+    // migration to blocks/sitenav; re-enable once that migration lands.
+    it.skip('replaces the nav section with a <nav class="main-nav-section"> element', () => {
       expect(el.querySelector('nav.main-nav-section')).to.not.be.null;
     });
 
-    it('adds aria-label="Main navigation" to the nav element', () => {
+    it.skip('adds aria-label="Main navigation" to the nav element', () => {
       expect(el.querySelector('nav.main-nav-section').getAttribute('aria-label')).to.equal('Main navigation');
     });
 
@@ -100,59 +102,6 @@ describe('header block', () => {
       const actions = el.querySelector('.actions-section');
       expect(actions.getAttribute('role')).to.equal('region');
       expect(actions.getAttribute('aria-label')).to.equal('Additional site actions');
-    });
-  });
-
-  describe('header mobile navigation', () => {
-    beforeEach(async () => {
-      stubFetch(sandbox);
-      await init(el);
-    });
-
-    it('creates a mobile nav button inside the nav section', () => {
-      expect(el.querySelector('nav.main-nav-section button.mobile-nav-button')).to.not.be.null;
-    });
-
-    it('sets the mobile nav button aria-expanded to "false" initially', () => {
-      const button = el.querySelector('button.mobile-nav-button');
-      expect(button.getAttribute('aria-expanded')).to.equal('false');
-    });
-
-    it('opens the nav and sets aria-expanded="true" when the button is clicked', () => {
-      const button = el.querySelector('button.mobile-nav-button');
-      button.click();
-      expect(button.getAttribute('aria-expanded')).to.equal('true');
-      expect(el.querySelector('nav.main-nav-section').classList.contains('open')).to.be.true;
-    });
-
-    it('closes the nav and sets aria-expanded="false" when the button is clicked again', () => {
-      const button = el.querySelector('button.mobile-nav-button');
-      button.click();
-      button.click();
-      expect(button.getAttribute('aria-expanded')).to.equal('false');
-      expect(el.querySelector('nav.main-nav-section').classList.contains('open')).to.be.false;
-    });
-
-    it('closes the open nav when Escape is pressed', () => {
-      const button = el.querySelector('button.mobile-nav-button');
-      button.click();
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      expect(button.getAttribute('aria-expanded')).to.equal('false');
-      expect(el.querySelector('nav.main-nav-section').classList.contains('open')).to.be.false;
-    });
-
-    it('creates a mobile nav list with id="main-nav-list" and aria-label', () => {
-      const mobileNav = el.querySelector('#main-nav-list');
-      expect(mobileNav).to.not.be.null;
-      expect(mobileNav.getAttribute('aria-label')).to.equal('Mobile navigation');
-    });
-
-    it('includes nav links in the mobile nav list', () => {
-      expect(el.querySelector('#main-nav-list a[href="/docs"]')).to.not.be.null;
-    });
-
-    it('includes action links in the mobile nav list', () => {
-      expect(el.querySelector('#main-nav-list a[href="/search"]')).to.not.be.null;
     });
   });
 
@@ -183,7 +132,9 @@ describe('header block', () => {
     });
   });
 
-  describe('aria-current on nav links', () => {
+  // aria-current on nav links was removed from header.js in c529b47 pending
+  // migration to blocks/sitenav; re-enable once that migration lands.
+  describe.skip('aria-current on nav links', () => {
     it('sets aria-current="page" on the link matching the current pathname', async () => {
       const currentPath = window.location.pathname;
       stubFetch(sandbox, makeFragmentHTML({
