@@ -208,6 +208,10 @@ export const closeSitenav = (sitenav) => {
   syncBackgroundInert(sitenav);
 };
 
+const getFocusableEls = (container) => [...container.querySelectorAll(
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+)].filter((el) => el.checkVisibility());
+
 export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
   btn.classList.add('sitenav-expand-btn');
@@ -231,17 +235,41 @@ export const getExpandButton = async (sitenav) => {
     } else {
       sitenav.toggleAttribute('is-open');
       syncBackgroundInert(sitenav);
+      // send focus into the full-screen mobile tray rather than leaving it on the trigger
+      if (isMobileViewport() && sitenav.hasAttribute('is-open')) {
+        getFocusableEls(sitenav).find((el) => el !== btn)?.focus();
+      }
     }
     btn.setAttribute('aria-expanded', String(sitenav.hasAttribute('is-open')));
   });
 
-  // Escape always closes, regardless of viewport — matches the disclosure
-  // pattern used throughout the rest of the sitenav (level-1/2/3 buttons).
   document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape' || !sitenav.hasAttribute('is-open')) { return; }
-    closeSitenav(sitenav);
-    btn.setAttribute('aria-expanded', 'false');
-    btn.focus();
+    if (!sitenav.hasAttribute('is-open')) { return; }
+
+    // Escape always closes, regardless of viewport — matches the disclosure
+    // pattern used throughout the rest of the sitenav (level-1/2/3 buttons).
+    if (e.key === 'Escape') {
+      closeSitenav(sitenav);
+      btn.setAttribute('aria-expanded', 'false');
+      btn.focus();
+      return;
+    }
+
+    // Loop focus within the full-screen mobile tray so Tab/Shift+Tab never
+    // escapes to inert background content or out of the document.
+    if (e.key === 'Tab' && isMobileViewport()) {
+      const focusable = getFocusableEls(sitenav);
+      if (!focusable.length) { return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
   });
 
   // A resize (or orientation change) can cross the mobile breakpoint while

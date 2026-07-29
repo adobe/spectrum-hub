@@ -251,6 +251,56 @@ describe('sitenav block', () => {
       expect(sitenav.hasAttribute('is-open')).to.be.true;
       expect(btn.getAttribute('aria-expanded')).to.equal('true');
     });
+
+    describe('initial focus and focus trap', () => {
+      let navLink;
+
+      beforeEach(() => {
+        navLink = document.createElement('a');
+        navLink.href = '/foo';
+        navLink.textContent = 'Foo';
+        sitenav.append(navLink);
+      });
+
+      it('moves focus into the tray (past the trigger) when opened', () => {
+        btn.click();
+
+        expect(document.activeElement).to.equal(navLink);
+      });
+
+      it('wraps Tab from the last focusable element back to the trigger', () => {
+        btn.click();
+        navLink.focus();
+
+        const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+        document.dispatchEvent(event);
+
+        expect(document.activeElement).to.equal(btn);
+        expect(event.defaultPrevented).to.be.true;
+      });
+
+      it('wraps Shift+Tab from the trigger back to the last focusable element', () => {
+        btn.click();
+        btn.focus();
+
+        const event = new KeyboardEvent('keydown', {
+          key: 'Tab', shiftKey: true, bubbles: true, cancelable: true,
+        });
+        document.dispatchEvent(event);
+
+        expect(document.activeElement).to.equal(navLink);
+        expect(event.defaultPrevented).to.be.true;
+      });
+
+      it('does not trap Tab while the tray is closed', () => {
+        btn.focus();
+
+        const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+        document.dispatchEvent(event);
+
+        expect(event.defaultPrevented).to.be.false;
+      });
+    });
   });
 
   // Migrated from header.test.js's old "header mobile navigation" suite,
