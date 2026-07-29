@@ -10,12 +10,21 @@
   }
 }
 
+/* When the default 380px-wide, right-anchored placement would overflow the
+viewport (narrow screens), fall back to a full-width sheet pinned to the
+viewport edges instead of the anchor. */
+@position-try --results-popover-fullwidth {
+  inset: anchor(bottom) var(--s2-spacing-200) auto var(--s2-spacing-200);
+  width: auto;
+}
+
 .results-popover {
   display: block;
   pointer-events: none;
   position: fixed;
   position-anchor: --se-input;
   inset: anchor(bottom) anchor(right) auto auto;
+  position-try-fallbacks: --results-popover-fullwidth;
   border: none;
   border-radius: var(--s2-corner-radius-800);
   box-shadow: var(--s2-elevated-shadow);
