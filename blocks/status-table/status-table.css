@@ -190,7 +190,7 @@
     thead th {
       text-align: start;
       font-weight: var(--s2-component-m-bold-font-weight);
-      color: var(--s2-gray-700);
+      color: var(--s2-body-color);
       padding: var(--s2-spacing-200) var(--s2-spacing-300);
       border: none;
       background-color: light-dark(rgb(from var(--s2-gray-25) r g b / 70%), rgb(from var(--s2-gray-1000) r g b / 12%));
@@ -254,7 +254,7 @@
   }
 
   .status-table-card-definition {
-    color: var(--s2-gray-700);
+    color: var(--s2-body-color);
     font-size: var(--s2-component-s-regular-font-size);
     line-height: var(--s2-component-s-regular-line-height);
   }

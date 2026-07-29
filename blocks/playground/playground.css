@@ -105,7 +105,7 @@
     gap: var(--s2-spacing-100);
     font-size: var(--s2-component-m-regular-font-size);
     font-weight: var(--s2-component-m-bold-font-weight);
-    color: var(--s2-gray-700);
+    color: var(--s2-body-color);
     cursor: pointer;
     user-select: none;
     padding-inline: var(--s2-spacing-200);

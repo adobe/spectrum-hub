@@ -45,7 +45,7 @@
   tbody td {
     display: block;
     font-size: var(--s2-body-size-s);
-    color: var(--s2-gray-700);
+    color: var(--s2-body-color);
     font-weight: var(--s2-component-m-regular-font-weight);
     padding-block: var(--table-body-row-padding-block);
   }
