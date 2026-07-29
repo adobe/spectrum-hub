@@ -422,8 +422,12 @@
 
       .level-1-button[aria-expanded="true"] + .level-2-menu {
         display: block;
-        width: 100%;
-        margin-inline-start: 0;
+
+        /* level-2 view covers the full viewport */
+        position: fixed;
+        inset: 0;
+        padding: var(--s2-spacing-300) var(--s2-spacing-200) calc(var(--s2-spacing-300) + 32px + var(--s2-spacing-200));
+        overflow-y: auto;
       }
 
       /* Drilled into level-2: hide every other level-1 item, and hide the
