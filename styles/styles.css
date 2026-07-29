@@ -532,6 +532,11 @@ div[data-status],
       border-block-end: none;
     }
 
+    /* keeps the space between sections but hides the divider line */
+    main > .section.no-divider {
+      border-block-end: none;
+    }
+
     &[expand-sitenav],
     &:has(#sitenav [aria-expanded="true"]) {
       --sitenav-level-2-width: var(--sitenav-level-2-expanded-width);

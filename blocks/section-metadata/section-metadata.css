@@ -4,7 +4,6 @@
   --section-column-width: var(--se-grid-column-width);
   --section-radius: 0;
 
-  padding: var(--top-bottom-spacing) 0;
   border-radius: var(--section-radius);
 
   > * {
@@ -77,6 +76,10 @@
 
   &.spacing-xxl {
     --top-bottom-spacing: calc(var(--s2-spacing-600) * 2);
+  }
+
+  &:is(.spacing-xs, .spacing-s, .spacing-m, .spacing-l, .spacing-xl, .spacing-xxl) {
+    padding-block: var(--top-bottom-spacing);
   }
 
   &.grid .block-content {
