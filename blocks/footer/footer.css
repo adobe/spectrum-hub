@@ -1,7 +1,7 @@
 footer {
   display: unset;
   font-size: var(--s2-body-size-xxs);
-  color: var(--s2-gray-500);
+  color: var(--s2-gray-600);
 
   a {
     display: block;
