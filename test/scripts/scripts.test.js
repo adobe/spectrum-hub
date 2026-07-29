@@ -40,6 +40,44 @@ describe('scripts.js', () => {
     });
   });
 
+  describe('decorateArea — heading classes', () => {
+    afterEach(() => {
+      document.body.innerHTML = '';
+    });
+
+    it('applies a trailing {.class} attribute list to the heading and strips it', async () => {
+      document.body.innerHTML = '<h2>My heading {.heading-size-l}</h2>';
+      await loadPage();
+      const heading = document.querySelector('h2');
+      expect(heading.classList.contains('heading-size-l')).to.be.true;
+      expect(heading.textContent.trim()).to.equal('My heading');
+    });
+
+    it('applies multiple classes', async () => {
+      document.body.innerHTML = '<h3>My heading {.heading-size-m.text-center}</h3>';
+      await loadPage();
+      const heading = document.querySelector('h3');
+      expect(heading.classList.contains('heading-size-m')).to.be.true;
+      expect(heading.classList.contains('text-center')).to.be.true;
+    });
+
+    it('preserves inline markup while stripping the marker from the last text node', async () => {
+      document.body.innerHTML = '<h2>Some <strong>bold</strong> text {.heading-size-l}</h2>';
+      await loadPage();
+      const heading = document.querySelector('h2');
+      expect(heading.classList.contains('heading-size-l')).to.be.true;
+      expect(heading.querySelector('strong').textContent).to.equal('bold');
+      expect(heading.textContent.trim()).to.equal('Some bold text');
+    });
+
+    it('does not throw and adds no class when there is no attribute list', async () => {
+      document.body.innerHTML = '<h2>Plain heading</h2>';
+      await loadPage();
+      const heading = document.querySelector('h2');
+      expect(heading.className).to.equal('');
+    });
+  });
+
   describe('decorateArea — main id', () => {
     afterEach(() => {
       document.body.innerHTML = '';
