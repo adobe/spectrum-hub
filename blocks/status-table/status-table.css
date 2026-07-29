@@ -283,6 +283,17 @@
     }
   }
 
+  .status-table-export {
+    max-inline-size: max-content;
+    outline: none;
+
+    &:focus-visible {
+      outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+      outline-offset: var(--s2-spacing-50);
+      border-radius: 9px;
+    }
+  }
+
   .status-table-search-wrap {
     display: flex;
     align-items: center;
