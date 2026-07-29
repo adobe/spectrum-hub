@@ -25,12 +25,33 @@ function setCopiedIcon(button, copied) {
     : use.dataset.defaultHref);
 }
 
+const DECORATION_TIMEOUT = 8000;
+
+// watch for data-status="decorated" attribute to
+// change and only re-check once it is removed.
 function whenPageDecorated() {
-  return new Promise((resolve) => {
-    const check = () => (document.querySelector('[data-status]')
-      ? requestAnimationFrame(check)
-      : resolve());
-    check();
+  return new Promise((resolve, reject) => {
+    if (!document.querySelector('[data-status]')) {
+      resolve();
+      return;
+    }
+    let timer;
+    const observer = new MutationObserver(() => {
+      if (!document.querySelector('[data-status]')) {
+        observer.disconnect();
+        clearTimeout(timer);
+        resolve();
+      }
+    });
+    timer = setTimeout(() => {
+      observer.disconnect();
+      reject(new Error('Timed out waiting for the page to finish decorating'));
+    }, DECORATION_TIMEOUT);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['data-status'],
+      subtree: true,
+    });
   });
 }
 

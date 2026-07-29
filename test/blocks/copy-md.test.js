@@ -233,5 +233,25 @@ describe('copy-md block', () => {
       await clock.tickAsync(100);
       expect(clipboardStub.calledOnceWith('MARKDOWN(<h1>Loaded</h1>)')).to.be.true;
     });
+
+    it('falls back to the .md fetch (and disconnects its observer) if a section never finishes decorating', async () => {
+      const disconnectSpy = sinon.spy(MutationObserver.prototype, 'disconnect');
+      setMain('<h1>Loaded</h1>');
+      const section = document.createElement('div');
+      section.dataset.status = 'decorated'; // intentionally never cleared
+      document.body.append(section);
+
+      makeCopyButton().click();
+      await clock.tickAsync(0);
+      expect(clipboardStub.called).to.be.false;
+
+      await clock.tickAsync(8000);
+      expect(loaderStub.called).to.be.false;
+      expect(fetchStub.calledOnce).to.be.true;
+      expect(clipboardStub.calledOnceWith('# Page markdown')).to.be.true;
+      expect(disconnectSpy.calledOnce).to.be.true;
+
+      disconnectSpy.restore();
+    });
   });
 });
