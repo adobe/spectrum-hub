@@ -490,7 +490,7 @@ describe('status-table block', () => {
     return mql;
   }
 
-  describe('toolbar — sort header focusability at narrow widths', () => {
+  describe('toolbar — sort header accessibility at narrow widths', () => {
     it('keeps sort-header buttons out of the tab order below 900px', async () => {
       stubMatchMedia(sandbox, false);
       stubFetchOk();
@@ -501,28 +501,50 @@ describe('status-table block', () => {
       expect(buttons.every((b) => b.tabIndex === -1)).to.be.true;
     });
 
-    it('keeps sort-header buttons focusable at/above 900px', async () => {
+    it('hides sort-header buttons from screen readers below 900px', async () => {
+      stubMatchMedia(sandbox, false);
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const buttons = [...el.querySelectorAll('.status-table-sort-header')];
+      expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'true')).to.be.true;
+    });
+
+    it('keeps sort-header buttons focusable and exposed at/above 900px', async () => {
       stubMatchMedia(sandbox, true);
       stubFetchOk();
       const el = makeEl();
       await init(el);
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.tabIndex === 0)).to.be.true;
+      expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'false')).to.be.true;
     });
 
-    it('updates focusability live when the viewport crosses the breakpoint', async () => {
+    it('updates focusability and visibility live when the viewport crosses the breakpoint', async () => {
       const mql = stubMatchMedia(sandbox, true);
       stubFetchOk();
       const el = makeEl();
       await init(el);
       const button = el.querySelector('.status-table-sort-header');
       expect(button.tabIndex).to.equal(0);
+      expect(button.getAttribute('aria-hidden')).to.equal('false');
 
       mql.dispatch(false);
       expect(button.tabIndex).to.equal(-1);
+      expect(button.getAttribute('aria-hidden')).to.equal('true');
 
       mql.dispatch(true);
       expect(button.tabIndex).to.equal(0);
+      expect(button.getAttribute('aria-hidden')).to.equal('false');
+    });
+
+    it('keeps the column header\'s accessible name even when its button is hidden', async () => {
+      stubMatchMedia(sandbox, false);
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const figmaHeader = el.querySelector('thead th[data-col="figma"]');
+      expect(figmaHeader.getAttribute('aria-label')).to.equal('Figma');
     });
   });
 

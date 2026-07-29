@@ -431,6 +431,9 @@ const buildSorting = (table, columns, announce) => {
     button.addEventListener('click', () => {
       sortBy(id, activeId === id && direction === 'ascending' ? 'descending' : 'ascending');
     });
+    // Named independently of the button's content, so hiding the button below
+    // 900px (see syncHeaderAccessibility) doesn't blank out the column's name.
+    th.setAttribute('aria-label', text.textContent);
     th.replaceChildren(button);
     headers.set(id, th);
   };
@@ -440,17 +443,20 @@ const buildSorting = (table, columns, announce) => {
     if (sortable.some((c) => c.id === id)) { wireHeader(th, id); }
   }
 
-  // Below 900px the thead is visually clipped to 1px; without this its buttons
-  // would stay focusable — invisible focus with no on-screen indicator (WCAG 2.4.7).
+  // Below 900px the thead is visually clipped to 1px; tabindex=-1 and
+  // aria-hidden to remove it from the accessibility tree. (WCAG 2.4.7).
   const desktopMql = window.matchMedia('(width >= 900px)');
-  const syncHeaderFocusability = () => {
+  const syncHeaderAccessibility = () => {
     for (const [, th] of headers) {
       const button = th.querySelector('.status-table-sort-header');
-      if (button) { button.tabIndex = desktopMql.matches ? 0 : -1; }
+      if (button) {
+        button.tabIndex = desktopMql.matches ? 0 : -1;
+        button.setAttribute('aria-hidden', String(!desktopMql.matches));
+      }
     }
   };
-  syncHeaderFocusability();
-  desktopMql.addEventListener('change', syncHeaderFocusability);
+  syncHeaderAccessibility();
+  desktopMql.addEventListener('change', syncHeaderAccessibility);
 
   // The small-screen "Sort by" control: a column select plus a direction toggle.
   const control = document.createElement('div');
