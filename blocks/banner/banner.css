@@ -4,7 +4,7 @@
   display: flex;
   justify-content: center;
   font-size: var(--s2-body-size-s);
-  margin-block: var(--s2-spacing-300);
+  margin-block: var(--s2-spacing-400);
 
   /* Row */
   > div {
