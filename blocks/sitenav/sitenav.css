@@ -53,6 +53,11 @@
     margin: 0;
   }
 
+  p:has(strong) {
+    margin-block-start: var(--s2-spacing-400);
+    color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
+  }
+
   a {
     color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
     text-decoration: none;

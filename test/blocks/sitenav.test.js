@@ -239,6 +239,18 @@ describe('sitenav block', () => {
       expect(sitenav.hasAttribute('is-open')).to.be.false;
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
     });
+
+    it('still opens on the first tap when the current page pre-expanded a level-1-button', () => {
+      const level1Btn = document.createElement('button');
+      level1Btn.className = 'level-1-button';
+      level1Btn.setAttribute('aria-expanded', 'true');
+      sitenav.append(level1Btn);
+
+      btn.click();
+
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+    });
   });
 
   // Migrated from header.test.js's old "header mobile navigation" suite,

@@ -221,7 +221,10 @@ export const getExpandButton = async (sitenav) => {
   btn.addEventListener('click', () => {
     // On mobile, when a level-2 list is drilled into, close it along with the
     // sitenav rather than toggling the (desktop-only) expanded rail width.
+    // is-open is required here too so that any pre-expanded state alone makes the very first tap
+    // "close" the tray.
     const expandedLevel1 = isMobileViewport()
+      && sitenav.hasAttribute('is-open')
       && sitenav.querySelector('.level-1-button[aria-expanded="true"]');
     if (expandedLevel1) {
       closeSitenav(sitenav);
