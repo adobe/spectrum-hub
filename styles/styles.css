@@ -503,7 +503,9 @@ div[data-status],
       }
 
       p {
-        margin-block-end: var(--s2-spacing-400);
+        margin-block: var(--s2-spacing-400);
+        max-inline-size: 80ch;
+        margin-inline: auto;
       }
 
       main > .section,
