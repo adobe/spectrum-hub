@@ -359,6 +359,7 @@ svg.icon {
   flex-wrap: wrap;
   align-items: center;
   gap: 0 8px;
+  inline-size: 100%;
 
   input[type="checkbox"] {
     position: absolute;
@@ -528,12 +529,12 @@ svg.icon {
       anchor-name: --active-segment;
     }
 
-    &:nth-child(2) {
+    &:first-of-type {
       border-top-left-radius: var(--s2-corner-radius-400);
       border-bottom-left-radius: var(--s2-corner-radius-400);
     }
 
-    &:last-child {
+    &:last-of-type {
       border-top-right-radius: var(--s2-corner-radius-400);
       border-bottom-right-radius: var(--s2-corner-radius-400);
     }
@@ -561,6 +562,26 @@ svg.icon {
   }
 }
 
+/* Truncation */
+.se-inputfield > label,
+.se-segmentedcontrol-field > label {
+  max-inline-size: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.se-switch .se-switch-label-text,
+.se-segmentedcontrol fieldset legend span {
+  display: block;
+  max-inline-size: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
 /* Side-label layout */
 .se-inputfield.side-label,
 .se-switch.side-label label,
@@ -569,6 +590,7 @@ svg.icon {
   inline-size: 100%;
   gap: var(--s2-spacing-300);
   justify-content: space-between;
+  align-items: center;
 }
 
 .se-switch.side-label label {

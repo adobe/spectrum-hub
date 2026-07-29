@@ -252,10 +252,8 @@ function buildSeInputControl(inputType, eventName, property, currentValue, onCha
 function buildSegmentedControl(property, options, currentValue, onChange) {
   const control = document.createElement('se-segmentedcontrol');
   control.labelPosition = 'side';
+  control.label = property;
   const fieldset = document.createElement('fieldset');
-  const legend = document.createElement('legend');
-  legend.textContent = property;
-  fieldset.append(legend);
 
   options.forEach((opt) => {
     const label = document.createElement('label');

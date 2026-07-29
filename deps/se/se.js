@@ -263,7 +263,7 @@ class SESwitch extends SECheckbox {
         />
         <label for="${this.name}">
           <span class="se-switch-track"><span class="se-switch-thumb"></span></span>
-          <slot></slot>
+          <span class="se-switch-label-text"><slot></slot></span>
         </label>
         ${this.error ? html`<p class="se-inputfield-error-text">${this.error}</p>` : nothing}
       </div>
