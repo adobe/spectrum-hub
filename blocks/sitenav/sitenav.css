@@ -475,7 +475,7 @@ html:has(meta[name="template"][content="marketing"]) {
 }
 
 .dark-scheme {
-  nav, .level-2-menu, .sitenav-expand-btn::before {
+  nav:not(.page-nav), .level-2-menu, .sitenav-expand-btn::before {
     background-color: #ffffff0a;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
   }
