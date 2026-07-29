@@ -12,9 +12,6 @@ const hostnames = ['spectrum.adobe.com'];
 const linkBlocks = [
   { 'action-button': '/tools/widgets/action-button' },
   { search: '/tools/widgets/search-bar' },
-  { 'action-button': '/tools/widgets/copy-markdown' },
-  { 'action-button': '/tools/widgets/go-to-impl' },
-  { 'action-button': '/tools/widgets/see-in-figma' },
   { fragment: '/fragments/' },
   { schedule: '/schedules/' },
   { youtube: 'https://www.youtube' },

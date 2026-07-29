@@ -266,137 +266,22 @@ describe('action-button block', () => {
     });
   });
 
-  // Detailed widget behavior (Turndown conversion, Figma URL resolution, impl
-  // URL mapping) is unit-tested against each code-split module directly — see
+  // copy-markdown, go-to-impl, and see-in-figma are no longer owned by
+  // action-button.js — page-nav builds and decorates those widgets itself
+  // directly against copy-md.js/go-to-impl.js/figma.js (see
   // test/blocks/copy-md.test.js, test/blocks/go-to-impl.test.js and
-  // test/blocks/figma.test.js. These dispatch tests only verify that
-  // action-button.js routes to the right widget and lazily loads its module.
-
-  describe('/tools/widgets/copy-markdown — code-split dispatch', () => {
-    let fetchStub;
-    let clipboardStub;
-
-    beforeEach(() => {
-      fetchStub = sinon.stub(window, 'fetch').resolves({
-        ok: true,
-        text: async () => '# Page markdown',
+  // test/blocks/figma.test.js). Nothing links to those paths standalone
+  // anymore, so action-button.js correctly treats them as unknown pathnames.
+  describe('/tools/widgets/{copy-markdown,go-to-impl,see-in-figma} — no longer action-button widgets', () => {
+    it('leaves the anchor untouched (falls through like any unknown pathname)', () => {
+      ['copy-markdown', 'go-to-impl', 'see-in-figma'].forEach((name) => {
+        const a = makeAnchor({ href: `/tools/widgets/${name}`, text: name });
+        document.body.append(a);
+        actionButton(a);
+        expect(a.tagName).to.equal('A');
+        a.remove();
       });
-      clipboardStub = sinon.stub(navigator.clipboard, 'writeText').resolves();
-    });
-
-    afterEach(() => {
-      fetchStub.restore();
-      clipboardStub.restore();
-    });
-
-    it('replaces the anchor with a <button>', () => {
-      const a = makeAnchor({ href: '/tools/widgets/copy-markdown', text: 'Copy markdown' });
-      document.body.append(a);
-      actionButton(a);
-      expect(document.body.querySelector('button')).to.not.be.null;
-      expect(document.body.querySelector('a')).to.be.null;
-    });
-
-    it('click lazily loads copy-md.js and copies the page markdown to the clipboard', async () => {
-      const a = makeAnchor({ href: '/tools/widgets/copy-markdown', text: 'Copy markdown' });
-      document.body.append(a);
-      actionButton(a);
-      document.body.querySelector('button').click();
-      // The dynamic import() of copy-md.js and its requestAnimationFrame-based
-      // wait for in-flight sections are real (not fake-timer-controlled), so
-      // poll for the clipboard call rather than a single microtask flush.
-      await new Promise((resolve, reject) => {
-        const start = Date.now();
-        (function poll() {
-          if (clipboardStub.called) {
-            resolve();
-            return;
-          }
-          if (Date.now() - start > 2000) {
-            reject(new Error('timed out waiting for clipboard write'));
-            return;
-          }
-          setTimeout(poll, 10);
-        }());
-      });
-      expect(clipboardStub.calledOnceWith('# Page markdown')).to.be.true;
-    });
-  });
-
-  describe('/tools/widgets/go-to-impl — link widget dispatch', () => {
-    let originalUrl;
-
-    beforeEach(() => {
-      originalUrl = window.location.pathname + window.location.search + window.location.hash;
-    });
-
-    afterEach(() => {
-      window.history.pushState({}, '', originalUrl);
-    });
-
-    it('stays an anchor and deep-links to the resolved implementation', async () => {
-      window.history.pushState({}, '', '/web/swc/components/action-button');
-      const a = makeAnchor({ href: '/tools/widgets/go-to-impl', text: 'Go to implementation' });
-      document.body.append(a);
-      await actionButton(a);
       expect(document.body.querySelector('button')).to.be.null;
-      const link = document.body.querySelector('[data-widget="go-to-impl"]');
-      expect(link).to.not.be.null;
-      expect(link.getAttribute('href')).to.equal(
-        'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
-      );
-    });
-
-    it('removes itself when the page is not a component page', async () => {
-      window.history.pushState({}, '', '/web/swc/get-started');
-      const a = makeAnchor({ href: '/tools/widgets/go-to-impl', text: 'Go to implementation' });
-      document.body.append(a);
-      await actionButton(a);
-      expect(document.body.querySelector('[data-widget="go-to-impl"]')).to.be.null;
-    });
-  });
-
-  describe('/tools/widgets/see-in-figma — link widget dispatch', () => {
-    let originalUrl;
-    let fetchStub;
-
-    beforeEach(() => {
-      originalUrl = window.location.pathname + window.location.search + window.location.hash;
-      fetchStub = sinon.stub(window, 'fetch');
-    });
-
-    afterEach(() => {
-      fetchStub.restore();
-      window.history.pushState({}, '', originalUrl);
-    });
-
-    it('stays an anchor and deep-links to the resolved Figma frame', async () => {
-      fetchStub.resolves({
-        ok: true,
-        json: async () => [{ name: 'Action button', figmaPageId: '9230:3620' }],
-      });
-      window.history.pushState({}, '', '/web/swc/components/action-button');
-      const a = makeAnchor({ href: '/tools/widgets/see-in-figma', text: 'See in Figma' });
-      document.body.append(a);
-      await actionButton(a);
-      expect(document.body.querySelector('button')).to.be.null;
-      const link = document.body.querySelector('[data-widget="see-in-figma"]');
-      expect(link).to.not.be.null;
-      expect(link.getAttribute('href')).to.equal(
-        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
-      );
-    });
-
-    it('removes itself when the component has no Figma entry', async () => {
-      fetchStub.resolves({
-        ok: true,
-        json: async () => [{ name: 'Accordion', figmaPageId: '10093:987' }],
-      });
-      window.history.pushState({}, '', '/web/swc/components/action-button');
-      const a = makeAnchor({ href: '/tools/widgets/see-in-figma', text: 'See in Figma' });
-      document.body.append(a);
-      await actionButton(a);
-      expect(document.body.querySelector('[data-widget="see-in-figma"]')).to.be.null;
     });
   });
 });
