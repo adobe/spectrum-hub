@@ -13,7 +13,8 @@
     "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
-    "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js"
+    "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js",
+    "build:turndown": "esbuild --format=esm --minify ./deps/turndown/src/index.js --bundle --outfile=./deps/turndown/dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -42,6 +43,8 @@
   },
   "dependencies": {
     "esbuild": "^0.28.0",
-    "lit": "^3.3.1"
+    "lit": "^3.3.1",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }

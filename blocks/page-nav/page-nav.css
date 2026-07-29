@@ -6,18 +6,21 @@ from the DOM and the accessibility tree (see page-nav.js). */
 
 @media (width >= 900px) {
   .page-nav {
+    --pagenav-clamp-preferred-width: calc(100% - var(--pagenav-track-width));
+
     display: block;
     position: sticky;
-    inset-block-start: calc(var(--sh-header-height) + var(--s2-spacing-100) + 32px); /* match the margin beneath the header so the page nav sticks in place */
-    align-self: start;
+    inset-block-start: var(--sh-header-height); /* match the header so the page nav sticks in place */
+    max-inline-size: max-content;
     max-block-size: calc(100vh - var(--sh-header-height, 0px));
-    padding-block: var(--s2-spacing-200);
     font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
-    color: var(--se-body-color, var(--s2-gray-1000));
+    color:  var(--s2-gray-700);
+    margin-inline-start: clamp(var(--pagenav-inline-start-margin), var(--pagenav-clamp-preferred-width), 100%);
     
     & ul {
+      border-inline-start: 2px solid rgb(from var(--s2-gray-1000) r g b / 12%);
       list-style: none;
       margin: 0;
       padding: 0;
@@ -28,27 +31,54 @@ from the DOM and the accessibility tree (see page-nav.js). */
     }
   }
 
-  .page-nav a {
+  .page-nav ul a {
     display: block;
     padding-block: var(--s2-spacing-100);
     padding-inline: var(--s2-spacing-200);
-    border-radius: var(--s2-corner-radius-300);
     color: inherit;
     text-decoration: none;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0 -2px;
+      inline-size: 2px;
+      block-size: 100%;
+      border-radius: 2px;
+    }
 
     &:hover {
-      background-color: rgb(from var(--se-body-color) r g b / 8%);
+      color: var(--s2-gray-1000);
+    }
+
+    &:hover::after {
+      background-color: rgb(from var(--se-body-color) r g b / 32%);
     }
 
     &:focus-visible {
       outline: 2px solid var(--s2-blue-900);
       outline-offset: var(--s2-spacing-50);
+      border-radius: 9px;
+      color: var(--s2-gray-1000);
     }
   }
 
-  .page-nav a[aria-current="location"] {
-    background-color: rgb(from var(--s2-gray-1000) r g b / 16%);
+  .page-nav ul a[aria-current="location"] {
     font-weight: var(--s2-component-m-bold-font-weight);
+    color: var(--s2-gray-1000);
+
+    &::after {
+      background-color: var(--s2-gray-1000);
+    }
+  }
+
+  .page-nav > .page-nav-widgets {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s2-spacing-100);
+    margin-block-start: var(--s2-spacing-700);
   }
 }
 

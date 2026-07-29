@@ -64,7 +64,7 @@ function getLinkProps(a) {
   }, {});
 }
 
-export default function actionButton(a) {
+export default async function actionButton(a) {
   const props = getLinkProps(a);
   if (props.style) { a.classList.add(`action-button-${props.style}`); }
 
@@ -74,10 +74,16 @@ export default function actionButton(a) {
   if (props.label === 'hide') { span.classList.add('visually-hidden'); }
   a.lastChild.replaceWith(span);
 
-  const buttonProps = BUTTONS[a.hash.replace('#', '')];
+  // The widget name (last path segment) is stamped as data-widget.
+  const widget = a.pathname.split('/').filter(Boolean).pop();
+
+  // Hash-based widgets (#action, #scheme, ...) key off the hash; path-based
+  // widgets (e.g. search) carry no hash and key off the widget name.
+  const buttonProps = BUTTONS[a.hash.replace('#', '')] ?? BUTTONS[widget];
   if (buttonProps) {
     const button = document.createElement('button');
     button.className = a.className;
+    button.dataset.widget = widget;
     if (buttonProps.click) {
       button.addEventListener('click', buttonProps.click);
     }

@@ -8,7 +8,9 @@ import { setConfig } from '../../scripts/ak.js';
 const logStub = sinon.stub();
 setConfig({ log: logStub });
 
-const { default: actionButton } = await import('../../blocks/action-button/action-button.js');
+const {
+  default: actionButton,
+} = await import('../../blocks/action-button/action-button.js');
 
 function makeAnchor({ href = '/unknown', title = 'label:Button', text = 'Click' } = {}) {
   const a = document.createElement('a');
@@ -136,6 +138,13 @@ describe('action-button block', () => {
       expect(document.body.querySelector('button span').textContent).to.equal('Action');
     });
 
+    it('stamps the widget name (last path segment) onto the button as data-widget', () => {
+      const a = makeAnchor({ href: '/tools/widgets/action' });
+      document.body.append(a);
+      actionButton(a);
+      expect(document.body.querySelector('button').dataset.widget).to.equal('action');
+    });
+
     it('click does not throw (no handler is attached)', () => {
       const a = makeAnchor({ href: '/tools/widgets/action#action' });
       document.body.append(a);
@@ -254,6 +263,25 @@ describe('action-button block', () => {
       actionButton(a);
       document.body.querySelector('button').click();
       expect(logStub.calledWith('You clicked settings')).to.be.true;
+    });
+  });
+
+  // copy-markdown, go-to-impl, and see-in-figma are no longer owned by
+  // action-button.js — page-nav builds and decorates those widgets itself
+  // directly against copy-md.js/go-to-impl.js/figma.js (see
+  // test/blocks/copy-md.test.js, test/blocks/go-to-impl.test.js and
+  // test/blocks/figma.test.js). Nothing links to those paths standalone
+  // anymore, so action-button.js correctly treats them as unknown pathnames.
+  describe('/tools/widgets/{copy-markdown,go-to-impl,see-in-figma} — no longer action-button widgets', () => {
+    it('leaves the anchor untouched (falls through like any unknown pathname)', () => {
+      ['copy-markdown', 'go-to-impl', 'see-in-figma'].forEach((name) => {
+        const a = makeAnchor({ href: `/tools/widgets/${name}`, text: name });
+        document.body.append(a);
+        actionButton(a);
+        expect(a.tagName).to.equal('A');
+        a.remove();
+      });
+      expect(document.body.querySelector('button')).to.be.null;
     });
   });
 });

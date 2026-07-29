@@ -1,3 +1,76 @@
+import { getSvgRef } from '../../scripts/utils/svg.js';
+
+// Widgets shown on every interior page.
+const GLOBAL_WIDGETS = new Set(['copy-markdown']);
+
+export function isComponentPath(pathname) {
+  return pathname.split('/').includes('components');
+}
+
+export function shouldRenderWidget(name, isComponentPage) {
+  return isComponentPage || GLOBAL_WIDGETS.has(name);
+}
+
+function makeWidgetElement(tag, name, label, icon) {
+  const widgetEl = document.createElement(tag);
+  widgetEl.className = 'action-button action-button-quiet';
+  widgetEl.dataset.widget = name;
+  widgetEl.append(getSvgRef(icon, 'icon'));
+  const span = document.createElement('span');
+  span.textContent = label;
+  widgetEl.append(span);
+  return widgetEl;
+}
+
+// Each widget's per-page decoration
+async function decorateCopyMarkdown(button) {
+  const { handleCopyMarkdown } = await import('../../scripts/utils/copy-md.js');
+  button.addEventListener('click', handleCopyMarkdown);
+}
+
+async function decorateGoToImplWidget(a) {
+  const { decorateGoToImpl } = await import('../../scripts/utils/go-to-impl.js');
+  await decorateGoToImpl(a, a.querySelector('span'));
+}
+
+async function decorateSeeInFigmaWidget(a) {
+  const { decorateSeeInFigma } = await import('../../scripts/utils/figma.js');
+  await decorateSeeInFigma(a, a.querySelector('span'));
+}
+
+const WIDGETS = [
+  {
+    name: 'copy-markdown', tag: 'button', label: 'Copy markdown', icon: 'copy', decorate: decorateCopyMarkdown,
+  },
+  {
+    name: 'go-to-impl', tag: 'a', label: 'Go to implementation', icon: 'openin', decorate: decorateGoToImplWidget,
+  },
+  {
+    name: 'see-in-figma', tag: 'a', label: 'See in Figma', icon: 'vectordraw', decorate: decorateSeeInFigmaWidget,
+  },
+];
+
+// Builds and decorates the URL-appropriate widget buttons/links and appends
+// them below the nav's table of contents. Widgets that decorate themselves away
+async function renderWidgets(el) {
+  const isComponentPage = isComponentPath(window.location.pathname);
+  const candidates = WIDGETS.filter(({ name }) => shouldRenderWidget(name, isComponentPage));
+  if (!candidates.length) { return; }
+
+  const group = document.createElement('div');
+  group.className = 'page-nav-widgets';
+
+  const elements = candidates.map(
+    ({ tag, name, label, icon }) => makeWidgetElement(tag, name, label, icon),
+  );
+  group.append(...elements);
+
+  await Promise.all(candidates.map(({ decorate }, i) => decorate(elements[i])));
+
+  if (!group.children.length) { return; }
+  el.append(group);
+}
+
 function slugify(text) {
   return text
     .toLowerCase()
@@ -30,25 +103,44 @@ function watchScrollSpy(headings, linkById) {
     .getPropertyValue('--sh-header-height').trim() || '56px';
   const rootMargin = `-${navHeight} 0px -50% 0px`;
 
+  // Without this, clicking a link whose heading is already in the band (e.g.
+  // the first section while at the top of the page) produces only an "exit"
+  // event for the heading scrolling away
+  const visible = new Set();
+
   const observer = new IntersectionObserver((entries) => {
-    const visible = entries.filter((e) => e.isIntersecting).map((e) => e.target);
-    if (!visible.length) {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        visible.add(e.target);
+      } else {
+        visible.delete(e.target);
+      }
+    });
+    if (!visible.size) {
       return;
     }
-    visible.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-    setActive(visible[0].id);
+    const topmost = [...visible].sort(
+      (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+    )[0];
+    setActive(topmost.id);
   }, { rootMargin });
 
   headings.forEach((h) => observer.observe(h));
 }
 
 export default async function init(el) {
+  // Guard against a second decoration
+  if (el.dataset.pageNav) {
+    return;
+  }
+
   const headings = [...document.querySelectorAll('main h2')].filter(
     (h) => !el.contains(h),
   );
   if (!headings.length) {
     return;
   }
+  el.dataset.pageNav = 'ready';
 
   // Assign ids and make headings focusable. Tabindex="-1" is set
   // on every heading so clicking a page-nav link moves focus to the target
@@ -114,6 +206,10 @@ export default async function init(el) {
   }
 
   el.append(list);
+
+  // URL-scoped widgets (copy markdown / see-in-figma / go-to-impl)
+  // sit below the table of contents.
+  await renderWidgets(el);
 
   // The nav is a desktop-only side rail (see detail template grid at >=900px).
   // Below that it is removed from the DOM and the accessibility tree entirely: a

@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import init from '../../blocks/page-nav/page-nav.js';
+import init, { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
   const main = document.createElement('main');
@@ -32,6 +32,30 @@ function stubMatchMedia(sandbox, matches = false) {
   };
   sandbox.stub(window, 'matchMedia').returns(mql);
   return mql;
+}
+
+// Replaces the real IntersectionObserver so the scroll spy can be driven
+// deterministically: `trigger` invokes the captured callback with the entries
+// the browser would report as headings cross the active band. The real
+// observer never fires under a test's static layout, which is why the
+// scroll-spy regression below went unnoticed until exercised this way.
+function stubIntersectionObserver(sandbox) {
+  const state = { cb: null, targets: [], count: 0 };
+  class FakeIntersectionObserver {
+    constructor(cb) { state.cb = cb; state.count += 1; }
+
+    observe(target) { state.targets.push(target); }
+
+    unobserve() {}
+
+    disconnect() {}
+  }
+  sandbox.stub(window, 'IntersectionObserver').value(FakeIntersectionObserver);
+  return {
+    trigger: (entries) => state.cb(entries),
+    get targets() { return state.targets; },
+    get count() { return state.count; },
+  };
 }
 
 describe('page-nav block', () => {
@@ -139,6 +163,71 @@ describe('page-nav block', () => {
     });
   });
 
+  describe('scroll spy keeps the active link in sync with the visible heading', () => {
+    // Regression: the observer only reports headings whose intersection
+    // *changed*. When the page is at the top, both the h1 and the first section
+    // sit inside the active band, so clicking the first link scrolls the h1 out
+    // and reports ONLY the h1's exit — no entry for the first section, which was
+    // already (and stays) intersecting. The callback must still re-select the
+    // first section as the topmost visible heading rather than bailing on the
+    // exit-only batch and leaving the previous heading active.
+    it('activates the first link on the first click when its heading is already in the band', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      await init(el);
+
+      const h1 = document.querySelector('main h1');
+      const headings = [...document.querySelectorAll('main h1, main h2')];
+      const firstLink = el.querySelector('ul li:first-child a');
+
+      // At the top of the page the h1 and every section are in the band; the
+      // topmost (h1) is active, so no section link is marked yet.
+      io.trigger(headings.map((target) => ({ target, isIntersecting: true })));
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+
+      // Clicking the first link scrolls the h1 out of the band. The observer
+      // reports only that exit; the first section is now the topmost visible.
+      io.trigger([{ target: h1, isIntersecting: false }]);
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('moves aria-current to the next section and clears the previous one', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      await init(el);
+
+      const [sectionOne, sectionTwo] = [...document.querySelectorAll('main h2')];
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul li a')];
+
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+
+      // Section two scrolls in and section one scrolls out.
+      io.trigger([
+        { target: sectionTwo, isIntersecting: true },
+        { target: sectionOne, isIntersecting: false },
+      ]);
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+  });
+
+  describe('init is idempotent — a second decoration does not duplicate anything', () => {
+    it('does not append a second list or attach a second observer when run twice', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+
+      await init(el);
+      await init(el);
+
+      expect(el.querySelectorAll(':scope > ul').length).to.equal(1);
+      expect(io.count).to.equal(1);
+    });
+  });
+
   describe('init when h1 is absent', () => {
     it('does not include a back-to-top link', async () => {
       stubMatchMedia(sandbox, true);
@@ -213,6 +302,108 @@ describe('page-nav block', () => {
       makeDOM();
       await init(el);
       expect(document.querySelector('main h1').classList.contains('page-nav-target')).to.be.true;
+    });
+  });
+
+  describe('isComponentPath — widget URL gate', () => {
+    it('is true when "components" is a path segment', () => {
+      expect(isComponentPath('/web/swc/components/button')).to.be.true;
+    });
+
+    it('is false for a non-component interior page', () => {
+      expect(isComponentPath('/web/swc/get-started')).to.be.false;
+    });
+
+    it('is false for the home page', () => {
+      expect(isComponentPath('/')).to.be.false;
+    });
+
+    it('does not match a partial segment such as "componentsx"', () => {
+      expect(isComponentPath('/web/swc/componentsx/button')).to.be.false;
+    });
+  });
+
+  describe('shouldRenderWidget — which widgets survive the URL filter', () => {
+    it('renders a global widget (copy-markdown) on a non-component page', () => {
+      expect(shouldRenderWidget('copy-markdown', false)).to.be.true;
+    });
+
+    it('renders a global widget on a component page too', () => {
+      expect(shouldRenderWidget('copy-markdown', true)).to.be.true;
+    });
+
+    it('hides a non-global widget on a non-component page', () => {
+      expect(shouldRenderWidget('see-in-figma', false)).to.be.false;
+    });
+
+    it('renders a non-global widget on a component page', () => {
+      expect(shouldRenderWidget('see-in-figma', true)).to.be.true;
+    });
+  });
+
+  // page-nav builds and decorates its widgets directly (no fragment, no
+  // action-button dispatch) — each widget's own decoration is lazily loaded
+  // from its code-split block module (copy-md.js / go-to-impl.js / figma.js).
+  describe('renderWidgets', () => {
+    let originalUrl;
+    let fetchStub;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      stubMatchMedia(sandbox, true);
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true,
+        json: async () => [{ name: 'Action button', figmaPageId: '9230:3620' }],
+      });
+      makeDOM();
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    it('renders all three decorated widgets, above the TOC, on a component page', async () => {
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      await init(el);
+
+      const group = el.querySelector('.page-nav-widgets');
+      expect(group).to.not.be.null;
+      // widgets group sits below the heading TOC list
+      expect(group.previousElementSibling).to.equal(el.querySelector('ul'));
+
+      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
+      expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl', 'see-in-figma']);
+
+      // copy-markdown becomes a button; the two link widgets stay anchors with
+      // their URL-derived hrefs.
+      expect(group.querySelector('[data-widget="copy-markdown"]').tagName).to.equal('BUTTON');
+      expect(group.querySelector('a[data-widget="go-to-impl"]').getAttribute('href')).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
+      );
+      expect(group.querySelector('a[data-widget="see-in-figma"]').getAttribute('href')).to.equal(
+        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
+      );
+    });
+
+    it('renders only copy-markdown on a non-component interior page', async () => {
+      window.history.pushState({}, '', '/web/swc/get-started');
+      await init(el);
+
+      const group = el.querySelector('.page-nav-widgets');
+      expect(group).to.not.be.null;
+      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
+      expect(rendered).to.deep.equal(['copy-markdown']);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
+      fetchStub.resolves({ ok: true, json: async () => [] });
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      await init(el);
+
+      const group = el.querySelector('.page-nav-widgets');
+      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
+      expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
     });
   });
 });
