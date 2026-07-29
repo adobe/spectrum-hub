@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { resolveFigmaUrl, decorateSeeInFigma } from '../../blocks/figma/figma.js';
+import { resolveFigmaUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
 
 function makeAnchor(text = 'See in Figma') {
   const a = document.createElement('a');

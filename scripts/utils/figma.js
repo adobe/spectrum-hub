@@ -1,4 +1,4 @@
-import { getConfig } from '../../scripts/ak.js';
+import { getConfig } from '../ak.js';
 
 // TODO: ensure this actually works once the status-table block has merged
 // The S2 Figma file; each component's frame is addressed by node id.

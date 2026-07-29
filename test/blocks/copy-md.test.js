@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 
-const { handleCopyMarkdown, turndownLoader } = await import('../../blocks/copy-md/copy-md.js');
+const { handleCopyMarkdown, turndownLoader } = await import('../../scripts/utils/copy-md.js');
 
 function makeCopyButton(text = 'Copy markdown') {
   const button = document.createElement('button');

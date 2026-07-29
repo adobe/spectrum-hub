@@ -1,5 +1,5 @@
 import { expect } from '@esm-bundle/chai';
-import { resolveImplementation, decorateGoToImpl } from '../../blocks/go-to-impl/go-to-impl.js';
+import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
 
 function makeAnchor(text = 'Go to implementation') {
   const a = document.createElement('a');

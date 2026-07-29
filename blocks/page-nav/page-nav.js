@@ -24,17 +24,17 @@ function makeWidgetElement(tag, name, label, icon) {
 
 // Each widget's per-page decoration
 async function decorateCopyMarkdown(button) {
-  const { handleCopyMarkdown } = await import('../copy-md/copy-md.js');
+  const { handleCopyMarkdown } = await import('../../scripts/utils/copy-md.js');
   button.addEventListener('click', handleCopyMarkdown);
 }
 
 async function decorateGoToImplWidget(a) {
-  const { decorateGoToImpl } = await import('../go-to-impl/go-to-impl.js');
+  const { decorateGoToImpl } = await import('../../scripts/utils/go-to-impl.js');
   await decorateGoToImpl(a, a.querySelector('span'));
 }
 
 async function decorateSeeInFigmaWidget(a) {
-  const { decorateSeeInFigma } = await import('../figma/figma.js');
+  const { decorateSeeInFigma } = await import('../../scripts/utils/figma.js');
   await decorateSeeInFigma(a, a.querySelector('span'));
 }
 
