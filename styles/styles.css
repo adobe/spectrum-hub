@@ -520,9 +520,14 @@ div[data-status],
 
     /* all other pages */
     main > .section {
-      padding-inline: 64px;
       padding-block: 120px;
       border-block-end: 1px solid rgb(from var(--s2-gray-1000) r g b / 8%);
+    }
+
+    @media (width > 900px) {
+      main > .section {
+        padding-inline: 64px;
+      }
     }
 
     main > .section:first-of-type {
