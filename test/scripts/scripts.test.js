@@ -1,4 +1,5 @@
 import { expect } from '@esm-bundle/chai';
+import sinon from 'sinon';
 import { loadPage } from '../../scripts/scripts.js';
 
 describe('scripts.js', () => {
@@ -63,36 +64,111 @@ describe('scripts.js', () => {
     });
   });
 
-  describe('decorateArea — breadcrumbs', () => {
+  describe('decorateArea — page header', () => {
+    let sandbox;
     const originalHref = window.location.href;
 
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+    });
+
     afterEach(() => {
+      sandbox.restore();
       document.body.innerHTML = '';
       window.history.pushState({}, '', originalHref);
+      // Guaranteed cleanup even if an assertion above throws — a leaked <meta
+      // name="template"> would otherwise silently affect every later test in the suite.
+      document.head.querySelector('meta[name="template"]')?.remove();
     });
 
-    it('prepends a breadcrumbs nav as the first child of main on a component page', async () => {
+    it('does not build a page header on a marketing-template page', async () => {
+      const meta = document.createElement('meta');
+      meta.name = 'template';
+      meta.content = 'marketing';
+      document.head.append(meta);
+      document.body.innerHTML = '<main><div><h1>Landing</h1></div></main>';
+      await loadPage();
+      expect(document.querySelector('.page-hero')).to.be.null;
+    });
+
+    it('does not build a page header when there is no h1', async () => {
+      document.body.innerHTML = '<main><div><p>No heading here</p></div></main>';
+      await loadPage();
+      expect(document.querySelector('.page-hero')).to.be.null;
+    });
+
+    it('wraps a bare h1 in a page header on any non-marketing page', async () => {
       window.history.pushState({}, '', '/web/swc/components/button');
-      document.body.innerHTML = '<main><h1>Button</h1></main>';
+      document.body.innerHTML = '<main><div><h1>Button</h1></div></main>';
       await loadPage();
-      const main = document.querySelector('main');
-      expect(main.firstElementChild.classList.contains('breadcrumbs')).to.be.true;
-      expect(main.firstElementChild.textContent).to.include('SWC');
+      const header = document.querySelector('.page-hero');
+      expect(header).to.not.be.null;
+      expect(header.firstElementChild.tagName).to.equal('H1');
     });
 
-    it('does not add a breadcrumbs nav when the path is not a component page', async () => {
-      window.history.pushState({}, '', '/web/overview');
-      document.body.innerHTML = '<main><h1>Overview</h1></main>';
+    it('wraps a bare h1 in a page header on a page with no "components" segment at all', async () => {
+      window.history.pushState({}, '', '/guidelines/color');
+      document.body.innerHTML = '<main><div><h1>Color</h1></div></main>';
       await loadPage();
-      expect(document.querySelector('main .breadcrumbs')).to.be.null;
+      expect(document.querySelector('.page-hero')).to.not.be.null;
     });
 
-    it('does not add a second breadcrumbs nav when one is already present', async () => {
+    it('includes the immediately-following paragraph as the description', async () => {
       window.history.pushState({}, '', '/web/swc/components/button');
-      document.body.innerHTML = '<main><h1>Button</h1></main>';
+      document.body.innerHTML = '<main><div><h1>Button</h1><p>A clickable action.</p></div></main>';
       await loadPage();
+      const header = document.querySelector('.page-hero');
+      expect(header.children[0].tagName).to.equal('H1');
+      expect(header.children[1].tagName).to.equal('P');
+      expect(header.children[1].textContent).to.equal('A clickable action.');
+    });
+
+    it('does not pull in a paragraph that is not immediately after the h1', async () => {
+      window.history.pushState({}, '', '/web/swc/components/button');
+      document.body.innerHTML = `
+        <main><div>
+          <h1>Button</h1>
+          <div class="component-status"></div>
+          <p>Not a description.</p>
+        </div></main>
+      `;
+      sandbox.stub(window, 'fetch').resolves(new Response('', { status: 404 }));
       await loadPage();
-      expect(document.querySelectorAll('main .breadcrumbs').length).to.equal(1);
+      expect(document.querySelector('.page-hero').querySelector('p')).to.be.null;
+    });
+
+    it('composes an existing breadcrumbs block and component-status block around the h1', async () => {
+      window.history.pushState({}, '', '/web/swc/components/button');
+      document.body.innerHTML = `
+        <main><div>
+          <div class="breadcrumbs"></div>
+          <h1>Button</h1>
+          <p>A clickable action.</p>
+          <div class="component-status"></div>
+        </div></main>
+      `;
+      sandbox.stub(window, 'fetch').callsFake((url) => {
+        if (String(url).includes('figma')) {
+          return Promise.resolve(new Response('[]', { status: 200 }));
+        }
+        const index = {
+          components: [{
+            name: 'Button',
+            platforms: { web: { swc: { status: 'available' } } },
+          }],
+        };
+        return Promise.resolve(new Response(JSON.stringify(index), { status: 200 }));
+      });
+
+      await loadPage();
+
+      const header = document.querySelector('.page-hero');
+      const tags = [...header.children].map((child) => child.tagName);
+      expect(tags).to.deep.equal(['DIV', 'H1', 'P', 'DIV']);
+      expect(header.children[0].classList.contains('breadcrumbs')).to.be.true;
+      expect(header.children[3].classList.contains('component-status')).to.be.true;
+      expect(header.querySelector('.breadcrumbs').textContent).to.include('SWC');
+      expect(header.querySelectorAll('.component-status-pill').length).to.equal(1);
     });
   });
 });
