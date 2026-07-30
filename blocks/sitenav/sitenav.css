@@ -27,25 +27,20 @@
     position: relative;
     anchor-name: --sitenav;
     box-sizing: border-box;
-  }
+    width: var(--sitenav-nav-width);
+    margin-inline-start: var(--sitenav-inline-start-margin);
+    border-radius: var(--sitenav-corner-radius);
+    overflow: hidden;
+    padding: var(--s2-spacing-300) var(--s2-spacing-200);
 
-  @media (width >= 900px) {
-    nav {
-      width: var(--sitenav-nav-width);
-      margin-inline-start: var(--sitenav-inline-start-margin);
-      border-radius: var(--sitenav-corner-radius);
-      overflow: hidden;
-      padding: var(--s2-spacing-300) var(--s2-spacing-200);
-
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        backdrop-filter: blur(var(--sitenav-blur));
-        pointer-events: none;
-        transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
-      }
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      backdrop-filter: blur(var(--sitenav-blur));
+      pointer-events: none;
+      transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
     }
   }
 
@@ -142,19 +137,14 @@
     margin: 0;
     padding: 0;
     list-style-type: none;
-  }
+    display: grid;
 
-  @media (width >= 900px) {
-    ul.level-1-list {
-      display: grid;
-
-      /* Without an explicit track, .level-1-button's real box (and its focus ring) 
-      extends far past the 32px closed rail, with only its left edge visible. */
-      grid-template-columns: minmax(0, 1fr);
-      gap: var(--s2-spacing-100);
-      overflow: hidden;
-      transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
-    }
+    /* Without an explicit track, .level-1-button's real box (and its focus ring) 
+    extends far past the 32px closed rail, with only its left edge visible. */
+    /* grid-template-columns: minmax(0, 1fr); */
+    gap: var(--s2-spacing-100);
+    overflow: hidden;
+    transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
   }
 
   .level-1-button {
@@ -179,20 +169,17 @@
   .level-2-menu {
     box-sizing: border-box;
     transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
-
-    @media (width >= 900px) {
-      width: var(--sitenav-level-2-width);
-      max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
-      padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
-      position: fixed;
-      position-anchor: --sitenav;
-      top: anchor(top);
-      left: anchor(right);
-      border-radius: var(--sitenav-corner-radius);
-      backdrop-filter: blur(var(--sitenav-blur));
-      margin-inline-start: var(--s2-spacing-85);
-      overflow-y: auto;
-    }
+    width: var(--sitenav-level-2-width);
+    max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
+    padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
+    position: fixed;
+    position-anchor: --sitenav;
+    top: anchor(top);
+    left: anchor(right);
+    border-radius: var(--sitenav-corner-radius);
+    backdrop-filter: blur(var(--sitenav-blur));
+    margin-inline-start: var(--s2-spacing-85);
+    overflow-y: auto;
 
     > * {
       display: block;
@@ -322,10 +309,7 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-
-    @media (width >= 900px) {
-      margin-block-start: var(--expand-toggle-top-margin);
-    }
+    margin-block-start: var(--expand-toggle-top-margin);
 
     &:hover {
       --expand-panel-width: 5px;
@@ -338,115 +322,12 @@
     }
   }
 
-  button.sitenav-back-btn {
-    display: none;
-    width: auto;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--s2-spacing-85);
-    margin-block-end: var(--s2-spacing-200);
-    color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
-
-    .icon {
-      width: 10px;
-      height: 10px;
-    }
-
-    &:hover {
-      color: var(--s2-gray-800);
-    }
-  }
-
   &[is-open] {
     --sitenav-corner-radius: var(--s2-corner-radius-950);
     --expand-panel-width: 5px;
 
     .sitenav-expand-btn:hover {
       --expand-panel-width: 1.5px;
-    }
-  }
-
-  /* Below 900px there's no room for the level-2 flyout, so both the level-1
-  and level-2 lists collapse behind a floating toggle pinned to the
-  bottom-start corner. */
-  @media (width < 900px) {
-    ul.level-1-list,
-    .level-2-menu {
-      display: none;
-    }
-
-    .sitenav-expand-btn {
-      position: fixed;
-      inset-inline-start: var(--s2-spacing-200);
-      inset-block-end: var(--s2-spacing-200);
-      z-index: 1;
-      border-radius: var(--s2-corner-radius-600);
-
-      /* Closed, it's just a floating chip — give it the same glass
-      background/blur treatment nav itself uses on desktop. */
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        border-radius: inherit;
-        backdrop-filter: blur(var(--sitenav-blur));
-        pointer-events: none;
-      }
-    }
-
-    &[is-open] {
-      z-index: 300;
-      
-      nav {
-        position: fixed;
-        inset: 0;
-        overflow-y: auto;
-        border-radius: 0;
-        padding: var(--s2-spacing-300) var(--s2-spacing-200) calc(var(--s2-spacing-300) + 32px + var(--s2-spacing-200));
-
-        &::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: -1;
-          backdrop-filter: blur(var(--sitenav-blur));
-          pointer-events: none;
-        }
-      }
-
-      ul.level-1-list {
-        display: grid;
-        gap: var(--s2-spacing-100);
-      }
-
-      .level-1-button[aria-expanded="true"] + .level-2-menu {
-        display: block;
-
-        /* level-2 view covers the full viewport */
-        position: fixed;
-        inset: 0;
-        padding: var(--s2-spacing-300) var(--s2-spacing-200) calc(var(--s2-spacing-300) + 32px + var(--s2-spacing-200));
-        overflow-y: auto;
-      }
-
-      /* Drilled into level-2: hide every other level-1 item, and hide the
-      active item's own button (its level-2-menu can't be hidden this way —
-      display:none on an ancestor would take the visible menu down with it,
-      since it's nested inside the level-1 list rather than a sibling of it). */
-      &:has(.level-1-button[aria-expanded="true"]) {
-        li.level-1:not(:has(.level-1-button[aria-expanded="true"])) {
-          display: none;
-        }
-
-        .level-1-button[aria-expanded="true"] {
-          display: none;
-        }
-      }
-
-      button.sitenav-back-btn {
-        display: flex;
-      }
     }
   }
 }
@@ -462,6 +343,7 @@
 html:has(meta[name="template"][content="marketing"]) {
   #sitenav {
     z-index: 300;
+    position: fixed;
   }
 }
 
