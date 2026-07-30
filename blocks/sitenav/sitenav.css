@@ -18,7 +18,7 @@
   place-self: start;
   position: sticky;
   top: var(--sh-header-height);
-  font-size: var(--s2-component-s-regular-font-size);
+  font-size: var(--s2-component-m-regular-font-size);
   white-space: nowrap;
   color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
   z-index: 100;
@@ -190,7 +190,7 @@
     > .list-item-label {
       color: var(--s2-blue-900);
       font-weight: 700;
-      line-height: var(--s2-component-l-height);
+      line-height: var(--s2-component-m-height);
     }
 
     ul.level-2-list {
