@@ -464,18 +464,19 @@ div[data-status],
         var(--sitenav-level-2-width) +
         var(--sitenav-inline-end-margin));
 
-    /* Below 900px the sitenav becomes a fixed overlay (see sitenav.css) rather
-    than a rail that pushes main content over, so its track shouldn't grow
-    when it opens or drills into a level-2 list. */
-    @media (width < 900px) {
-      --sitenav-track-width: calc(var(--sitenav-inline-start-margin) + 32px);
-    }
-
     /* Set the pagenav track to prevent CLS too */
     --pagenav-track-width: calc(
         var(--pagenav-min-inline-size) +
         var(--pagenav-inline-start-margin) +
         var(--pagenav-inline-end-margin));
+
+    /* Below 900px the sitenav becomes a fixed overlay (see sitenav.css) rather
+    than a rail that pushes main content over, so its track shouldn't grow
+    when it opens or drills into a level-2 list. Page nav does not display at all. */
+    @media (width < 900px) {
+      --sitenav-track-width: 0;
+      --pagenav-track-width: 0;
+    }
 
     /* Only allow transition once sitenav is in the DOM */
     &:has(#sitenav) {
@@ -552,6 +553,7 @@ div[data-status],
 
     body {
       display: grid;
+      place-content: center;
       grid-template:
         'header header header' var(--sh-header-height)
         'sitenav main pagenav' 1fr
@@ -562,6 +564,10 @@ div[data-status],
       font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
+
+      @media (width > 900px) {
+        place-content: unset;
+      }
 
       header {
         visibility: hidden;
