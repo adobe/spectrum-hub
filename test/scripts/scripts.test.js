@@ -98,6 +98,7 @@ describe('scripts.js', () => {
     });
 
     it('wraps a bare h1 in a page header on a component page', async () => {
+      sandbox.stub(window, 'fetch').resolves(new Response('', { status: 404 }));
       window.history.pushState({}, '', '/web/swc/components/button');
       document.body.innerHTML = '<main><div><h1>Button</h1></div></main>';
       await loadPage();
@@ -113,7 +114,38 @@ describe('scripts.js', () => {
       expect(document.querySelector('.page-hero')).to.be.null;
     });
 
+    it('does not create a component-status placeholder on a non-component page', async () => {
+      window.history.pushState({}, '', '/guidelines/color');
+      document.body.innerHTML = '<main><div><h1>Color</h1></div></main>';
+      await loadPage();
+      expect(document.querySelector('.component-status')).to.be.null;
+    });
+
+    it('creates a component-status placeholder on a component page when the author placed none', async () => {
+      window.history.pushState({}, '', '/web/swc/components/button');
+      document.body.innerHTML = '<main><div><h1>Button</h1></div></main>';
+      sandbox.stub(window, 'fetch').callsFake((url) => {
+        if (String(url).includes('figma')) {
+          return Promise.resolve(new Response('[]', { status: 200 }));
+        }
+        const index = {
+          components: [{
+            name: 'Button',
+            platforms: { web: { swc: { status: 'available' } } },
+          }],
+        };
+        return Promise.resolve(new Response(JSON.stringify(index), { status: 200 }));
+      });
+
+      await loadPage();
+
+      const header = document.querySelector('.page-hero');
+      expect(header.querySelector('.component-status')).to.not.be.null;
+      expect(header.querySelectorAll('.component-status-pill').length).to.equal(1);
+    });
+
     it('includes the immediately-following paragraph as the description', async () => {
+      sandbox.stub(window, 'fetch').resolves(new Response('', { status: 404 }));
       window.history.pushState({}, '', '/web/swc/components/button');
       document.body.innerHTML = '<main><div><h1>Button</h1><p>A clickable action.</p></div></main>';
       await loadPage();

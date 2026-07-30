@@ -40,7 +40,11 @@ const buildPageHeader = (main) => {
 
   const description = h1.nextElementSibling?.tagName === 'P' ? h1.nextElementSibling : null;
   const breadcrumbs = main.querySelector('.breadcrumbs');
-  const status = main.querySelector('.component-status');
+  let status = main.querySelector('.component-status');
+  if (!status && isComponentPage(window.location.pathname)) {
+    status = document.createElement('div');
+    status.className = 'component-status';
+  }
 
   const pageHeader = document.createElement('div');
   pageHeader.className = 'page-hero';
@@ -112,21 +116,6 @@ const buildPageNav = async () => {
   await loadBlock(pageNav);
 };
 
-// Injects the per-component status pills into the hero. Runs after loadArea so the
-// hero is decorated and its text column is present. The block itself removes the element on
-// non-component pages (render nothing).
-const buildComponentStatus = async () => {
-  const template = getMetadata('template');
-  if (template === 'marketing') { return; }
-  if (!window.location.pathname.split('/').includes('components')) { return; }
-  const heroText = document.querySelector('main h1')?.closest('.fg-text');
-  if (!heroText || heroText.querySelector('.component-status')) { return; }
-  const el = document.createElement('div');
-  el.className = 'component-status';
-  heroText.append(el);
-  await loadBlock(el);
-};
-
 const getSession = () => {
   const isSession = sessionStorage.getItem('session');
   if (isSession) { document.body.classList.add('is-returning'); }
@@ -146,9 +135,6 @@ export async function loadPage() {
   buildPageNav();
 
   await loadArea();
-
-  // After decoration so the hero/<h1> is present and the pills mount reliably.
-  buildComponentStatus();
 }
 await loadPage();
 
