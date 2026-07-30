@@ -3,54 +3,84 @@ import init, { resolveContext, buildTrail, buildBreadcrumbs } from '../../blocks
 
 describe('breadcrumbs block', () => {
   describe('resolveContext', () => {
-    it('resolves a swc component page', () => {
+    it('resolves a web component page down to its ancestor segments', () => {
       expect(resolveContext('/web/swc/components/button')).to.deep.equal({
-        impl: { id: 'swc', label: 'Spectrum Web Components', shortLabel: 'SWC' },
+        segments: ['web', 'swc', 'components'],
       });
     });
 
-    it('resolves an rsp component page', () => {
-      expect(resolveContext('/web/rsp/components/action-button').impl.id).to.equal('rsp');
+    it('resolves a non-web page the same way', () => {
+      expect(resolveContext('/mobile/ios/components/button')).to.deep.equal({
+        segments: ['mobile', 'ios', 'components'],
+      });
     });
 
-    it('returns null for a non-web top-level path', () => {
-      expect(resolveContext('/mobile/ios/components/button')).to.be.null;
+    it('resolves an unregistered web implementation the same way', () => {
+      expect(resolveContext('/web/figma/components/button')).to.deep.equal({
+        segments: ['web', 'figma', 'components'],
+      });
     });
 
-    it('returns null for an unregistered implementation', () => {
-      expect(resolveContext('/web/figma/components/button')).to.be.null;
+    it('resolves a web implementation landing page to a single ancestor', () => {
+      expect(resolveContext('/web/swc')).to.deep.equal({ segments: ['web'] });
     });
 
-    it('returns null for a web implementation landing page with no components segment', () => {
-      expect(resolveContext('/web/swc')).to.be.null;
+    it('resolves a deeper page down to all of its ancestors', () => {
+      expect(resolveContext('/web/swc/components/button/extra')).to.deep.equal({
+        segments: ['web', 'swc', 'components', 'button'],
+      });
     });
 
-    it('returns null when the component slug is missing', () => {
-      expect(resolveContext('/web/swc/components')).to.be.null;
+    it('returns null for the homepage', () => {
+      expect(resolveContext('/')).to.be.null;
     });
 
-    it('returns null when the path is deeper than a component slug', () => {
-      expect(resolveContext('/web/swc/components/button/extra')).to.be.null;
+    it('returns null for a bare top-level section', () => {
+      expect(resolveContext('/web')).to.be.null;
     });
 
-    it('returns null for the web overview page', () => {
+    it('returns null for a section overview page', () => {
       expect(resolveContext('/web/overview')).to.be.null;
     });
   });
 
   describe('buildTrail', () => {
-    it('builds Web > <short label> > Components for the given implementation', () => {
-      const trail = buildTrail({ id: 'swc', label: 'Spectrum Web Components', shortLabel: 'SWC' });
-      expect(trail).to.deep.equal([
+    it('builds Web > <short label> > Components for a registered web implementation', () => {
+      expect(buildTrail(['web', 'swc', 'components'])).to.deep.equal([
         { label: 'Web', href: '/web/overview' },
         { label: 'SWC', href: '/web/swc' },
         { label: 'Components', href: null },
       ]);
     });
+
+    it('falls back to a humanized label for an unregistered web implementation', () => {
+      expect(buildTrail(['web', 'figma', 'components'])).to.deep.equal([
+        { label: 'Web', href: '/web/overview' },
+        { label: 'Figma', href: '/web/figma' },
+        { label: 'Components', href: null },
+      ]);
+    });
+
+    it('humanizes and links every segment outside the web section', () => {
+      expect(buildTrail(['mobile', 'ios', 'components'])).to.deep.equal([
+        { label: 'Mobile', href: '/mobile' },
+        { label: 'Ios', href: '/mobile/ios' },
+        { label: 'Components', href: null },
+      ]);
+    });
+
+    it('humanizes multi-word (kebab-case) segments', () => {
+      expect(buildTrail(['web', 'swc', 'components', 'action-button'])).to.deep.equal([
+        { label: 'Web', href: '/web/overview' },
+        { label: 'SWC', href: '/web/swc' },
+        { label: 'Components', href: null },
+        { label: 'Action Button', href: '/web/swc/components/action-button' },
+      ]);
+    });
   });
 
   describe('buildBreadcrumbs', () => {
-    it('returns null when the path does not resolve to a component page', () => {
+    it('returns null when the path does not resolve', () => {
       expect(buildBreadcrumbs('/web/overview')).to.be.null;
     });
 
@@ -73,6 +103,12 @@ describe('breadcrumbs block', () => {
       const last = ol.querySelector('li:nth-child(3)');
       expect(last.textContent).to.equal('Components');
       expect(last.querySelector('a')).to.be.null;
+    });
+
+    it('builds a trail for a non-web page', () => {
+      const ol = buildBreadcrumbs('/mobile/ios/components/button');
+      expect(ol.textContent).to.include('Mobile');
+      expect(ol.textContent).to.include('Ios');
     });
   });
 
