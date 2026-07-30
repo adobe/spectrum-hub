@@ -14,21 +14,6 @@ h1 {
   margin: 0 0 6px;
   padding: 6px 20px;
   font-weight: 700;
-
-  &.generated {
-    background-image: linear-gradient(95.85deg, #b539c8 0%, #7155fa 66%, #3b63fb 100%);
-    background-clip: text;
-    color: transparent;
-  }
-}
-
-.current-description,
-.preview {
-  padding: 0 20px;
-}
-
-.preview {
-  color: var(--s2-gray-700, #444);
 }
 
 .empty {
@@ -46,11 +31,61 @@ h1 {
     border-bottom: 1px solid #efefef;
   }
 
-  label {
+  .select-all {
+    font-weight: 700;
+    border-bottom: 2px solid #efefef;
+  }
+}
+
+.matches-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0 20px;
+
+  .title-area {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+  }
+
+  .title-num-actions {
+    display: flex;
     gap: 8px;
-    cursor: pointer;
+  }
+
+  .count {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 28px;
+    min-width: 28px;
+    border: 2px solid var(--s2-blue-200);
+    padding: 0 12px;
+    border-radius: 15px;
+    background-color: var(--s2-blue-200);
+  }
+
+  .description {
+    margin: 8px 0;
+    color: var(--s2-gray-700, #444);
+  }
+
+  .page-list {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .match-item {
+    padding: 18px;
+    border-top: 1px solid #efefef;
+    border-bottom: 1px solid #efefef;
+    margin: -1px 0;
+
+    &.is-open .page-list {
+      display: initial;
+    }
   }
 }
 
