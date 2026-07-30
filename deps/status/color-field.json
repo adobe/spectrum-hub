@@ -1,0 +1,15 @@
+{
+  "web": {
+    "figma": {
+      "status": "not-available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Stable"
+    },
+    "swc": {
+      "status": "not-available",
+      "secondary": "Use Gen1"
+    }
+  }
+}

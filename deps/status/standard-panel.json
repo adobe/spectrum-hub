@@ -1,0 +1,15 @@
+{
+  "web": {
+    "figma": {
+      "status": "available"
+    },
+    "rsp": {
+      "status": "not-available"
+    },
+    "swc": {
+      "status": "not-available",
+      "secondary": "Use UEC (Gen 1)"
+    }
+  },
+  "figmaPageId": "10151:3337"
+}

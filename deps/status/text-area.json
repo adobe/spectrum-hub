@@ -1,0 +1,16 @@
+{
+  "web": {
+    "figma": {
+      "status": "available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Stable"
+    },
+    "swc": {
+      "status": "not-available",
+      "secondary": "Use Text field"
+    }
+  },
+  "figmaPageId": "9913:25077"
+}

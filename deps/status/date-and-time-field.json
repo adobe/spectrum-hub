@@ -1,0 +1,16 @@
+{
+  "web": {
+    "figma": {
+      "status": "available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Stable",
+      "note": "React Spectrum splits this into separate Date Field, Date Picker, Date Range Picker, and Time Field components; this row mirrors their availability."
+    },
+    "swc": {
+      "status": "not-available"
+    }
+  },
+  "figmaPageId": "10196:3411"
+}

@@ -1,0 +1,19 @@
+{
+  "web": {
+    "figma": {
+      "status": "available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Stable",
+      "secondary": "Use color components",
+      "note": "Built into color components instead."
+    },
+    "swc": {
+      "status": "available",
+      "context": "Stable",
+      "secondary": "Use Gen1"
+    }
+  },
+  "figmaPageId": "9306:18338"
+}
