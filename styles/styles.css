@@ -544,10 +544,10 @@ div[data-status],
     }
 
     &[expand-sitenav],
-    &:has(#sitenav [aria-expanded="true"]) {
+    &:has(#sitenav .level-1-button[aria-expanded="true"]) {
       --sitenav-level-2-width: var(--sitenav-level-2-expanded-width);
 
-      &:has(#sitenav):not(:has(#sitenav [aria-expanded="true"])) {
+      &:has(#sitenav):not(:has(#sitenav .level-1-button[aria-expanded="true"])) {
         --sitenav-level-2-width: 0;
       }
     }

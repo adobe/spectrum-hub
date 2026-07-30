@@ -141,7 +141,7 @@
 
     /* Without an explicit track, .level-1-button's real box (and its focus ring) 
     extends far past the 32px closed rail, with only its left edge visible. */
-    /* grid-template-columns: minmax(0, 1fr); */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--s2-spacing-100);
     overflow: hidden;
     transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
@@ -320,6 +320,40 @@
     #animate-panel-bar {
       transition: width var(--expand-toggle-hover-duration) var(--expand-toggle-hover-ease);
     }
+
+    @media (width < 900px) {
+      display: none;
+    }
+  }
+
+  /* Below 900px sitenav-expand-btn (above) is hidden and this fixed,
+  viewport-pinned trigger takes over. */
+  .sitenav-trigger-btn {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+
+    @media (width < 900px) {
+      display: flex;
+      position: fixed;
+      inset-inline-start: var(--s2-spacing-200);
+      inset-block-end: var(--s2-spacing-200);
+      z-index: 1;
+      border-radius: var(--s2-corner-radius-600);
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        backdrop-filter: blur(var(--sitenav-blur));
+        pointer-events: none;
+      }
+    }
   }
 
   &[is-open] {
@@ -328,6 +362,23 @@
 
     .sitenav-expand-btn:hover {
       --expand-panel-width: 1.5px;
+    }
+  }
+
+  /* Below 900px there's no room for the rail, so it's hidden by default and
+  only sitenav-trigger-btn shows it. */
+  @media (width < 900px) {
+    nav {
+      display: none;
+    }
+
+    &[is-open] {
+      position: fixed;
+      z-index: 300;
+
+      nav {
+        display: block;
+      }
     }
   }
 }
@@ -340,9 +391,9 @@
   grid-area: sitenav;
 }
 
+
 html:has(meta[name="template"][content="marketing"]) {
   #sitenav {
-    z-index: 300;
     position: fixed;
   }
 }
