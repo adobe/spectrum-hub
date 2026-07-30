@@ -1,3 +1,5 @@
+import { crawl } from 'https://da.live/nx/public/utils/tree.js';
+
 function getOpts(token, method = 'GET') {
   return {
     method,
@@ -37,6 +39,34 @@ export async function loadComponentDescription(component, token) {
   return extractText(docHtml);
 }
 
+/**
+ * Finds every page under basePath with a "components/<name>" path segment matching
+ * one of componentNames, at any depth or platform/impl prefix (web/swc/components/<name>,
+ * web/rsp/components/<name>, ios/components/<name>, ...). Pages under /fragments/ are
+ * excluded - that's where the description source lives, not a page that consumes it.
+ */
+export function findComponentPages(basePath, componentNames, setStatus) {
+  const nameSet = new Set(componentNames);
+  const matches = new Map(componentNames.map((name) => [name, []]));
+
+  const callback = async (item) => {
+    if (item.ext !== 'html') { return; }
+    const uiPath = item.path.replace('.html', '');
+    if (uiPath.startsWith(`${basePath}/fragments/`)) { return; }
+
+    const segments = uiPath.split('/').filter(Boolean);
+    const idx = segments.indexOf('components');
+    const name = idx === -1 ? undefined : segments[idx + 1];
+    if (!name || !nameSet.has(name)) { return; }
+
+    setStatus(`Found ${uiPath}`);
+    matches.get(name).push({ path: uiPath });
+  };
+
+  const { results } = crawl({ path: basePath, callback, throttle: 10 });
+  return results.then(() => matches);
+}
+
 function createMetadataBlock() {
   const metadata = document.createElement('div');
   metadata.className = 'metadata';
@@ -69,28 +99,6 @@ async function saveDoc(path, token, doc) {
   const resp = await fetch(`https://admin.da.live/source${path}.html`, opts);
   if (!resp.ok) { return { message: 'Could not save.', status: resp.status, type: 'error' }; }
   return { message: 'Successfully saved.', status: resp.status, type: 'success' };
-}
-
-const getMetadata = (el) => [...el.childNodes].reduce((rdx, row) => {
-  if (row.children) {
-    const key = row.children[0].textContent.trim().toLowerCase();
-    const content = row.children[1];
-    const text = content.textContent.trim();
-    if (key && text) { rdx[key] = { text }; }
-  }
-  return rdx;
-}, {});
-
-export async function loadPageDescription(path, token) {
-  const docHtml = await fetchDoc(path, token);
-  if (!docHtml) { return undefined; }
-  const doc = new DOMParser().parseFromString(docHtml, 'text/html');
-  const metaEl = doc.querySelector('.metadata');
-  if (metaEl) {
-    const { description } = getMetadata(metaEl);
-    if (description) { return description.text; }
-  }
-  return undefined;
 }
 
 export async function savePageDescription(path, token, description) {
