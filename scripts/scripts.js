@@ -6,6 +6,7 @@ import {
   setScheme,
   makePicture,
 } from './ak.js';
+import { prefetchStatusData } from '../blocks/component-status/component-status.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -19,7 +20,7 @@ const linkBlocks = [
 
 // Blocks with self-managed styles
 // page-hero/breadcrumbs styles are folded into the eager styles/styles.css
-const components = ['fragment', 'schedule', 'page-hero', 'breadcrumbs'];
+const components = ['fragment', 'schedule', 'page-hero', 'breadcrumbs', 'component-status'];
 
 const isComponentPage = (pathname) => {
   const parts = pathname.split('/').filter(Boolean);
@@ -41,9 +42,12 @@ const buildPageHeader = (main) => {
   const description = h1.nextElementSibling?.tagName === 'P' ? h1.nextElementSibling : null;
   const breadcrumbs = main.querySelector('.breadcrumbs');
   let status = main.querySelector('.component-status');
-  if (!status && isComponentPage(window.location.pathname)) {
-    status = document.createElement('div');
-    status.className = 'component-status';
+  if (isComponentPage(window.location.pathname)) {
+    if (!status) {
+      status = document.createElement('div');
+      status.className = 'component-status';
+    }
+    prefetchStatusData(status);
   }
 
   const pageHeader = document.createElement('div');

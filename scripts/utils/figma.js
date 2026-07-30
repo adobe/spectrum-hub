@@ -25,7 +25,7 @@ export function resolveFigmaUrl(componentSlug, data) {
   return `${FIGMA_FILE_URL}?node-id=${nodeId}&m=dev`;
 }
 
-async function fetchFigmaData() {
+export async function fetchFigmaData() {
   const { codeBase = '' } = getConfig();
   try {
     const resp = await fetch(`${codeBase}${FIGMA_STATUS_PATH}`);

@@ -484,6 +484,62 @@ main > div[data-status],
   }
 }
 
+/* Per-component Dev + Design status pills. Author-placed anywhere in the page content, or
+auto-created inside .page-hero on a component page (see scripts.js buildPageHeader). Static,
+button-styled indicators — status is conveyed by the label + icon, not color (see
+component-status.js).
+
+min-block-size reserves one pill row's height from first paint, before the pills' own async
+data ever resolves — the box never grows once its content arrives, which is what would
+otherwise shift everything below it. */
+.component-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2-spacing-100);
+  min-block-size: var(--se-component-m-height);
+}
+
+.component-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2-spacing-75);
+  padding-inline: var(--s2-spacing-200);
+  block-size: var(--se-component-m-height);
+  border-radius: var(--s2-corner-radius-500);
+  background-color: var(--s2-gray-100);
+  font-size: var(--s2-component-m-regular-font-size);
+  font-weight: var(--s2-component-m-bold-font-weight);
+  line-height: 1;
+  color: var(--s2-gray-900);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* Only the linked pills are interactive (a component with no docs/Figma target
+falls back to a static span). */
+a.component-status-pill {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: var(--s2-gray-200);
+  }
+
+  &:focus-visible {
+    outline: var(--se-focus-indicator-width, 2px) solid var(--s2-blue-900);
+    outline-offset: var(--s2-spacing-50);
+  }
+}
+
+.component-status-icon {
+  display: block;
+  inline-size: 20px;
+  block-size: 20px;
+  color: inherit;
+  flex-shrink: 0;
+}
+
 /* --- Spectrum Edge default styles --- */
 @layer spectrum-edge {
   @property --sitenav-nav-width {
