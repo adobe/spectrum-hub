@@ -6,20 +6,22 @@
  * current implementation's status) and Design (the Figma status) — each a per-status icon
  * plus a "<kind> <status>" label (e.g. "Development available").
  *
- * Data comes from the build-time combined index (deps/build-status-index.js); labels bind
- * to the unified STATUSES model so they never drift from the adapter. When the path doesn't
+ * Data comes from a per-component build-time slice (deps/status/<slug>.json, written by
+ * deps/build-status-index.js) rather than the whole combined index — one small, targeted
+ * fetch instead of downloading and searching the full multi-KB roster. Labels bind to the
+ * unified STATUSES model so they never drift from the adapter. When the path doesn't
  * resolve to an indexed component the block removes its own element (render nothing).
  */
 
-import { getConfig } from '../../scripts/ak.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { getSvgRef } from '../../scripts/utils/svg.js';
+import { getConfig } from '../../scripts/ak.js';
 import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
-import { resolveFigmaUrl, fetchFigmaData } from '../../scripts/utils/figma.js';
+import { figmaNodeUrl } from '../../scripts/utils/figma.js';
+import { toSlug } from '../../scripts/utils/slug.js';
 
-// Same combined index the status table reads.
-const DEFAULT_INDEX = '/deps/status-index.json';
+export { toSlug };
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -39,12 +41,6 @@ const STATUS_ICONS = {
   removed: 'removecircle',
 };
 
-/** `ActionButton` → `action-button`: the kebab slug used in component-page URLs. */
-export const toSlug = (name) => name
-  .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-  .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-  .toLowerCase();
-
 /**
  * Resolves a component-page pathname to its code implementation and slug.
  *
@@ -60,11 +56,6 @@ export function resolveContext(pathname) {
   const slug = parts[idx + 1];
   if (!slug || !getImplementationById(impl)) { return null; }
   return { impl, slug };
-}
-
-/** The index row whose canonical name kebab-matches `slug`, or `null`. */
-export function findComponent(index, slug) {
-  return (index.components ?? []).find((c) => toSlug(c.name) === slug) ?? null;
 }
 
 /**
@@ -102,10 +93,11 @@ function buildPill({ kind, label: prefix }, cell, link) {
   return pill;
 }
 
-async function fetchIndex() {
+/** Fetches one component's status slice (deps/status/<slug>.json), or null when absent. */
+export async function fetchComponentSlice(slug) {
   const { codeBase = '' } = getConfig();
   try {
-    const resp = await fetch(`${codeBase}${DEFAULT_INDEX}`);
+    const resp = await fetch(`${codeBase}/deps/status/${slug}.json`);
     return resp.ok ? resp.json() : null;
   } catch {
     return null;
@@ -113,7 +105,7 @@ async function fetchIndex() {
 }
 
 /**
- * Kicks off (or reuses) the status-index + Figma-roster fetch. Called speculatively from
+ * Kicks off (or reuses) the component's status-slice fetch. Called speculatively from
  * scripts.js's buildPageHeader as soon as the placeholder exists — well before this block's
  * own init() would normally run via the section-decoration loop — and stashes the in-flight
  * promise on the element itself, so init() awaits the same request instead of starting a
@@ -121,29 +113,28 @@ async function fetchIndex() {
  * pages/tests never share stale state.
  */
 export function prefetchStatusData(el) {
-  el.pendingStatusFetch = Promise.all([fetchIndex(), fetchFigmaData()]);
+  const context = resolveContext(window.location.pathname);
+  el.pendingStatusFetch = context ? fetchComponentSlice(context.slug) : Promise.resolve(null);
   return el.pendingStatusFetch;
 }
 
 /**
  * Builds the Development + Design status pills for the current component page, or
- * an empty array when the path doesn't resolve or the component isn't indexed.
+ * an empty array when the path doesn't resolve or the component has no slice.
  *
  * @param {string} pathname
- * @param {object} index - the combined status index.
- * @param {Array} [figmaData] - the Figma component roster (for the Design link).
+ * @param {{ web: object, figmaPageId?: string } | null} componentData - this component's slice.
  * @returns {HTMLElement[]}
  */
-export function buildPills(pathname, index, figmaData = []) {
+export function buildPills(pathname, componentData) {
   const context = resolveContext(pathname);
-  if (!context || !index) { return []; }
-  const component = findComponent(index, context.slug);
-  if (!component) { return []; }
-  const web = component.platforms?.web ?? {};
+  if (!context || !componentData) { return []; }
+  const web = componentData.web ?? {};
 
-  // Link destinations reuse the page-nav widgets' URL logic exactly.
+  // Development reuses the page-nav widgets' URL logic exactly; Design links straight to
+  // the node id the build already resolved (no client-side Figma roster search needed).
   const impl = resolveImplementation(pathname);
-  const figmaHref = resolveFigmaUrl(context.slug, figmaData);
+  const figmaHref = figmaNodeUrl(componentData.figmaPageId);
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,
     design: figmaHref ? { href: figmaHref, dest: 'Figma' } : null,
@@ -155,14 +146,14 @@ export function buildPills(pathname, index, figmaData = []) {
 }
 
 export default async function init(el) {
-  if (!resolveContext(window.location.pathname)) {
+  const context = resolveContext(window.location.pathname);
+  if (!context) {
     el.remove();
     return;
   }
 
-  const fetching = el.pendingStatusFetch ?? Promise.all([fetchIndex(), fetchFigmaData()]);
-  const [index, figmaData] = await fetching;
-  const pills = buildPills(window.location.pathname, index, figmaData);
+  const componentData = await (el.pendingStatusFetch ?? fetchComponentSlice(context.slug));
+  const pills = buildPills(window.location.pathname, componentData);
   if (!pills.length) {
     el.remove();
     return;

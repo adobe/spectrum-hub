@@ -21,17 +21,14 @@ describe('page-hero block', () => {
     window.history.pushState({}, '', originalUrl);
   });
 
-  // component-status's init fetches both the status index and the Figma roster.
+  // component-status's init fetches its one per-component status slice.
   function stubStatusFetch() {
-    return sandbox.stub(window, 'fetch').callsFake((url) => {
-      if (String(url).includes('figma')) {
-        return Promise.resolve(new Response('[]', { status: 200 }));
-      }
-      const index = {
-        components: [{ name: 'Button', platforms: { web: { swc: { status: 'available' } } } }],
-      };
-      return Promise.resolve(new Response(JSON.stringify(index), { status: 200 }));
-    });
+    const slice = { web: { swc: { status: 'available' } } };
+    return sandbox.stub(window, 'fetch').callsFake((url) => (
+      String(url).endsWith('/deps/status/button.json')
+        ? Promise.resolve(new Response(JSON.stringify(slice), { status: 200 }))
+        : Promise.resolve(new Response('', { status: 404 }))
+    ));
   }
 
   function mount(children) {

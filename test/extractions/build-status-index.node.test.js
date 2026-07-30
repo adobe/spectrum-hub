@@ -16,6 +16,7 @@ import {
   applySecondaries,
   applyOverrides,
   buildIndex,
+  buildComponentSlices,
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
@@ -361,6 +362,55 @@ describe('buildIndex', () => {
 
   it('omits the presentation-only color token from the legend', () => {
     assert.ok(!('color' in statusLegend().available));
+  });
+});
+
+describe('buildComponentSlices', () => {
+  const roster = [
+    { name: 'ActionButton', sources: { rsp: 'ActionButton', swc: 'swc-action-button', figma: 'Action button' } },
+    { name: 'Modal', sources: { rsp: 'Modal' } },
+    { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' } },
+  ];
+  const { index } = buildIndex({
+    roster,
+    readData: (source, name) => (
+      source === 'rsp' && name === 'ActionButton' ? { props: [], status: 'stable' } : null
+    ),
+  });
+  const figmaRoster = [
+    { name: 'Action button', figmaPageId: '9230:3620' },
+    { name: 'Bar panel and toolbar', figmaPageId: '10500:42' },
+  ];
+
+  it('emits one slice per roster component, keyed by its URL slug', () => {
+    const slices = buildComponentSlices(roster, index.components, figmaRoster);
+    assert.deepEqual(slices.map((s) => s.slug), ['action-button', 'modal', 'bar-panel-and-toolbar']);
+  });
+
+  it("carries the component's web cells", () => {
+    const slices = buildComponentSlices(roster, index.components, figmaRoster);
+    const ab = slices.find((s) => s.slug === 'action-button');
+    assert.deepEqual(ab.data.web, index.components.find((c) => c.name === 'ActionButton').platforms.web);
+  });
+
+  it('resolves the Figma node id via the roster join, not a slug re-match', () => {
+    const slices = buildComponentSlices(roster, index.components, figmaRoster);
+    assert.equal(slices.find((s) => s.slug === 'action-button').data.figmaPageId, '9230:3620');
+    assert.equal(slices.find((s) => s.slug === 'bar-panel-and-toolbar').data.figmaPageId, '10500:42');
+  });
+
+  it('omits figmaPageId when the component has no Figma source', () => {
+    const slices = buildComponentSlices(roster, index.components, figmaRoster);
+    assert.ok(!('figmaPageId' in slices.find((s) => s.slug === 'modal').data));
+  });
+
+  it('omits figmaPageId when the Figma source has no matching roster entry', () => {
+    const slices = buildComponentSlices(
+      [{ name: 'Ghost', sources: { figma: 'Ghost design' } }],
+      [{ name: 'Ghost', platforms: { web: { figma: { status: 'available' } } } }],
+      figmaRoster,
+    );
+    assert.ok(!('figmaPageId' in slices[0].data));
   });
 });
 

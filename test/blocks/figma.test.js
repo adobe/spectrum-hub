@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { resolveFigmaUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
+import { figmaNodeUrl, resolveFigmaUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
 
 function makeAnchor(text = 'See in Figma') {
   const a = document.createElement('a');
@@ -12,6 +12,19 @@ function makeAnchor(text = 'See in Figma') {
 }
 
 describe('figma block', () => {
+  describe('figmaNodeUrl — node id → Figma dev-mode URL', () => {
+    it('builds a dev-mode URL with the node id hyphenated', () => {
+      expect(figmaNodeUrl('9230:3620')).to.equal(
+        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
+      );
+    });
+
+    it('returns null for a missing id', () => {
+      expect(figmaNodeUrl(undefined)).to.equal(null);
+      expect(figmaNodeUrl(null)).to.equal(null);
+    });
+  });
+
   describe('resolveFigmaUrl — component slug → Figma dev-mode URL', () => {
     const data = [
       { name: 'Accordion', figmaPageId: '10093:987' },

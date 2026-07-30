@@ -124,18 +124,12 @@ describe('scripts.js', () => {
     it('creates a component-status placeholder on a component page when the author placed none', async () => {
       window.history.pushState({}, '', '/web/swc/components/button');
       document.body.innerHTML = '<main><div><h1>Button</h1></div></main>';
-      const fetchStub = sandbox.stub(window, 'fetch').callsFake((url) => {
-        if (String(url).includes('figma')) {
-          return Promise.resolve(new Response('[]', { status: 200 }));
-        }
-        const index = {
-          components: [{
-            name: 'Button',
-            platforms: { web: { swc: { status: 'available' } } },
-          }],
-        };
-        return Promise.resolve(new Response(JSON.stringify(index), { status: 200 }));
-      });
+      const slice = { web: { swc: { status: 'available' } } };
+      const fetchStub = sandbox.stub(window, 'fetch').callsFake((url) => (
+        String(url).endsWith('/deps/status/button.json')
+          ? Promise.resolve(new Response(JSON.stringify(slice), { status: 200 }))
+          : Promise.resolve(new Response('', { status: 404 }))
+      ));
 
       await loadPage();
 
@@ -143,8 +137,8 @@ describe('scripts.js', () => {
       expect(header.querySelector('.component-status')).to.not.be.null;
       expect(header.querySelectorAll('.component-status-pill').length).to.equal(1);
       // buildPageHeader's early prefetch and component-status's own init() should share
-      // one request pair (index + figma), not fetch twice.
-      expect(fetchStub.callCount).to.equal(2);
+      // one request, not fetch twice.
+      expect(fetchStub.callCount).to.equal(1);
     });
 
     it('includes the immediately-following paragraph as the description', async () => {
@@ -182,18 +176,12 @@ describe('scripts.js', () => {
           <div class="component-status"></div>
         </div></main>
       `;
-      sandbox.stub(window, 'fetch').callsFake((url) => {
-        if (String(url).includes('figma')) {
-          return Promise.resolve(new Response('[]', { status: 200 }));
-        }
-        const index = {
-          components: [{
-            name: 'Button',
-            platforms: { web: { swc: { status: 'available' } } },
-          }],
-        };
-        return Promise.resolve(new Response(JSON.stringify(index), { status: 200 }));
-      });
+      const slice = { web: { swc: { status: 'available' } } };
+      sandbox.stub(window, 'fetch').callsFake((url) => (
+        String(url).endsWith('/deps/status/button.json')
+          ? Promise.resolve(new Response(JSON.stringify(slice), { status: 200 }))
+          : Promise.resolve(new Response('', { status: 404 }))
+      ));
 
       await loadPage();
 
