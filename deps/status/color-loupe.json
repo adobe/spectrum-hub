@@ -1,0 +1,17 @@
+{
+  "web": {
+    "figma": {
+      "status": "not-available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Stable",
+      "secondary": "Use color components",
+      "note": "Built into color components instead."
+    },
+    "swc": {
+      "status": "available",
+      "context": "Stable"
+    }
+  }
+}

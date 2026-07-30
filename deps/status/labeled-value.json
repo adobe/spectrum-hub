@@ -1,0 +1,15 @@
+{
+  "web": {
+    "figma": {
+      "status": "available",
+      "secondary": "Reference documentation"
+    },
+    "rsp": {
+      "status": "available"
+    },
+    "swc": {
+      "status": "not-available",
+      "secondary": "N/A"
+    }
+  }
+}

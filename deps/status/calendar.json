@@ -1,0 +1,15 @@
+{
+  "web": {
+    "figma": {
+      "status": "available",
+      "secondary": "Use date and time component"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Stable"
+    },
+    "swc": {
+      "status": "not-available"
+    }
+  }
+}
