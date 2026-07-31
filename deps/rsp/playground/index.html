@@ -18,6 +18,7 @@
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
+    import { OVERLAY_TRIGGERS } from './overlay-triggers.js';
     import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
@@ -57,6 +58,7 @@
     async function initRsp() {
       const PKG = '@react-spectrum/s2';
       const exportName = pascalCase(component);
+      const overlayTrigger = OVERLAY_TRIGGERS[component];
 
       if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
         // CardView shrink-to-fits to 0 width under #mount's flex layout.
@@ -84,7 +86,10 @@
           ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
           : [];
         // `Text` lets an icon+label composition wrap the label for real TextContext styling.
-        const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports])].join(',');
+        // A trigger-wrapped route (see overlay-triggers.js) also needs its Trigger + a
+        // pressable Button, neither of which the fragment itself references.
+        const triggerExports = overlayTrigger ? [overlayTrigger.trigger, 'Button'] : [];
+        const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports, ...triggerExports])].join(',');
 
         // `?bundle` drops CSS side-effect imports — a bare import() can't load
         // them (wrong MIME type). Visual CSS is loaded separately below.
@@ -134,9 +139,20 @@
 
         function render() {
           const scheme = resolveColorScheme(currentScheme, matchMedia('(prefers-color-scheme: dark)').matches);
-          const rootElement = compositeChildren.length
+          const innerElement = compositeChildren.length
             ? createElement(Component, currentProps, ...rootChildArgs)
             : createElement(Component, currentProps);
+          // Overlay content (Dialog/Popover/Tooltip/...) only ever mounts real DOM
+          // once a real Trigger supplies open/anchor state via context — see
+          // overlay-triggers.js for which routes need this and why.
+          const rootElement = overlayTrigger
+            ? createElement(
+              RSP[overlayTrigger.trigger],
+              {},
+              createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
+              innerElement,
+            )
+            : innerElement;
           // Forces a full remount — an in-place update leaves `light-dark()` descendant
           // styles stuck on their old value
           const key = `${scheme}-${currentProps.staticColor ?? 'none'}-${currentProps.variant ?? 'none'}`;

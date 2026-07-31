@@ -12,6 +12,7 @@ import {
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
+import { OVERLAY_TRIGGERS } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -133,7 +134,6 @@ function buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelTarget,
   });
 
   applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget);
-  return serializeElement(el);
 }
 
 export function buildSwcSnippet(tagName, currentProps, markup) {
@@ -144,22 +144,36 @@ export function buildSwcSnippet(tagName, currentProps, markup) {
   // instead — currentProps.label.attribute already carries that name through
   // from resolveControl.
   const hasRealLabelAttribute = Boolean(currentProps.label?.attribute);
-  return buildSnippetElement(
+  buildSnippetElement(
     el,
     currentProps,
     fragmentRoot,
     hasRealLabelAttribute,
     (prop, { attribute }) => attribute,
   );
+  return serializeElement(el);
 }
 
-export function buildRspSnippet(componentName, currentProps, markup, hasRealLabelProp = false) {
+export function buildRspSnippet(componentName, currentProps, markup, hasRealLabelProp = false, routeName) {
   // needed for RSP's PascalCase component names.
   const xmlDoc = document.implementation.createDocument(null, null, null);
   const el = xmlDoc.createElement(componentName);
   const fragmentRoot = parseXmlFragmentRoot(markup);
   // RSP prop names are used as-authored, unlike SWC.
-  return buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
+  buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
+
+  // Real usage always nests this behind a Trigger that supplies open/anchor
+  // state via context (see overlay-triggers.js) — the snippet should show
+  // that, not just the bare overlay content, or a dev copying it hits the
+  // same blank-render problem the live preview used to have.
+  const overlayTrigger = OVERLAY_TRIGGERS[routeName];
+  if (!overlayTrigger) { return serializeElement(el); }
+
+  const trigger = xmlDoc.createElement(overlayTrigger.trigger);
+  const triggerButton = xmlDoc.createElement('Button');
+  triggerButton.textContent = overlayTrigger.triggerLabel;
+  trigger.append(triggerButton, el);
+  return serializeElement(trigger);
 }
 
 // --- Code disclosure --------------------------------------------------------
@@ -549,7 +563,7 @@ export default async function init(el) {
   const hasRealLabelProp = hasLabelProp(rspProps);
 
   const buildSnippet = implementation === 'rsp'
-    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp)
+    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, component)
     : (name, props) => buildSwcSnippet(name, props, snippetMarkup);
 
   const controlsMap = buildControlsMap(controlsSheet);

@@ -487,6 +487,50 @@ describe('buildRspSnippet — composite components', () => {
   });
 });
 
+// --- buildRspSnippet — overlay trigger wrapping ------------------------------
+
+// Mirrors deps/rsp/playground/snippets/alert-dialog.jsx — see overlay-triggers.js
+// for why AlertDialog/Dialog/CustomDialog/FullscreenDialog/Popover/Tooltip need
+// this and Tabs/Accordion/ButtonGroup (tested above) don't.
+describe('buildRspSnippet — overlay trigger wrapping', () => {
+  const alertDialogMarkup = '<AlertDialog title="Delete file?" primaryActionLabel="Delete">This action cannot be undone.</AlertDialog>';
+
+  it('wraps a DialogTrigger-family route in DialogTrigger + a labeled Button', () => {
+    // currentProps has no `children` entry, so the inner element falls back
+    // to the same 'Label' default any leaf component's snippet uses (see the
+    // Badge/ActionButton tests above) — this test is about the *wrapping*,
+    // not the fragment's own default text content.
+    const snippet = buildRspSnippet('AlertDialog', {}, alertDialogMarkup, false, 'alert-dialog');
+    expect(snippet).to.equal([
+      '<DialogTrigger>',
+      '  <Button>Open dialog</Button>',
+      '  <AlertDialog',
+      '    title="Delete file?"',
+      '    primaryActionLabel="Delete">',
+      '    Label',
+      '  </AlertDialog>',
+      '</DialogTrigger>',
+    ].join('\n'));
+  });
+
+  it('wraps the tooltip route in TooltipTrigger, not DialogTrigger', () => {
+    const snippet = buildRspSnippet('Tooltip', {}, '<Tooltip>Helpful tip text</Tooltip>', false, 'tooltip');
+    expect(snippet.startsWith('<TooltipTrigger>')).to.be.true;
+    expect(snippet.includes('<Button>Hover me</Button>')).to.be.true;
+  });
+
+  it('does not wrap a route with no OVERLAY_TRIGGERS entry', () => {
+    const snippet = buildRspSnippet('ActionButton', { children: { value: 'Action' } }, undefined, false, 'action-button');
+    expect(snippet).to.equal('<ActionButton>Action</ActionButton>');
+  });
+
+  it('does not wrap when routeName is omitted (back-compat with existing callers)', () => {
+    const snippet = buildRspSnippet('AlertDialog', {}, alertDialogMarkup);
+    expect(snippet.startsWith('<DialogTrigger>')).to.be.false;
+    expect(snippet.startsWith('<AlertDialog')).to.be.true;
+  });
+});
+
 // Guards against a typo/malformed-markup regression in the real committed
 // fragment files, which have no other build-time validation. Real (unmocked)
 // fetches — window.fetch is only stubbed inside the init() describe block below.
@@ -523,6 +567,23 @@ describe('composite snippet fragments — real committed files', () => {
     const markup = await (await fetch('/deps/rsp/playground/snippets/button-group.jsx')).text();
     const snippet = buildRspSnippet('ButtonGroup', {}, markup);
     expect(snippet.includes('<Button\n')).to.be.true;
+  });
+
+  // Regression guard for the overlay-trigger fix (deps/rsp/playground/overlay-triggers.js) —
+  // catches a future typo in OVERLAY_TRIGGERS or a route's own .jsx file breaking the wrap.
+  it('wraps the real RSP alert-dialog JSX snippet in a DialogTrigger', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/alert-dialog.jsx')).text();
+    const snippet = buildRspSnippet('AlertDialog', {}, markup, false, 'alert-dialog');
+    expect(snippet.startsWith('<DialogTrigger>')).to.be.true;
+    expect(snippet.includes('<Button>Open dialog</Button>')).to.be.true;
+    expect(snippet.includes('<AlertDialog')).to.be.true;
+  });
+
+  it('wraps the real RSP tooltip JSX snippet in a TooltipTrigger', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/tooltip.jsx')).text();
+    const snippet = buildRspSnippet('Tooltip', {}, markup, false, 'tooltip');
+    expect(snippet.startsWith('<TooltipTrigger>')).to.be.true;
+    expect(snippet.includes('<Tooltip>')).to.be.true;
   });
 });
 
