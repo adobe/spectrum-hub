@@ -4,8 +4,8 @@
  * index to its temporary index, so these must be applied to the target first.
  *
  * Deep frozen to prevent accidental mutation: the object and all nested arrays
- * are immutable. This is shallow-frozen to prevent silent changes to indexing
- * behaviour across all callers.
+ * are immutable, so no caller can silently change indexing behaviour for the
+ * rest of the run.
  */
 
 export const INDEX_SETTINGS = Object.freeze({
