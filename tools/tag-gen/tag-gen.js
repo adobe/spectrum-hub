@@ -65,7 +65,7 @@ class ADLTagGen extends LitElement {
       <div class="action-area">
       ${this.title === 'Current tags'
     ? html`<button class="btn-gradient" @click=${this.generateTags}>
-                <svg><use href="https://main--summit-labs--aemsites.aem.live/tools/tag-gen/tag-gen.svg#tag-gen" /></svg> Generate tags</button>`
+                <svg><use href="/tools/tag-gen/tag-gen.svg#tag-gen" /></svg> Generate tags</button>`
     : html`<sl-button @click=${this.updateTags}>Save tags</sl-button>`}
       </div>
     `;
@@ -74,7 +74,7 @@ class ADLTagGen extends LitElement {
   renderStatus() {
     return html`
       <div class="status-container">
-        <svg><use href="https://main--summit-labs--aemsites.aem.live/tools/tag-gen/tag-gen.svg#tag-gen" /></svg>
+        <svg><use href="/tools/tag-gen/tag-gen.svg#tag-gen" /></svg>
         <p class="status">${this._status}</p>
       </div>
     `;
