@@ -86,7 +86,9 @@ Two new runtime dependencies:
 ### Data flow
 
 1. `GET /query-index.json?limit=500` — 155 rows supplying `path`, `title`, `description`,
-   `lastModified`, `platform`, `tags`.
+   `lastModified`, `platform`, `implementation`, and `tags`. Every field on a record other than the
+   section text comes from here, so the indexer never reads the page `<head>` and parses `<main>`
+   only.
 2. `GET` each page's HTML.
 3. Parse, then inline fragments recursively, fetching each distinct fragment once per run.
 4. Split `main` into sections.
@@ -107,9 +109,11 @@ fragment modification times come from the `last-modified` response header.
   url:      '/web/rsp/components/accordion#progressive-disclosure',
   path:     '/web/rsp/components/accordion',
 
-  // Displayed. Title is highlighted; tags render as pills.
-  title: 'Accordion › Progressive disclosure',
-  tags:  ['accordion', 'container'],
+  // Displayed. Title is highlighted; the rest render as pills.
+  title:          'Accordion › Progressive disclosure',
+  implementation: 'RSP',
+  platform:       'Web',
+  tags:           ['accordion', 'container'],
 
   // Searched, not displayed.
   hierarchy:   { lvl0: 'Accordion', lvl1: 'Usage guidelines', lvl2: 'Progressive disclosure' },
@@ -119,8 +123,6 @@ fragment modification times come from the `last-modified` response header.
 
   // Facets, ranking, and debugging.
   section: 'web',
-  platform: 'web',
-  implementation: 'rsp',
   level: 3,
   position: 5,
   lastModified: 1785470599,
@@ -138,11 +140,13 @@ than assembled by the UI.
   lands. Hierarchies deeper than two levels still produce two segments; the UI has one line.
   Truncated to 80 characters. It is rendered from `_highlightResult.title`, which requires `title` to
   appear in both `searchableAttributes` and `attributesToHighlight`.
-- **`tags`** are passed through verbatim from `query-index.json` and feed the pills, including their
-  authored casing. The indexer applies no mapping, no title-casing, and no cap; how many pills fit is
-  the UI's decision. At the time of writing, 1 of 155 pages carries tags, so most results render
-  without pills until the content is tagged. This resolves itself as tagging lands, with no indexer
-  change.
+- **`implementation`, `platform`, and `tags`** feed the pills. All three are passed through verbatim
+  from `query-index.json`, authored casing included — `iOS`, `Mobile`, `RSP`, `Web`. The indexer
+  applies no mapping, no title-casing, and no cap. It emits all three as separate fields and takes no
+  position on which the UI renders or in what order; the design pairs `implementation` with
+  `platform`, but that choice stays in the UI. At the time of writing these properties are nearly
+  unpopulated, so most results render without pills until the content is tagged. That resolves itself
+  as authoring lands, with no indexer change.
 - **`description`** is not displayed. It is carried as a searchable attribute only, taken from the
   page's `description` in `query-index.json`, so a page still matches on its summary text.
 - **`external`** is omitted. A `hit.external` check treats `undefined` correctly, which keeps
@@ -156,9 +160,8 @@ than assembled by the UI.
 
 | Field | Source |
 | --- | --- |
-| `path`, `pageTitle`, `tags`, `platform` | `query-index.json` row |
+| `path`, `pageTitle`, `description`, `tags`, `platform`, `implementation` | `query-index.json` row, verbatim |
 | `section` | First path segment, for example `web` for `/web/rsp/components/accordion`. `root` when the path has no segment. |
-| `implementation` | `<meta name="implementation">` in the page head, which `query-index.json` does not expose. Free to read, since the HTML is already fetched. Empty string when absent. |
 | `anchor` | The section heading's existing `id`. Empty string for a lead section with no `id`. |
 | `position` | Zero-based index of the section within its page, in document order. |
 | `level` | 1, 2, or 3, from the heading tag. Lead sections are 1. |
@@ -192,6 +195,8 @@ settings from the target to the temporary index.
     'content',
     'tags',
     'description',
+    'implementation',
+    'platform',
   ],
   attributesToHighlight: ['title'],
   attributesForFaceting: ['platform', 'implementation', 'section', 'tags'],
@@ -205,6 +210,9 @@ settings from the target to the temporary index.
 `_highlightResult.title` to exist at all. It already contains `hierarchy.lvl0` and the section's own
 heading, so only `hierarchy.lvl1` — the intermediate context that the two-segment title drops — needs
 listing separately.
+
+`implementation` and `platform` are listed last, so that typing a pill's text such as `iOS` finds the
+matching pages while never outranking a title or body match.
 
 `attributesToSnippet` is not configured. Nothing renders a snippet.
 
