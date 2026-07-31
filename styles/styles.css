@@ -422,15 +422,12 @@ div[data-status],
   flex-direction: column;
   gap: var(--s2-spacing-200);
   max-width: var(--se-grid-container-width);
-  margin: 0 auto;
   border-radius: 32px;
   background-color: var(--se-body-background-color);
   padding: var(--s2-spacing-800);
   margin-block-end: var(--s2-spacing-300);
 }
 
-/* The wrapper's own gap owns the spacing above the <h1>; drop the standalone
-block's bottom padding so it isn't doubled up here. */
 .page-hero > .breadcrumbs {
   padding-block-end: 0;
 }
@@ -446,7 +443,6 @@ block's bottom padding so it isn't doubled up here. */
 
 .breadcrumbs {
   max-width: var(--se-grid-container-width);
-  margin: 0 auto;
   padding-block-end: var(--s2-spacing-300);
 
   ol {
@@ -455,7 +451,7 @@ block's bottom padding so it isn't doubled up here. */
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: var(--s2-body-size-s);
+    font-size: var(--s2-body-size-xs);
     color: var(--s2-gray-700);
   }
 
@@ -476,6 +472,12 @@ block's bottom padding so it isn't doubled up here. */
 
     &:hover {
       text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+      outline-offset: var(--s2-spacing-50);
+      border-radius: var(--s2-corner-radius-100);
     }
   }
 }
