@@ -70,6 +70,57 @@ describe('section-metadata block', () => {
     });
   });
 
+  describe('base .section rule — cascade layer regression', () => {
+    // section-metadata.css loads as a plain <link> (unlayered). Page-level base styles live inside
+    // a named @layer. Per the cascade-layers spec, unlayered rules always beat layered ones
+    // regardless of specificity — so an unconditional `.section { padding: ... }` here previously
+    // zeroed out padding-block on every section on the page, not just ones using this block.
+    let layerStyle;
+    let link;
+
+    before(async () => {
+      layerStyle = document.createElement('style');
+      layerStyle.textContent = '@layer page { main > .section { padding-block: 120px; } }';
+      document.head.append(layerStyle);
+
+      link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/blocks/section-metadata/section-metadata.css';
+      document.head.append(link);
+      await new Promise((resolve) => {
+        link.onload = resolve;
+        link.onerror = resolve;
+      });
+    });
+
+    after(() => {
+      layerStyle.remove();
+      link.remove();
+    });
+
+    afterEach(() => {
+      document.querySelector('main')?.remove();
+    });
+
+    it('does not override a layered page rule for a section with no spacing modifier', () => {
+      const main = document.createElement('main');
+      const section = document.createElement('div');
+      section.className = 'section';
+      main.append(section);
+      document.body.append(main);
+      expect(getComputedStyle(section).paddingBlock).to.equal('120px');
+    });
+
+    it('still applies its own padding-block override for a section that opts into a spacing modifier', () => {
+      const main = document.createElement('main');
+      const section = document.createElement('div');
+      section.className = 'section spacing-l';
+      main.append(section);
+      document.body.append(main);
+      expect(getComputedStyle(section).paddingBlock).to.not.equal('120px');
+    });
+  });
+
   describe('grid row', () => {
     it('adds both "grid" and "grid-{value}" classes to the section', async () => {
       const { section, el } = makeSection(row('grid', '2'));

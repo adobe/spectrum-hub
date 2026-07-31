@@ -30,7 +30,7 @@ header {
   }
 
   a {
-    color: var(--se-body-color);
+    color: var(--s2-gray-1000);
   }
 
   .section > .default-content {
@@ -78,6 +78,7 @@ header {
       align-items: center;
       gap: var(--s2-spacing-100);
       list-style: none;
+      color: var(--s2-gray-1000);
     }
   }
   

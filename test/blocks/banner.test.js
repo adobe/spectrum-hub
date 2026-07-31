@@ -33,12 +33,12 @@ describe('banner block', () => {
     expect(document.head.querySelector('link[href$="/deps/se/buttons.css"]')).to.be.null;
   });
 
-  it('adds se-button and size-s to the button link\'s wrapping div', async () => {
+  it('adds se-button and size-m to the button link\'s wrapping div', async () => {
     const el = makeEl(WITH_BUTTON);
     await init(el);
     const wrapper = el.querySelector('a.btn').closest('div');
     expect(wrapper.classList.contains('se-button')).to.be.true;
-    expect(wrapper.classList.contains('size-s')).to.be.true;
+    expect(wrapper.classList.contains('size-m')).to.be.true;
   });
 
   it('leaves the button link\'s own classes untouched', async () => {
