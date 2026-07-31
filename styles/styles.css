@@ -440,6 +440,7 @@ div[data-status],
 .page-hero p {
   margin: 0;
   color: var(--s2-gray-700);
+  max-inline-size: 80ch;
 }
 
 .breadcrumbs {
