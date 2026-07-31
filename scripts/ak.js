@@ -295,9 +295,20 @@ function decorateLinks(el) {
 }
 
 function loadIcons(el) {
-  const icons = el.querySelectorAll('span.icon');
+  const icons = [...el.querySelectorAll('span.icon')];
   if (!icons.length) { return; }
-  import('./utils/svg.js').then((mod) => mod.default(icons));
+  const svgs = icons.reduce((acc, icon) => {
+    const lastClass = Array.from(icon.classList).pop();
+    if (lastClass.startsWith('icon-size-')) {
+      const prefix = icon.parentElement.nodeName.startsWith('H') ? 'heading' : 'text';
+      icon.parentElement.classList.add(lastClass.replace('icon', prefix));
+      icon.remove();
+    } else {
+      acc.push(icon);
+    }
+    return acc;
+  }, []);
+  import('./utils/svg.js').then((mod) => mod.default(svgs));
 }
 
 function groupChildren(section) {

@@ -7,6 +7,7 @@ loadStyle(import.meta.url.replace('js', 'css'));
 
 const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
+const INDEX_BASED_PARENT_NAMES = ['rsp', 'swc'];
 const INDEX_BASED_NAV = [
   { prefix: '/web/rsp', count: 0 },
   { prefix: '/web/swc', count: 0 },
@@ -50,6 +51,13 @@ export const decorateLevel = (ul, depth) => {
       // The link carries the visible label here
       btn.setAttribute('aria-label', labelText);
     } else {
+      if (labelText === 'Components') {
+        const prevLiLabel = li.previousElementSibling.textContent.trim().toLowerCase();
+        if (INDEX_BASED_PARENT_NAMES.some((name) => name === prevLiLabel)) {
+          label.setAttribute('index-based-nav-prefix', `/web/${prevLiLabel}`);
+        }
+      }
+
       btn.append(label);
     }
 
@@ -99,13 +107,16 @@ const decorateIndexBasedNav = (navList, index) => {
   index.forEach((entry) => {
     const parentPrefix = INDEX_BASED_NAV.find((top) => entry.path.startsWith(`${top.prefix}/`));
     if (!parentPrefix) { return; }
-    const parentAnchor = navList.querySelector(`[href^="${parentPrefix.prefix}"]`);
-    const parentLi = parentAnchor.closest('li');
+    const parentLabel = navList.querySelector(`[index-based-nav-prefix^="${parentPrefix.prefix}"]`);
+    if (!parentLabel) {
+      return;
+    }
+    const parentLi = parentLabel.closest('li');
     if (!parentLi) {
       log(`Could not find a parent nav item for ${entry.path}`);
       return;
     }
-    parentPrefix.anchor ??= parentAnchor;
+    parentPrefix.label ??= parentLabel;
     parentPrefix.count += 1;
 
     const lvl3Ul = parentLi.querySelector('.level-3-list');
@@ -132,7 +143,7 @@ const decorateBadges = () => {
     const badge = document.createElement('span');
     badge.classList.add('count-badge');
     badge.textContent = parentPrefix.count;
-    parentPrefix.anchor.after(badge);
+    parentPrefix.label.after(badge);
   });
 };
 
