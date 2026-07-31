@@ -60,19 +60,19 @@ These were considered and deliberately deferred.
 
 ## Architecture
 
-A new top-level `indexer/` directory, added to `.hlxignore` so it is not served, with an ESLint
+A `tools/indexer/` directory, added to `.hlxignore` so it is not served, with an ESLint
 override granting Node globals.
 
 | Module | Responsibility |
 | --- | --- |
-| `indexer/index.js` | CLI entry. Parses flags, orchestrates the run, prints the summary, sets the exit code. |
-| `indexer/config.js` | Reads `.env` when present, validates required variables. |
-| `indexer/aem-client.js` | `fetchQueryIndex()` and `fetchPage(path)` against `SITE_ORIGIN`, through a concurrency pool. |
-| `indexer/fragments.js` | `inlineFragments(mainEl, fetchPage)` — recursively replaces fragment links with fragment content. |
-| `indexer/sections.js` | `splitSections(mainEl)` — an ordered list of sections with heading, level, anchor, and text. |
-| `indexer/records.js` | `buildRecords(indexRow, sections, meta)` — Algolia records. |
-| `indexer/algolia.js` | Applies settings, then `replaceAllObjects`. |
-| `indexer/settings.js` | Index settings as a plain exported object. |
+| `tools/indexer/index.js` | CLI entry. Parses flags, orchestrates the run, prints the summary, sets the exit code. |
+| `tools/indexer/config.js` | Reads `.env` when present, validates required variables. |
+| `tools/indexer/aem-client.js` | `fetchQueryIndex()` and `fetchPage(path)` against `SITE_ORIGIN`, through a concurrency pool. |
+| `tools/indexer/fragments.js` | `inlineFragments(mainEl, fetchPage)` — recursively replaces fragment links with fragment content. |
+| `tools/indexer/sections.js` | `splitSections(mainEl)` — an ordered list of sections with heading, level, anchor, and text. |
+| `tools/indexer/records.js` | `buildRecords(indexRow, sections, meta)` — Algolia records. |
+| `tools/indexer/algolia.js` | Applies settings, then `replaceAllObjects`. |
+| `tools/indexer/settings.js` | Index settings as a plain exported object. |
 
 `fragments`, `sections`, and `records` are pure functions over a DOM and plain data, with the fetcher
 injected. All the logic that will need tuning is unit-testable without network access.
@@ -322,14 +322,14 @@ the process rather than the call.
 ## CLI
 
 ```bash
-node indexer/index.js                     # Full rebuild, pushes to Algolia
-node indexer/index.js --dry-run           # Builds records to indexer/out/records.json, pushes nothing
-node indexer/index.js --limit=10          # First 10 pages only
-node indexer/index.js --path=/web/rsp/components/accordion   # One page, implies --dry-run
+node tools/indexer/index.js                     # Full rebuild, pushes to Algolia
+node tools/indexer/index.js --dry-run           # Builds records to tools/indexer/out/records.json, pushes nothing
+node tools/indexer/index.js --limit=10          # First 10 pages only
+node tools/indexer/index.js --path=/web/rsp/components/accordion   # One page, implies --dry-run
 ```
 
 `--dry-run` is the tuning loop: inspect `records.json`, adjust the noise list or the splitter, re-run,
-and diff. `indexer/out/` is added to `.gitignore`.
+and diff. `tools/indexer/out/` is added to `.gitignore`.
 
 `--limit` and `--path` restrict which pages are read, but the push is still a full replace. A limited
 run that pushes therefore leaves the index holding only those pages. Both flags are meant for scratch
@@ -369,7 +369,7 @@ unattended run still leaves an operator the counts.
 - `schedule` with `cron: '0 */2 * * *'`, plus `workflow_dispatch` with a `dry_run` boolean input so a
   no-op run can be triggered against production configuration from the Actions tab.
 - `permissions: contents: read`. Nothing is committed.
-- Node 20, matching the existing workflows, then `npm ci` and a single `node indexer/index.js` step.
+- Node 20, matching the existing workflows, then `npm ci` and a single `node tools/indexer/index.js` step.
 - `ALGOLIA_APP_ID` and `ALGOLIA_WRITE_API_KEY` as repository secrets. `ALGOLIA_INDEX_NAME` as a
   repository variable, so the target is visible without being secret.
 

@@ -5,4 +5,4 @@ package.json
 package-lock.json
 test/
 workers/
-indexer/
+tools/indexer/

@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { DEFAULT_CONCURRENCY, DEFAULT_SITE_ORIGIN, loadConfig } from '../../indexer/config.js';
+import {
+  DEFAULT_CONCURRENCY,
+  DEFAULT_SITE_ORIGIN,
+  envCandidates,
+  loadConfig,
+} from '../../tools/indexer/config.js';
 
 const complete = {
   ALGOLIA_APP_ID: 'APP',
@@ -60,5 +65,23 @@ describe('loadConfig', () => {
   it('strips a trailing slash from SITE_ORIGIN', () => {
     const config = loadConfig({ ...complete, SITE_ORIGIN: 'https://example.test/' });
     assert.equal(config.siteOrigin, 'https://example.test');
+  });
+});
+
+describe('envCandidates', () => {
+  it('looks in the working directory first, since the tool runs from the repo root', () => {
+    assert.equal(envCandidates('/repo')[0], '/repo/.env');
+  });
+
+  it('falls back to the repository root resolved from this module', () => {
+    // Not the module's own directory: .env lives at the root, two levels up
+    // from tools/indexer. Pinning this catches a silent break if the folder moves.
+    const [, fallback] = envCandidates('/repo');
+    assert.ok(fallback.endsWith('/.env'), fallback);
+    assert.ok(!fallback.includes('/tools/'), `fallback must resolve above tools/: ${fallback}`);
+  });
+
+  it('offers exactly two candidates', () => {
+    assert.equal(envCandidates('/repo').length, 2);
   });
 });

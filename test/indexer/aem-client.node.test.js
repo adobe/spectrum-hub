@@ -6,7 +6,7 @@ import {
   createClient,
   mapWithConcurrency,
   retryAfterMs,
-} from '../../indexer/aem-client.js';
+} from '../../tools/indexer/aem-client.js';
 
 const ORIGIN = 'https://site.test';
 

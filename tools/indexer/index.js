@@ -1,10 +1,10 @@
 /**
  * CLI entry point for the Algolia content indexer.
  *
- *   node indexer/index.js                    full rebuild, pushes to Algolia
- *   node indexer/index.js --dry-run          writes indexer/out/records.json only
- *   node indexer/index.js --limit=10         first 10 pages
- *   node indexer/index.js --path=/some/page  one page, implies --dry-run
+ *   node tools/indexer/index.js                    full rebuild, pushes to Algolia
+ *   node tools/indexer/index.js --dry-run          writes tools/indexer/out/records.json only
+ *   node tools/indexer/index.js --limit=10         first 10 pages
+ *   node tools/indexer/index.js --path=/some/page  one page, implies --dry-run
  *
  * --limit and --path restrict what is read, but a push is still a full replace,
  * so a limited run that publishes leaves the index holding only those pages.
@@ -283,7 +283,7 @@ export async function main({
 }
 
 // Only run when invoked directly, so the test can import the exports. argv[1]
-// is resolved because `node indexer/index.js` passes a relative path while
+// is resolved because `node tools/indexer/index.js` passes a relative path while
 // import.meta.url is always absolute.
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((error) => {

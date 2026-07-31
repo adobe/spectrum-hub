@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { parse } from 'node-html-parser';
 
-import { inlineFragments } from '../../indexer/fragments.js';
+import { inlineFragments } from '../../tools/indexer/fragments.js';
 
 const main = (html) => parse(`<main>${html}</main>`).querySelector('main');
 const page = (body) => `<html><body><main>${body}</main></body></html>`;

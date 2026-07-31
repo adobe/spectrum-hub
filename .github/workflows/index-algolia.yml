@@ -40,7 +40,7 @@ jobs:
         run: npm ci
 
       - name: Build and publish the index
-        run: node indexer/index.js ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node tools/indexer/index.js ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_WRITE_API_KEY: ${{ secrets.ALGOLIA_WRITE_API_KEY }}

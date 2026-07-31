@@ -77,7 +77,7 @@ export default defineConfig([
   },
   {
     // Node scripts, not browser code
-    files: ['indexer/**/*.js'],
+    files: ['tools/indexer/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,

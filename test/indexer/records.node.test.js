@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { buildRecords, httpDateToEpochSeconds } from '../../indexer/records.js';
+import { buildRecords, httpDateToEpochSeconds } from '../../tools/indexer/records.js';
 
 const row = {
   path: '/web/rsp/components/accordion',

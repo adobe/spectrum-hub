@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { publish } from '../../indexer/algolia.js';
-import { INDEX_SETTINGS } from '../../indexer/settings.js';
+import { publish } from '../../tools/indexer/algolia.js';
+import { INDEX_SETTINGS } from '../../tools/indexer/settings.js';
 
 describe('INDEX_SETTINGS', () => {
   it('searches title first so highlighting exists and outranks facets', () => {

@@ -13,4 +13,4 @@ helix-importer-ui
 .cursor
 
 .superpowers/
-indexer/out/
+tools/indexer/out/

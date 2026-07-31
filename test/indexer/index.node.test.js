@@ -10,10 +10,10 @@ import {
   buildAll,
   main,
   parseArgs,
-} from '../../indexer/index.js';
+} from '../../tools/indexer/index.js';
 
 const run = promisify(execFile);
-const ENTRY = fileURLToPath(new URL('../../indexer/index.js', import.meta.url));
+const ENTRY = fileURLToPath(new URL('../../tools/indexer/index.js', import.meta.url));
 
 const page = (body) => ({ html: `<html><body><main>${body}</main></body></html>`, lastModified: null });
 

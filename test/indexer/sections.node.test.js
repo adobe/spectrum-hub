@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { parse } from 'node-html-parser';
 
-import { splitSections, stripNoise } from '../../indexer/sections.js';
+import { splitSections, stripNoise } from '../../tools/indexer/sections.js';
 
 const main = (html) => parse(`<main>${html}</main>`).querySelector('main');
 

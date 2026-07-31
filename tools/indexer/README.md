@@ -1,7 +1,7 @@
 # Content indexer
 
 Publishes Spectrum Hub content to Algolia. Runs every two hours via
-[`.github/workflows/index-algolia.yml`](../.github/workflows/index-algolia.yml), and runs
+[`.github/workflows/index-algolia.yml`](../../.github/workflows/index-algolia.yml), and runs
 identically on a laptop.
 
 Each run is a full atomic rebuild: it reads every published page, inlines any linked
@@ -28,10 +28,10 @@ Two optional variables tune the run:
 | `INDEXER_CONCURRENCY` | `3` | Page fetches in flight. The origin rate-limits bursts: a full run at 16 draws HTTP 429 widely and aborts, while 3 completes clean in about six seconds. Raise it only if the origin's limits change. |
 
 ```bash
-node indexer/index.js                     # full rebuild, publishes
-node indexer/index.js --dry-run           # writes indexer/out/records.json, publishes nothing
-node indexer/index.js --limit=10          # first 10 pages
-node indexer/index.js --path=/web/rsp/components/accordion   # one page, implies --dry-run
+node tools/indexer/index.js                     # full rebuild, publishes
+node tools/indexer/index.js --dry-run           # writes tools/indexer/out/records.json, publishes nothing
+node tools/indexer/index.js --limit=10          # first 10 pages
+node tools/indexer/index.js --path=/web/rsp/components/accordion   # one page, implies --dry-run
 ```
 
 `--limit` and `--path` restrict what is read, but a push is still a full replace, so a
@@ -67,5 +67,5 @@ every run.
 
 ## Design
 
-See [the design spec](../docs/superpowers/specs/2026-07-30-algolia-content-indexer-design.md)
+See [the design spec](../../docs/superpowers/specs/2026-07-30-algolia-content-indexer-design.md)
 for the record shape, index settings, and the reasoning behind them.
