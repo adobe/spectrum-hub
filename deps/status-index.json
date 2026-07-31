@@ -571,23 +571,6 @@
       }
     },
     {
-      "name": "ComboBoxItem",
-      "label": "Combo Box Item",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "ContextualHelp",
       "label": "Contextual Help",
       "platforms": {
@@ -626,46 +609,8 @@
       }
     },
     {
-      "name": "DateField",
-      "label": "Date Field",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "secondary": "Use date and time component"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "DatePicker",
       "label": "Date Picker",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "secondary": "Use date and time component"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "DateRangePicker",
-      "label": "Date Range Picker",
       "platforms": {
         "web": {
           "figma": {
@@ -909,23 +854,6 @@
       }
     },
     {
-      "name": "MenuItem",
-      "label": "Menu Item",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Meter",
       "label": "Meter",
       "platforms": {
@@ -940,40 +868,6 @@
           "swc": {
             "status": "available",
             "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "Modal",
-      "label": "Modal",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "NotificationBadge",
-      "label": "Notification Badge",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -1090,44 +984,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "RangeCalendar",
-      "label": "Range Calendar",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "secondary": "Use date and time component"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "RangeSlider",
-      "label": "Range Slider",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "Use Slider"
           }
         }
       }
@@ -1639,25 +1495,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "TimeField",
-      "label": "Time Field",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "secondary": "Use date and time component"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
