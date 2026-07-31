@@ -16,5 +16,16 @@
      itself): real DOM renders as a plain, under-chromed element rather than
      crashing. Flagging for a live double-check. -->
 <Card id="budget">
-  <CardPreview>Budget.xlsx</CardPreview>
+  <Content>
+    <Text slot="title">Card title</Text>
+    <ActionMenu>
+      <MenuItem>Edit</MenuItem>
+      <MenuItem>Share</MenuItem>
+      <MenuItem>Delete</MenuItem>
+    </ActionMenu>
+    <Text slot="description">Card description. Give a concise overview of the context or functionality that's mentioned in the card title.</Text>
+  </Content>
+  <Footer>
+    <StatusLight size="S" variant="positive">Published</StatusLight>
+  </Footer>
 </Card>
