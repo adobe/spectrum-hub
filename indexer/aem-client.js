@@ -60,7 +60,10 @@ export function createClient({ siteOrigin, fetchImpl = fetch }) {
         }
         : null;
       return result;
-    })();
+    })().catch((err) => {
+      cache.delete(path);
+      throw err;
+    });
 
     cache.set(path, promise);
     return promise;

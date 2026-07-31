@@ -103,6 +103,34 @@ describe('fetchPage', () => {
     assert.deepEqual(result2, { html: 'x', lastModified: null });
     assert.equal(calls.length, 1, 'should have made only one network call');
   });
+
+  it('evicts rejections from cache so transient errors can be retried', async () => {
+    let callCount = 0;
+    const fetchImpl = async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        throw new Error('transient network error');
+      }
+      return {
+        ok: true,
+        status: 200,
+        text: async () => 'success',
+        json: async () => ({}),
+        headers: { get: () => null },
+      };
+    };
+
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl });
+
+    await assert.rejects(
+      () => client.fetchPage('/a'),
+      /transient network error/,
+    );
+
+    const result = await client.fetchPage('/a');
+    assert.deepEqual(result, { html: 'success', lastModified: null });
+    assert.equal(callCount, 2, 'should have retried after rejection');
+  });
 });
 
 describe('mapWithConcurrency', () => {
