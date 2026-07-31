@@ -142,11 +142,27 @@ than assembled by the UI.
   appear in both `searchableAttributes` and `attributesToHighlight`.
 - **`implementation`, `platform`, and `tags`** feed the pills. All three are passed through verbatim
   from `query-index.json`, authored casing included — `iOS`, `Mobile`, `RSP`, `Web`. The indexer
-  applies no mapping, no title-casing, and no cap. It emits all three as separate fields and takes no
-  position on which the UI renders or in what order; the design pairs `implementation` with
-  `platform`, but that choice stays in the UI. At the time of writing these properties are nearly
+  applies no mapping, no title-casing, and no cap. At the time of writing these properties are nearly
   unpopulated, so most results render without pills until the content is tagged. That resolves itself
   as authoring lands, with no indexer change.
+
+  They stay three separate fields rather than one merged array, and the UI composes the pill row:
+
+  ```js
+  const pills = [...hit.tags];
+  if (hit.platform) pills.unshift(hit.platform);
+  if (hit.implementation) pills.unshift(hit.implementation);
+  ```
+
+  Merging them in the record would cost more than it saves. `attributesForFaceting` can only filter
+  on `platform` while `platform` is its own attribute. `searchableAttributes` is priority-ordered, and
+  `tags` deliberately outranks `platform`, so folding `Web` into `tags` would make every `/web/**`
+  page match "web" as strongly as a genuine tag hit. And keeping the composition in the UI means
+  reordering or dropping a pill is a UI edit rather than a full reindex.
+
+  To make those three lines safe, the indexer guarantees the shape: `tags` is always an array, never
+  `undefined` or a bare string, and `implementation` and `platform` are always strings, empty when
+  unauthored. The UI never needs to defend against a missing field.
 - **`description`** is not displayed. It is carried as a searchable attribute only, taken from the
   page's `description` in `query-index.json`, so a page still matches on its summary text.
 - **`external`** is omitted. A `hit.external` check treats `undefined` correctly, which keeps
@@ -339,8 +355,10 @@ test touches the network.
   cap holds, cycles terminate, a cached fragment is fetched once, and a 404 leaves the page intact.
 - **`records`** — `objectID` uniqueness, `lastModified` rolling up to the maximum across inlined
   fragments and handling the seconds-versus-HTTP-date conversion, display title formatting for both
-  lead and sub-sections including 80-character truncation, tags passed through untransformed, `url`
-  emitted as a root-relative path, and `external` absent.
+  lead and sub-sections including 80-character truncation, `url` emitted as a root-relative path, and
+  `external` absent. Pill fields are covered by their own cases: values passed through untransformed,
+  `tags` always an array given a missing, string, or null value in the source row, and
+  `implementation` and `platform` always strings given a missing value.
 - **`config`** — a missing `.env` not throwing, and a missing required variable throwing.
 
 ## Follow-up work
