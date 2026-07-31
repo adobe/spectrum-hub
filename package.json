@@ -9,7 +9,7 @@
     "lint": "npm run lint:js && npm run lint:css",
     "test": "npm run test:unit; e1=$?; npm run test:extractions; e2=$?; exit $((e1 | e2))",
     "test:unit": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --concurrent-browsers 4",
-    "test:extractions": "node --test test/extractions/*.node.test.js",
+    "test:extractions": "node --test test/extractions/*.node.test.js test/indexer/*.node.test.js",
     "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
@@ -41,7 +41,9 @@
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
+    "algoliasearch": "^5.56.0",
     "esbuild": "^0.28.0",
-    "lit": "^3.3.1"
+    "lit": "^3.3.1",
+    "node-html-parser": "^9.0.1"
   }
 }
