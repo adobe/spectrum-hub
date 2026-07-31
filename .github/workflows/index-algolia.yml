@@ -1,0 +1,47 @@
+name: Index content to Algolia
+
+on:
+  schedule:
+    - cron: '0 */2 * * *' # Every two hours
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Build records without publishing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One run at a time against one index. A slow run can outlive the two-hour cron,
+# and two overlapping replaceAllObjects calls would race the same index.
+# cancel-in-progress stays false: interrupting a rebuild mid-swap is worse than
+# making the next run wait.
+concurrency:
+  group: index-algolia
+  cancel-in-progress: false
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    # A full run is minutes, not tens of minutes. This bounds a hung fetch so a
+    # stuck job cannot hold the concurrency group against every later run.
+    timeout-minutes: 30
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and publish the index
+        run: node tools/indexer/index.js ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          ALGOLIA_WRITE_API_KEY: ${{ secrets.ALGOLIA_WRITE_API_KEY }}
+          ALGOLIA_INDEX_NAME: ${{ vars.ALGOLIA_INDEX_NAME }}

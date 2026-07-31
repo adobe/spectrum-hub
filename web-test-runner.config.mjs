@@ -15,6 +15,7 @@ export default {
     'test/**/*.test.js',
     'test/**/*.test.html',
     '!test/extractions/**',
+    '!test/indexer/**',
   ],
   nodeResolve: true,
   port: 2000,
