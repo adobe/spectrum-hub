@@ -74,5 +74,17 @@ export default defineConfig([
       'no-underscore-dangle': 0,
       'no-unused-expressions': 0,
     },
-  }
+  },
+  {
+    // Node scripts, not browser code
+    files: ['tools/indexer/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ]);

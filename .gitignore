@@ -11,3 +11,6 @@ helix-importer-ui
 .wrangler
 .claude
 .cursor
+
+.superpowers/
+tools/indexer/out/

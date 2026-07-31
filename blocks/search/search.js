@@ -11,8 +11,8 @@ const styles = await Promise.all([
 ]);
 
 const APP_ID = '464UXSQJQC';
-const SEARCH_KEY = '271461afa0e340546d112204c7520c1e'; // public search-only key
-const INDEX_NAME = 'spectrum-docs-test';
+const SEARCH_KEY = '271461afa0e340546d112204c7520c1e';
+const INDEX_NAME = 'spectrum-docs-public';
 const DEBOUNCE_MS = 250;
 
 class SHSearch extends LitElement {
