@@ -20,6 +20,13 @@ ALGOLIA_INDEX_NAME=spectrum-docs-dev
 
 Use a scratch index name locally. A run replaces the entire target index.
 
+Two optional variables tune the run:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SITE_ORIGIN` | `https://main--spectrum-hub--adobe.aem.live` | Where content is read from. |
+| `INDEXER_CONCURRENCY` | `3` | Page fetches in flight. The origin rate-limits bursts: a full run at 16 draws HTTP 429 widely and aborts, while 3 completes clean in about six seconds. Raise it only if the origin's limits change. |
+
 ```bash
 node indexer/index.js                     # full rebuild, publishes
 node indexer/index.js --dry-run           # writes indexer/out/records.json, publishes nothing
@@ -40,6 +47,23 @@ Most tuning happens in [`sections.js`](./sections.js):
 
 Change it, add a case to `test/indexer/sections.node.test.js`, then compare with
 `--dry-run`.
+
+## When a run refuses to publish
+
+Each run replaces the whole index, so it fails closed rather than publish something
+gutted. It aborts before pushing when any of these hold, printing the summary first so
+the counts survive the abort:
+
+- Page failures reach `max(3, pages * 0.1)`. A page that yields zero records counts here,
+  not just one that could not be fetched.
+- No fragment at all resolved, across a run that attempted at least ten.
+- Unreachable fragments — requests that exhausted their retries — reach
+  `max(3, fragments * 0.1)`.
+
+Fragments the origin reports as 404 are counted and warned about but do not trigger an
+abort on their own. Authors routinely link fragments that were never published: a full
+run currently resolves 127 and 404s on 368, so treating that as an incident would block
+every run.
 
 ## Design
 

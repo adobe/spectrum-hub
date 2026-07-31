@@ -311,6 +311,7 @@ block.
 | `ALGOLIA_WRITE_API_KEY` | Yes | — |
 | `ALGOLIA_INDEX_NAME` | Yes | None. Must be explicit, so a missing variable cannot wipe the wrong index. |
 | `SITE_ORIGIN` | No | `https://main--spectrum-hub--adobe.aem.live` |
+| `INDEXER_CONCURRENCY` | No | `3`. The origin rate-limits bursts, so this is tunable without a code change. |
 
 `config.js` loads `.env` with `process.loadEnvFile()` inside a `try`/`catch`, matching the convention
 already used by `tools/algolia-push-test.js` on the `search` branch. The call throws when the file is
@@ -337,17 +338,29 @@ with a real push.
 
 ## Error handling
 
-- A page that fails to fetch logs a warning and is skipped.
-- A fragment that fails to fetch logs a warning and injects nothing.
+- A page that fails to fetch logs a warning naming the cause, and is skipped. A page that yields
+  zero records is treated the same way: a 200 with an empty `<main>` is content loss, not a success.
+- A fragment that fails to inline logs a warning and injects nothing. The page still indexes with
+  whatever content it does have, because partial content beats none.
+- HTTP 429 and 5xx are retried with exponential backoff, honouring `Retry-After`, up to four
+  attempts. A request that exhausts them raises an error rather than resolving to `null`, so
+  throttling can never be mistaken for a deleted page. A genuine 404 is not retried.
 - The run aborts before pushing, and exits non-zero, when page failures reach
   `max(3, attempted * 0.1)`. Without this, an `aem.live` outage would turn an atomic rebuild into an
   atomic emptying of the index. This mirrors how `deps/build-status-index.js` fails closed on an
   empty roster. The floor of 3 keeps a single flaky fetch from aborting a small `--limit` run, where
   a bare 10 percent threshold would trip after one failure.
+- The run also aborts on fragment loss, which page failures cannot see: a page whose fragments all
+  failed still returns 200 and still yields its title record. Two rules, because the two loss modes
+  differ. Fragments the origin reports as 404 are the steady state — a full run resolves 127 and
+  404s on 368 — so they are counted and warned about but cannot abort on their own. Fragments the
+  origin failed to answer for abort at `max(3, attempted * 0.1)`, and a run of at least ten attempts
+  that resolves nothing at all aborts regardless of cause.
 - If zero records are built, the run aborts and exits non-zero.
 
-The run prints a summary covering pages fetched, fragments resolved, records built, per-page
-failures, and elapsed time.
+The run prints a summary covering pages fetched, fragments resolved and lost, records built,
+per-page failures, and elapsed time. It is printed **before** the abort decision, so an aborted
+unattended run still leaves an operator the counts.
 
 ## GitHub Actions
 
