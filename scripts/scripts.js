@@ -6,7 +6,6 @@ import {
   setScheme,
   makePicture,
 } from './ak.js';
-import decorateHeadingClasses from './utils/heading-classes.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -31,8 +30,6 @@ const decorateArea = ({ area = document }) => {
   };
 
   eagerLoad(area, 'img:not([src*=".svg"])');
-
-  decorateHeadingClasses(area);
 
   // adds the id to `main` for the skip link
   const main = area.querySelector('main');
