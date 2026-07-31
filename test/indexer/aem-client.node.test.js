@@ -1,9 +1,41 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { createClient, mapWithConcurrency } from '../../indexer/aem-client.js';
+import {
+  DEFAULT_MAX_ATTEMPTS,
+  createClient,
+  mapWithConcurrency,
+  retryAfterMs,
+} from '../../indexer/aem-client.js';
 
 const ORIGIN = 'https://site.test';
+
+/**
+ * Records the delays a client would have waited instead of waiting them, so a
+ * backoff test costs no wall-clock time.
+ */
+function fakeSleep() {
+  const delays = [];
+  return { delays, sleep: async (ms) => { delays.push(ms); } };
+}
+
+/** Replays a queue of canned responses, one per call. */
+function scriptedFetch(script) {
+  const calls = [];
+  const impl = async (url) => {
+    calls.push(url);
+    const step = script[Math.min(calls.length - 1, script.length - 1)];
+    if (step.throws) { throw new Error(step.throws); }
+    return {
+      ok: step.status === 200,
+      status: step.status,
+      text: async () => step.body ?? '',
+      json: async () => JSON.parse(step.body ?? '{}'),
+      headers: { get: (name) => (step.headers || {})[name.toLowerCase()] ?? null },
+    };
+  };
+  return { impl, calls };
+}
 
 /** Minimal fetch double: a url -> { status, body, headers } map. */
 function fakeFetch(routes) {
@@ -120,7 +152,10 @@ describe('fetchPage', () => {
       };
     };
 
-    const client = createClient({ siteOrigin: ORIGIN, fetchImpl });
+    // maxAttempts: 1 disables the retry layer so this test still exercises what
+    // it is about — that a rejection is evicted from the cache — rather than
+    // being absorbed by a retry.
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl, maxAttempts: 1 });
 
     await assert.rejects(
       () => client.fetchPage('/a'),
@@ -130,6 +165,125 @@ describe('fetchPage', () => {
     const result = await client.fetchPage('/a');
     assert.deepEqual(result, { html: 'success', lastModified: null });
     assert.equal(callCount, 2, 'should have retried after rejection');
+  });
+});
+
+describe('retry', () => {
+  it('retries a 429 and succeeds', async () => {
+    const { impl, calls } = scriptedFetch([
+      { status: 429 },
+      { status: 429 },
+      { status: 200, body: 'hello' },
+    ]);
+    const { delays, sleep } = fakeSleep();
+    const client = createClient({
+      siteOrigin: ORIGIN, fetchImpl: impl, sleep, baseDelayMs: 500,
+    });
+
+    assert.equal((await client.fetchPage('/a')).html, 'hello');
+    assert.equal(calls.length, 3);
+    assert.deepEqual(delays, [500, 1000], 'backoff should be exponential');
+  });
+
+  it('surfaces an exhausted 429 as a rejection, not as a missing page', async () => {
+    // A throttled page must never look like a deleted one: that is how a
+    // rate-limited origin silently shrinks the index.
+    const { impl, calls } = scriptedFetch([{ status: 429 }]);
+    const { sleep } = fakeSleep();
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl: impl, sleep });
+
+    await assert.rejects(() => client.fetchPage('/a'), /429/);
+    assert.equal(calls.length, DEFAULT_MAX_ATTEMPTS);
+  });
+
+  it('does not retry a genuine 404', async () => {
+    const { impl, calls } = scriptedFetch([{ status: 404 }]);
+    const { delays, sleep } = fakeSleep();
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl: impl, sleep });
+
+    assert.equal(await client.fetchPage('/gone'), null);
+    assert.equal(calls.length, 1);
+    assert.deepEqual(delays, []);
+  });
+
+  it('retries a 503', async () => {
+    const { impl, calls } = scriptedFetch([{ status: 503 }, { status: 200, body: 'ok' }]);
+    const { sleep } = fakeSleep();
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl: impl, sleep });
+
+    assert.equal((await client.fetchPage('/a')).html, 'ok');
+    assert.equal(calls.length, 2);
+  });
+
+  it('retries a transport error', async () => {
+    const { impl, calls } = scriptedFetch([{ throws: 'ECONNRESET' }, { status: 200, body: 'ok' }]);
+    const { sleep } = fakeSleep();
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl: impl, sleep });
+
+    assert.equal((await client.fetchPage('/a')).html, 'ok');
+    assert.equal(calls.length, 2);
+  });
+
+  it('honours a Retry-After header over its own backoff', async () => {
+    const { impl } = scriptedFetch([
+      { status: 429, headers: { 'retry-after': '2' } },
+      { status: 200, body: 'ok' },
+    ]);
+    const { delays, sleep } = fakeSleep();
+    const client = createClient({
+      siteOrigin: ORIGIN, fetchImpl: impl, sleep, baseDelayMs: 500,
+    });
+
+    await client.fetchPage('/a');
+    assert.deepEqual(delays, [2000]);
+  });
+
+  it('retries the query index too', async () => {
+    const { impl, calls } = scriptedFetch([
+      { status: 429 },
+      { status: 200, body: '{"data":[{"path":"/a"}]}' },
+    ]);
+    const { sleep } = fakeSleep();
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl: impl, sleep });
+
+    assert.deepEqual(await client.fetchQueryIndex(), [{ path: '/a' }]);
+    assert.equal(calls.length, 2);
+  });
+
+  it('respects a lowered attempt budget', async () => {
+    const { impl, calls } = scriptedFetch([{ status: 429 }]);
+    const { sleep } = fakeSleep();
+    const client = createClient({
+      siteOrigin: ORIGIN, fetchImpl: impl, sleep, maxAttempts: 2,
+    });
+
+    await assert.rejects(() => client.fetchPage('/a'));
+    assert.equal(calls.length, 2);
+  });
+});
+
+describe('retryAfterMs', () => {
+  it('reads delay-seconds', () => {
+    assert.equal(retryAfterMs('3'), 3000);
+  });
+
+  it('reads an HTTP date', () => {
+    const future = new Date(Date.now() + 5000).toUTCString();
+    const ms = retryAfterMs(future);
+    assert.ok(ms > 0 && ms <= 5000, `got ${ms}`);
+  });
+
+  it('treats a past date as no wait', () => {
+    assert.equal(retryAfterMs('Fri, 31 Jul 2020 04:03:19 GMT'), 0);
+  });
+
+  it('caps an absurd delay', () => {
+    assert.equal(retryAfterMs('99999'), 30000);
+  });
+
+  it('ignores a missing or unparseable value', () => {
+    assert.equal(retryAfterMs(null), null);
+    assert.equal(retryAfterMs('soon'), null);
   });
 });
 
