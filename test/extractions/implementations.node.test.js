@@ -21,6 +21,13 @@ describe('IMPLEMENTATIONS', () => {
       assert.ok(impl.label.length > 0);
     }
   });
+
+  it('gives every implementation a non-empty shortLabel', () => {
+    for (const impl of IMPLEMENTATIONS) {
+      assert.equal(typeof impl.shortLabel, 'string');
+      assert.ok(impl.shortLabel.length > 0);
+    }
+  });
 });
 
 describe('ALL_OPTION', () => {

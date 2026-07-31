@@ -18,7 +18,35 @@ const linkBlocks = [
 ];
 
 // Blocks with self-managed styles
-const components = ['fragment', 'schedule'];
+// page-hero/breadcrumbs styles are folded into the eager styles/styles.css
+const components = ['fragment', 'schedule', 'page-hero', 'breadcrumbs'];
+
+const isComponentPage = (pathname) => {
+  const parts = pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf('components');
+  return idx > 0 && Boolean(parts[idx + 1]);
+};
+
+// Wraps whatever's already around the page's <h1> — an optional .breadcrumbs block, the
+// <h1>, an optional following description paragraph, and an optional .component-status
+// block — into a single <div class="page-hero">. Runs before decorateSections, so the
+// wrapper is decorated as a normal block once section decoration reaches it. Scoped to
+// component pages only
+const buildPageHeader = (main) => {
+  if (getMetadata('template') === 'marketing') { return; }
+  if (!isComponentPage(window.location.pathname)) { return; }
+  const h1 = main.querySelector('h1');
+  if (!h1 || h1.closest('.page-hero')) { return; }
+
+  const description = h1.nextElementSibling?.tagName === 'P' ? h1.nextElementSibling : null;
+  const breadcrumbs = main.querySelector('.breadcrumbs');
+  const status = main.querySelector('.component-status');
+
+  const pageHeader = document.createElement('div');
+  pageHeader.className = 'page-hero';
+  h1.before(pageHeader);
+  pageHeader.append(...[breadcrumbs, h1, description, status].filter(Boolean));
+};
 
 // How to decorate an area before loading it
 const decorateArea = ({ area = document }) => {
@@ -36,6 +64,8 @@ const decorateArea = ({ area = document }) => {
   if (main && !main.id) {
     main.id = 'main-content';
   }
+
+  if (area === document && main) { buildPageHeader(main); }
 };
 
 const decorateBackground = async (scheme) => {
