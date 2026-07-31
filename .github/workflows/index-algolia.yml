@@ -13,9 +13,20 @@ on:
 permissions:
   contents: read
 
+# One run at a time against one index. A slow run can outlive the two-hour cron,
+# and two overlapping replaceAllObjects calls would race the same index.
+# cancel-in-progress stays false: interrupting a rebuild mid-swap is worse than
+# making the next run wait.
+concurrency:
+  group: index-algolia
+  cancel-in-progress: false
+
 jobs:
   index:
     runs-on: ubuntu-latest
+    # A full run is minutes, not tens of minutes. This bounds a hung fetch so a
+    # stuck job cannot hold the concurrency group against every later run.
+    timeout-minutes: 30
     steps:
       - name: Check out code
         uses: actions/checkout@v4
