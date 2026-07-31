@@ -197,20 +197,12 @@ export const closeSitenav = (sitenav) => {
   sitenav.querySelector('.level-1-button[aria-expanded="true"]')
     ?.setAttribute('aria-expanded', 'false');
   sitenav.removeAttribute('is-open');
+  sitenav.querySelector('.sitenav-trigger-btn')?.setAttribute('aria-expanded', 'false');
 };
 
 const getFocusableEls = (container) => [...container.querySelectorAll(
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
 )].filter((el) => el.checkVisibility());
-
-// sitenav-expand-btn (desktop toggle) and sitenav-trigger-btn (mobile
-// toggle)  both
-// reflect the same #sitenav[is-open] state, so keep both in sync.
-const syncToggleButtons = (sitenav) => {
-  const isOpen = String(sitenav.hasAttribute('is-open'));
-  sitenav.querySelectorAll('.sitenav-expand-btn, .sitenav-trigger-btn')
-    .forEach((btn) => btn.setAttribute('aria-expanded', isOpen));
-};
 
 export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
@@ -223,8 +215,8 @@ export const getExpandButton = async (sitenav) => {
   btn.append(svg);
 
   btn.addEventListener('click', () => {
-    sitenav.toggleAttribute('is-open');
-    syncToggleButtons(sitenav);
+    const isExpanded = sitenav.toggleAttribute('is-expanded');
+    btn.setAttribute('aria-expanded', String(isExpanded));
   });
 
   return btn;
@@ -239,7 +231,7 @@ export const getTriggerButton = async (sitenav) => {
   btn.setAttribute('aria-expanded', 'false');
   btn.setAttribute('aria-controls', sitenav.id);
 
-  const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');
+  const svg = await fetchSvgEl('/img/icons/s2-icon-appsall-20-n.svg');
   btn.append(svg);
 
   btn.addEventListener('click', () => {
@@ -247,8 +239,8 @@ export const getTriggerButton = async (sitenav) => {
       closeSitenav(sitenav);
     } else {
       sitenav.setAttribute('is-open', '');
+      btn.setAttribute('aria-expanded', 'true');
     }
-    syncToggleButtons(sitenav);
   });
 
   return btn;
@@ -264,7 +256,6 @@ export const setupOutsideClose = (sitenav) => {
     if (sitenav.contains(e.target)) { return; }
 
     closeSitenav(sitenav);
-    syncToggleButtons(sitenav);
   });
 };
 
@@ -278,7 +269,6 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
     // pattern used throughout the rest of the sitenav (level-1/2/3 buttons).
     if (e.key === 'Escape') {
       closeSitenav(sitenav);
-      syncToggleButtons(sitenav);
       buttons.find((btn) => btn.checkVisibility())?.focus();
       return;
     }

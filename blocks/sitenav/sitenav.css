@@ -32,6 +32,7 @@
     border-radius: var(--sitenav-corner-radius);
     overflow: hidden;
     padding: var(--s2-spacing-300) var(--s2-spacing-200);
+    transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
 
     &::before {
       content: "";
@@ -139,7 +140,7 @@
     list-style-type: none;
     display: grid;
 
-    /* Without an explicit track, .level-1-button's real box (and its focus ring) 
+    /* Without an explicit track, .level-1-button's real box (and its focus ring)
     extends far past the 32px closed rail, with only its left edge visible. */
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s2-spacing-100);
@@ -180,6 +181,11 @@
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
+
+    /* Anything taller scrolls internally instead of running past the edge of the screen. */
+    @media (width < 900px) {
+      max-height: anchor-size(height);
+    }
 
     > * {
       display: block;
@@ -320,14 +326,11 @@
     #animate-panel-bar {
       transition: width var(--expand-toggle-hover-duration) var(--expand-toggle-hover-ease);
     }
-
-    @media (width < 900px) {
-      display: none;
-    }
   }
 
-  /* Below 900px sitenav-expand-btn (above) is hidden and this fixed,
-  viewport-pinned trigger takes over. */
+  /* Below 900px this fixed, viewport-pinned trigger opens the sitenav overlay,
+  which shows the same rail (icons only) as desktop by default — tap
+  sitenav-expand-btn inside it to reveal labels, same as desktop. */
   .sitenav-trigger-btn {
     display: none;
     justify-content: center;
@@ -335,12 +338,23 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
+    background-color: var(--s2-gray-1000);
+
+    > svg,
+    &[aria-expanded="true"] svg {
+      color: var(--s2-gray-25);
+    }
+
+    &:hover svg,
+    &[aria-expanded="true"] svg {
+      color: var(--s2-gray-100);
+    }
 
     @media (width < 900px) {
       display: flex;
       position: fixed;
-      inset-inline-start: var(--s2-spacing-200);
-      inset-block-end: var(--s2-spacing-200);
+      inset-inline-start: 36px; /* margin from edge of viewport to sitenav + padding of sitenav */
+      inset-block-end: var(--s2-spacing-400);
       z-index: 1;
       border-radius: var(--s2-corner-radius-600);
 
@@ -356,7 +370,7 @@
     }
   }
 
-  &[is-open] {
+  &[is-expanded] {
     --sitenav-corner-radius: var(--s2-corner-radius-950);
     --expand-panel-width: 5px;
 
@@ -375,6 +389,8 @@
     &[is-open] {
       position: fixed;
       z-index: 300;
+      top: auto;
+      inset-block-end: calc(var(--s2-spacing-400) + 32px + 6px);
 
       nav {
         display: block;
