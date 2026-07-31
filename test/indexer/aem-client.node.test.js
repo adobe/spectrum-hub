@@ -78,6 +78,31 @@ describe('fetchPage', () => {
     await client.fetchPage('/nope');
     assert.equal(calls.length, 1);
   });
+
+  it('deduplicates concurrent requests for the same uncached path', async () => {
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(url);
+      await new Promise((resolve) => { setTimeout(resolve, 10); });
+      return {
+        ok: true,
+        status: 200,
+        text: async () => 'x',
+        json: async () => ({}),
+        headers: { get: () => null },
+      };
+    };
+
+    const client = createClient({ siteOrigin: ORIGIN, fetchImpl });
+    const [result1, result2] = await Promise.all([
+      client.fetchPage('/a'),
+      client.fetchPage('/a'),
+    ]);
+
+    assert.deepEqual(result1, { html: 'x', lastModified: null });
+    assert.deepEqual(result2, { html: 'x', lastModified: null });
+    assert.equal(calls.length, 1, 'should have made only one network call');
+  });
 });
 
 describe('mapWithConcurrency', () => {

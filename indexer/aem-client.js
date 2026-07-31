@@ -51,16 +51,19 @@ export function createClient({ siteOrigin, fetchImpl = fetch }) {
   async function fetchPage(path) {
     if (cache.has(path)) { return cache.get(path); }
 
-    const response = await fetchImpl(`${siteOrigin}${path}`);
-    const result = response.ok
-      ? {
-        html: await response.text(),
-        lastModified: httpDateToEpochSeconds(response.headers.get('last-modified')),
-      }
-      : null;
+    const promise = (async () => {
+      const response = await fetchImpl(`${siteOrigin}${path}`);
+      const result = response.ok
+        ? {
+          html: await response.text(),
+          lastModified: httpDateToEpochSeconds(response.headers.get('last-modified')),
+        }
+        : null;
+      return result;
+    })();
 
-    cache.set(path, result);
-    return result;
+    cache.set(path, promise);
+    return promise;
   }
 
   return { fetchQueryIndex, fetchPage };
