@@ -61,9 +61,13 @@ describe('page-hero block', () => {
 
     await init(el);
 
-    // dataset.blockName is stamped by ak.js's loadBlock — proof init actually ran this block.
+    // dataset.blockName is stamped by ak.js's loadBlock before init replaces the
+    // placeholder <div> with a <nav> (WAI-ARIA breadcrumb pattern) — check it there first
+    // as proof init actually ran this block.
     expect(breadcrumbs.dataset.blockName).to.equal('breadcrumbs');
-    expect(breadcrumbs.textContent).to.include('SWC');
+    const nav = el.querySelector('nav.breadcrumbs');
+    expect(nav).to.not.be.null;
+    expect(nav.textContent).to.include('SWC');
   });
 
   it('loads a nested .component-status child (calls its real init)', async () => {

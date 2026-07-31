@@ -164,7 +164,9 @@ describe('scripts.js', () => {
 
       const header = document.querySelector('.page-hero');
       const tags = [...header.children].map((child) => child.tagName);
-      expect(tags).to.deep.equal(['DIV', 'H1', 'P', 'DIV']);
+      // breadcrumbs' own init replaces its placeholder <div> with a <nav> (WAI-ARIA
+      // breadcrumb pattern), so the first child is a NAV rather than a DIV.
+      expect(tags).to.deep.equal(['NAV', 'H1', 'P', 'DIV']);
       expect(header.children[0].classList.contains('breadcrumbs')).to.be.true;
       expect(header.children[3].classList.contains('component-status')).to.be.true;
       expect(header.querySelector('.breadcrumbs').textContent).to.include('SWC');
