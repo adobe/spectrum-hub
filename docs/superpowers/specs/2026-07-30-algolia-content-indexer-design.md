@@ -36,9 +36,12 @@ These were considered and deliberately deferred.
 - **IMS authentication and the DA state log.** A full atomic rebuild needs no persisted state, so
   neither is required for correctness. The site is not behind auth today.
 - **Indexing component props JSON.** Component pages embed a `table` block pointing at a props file
-  such as `/deps/rsp/data/Accordion.json`. That text is invisible to an HTML scrape. Following it
-  would make `isQuiet` or `density` findable, but it is a second source with its own shape and
-  failure modes. Deferred until the prose record shape has settled.
+  such as `/deps/rsp/data/Accordion.json`. That text is invisible to an HTML scrape. Deferred until
+  the prose record shape has settled — and worth less than it first appeared, because prototyping
+  showed the `option-details` fragment already documents the same props as prose. After inlining, the
+  accordion page yields sections headed `isMultiple`, `items`, `density`, `isDisabled`, `isQuiet`, and
+  `size`, each with a description. Those prop names are findable in v1 through fragment inlining
+  alone. Reading the JSON would add types and defaults, not names.
 - **Changes to `blocks/search/search.js`.** The search UI is being redesigned separately, and its
   design is settled: a highlighted title and tag pills per result. The record shape is designed
   around that constraint rather than requiring UI work. The indexer's only obligation is to emit
@@ -257,13 +260,30 @@ only-content case is the one every sampled page uses.
 
 ### Sections
 
-`main` is walked in document order and cut at `h1`, `h2`, and `h3`. The anchor comes from the
-heading's existing `id`, which the published HTML already provides. Content appearing before the
-first heading joins the `h1` section.
+`main` is walked **depth-first in document order** and cut at `h1`, `h2`, and `h3`. The walk must not
+assume headings are direct children of `main`. The published HTML wraps content in EDS section
+`div`s, so on a component page every heading sits three levels deep, and authored content can nest a
+heading arbitrarily deeper. A boundary is any `h1`/`h2`/`h3` encountered anywhere in the subtree.
+`h4` and below are not boundaries; their text becomes part of the enclosing section.
 
-A section is kept when it has a heading or content, and dropped only when it has neither. Pages that
-are little more than a title, such as `/foundations/composition`, still produce one findable record.
-Section content is capped at 8000 characters.
+Text is accumulated from text nodes only, never from element `textContent`, so nesting depth cannot
+cause a passage to be counted twice. The traversal does not descend into a heading after recording
+it, which keeps heading text out of the section body.
+
+The anchor comes from the heading's existing `id`, which the published HTML already provides.
+Content appearing before the first heading is merged into the first heading's section, so a leading
+breadcrumb or intro paragraph is not stranded in a headingless record.
+
+**Retention:** the first section of a page is always kept, so every page stays findable by its title
+even when it has no body — `/foundations/composition` is a title and nothing else. Every later
+section is kept only when it has content. A sub-heading whose prose lives entirely in its own
+sub-sections, such as `Behaviors` on a component page, is dropped rather than emitted as a
+content-free record. Measured across a 26-page sample this removes 29 percent of records and costs no
+searchable text, because those children already carry the parent in `hierarchy.lvl1`. No page in the
+sample lost all of its records.
+
+Section content is capped at 8000 characters. The longest section observed in the sample was 1221
+characters, so the cap is a safety net rather than a routine truncation.
 
 ### Noise
 
