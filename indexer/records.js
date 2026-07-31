@@ -34,7 +34,9 @@ function displayTitle(pageTitle, section) {
   const title = section.level === 1 || !section.heading || section.heading === pageTitle
     ? pageTitle
     : `${pageTitle}${TITLE_SEPARATOR}${section.heading}`;
-  return title.slice(0, MAX_TITLE_LENGTH);
+  let result = title.slice(0, MAX_TITLE_LENGTH);
+  result = result.replace(/\s*›\s*$/, '').trimEnd();
+  return result;
 }
 
 /**
@@ -42,8 +44,13 @@ function displayTitle(pageTitle, section) {
  * @param {object[]} sections output of splitSections
  * @param {number[]} fragmentTimes epoch seconds for each inlined fragment
  * @returns {object[]} Algolia records
+ * @throws {Error} when row has no usable path
  */
 export function buildRecords(row, sections, fragmentTimes = []) {
+  if (!row.path || typeof row.path !== 'string') {
+    throw new Error(`Row must have a non-empty path string: ${JSON.stringify(row)}`);
+  }
+
   const pageTitle = asString(row.title);
   const section = row.path.split('/').filter(Boolean)[0] || 'root';
   const lastModified = Math.max(Number(row.lastModified) || 0, ...fragmentTimes);

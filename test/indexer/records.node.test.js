@@ -52,7 +52,18 @@ describe('buildRecords', () => {
 
   it('truncates a long title to 80 characters', () => {
     const long = { ...deep, heading: 'x'.repeat(200) };
-    assert.equal(buildRecords(row, [lead, long])[1].title.length, 80);
+    const [, { title }] = buildRecords(row, [lead, long]);
+    assert.equal(title.length <= 80, true);
+    assert.match(title, /^Accordion › x+$/);
+  });
+
+  it('does not leave a dangling separator when truncating', () => {
+    const pageTitle78 = 'a'.repeat(78);
+    const customRow = { ...row, title: pageTitle78 };
+    const section = { ...deep, heading: 'Sub' };
+    const [{ title }] = buildRecords(customRow, [section]);
+    assert.equal(title.length <= 80, true);
+    assert.equal(/[\s›]$/.test(title), false);
   });
 
   it('builds objectID and url from path and anchor', () => {
@@ -114,5 +125,29 @@ describe('buildRecords', () => {
 
   it('returns nothing for a page with no sections', () => {
     assert.deepEqual(buildRecords(row, []), []);
+  });
+
+  it('throws a descriptive error when row has no path', () => {
+    const noPath = { title: 'No Path', lastModified: 1 };
+    assert.throws(
+      () => buildRecords(noPath, [lead]),
+      (err) => {
+        assert.equal(err instanceof Error, true);
+        assert.match(err.message, /Row must have a non-empty path string/);
+        return true;
+      },
+    );
+  });
+
+  it('throws a descriptive error when path is not a string', () => {
+    const badPath = { path: 123, title: 'Bad', lastModified: 1 };
+    assert.throws(
+      () => buildRecords(badPath, [lead]),
+      (err) => {
+        assert.equal(err instanceof Error, true);
+        assert.match(err.message, /Row must have a non-empty path string/);
+        return true;
+      },
+    );
   });
 });
