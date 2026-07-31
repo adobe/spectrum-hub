@@ -1686,13 +1686,15 @@ Run:
 node -e "
 const r = require('./indexer/out/records.json');
 console.log('records:', r.length);
-console.log('has fragment prose:', r.some((x) => /Progressive disclosure/.test(x.content)));
-console.log('has prop sections:', r.filter((x) => /isQuiet|density|isMultiple/.test(x.heading)).length);
+console.log('has fragment prose:', r.some((x) => /Accordions are effective for organizing/.test(x.content)));
+console.log('has prop sections:', r.filter((x) => /isQuiet|density|isMultiple/.test(x.title)).length);
 console.log(r.map((x) => x.title).join('\n'));
 "
 ```
 
 Expected: `has fragment prose: true`, and several prop-named sections. If `false`, inlining is broken — do not continue.
+
+Two details this check gets wrong if written carelessly. A record has no `heading` field — the section heading reaches the record through `title` and `hierarchy`, so match against `title`. And `Progressive disclosure` is a section's *heading*, never its `content`; searching `content` for it returns false on a perfectly working pipeline. Match a distinctive phrase from the fragment's prose instead.
 
 - [ ] **Step 3: Dry-run the whole site**
 
