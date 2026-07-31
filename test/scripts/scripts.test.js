@@ -97,7 +97,7 @@ describe('scripts.js', () => {
       expect(document.querySelector('.page-hero')).to.be.null;
     });
 
-    it('wraps a bare h1 in a page header on any non-marketing page', async () => {
+    it('wraps a bare h1 in a page header on a component page', async () => {
       window.history.pushState({}, '', '/web/swc/components/button');
       document.body.innerHTML = '<main><div><h1>Button</h1></div></main>';
       await loadPage();
@@ -106,11 +106,11 @@ describe('scripts.js', () => {
       expect(header.firstElementChild.tagName).to.equal('H1');
     });
 
-    it('wraps a bare h1 in a page header on a page with no "components" segment at all', async () => {
+    it('does not build a page header on a page with no "components" segment at all', async () => {
       window.history.pushState({}, '', '/guidelines/color');
       document.body.innerHTML = '<main><div><h1>Color</h1></div></main>';
       await loadPage();
-      expect(document.querySelector('.page-hero')).to.not.be.null;
+      expect(document.querySelector('.page-hero')).to.be.null;
     });
 
     it('includes the immediately-following paragraph as the description', async () => {
