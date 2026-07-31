@@ -28,23 +28,44 @@ const MIN_FAILURES_TO_ABORT = 3;
 const FAILURE_RATE_LIMIT = 0.1;
 const OUT_DIR = new URL('./out/', import.meta.url);
 
+const ACCEPTED_FLAGS = '--dry-run, --limit=<positive integer>, --path=<page path>';
+
+/** True for anything other than --dry-run, --limit=..., or --path=... */
+const isUnknownArg = (arg) => (
+  arg !== '--dry-run' && !arg.startsWith('--limit=') && !arg.startsWith('--path=')
+);
+
 /**
+ * A typo'd flag (e.g. --dry-runn) must not fall through to a full live
+ * replace of the index, and an empty --path/--limit value must not silently
+ * behave as if the flag were absent, so both are rejected outright rather
+ * than ignored.
  * @param {string[]} argv raw CLI arguments
  * @returns {object} parsed flags
+ * @throws {Error} on an unrecognized argument, or an empty --path/--limit value
  */
 export function parseArgs(argv) {
+  const unknown = argv.find(isUnknownArg);
+  if (unknown) {
+    throw new Error(`Unrecognized argument: ${unknown}. Accepted flags: ${ACCEPTED_FLAGS}.`);
+  }
+
   const has = (name) => argv.includes(name);
   const value = (name) => {
     const match = argv.find((arg) => arg.startsWith(`${name}=`));
     return match ? match.slice(name.length + 1) : null;
   };
 
-  const rawLimit = Number(value('--limit'));
   const path = value('--path');
+  if (path === '') { throw new Error('--path requires a non-empty value.'); }
+
+  const rawLimit = value('--limit');
+  if (rawLimit === '') { throw new Error('--limit requires a non-empty value.'); }
+  const limit = Number(rawLimit);
 
   return {
     dryRun: has('--dry-run') || Boolean(path),
-    limit: Number.isInteger(rawLimit) && rawLimit > 0 ? rawLimit : null,
+    limit: Number.isInteger(limit) && limit > 0 ? limit : null,
     path,
   };
 }

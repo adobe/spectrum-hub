@@ -27,6 +27,20 @@ describe('parseArgs', () => {
   it('ignores a non-numeric limit', () => {
     assert.equal(parseArgs(['--limit=abc']).limit, null);
   });
+
+  it('rejects an unrecognized flag', () => {
+    // A typo like --dry-runn must not silently fall through to a full live
+    // replace of the index.
+    assert.throws(() => parseArgs(['--dry-runn']), /--dry-runn/);
+  });
+
+  it('rejects an empty --path value', () => {
+    assert.throws(() => parseArgs(['--path=']), /--path/);
+  });
+
+  it('rejects an empty --limit value', () => {
+    assert.throws(() => parseArgs(['--limit=']), /--limit/);
+  });
 });
 
 describe('assertAcceptableFailureRate', () => {
@@ -109,7 +123,13 @@ describe('buildAll', () => {
   });
 
   it('records a failure when buildRecords throws on a row with no path, without rejecting buildAll', async () => {
-    const client = fakeClient({ '/no-path': page('<div><h1 id="t">Title</h1><p>text</p></div>') });
+    // fetchPage resolves a real page for every path (including undefined) so
+    // execution gets past the `!pageMain` check and actually reaches
+    // buildRecords, which is what throws on a pathless row.
+    const client = {
+      fetchQueryIndex: async () => [],
+      fetchPage: async () => page('<div><h1 id="t">Title</h1><p>text</p></div>'),
+    };
     const rows = [{ path: undefined, title: 'No Path', lastModified: 1 }];
     // buildRecords keys its error message on the row, not the path, so buildAll
     // must record the failure under whatever falsy path the row carries.
@@ -124,7 +144,11 @@ describe('buildAll', () => {
       fetchPage: async (path) => {
         if (path === '/network-down') { throw new Error('ECONNRESET'); }
         if (path === '/ok') { return page('<div><h1 id="t">Ok</h1><p>text</p></div>'); }
-        return null;
+        // The pathless row's fetch still resolves a real page, so its failure
+        // comes from buildRecords rejecting the missing path, not from a
+        // missing <main> — keeping this test on the same failure route as
+        // the dedicated buildRecords-throw test above.
+        return page('<div><h1 id="t">No Path Page</h1><p>text</p></div>');
       },
     };
     const rows = [
@@ -133,7 +157,13 @@ describe('buildAll', () => {
       { path: '/ok', title: 'Ok', lastModified: 1 },
     ];
     const { records, failures } = await buildAll(rows, client);
-    assert.deepEqual(failures, ['/network-down', undefined]);
+    // mapWithConcurrency preserves input order in its results array, but the
+    // two failures still land in `failures` in whatever order their workers
+    // complete, which a concurrent pool does not promise. Assert membership,
+    // not position.
+    assert.equal(failures.length, 2);
+    assert.ok(failures.includes('/network-down'));
+    assert.ok(failures.includes(undefined));
     assert.equal(records.length, 1);
     assert.equal(records[0].objectID, '/ok#t');
   });
