@@ -436,6 +436,7 @@ div[data-status],
   margin: 0;
 }
 
+.page-hero .section > .default-content,
 .page-hero p {
   margin: 0;
   color: var(--s2-gray-700);
@@ -597,6 +598,7 @@ div[data-status],
 
     main > .section:first-of-type {
       padding-block-start: 0;
+      padding-inline: 0;
     }
 
     main > .section:last-of-type {
