@@ -20,6 +20,10 @@ export async function publish(records, config, { clientFactory = algoliasearch }
     throw new Error('Refusing to publish: no records were built');
   }
 
+  if (typeof config.indexName !== 'string' || !config.indexName) {
+    throw new Error('Invalid indexName: must be a non-empty string');
+  }
+
   const client = clientFactory(config.appId, config.writeKey);
 
   await client.setSettings({

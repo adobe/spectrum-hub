@@ -23,6 +23,18 @@ describe('INDEX_SETTINGS', () => {
     assert.equal(INDEX_SETTINGS.attributeForDistinct, 'path');
     assert.equal(INDEX_SETTINGS.distinct, 1);
   });
+
+  it('prevents top-level mutation', () => {
+    assert.throws(() => {
+      INDEX_SETTINGS.attributeForDistinct = 'otherId';
+    }, TypeError);
+  });
+
+  it('prevents nested array mutation', () => {
+    assert.throws(() => {
+      INDEX_SETTINGS.searchableAttributes.push('newAttr');
+    }, TypeError);
+  });
 });
 
 describe('publish', () => {
@@ -57,6 +69,28 @@ describe('publish', () => {
     await assert.rejects(
       () => publish([], { appId: 'A', writeKey: 'K', indexName: 'idx' }, { clientFactory }),
       /no records/i,
+    );
+  });
+
+  it('rejects missing indexName', async () => {
+    const clientFactory = () => ({
+      setSettings: async () => {},
+      replaceAllObjects: async () => {},
+    });
+    await assert.rejects(
+      () => publish([{ objectID: 'a' }], { appId: 'A', writeKey: 'K' }, { clientFactory }),
+      /invalid indexname/i,
+    );
+  });
+
+  it('rejects empty-string indexName', async () => {
+    const clientFactory = () => ({
+      setSettings: async () => {},
+      replaceAllObjects: async () => {},
+    });
+    await assert.rejects(
+      () => publish([{ objectID: 'a' }], { appId: 'A', writeKey: 'K', indexName: '' }, { clientFactory }),
+      /invalid indexname/i,
     );
   });
 });
