@@ -139,5 +139,33 @@ describe('breadcrumbs block', () => {
       expect(el.querySelector('ol')).to.not.be.null;
       expect(el.textContent).to.include('RSP');
     });
+
+    it('labels the nav landmark as "Breadcrumb" per the APG pattern', () => {
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+      init(el);
+      expect(el.getAttribute('aria-label')).to.equal('Breadcrumb');
+    });
+
+    it('preserves an author-provided aria-label instead of overwriting it', () => {
+      el.setAttribute('aria-label', 'Custom trail');
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+      init(el);
+      expect(el.getAttribute('aria-label')).to.equal('Custom trail');
+    });
+
+    it('promotes a <div> block wrapper to a real <nav> landmark', () => {
+      const div = document.createElement('div');
+      div.className = 'breadcrumbs block';
+      document.body.replaceChildren(div);
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+
+      init(div);
+
+      const nav = document.body.querySelector('nav.breadcrumbs');
+      expect(nav).to.not.be.null;
+      expect(nav.classList.contains('block')).to.be.true;
+      expect(nav.getAttribute('aria-label')).to.equal('Breadcrumb');
+      expect(document.body.contains(div)).to.be.false;
+    });
   });
 });

@@ -63,11 +63,25 @@ export function buildBreadcrumbs(pathname) {
   return ol;
 }
 
+/**
+ * Follows the WAI-ARIA APG breadcrumb pattern
+ * (https://www.w3.org/WAI/ARIA/apg/patterns/breadcrumb/)
+ */
 export default function init(el) {
   const trail = buildBreadcrumbs(window.location.pathname);
   if (!trail) {
     el.remove();
     return;
   }
-  el.append(trail);
+
+  let nav = el;
+  if (el.tagName !== 'NAV') {
+    nav = document.createElement('nav');
+    nav.className = el.className;
+    nav.dataset.blockName = el.dataset.blockName;
+    if (el.hasAttribute('aria-label')) { nav.setAttribute('aria-label', el.getAttribute('aria-label')); }
+    el.replaceWith(nav);
+  }
+  if (!nav.hasAttribute('aria-label')) { nav.setAttribute('aria-label', 'Breadcrumb'); }
+  nav.append(trail);
 }
