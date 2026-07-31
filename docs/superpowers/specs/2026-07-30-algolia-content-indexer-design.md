@@ -24,7 +24,7 @@ accordion `description` fragment was modified a week later than the page that in
 ## Goals
 
 - Index all published content, with fragment content inlined as though it were part of the page.
-- Produce records that render correctly in the existing search UI without changing that UI.
+- Produce records that render correctly in the redesigned search UI without requiring UI work.
 - Run on a two-hour schedule in CI, and run locally from a `.env` file with no CI-specific machinery.
 - Make the content-shaping logic easy to inspect and tune, since the record shape will need
   iteration.
@@ -39,8 +39,10 @@ These were considered and deliberately deferred.
   such as `/deps/rsp/data/Accordion.json`. That text is invisible to an HTML scrape. Following it
   would make `isQuiet` or `density` findable, but it is a second source with its own shape and
   failure modes. Deferred until the prose record shape has settled.
-- **Changes to `blocks/search/search.js`.** The search UI is fixed apart from a planned addition of
-  tags. The record shape is designed around that constraint rather than requiring UI work.
+- **Changes to `blocks/search/search.js`.** The search UI is being redesigned separately, and its
+  design is settled: a highlighted title and tag pills per result. The record shape is designed
+  around that constraint rather than requiring UI work. The indexer's only obligation is to emit
+  `title`, `tags`, and `url` in the shape that design consumes.
 
 ## Decisions
 
@@ -105,15 +107,15 @@ fragment modification times come from the `last-modified` response header.
   url:      '/web/rsp/components/accordion#progressive-disclosure',
   path:     '/web/rsp/components/accordion',
 
-  // Display fields. Rendered verbatim by blocks/search/search.js.
-  title:       'Accordion › Progressive disclosure',
-  description: 'Accordions are effective for organizing large amounts of related…',
-  tags:        ['accordion', 'container'],
+  // Displayed. Title is highlighted; tags render as pills.
+  title: 'Accordion › Progressive disclosure',
+  tags:  ['accordion', 'container'],
 
   // Searched, not displayed.
-  hierarchy: { lvl0: 'Accordion', lvl1: 'Usage guidelines', lvl2: 'Progressive disclosure' },
-  content:   '<full section text>',
-  pageTitle: 'Accordion',
+  hierarchy:   { lvl0: 'Accordion', lvl1: 'Usage guidelines', lvl2: 'Progressive disclosure' },
+  content:     '<full section text>',
+  description: 'An accordion displays a list of items that can be expanded…',
+  pageTitle:   'Accordion',
 
   // Facets, ranking, and debugging.
   section: 'web',
@@ -127,20 +129,24 @@ fragment modification times come from the `last-modified` response header.
 
 ### Display fields
 
-The search UI is fixed. It reads `hit.url`, `hit.title`, `hit.description`, and `hit.external`, and
-will gain `hit.tags`. Records are therefore pre-formatted for display rather than assembled by the
-UI.
+The search UI is fixed. A result row renders a highlighted **title** and a row of **tag pills**, and
+nothing else. There is no description line. Records are therefore pre-formatted for display rather
+than assembled by the UI.
 
 - **`title`** is `pageTitle › heading` for a sub-section, or `pageTitle` alone for a page's lead
   section. The second segment is the section's own heading, because that names where the anchor
   lands. Hierarchies deeper than two levels still produce two segments; the UI has one line.
-  Truncated to 80 characters.
-- **`description`** is a snippet of the section's own text for a sub-section, or the page description
-  from `query-index.json` for a lead section, each falling back to the other and then to an empty
-  string. Trimmed to 160 characters on a word boundary. The UI renders it raw, so it is trimmed here
-  rather than relying on Algolia snippets.
-- **`external`** is omitted. The UI's `hit.external ? … : nothing` check treats `undefined`
-  correctly, which keeps external-link records a separate concern.
+  Truncated to 80 characters. It is rendered from `_highlightResult.title`, which requires `title` to
+  appear in both `searchableAttributes` and `attributesToHighlight`.
+- **`tags`** are passed through verbatim from `query-index.json` and feed the pills, including their
+  authored casing. The indexer applies no mapping, no title-casing, and no cap; how many pills fit is
+  the UI's decision. At the time of writing, 1 of 155 pages carries tags, so most results render
+  without pills until the content is tagged. This resolves itself as tagging lands, with no indexer
+  change.
+- **`description`** is not displayed. It is carried as a searchable attribute only, taken from the
+  page's `description` in `query-index.json`, so a page still matches on its summary text.
+- **`external`** is omitted. A `hit.external` check treats `undefined` correctly, which keeps
+  external-link records a separate concern.
 - **`url`** is a root-relative path, not an absolute URL. The UI renders it as
   `<a href="${hit.url}">`, which resolves against whatever host is serving the page, so the index is
   not tied to the `aem.live` preview origin and needs no rebuild when a production domain appears.
@@ -181,20 +187,26 @@ settings from the target to the temporary index.
 ```js
 {
   searchableAttributes: [
-    'hierarchy.lvl0',
+    'title',
     'hierarchy.lvl1',
-    'hierarchy.lvl2',
     'content',
     'tags',
     'description',
   ],
+  attributesToHighlight: ['title'],
   attributesForFaceting: ['platform', 'implementation', 'section', 'tags'],
   attributeForDistinct: 'path',
   distinct: 1,
   customRanking: ['asc(level)', 'asc(position)'],
-  attributesToSnippet: ['content:30'],
 }
 ```
+
+`title` is listed first because it is the only text the UI shows, and it must be searchable for
+`_highlightResult.title` to exist at all. It already contains `hierarchy.lvl0` and the section's own
+heading, so only `hierarchy.lvl1` — the intermediate context that the two-segment title drops — needs
+listing separately.
+
+`attributesToSnippet` is not configured. Nothing renders a snippet.
 
 `distinct: 1` on `path` collapses each page to its single best-matching section, so the results list
 shows one row per page. Textual relevance is applied before `customRanking` in Algolia's default
@@ -256,9 +268,11 @@ block.
 | `ALGOLIA_INDEX_NAME` | Yes | None. Must be explicit, so a missing variable cannot wipe the wrong index. |
 | `SITE_ORIGIN` | No | `https://main--spectrum-hub--adobe.aem.live` |
 
-`config.js` reads `.env` only when the file exists and never overwrites a variable that is already
-set. The same code path works locally and in CI without branching. Node's `--env-file` is not used,
-because it errors when the file is absent.
+`config.js` loads `.env` with `process.loadEnvFile()` inside a `try`/`catch`, matching the convention
+already used by `tools/algolia-push-test.js` on the `search` branch. The call throws when the file is
+absent, which is exactly the CI case, so the same code path works locally and in Actions without
+branching and without a hand-written parser. Node's `--env-file` flag is not used, because it fails
+the process rather than the call.
 
 ## CLI
 
@@ -316,14 +330,14 @@ test touches the network.
 - **`fragments`** — injection replaces the containing paragraph, nested fragments resolve, the depth
   cap holds, cycles terminate, a cached fragment is fetched once, and a 404 leaves the page intact.
 - **`records`** — `objectID` uniqueness, `lastModified` rolling up to the maximum across inlined
-  fragments, display title and description formatting including fallbacks and truncation, URL-only
-  anchors dropped, and `.playground` dropped.
-- **`config`** — `.env` parsed, real environment variables taking precedence, and a missing required
-  variable throwing.
+  fragments and handling the seconds-versus-HTTP-date conversion, display title formatting for both
+  lead and sub-sections including 80-character truncation, tags passed through untransformed, `url`
+  emitted as a root-relative path, and `external` absent.
+- **`config`** — a missing `.env` not throwing, and a missing required variable throwing.
 
 ## Follow-up work
 
-- Point `blocks/search/search.js` at the new index and render `hit.tags`.
+- Point the redesigned search block at the new index once its record shape has settled.
 - Decide how external-link records are maintained, given that a full rebuild replaces index contents.
 - Index component props JSON, so that prop names such as `isQuiet` become findable.
 - Add IMS authentication and the DA run log if the site moves behind auth or the run history becomes
