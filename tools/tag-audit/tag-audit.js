@@ -7,6 +7,7 @@ import 'https://da.live/nx/public/sl/components.js';
 
 // Application styles
 import loadStyle from '../../scripts/utils/styles.js';
+
 const styles = await loadStyle(import.meta.url);
 
 class ADLTagAudit extends LitElement {
@@ -29,7 +30,6 @@ class ADLTagAudit extends LitElement {
     };
 
     this._tags = await loadTags(this.path, this.token, setStatus);
-    console.log(this._tags);
     this._status = undefined;
   }
 
@@ -45,7 +45,7 @@ class ADLTagAudit extends LitElement {
           <li>
             <a href="https://da.live/edit#${page.uiPath}" target="_blank">${page.uiPath}</a>
           </li>`)}
-      </ul>`
+      </ul>`;
   }
 
   renderTag(tag) {
@@ -67,7 +67,7 @@ class ADLTagAudit extends LitElement {
   }
 
   renderTags() {
-    if (!this._tags) return nothing;
+    if (!this._tags) { return nothing; }
     return html`
       <ul class="tags-list">
         ${this._tags.map((tag) => this.renderTag(tag))}
@@ -91,7 +91,7 @@ customElements.define('adl-tag-audit', ADLTagAudit);
 
 (async function init() {
   const { context, token } = await DA_SDK;
-  const { org, repo, path } = context;
+  const { org, repo } = context;
 
   const cmp = document.createElement('adl-tag-audit');
   cmp.path = `/${org}/${repo}`;
@@ -99,4 +99,3 @@ customElements.define('adl-tag-audit', ADLTagAudit);
 
   document.body.append(cmp);
 }());
-

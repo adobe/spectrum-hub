@@ -57,7 +57,7 @@ class ADLTagGen extends LitElement {
   }
 
   renderTags() {
-    if (!this.tags) return nothing;
+    if (!this.tags) { return nothing; }
 
     return html`
       <p class="title ${this._genTags ? 'generated' : ''}">${this.title}</p>
@@ -81,7 +81,7 @@ class ADLTagGen extends LitElement {
   }
 
   render() {
-    if (!(this._genTags || this._pageTags || this._status)) return nothing;
+    if (!(this._genTags || this._pageTags || this._status)) { return nothing; }
 
     return html`
       ${this._status !== undefined ? this.renderStatus() : this.renderTags()}

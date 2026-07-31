@@ -12,7 +12,7 @@ const getMetadata = (el) => [...el.childNodes].reduce((rdx, row) => {
     const key = row.children[0].textContent.trim().toLowerCase();
     const content = row.children[1];
     const text = content.textContent.trim().toLowerCase();
-    if (key && text) rdx[key] = { text };
+    if (key && text) { rdx[key] = { text }; }
   }
   return rdx;
 }, {});
@@ -20,14 +20,14 @@ const getMetadata = (el) => [...el.childNodes].reduce((rdx, row) => {
 async function fetchDoc(path, token) {
   const opts = getOpts(token);
   const resp = await fetch(`https://admin.da.live/source${path}`, opts);
-  if (!resp.ok) return { message: 'Could not fetch doc.', status: resp.status };
+  if (!resp.ok) { return { message: 'Could not fetch doc.', status: resp.status }; }
   const html = await resp.text();
   return { html };
 }
 
 async function loadPageTags(path, token) {
   const { html } = await fetchDoc(path, token);
-  if (!html) return [];
+  if (!html) { return []; }
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const metaEl = doc.querySelector('.metadata');
   if (metaEl) {
@@ -41,7 +41,7 @@ async function loadPageTags(path, token) {
 
 export default async function loadTags(path, token, setStatus) {
   const callback = async (item) => {
-    if (item.ext !== 'html') return;
+    if (item.ext !== 'html') { return; }
     item.uiPath = item.path.replace('.html', '');
     setStatus(`Loading ${item.uiPath}`);
     item.tags = await loadPageTags(item.path, token);
