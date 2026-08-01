@@ -487,6 +487,29 @@ describe('buildRspSnippet — composite components', () => {
   });
 });
 
+// --- buildRspSnippet — self-closing / no-children components ----------------
+
+// Mirrors deps/rsp/playground/snippets/divider.jsx — Divider has no children/text
+// prop at all, so its fragment is authored self-closing with no text of its own.
+describe('buildRspSnippet — self-closing components', () => {
+  it('renders self-closing when the fragment has no text and no matching prop', () => {
+    expect(buildRspSnippet('Divider', {}, '<Divider />')).to.equal('<Divider />');
+  });
+
+  it('renders self-closing with attributes on their own lines', () => {
+    const snippet = buildRspSnippet('Divider', { size: { value: 'L' } }, '<Divider />');
+    expect(snippet).to.equal('<Divider\n  size="L"\n/>');
+  });
+
+  it('still falls back to Label when the fragment has its own text (e.g. Button)', () => {
+    expect(buildRspSnippet('Button', {}, '<Button>Button</Button>')).to.equal('<Button>Label</Button>');
+  });
+
+  it('still falls back to Label when no fragment is given at all', () => {
+    expect(buildRspSnippet('ActionButton', {})).to.equal('<ActionButton>Label</ActionButton>');
+  });
+});
+
 // --- buildRspSnippet — overlay trigger wrapping ------------------------------
 
 // Mirrors deps/rsp/playground/snippets/alert-dialog.jsx (see overlay-triggers.js).
@@ -562,6 +585,11 @@ describe('composite snippet fragments — real committed files', () => {
     const markup = await (await fetch('/deps/rsp/playground/snippets/button-group.jsx')).text();
     const snippet = buildRspSnippet('ButtonGroup', {}, markup);
     expect(snippet.includes('<Button\n')).to.be.true;
+  });
+
+  it('renders the real RSP divider JSX snippet self-closing', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/divider.jsx')).text();
+    expect(buildRspSnippet('Divider', {}, markup)).to.equal('<Divider />');
   });
 
   // Regression guard against a typo in overlay-triggers.js or a route's .jsx file.

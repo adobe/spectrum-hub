@@ -66,7 +66,9 @@ function serializeAttrs(el) {
 // Recursively prints an element and any nested subcomponents (tabs >
 // tab/tab-panel, RSP's Tabs > TabList > Tab, ...), one attribute per line.
 // Collapses to a single line when there are no attributes/element children.
-function serializeElement(el, depth = 0) {
+// `selfClosing` (RSP/JSX only — real HTML custom elements can't self-close)
+// renders a childless, textless element as `<Tag />` instead of `<Tag></Tag>`.
+function serializeElement(el, depth = 0, selfClosing = false) {
   const indent = '  '.repeat(depth);
   const childIndent = '  '.repeat(depth + 1);
   const tag = el.localName;
@@ -75,12 +77,16 @@ function serializeElement(el, depth = 0) {
 
   if (!elementChildren.length) {
     const text = el.textContent;
+    if (selfClosing && !text) {
+      const attrLines = attrs.map((attr) => `${childIndent}${attr}`).join('\n');
+      return attrs.length ? `${indent}<${tag}\n${attrLines}\n${indent}/>` : `${indent}<${tag} />`;
+    }
     if (!attrs.length) { return `${indent}<${tag}>${text}</${tag}>`; }
     const attrLines = attrs.map((attr) => `${childIndent}${attr}`).join('\n');
     return `${indent}<${tag}\n${attrLines}>\n${childIndent}${text}\n${indent}</${tag}>`;
   }
 
-  const childLines = elementChildren.map((child) => serializeElement(child, depth + 1)).join('\n');
+  const childLines = elementChildren.map((child) => serializeElement(child, depth + 1, selfClosing)).join('\n');
   if (!attrs.length) { return `${indent}<${tag}>\n${childLines}\n${indent}</${tag}>`; }
   const attrLines = attrs.map((attr) => `${childIndent}${attr}`).join('\n');
   return `${indent}<${tag}\n${attrLines}>\n${childLines}\n${indent}</${tag}>`;
@@ -116,6 +122,10 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
     }
     return;
   }
+  // A fragment authored with no text of its own (e.g. Divider's `<Divider />`) has no
+  // text slot at all — leave it empty instead of injecting a placeholder it can't take.
+  if (fragmentRoot && !fragmentRoot.textContent) { return; }
+
   const fallbackKeys = hasRealLabelTarget ? new Set(['text', 'children']) : TEXT_KEYS;
   const textEntry = Object.entries(currentProps).find(([prop]) => fallbackKeys.has(prop));
   el.textContent = textEntry?.[1]?.value ?? 'Label';
@@ -154,7 +164,13 @@ export function buildSwcSnippet(tagName, currentProps, markup) {
   return serializeElement(el);
 }
 
-export function buildRspSnippet(componentName, currentProps, markup, hasRealLabelProp = false, routeName) {
+export function buildRspSnippet(
+  componentName,
+  currentProps,
+  markup,
+  hasRealLabelProp = false,
+  routeName = null,
+) {
   // needed for RSP's PascalCase component names.
   const xmlDoc = document.implementation.createDocument(null, null, null);
   const el = xmlDoc.createElement(componentName);
@@ -164,13 +180,13 @@ export function buildRspSnippet(componentName, currentProps, markup, hasRealLabe
 
   // Some components need a real Trigger wrapper to be usable (overlay-triggers.js).
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
-  if (!overlayTrigger) { return serializeElement(el); }
+  if (!overlayTrigger) { return serializeElement(el, 0, true); }
 
   const trigger = xmlDoc.createElement(overlayTrigger.trigger);
   const triggerButton = xmlDoc.createElement('Button');
   triggerButton.textContent = overlayTrigger.triggerLabel;
   trigger.append(triggerButton, el);
-  return serializeElement(trigger);
+  return serializeElement(trigger, 0, true);
 }
 
 // --- Code disclosure --------------------------------------------------------

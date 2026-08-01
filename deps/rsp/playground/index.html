@@ -44,6 +44,9 @@
     }
     // Virtualized — silently render zero rows without a real sized box.
     const VIRTUALIZED_RSP_COMPONENTS = new Set(['card-view', 'table-view']);
+    // No intrinsic content of their own (no text/children) — same #mount flex-item
+    // shrink-to-fit collapse as VIRTUALIZED_RSP_COMPONENTS, just width, no forced height.
+    const FULL_WIDTH_RSP_COMPONENTS = new Set(['divider', 'select-box-group']);
 
     // Listened for at module top-level, before initRsp()'s awaited network
     // calls, so the first `theme-update` isn't missed mid-flight.
@@ -65,6 +68,9 @@
         mount.style.display = 'block';
         mount.style.width = 'min(90vw, 400px)';
         mount.style.height = '20rem';
+      } else if (FULL_WIDTH_RSP_COMPONENTS.has(component)) {
+        mount.style.display = 'block';
+        mount.style.width = 'min(90vw, 400px)';
       }
 
       try {
