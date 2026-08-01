@@ -12,14 +12,6 @@
      content, since Popover has no documented heading/body sub-slots the way
      Dialog does).
 
-     FIXED (2026-07-31), same underlying cause as Tooltip/Dialog: the
-     published Popover.d.ts shows its props are Pick'd from PopoverProps,
-     which includes `triggerRef` — "only required when used standalone" per
-     its own doc comment — and this harness used to render it exactly that
-     way, with nothing around it to supply that ref automatically. initRsp()
-     and buildRspSnippet() now wrap this fragment in a real `<DialogTrigger>
-     <Button>...</Button><Popover>...</Popover></DialogTrigger>` per
-     overlay-triggers.js's `popover` entry, which supplies triggerRef via
-     context same as it does for Dialog — confirmed live: clicking the
-     trigger opens a real anchored/arrowed popover. -->
+     Popover needs a triggerRef it has none of standalone, so initRsp()/
+     buildRspSnippet() wrap it in a real DialogTrigger + Button (overlay-triggers.js). -->
 <Popover>Popover content goes here.</Popover>

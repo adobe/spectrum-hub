@@ -162,10 +162,7 @@ export function buildRspSnippet(componentName, currentProps, markup, hasRealLabe
   // RSP prop names are used as-authored, unlike SWC.
   buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
 
-  // Real usage always nests this behind a Trigger that supplies open/anchor
-  // state via context (see overlay-triggers.js) — the snippet should show
-  // that, not just the bare overlay content, or a dev copying it hits the
-  // same blank-render problem the live preview used to have.
+  // Some components need a real Trigger wrapper to be usable (overlay-triggers.js).
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
   if (!overlayTrigger) { return serializeElement(el); }
 

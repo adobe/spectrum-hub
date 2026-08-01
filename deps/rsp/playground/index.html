@@ -86,8 +86,7 @@
           ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
           : [];
         // `Text` lets an icon+label composition wrap the label for real TextContext styling.
-        // A trigger-wrapped route (see overlay-triggers.js) also needs its Trigger + a
-        // pressable Button, neither of which the fragment itself references.
+        // A trigger-wrapped route also needs its Trigger + Button (overlay-triggers.js).
         const triggerExports = overlayTrigger ? [overlayTrigger.trigger, 'Button'] : [];
         const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports, ...triggerExports])].join(',');
 
@@ -142,9 +141,7 @@
           const innerElement = compositeChildren.length
             ? createElement(Component, currentProps, ...rootChildArgs)
             : createElement(Component, currentProps);
-          // Overlay content (Dialog/Popover/Tooltip/...) only ever mounts real DOM
-          // once a real Trigger supplies open/anchor state via context — see
-          // overlay-triggers.js for which routes need this and why.
+          // Overlay routes need a real Trigger to mount anything (overlay-triggers.js).
           const rootElement = overlayTrigger
             ? createElement(
               RSP[overlayTrigger.trigger],

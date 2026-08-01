@@ -11,13 +11,6 @@
      optional but included for a realistic confirmation-style default;
      `variant` is left unset since 'confirmation' is already its default.
 
-     FIXED (2026-07-31): AlertDialog is Dialog's specialized sibling — same
-     DialogProps-shaped overlay content, always meant to render inside a
-     DialogTrigger + Modal pair for its open/anchor state; standalone it used
-     to mount nothing (same class of issue as Dialog/Popover/Tooltip — see
-     overlay-triggers.js for the general fix). initRsp() and buildRspSnippet()
-     now wrap this fragment in a real `<DialogTrigger><Button>...</Button>
-     <AlertDialog>...</AlertDialog></DialogTrigger>` per overlay-triggers.js's
-     `alert-dialog` entry — confirmed live: clicking the trigger opens a real
-     "Delete file?" modal with working Cancel/Delete buttons. -->
+     AlertDialog has no standalone open state, so initRsp()/buildRspSnippet()
+     wrap it in a real DialogTrigger + Button (overlay-triggers.js). -->
 <AlertDialog title="Delete file?" primaryActionLabel="Delete" cancelLabel="Cancel">This action cannot be undone.</AlertDialog>
