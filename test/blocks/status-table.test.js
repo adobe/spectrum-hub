@@ -50,6 +50,18 @@ const MOCK_INDEX = {
         },
       },
     },
+    // Design-only: a Figma design with no registered code implementation at all.
+    {
+      name: 'Whiteboard',
+      label: 'Whiteboard',
+      platforms: {
+        web: {
+          figma: { status: 'available' },
+          rsp: { status: 'not-available' },
+          swc: { status: 'not-available' },
+        },
+      },
+    },
   ],
 };
 
@@ -127,7 +139,7 @@ describe('status-table block', () => {
     });
 
     it('renders one body row per component', () => {
-      expect(el.querySelectorAll('tbody tr')).to.have.length(3);
+      expect(el.querySelectorAll('tbody tr')).to.have.length(4);
     });
 
     it('renders the component display label in the row header cell', () => {
@@ -211,8 +223,20 @@ describe('status-table block', () => {
       expect(cell(el, 'Calendar', 'swc').querySelector('a')).to.be.null;
     });
 
-    it('does not link Figma cells, only RSP and SWC', () => {
+    it('does not link a Figma cell when the component has a real code implementation', () => {
       expect(cell(el, 'Button', 'figma').querySelector('a')).to.be.null;
+    });
+
+    it('links a design-only component\'s Figma cell to the design-only route', () => {
+      const link = cell(el, 'Whiteboard', 'figma').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/web/design-only/components/whiteboard');
+    });
+
+    it('does not link an experimental-but-code-backed component\'s Figma cell', () => {
+      // Color Area has an rsp implementation (experimental), so it isn't design-only
+      // even though its swc cell is not-available.
+      expect(cell(el, 'Color Area', 'figma').querySelector('a')).to.be.null;
     });
 
     it('keeps the status badge (dot + label) as the link content', () => {
@@ -319,7 +343,7 @@ describe('status-table block', () => {
       expect(region.textContent).to.equal('1 component');
       input.value = '';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('3 components');
+      expect(region.textContent).to.equal('4 components');
     });
   });
 
@@ -435,7 +459,7 @@ describe('status-table block', () => {
       .map((tr) => tr.querySelector('th').textContent);
 
     it('loads sorted by Component ascending', () => {
-      expect(names(el)).to.deep.equal(['Button', 'Calendar', 'Color Area']);
+      expect(names(el)).to.deep.equal(['Button', 'Calendar', 'Color Area', 'Whiteboard']);
       expect(el.querySelector('thead th:first-child').getAttribute('aria-sort')).to.equal('ascending');
     });
 
@@ -447,7 +471,7 @@ describe('status-table block', () => {
       const header = el.querySelector('thead th:first-child');
       header.querySelector('.status-table-sort-header').click();
       expect(header.getAttribute('aria-sort')).to.equal('descending');
-      expect(names(el)).to.deep.equal(['Color Area', 'Calendar', 'Button']);
+      expect(names(el)).to.deep.equal(['Whiteboard', 'Color Area', 'Calendar', 'Button']);
     });
 
     it('moves aria-sort onto a newly clicked column and resets the others', () => {
