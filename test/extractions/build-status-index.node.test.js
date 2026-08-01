@@ -439,4 +439,22 @@ describe('applyOverrides', () => {
     const { warnings } = applyOverrides(base(), overrides);
     assert.ok(warnings.some((w) => /bogus/.test(w)));
   });
+
+  it('sets hasPage: false without changing the status', () => {
+    const overrides = { ActionButton: { web: { rsp: { status: 'available', hasPage: false } } } };
+    const { components } = applyOverrides(base(), overrides);
+    assert.deepEqual(components[0].platforms.web.rsp, { status: 'available', hasPage: false });
+  });
+
+  it('does not warn as redundant when only hasPage changes', () => {
+    const overrides = { ActionButton: { web: { rsp: { status: 'available', context: 'Stable', hasPage: false } } } };
+    const { warnings } = applyOverrides(base(), overrides);
+    assert.ok(!warnings.some((w) => /redundant/i.test(w)));
+  });
+
+  it('omits hasPage from the cell when true (the default)', () => {
+    const overrides = { ActionButton: { web: { rsp: { status: 'deprecated', hasPage: true } } } };
+    const { components } = applyOverrides(base(), overrides);
+    assert.ok(!Object.hasOwn(components[0].platforms.web.rsp, 'hasPage'));
+  });
 });

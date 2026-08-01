@@ -310,9 +310,10 @@ export function applySecondaries(components, secondaries = {}) {
 
 /**
  * Applies the manual override file last (override wins over auto-detected). Overrides are
- * keyed name → platform → implementation and may set `context` and a `note` provenance
- * field. Redundant, unknown-component, unknown-implementation, and unknown-status
- * overrides are warned about but do not abort the build.
+ * keyed name → platform → implementation and may set `context`, `hasPage` (false when the
+ * status is accurate but no component page exists yet — suppresses the status-table link),
+ * and a `note` provenance field. Redundant, unknown-component, unknown-implementation, and
+ * unknown-status overrides are warned about but do not abort the build.
  *
  * @param {object[]} components
  * @param {object} overrides
@@ -340,8 +341,10 @@ export function applyOverrides(components, overrides = {}) {
           warnings.push(`override for "${name}" ${platform}/${impl} has unknown status "${override.status}"`);
           continue;
         }
+        const hasPage = override.hasPage ?? true;
         if (current.status === override.status
-          && (current.context ?? null) === (override.context ?? null)) {
+          && (current.context ?? null) === (override.context ?? null)
+          && (current.hasPage ?? true) === hasPage) {
           warnings.push(`redundant override for "${name}" ${platform}/${impl} (already ${override.status})`);
         }
 
@@ -349,6 +352,7 @@ export function applyOverrides(components, overrides = {}) {
         const next = { status: override.status };
         if (override.context) { next.context = override.context; }
         if (current.secondary) { next.secondary = current.secondary; }
+        if (!hasPage) { next.hasPage = false; }
         if (override.note) { next.note = override.note; }
         component.platforms[platform][impl] = next;
       }

@@ -41,8 +41,8 @@ const toSlug = (name) => name
   .toLowerCase();
 
 /** The internal component-page URL for a status cell, or null when it shouldn't link. */
-const componentPageHref = (columnId, status, name, web) => {
-  if (!name || !LINKED_STATUSES.has(status)) { return null; }
+const componentPageHref = (columnId, status, name, web, hasPage = true) => {
+  if (!name || !LINKED_STATUSES.has(status) || !hasPage) { return null; }
   if (columnId === 'figma') {
     return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${toSlug(name)}` : null;
   }
@@ -86,7 +86,7 @@ const buildStatusCell = (cell, context = {}) => {
   const td = withRole(document.createElement('td'), 'cell');
 
   const badge = buildBadge(cell);
-  const href = componentPageHref(columnId, cell?.status, componentName, web);
+  const href = componentPageHref(columnId, cell?.status, componentName, web, cell?.hasPage);
   if (href) {
     const status = STATUSES[cell.status];
     const link = document.createElement('a');

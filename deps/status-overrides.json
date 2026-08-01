@@ -52,5 +52,14 @@
         "note": "React Spectrum splits this into separate Date Field, Date Picker, Date Range Picker, and Time Field components; this row mirrors their availability."
       }
     }
+  },
+  "CoachMark": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "hasPage": false,
+        "note": "Docs page not yet written."
+      }
+    }
   }
 }

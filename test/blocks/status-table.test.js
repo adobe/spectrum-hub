@@ -62,6 +62,18 @@ const MOCK_INDEX = {
         },
       },
     },
+    // hasPage: false — status is accurate but no component page exists yet.
+    {
+      name: 'CoachMark',
+      label: 'Coach Mark',
+      platforms: {
+        web: {
+          figma: { status: 'available' },
+          rsp: { status: 'available', hasPage: false },
+          swc: { status: 'not-available' },
+        },
+      },
+    },
   ],
 };
 
@@ -139,7 +151,7 @@ describe('status-table block', () => {
     });
 
     it('renders one body row per component', () => {
-      expect(el.querySelectorAll('tbody tr')).to.have.length(4);
+      expect(el.querySelectorAll('tbody tr')).to.have.length(5);
     });
 
     it('renders the component display label in the row header cell', () => {
@@ -221,6 +233,12 @@ describe('status-table block', () => {
 
     it('does not link a not-available cell', () => {
       expect(cell(el, 'Calendar', 'swc').querySelector('a')).to.be.null;
+    });
+
+    it('does not link a cell with hasPage: false, even though it is available', () => {
+      const coachMarkCell = cell(el, 'Coach Mark', 'rsp');
+      expect(coachMarkCell.querySelector('a')).to.be.null;
+      expect(coachMarkCell.textContent).to.include('Available');
     });
 
     it('does not link a Figma cell when the component has a real code implementation', () => {
@@ -343,7 +361,7 @@ describe('status-table block', () => {
       expect(region.textContent).to.equal('1 component');
       input.value = '';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('4 components');
+      expect(region.textContent).to.equal('5 components');
     });
   });
 
@@ -459,7 +477,7 @@ describe('status-table block', () => {
       .map((tr) => tr.querySelector('th').textContent);
 
     it('loads sorted by Component ascending', () => {
-      expect(names(el)).to.deep.equal(['Button', 'Calendar', 'Color Area', 'Whiteboard']);
+      expect(names(el)).to.deep.equal(['Button', 'Calendar', 'Coach Mark', 'Color Area', 'Whiteboard']);
       expect(el.querySelector('thead th:first-child').getAttribute('aria-sort')).to.equal('ascending');
     });
 
@@ -471,7 +489,7 @@ describe('status-table block', () => {
       const header = el.querySelector('thead th:first-child');
       header.querySelector('.status-table-sort-header').click();
       expect(header.getAttribute('aria-sort')).to.equal('descending');
-      expect(names(el)).to.deep.equal(['Whiteboard', 'Color Area', 'Calendar', 'Button']);
+      expect(names(el)).to.deep.equal(['Whiteboard', 'Color Area', 'Coach Mark', 'Calendar', 'Button']);
     });
 
     it('moves aria-sort onto a newly clicked column and resets the others', () => {
