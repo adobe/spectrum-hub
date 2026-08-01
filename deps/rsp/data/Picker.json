@@ -47,13 +47,6 @@
       "description": "Custom renderer for the picker value. Allows one to provide a custom element to render selected items."
     },
     {
-      "property": "placeholder",
-      "type": "string",
-      "default": "'Select an item' (localized)",
-      "description": "Temporary text that occupies the select when it is empty.",
-      "inheritedFrom": "SelectProps"
-    },
-    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
@@ -114,6 +107,12 @@
       "property": "isExiting",
       "type": "boolean",
       "description": "Whether the popover is currently performing an exit animation.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
+      "property": "shouldSkipAnimation",
+      "type": "boolean",
+      "description": "Whether the popover should appear and disappear without an entry or exit animation. This is used by components such as PreviewTrigger to skip animations when quickly swapping between overlays.",
       "inheritedFrom": "PopoverProps"
     },
     {

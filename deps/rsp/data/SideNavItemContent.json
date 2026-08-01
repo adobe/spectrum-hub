@@ -1,0 +1,10 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "Rendered contents of the side nav item or child items."
+    }
+  ]
+}

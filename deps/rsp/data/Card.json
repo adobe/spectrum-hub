@@ -55,6 +55,18 @@
       "inheritedFrom": "GridListItemProps"
     },
     {
+      "property": "focusMode",
+      "type": "'child' | 'row'",
+      "description": "Whether the row or its first focusable child element should be focused when navigating to the row. Defaults to 'row'.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "description": "Whether the row should support arrow key navigation even when the containing collection uses tab keyboard navigation. Allows users to navigate between rows with arrow keys while focus is on an interactive child element within the row.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",

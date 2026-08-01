@@ -44,7 +44,7 @@
     {
       "property": "defaultFilter",
       "type": "(textValue: string, inputValue: string) => boolean",
-      "description": "The filter function used to determine if a option should be included in the combo box list.",
+      "description": "The filter function used to determine if an option should be included in the combo box list. By default, a language-sensitive \"contains\" filter from `useFilter` is used.",
       "inheritedFrom": "ComboBoxProps"
     },
     {
@@ -121,6 +121,12 @@
       "property": "isExiting",
       "type": "boolean",
       "description": "Whether the popover is currently performing an exit animation.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
+      "property": "shouldSkipAnimation",
+      "type": "boolean",
+      "description": "Whether the popover should appear and disappear without an entry or exit animation. This is used by components such as PreviewTrigger to skip animations when quickly swapping between overlays.",
       "inheritedFrom": "PopoverProps"
     },
     {

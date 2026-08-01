@@ -609,6 +609,37 @@
       "ListBoxProps"
     ]
   },
+  "SideNav": {
+    "interface": "SideNavProps",
+    "extends": [
+      "TreeProps"
+    ]
+  },
+  "SideNavHeader": {
+    "interface": "SideNavHeaderProps",
+    "file": "SideNav",
+    "extends": [
+      "TreeHeaderProps"
+    ]
+  },
+  "SideNavItem": {
+    "interface": "SideNavItemProps",
+    "file": "SideNav",
+    "extends": [
+      "TreeItemProps"
+    ]
+  },
+  "SideNavItemContent": {
+    "interface": "SideNavItemContentProps",
+    "file": "SideNav",
+    "extends": [
+      "TreeItemContentProps"
+    ]
+  },
+  "SideNavItemLink": {
+    "interface": "SideNavItemLinkProps",
+    "file": "SideNav"
+  },
   "Skeleton": {
     "interface": "SkeletonProps"
   },

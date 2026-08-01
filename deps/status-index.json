@@ -1204,6 +1204,41 @@
       }
     },
     {
+      "name": "SideNav",
+      "label": "Side Nav",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SideNavHeader",
+      "label": "Side Nav Header",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "SideNavigation",
       "label": "Side Navigation",
       "platforms": {
@@ -1217,6 +1252,57 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
+      "name": "SideNavItem",
+      "label": "Side Nav Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SideNavItemContent",
+      "label": "Side Nav Item Content",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SideNavItemLink",
+      "label": "Side Nav Item Link",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }

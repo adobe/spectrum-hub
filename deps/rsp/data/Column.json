@@ -74,6 +74,18 @@
       "type": "ColumnStaticSize | null",
       "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
       "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "focusMode",
+      "type": "'child' | 'cell'",
+      "description": "Whether the column header or its first focusable child element should be focused when the column header is focused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard navigation mode.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "description": "Whether the column should support arrow key navigation even when the containing table uses tab keyboard navigation. Allows users to navigate between columns and rows with arrow keys while focus is on an interactive child element within the column header.",
+      "inheritedFrom": "ColumnProps"
     }
   ]
 }

@@ -37,6 +37,12 @@
       "inheritedFrom": "PopoverProps"
     },
     {
+      "property": "shouldSkipAnimation",
+      "type": "boolean",
+      "description": "Whether the popover should appear and disappear without an entry or exit animation. This is used by components such as PreviewTrigger to skip animations when quickly swapping between overlays.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
       "property": "UNSTABLE_portalContainer",
       "type": "Element",
       "default": "document.body",

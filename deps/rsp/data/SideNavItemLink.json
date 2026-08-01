@@ -1,0 +1,9 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "Rendered contents of the link."
+    }
+  ]
+}

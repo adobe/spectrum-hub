@@ -418,6 +418,16 @@
       "property": "colSpan",
       "type": "number",
       "description": "Indicates how many columns the data cell spans."
+    },
+    {
+      "property": "focusMode",
+      "type": "'child' | 'cell'",
+      "description": "Whether the cell or its first focusable child element should be focused when the cell is focused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard navigation mode."
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "description": "Whether the cell should support arrow key navigation even when the containing table uses tab keyboard navigation. Allows users to navigate between cells and rows with arrow keys while focus is on an interactive child element within the cell."
     }
   ],
   "CellRenderProps": [
@@ -1104,6 +1114,16 @@
       "property": "maxWidth",
       "type": "ColumnStaticSize | null",
       "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`."
+    },
+    {
+      "property": "focusMode",
+      "type": "'child' | 'cell'",
+      "description": "Whether the column header or its first focusable child element should be focused when the column header is focused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard navigation mode."
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "description": "Whether the column should support arrow key navigation even when the containing table uses tab keyboard navigation. Allows users to navigate between columns and rows with arrow keys while focus is on an interactive child element within the column header."
     }
   ],
   "ColumnRenderProps": [
@@ -1205,7 +1225,7 @@
     {
       "property": "defaultFilter",
       "type": "(textValue: string, inputValue: string) => boolean",
-      "description": "The filter function used to determine if a option should be included in the combo box list."
+      "description": "The filter function used to determine if an option should be included in the combo box list. By default, a language-sensitive \"contains\" filter from `useFilter` is used."
     },
     {
       "property": "formValue",
@@ -2635,6 +2655,16 @@
       "property": "onAction",
       "type": "() => void",
       "description": "Handler that is called when a user performs an action on the item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality."
+    },
+    {
+      "property": "focusMode",
+      "type": "'child' | 'row'",
+      "description": "Whether the row or its first focusable child element should be focused when navigating to the row. Defaults to 'row'."
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "description": "Whether the row should support arrow key navigation even when the containing collection uses tab keyboard navigation. Allows users to navigate between rows with arrow keys while focus is on an interactive child element within the row."
     }
   ],
   "GridListItemRenderProps": [
@@ -3849,6 +3879,11 @@
       "description": "Whether the popover is currently performing an exit animation."
     },
     {
+      "property": "shouldSkipAnimation",
+      "type": "boolean",
+      "description": "Whether the popover should appear and disappear without an entry or exit animation. This is used by components such as PreviewTrigger to skip animations when quickly swapping between overlays."
+    },
+    {
       "property": "UNSTABLE_portalContainer",
       "type": "Element",
       "default": "document.body",
@@ -3985,6 +4020,26 @@
       "property": "onClick",
       "type": "(e: MouseEvent<FocusableElement>) => void",
       "description": "**Not recommended – use `onPress` instead.** `onClick` is an alias for `onPress` provided for compatibility with other libraries. `onPress` provides additional event details for non-mouse interactions."
+    }
+  ],
+  "PreviewTriggerProps": [
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The trigger and Popover that make up the preview trigger."
+    },
+    {
+      "property": "delay",
+      "type": "number",
+      "default": "600",
+      "description": "The delay time in milliseconds before the preview opens."
+    },
+    {
+      "property": "closeDelay",
+      "type": "number",
+      "default": "200",
+      "description": "The delay time in milliseconds before the preview closes."
     }
   ],
   "ProgressBarProps": [
@@ -4544,20 +4599,6 @@
       "property": "isSelected",
       "type": "boolean",
       "description": "Whether the SelectionIndicator is visible. This is usually set automatically by the parent component."
-    }
-  ],
-  "SelectProps": [
-    {
-      "property": "className",
-      "type": "ClassNameOrFunction<SelectRenderProps>",
-      "default": "'react-aria-Select'",
-      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
-    },
-    {
-      "property": "placeholder",
-      "type": "string",
-      "default": "'Select an item' (localized)",
-      "description": "Temporary text that occupies the select when it is empty."
     }
   ],
   "SelectRenderProps": [
@@ -5834,6 +5875,96 @@
       "description": "State of the toggle button."
     }
   ],
+  "TokenFieldProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TokenFieldRenderProps>",
+      "default": "'react-aria-TokenField'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "TokenFieldRenderProps": [
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token field is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token field is read only."
+    }
+  ],
+  "TokenInputProps": [
+    {
+      "property": "children",
+      "type": "(segment: TokenSegment<T extends TokenFieldValue<infer V> ? V : never>) => React.ReactElement",
+      "required": true,
+      "description": "A function that renders a token for each segment in the token field."
+    },
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TokenInputRenderProps>",
+      "default": "'react-aria-TokenInput'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "TokenInputRenderProps": [
+    {
+      "property": "isHovered",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token input is currently hovered with a mouse."
+    },
+    {
+      "property": "isFocused",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token input is focused, either via a mouse or keyboard."
+    },
+    {
+      "property": "isFocusVisible",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token input is keyboard focused."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token input is disabled."
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token input is read only."
+    }
+  ],
+  "TokenProps": [
+    {
+      "property": "className",
+      "type": "ClassNameOrFunction<TokenRenderProps>",
+      "default": "'react-aria-Token'",
+      "description": "The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state."
+    }
+  ],
+  "TokenRenderProps": [
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token is selected."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "required": true,
+      "description": "Whether the token is disabled."
+    }
+  ],
   "ToolbarProps": [
     {
       "property": "className",
@@ -6350,6 +6481,11 @@
       "property": "layoutOptions",
       "type": "O",
       "description": "Options for the layout."
+    },
+    {
+      "property": "shouldObserveItemSize",
+      "type": "boolean",
+      "description": "Whether to observe each item's size with a ResizeObserver and re-measure when it changes."
     }
   ]
 }

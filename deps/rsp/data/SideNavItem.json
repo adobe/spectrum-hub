@@ -1,0 +1,52 @@
+{
+  "props": [
+    {
+      "property": "textValue",
+      "type": "string",
+      "required": true,
+      "description": "A string representation of the side nav item's contents, used for features like typeahead."
+    },
+    {
+      "property": "hasChildItems",
+      "type": "boolean",
+      "description": "Whether this item has children."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the tree row.",
+      "inheritedFrom": "TreeItemProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The object value that this tree item represents. When using dynamic collections, this is set automatically.",
+      "inheritedFrom": "TreeItemProps"
+    },
+    {
+      "property": "'aria-label'",
+      "type": "string",
+      "description": "An accessibility label for this tree item.",
+      "inheritedFrom": "TreeItemProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content of the tree item along with any nested children. Supports static nested tree items or use of a Collection to dynamically render nested tree items.",
+      "inheritedFrom": "TreeItemProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the item is disabled.",
+      "inheritedFrom": "TreeItemProps"
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "description": "Handler that is called when a user performs an action on this tree item. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
+      "inheritedFrom": "TreeItemProps"
+    }
+  ]
+}
