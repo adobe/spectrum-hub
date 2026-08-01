@@ -6,6 +6,5 @@
   { "name": "Field Label",     "context": "Use Form component" },
   { "name": "Help Text",       "context": "Use Form component" },
   { "name": "Standard Dialog", "context": "Use Dialog component" },
-  { "name": "Takeover Dialog", "context": "Use Dialog component" },
   { "name": "Thumbnail",       "context": "Use image" }
 ]

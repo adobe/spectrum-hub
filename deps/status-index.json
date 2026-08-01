@@ -687,23 +687,6 @@
       }
     },
     {
-      "name": "FullscreenDialog",
-      "label": "Fullscreen Dialog",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "HelpText",
       "label": "Help Text",
       "platforms": {
@@ -1432,8 +1415,7 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available",
-            "secondary": "Use Dialog component"
+            "status": "available"
           },
           "swc": {
             "status": "not-available",

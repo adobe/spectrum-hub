@@ -16,7 +16,7 @@
     "SelectBoxGroup": "SelectBox",
     "ActionButtonGroup": "ActionGroup",
     "Dialog": "StandardDialog",
-    "FullScreenDialog": "TakeoverDialog",
+    "FullscreenDialog": "TakeoverDialog",
     "TableView": "Table"
   },
   "figma": {
