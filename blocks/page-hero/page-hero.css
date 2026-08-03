@@ -1,0 +1,27 @@
+.page-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2-spacing-200);
+  max-width: var(--se-grid-container-width);
+  border-radius: 32px;
+  background-color: var(--se-body-background-color);
+  padding: var(--s2-spacing-800);
+  margin-block-end: var(--s2-spacing-300);
+
+  h1 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+    color: var(--s2-gray-700);
+    max-inline-size: 80ch;
+  }
+
+  .breadcrumbs {
+    padding-block-end: var(--s2-spacing-300);
+
+    /* Reserve space during load */
+    &:empty::after { content: "\00a0"; }
+  }
+}

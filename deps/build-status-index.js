@@ -5,7 +5,9 @@
  * the RSP, SWC, and Figma rosters into canonical components, resolves each column's
  * unified status through the adapter, layers on the per-implementation secondary-status
  * guidance and the manual override file, and writes a single `deps/status-index.json`
- * that downstream surfaces bind to.
+ * that downstream surfaces bind to — plus one small `deps/status/<slug>.json` per
+ * component (its web cells + Figma node id) for blocks/component-status.js, so a single
+ * component page's status pills don't need to fetch and search the whole index.
  *
  * Design guarantees:
  * - Columns are data-driven. The status table's web columns are defined here (WEB_COLUMNS)
@@ -27,7 +29,9 @@
  * Usage: node deps/build-status-index.js
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import {
+  readFileSync, writeFileSync, existsSync, mkdirSync,
+} from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -37,6 +41,7 @@ import { getImplementationById } from '../scripts/utils/implementations.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_FILE = join(__dirname, 'status-index.json');
+const SLICES_DIR = join(__dirname, 'status');
 const ALIASES_FILE = join(__dirname, 'component-aliases.json');
 const OVERRIDES_FILE = join(__dirname, 'status-overrides.json');
 const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
@@ -80,6 +85,22 @@ const OVERLAY_FILES = {
 
 // Small words kept lowercase (except when first) when title-casing a Figma display name.
 const SMALL_WORDS = new Set(['and', 'or', 'of', 'the', 'to', 'a', 'an', 'for', 'in', 'on', 'with']);
+
+/**
+ * `ActionButton` -> `action-button`: the kebab slug used in component-page URLs
+ * (`/web/<impl>/components/<slug>`) and in the per-component status file names
+ * (`deps/status/<slug>.json`). Shared between the browser (component-status.js) and the
+ * Node build script (deps/build-status-index.js) — dependency-free so it's safe in both.
+ *
+ * @param {string} name - a canonical PascalCase component name.
+ * @returns {string}
+ */
+export function toSlug(name) {
+  return name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
+}
 
 /**
  * Normalizes a human display name to a canonical PascalCase key.
@@ -393,6 +414,55 @@ export function buildIndex({
   return { index, warnings: [...secondaryWarnings, ...overrideWarnings] };
 }
 
+/**
+ * Builds the per-component status slices blocks/component-status.js fetches: one small
+ * file per component (`{ web, figmaPageId? }`, named by its URL slug) instead of the whole
+ * index, so a component page's status pills need a single small fetch rather than parsing
+ * the full multi-KB index and searching a separate Figma roster client-side.
+ *
+ * @param {{ name: string, sources: Record<string, string> }[]} roster
+ * @param {{ name: string, platforms: object }[]} components - buildIndex's output components
+ *   (same canonical names as roster, resolved cells already applied).
+ * @param {{ name: string, figmaPageId: string }[]} figmaRoster
+ * @returns {{ slug: string, data: { web: object, figmaPageId?: string } }[]}
+ */
+export function buildComponentSlices(roster, components, figmaRoster) {
+  const figmaPageIdByName = new Map(figmaRoster.map((entry) => [entry.name, entry.figmaPageId]));
+  const componentByName = new Map(components.map((component) => [component.name, component]));
+
+  return roster.map(({ name, sources }) => {
+    const figmaPageId = sources.figma ? figmaPageIdByName.get(sources.figma) : undefined;
+    const data = { web: componentByName.get(name).platforms[PLATFORM] };
+    if (figmaPageId) { data.figmaPageId = figmaPageId; }
+    return { slug: toSlug(name), data };
+  });
+}
+
+/**
+ * Writes each slice to `deps/status/<slug>.json`, creating the directory if needed. A
+ * slug collision (two canonical names kebab-casing to the same slug) is warned about and
+ * the later entry is skipped, rather than silently overwriting the earlier file.
+ *
+ * @param {{ slug: string, data: object }[]} slices
+ * @returns {string[]} warnings
+ */
+export function writeComponentSlices(slices) {
+  const warnings = [];
+  const seen = new Set();
+  mkdirSync(SLICES_DIR, { recursive: true });
+
+  for (const { slug, data } of slices) {
+    if (seen.has(slug)) {
+      warnings.push(`slug collision "${slug}" — skipping duplicate component status file`);
+      continue;
+    }
+    seen.add(slug);
+    writeFileSync(join(SLICES_DIR, `${slug}.json`), `${JSON.stringify(data, null, 2)}\n`);
+  }
+
+  return warnings;
+}
+
 /** Reads and parses a JSON file, returning `fallback` when it is absent. */
 function readJson(path, fallback) {
   if (!existsSync(path)) { return fallback; }
@@ -446,12 +516,16 @@ function main() {
     roster, readData: readExtraction, overrides, secondaries,
   });
 
-  for (const warning of warnings) {
+  const slices = buildComponentSlices(roster, index.components, figmaRoster);
+  const sliceWarnings = writeComponentSlices(slices);
+
+  for (const warning of [...warnings, ...sliceWarnings]) {
     console.warn(`warning: ${warning}`);
   }
 
   writeFileSync(OUTPUT_FILE, `${JSON.stringify(index, null, 2)}\n`);
   console.log(`Wrote ${index.components.length} component(s) to ${OUTPUT_FILE}`);
+  console.log(`Wrote ${slices.length} component status slice(s) to ${SLICES_DIR}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

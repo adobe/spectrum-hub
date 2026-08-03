@@ -128,19 +128,19 @@ function watchScrollSpy(headings, linkById) {
   headings.forEach((h) => observer.observe(h));
 }
 
-export default async function init(el) {
-  // Guard against a second decoration
-  if (el.dataset.pageNav) {
-    return;
-  }
+(() => {
+  const pageNav = document.createElement('nav');
+  pageNav.className = 'page-nav';
+  pageNav.setAttribute('aria-label', 'On this page');
+  document.body.append(pageNav);
 
   const headings = [...document.querySelectorAll('main h2')].filter(
-    (h) => !el.contains(h),
+    (h) => !pageNav.contains(h),
   );
   if (!headings.length) {
     return;
   }
-  el.dataset.pageNav = 'ready';
+  pageNav.dataset.pageNav = 'ready';
 
   // Assign ids and make headings focusable. Tabindex="-1" is set
   // on every heading so clicking a page-nav link moves focus to the target
@@ -205,11 +205,11 @@ export default async function init(el) {
     list.append(topLi);
   }
 
-  el.append(list);
+  pageNav.append(list);
 
   // URL-scoped widgets (copy markdown / see-in-figma / go-to-impl)
   // sit below the table of contents.
-  await renderWidgets(el);
+  renderWidgets(pageNav);
 
   // The nav is a desktop-only side rail (see detail template grid at >=900px).
   // Below that it is removed from the DOM and the accessibility tree entirely: a
@@ -219,13 +219,13 @@ export default async function init(el) {
   const placeholder = document.createComment('page-nav');
   const syncPresence = () => {
     if (desktopMql.matches && placeholder.parentNode) {
-      placeholder.replaceWith(el);
-    } else if (!desktopMql.matches && el.parentNode) {
-      el.replaceWith(placeholder);
+      placeholder.replaceWith(pageNav);
+    } else if (!desktopMql.matches && pageNav.parentNode) {
+      pageNav.replaceWith(placeholder);
     }
   };
   syncPresence();
   desktopMql.addEventListener('change', syncPresence);
 
   watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
-}
+})();

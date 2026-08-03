@@ -1,14 +1,27 @@
-/**
- * Composed by scripts.js's `buildPageHeader` before section decoration runs (see
- * scripts.js), out of whatever the author placed near the page's <h1>: an optional
- * .breadcrumbs block, the <h1> itself, an optional following description paragraph, and
- * an optional .component-status block. Because those become nested inside this block
- * rather than direct children of the section, the generic section-decoration loop never
- * reaches them — this init loads them itself.
- */
-import { loadBlock } from '../../scripts/ak.js';
+import { getMetadata, loadBlock } from '../../scripts/ak.js';
 
-export default async function init(el) {
-  const nested = [...el.querySelectorAll(':scope > .breadcrumbs, :scope > .component-status')];
-  await Promise.all(nested.map((block) => loadBlock(block)));
+const template = getMetadata('template');
+
+export default function init(el) {
+  const h1 = el.querySelector('h1');
+  if (!h1) {
+    el.textContent = 'No heading found';
+    return;
+  }
+
+  const breadcrumbs = el.querySelector('.breadcrumbs');
+  if (breadcrumbs) { loadBlock(breadcrumbs); }
+
+  // Only components get the rest of the hero treatment (for now)
+  if (template !== 'component') { return; }
+
+  const desc = document.createElement('p');
+  desc.className = 'description';
+  desc.textContent = getMetadata('description') ?? 'No description found in metadata.';
+
+  const statusBlock = document.createElement('div');
+  statusBlock.classList.add('component-status');
+  loadBlock(statusBlock);
+
+  el.append(desc, statusBlock);
 }

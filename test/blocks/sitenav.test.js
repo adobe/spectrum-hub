@@ -7,7 +7,8 @@ import sinon from 'sinon';
 const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('', { status: 404 }));
 
 const {
-  decorateLevel, getExpandButton, syncBackgroundInert, closeSitenav,
+  decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
+  isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -16,6 +17,17 @@ function buildNavList(html) {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = html;
   return wrapper.querySelector('ul');
+}
+
+// Chai serializes both operands into its diff when an equality assertion fails.
+// For document.activeElement that operand is usually <body> — a payload large
+// enough to hang the test runner (0 passed, 0 failed, silent timeout) instead of
+// reporting the failure. Compare identity as a boolean so a miss prints a
+// readable message rather than the whole DOM.
+function expectFocus(el, description) {
+  const active = document.activeElement;
+  const actual = active ? `<${active.tagName.toLowerCase()} class="${active.className}">` : 'nothing';
+  expect(active === el, `expected focus on ${description}, got ${actual}`).to.be.true;
 }
 
 function stubMatchMedia(sandbox, matches) {
@@ -45,6 +57,16 @@ describe('sitenav block', () => {
 
   afterEach(() => {
     sandbox.restore();
+  });
+
+  describe('getSiteNav', () => {
+    it('builds the #sitenav wrapper around a labelled nav landmark', () => {
+      const { sitenav, nav } = getSiteNav();
+      expect(sitenav.id).to.equal('sitenav');
+      expect(nav.tagName).to.equal('NAV');
+      expect(nav.getAttribute('aria-label')).to.equal('Spectrum Hub');
+      expect(nav.parentElement).to.equal(sitenav);
+    });
   });
 
   describe('decorateLevel — accessible name for icon-only toggle buttons', () => {
@@ -79,11 +101,8 @@ describe('sitenav block', () => {
     });
   });
 
-  describe('decorateLevel — mobile back button', () => {
-    let btn;
-    let backBtn;
-
-    beforeEach(() => {
+  describe('decorateLevel — disclosure wiring', () => {
+    it('points aria-controls at the menu wrapper it expands', () => {
       const ul = buildNavList(`
         <ul>
           <li>
@@ -93,33 +112,66 @@ describe('sitenav block', () => {
         </ul>
       `);
       decorateLevel(ul, 1);
-      btn = ul.querySelector('button.level-1-button');
-      backBtn = ul.querySelector('.sitenav-back-btn');
+      const btn = ul.querySelector('button.level-1-button');
+      const menu = ul.querySelector('.level-2-menu');
+      expect(menu.classList.contains('can-expand')).to.be.true;
+      expect(btn.getAttribute('aria-controls')).to.equal(menu.id);
+      expect(menu.id).to.equal('foundations');
     });
 
-    it('creates a back button inside the level-2-menu with visible "Back" text', () => {
-      expect(backBtn).to.not.be.null;
-      expect(backBtn.closest('.level-2-menu')).to.not.be.null;
-      expect(backBtn.textContent.trim()).to.equal('Back');
-    });
-
-    it('collapses the level-1-button (without closing the whole sitenav) when clicked', () => {
-      btn.setAttribute('aria-expanded', 'true');
-      backBtn.click();
-      expect(btn.getAttribute('aria-expanded')).to.equal('false');
-    });
-
-    it('does not create a back button for depth 2 and deeper', () => {
-      const nested = buildNavList(`
+    it('starts collapsed and toggles aria-expanded on click', () => {
+      const ul = buildNavList(`
         <ul>
           <li>
-            <p>Layout and structure</p>
-            <ul><li><a href="/x">Spacing</a></li></ul>
+            <p>Foundations</p>
+            <ul><li><a href="/foundations/overview">Overview</a></li></ul>
           </li>
         </ul>
       `);
-      decorateLevel(nested, 2);
-      expect(nested.querySelector('.sitenav-back-btn')).to.be.null;
+      decorateLevel(ul, 1);
+      const btn = ul.querySelector('button.level-1-button');
+      expect(btn.getAttribute('aria-expanded')).to.equal('false');
+      btn.click();
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+      btn.click();
+      expect(btn.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('leaves a leaf item (no nested list) as a plain link', () => {
+      const ul = buildNavList('<ul><li><a href="/x">Overview</a></li></ul>');
+      decorateLevel(ul, 1);
+      expect(ul.querySelector('button')).to.be.null;
+      expect(ul.querySelector('a').getAttribute('href')).to.equal('/x');
+    });
+  });
+
+  // decorateIndexBasedNav stitches query-index pages under the "Components"
+  // item of a known implementation. It finds that item by the marker
+  // decorateLevel stamps here, so the marker is the contract between them.
+  describe('decorateLevel — index-based nav marker', () => {
+    function buildImplList(parentLabel) {
+      return buildNavList(`
+        <ul>
+          <li><p>${parentLabel}</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+    }
+
+    it('marks a Components item that follows a known implementation with its prefix', () => {
+      const ul = buildImplList('SWC');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc');
+    });
+
+    it('leaves a Components item unmarked when the preceding item is not a known implementation', () => {
+      const ul = buildImplList('Foundations');
+      decorateLevel(ul, 2);
+      expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
     });
   });
 
@@ -159,7 +211,9 @@ describe('sitenav block', () => {
     });
   });
 
-  describe('getExpandButton — desktop (rail widen/narrow)', () => {
+  // The expand button widens/narrows the rail (is-expanded). Opening the
+  // mobile tray (is-open) is getTriggerButton's job — see below.
+  describe('getExpandButton — rail widen/narrow', () => {
     let sitenav;
     let btn;
     let main;
@@ -175,211 +229,67 @@ describe('sitenav block', () => {
       sitenav.append(btn);
     });
 
-    it('toggles is-open and aria-expanded together on click', () => {
+    it('toggles is-expanded and aria-expanded together on click', () => {
       btn.click();
-      expect(sitenav.hasAttribute('is-open')).to.be.true;
+      expect(sitenav.hasAttribute('is-expanded')).to.be.true;
       expect(btn.getAttribute('aria-expanded')).to.equal('true');
 
       btn.click();
-      expect(sitenav.hasAttribute('is-open')).to.be.false;
+      expect(sitenav.hasAttribute('is-expanded')).to.be.false;
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
     });
 
-    it('never marks main/header/footer inert — the desktop rail sits beside content, not over it', () => {
+    it('does not open the mobile tray — the rail width is a separate state', () => {
       btn.click();
-      expect(main.hasAttribute('inert')).to.be.false;
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
     });
   });
 
-  describe('getExpandButton — mobile (full-screen tray)', () => {
+  describe('getTriggerButton — mobile tray', () => {
     let sitenav;
-    let btn;
-    let main;
-    let header;
-    let footer;
+    let trigger;
 
     beforeEach(async () => {
       stubMatchMedia(sandbox, true);
-      stubIconFetch(sandbox);
-      sitenav = document.createElement('div');
-      sitenav.id = 'sitenav';
-      header = document.createElement('header');
-      main = document.createElement('main');
-      footer = document.createElement('footer');
-      document.body.append(header, main, sitenav, footer);
-      btn = await getExpandButton(sitenav);
-      sitenav.append(btn);
-    });
-
-    it('marks main, header, and footer inert once opened', () => {
-      btn.click();
-      expect(main.hasAttribute('inert')).to.be.true;
-      expect(header.hasAttribute('inert')).to.be.true;
-      expect(footer.hasAttribute('inert')).to.be.true;
-    });
-
-    it('clears inert again once closed', () => {
-      btn.click();
-      btn.click();
-      expect(main.hasAttribute('inert')).to.be.false;
-      expect(header.hasAttribute('inert')).to.be.false;
-      expect(footer.hasAttribute('inert')).to.be.false;
-    });
-
-    it('collapses a drilled-in level-1-button and closes the sitenav in one click, rather than opening further', () => {
-      const level1Btn = document.createElement('button');
-      level1Btn.className = 'level-1-button';
-      level1Btn.setAttribute('aria-expanded', 'true');
-      sitenav.append(level1Btn);
-      sitenav.setAttribute('is-open', '');
-
-      btn.click();
-
-      expect(level1Btn.getAttribute('aria-expanded')).to.equal('false');
-      expect(sitenav.hasAttribute('is-open')).to.be.false;
-      expect(btn.getAttribute('aria-expanded')).to.equal('false');
-    });
-
-    it('still opens on the first tap when the current page pre-expanded a level-1-button', () => {
-      const level1Btn = document.createElement('button');
-      level1Btn.className = 'level-1-button';
-      level1Btn.setAttribute('aria-expanded', 'true');
-      sitenav.append(level1Btn);
-
-      btn.click();
-
-      expect(sitenav.hasAttribute('is-open')).to.be.true;
-      expect(btn.getAttribute('aria-expanded')).to.equal('true');
-    });
-
-    describe('initial focus and focus trap', () => {
-      let navLink;
-
-      beforeEach(() => {
-        navLink = document.createElement('a');
-        navLink.href = '/foo';
-        navLink.textContent = 'Foo';
-        sitenav.append(navLink);
-      });
-
-      it('moves focus into the tray (past the trigger) when opened', () => {
-        btn.click();
-
-        expect(document.activeElement).to.equal(navLink);
-      });
-
-      it('wraps Tab from the last focusable element back to the trigger', () => {
-        btn.click();
-        navLink.focus();
-
-        const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
-        document.dispatchEvent(event);
-
-        expect(document.activeElement).to.equal(btn);
-        expect(event.defaultPrevented).to.be.true;
-      });
-
-      it('wraps Shift+Tab from the trigger back to the last focusable element', () => {
-        btn.click();
-        btn.focus();
-
-        const event = new KeyboardEvent('keydown', {
-          key: 'Tab', shiftKey: true, bubbles: true, cancelable: true,
-        });
-        document.dispatchEvent(event);
-
-        expect(document.activeElement).to.equal(navLink);
-        expect(event.defaultPrevented).to.be.true;
-      });
-
-      it('does not trap Tab while the tray is closed', () => {
-        btn.focus();
-
-        const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
-        document.dispatchEvent(event);
-
-        expect(event.defaultPrevented).to.be.false;
-      });
-    });
-  });
-
-  // Migrated from header.test.js's old "header mobile navigation" suite,
-  // which tested a button.mobile-nav-button + #main-nav-list that no longer
-  // exist — that responsibility (and its Escape-to-close behavior) moved
-  // here when the sitenav took over primary site navigation.
-  describe('getExpandButton — Escape key', () => {
-    let sitenav;
-    let btn;
-
-    beforeEach(async () => {
       stubIconFetch(sandbox);
       sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       document.body.append(sitenav);
-      btn = await getExpandButton(sitenav);
-      sitenav.append(btn);
+      trigger = await getTriggerButton(sitenav);
+      sitenav.append(trigger);
     });
 
-    it('closes the open sitenav and sets aria-expanded="false"', () => {
-      stubMatchMedia(sandbox, true);
-      btn.click();
+    it('has an accessible label, aria-controls, and starts collapsed', () => {
+      expect(trigger.classList.contains('sitenav-trigger-btn')).to.be.true;
+      expect(trigger.getAttribute('aria-label')).to.equal('Toggle site navigation');
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+      expect(trigger.getAttribute('aria-controls')).to.equal('sitenav');
+    });
+
+    it('opens the tray on the first tap', () => {
+      trigger.click();
       expect(sitenav.hasAttribute('is-open')).to.be.true;
-
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-
-      expect(sitenav.hasAttribute('is-open')).to.be.false;
-      expect(btn.getAttribute('aria-expanded')).to.equal('false');
+      expect(trigger.getAttribute('aria-expanded')).to.equal('true');
     });
 
-    it('also collapses a drilled-in level-2 list, not just the sitenav itself', () => {
-      stubMatchMedia(sandbox, true);
+    it('closes the tray on the second tap', () => {
+      trigger.click();
+      trigger.click();
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('collapses a drilled-in level-1-button as it closes', () => {
       const level1Btn = document.createElement('button');
       level1Btn.className = 'level-1-button';
       level1Btn.setAttribute('aria-expanded', 'true');
       sitenav.append(level1Btn);
-      sitenav.setAttribute('is-open', '');
 
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      trigger.click();
+      trigger.click();
 
       expect(level1Btn.getAttribute('aria-expanded')).to.equal('false');
       expect(sitenav.hasAttribute('is-open')).to.be.false;
-    });
-
-    it('returns focus to the toggle button', () => {
-      stubMatchMedia(sandbox, true);
-      btn.click();
-
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-
-      expect(document.activeElement).to.equal(btn);
-    });
-
-    it('closes the expanded rail on desktop too', () => {
-      stubMatchMedia(sandbox, false);
-      btn.click();
-      expect(sitenav.hasAttribute('is-open')).to.be.true;
-
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-
-      expect(sitenav.hasAttribute('is-open')).to.be.false;
-    });
-
-    it('does nothing when the sitenav is already closed', () => {
-      stubMatchMedia(sandbox, true);
-      expect(sitenav.hasAttribute('is-open')).to.be.false;
-
-      expect(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
-        .to.not.throw();
-      expect(sitenav.hasAttribute('is-open')).to.be.false;
-    });
-
-    it('ignores other keys', () => {
-      stubMatchMedia(sandbox, true);
-      btn.click();
-
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-
-      expect(sitenav.hasAttribute('is-open')).to.be.true;
     });
   });
 
@@ -400,6 +310,20 @@ describe('sitenav block', () => {
       expect(level1Btn.getAttribute('aria-expanded')).to.equal('false');
     });
 
+    it('resets the trigger button back to collapsed', () => {
+      const sitenav = document.createElement('div');
+      sitenav.setAttribute('is-open', '');
+      const trigger = document.createElement('button');
+      trigger.className = 'sitenav-trigger-btn';
+      trigger.setAttribute('aria-expanded', 'true');
+      sitenav.append(trigger);
+      document.body.append(sitenav);
+
+      closeSitenav(sitenav);
+
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    });
+
     it('is a no-op when nothing is expanded', () => {
       const sitenav = document.createElement('div');
       document.body.append(sitenav);
@@ -409,40 +333,225 @@ describe('sitenav block', () => {
     });
   });
 
-  describe('syncBackgroundInert', () => {
-    it('leaves main interactive when the sitenav is closed, even on mobile', () => {
-      stubMatchMedia(sandbox, true);
-      const sitenav = document.createElement('div');
-      const main = document.createElement('main');
-      document.body.append(main, sitenav);
+  // Migrated from header.test.js's old "header mobile navigation" suite, which
+  // tested a button.mobile-nav-button + #main-nav-list that no longer exist —
+  // that responsibility moved here when the sitenav took over primary site
+  // navigation. The handlers live on document and only act while the tray is
+  // open, so they are wired up explicitly rather than by the toggle buttons.
+  describe('setupSitenavKeyboardHandling — Escape key', () => {
+    let sitenav;
+    let btn;
 
-      syncBackgroundInert(sitenav);
-
-      expect(main.hasAttribute('inert')).to.be.false;
+    beforeEach(async () => {
+      stubIconFetch(sandbox);
+      sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      document.body.append(sitenav);
+      btn = await getExpandButton(sitenav);
+      sitenav.append(btn);
+      setupSitenavKeyboardHandling(sitenav, [btn]);
     });
 
-    it('leaves main interactive when open on desktop', () => {
+    function pressEscape() {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    }
+
+    it('closes the open sitenav', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+
+      pressEscape();
+
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+    });
+
+    it('also collapses a drilled-in level-2 list, not just the sitenav itself', () => {
+      stubMatchMedia(sandbox, true);
+      const level1Btn = document.createElement('button');
+      level1Btn.className = 'level-1-button';
+      level1Btn.setAttribute('aria-expanded', 'true');
+      sitenav.append(level1Btn);
+      sitenav.setAttribute('is-open', '');
+
+      pressEscape();
+
+      expect(level1Btn.getAttribute('aria-expanded')).to.equal('false');
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+    });
+
+    it('returns focus to the toggle button', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+
+      pressEscape();
+
+      expectFocus(btn, 'the sitenav toggle button');
+    });
+
+    it('closes on desktop too — Escape is not viewport-gated', () => {
       stubMatchMedia(sandbox, false);
-      const sitenav = document.createElement('div');
       sitenav.setAttribute('is-open', '');
-      const main = document.createElement('main');
-      document.body.append(main, sitenav);
 
-      syncBackgroundInert(sitenav);
+      pressEscape();
 
-      expect(main.hasAttribute('inert')).to.be.false;
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
     });
 
-    it('marks main inert only when open on mobile', () => {
+    it('does nothing when the sitenav is already closed', () => {
       stubMatchMedia(sandbox, true);
-      const sitenav = document.createElement('div');
+
+      expect(() => pressEscape()).to.not.throw();
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+    });
+
+    it('ignores other keys', () => {
+      stubMatchMedia(sandbox, true);
       sitenav.setAttribute('is-open', '');
-      const main = document.createElement('main');
-      document.body.append(main, sitenav);
 
-      syncBackgroundInert(sitenav);
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-      expect(main.hasAttribute('inert')).to.be.true;
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+    });
+  });
+
+  describe('setupSitenavKeyboardHandling — focus trap', () => {
+    let sitenav;
+    let btn;
+    let navLink;
+
+    beforeEach(async () => {
+      stubIconFetch(sandbox);
+      sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      document.body.append(sitenav);
+      btn = await getExpandButton(sitenav);
+      sitenav.append(btn);
+      navLink = document.createElement('a');
+      navLink.href = '/foo';
+      navLink.textContent = 'Foo';
+      sitenav.append(navLink);
+      setupSitenavKeyboardHandling(sitenav, [btn]);
+    });
+
+    function pressTab({ shiftKey = false } = {}) {
+      const event = new KeyboardEvent('keydown', {
+        key: 'Tab', shiftKey, bubbles: true, cancelable: true,
+      });
+      document.dispatchEvent(event);
+      return event;
+    }
+
+    it('wraps Tab from the last focusable element back to the first', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+      navLink.focus();
+
+      const event = pressTab();
+
+      expect(event.defaultPrevented).to.be.true;
+      expectFocus(btn, 'the first focusable element in the tray');
+    });
+
+    it('wraps Shift+Tab from the first focusable element to the last', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+      btn.focus();
+
+      const event = pressTab({ shiftKey: true });
+
+      expect(event.defaultPrevented).to.be.true;
+      expectFocus(navLink, 'the last focusable element in the tray');
+    });
+
+    it('leaves Tab alone in the middle of the tray', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+      btn.focus();
+
+      expect(pressTab().defaultPrevented).to.be.false;
+    });
+
+    it('does not trap Tab while the tray is closed', () => {
+      stubMatchMedia(sandbox, true);
+      navLink.focus();
+
+      expect(pressTab().defaultPrevented).to.be.false;
+    });
+
+    // The desktop rail sits beside the content rather than over it, so focus
+    // must be free to leave it.
+    it('does not trap Tab on desktop', () => {
+      stubMatchMedia(sandbox, false);
+      sitenav.setAttribute('is-open', '');
+      navLink.focus();
+
+      expect(pressTab().defaultPrevented).to.be.false;
+    });
+  });
+
+  describe('setupOutsideClose', () => {
+    let sitenav;
+    let outside;
+
+    beforeEach(() => {
+      sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      const inside = document.createElement('button');
+      inside.className = 'inside';
+      sitenav.append(inside);
+      outside = document.createElement('button');
+      document.body.append(sitenav, outside);
+      setupOutsideClose(sitenav);
+    });
+
+    it('closes the open tray when the click lands outside it on mobile', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+
+      outside.click();
+
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+    });
+
+    it('ignores clicks inside the tray', () => {
+      stubMatchMedia(sandbox, true);
+      sitenav.setAttribute('is-open', '');
+
+      sitenav.querySelector('.inside').click();
+
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+    });
+
+    // The desktop rail is in-flow, so clicking the page beside it is not a
+    // dismiss gesture the way tapping outside a floating overlay is.
+    it('ignores outside clicks on desktop', () => {
+      stubMatchMedia(sandbox, false);
+      sitenav.setAttribute('is-open', '');
+
+      outside.click();
+
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+    });
+
+    it('does nothing when the tray is already closed', () => {
+      stubMatchMedia(sandbox, true);
+
+      expect(() => outside.click()).to.not.throw();
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+    });
+  });
+
+  describe('isMobileViewport', () => {
+    it('is true below the 900px breakpoint', () => {
+      const mql = stubMatchMedia(sandbox, true);
+      expect(isMobileViewport()).to.be.true;
+      expect(window.matchMedia.calledWith('(width < 900px)')).to.be.true;
+      expect(mql.matches).to.be.true;
+    });
+
+    it('is false at or above the breakpoint', () => {
+      stubMatchMedia(sandbox, false);
+      expect(isMobileViewport()).to.be.false;
     });
   });
 });

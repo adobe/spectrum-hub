@@ -1,11 +1,4 @@
-import {
-  loadArea,
-  loadBlock,
-  getMetadata,
-  setConfig,
-  setScheme,
-  makePicture,
-} from './ak.js';
+import { loadArea, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -17,35 +10,47 @@ const linkBlocks = [
   { youtube: 'https://www.youtube' },
 ];
 
-// Blocks with self-managed styles
-// page-hero/breadcrumbs styles are folded into the eager styles/styles.css
-const components = ['fragment', 'schedule', 'page-hero', 'breadcrumbs'];
+// Blocks that do not need their own styles
+const components = ['fragment'];
 
-const isComponentPage = (pathname) => {
-  const parts = pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('components');
-  return idx > 0 && Boolean(parts[idx + 1]);
+// Setup basic state of the doc
+document.documentElement.classList.add('spectrum-edge');
+const isSession = sessionStorage.getItem('session');
+if (isSession) { document.body.classList.add('is-returning'); }
+const scheme = setScheme(document.body);
+const template = getMetadata('template');
+const breadcrumbMeta = getMetadata('breadcrumbs');
+const heroMeta = getMetadata('hero');
+
+// Optionally build a page hero
+const buildAutoHero = () => {
+  if (heroMeta === 'auto' || template === 'component') {
+    const h1 = document.body.querySelector('h1');
+    const section = h1.closest('main > div');
+
+    const hero = document.createElement('div');
+    hero.className = 'page-hero';
+    hero.append(h1);
+
+    section.prepend(hero);
+    return hero;
+  }
+  return null;
 };
 
-// Wraps whatever's already around the page's <h1> — an optional .breadcrumbs block, the
-// <h1>, an optional following description paragraph, and an optional .component-status
-// block — into a single <div class="page-hero">. Runs before decorateSections, so the
-// wrapper is decorated as a normal block once section decoration reaches it. Scoped to
-// component pages only
-const buildPageHeader = (main) => {
-  if (getMetadata('template') === 'marketing') { return; }
-  if (!isComponentPage(window.location.pathname)) { return; }
-  const h1 = main.querySelector('h1');
-  if (!h1 || h1.closest('.page-hero')) { return; }
-
-  const description = h1.nextElementSibling?.tagName === 'P' ? h1.nextElementSibling : null;
-  const breadcrumbs = main.querySelector('.breadcrumbs');
-  const status = main.querySelector('.component-status');
-
-  const pageHeader = document.createElement('div');
-  pageHeader.className = 'page-hero';
-  h1.before(pageHeader);
-  pageHeader.append(...[breadcrumbs, h1, description, status].filter(Boolean));
+// Optionally build breadcrumbs
+const buildBreadcrumbs = (hero) => {
+  // A hero does not guarantee breadcrumbs are wanted
+  if (breadcrumbMeta || template === 'component') {
+    // Breadcrumbs can be explicitly turned off
+    if (breadcrumbMeta === 'off') { return; }
+    // Initial scan for blocks requires a div
+    const breadcrumbs = document.createElement('div');
+    breadcrumbs.className = 'breadcrumbs';
+    // Prepand to either hero or the first section
+    const parent = hero || document.querySelector('main > div');
+    parent.prepend(breadcrumbs);
+  }
 };
 
 // How to decorate an area before loading it
@@ -56,19 +61,10 @@ const decorateArea = ({ area = document }) => {
     img.removeAttribute('loading');
     img.fetchPriority = 'high';
   };
-
   eagerLoad(area, 'img:not([src*=".svg"])');
-
-  // adds the id to `main` for the skip link
-  const main = area.querySelector('main');
-  if (main && !main.id) {
-    main.id = 'main-content';
-  }
-
-  if (area === document && main) { buildPageHeader(main); }
 };
 
-const decorateBackground = async (scheme) => {
+const decorateBackground = async () => {
   const currColor = scheme.replace('-scheme', '');
 
   const getPic = (color) => {
@@ -78,12 +74,14 @@ const decorateBackground = async (scheme) => {
       class: `bg-img scheme-aware-pic ${color}-pic`,
       loading: currColor === color ? 'eager' : 'lazy',
     };
+    if (!path) { return null; }
     return makePicture(path, opts);
   };
 
   const pics = [getPic('light'), getPic('dark')];
   document.body.prepend(...pics);
   pics.forEach((pic) => {
+    if (!pic) { return; }
     const img = pic.querySelector('img');
     img.decode()
       .then(() => img.classList.add('decoded'))
@@ -91,44 +89,13 @@ const decorateBackground = async (scheme) => {
   });
 };
 
-const setSiteNav = () => {
-  const template = getMetadata('template');
-  if (template === 'marketing') { return; }
-  const { pathname } = window.location;
-  if (pathname !== '/') {
-    document.documentElement.toggleAttribute('expand-sitenav');
-  }
-};
-
-const buildPageNav = async () => {
-  const template = getMetadata('template');
-  if (template === 'marketing') { return; }
-  const body = document.querySelector('body');
-  if (!body) { return; }
-  const pageNav = document.createElement('nav');
-  pageNav.className = 'page-nav';
-  pageNav.setAttribute('aria-label', 'On this page');
-  body.append(pageNav);
-  await loadBlock(pageNav);
-};
-
-const getSession = () => {
-  const isSession = sessionStorage.getItem('session');
-  if (isSession) { document.body.classList.add('is-returning'); }
-};
-
 export async function loadPage() {
-  getSession();
-
-  document.documentElement.classList.add('spectrum-edge');
-
-  const scheme = setScheme(document.body);
-  decorateBackground(scheme);
-
   setConfig({ hostnames, linkBlocks, components, decorateArea });
+  decorateBackground();
 
-  setSiteNav();
-  buildPageNav();
+  // Auto blocks
+  const hero = buildAutoHero();
+  buildBreadcrumbs(hero);
 
   await loadArea();
 }

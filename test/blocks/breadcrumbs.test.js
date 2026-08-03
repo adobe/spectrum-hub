@@ -112,12 +112,15 @@ describe('breadcrumbs block', () => {
     });
   });
 
+  // init always swaps the block's <div> for a fresh <nav>, so assertions look
+  // at the replacement in the document rather than at the element passed in —
+  // that one is detached by the time init returns.
   describe('init', () => {
     let el;
     const originalHref = window.location.href;
 
     beforeEach(() => {
-      el = document.createElement('nav');
+      el = document.createElement('div');
       el.className = 'breadcrumbs';
       document.body.append(el);
     });
@@ -131,26 +134,30 @@ describe('breadcrumbs block', () => {
       window.history.pushState({}, '', '/web/overview');
       init(el);
       expect(document.body.contains(el)).to.be.false;
+      expect(document.body.querySelector('nav.breadcrumbs')).to.be.null;
     });
 
-    it('appends the trail to the element when the current path resolves', () => {
+    it('appends the trail to the nav when the current path resolves', () => {
       window.history.pushState({}, '', '/web/rsp/components/action-button');
       init(el);
-      expect(el.querySelector('ol')).to.not.be.null;
-      expect(el.textContent).to.include('RSP');
+      const nav = document.body.querySelector('nav.breadcrumbs');
+      expect(nav.querySelector('ol')).to.not.be.null;
+      expect(nav.textContent).to.include('RSP');
     });
 
     it('labels the nav landmark as "Breadcrumb" per the APG pattern', () => {
       window.history.pushState({}, '', '/web/rsp/components/action-button');
       init(el);
-      expect(el.getAttribute('aria-label')).to.equal('Breadcrumb');
+      expect(document.body.querySelector('nav.breadcrumbs').getAttribute('aria-label'))
+        .to.equal('Breadcrumb');
     });
 
-    it('preserves an author-provided aria-label instead of overwriting it', () => {
+    it('labels the nav "Breadcrumb" even when the authored div carried its own label', () => {
       el.setAttribute('aria-label', 'Custom trail');
       window.history.pushState({}, '', '/web/rsp/components/action-button');
       init(el);
-      expect(el.getAttribute('aria-label')).to.equal('Custom trail');
+      expect(document.body.querySelector('nav.breadcrumbs').getAttribute('aria-label'))
+        .to.equal('Breadcrumb');
     });
 
     it('promotes a <div> block wrapper to a real <nav> landmark', () => {
