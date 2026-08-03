@@ -40,13 +40,24 @@ const toSlug = (name) => name
   .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
   .toLowerCase();
 
+// Components that keep their own row (own statuses, own cells) but are documented
+// together on one page, so their link target is shared rather than derived from their
+// own name. Unlike deps/component-aliases.json (a build-time roster merge), this is a
+// display-only redirect — the two rows never combine.
+const PAGE_SLUG_ALIASES = {
+  ColorHandle: 'color-handle-and-loupe',
+  ColorLoupe: 'color-handle-and-loupe',
+};
+
+const slugFor = (name) => PAGE_SLUG_ALIASES[name] ?? toSlug(name);
+
 /** The internal component-page URL for a status cell, or null when it shouldn't link. */
 const componentPageHref = (columnId, status, name, web, hasPage = true) => {
   if (!name || !LINKED_STATUSES.has(status) || !hasPage) { return null; }
   if (columnId === 'figma') {
-    return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${toSlug(name)}` : null;
+    return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${slugFor(name)}` : null;
   }
-  return isLinkableColumn(columnId) ? `/${PLATFORM}/${columnId}/components/${toSlug(name)}` : null;
+  return isLinkableColumn(columnId) ? `/${PLATFORM}/${columnId}/components/${slugFor(name)}` : null;
 };
 
 // explicitly reset table roles so that when the CSS display property changes on small

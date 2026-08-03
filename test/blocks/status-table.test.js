@@ -74,6 +74,30 @@ const MOCK_INDEX = {
         },
       },
     },
+    // Two separate rows (own statuses) that share one documentation page — see
+    // PAGE_SLUG_ALIASES in status-table.js.
+    {
+      name: 'ColorHandle',
+      label: 'Color Handle',
+      platforms: {
+        web: {
+          figma: { status: 'not-available' },
+          rsp: { status: 'available' },
+          swc: { status: 'available' },
+        },
+      },
+    },
+    {
+      name: 'ColorLoupe',
+      label: 'Color Loupe',
+      platforms: {
+        web: {
+          figma: { status: 'not-available' },
+          rsp: { status: 'available' },
+          swc: { status: 'experimental' },
+        },
+      },
+    },
   ],
 };
 
@@ -151,7 +175,7 @@ describe('status-table block', () => {
     });
 
     it('renders one body row per component', () => {
-      expect(el.querySelectorAll('tbody tr')).to.have.length(5);
+      expect(el.querySelectorAll('tbody tr')).to.have.length(7);
     });
 
     it('renders the component display label in the row header cell', () => {
@@ -269,6 +293,25 @@ describe('status-table block', () => {
       expect(name).to.include('Button');
       expect(name).to.include('Spectrum Web Components');
     });
+
+    it('links Color Handle and Color Loupe to the same shared documentation page, per implementation', () => {
+      const handleRsp = cell(el, 'Color Handle', 'rsp').querySelector('a.status-table-link');
+      const loupeRsp = cell(el, 'Color Loupe', 'rsp').querySelector('a.status-table-link');
+      const handleSwc = cell(el, 'Color Handle', 'swc').querySelector('a.status-table-link');
+      const loupeSwc = cell(el, 'Color Loupe', 'swc').querySelector('a.status-table-link');
+
+      expect(handleRsp.getAttribute('href')).to.equal('/web/rsp/components/color-handle-and-loupe');
+      expect(loupeRsp.getAttribute('href')).to.equal('/web/rsp/components/color-handle-and-loupe');
+      expect(handleSwc.getAttribute('href')).to.equal('/web/swc/components/color-handle-and-loupe');
+      expect(loupeSwc.getAttribute('href')).to.equal('/web/swc/components/color-handle-and-loupe');
+    });
+
+    it('keeps Color Handle and Color Loupe as two independent rows with their own statuses', () => {
+      const sameRow = rowByName(el, 'Color Handle') === rowByName(el, 'Color Loupe');
+      expect(sameRow).to.equal(false);
+      const loupeSwcCell = cell(el, 'Color Loupe', 'swc');
+      expect(loupeSwcCell.textContent).to.include('Experimental');
+    });
   });
 
   describe('status cards', () => {
@@ -332,7 +375,9 @@ describe('status-table block', () => {
       input.value = 'color';
       input.dispatchEvent(new Event('input'));
       const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
-      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal(['Color Area']);
+      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal([
+        'Color Area', 'Color Handle', 'Color Loupe',
+      ]);
     });
 
     it('is case-insensitive and matches on substrings', () => {
@@ -358,10 +403,10 @@ describe('status-table block', () => {
       const region = el.querySelector('[role="status"]');
       input.value = 'color';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('1 component');
+      expect(region.textContent).to.equal('3 components');
       input.value = '';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('5 components');
+      expect(region.textContent).to.equal('7 components');
     });
   });
 
@@ -477,7 +522,9 @@ describe('status-table block', () => {
       .map((tr) => tr.querySelector('th').textContent);
 
     it('loads sorted by Component ascending', () => {
-      expect(names(el)).to.deep.equal(['Button', 'Calendar', 'Coach Mark', 'Color Area', 'Whiteboard']);
+      expect(names(el)).to.deep.equal([
+        'Button', 'Calendar', 'Coach Mark', 'Color Area', 'Color Handle', 'Color Loupe', 'Whiteboard',
+      ]);
       expect(el.querySelector('thead th:first-child').getAttribute('aria-sort')).to.equal('ascending');
     });
 
@@ -489,7 +536,9 @@ describe('status-table block', () => {
       const header = el.querySelector('thead th:first-child');
       header.querySelector('.status-table-sort-header').click();
       expect(header.getAttribute('aria-sort')).to.equal('descending');
-      expect(names(el)).to.deep.equal(['Whiteboard', 'Color Area', 'Coach Mark', 'Calendar', 'Button']);
+      expect(names(el)).to.deep.equal([
+        'Whiteboard', 'Color Loupe', 'Color Handle', 'Color Area', 'Coach Mark', 'Calendar', 'Button',
+      ]);
     });
 
     it('moves aria-sort onto a newly clicked column and resets the others', () => {
