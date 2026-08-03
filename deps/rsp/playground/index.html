@@ -110,13 +110,15 @@
           ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
           : [];
         // `Text` lets an icon+label composition wrap the label for real TextContext styling.
-        // A trigger-wrapped route also needs its Trigger + Button (overlay-triggers.js).
-        const triggerExports = overlayTrigger ? [overlayTrigger.trigger, 'Button'] : [];
+        // A trigger route also needs its Trigger (or queue) export + Button (overlay-triggers.js).
+        const triggerExports = overlayTrigger
+          ? [overlayTrigger.trigger ?? overlayTrigger.queueExport, 'Button'].filter(Boolean)
+          : [];
         const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports, ...triggerExports])].join(',');
 
         // `?bundle` drops CSS side-effect imports — a bare import() can't load
         // them (wrong MIME type). Visual CSS is loaded separately below.
-        const [{ createElement }, { createRoot }, RSP] = await Promise.all([
+        const [{ createElement, Fragment }, { createRoot }, RSP] = await Promise.all([
           import(`https://esm.sh/react@${reactVersion}`),
           import(`https://esm.sh/react-dom@${reactVersion}/client`),
           import(`https://esm.sh/${PKG}@${pkg.version}?bundle&exports=${exports}&deps=${deps}`),
@@ -166,15 +168,28 @@
           const innerElement = compositeChildren.length
             ? createElement(Component, currentProps, ...rootChildArgs)
             : createElement(Component, currentProps);
-          // Overlay routes need a real Trigger to mount anything (overlay-triggers.js).
-          const rootElement = overlayTrigger
-            ? createElement(
+          // Overlay routes need a real Trigger to mount anything, or (with no
+          // `trigger` of their own, e.g. toast-container) a sibling Button
+          // that fires imperatively (overlay-triggers.js).
+          let rootElement = innerElement;
+          if (overlayTrigger?.trigger) {
+            rootElement = createElement(
               RSP[overlayTrigger.trigger],
               {},
               createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
               innerElement,
-            )
-            : innerElement;
+            );
+          } else if (overlayTrigger) {
+            rootElement = createElement(
+              Fragment,
+              {},
+              createElement(RSP.Button, {
+                onPress: () => RSP[overlayTrigger.queueExport].info(overlayTrigger.toastMessage),
+                variant: 'accent',
+              }, overlayTrigger.triggerLabel),
+              innerElement,
+            );
+          }
           // Forces a full remount — an in-place update leaves `light-dark()` descendant
           // styles stuck on their old value
           const key = `${scheme}-${currentProps.staticColor ?? 'none'}-${currentProps.variant ?? 'none'}`;

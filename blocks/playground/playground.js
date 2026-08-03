@@ -184,9 +184,21 @@ export function buildRspSnippet(
   // RSP prop names are used as-authored, unlike SWC.
   buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
 
-  // Some components need a real Trigger wrapper to be usable (overlay-triggers.js).
+  // Some routes need a real Trigger wrapper to be usable; a route with no
+  // `trigger` of its own (e.g. toast-container) fires imperatively instead,
+  // so its Button is a sibling line rather than a parent (overlay-triggers.js).
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
   if (!overlayTrigger) { return serializeElement(el, 0, true); }
+
+  if (!overlayTrigger.trigger) {
+    // Hardcoded rather than built via serializeElement: onPress is a real
+    // JSX expression, not a quoted string attribute.
+    const onPress = `() => ${overlayTrigger.queueExport}.info('${overlayTrigger.toastMessage}')`;
+    return [
+      `<Button onPress={${onPress}} variant="accent">\n  ${overlayTrigger.triggerLabel}\n</Button>`,
+      serializeElement(el, 0, true),
+    ].join('\n');
+  }
 
   const trigger = xmlDoc.createElement(overlayTrigger.trigger);
   const triggerButton = xmlDoc.createElement('Button');

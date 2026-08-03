@@ -547,6 +547,16 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
     expect(snippet.startsWith('<DialogTrigger>')).to.be.false;
     expect(snippet.startsWith('<AlertDialog')).to.be.true;
   });
+
+  it('shows the toast route\'s Button as a sibling line, not a wrapper', () => {
+    const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast-container');
+    expect(snippet).to.equal([
+      '<Button onPress={() => ToastQueue.info(\'Toasting…\')} variant="accent">',
+      '  Show Toast',
+      '</Button>',
+      '<ToastContainer />',
+    ].join('\n'));
+  });
 });
 
 // Guards against a typo/malformed-markup regression in the real committed
@@ -606,6 +616,13 @@ describe('composite snippet fragments — real committed files', () => {
     const snippet = buildRspSnippet('Tooltip', {}, markup, false, 'tooltip');
     expect(snippet.startsWith('<TooltipTrigger>')).to.be.true;
     expect(snippet.includes('<Tooltip>')).to.be.true;
+  });
+
+  it('gives the real RSP toast-container JSX snippet a sibling trigger Button', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/toast-container.jsx')).text();
+    const snippet = buildRspSnippet('ToastContainer', {}, markup, false, 'toast-container');
+    expect(snippet.includes('onPress={() => ToastQueue.info(\'Toasting…\')}')).to.be.true;
+    expect(snippet.includes('<ToastContainer />')).to.be.true;
   });
 });
 
