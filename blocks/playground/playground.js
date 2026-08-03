@@ -441,6 +441,8 @@ function createPreviewIframe(iframeUrl, title) {
 
 function wireIframeMessaging(iframe, currentProps) {
   function postPropUpdate(property, attribute, value, controlType) {
+    // Don't clobber the preview's own default with "no value to contribute".
+    if (value === undefined) { return; }
     const normalized = FREEFORM_CONTROLS.has(controlType) ? value : yesNoToBoolean(value);
     iframe.contentWindow?.postMessage({ type: 'prop-update', property, attribute, value: normalized }, '*');
   }
