@@ -15,11 +15,22 @@ Coding agents working in this repository should treat **`.ai/`** as the canonica
 | Rule catalog and usage       | [`.ai/README.md`](./.ai/README.md)                                                                 |
 | Rule files (`.md`)           | [`.ai/rules/`](./.ai/rules/)                                                                       |
 | Task workflows (skills)      | [`.ai/skills/`](./.ai/skills/) — each skill is typically `SKILL.md` in a subfolder                 |
+| Design specs                 | [`.ai/docs/specs/`](./.ai/docs/specs/) — `YYYY-MM-DD-<topic>-design.md`                            |
+| Implementation plans         | [`.ai/docs/plans/`](./.ai/docs/plans/) — `YYYY-MM-DD-<feature-name>.md`                            |
 
 ## Rules vs skills
 
 - **Rules** enforce consistency (documentation shape, CSS conventions, branch naming guidance, and similar). Prefer the always-applied and glob-triggered rules from [`.ai/README.md`](./.ai/README.md) when editing matching paths.
 - **Skills** are **on-demand** playbooks (for example explain-code, test-driven development, session handoff). When the user’s request fits a skill’s description, **read that skill’s `SKILL.md`** before doing the work.
+
+## Specs and plans
+
+Design specs and implementation plans live under **`.ai/docs/`**, alongside the rest of the project's agent documentation:
+
+- **Specs** (brainstorming output, design docs): `.ai/docs/specs/YYYY-MM-DD-<topic>-design.md`
+- **Plans** (implementation plans): `.ai/docs/plans/YYYY-MM-DD-<feature-name>.md`
+
+This **overrides** the default paths used by the Superpowers plugin skills (`superpowers:brainstorming`, `superpowers:writing-plans`, `superpowers:subagent-driven-development`, `superpowers:executing-plans`, and `superpowers:requesting-code-review`), which write to `docs/superpowers/specs/` and `docs/superpowers/plans/`. When any of those skills instruct you to save to `docs/superpowers/…`, save to the matching `.ai/docs/…` path instead. Do not create a `docs/superpowers/` directory in this repository.
 
 ## Rule index
 

@@ -67,5 +67,5 @@ every run.
 
 ## Design
 
-See [the design spec](../../docs/superpowers/specs/2026-07-30-algolia-content-indexer-design.md)
+See [the design spec](../../.ai/docs/specs/2026-07-30-algolia-content-indexer-design.md)
 for the record shape, index settings, and the reasoning behind them.
