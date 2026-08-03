@@ -40,24 +40,17 @@ const toSlug = (name) => name
   .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
   .toLowerCase();
 
-// Components that keep their own row (own statuses, own cells) but are documented
-// together on one page, so their link target is shared rather than derived from their
-// own name. Unlike deps/component-aliases.json (a build-time roster merge), this is a
-// display-only redirect — the two rows never combine.
-const PAGE_SLUG_ALIASES = {
-  ColorHandle: 'color-handle-and-loupe',
-  ColorLoupe: 'color-handle-and-loupe',
-};
-
-const slugFor = (name) => PAGE_SLUG_ALIASES[name] ?? toSlug(name);
-
 /** The internal component-page URL for a status cell, or null when it shouldn't link. */
-const componentPageHref = (columnId, status, name, web, hasPage = true) => {
+const componentPageHref = (columnId, status, name, web, cell = {}) => {
+  const { hasPage = true, page } = cell;
   if (!name || !LINKED_STATUSES.has(status) || !hasPage) { return null; }
+  // `page` (deps/build-status-index.js's override pipeline) redirects a row that keeps its
+  // own statuses/cells to a slug shared with another component documented on the same page.
+  const slug = page ?? toSlug(name);
   if (columnId === 'figma') {
-    return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${slugFor(name)}` : null;
+    return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${slug}` : null;
   }
-  return isLinkableColumn(columnId) ? `/${PLATFORM}/${columnId}/components/${slugFor(name)}` : null;
+  return isLinkableColumn(columnId) ? `/${PLATFORM}/${columnId}/components/${slug}` : null;
 };
 
 // explicitly reset table roles so that when the CSS display property changes on small
@@ -97,7 +90,7 @@ const buildStatusCell = (cell, context = {}) => {
   const td = withRole(document.createElement('td'), 'cell');
 
   const badge = buildBadge(cell);
-  const href = componentPageHref(columnId, cell?.status, componentName, web, cell?.hasPage);
+  const href = componentPageHref(columnId, cell?.status, componentName, web, cell);
   if (href) {
     const status = STATUSES[cell.status];
     const link = document.createElement('a');

@@ -74,16 +74,17 @@ const MOCK_INDEX = {
         },
       },
     },
-    // Two separate rows (own statuses) that share one documentation page — see
-    // PAGE_SLUG_ALIASES in status-table.js.
+    // Two separate rows (own statuses) that share one documentation page — `page` comes
+    // straight off each cell (deps/build-status-index.js's override pipeline), not a
+    // hardcoded map in this block.
     {
       name: 'ColorHandle',
       label: 'Color Handle',
       platforms: {
         web: {
           figma: { status: 'not-available' },
-          rsp: { status: 'available' },
-          swc: { status: 'available' },
+          rsp: { status: 'available', page: 'color-handle-and-loupe' },
+          swc: { status: 'available', page: 'color-handle-and-loupe' },
         },
       },
     },
@@ -93,8 +94,8 @@ const MOCK_INDEX = {
       platforms: {
         web: {
           figma: { status: 'not-available' },
-          rsp: { status: 'available' },
-          swc: { status: 'experimental' },
+          rsp: { status: 'available', page: 'color-handle-and-loupe' },
+          swc: { status: 'experimental', page: 'color-handle-and-loupe' },
         },
       },
     },

@@ -7,12 +7,16 @@
       "status": "available",
       "context": "Stable",
       "secondary": "Use color components",
+      "page": "color-handle-and-loupe",
+      "originalName": "ColorHandle",
       "note": "Built into color components instead."
     },
     "swc": {
       "status": "available",
       "context": "Stable",
-      "secondary": "Use Gen1"
+      "secondary": "Use Gen1",
+      "page": "color-handle-and-loupe",
+      "originalName": "ColorHandle"
     }
   },
   "figmaPageId": "9306:18338"
