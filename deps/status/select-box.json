@@ -5,12 +5,12 @@
     },
     "rsp": {
       "status": "available",
-      "context": "Stable"
+      "context": "Stable",
+      "originalName": "SelectBoxGroup"
     },
     "swc": {
-      "status": "not-available",
-      "secondary": "Use Gen1"
+      "status": "not-available"
     }
   },
-  "figmaPageId": "9953:42090"
+  "figmaPageId": "9966:48949"
 }

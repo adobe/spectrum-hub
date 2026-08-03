@@ -6,12 +6,12 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
-      "originalName": "TableView"
+      "originalName": "InlineAlert"
     },
     "swc": {
       "status": "not-available",
       "secondary": "Use Gen1"
     }
   },
-  "figmaPageId": "10220:2502"
+  "figmaPageId": "9953:42090"
 }

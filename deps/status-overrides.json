@@ -31,7 +31,15 @@
       "rsp": {
         "status": "available",
         "context": "Stable",
-        "note": "Built into color components instead."
+        "note": "Built into color components instead.",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
+      },
+      "swc": {
+        "status": "available",
+        "context": "Stable",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
       }
     }
   },
@@ -40,7 +48,15 @@
       "rsp": {
         "status": "available",
         "context": "Stable",
-        "note": "Built into color components instead."
+        "note": "Built into color components instead.",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
+      },
+      "swc": {
+        "status": "available",
+        "context": "Stable",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
       }
     }
   },

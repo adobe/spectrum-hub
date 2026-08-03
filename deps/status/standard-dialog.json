@@ -6,6 +6,7 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
+      "originalName": "Dialog",
       "secondary": "Use Dialog component"
     },
     "swc": {

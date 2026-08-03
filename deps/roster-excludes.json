@@ -30,13 +30,10 @@
   "Image",
   "LinkButton",
   "PopoverBase",
-  "Radio",
-  "RadioButton",
   "RangeCalendar",
   "RangeSlider",
   "Row",
   "SegmentedControlItem",
-  "SelectBox",
   "Tab",
   "TabPanel",
   "TableBody",
@@ -54,5 +51,11 @@
   "AssetCard",
   "ProductCard",
   "SkeletonCollection",
-  "CustomDialog"
+  "Skeleton",
+  "CustomDialog",
+  "SideNavHeader",
+  "SideNavItem",
+  "SideNavItemContent",
+  "SideNavItemLink"
 ]
+

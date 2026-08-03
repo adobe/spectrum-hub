@@ -5,7 +5,8 @@
     },
     "rsp": {
       "status": "available",
-      "context": "Stable"
+      "context": "Stable",
+      "originalName": "ColorSwatchPicker"
     },
     "swc": {
       "status": "not-available",

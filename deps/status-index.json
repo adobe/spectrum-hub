@@ -105,7 +105,8 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "originalName": "ActionButtonGroup"
           },
           "swc": {
             "status": "not-available",
@@ -162,6 +163,7 @@
           },
           "rsp": {
             "status": "available",
+            "originalName": "Dialog",
             "secondary": "Use Dialog component"
           },
           "swc": {
@@ -484,12 +486,16 @@
             "status": "available",
             "context": "Stable",
             "secondary": "Use color components",
+            "page": "color-handle-and-loupe",
+            "originalName": "ColorHandle",
             "note": "Built into color components instead."
           },
           "swc": {
             "status": "available",
             "context": "Stable",
-            "secondary": "Use Gen1"
+            "secondary": "Use Gen1",
+            "page": "color-handle-and-loupe",
+            "originalName": "ColorHandle"
           }
         }
       }
@@ -506,11 +512,15 @@
             "status": "available",
             "context": "Stable",
             "secondary": "Use color components",
+            "page": "color-handle-and-loupe",
+            "originalName": "ColorHandle",
             "note": "Built into color components instead."
           },
           "swc": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "page": "color-handle-and-loupe",
+            "originalName": "ColorHandle"
           }
         }
       }
@@ -689,6 +699,25 @@
       }
     },
     {
+      "name": "Form",
+      "label": "Form",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "N/A"
+          }
+        }
+      }
+    },
+    {
       "name": "HelpText",
       "label": "Help Text",
       "platforms": {
@@ -729,8 +758,8 @@
       }
     },
     {
-      "name": "InlineAlert",
-      "label": "Inline Alert",
+      "name": "InLineAlert",
+      "label": "In Line Alert",
       "platforms": {
         "web": {
           "figma": {
@@ -738,7 +767,8 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "originalName": "InlineAlert"
           },
           "swc": {
             "status": "not-available",
@@ -955,6 +985,27 @@
       }
     },
     {
+      "name": "RadioButton",
+      "label": "Radio Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable",
+            "originalName": "RadioGroup",
+            "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "Use Gen1"
+          }
+        }
+      }
+    },
+    {
       "name": "RadioGroup",
       "label": "Radio Group",
       "platforms": {
@@ -1045,6 +1096,25 @@
       }
     },
     {
+      "name": "SelectBox",
+      "label": "Select Box",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable",
+            "originalName": "SelectBoxGroup"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "SideNav",
       "label": "Side Nav",
       "platforms": {
@@ -1055,23 +1125,6 @@
           "rsp": {
             "status": "available",
             "context": "Alpha"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "SideNavHeader",
-      "label": "Side Nav Header",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
           },
           "swc": {
             "status": "not-available"
@@ -1093,75 +1146,6 @@
           "swc": {
             "status": "not-available",
             "secondary": "Use Gen1"
-          }
-        }
-      }
-    },
-    {
-      "name": "SideNavItem",
-      "label": "Side Nav Item",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "SideNavItemContent",
-      "label": "Side Nav Item Content",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "SideNavItemLink",
-      "label": "Side Nav Item Link",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "Skeleton",
-      "label": "Skeleton",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -1196,6 +1180,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
+            "originalName": "Dialog",
             "secondary": "Use Dialog component"
           },
           "swc": {
@@ -1269,7 +1254,8 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "originalName": "ColorSwatch"
           },
           "swc": {
             "status": "not-available",
@@ -1288,7 +1274,8 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "originalName": "ColorSwatchPicker"
           },
           "swc": {
             "status": "not-available",
@@ -1326,7 +1313,8 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "originalName": "TableView"
           },
           "swc": {
             "status": "not-available",
@@ -1417,7 +1405,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "available"
+            "status": "available",
+            "originalName": "Dialog"
           },
           "swc": {
             "status": "not-available",
