@@ -48,7 +48,7 @@
     // shrink-to-fit collapse as VIRTUALIZED_RSP_COMPONENTS, just width, no forced height.
     const FULL_WIDTH_RSP_COMPONENTS = new Set(['divider', 'select-box-group']);
     // Vertical divider needs #mount height, not width, or it collapses.
-    const VERTICAL_ORIENTATION_COMPONENTS = new Set(['divider']);
+    const VERTICAL_ORIENTATION_COMPONENTS = new Set(['divider', 'select-box-group']);
 
     // Sizes #mount for a component with no intrinsic size; re-run on orientation change.
     function applyMountSizing(orientation) {
