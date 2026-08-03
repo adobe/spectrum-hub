@@ -1,0 +1,42 @@
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "'S' | 'M' | 'L' | 'XL'",
+      "default": "'M'",
+      "description": "Size of the Form elements.",
+      "inheritedFrom": "FormStyleProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the Form elements are disabled.",
+      "inheritedFrom": "FormStyleProps"
+    },
+    {
+      "property": "isEmphasized",
+      "type": "boolean",
+      "description": "Whether the Form elements are rendered with their emphasized style.",
+      "inheritedFrom": "FormStyleProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
+    },
+    {
+      "property": "validationBehavior",
+      "type": "'aria' | 'native'",
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission when a field value is missing or invalid, or mark fields as required or invalid via ARIA.",
+      "inheritedFrom": "FormProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    }
+  ],
+  "status": "stable"
+}

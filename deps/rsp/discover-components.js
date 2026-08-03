@@ -20,7 +20,7 @@ const TYPES_BASE_URLS = [
   (path) => `https://cdn.jsdelivr.net/npm/@react-spectrum/s2/dist/types/src/${path}`,
 ];
 
-const SKIP_FILES = /^(bar-utils|style-utils|useDOMRef|intl|CenterBaseline|pressScale|Content|Field|Form|Provider|Tree|Collection|Fonts|ImageCoordinator)$/;
+const SKIP_FILES = /^(bar-utils|style-utils|useDOMRef|intl|CenterBaseline|pressScale|Content|Field|Provider|Tree|Collection|Fonts|ImageCoordinator)$/;
 
 // Manually maintained: tokens to skip when resolving `extends` from interface headers.
 // Not derived from TypeScript — if S2 adds new utility or shared type names in headers,

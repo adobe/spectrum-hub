@@ -367,6 +367,16 @@
       "CellProps"
     ]
   },
+  "Form": {
+    "interface": "FormProps",
+    "includes": [
+      "FormStyleProps"
+    ],
+    "extends": [
+      "FormProps",
+      "StyleProps"
+    ]
+  },
   "FullscreenDialog": {
     "interface": "FullscreenDialogProps",
     "extends": [
