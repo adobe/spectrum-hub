@@ -1,3 +1,4 @@
-<!-- Tooltip visibility is gated by the Popover API (`:not(:popover-open)` in its
-     styles), not just `open` — the shell calls showPopover() after injecting. -->
-<swc-tooltip open>Helpful tip text</swc-tooltip>
+<!-- swc-tooltip anchors to a real trigger via `for="id"`, no wrapper element —
+     hover/focus wiring on it is automatic once mounted. -->
+<swc-button id="tooltip-trigger">Hover me</swc-button>
+<swc-tooltip for="tooltip-trigger">Helpful tip text</swc-tooltip>

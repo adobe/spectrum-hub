@@ -1,5 +1,6 @@
-<!-- Popover visibility is driven by `open` via the Popover API — the shell calls
-     showPopover() after injecting. accessible-label is required (the surface is a dialog). -->
-<swc-popover open accessible-label="More information">
+<!-- swc-popover anchors to a real trigger via `for="id"`, no wrapper element —
+     it wires its own click-to-toggle. accessible-label is required (the surface is a dialog). -->
+<swc-button id="popover-trigger">Open popover</swc-button>
+<swc-popover for="popover-trigger" accessible-label="More information">
   Popover content goes here.
 </swc-popover>

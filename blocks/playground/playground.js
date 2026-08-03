@@ -92,13 +92,15 @@ function serializeElement(el, depth = 0, selfClosing = false) {
   return `${indent}<${tag}\n${attrLines}>\n${childLines}\n${indent}</${tag}>`;
 }
 
-// Extracts a composite component's real fragment root with its own attributes
-// plus real subcomponent children (swc-tab/swc-tab-panel).
-function parseHtmlFragmentRoot(markup) {
-  if (!markup) { return null; }
+// Matched by tag, not first-child — a trigger-anchored component (popover/tooltip)
+// has a real trigger element ahead of it; other siblings are returned separately.
+function parseHtmlFragmentRoot(markup, tagName) {
+  if (!markup) { return { fragmentRoot: null, siblings: [] }; }
   const template = document.createElement('template');
   template.innerHTML = markup.trim();
-  return template.content.firstElementChild ?? null;
+  const children = [...template.content.children];
+  const fragmentRoot = children.find((el) => el.localName === tagName) ?? children[0] ?? null;
+  return { fragmentRoot, siblings: children.filter((el) => el !== fragmentRoot) };
 }
 
 // Same idea as parseHtmlFragmentRoot, but for RSP's JSX snippet fragments.
@@ -148,7 +150,7 @@ function buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelTarget,
 
 export function buildSwcSnippet(tagName, currentProps, markup) {
   const el = document.createElement(tagName);
-  const fragmentRoot = parseHtmlFragmentRoot(markup);
+  const { fragmentRoot, siblings } = parseHtmlFragmentRoot(markup, tagName);
   // "label" is normally flat text content (see TEXT_KEYS), but if this SWC
   // component documents a real "label" attribute, apply it as an attribute
   // instead — currentProps.label.attribute already carries that name through
@@ -161,7 +163,11 @@ export function buildSwcSnippet(tagName, currentProps, markup) {
     hasRealLabelAttribute,
     (prop, { attribute }) => attribute,
   );
-  return serializeElement(el);
+  const rootMarkup = serializeElement(el);
+  // A trigger-anchored component's real usage needs its trigger too, or the
+  // `for="..."` on the copied snippet dangles — include it verbatim.
+  if (!siblings.length) { return rootMarkup; }
+  return [...siblings.map((sibling) => serializeElement(sibling)), rootMarkup].join('\n');
 }
 
 export function buildRspSnippet(
