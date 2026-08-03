@@ -64,16 +64,15 @@ class ADLSeoDescription extends LitElement {
     const setStatus = (message) => { this._status = message; };
 
     const names = [...this._selected];
+    const components = names.map((name) => this._components.find((cmp) => cmp.name === name));
     const [matchesByName, descriptions] = await Promise.all([
       findComponentPages(this.basePath, names, setStatus),
-      Promise.all(names.map((name) => loadComponentDescription(
-        this._components.find((cmp) => cmp.name === name),
-        this.token,
-      ))),
+      Promise.all(components.map((component) => loadComponentDescription(component, this.token))),
     ]);
 
     this._matches = names.map((name, i) => ({
       name,
+      component: components[i],
       description: descriptions[i],
       pages: matchesByName.get(name),
       open: false,
@@ -82,16 +81,20 @@ class ADLSeoDescription extends LitElement {
   }
 
   async updatePages() {
-    const jobs = this._matches.flatMap(
-      (match) => match.pages.map((page) => ({ page, description: match.description })),
-    );
+    const jobs = this._matches.flatMap((match) => {
+      const adminFragmentPath = `${match.component.path}/description`;
+      // Site-relative path - the org/repo prefix on component.path is a DA admin
+      // path detail and doesn't exist on the published site.
+      const sitePath = `${match.component.path.slice(this.basePath.length)}/description`;
+      return match.pages.map((page) => ({ page, adminFragmentPath, sitePath }));
+    });
 
     for (let i = 0; i < jobs.length; i += 1) {
-      const { page, description } = jobs[i];
+      const { page, adminFragmentPath, sitePath } = jobs[i];
       this._status = `Updating ${i + 1}/${jobs.length}: ${page.path}`;
       // Sequential on purpose - keeps per-page progress accurate.
       // eslint-disable-next-line no-await-in-loop
-      await savePageDescription(page.path, this.token, description);
+      await savePageDescription(page.path, this.token, adminFragmentPath, sitePath);
     }
 
     this._updated = this._matches;
