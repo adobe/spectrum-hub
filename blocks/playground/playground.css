@@ -1,5 +1,5 @@
 .playground {
-  --playground-iframe-min-block-size: 200px;
+  --playground-iframe-min-block-size: 300px;
   --playground-controls-min-inline-size: 200px;
   --playground-border-color: var(--s2-gray-300);
   --playground-border-radius: 32px;
