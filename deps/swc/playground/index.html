@@ -57,9 +57,12 @@
       mount.innerHTML = markup;
 
       // Looked up by tag, not firstElementChild — a trigger-anchored component
-      // (popover/tooltip) has a real sibling trigger element ahead of it.
+      // (popover/tooltip) has a real sibling trigger element ahead of it. A
+      // handful of components (e.g. link) render as native markup + utility
+      // classes with no swc-<name> custom element of their own — fall back to
+      // the fragment's own root in that case.
       const rootTag = `swc-${component}`;
-      const root = mount.querySelector(rootTag);
+      const root = mount.querySelector(rootTag) ?? mount.firstElementChild;
       if (!root) {
         showError(`Preview markup for ${component} has no root element`);
         throw new Error('Empty preview fragment');

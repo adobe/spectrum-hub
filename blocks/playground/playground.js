@@ -149,8 +149,11 @@ function buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelTarget,
 }
 
 export function buildSwcSnippet(tagName, currentProps, markup) {
-  const el = document.createElement(tagName);
   const { fragmentRoot, siblings } = parseHtmlFragmentRoot(markup, tagName);
+  // A handful of components (e.g. link) render as native markup with no
+  // swc-<name> custom element of their own — build the disclosure/live
+  // element with the fragment's real root tag instead of the assumed one.
+  const el = document.createElement(fragmentRoot?.localName ?? tagName);
   // "label" is normally flat text content (see TEXT_KEYS), but if this SWC
   // component documents a real "label" attribute, apply it as an attribute
   // instead — currentProps.label.attribute already carries that name through
