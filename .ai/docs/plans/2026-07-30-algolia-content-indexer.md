@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node 20+ ESM, `node-html-parser@9` for parsing, `algoliasearch@5` for the atomic index swap, `node:test` + `node:assert/strict` for tests.
 
-**Spec:** [`docs/superpowers/specs/2026-07-30-algolia-content-indexer-design.md`](../specs/2026-07-30-algolia-content-indexer-design.md)
+**Spec:** [`.ai/docs/specs/2026-07-30-algolia-content-indexer-design.md`](../specs/2026-07-30-algolia-content-indexer-design.md)
 
 ## Global Constraints
 
@@ -1873,7 +1873,7 @@ Change it, add a case to `test/indexer/sections.node.test.js`, then compare with
 
 ## Design
 
-See [the design spec](../docs/superpowers/specs/2026-07-30-algolia-content-indexer-design.md)
+See [the design spec](../../.ai/docs/specs/2026-07-30-algolia-content-indexer-design.md)
 for the record shape, index settings, and the reasoning behind them.
 ````
 

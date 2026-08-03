@@ -356,15 +356,35 @@ function decorateHeader() {
   header.className = meta;
 }
 
-async function decorateNav() {
-  const meta = getMetadata('sitenav');
-  if (meta === 'off') { return; }
-  await import('../blocks/sitenav/sitenav.js');
+async function loadNav() {
+  const template = getMetadata('template');
+  const sitenav = getMetadata('sitenav');
+  const pagenav = getMetadata('pagenav');
+
+  if (sitenav !== 'off') {
+    await Promise.all([
+      loadStyle('/blocks/sitenav/sitenav.css'),
+      import('../blocks/sitenav/sitenav.js'),
+    ]);
+  }
+
+  if (template !== 'marketing') {
+    if (pagenav !== 'off') {
+      await Promise.all([
+        loadStyle('/blocks/page-nav/page-nav.css'),
+        import('../blocks/page-nav/page-nav.js'),
+      ]);
+    }
+  }
 }
 
 function decorateDoc() {
+  const template = getMetadata('template');
+  if (template !== 'marketing') {
+    document.documentElement.toggleAttribute('expand-sitenav');
+  }
+
   decorateHeader();
-  decorateNav();
 
   const pageId = window.location.hash?.replace('#', '');
   if (pageId) { localStorage.setItem('lazyhash', pageId); }
@@ -374,13 +394,14 @@ async function loadSession() {
   sessionStorage.setItem('session', true);
   document.body.classList.add('session');
   const header = document.querySelector('header');
-  if (header) { await loadBlock(header); }
+  if (header) { loadBlock(header); }
+  loadNav();
 }
 
 export async function loadArea({ area } = { area: document }) {
   const isDoc = area === document;
   const isSession = sessionStorage.getItem('session');
-  if (isDoc) { decorateDoc(); }
+  if (isDoc) { decorateDoc(isSession); }
   const { decorateArea } = getConfig();
   if (decorateArea) { decorateArea({ area }); }
   decoratePictures(area);

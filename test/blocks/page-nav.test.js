@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import init, { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
+import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
   const main = document.createElement('main');
@@ -15,6 +15,41 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
     main.append(h2);
   });
   document.body.append(main);
+}
+
+// page-nav.js has no init export: a top-level IIFE builds its own <nav> and
+// appends it to the body on import. Importing the module *is* the decoration,
+// so every test sets up the DOM and its stubs first, then imports. A unique
+// query string defeats the module cache so the IIFE re-runs each time (only
+// page-nav.js itself re-executes; its dependencies stay cached).
+let runCount = 0;
+async function loadPageNav() {
+  runCount += 1;
+  await import(`../../blocks/page-nav/page-nav.js?run=${runCount}`);
+  // Null below the desktop breakpoint, where the IIFE detaches the nav.
+  return document.querySelector('nav.page-nav');
+}
+
+// The IIFE kicks off widget rendering without awaiting it, so an import
+// resolving only means the synchronous work (TOC, ids, breakpoint) is done.
+// Widget tests wait for the group the async pass appends last.
+function waitForEl(root, selector, timeout = 2000) {
+  return new Promise((resolve, reject) => {
+    const start = performance.now();
+    const check = () => {
+      const found = root.querySelector(selector);
+      if (found) {
+        resolve(found);
+        return;
+      }
+      if (performance.now() - start > timeout) {
+        reject(new Error(`timed out waiting for ${selector}`));
+        return;
+      }
+      setTimeout(check, 10);
+    };
+    check();
+  });
 }
 
 // matches=true simulates the >=900px desktop viewport where the nav renders;
@@ -60,14 +95,9 @@ function stubIntersectionObserver(sandbox) {
 
 describe('page-nav block', () => {
   let sandbox;
-  let el;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    el = document.createElement('nav');
-    el.className = 'page-nav';
-    el.setAttribute('aria-label', 'On this page');
-    document.body.append(el);
   });
 
   afterEach(() => {
@@ -75,26 +105,44 @@ describe('page-nav block', () => {
     document.body.innerHTML = '';
   });
 
-  describe('init leaves the nav empty when no h2 headings are present', () => {
-    it('does not append content when main has no h2 headings', async () => {
+  describe('the module builds its own nav landmark on import', () => {
+    it('appends a labelled nav.page-nav to the body', async () => {
       stubMatchMedia(sandbox, true);
-      makeDOM({ h2Texts: [] });
-      await init(el);
-      expect(el.children.length).to.equal(0);
-    });
-
-    it('does not throw when main has no h2 headings', async () => {
-      stubMatchMedia(sandbox, true);
-      makeDOM({ h2Texts: [] });
-      await init(el);
+      makeDOM();
+      const el = await loadPageNav();
+      expect(el.parentElement).to.equal(document.body);
+      expect(el.tagName).to.equal('NAV');
+      expect(el.getAttribute('aria-label')).to.equal('On this page');
     });
   });
 
-  describe('init builds the navigation links at the desktop viewport', () => {
+  describe('the nav stays empty when no h2 headings are present', () => {
+    it('does not append content when main has no h2 headings', async () => {
+      stubMatchMedia(sandbox, true);
+      makeDOM({ h2Texts: [] });
+      const el = await loadPageNav();
+      expect(el.children.length).to.equal(0);
+    });
+
+    it('does not mark the nav ready when main has no h2 headings', async () => {
+      stubMatchMedia(sandbox, true);
+      makeDOM({ h2Texts: [] });
+      const el = await loadPageNav();
+      expect(el.dataset.pageNav).to.be.undefined;
+    });
+  });
+
+  describe('the navigation links at the desktop viewport', () => {
+    let el;
+
     beforeEach(async () => {
       stubMatchMedia(sandbox, true);
       makeDOM();
-      await init(el);
+      el = await loadPageNav();
+    });
+
+    it('marks the nav ready once it has headings to list', () => {
+      expect(el.dataset.pageNav).to.equal('ready');
     });
 
     it('appends a list directly to the nav without a details wrapper', () => {
@@ -130,22 +178,26 @@ describe('page-nav block', () => {
     it('no links have aria-current set before scrolling', () => {
       expect(el.querySelector('[aria-current]')).to.be.null;
     });
+
+    it('does not list an h2 that lives inside the nav itself', () => {
+      const texts = [...el.querySelectorAll('ul a')].map((a) => a.textContent);
+      expect(texts).to.deep.equal(['Section One', 'Section Two', 'Back to top']);
+    });
   });
 
-  describe('init removes the nav from the DOM below the desktop breakpoint', () => {
-    it('detaches the nav element from the document at a small-screen viewport', async () => {
+  describe('the nav is removed from the DOM below the desktop breakpoint', () => {
+    it('detaches the nav element at a small-screen viewport', async () => {
       stubMatchMedia(sandbox, false);
       makeDOM();
-      await init(el);
-      expect(el.isConnected).to.be.false;
+      await loadPageNav();
       expect(document.querySelector('nav.page-nav')).to.be.null;
     });
 
     it('detaches the nav element when the viewport shrinks below the breakpoint', async () => {
       const mql = stubMatchMedia(sandbox, true);
       makeDOM();
-      await init(el);
-      expect(document.querySelector('nav.page-nav ul')).to.not.be.null;
+      const el = await loadPageNav();
+      expect(el.querySelector('ul')).to.not.be.null;
       mql.dispatch(false);
       expect(el.isConnected).to.be.false;
       expect(document.querySelector('nav.page-nav')).to.be.null;
@@ -154,11 +206,10 @@ describe('page-nav block', () => {
     it('restores the nav in place when the viewport grows past the breakpoint', async () => {
       const mql = stubMatchMedia(sandbox, false);
       makeDOM();
-      await init(el);
-      expect(el.isConnected).to.be.false;
+      expect(await loadPageNav()).to.be.null;
       mql.dispatch(true);
-      expect(el.isConnected).to.be.true;
-      expect(el.querySelector('ul')).to.not.be.null;
+      const el = document.querySelector('nav.page-nav');
+      expect(el).to.not.be.null;
       expect(el.querySelectorAll('ul li').length).to.equal(3);
     });
   });
@@ -175,7 +226,7 @@ describe('page-nav block', () => {
       stubMatchMedia(sandbox, true);
       const io = stubIntersectionObserver(sandbox);
       makeDOM();
-      await init(el);
+      const el = await loadPageNav();
 
       const h1 = document.querySelector('main h1');
       const headings = [...document.querySelectorAll('main h1, main h2')];
@@ -196,7 +247,7 @@ describe('page-nav block', () => {
       stubMatchMedia(sandbox, true);
       const io = stubIntersectionObserver(sandbox);
       makeDOM();
-      await init(el);
+      const el = await loadPageNav();
 
       const [sectionOne, sectionTwo] = [...document.querySelectorAll('main h2')];
       const [firstLink, secondLink] = [...el.querySelectorAll('ul li a')];
@@ -212,46 +263,46 @@ describe('page-nav block', () => {
       expect(secondLink.getAttribute('aria-current')).to.equal('location');
       expect(firstLink.getAttribute('aria-current')).to.be.null;
     });
-  });
 
-  describe('init is idempotent — a second decoration does not duplicate anything', () => {
-    it('does not append a second list or attach a second observer when run twice', async () => {
+    it('observes every h2 plus the h1 back-to-top target', async () => {
       stubMatchMedia(sandbox, true);
       const io = stubIntersectionObserver(sandbox);
       makeDOM();
+      await loadPageNav();
 
-      await init(el);
-      await init(el);
-
-      expect(el.querySelectorAll(':scope > ul').length).to.equal(1);
       expect(io.count).to.equal(1);
+      // The h1 is observed last, after the section headings it backs up to.
+      expect(io.targets).to.deep.equal([
+        ...document.querySelectorAll('main h2'),
+        document.querySelector('main h1'),
+      ]);
     });
   });
 
-  describe('init when h1 is absent', () => {
+  describe('when h1 is absent', () => {
     it('does not include a back-to-top link', async () => {
       stubMatchMedia(sandbox, true);
       makeDOM({ h1Text: null });
-      await init(el);
+      const el = await loadPageNav();
       const links = [...el.querySelectorAll('ul a')];
       expect(links.every((a) => a.textContent !== 'Back to top')).to.be.true;
     });
   });
 
-  describe('init assigns ids and accessibility attributes to headings regardless of viewport', () => {
+  describe('ids and accessibility attributes are assigned regardless of viewport', () => {
     beforeEach(() => {
       stubMatchMedia(sandbox, false);
     });
 
     it('assigns a slugified id to an h2 that has none', async () => {
       makeDOM({ h2Texts: ['Getting Started'] });
-      await init(el);
+      await loadPageNav();
       expect(document.querySelector('main h2').id).to.equal('getting-started');
     });
 
     it('assigns a slugified id to the h1', async () => {
       makeDOM();
-      await init(el);
+      await loadPageNav();
       expect(document.querySelector('main h1').id).to.equal('page-title');
     });
 
@@ -264,13 +315,13 @@ describe('page-nav block', () => {
       h2.textContent = 'Custom';
       main.append(h1, h2);
       document.body.append(main);
-      await init(el);
+      await loadPageNav();
       expect(document.querySelector('main h2').id).to.equal('my-custom-id');
     });
 
     it('deduplicates ids by appending a numeric suffix when two h2s share text', async () => {
       makeDOM({ h2Texts: ['Overview', 'Overview'] });
-      await init(el);
+      await loadPageNav();
       const [first, second] = document.querySelectorAll('main h2');
       expect(first.id).to.equal('overview');
       expect(second.id).to.equal('overview-2');
@@ -278,7 +329,7 @@ describe('page-nav block', () => {
 
     it('sets tabindex="-1" on each h2 heading', async () => {
       makeDOM();
-      await init(el);
+      await loadPageNav();
       document.querySelectorAll('main h2').forEach((h) => {
         expect(h.getAttribute('tabindex')).to.equal('-1');
       });
@@ -286,7 +337,7 @@ describe('page-nav block', () => {
 
     it('adds page-nav-target class to each h2 heading', async () => {
       makeDOM();
-      await init(el);
+      await loadPageNav();
       document.querySelectorAll('main h2').forEach((h) => {
         expect(h.classList.contains('page-nav-target')).to.be.true;
       });
@@ -294,13 +345,13 @@ describe('page-nav block', () => {
 
     it('sets tabindex="-1" on the h1', async () => {
       makeDOM();
-      await init(el);
+      await loadPageNav();
       expect(document.querySelector('main h1').getAttribute('tabindex')).to.equal('-1');
     });
 
     it('adds page-nav-target class to the h1', async () => {
       makeDOM();
-      await init(el);
+      await loadPageNav();
       expect(document.querySelector('main h1').classList.contains('page-nav-target')).to.be.true;
     });
   });
@@ -364,10 +415,9 @@ describe('page-nav block', () => {
 
     it('renders all three decorated widgets, above the TOC, on a component page', async () => {
       window.history.pushState({}, '', '/web/swc/components/action-button');
-      await init(el);
+      const el = await loadPageNav();
+      const group = await waitForEl(el, '.page-nav-widgets');
 
-      const group = el.querySelector('.page-nav-widgets');
-      expect(group).to.not.be.null;
       // widgets group sits below the heading TOC list
       expect(group.previousElementSibling).to.equal(el.querySelector('ul'));
 
@@ -387,10 +437,9 @@ describe('page-nav block', () => {
 
     it('renders only copy-markdown on a non-component interior page', async () => {
       window.history.pushState({}, '', '/web/swc/get-started');
-      await init(el);
+      const el = await loadPageNav();
+      const group = await waitForEl(el, '.page-nav-widgets');
 
-      const group = el.querySelector('.page-nav-widgets');
-      expect(group).to.not.be.null;
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown']);
       expect(fetchStub.called).to.be.false;
@@ -399,9 +448,9 @@ describe('page-nav block', () => {
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
       fetchStub.resolves({ ok: true, json: async () => [] });
       window.history.pushState({}, '', '/web/swc/components/action-button');
-      await init(el);
+      const el = await loadPageNav();
+      const group = await waitForEl(el, '.page-nav-widgets');
 
-      const group = el.querySelector('.page-nav-widgets');
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
     });

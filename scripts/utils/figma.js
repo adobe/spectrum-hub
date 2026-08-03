@@ -17,15 +17,19 @@ function componentSlugFromPath(pathname) {
 
 // The stored id uses a colon (e.g. "9230:3620"); Figma node ids in URLs are hyphenated
 // ("9230-3620").
-export function resolveFigmaUrl(componentSlug, data) {
-  if (!componentSlug) { return null; }
-  const entry = data.find((row) => slugifyName(row.name) === componentSlug);
-  if (!entry?.figmaPageId) { return null; }
-  const nodeId = entry.figmaPageId.replace(':', '-');
+export function figmaNodeUrl(figmaPageId) {
+  if (!figmaPageId) { return null; }
+  const nodeId = figmaPageId.replace(':', '-');
   return `${FIGMA_FILE_URL}?node-id=${nodeId}&m=dev`;
 }
 
-async function fetchFigmaData() {
+export function resolveFigmaUrl(componentSlug, data) {
+  if (!componentSlug) { return null; }
+  const entry = data.find((row) => slugifyName(row.name) === componentSlug);
+  return figmaNodeUrl(entry?.figmaPageId);
+}
+
+export async function fetchFigmaData() {
   const { codeBase = '' } = getConfig();
   try {
     const resp = await fetch(`${codeBase}${FIGMA_STATUS_PATH}`);

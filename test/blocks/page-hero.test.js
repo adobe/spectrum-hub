@@ -1,7 +1,56 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { setConfig } from '../../scripts/ak.js';
-import init from '../../blocks/page-hero/page-hero.js';
+
+const COMPONENT_PATH = '/web/swc/components/button';
+
+// The per-component status slice component-status fetches (deps/status/<slug>.json).
+const STATUS_SLICE = {
+  web: { swc: { status: 'available' }, figma: { status: 'experimental' } },
+  figmaPageId: '9230:3620',
+};
+
+function setMeta(name, content) {
+  document.head.querySelector(`meta[name="${name}"]`)?.remove();
+  if (content === undefined) { return; }
+  const meta = document.createElement('meta');
+  meta.name = name;
+  meta.content = content;
+  document.head.append(meta);
+}
+
+// page-hero reads the page template once, at module-evaluation time, so a test
+// that needs a different template imports a fresh copy behind a cache-busting
+// query rather than trying to change it after the fact.
+let runCount = 0;
+async function loadPageHero({ template, description } = {}) {
+  setMeta('template', template);
+  setMeta('description', description);
+  runCount += 1;
+  const { default: init } = await import(`../../blocks/page-hero/page-hero.js?run=${runCount}`);
+  return init;
+}
+
+// init() is synchronous and fires loadBlock without awaiting it, so returning
+// from init only means the hero's own markup is in place — a nested block's
+// decoration lands a few microtasks later.
+function waitFor(predicate, description, timeout = 2000) {
+  return new Promise((resolve, reject) => {
+    const start = performance.now();
+    const check = () => {
+      if (predicate()) {
+        resolve();
+        return;
+      }
+      if (performance.now() - start > timeout) {
+        reject(new Error(`timed out waiting for ${description}`));
+        return;
+      }
+      setTimeout(check, 10);
+    };
+    check();
+  });
+}
 
 describe('page-hero block', () => {
   let sandbox;
@@ -18,19 +67,18 @@ describe('page-hero block', () => {
   afterEach(() => {
     sandbox.restore();
     document.body.innerHTML = '';
+    setMeta('template', undefined);
+    setMeta('description', undefined);
     window.history.pushState({}, '', originalUrl);
   });
 
-  // component-status's init fetches both the status index and the Figma roster.
-  function stubStatusFetch() {
+  // component-status fetches one slice per component (deps/status/<slug>.json).
+  function stubStatusFetch(slice = STATUS_SLICE) {
     return sandbox.stub(window, 'fetch').callsFake((url) => {
-      if (String(url).includes('figma')) {
-        return Promise.resolve(new Response('[]', { status: 200 }));
+      if (String(url).includes('/deps/status/')) {
+        return Promise.resolve(new Response(JSON.stringify(slice), { status: 200 }));
       }
-      const index = {
-        components: [{ name: 'Button', platforms: { web: { swc: { status: 'available' } } } }],
-      };
-      return Promise.resolve(new Response(JSON.stringify(index), { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: 200 }));
     });
   }
 
@@ -42,92 +90,168 @@ describe('page-hero block', () => {
     return el;
   }
 
-  it('resolves without loading anything when there are no nested blocks', async () => {
+  function heading(text = 'Button') {
     const h1 = document.createElement('h1');
-    h1.textContent = 'Button';
-    const el = mount([h1]);
+    h1.textContent = text;
+    return h1;
+  }
 
-    await init(el);
+  function breadcrumbsBlock() {
+    const div = document.createElement('div');
+    div.className = 'breadcrumbs';
+    return div;
+  }
 
-    expect(el.contains(h1)).to.be.true;
-    expect(el.children.length).to.equal(1);
+  describe('without a heading', () => {
+    it('replaces the block content with a "No heading found" message', async () => {
+      const init = await loadPageHero();
+      const el = mount([document.createElement('p')]);
+
+      init(el);
+
+      expect(el.textContent).to.equal('No heading found');
+      expect(el.children.length).to.equal(0);
+    });
+
+    it('does not load a nested breadcrumbs block', async () => {
+      const init = await loadPageHero();
+      const breadcrumbs = breadcrumbsBlock();
+      const el = mount([breadcrumbs]);
+
+      init(el);
+
+      expect(breadcrumbs.dataset.blockName).to.be.undefined;
+    });
   });
 
-  it('loads a nested .breadcrumbs child (calls its real init)', async () => {
-    window.history.pushState({}, '', '/web/swc/components/button');
-    const breadcrumbs = document.createElement('div');
-    breadcrumbs.className = 'breadcrumbs';
-    const el = mount([breadcrumbs, document.createElement('h1')]);
+  describe('on a non-component page', () => {
+    it('leaves the heading in place and adds nothing to it', async () => {
+      const init = await loadPageHero();
+      const h1 = heading();
+      const el = mount([h1]);
 
-    await init(el);
+      init(el);
 
-    // dataset.blockName is stamped by ak.js's loadBlock before init replaces the
-    // placeholder <div> with a <nav> (WAI-ARIA breadcrumb pattern) — check it there first
-    // as proof init actually ran this block.
-    expect(breadcrumbs.dataset.blockName).to.equal('breadcrumbs');
-    const nav = el.querySelector('nav.breadcrumbs');
-    expect(nav).to.not.be.null;
-    expect(nav.textContent).to.include('SWC');
+      expect(el.contains(h1)).to.be.true;
+      expect(el.children.length).to.equal(1);
+    });
+
+    it('adds neither a description nor a status block', async () => {
+      const init = await loadPageHero({ description: 'A clickable action.' });
+      const el = mount([heading()]);
+
+      init(el);
+
+      expect(el.querySelector('.description')).to.be.null;
+      expect(el.querySelector('.component-status')).to.be.null;
+    });
+
+    it('still loads a nested breadcrumbs child (calls its real init)', async () => {
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero();
+      const breadcrumbs = breadcrumbsBlock();
+      const el = mount([breadcrumbs, heading()]);
+
+      init(el);
+
+      // dataset.blockName is stamped by ak.js's loadBlock before breadcrumbs' own
+      // init replaces the placeholder <div> with a <nav> (WAI-ARIA breadcrumb
+      // pattern) — check it first as proof loadBlock reached this block at all.
+      expect(breadcrumbs.dataset.blockName).to.equal('breadcrumbs');
+      await waitFor(() => el.querySelector('nav.breadcrumbs'), 'the breadcrumbs nav');
+      expect(el.querySelector('nav.breadcrumbs').textContent).to.include('SWC');
+    });
+
+    it('lets breadcrumbs remove itself on a page its own resolveContext rejects', async () => {
+      window.history.pushState({}, '', '/web/overview');
+      const init = await loadPageHero();
+      const breadcrumbs = breadcrumbsBlock();
+      const el = mount([breadcrumbs, heading()]);
+
+      init(el);
+
+      await waitFor(() => !el.contains(breadcrumbs), 'the breadcrumbs block to be removed');
+      expect(el.querySelector('nav.breadcrumbs')).to.be.null;
+    });
   });
 
-  it('loads a nested .component-status child (calls its real init)', async () => {
-    stubStatusFetch();
-    window.history.pushState({}, '', '/web/swc/components/button');
-    const status = document.createElement('div');
-    status.className = 'component-status';
-    const el = mount([document.createElement('h1'), status]);
+  describe('on a component page', () => {
+    it('appends the description from metadata after the heading', async () => {
+      stubStatusFetch();
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero({ template: 'component', description: 'A clickable action.' });
+      const el = mount([heading()]);
 
-    await init(el);
+      init(el);
 
-    expect(status.dataset.blockName).to.equal('component-status');
-    expect(status.querySelectorAll('.component-status-pill').length).to.equal(1);
+      const desc = el.querySelector('p.description');
+      expect(desc.textContent).to.equal('A clickable action.');
+      expect(desc.previousElementSibling.tagName).to.equal('H1');
+    });
+
+    it('falls back to a placeholder when the page has no description metadata', async () => {
+      stubStatusFetch();
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+
+      init(el);
+
+      expect(el.querySelector('p.description').textContent)
+        .to.equal('No description found in metadata.');
+    });
+
+    it('appends a component-status block and loads it (calls its real init)', async () => {
+      stubStatusFetch();
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+
+      init(el);
+
+      const status = el.querySelector('.component-status');
+      expect(status.dataset.blockName).to.equal('component-status');
+      await waitFor(
+        () => status.querySelectorAll('.component-status-pill').length === 2,
+        'the Development and Design status pills',
+      );
+      expect(status.getAttribute('role')).to.equal('group');
+    });
+
+    it('lets component-status remove itself when the path has no indexed component', async () => {
+      stubStatusFetch();
+      window.history.pushState({}, '', '/web/swc/get-started');
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+
+      init(el);
+
+      const status = el.querySelector('.component-status');
+      await waitFor(() => !el.contains(status), 'the component-status block to be removed');
+    });
+
+    it('loads a nested breadcrumbs child alongside the status block', async () => {
+      stubStatusFetch();
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero({ template: 'component' });
+      const breadcrumbs = breadcrumbsBlock();
+      const el = mount([breadcrumbs, heading()]);
+
+      init(el);
+
+      expect(breadcrumbs.dataset.blockName).to.equal('breadcrumbs');
+      expect(el.querySelector('.component-status').dataset.blockName).to.equal('component-status');
+      await waitFor(() => el.querySelector('nav.breadcrumbs'), 'the breadcrumbs nav');
+    });
   });
 
-  it('loads a nested breadcrumbs and component-status child together', async () => {
-    stubStatusFetch();
-    window.history.pushState({}, '', '/web/swc/components/button');
-    const breadcrumbs = document.createElement('div');
-    breadcrumbs.className = 'breadcrumbs';
-    const status = document.createElement('div');
-    status.className = 'component-status';
-    const el = mount([breadcrumbs, document.createElement('h1'), status]);
-
-    await init(el);
-
-    expect(breadcrumbs.dataset.blockName).to.equal('breadcrumbs');
-    expect(status.dataset.blockName).to.equal('component-status');
-  });
-
-  it('removes a nested breadcrumbs child on a page its own resolveContext rejects', async () => {
-    window.history.pushState({}, '', '/web/overview');
-    const breadcrumbs = document.createElement('div');
-    breadcrumbs.className = 'breadcrumbs';
-    const el = mount([breadcrumbs, document.createElement('h1')]);
-
-    await init(el);
-
-    expect(el.contains(breadcrumbs)).to.be.false;
-  });
-
-  it('does not load a block nested deeper than a direct child', async () => {
-    window.history.pushState({}, '', '/web/swc/components/button');
-    const breadcrumbs = document.createElement('div');
-    breadcrumbs.className = 'breadcrumbs';
-    const wrapper = document.createElement('div');
-    wrapper.append(breadcrumbs);
-    const el = mount([wrapper, document.createElement('h1')]);
-
-    await init(el);
-
-    expect(breadcrumbs.dataset.blockName).to.be.undefined;
-  });
-
-  it('ignores non-breadcrumbs/component-status children', async () => {
+  it('ignores children that are not blocks it knows about', async () => {
+    const init = await loadPageHero();
     const p = document.createElement('p');
     p.textContent = 'A clickable action.';
-    const el = mount([document.createElement('h1'), p]);
+    const el = mount([heading(), p]);
 
-    await init(el);
+    init(el);
 
     expect(p.dataset.blockName).to.be.undefined;
     expect(el.contains(p)).to.be.true;
