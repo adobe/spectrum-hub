@@ -29,6 +29,12 @@ body:has([static-color="white"]) { background: rgb(17 17 17); }
   background: transparent !important;
 }
 
+/* Vertical Divider needs its flex parent to have real height for align-self: stretch to work. */
+#mount[data-vertical-divider] > * {
+  display: flex;
+  height: 100%;
+}
+
 #mount {
   display: flex;
   align-items: center;

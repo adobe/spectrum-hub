@@ -47,6 +47,34 @@
     // No intrinsic content of their own (no text/children) — same #mount flex-item
     // shrink-to-fit collapse as VIRTUALIZED_RSP_COMPONENTS, just width, no forced height.
     const FULL_WIDTH_RSP_COMPONENTS = new Set(['divider', 'select-box-group']);
+    // Vertical divider needs #mount height, not width, or it collapses.
+    const VERTICAL_ORIENTATION_COMPONENTS = new Set(['divider']);
+
+    // Sizes #mount for a component with no intrinsic size; re-run on orientation change.
+    function applyMountSizing(orientation) {
+      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
+        // CardView shrink-to-fits to 0 width under #mount's flex layout.
+        mount.style.display = 'block';
+        mount.style.width = 'min(90vw, 400px)';
+        mount.style.height = '20rem';
+        return;
+      }
+      if (!FULL_WIDTH_RSP_COMPONENTS.has(component)) { return; }
+      if (VERTICAL_ORIENTATION_COMPONENTS.has(component) && orientation === 'vertical') {
+        // stretch (not the shell's default center) gives Provider's root real height.
+        mount.style.display = 'flex';
+        mount.style.alignItems = 'stretch';
+        mount.style.width = '';
+        mount.style.height = '10rem';
+        mount.setAttribute('data-vertical-divider', '');
+      } else {
+        mount.style.display = 'block';
+        mount.style.alignItems = '';
+        mount.style.width = 'min(90vw, 400px)';
+        mount.style.height = '';
+        mount.removeAttribute('data-vertical-divider');
+      }
+    }
 
     // Listened for at module top-level, before initRsp()'s awaited network
     // calls, so the first `theme-update` isn't missed mid-flight.
@@ -62,16 +90,6 @@
       const PKG = '@react-spectrum/s2';
       const exportName = pascalCase(component);
       const overlayTrigger = OVERLAY_TRIGGERS[component];
-
-      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
-        // CardView shrink-to-fits to 0 width under #mount's flex layout.
-        mount.style.display = 'block';
-        mount.style.width = 'min(90vw, 400px)';
-        mount.style.height = '20rem';
-      } else if (FULL_WIDTH_RSP_COMPONENTS.has(component)) {
-        mount.style.display = 'block';
-        mount.style.width = 'min(90vw, 400px)';
-      }
 
       try {
         const [pkg, compositeRoot, ownRspProps] = await Promise.all([
@@ -131,6 +149,7 @@
             [...compositeRoot.attributes].map((attr) => [attr.name, attr.value === '' ? true : attr.value]),
           )
           : { children: capitalize(component) };
+        applyMountSizing(currentProps.orientation);
 
         // render() must read currentProps.children live, not as a frozen
         // child arg, or a text control's prop-updates never reach the preview.
@@ -201,6 +220,7 @@
               currentProps[key] = value;
             }
           }
+          if (property === 'orientation') { applyMountSizing(value); }
           // RSP doesn't reflect most props as real DOM attributes, so mirror
           // onto #mount for CSS that keys off one (e.g. static-color backdrop).
           applyAttribute(mount, attribute, property === 'staticColor' && value === NO_STATIC_COLOR ? null : value);

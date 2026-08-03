@@ -20,6 +20,13 @@
     const mount = document.getElementById('mount');
     const { component, implementation } = resolvePreviewParams();
 
+    // The snippet's hardcoded inline-size must move to block-size when vertical, or it collapses.
+    const VERTICAL_ORIENTATION_SWC_COMPONENTS = new Set(['divider']);
+    function applyDividerOrientation(root, isVertical) {
+      root.style.inlineSize = isVertical ? '' : '200px';
+      root.style.blockSize = isVertical ? '200px' : '';
+    }
+
     // Per-component markup lives in snippets/<component>.html (bare
     // web-component HTML, no shell boilerplate). Adding a component is a
     // one-file markup edit.
@@ -84,7 +91,12 @@
         }
       });
 
-      listenForPropUpdates((update) => applySwcProp(root, update));
+      listenForPropUpdates((update) => {
+        applySwcProp(root, update);
+        if (VERTICAL_ORIENTATION_SWC_COMPONENTS.has(component) && update.property === 'vertical') {
+          applyDividerOrientation(root, update.value === true);
+        }
+      });
       notifyPreviewReady();
     }
 
