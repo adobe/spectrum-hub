@@ -4,7 +4,10 @@
 // exist and where each tag's module lives.
 import COMPONENTS from '../components.json' with { type: 'json' };
 
-export const BASE = 'https://esm.sh/@adobe/spectrum-wc@0.3.0';
+// `@beta` matches the dist-tag extract-cem-components.js pulls the CEM
+// from — components.json/data would drift from what's actually loadable
+// here if this pinned an older release (e.g. 0.3.0 predates progress-bar).
+export const BASE = 'https://esm.sh/@adobe/spectrum-wc@beta';
 
 export { COMPONENTS };
 
