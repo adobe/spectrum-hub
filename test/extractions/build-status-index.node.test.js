@@ -16,6 +16,7 @@ import {
   applySecondaries,
   applyOverrides,
   buildIndex,
+  buildComponentSlices,
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
@@ -41,6 +42,11 @@ describe('canonicalNameForSwc', () => {
 
   it('lets an alias override the mechanical name', () => {
     const aliases = { 'swc-cta': 'CallToAction' };
+    assert.equal(canonicalNameForSwc('swc-cta', aliases), 'CallToAction');
+  });
+
+  it('reads the canonical name off an object-shaped alias entry', () => {
+    const aliases = { 'swc-cta': { canonical: 'CallToAction', externalName: 'swc-cta' } };
     assert.equal(canonicalNameForSwc('swc-cta', aliases), 'CallToAction');
   });
 });
@@ -80,6 +86,11 @@ describe('canonicalNameForRsp', () => {
   it('lets an alias merge a differently-named RSP export into an existing canonical row', () => {
     assert.equal(canonicalNameForRsp('ToastContainer', { ToastContainer: 'Toast' }), 'Toast');
   });
+
+  it('reads the canonical name off an object-shaped alias entry', () => {
+    const aliases = { ActionButtonGroup: { canonical: 'ActionGroup', externalName: 'ActionButtonGroup' } };
+    assert.equal(canonicalNameForRsp('ActionButtonGroup', aliases), 'ActionGroup');
+  });
 });
 
 describe('joinRosters', () => {
@@ -89,6 +100,7 @@ describe('joinRosters', () => {
       {
         name: 'ActionButton',
         sources: { rsp: 'ActionButton', swc: 'swc-action-button', figma: 'Action button' },
+        externalNames: {},
       },
     ]);
   });
@@ -96,28 +108,28 @@ describe('joinRosters', () => {
   it('keeps an RSP-only component as a single-source row', () => {
     const roster = joinRosters(['TableView'], [], [], {});
     assert.deepEqual(roster, [
-      { name: 'TableView', sources: { rsp: 'TableView' } },
+      { name: 'TableView', sources: { rsp: 'TableView' }, externalNames: {} },
     ]);
   });
 
   it('keeps a SWC-only component as a single-source row', () => {
     const roster = joinRosters([], ['swc-color-loupe'], [], {});
     assert.deepEqual(roster, [
-      { name: 'ColorLoupe', sources: { swc: 'swc-color-loupe' } },
+      { name: 'ColorLoupe', sources: { swc: 'swc-color-loupe' }, externalNames: {} },
     ]);
   });
 
   it('keeps a Figma-only design as a single-source row (union membership)', () => {
     const roster = joinRosters([], [], ['Bar panel and toolbar'], {});
     assert.deepEqual(roster, [
-      { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' } },
+      { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' }, externalNames: {} },
     ]);
   });
 
   it('merges a Figma name into an existing row via the figma alias map', () => {
     const roster = joinRosters(['TableView'], [], ['Table'], { figma: { Table: 'TableView' } });
     assert.deepEqual(roster, [
-      { name: 'TableView', sources: { rsp: 'TableView', figma: 'Table' } },
+      { name: 'TableView', sources: { rsp: 'TableView', figma: 'Table' }, externalNames: {} },
     ]);
   });
 
@@ -136,7 +148,7 @@ describe('joinRosters', () => {
       { rsp: { ToastContainer: 'Toast' } },
     );
     assert.deepEqual(roster, [
-      { name: 'Toast', sources: { rsp: 'ToastContainer', figma: 'Toast' } },
+      { name: 'Toast', sources: { rsp: 'ToastContainer', figma: 'Toast' }, externalNames: {} },
     ]);
   });
 
@@ -156,8 +168,43 @@ describe('joinRosters', () => {
       },
     );
     assert.deepEqual(roster, [
-      { name: 'Cards (Asset)', sources: { rsp: 'AssetCard', figma: 'Cards (Asset)' } },
+      { name: 'Cards (Asset)', sources: { rsp: 'AssetCard', figma: 'Cards (Asset)' }, externalNames: {} },
     ]);
+  });
+
+  it('records a verified external name from an object-shaped rsp alias entry', () => {
+    const roster = joinRosters(
+      ['ActionButtonGroup'],
+      [],
+      [],
+      { rsp: { ActionButtonGroup: { canonical: 'ActionGroup', externalName: 'ActionButtonGroup' } } },
+    );
+    assert.deepEqual(roster, [
+      {
+        name: 'ActionGroup',
+        sources: { rsp: 'ActionButtonGroup' },
+        externalNames: { rsp: 'ActionButtonGroup' },
+      },
+    ]);
+  });
+
+  it('does not set an external name for a plain-string alias entry (no verified direction)', () => {
+    const roster = joinRosters(['ToastContainer'], [], [], { rsp: { ToastContainer: 'Toast' } });
+    assert.deepEqual(roster[0].externalNames, {});
+  });
+
+  it('keeps the first-found external name across a many-to-one merge, regardless of order', () => {
+    const aliases = {
+      rsp: {
+        CardPreview: 'Cards',
+        Card: { canonical: 'Cards', externalName: 'Card' },
+        CardView: 'Cards',
+      },
+    };
+    const forward = joinRosters(['CardPreview', 'Card', 'CardView'], [], [], aliases);
+    const reversed = joinRosters(['CardView', 'Card', 'CardPreview'], [], [], aliases);
+    assert.equal(forward[0].externalNames.rsp, 'Card');
+    assert.equal(reversed[0].externalNames.rsp, 'Card');
   });
 
   it('splits a card into duplicate rows when the Figma identity alias is missing', () => {
@@ -305,6 +352,25 @@ describe('buildIndex', () => {
     const ab = index.components.find((c) => c.name === 'ActionButton');
     assert.deepEqual(ab.platforms.web.rsp, { status: 'available', context: 'Stable' });
     assert.deepEqual(ab.platforms.web.swc, { status: 'available', context: 'Stable' });
+  });
+
+  it('carries a roster entry\'s externalNames onto the matching cell as originalName', () => {
+    const aliasedRoster = [
+      { name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' }, externalNames: { rsp: 'ActionButtonGroup' } },
+    ];
+    const { index } = buildIndex({
+      roster: aliasedRoster,
+      readData: () => ({ props: [], status: 'stable' }),
+      columns,
+    });
+    const ag = index.components.find((c) => c.name === 'ActionGroup');
+    assert.equal(ag.platforms.web.rsp.originalName, 'ActionButtonGroup');
+  });
+
+  it('omits originalName when the roster entry has no externalNames entry for that column', () => {
+    const { index } = buildIndex({ roster, readData, columns });
+    const ab = index.components.find((c) => c.name === 'ActionButton');
+    assert.ok(!Object.hasOwn(ab.platforms.web.rsp, 'originalName'));
   });
 
   it('emits Not available for a source a component lacks', () => {
@@ -456,5 +522,69 @@ describe('applyOverrides', () => {
     const overrides = { ActionButton: { web: { rsp: { status: 'deprecated', hasPage: true } } } };
     const { components } = applyOverrides(base(), overrides);
     assert.ok(!Object.hasOwn(components[0].platforms.web.rsp, 'hasPage'));
+  });
+
+  it('carries a page override onto the cell', () => {
+    const overrides = {
+      ActionButton: { web: { swc: { status: 'experimental', page: 'action-button-and-group' } } },
+    };
+    const { components } = applyOverrides(base(), overrides);
+    assert.equal(components[0].platforms.web.swc.page, 'action-button-and-group');
+  });
+
+  it('does not warn as redundant when only page changes', () => {
+    const overrides = {
+      ActionButton: { web: { swc: { status: 'experimental', page: 'action-button-and-group' } } },
+    };
+    const { warnings } = applyOverrides(base(), overrides);
+    assert.ok(!warnings.some((w) => /redundant/i.test(w)));
+  });
+});
+
+describe('buildComponentSlices', () => {
+  const roster = [
+    { name: 'ActionButton', sources: { swc: 'swc-action-button' } },
+    { name: 'ActionGroup', sources: { swc: 'swc-action-group' } },
+  ];
+  const components = [
+    { name: 'ActionButton', platforms: { web: { swc: { status: 'available' } } } },
+    { name: 'ActionGroup', platforms: { web: { swc: { status: 'available' } } } },
+  ];
+
+  it('slugs a normal component by its own name, not flagged shared', () => {
+    const slices = buildComponentSlices(roster, components, []);
+    const actionButton = slices.find((s) => s.slug === 'action-button');
+    assert.ok(actionButton);
+    assert.equal(actionButton.shared, false);
+  });
+
+  it('redirects components carrying a page override to that shared slug, flagged shared', () => {
+    const overridden = [
+      { name: 'ActionButton', platforms: { web: { swc: { status: 'available', page: 'action-button-and-group' } } } },
+      { name: 'ActionGroup', platforms: { web: { swc: { status: 'available', page: 'action-button-and-group' } } } },
+    ];
+    const slices = buildComponentSlices(roster, overridden, []);
+    assert.deepEqual(slices.map((s) => s.slug), ['action-button-and-group', 'action-button-and-group']);
+    assert.ok(slices[0].shared);
+    assert.ok(slices[1].shared);
+  });
+
+  it('carries a cell\'s own originalName through unchanged (buildIndex/applyOverrides set it, not this function)', () => {
+    const withOriginalName = [
+      { name: 'ActionButton', platforms: { web: { rsp: { status: 'available', originalName: 'ActionBtn' } } } },
+    ];
+    const rosterWithRsp = [{ name: 'ActionButton', sources: { rsp: 'ActionButton' } }];
+    const slices = buildComponentSlices(rosterWithRsp, withOriginalName, []);
+    assert.equal(slices[0].data.web.rsp.originalName, 'ActionBtn');
+  });
+
+  it('attaches the figma page id by source name, unaffected by a page override', () => {
+    const rosterWithFigma = [{ name: 'ActionButton', sources: { figma: 'Action Button' } }];
+    const slices = buildComponentSlices(
+      rosterWithFigma,
+      [{ name: 'ActionButton', platforms: { web: {} } }],
+      [{ name: 'Action Button', figmaPageId: '1:1' }],
+    );
+    assert.equal(slices[0].data.figmaPageId, '1:1');
   });
 });
