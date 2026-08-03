@@ -181,6 +181,7 @@
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
+    scroll-behavior: smooth;
 
     /* Anything taller scrolls internally instead of running past the edge of the screen. */
     @media (width < 900px) {

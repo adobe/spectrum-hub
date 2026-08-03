@@ -177,7 +177,7 @@ const findCurrentPageInNav = (navList) => {
   const { pathname } = window.location;
   const currentLink = [...navList.querySelectorAll('a')]
     .find((a) => a.pathname === pathname);
-  if (!currentLink) { return; }
+  if (!currentLink) { return null; }
   currentLink.classList.add('is-current-page');
 
   [1, 2].forEach((level) => {
@@ -187,6 +187,8 @@ const findCurrentPageInNav = (navList) => {
     if (!button) { return; }
     button.setAttribute('aria-expanded', true);
   });
+
+  return currentLink;
 };
 
 export const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
@@ -314,7 +316,7 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   decorateBadges();
 
   // Find current page
-  findCurrentPageInNav(navList);
+  const currentLink = findCurrentPageInNav(navList);
 
   // Append it all. triggerBtn is a sibling of nav (not nested inside it) so
   // that hiding nav below 900px doesn't take the mobile trigger down with it.
@@ -323,4 +325,8 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   const main = document.querySelector('main');
   if (!main) { return; }
   main.before(sitenav);
+
+  // Scroll the level-2 flyout (the only scrollable nav container) so the
+  // current page is visible, rather than always starting at the top.
+  currentLink?.scrollIntoView({ block: 'nearest' });
 })();
