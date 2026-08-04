@@ -7,6 +7,13 @@
   <link rel="stylesheet" href="../../../blocks/playground/preview-shell.css" />
   <link rel="stylesheet" href="../../shared/playground/shared-fonts.css" />
   <script type="module" src="../../shared/playground/theme-sync.js"></script>
+  <style>
+    /* Divider has no intrinsic size — reflected purely in CSS, keyed off the real
+       `vertical` attribute applySwcProp already sets, so a live prop update swaps the
+       axis on its own with no JS. */
+    swc-divider { inline-size: 200px; }
+    swc-divider[vertical] { inline-size: auto; block-size: 200px; }
+  </style>
 </head>
 <body class="swc-theme swc-theme--sizeM swc-theme--light">
   <div id="mount"></div>
@@ -19,13 +26,6 @@
 
     const mount = document.getElementById('mount');
     const { component, implementation } = resolvePreviewParams();
-
-    // The snippet's hardcoded inline-size must move to block-size when vertical, or it collapses.
-    const VERTICAL_ORIENTATION_SWC_COMPONENTS = new Set(['divider']);
-    function applyDividerOrientation(root, isVertical) {
-      root.style.inlineSize = isVertical ? '' : '200px';
-      root.style.blockSize = isVertical ? '200px' : '';
-    }
 
     // Per-component markup lives in snippets/<component>.html (bare
     // web-component HTML, no shell boilerplate). Adding a component is a
@@ -109,9 +109,6 @@
 
       listenForPropUpdates((update) => {
         applySwcProp(root, update);
-        if (VERTICAL_ORIENTATION_SWC_COMPONENTS.has(component) && update.property === 'vertical') {
-          applyDividerOrientation(root, update.value === true);
-        }
       });
       notifyPreviewReady();
     }
