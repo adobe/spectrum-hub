@@ -1,6 +1,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { getConfig } from '../../scripts/ak.js';
 import loadStyle from '../../scripts/utils/styles.js';
+import { fetchNavAreas } from './nav-areas.js';
 import '../../deps/se/se.js';
 
 const { codeBase } = getConfig();
@@ -15,10 +16,18 @@ const SEARCH_KEY = '271461afa0e340546d112204c7520c1e';
 const INDEX_NAME = 'spectrum-docs-public';
 const DEBOUNCE_MS = 250;
 
+// Dispatched on document when a nav area is selected, mirroring a real click
+// on the sitenav's own level-1 button. Kept as a local string rather than
+// imported from blocks/sitenav/sitenav.js — that module's body is a
+// side-effecting IIFE that would inject the whole sitenav rail onto pages
+// that load search but intentionally have no sitenav.
+const SEARCH_EXPAND_EVENT = 'sitenav:expand-level1';
+
 class SHSearch extends LitElement {
   static properties = {
     query: { type: String, state: true },
     results: { type: Array, state: true },
+    navAreas: { type: Array, state: true },
     activeIndex: { state: true },
   };
 
@@ -26,17 +35,25 @@ class SHSearch extends LitElement {
     super();
     this.query = '';
     this.results = [];
+    this.navAreas = [];
     this.activeIndex = -1;
     this._debounceTimeout = null;
+    this._handleOutsideClick = this._handleOutsideClick.bind(this);
   }
 
   connectedCallback() {
     super.connectedCallback();
     this.shadowRoot.adoptedStyleSheets = styles;
+    fetchNavAreas().then((areas) => { this.navAreas = areas; });
+    // Deferred: the same click that inserted this element (the action-button
+    // icon click) is still bubbling to `document` right now. Registering
+    // immediately would have this fire on that same click and self-close.
+    setTimeout(() => document.addEventListener('click', this._handleOutsideClick), 0);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    document.removeEventListener('click', this._handleOutsideClick);
     if (this._debounceTimeout) {
       clearTimeout(this._debounceTimeout);
     }
@@ -44,12 +61,21 @@ class SHSearch extends LitElement {
 
   firstUpdated() {
     this.shadowRoot.querySelector('se-input').focus();
+    this._popover.showPopover();
   }
 
   willUpdate(changed) {
-    if (changed.has('results')) {
-      this.activeIndex = this.results.length > 0 ? 0 : -1;
+    if (changed.has('results') || changed.has('navAreas')) {
+      this.activeIndex = this._currentItems.length > 0 ? 0 : -1;
     }
+  }
+
+  get _isNavView() {
+    return !this.query.trim();
+  }
+
+  get _currentItems() {
+    return this._isNavView ? this.navAreas : this.results;
   }
 
   updated(changed) {
@@ -82,14 +108,11 @@ class SHSearch extends LitElement {
   async _runSearch() {
     const query = this.query.trim();
     if (!query) {
+      // Empty query returns to nav-area view; the popover stays open.
       this.results = [];
-      this._popover.hidePopover();
       return;
     }
-    const hits = await this._search(query);
-    this.results = hits;
-    // Show popover *after* results are set
-    this._popover.showPopover();
+    this.results = await this._search(query);
   }
 
   _handleInput(e) {
@@ -105,27 +128,28 @@ class SHSearch extends LitElement {
   }
 
   _handleKey(e) {
-    if (!this.results.length) { return; }
+    const items = this._currentItems;
 
     switch (e.key) {
       case 'ArrowDown':
+        if (!items.length) { return; }
         e.preventDefault();
-        this._setActive((this.activeIndex + 1) % this.results.length);
+        this._setActive((this.activeIndex + 1) % items.length);
         break;
       case 'ArrowUp':
+        if (!items.length) { return; }
         e.preventDefault();
-        this._setActive((this.activeIndex - 1 + this.results.length) % this.results.length);
+        this._setActive((this.activeIndex - 1 + items.length) % items.length);
         break;
       case 'Enter':
         if (this.activeIndex > -1) {
           e.preventDefault();
-          this._select(this.results[this.activeIndex]);
+          this._select(items[this.activeIndex]);
         }
         break;
       case 'Escape':
         e.preventDefault();
-        this._popover.hidePopover();
-        this.results = [];
+        this._close();
         break;
       default:
         break;
@@ -136,14 +160,39 @@ class SHSearch extends LitElement {
     this.activeIndex = index;
   }
 
-  _select(hit) {
+  _select(item) {
+    if (this._isNavView) {
+      this._selectNavArea(item);
+    } else {
+      this._selectHit(item);
+    }
+  }
+
+  _selectHit(hit) {
     if (hit.url) {
       window.open(hit.url, '_blank');
     }
   }
 
+  _selectNavArea(area) {
+    document.dispatchEvent(new CustomEvent(SEARCH_EXPAND_EVENT, { detail: { label: area.label } }));
+    this._close();
+  }
+
+  _close() {
+    this._popover.hidePopover();
+    this.dispatchEvent(new CustomEvent('clear'));
+  }
+
   get _popover() {
     return this.shadowRoot.querySelector('.results-popover');
+  }
+
+  _handleOutsideClick(e) {
+    // Click events crossing a shadow boundary retarget `e.target` to the
+    // host, so this correctly excludes every click inside this component.
+    if (this.contains(e.target)) { return; }
+    this._close();
   }
 
   get _resultsCountText() {
@@ -152,25 +201,55 @@ class SHSearch extends LitElement {
     return `${length} results`;
   }
 
-  _renderResult(hit, index) {
+  _pillsFor(hit) {
+    return [hit.implementation, hit.platform, ...(hit.tags || [])]
+      .filter(Boolean)
+      .slice(0, 2);
+  }
+
+  _renderNavArea(area, index) {
     const isActive = index === this.activeIndex;
     return html`
       <li
         id="result-${index}"
         role="option"
         aria-selected=${isActive}>
-        <a
-          href=${hit.url}
-          target=${hit.external ? '_blank' : nothing}
-          rel=${hit.external ? 'noopener' : nothing}
-          tabindex="-1">
+        <button
+          type="button"
+          class="result-row"
+          tabindex="-1"
+          @click=${() => this._selectNavArea(area)}>
           <div class="result-text">
-            <p class="hit-title">${hit.title || hit.objectID}</p>
-            ${hit.description ? html`<p class="hit-description">${hit.description}</p>` : nothing}
+            <p class="hit-title">${area.label}</p>
+            ${area.description ? html`<p class="hit-description">${area.description}</p>` : nothing}
           </div>
           <svg class="icon" viewBox="0 0 20 20">
             <use href="/img/icons/s2-icon-chevronright-20-n.svg#icon"></use>
           </svg>
+        </button>
+      </li>
+    `;
+  }
+
+  _renderHit(hit, index) {
+    const isActive = index === this.activeIndex;
+    const pills = this._pillsFor(hit);
+    return html`
+      <li
+        id="result-${index}"
+        role="option"
+        aria-selected=${isActive}>
+        <a
+          class="result-row"
+          href=${hit.url}
+          target=${hit.external ? '_blank' : nothing}
+          rel=${hit.external ? 'noopener' : nothing}
+          tabindex="-1">
+          <p class="hit-title">${hit.title || hit.objectID}</p>
+          ${pills.length ? html`
+            <div class="hit-tags">
+              ${pills.map((pill) => html`<span class="tag-pill">${pill}</span>`)}
+            </div>` : nothing}
         </a>
       </li>
     `;
@@ -188,7 +267,7 @@ class SHSearch extends LitElement {
           role="combobox"
           placeholder="Search everything..."
           aria-label="Search"
-          aria-expanded=${this.results.length > 0}
+          aria-expanded="true"
           aria-controls="listbox"
           aria-activedescendant=${activeId}
           autocomplete="off"
@@ -198,9 +277,11 @@ class SHSearch extends LitElement {
         </se-input>
       </form>
       <div class="results-popover" popover="manual">
-        <p class="results-heading">${this._resultsCountText}</p>
+        ${this._isNavView ? nothing : html`<p class="results-heading">${this._resultsCountText}</p>`}
         <ul id="listbox" class="results-list" aria-live="polite" role="listbox">
-          ${this.results.map((hit, index) => this._renderResult(hit, index))}
+          ${this._isNavView
+    ? this.navAreas.map((area, index) => this._renderNavArea(area, index))
+    : this.results.map((hit, index) => this._renderHit(hit, index))}
         </ul>
         <div class="results-popover-footer">
           <div class="instruction">
