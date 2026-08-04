@@ -66,6 +66,7 @@
     "Button (Gradient)": "Button",
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",
-    "Slider (Range)": "Slider"
+    "Slider (Range)": "Slider",
+    "Side navigation": "SideNav"
   }
 }

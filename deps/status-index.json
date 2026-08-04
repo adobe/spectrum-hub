@@ -1120,7 +1120,7 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "not-available"
+            "status": "available"
           },
           "rsp": {
             "status": "available",
@@ -1128,24 +1128,6 @@
           },
           "swc": {
             "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "SideNavigation",
-      "label": "Side Navigation",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available",
-            "secondary": "Use Gen1"
           }
         }
       }
