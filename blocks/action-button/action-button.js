@@ -23,6 +23,7 @@ const handleSearch = async (e) => {
   btn.insertAdjacentElement('beforebegin', shSearch);
   shSearch.addEventListener('clear', () => {
     shSearch.remove();
+    btn.focus();
   });
 };
 
