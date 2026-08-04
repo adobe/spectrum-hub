@@ -12,12 +12,6 @@
      content, since Popover has no documented heading/body sub-slots the way
      Dialog does).
 
-     BLANK-PREVIEW LIMITATION, same underlying cause as Tooltip (confirmed
-     live — see tooltip.jsx for the full mechanism writeup): the published
-     Popover.d.ts shows its props are Pick'd from PopoverProps, which
-     includes `triggerRef` — "only required when used standalone" per its
-     own doc comment, and this harness renders it exactly that way, with no
-     DialogTrigger/MenuTrigger/etc. around it to supply that ref
-     automatically. Confirmed via a live browser reproduction: this route
-     renders a completely blank page, no error — matching Tooltip exactly. -->
+     Popover needs a triggerRef it has none of standalone, so initRsp()/
+     buildRspSnippet() wrap it in a real DialogTrigger + Button (overlay-triggers.js). -->
 <Popover>Popover content goes here.</Popover>

@@ -4,7 +4,16 @@
 // exist and where each tag's module lives.
 import COMPONENTS from '../components.json' with { type: 'json' };
 
-export const BASE = 'https://esm.sh/@adobe/spectrum-wc@0.3.0';
+// The concrete version `@beta` resolved to as of the last daily extraction run
+// (deps/swc/extract-cem-components.js writes this file) — not a live `@beta`
+// tag read here directly, so this never drifts from what components.json/data
+// were actually extracted from (a hardcoded stale pin caused exactly that: an
+// old 0.3.0 pin predated progress-bar). Refreshed automatically every day;
+// never hand-edit.
+import VERSION_INFO from '../version.json' with { type: 'json' };
+
+export const VERSION = VERSION_INFO.version;
+export const BASE = `https://esm.sh/@adobe/spectrum-wc@${VERSION}`;
 
 export { COMPONENTS };
 

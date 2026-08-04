@@ -1,7 +1,7 @@
 {
   "web": {
     "figma": {
-      "status": "not-available"
+      "status": "available"
     },
     "rsp": {
       "status": "available",
@@ -10,5 +10,6 @@
     "swc": {
       "status": "not-available"
     }
-  }
+  },
+  "figmaPageId": "10134:3926"
 }

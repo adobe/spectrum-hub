@@ -2,8 +2,9 @@ import '../../deps/se/se.js';
 import { getConfig } from '../../scripts/ak.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
 import { fetchSvgEl } from '../../scripts/utils/svg.js';
-import { getImplementationById } from '../../scripts/utils/implementations.js';
+import { getImplementationById, IMPLEMENTATIONS } from '../../scripts/utils/implementations.js';
 import { toCsv, downloadCsv } from '../../scripts/utils/csv.js';
+import { toSlug } from '../../scripts/utils/component-path.js';
 
 const config = getConfig();
 
@@ -20,26 +21,32 @@ const NOT_AVAILABLE = 'not-available';
 // Web-scoped today; hoisted here for when per-platform tables (mobile, desktop) arrive.
 const PLATFORM = 'web';
 
+// Route segment for a Figma-only component (no code implementation) — not a
+// registered implementation itself, just the URL segment its Figma cell links to.
+const DESIGN_ONLY = 'design-only';
+
 // A cell links to its internal component page; a column links when it's a registered
-// code implementation
+// code implementation. Figma also links, but only for design-only rows.
 const LINKED_STATUSES = new Set(['available', 'experimental']);
 const isLinkableColumn = (columnId) => getImplementationById(columnId) !== null;
 
-/** `ActionButton` > `action-button`: the kebab slug used in component page URLs. */
-const toSlug = (name) => name
-  .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-  .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-  .toLowerCase();
-
-/**
- * The internal component-page URL for an implementation cell, or null when the cell
- * shouldn't link (non-implementation column, absent component, or a status with no page).
- */
-const componentPageHref = (columnId, status, name) => (
-  isLinkableColumn(columnId) && LINKED_STATUSES.has(status) && name
-    ? `/${PLATFORM}/${columnId}/components/${toSlug(name)}`
-    : null
+/** True when no registered code implementation (rsp, swc, ...) has this component. */
+const isDesignOnly = (web = {}) => IMPLEMENTATIONS.every(
+  (impl) => (web[impl.id]?.status ?? NOT_AVAILABLE) === NOT_AVAILABLE,
 );
+
+/** The internal component-page URL for a status cell, or null when it shouldn't link. */
+const componentPageHref = (columnId, status, name, web, cell = {}) => {
+  const { hasPage = true, page } = cell;
+  if (!name || !LINKED_STATUSES.has(status) || !hasPage) { return null; }
+  // `page` (deps/build-status-index.js's override pipeline) redirects a row that keeps its
+  // own statuses/cells to a slug shared with another component documented on the same page.
+  const slug = page ?? toSlug(name);
+  if (columnId === 'figma') {
+    return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${slug}` : null;
+  }
+  return isLinkableColumn(columnId) ? `/${PLATFORM}/${columnId}/components/${slug}` : null;
+};
 
 // explicitly reset table roles so that when the CSS display property changes on small
 // screens the accessibility tree is unaffected — WCAG 1.3.1 (Info and Relationships).
@@ -73,12 +80,12 @@ const buildBadge = (cell) => {
 /** One implementation cell: the status badge plus an optional secondary guidance line. */
 const buildStatusCell = (cell, context = {}) => {
   const {
-    columnId, columnLabel, componentName, componentLabel,
+    columnId, columnLabel, componentName, componentLabel, web,
   } = context;
   const td = withRole(document.createElement('td'), 'cell');
 
   const badge = buildBadge(cell);
-  const href = componentPageHref(columnId, cell?.status, componentName);
+  const href = componentPageHref(columnId, cell?.status, componentName, web, cell);
   if (href) {
     const status = STATUSES[cell.status];
     const link = document.createElement('a');
@@ -144,6 +151,7 @@ const buildTable = (index) => {
         columnLabel: label,
         componentName: component.name,
         componentLabel: component.label ?? component.name,
+        web,
       });
       cell.dataset.col = id;
       row.append(cell);

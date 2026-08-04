@@ -4,7 +4,9 @@
       "status": "available"
     },
     "rsp": {
-      "status": "available"
+      "status": "available",
+      "hasPage": false,
+      "note": "Docs page not yet written."
     },
     "swc": {
       "status": "not-available",

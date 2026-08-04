@@ -1,6 +1,10 @@
 {
   "swc": {},
   "rsp": {
+    "AlertDialog": {
+      "canonical": "AlertDialog",
+      "externalName": "Dialog"
+    },
     "ToastContainer": "Toast",
     "CardPreview": "Cards",
     "CardsAsset": "Cards",
@@ -11,17 +15,46 @@
     "CardsUser": "Cards",
     "CardView": "Cards",
     "Card": "Cards",
-    "ColorSwatchPicker": "SwatchGroup",
-    "ColorSwatch": "Swatch",
-    "SelectBoxGroup": "SelectBox",
-    "ActionButtonGroup": "ActionGroup",
-    "Dialog": "StandardDialog",
-    "FullScreenDialog": "TakeoverDialog",
-    "TableView": "Table"
+    "ColorSwatchPicker": {
+      "canonical": "SwatchGroup",
+      "externalName": "ColorSwatchPicker"
+    },
+    "ColorSwatch": {
+      "canonical": "Swatch",
+      "externalName": "ColorSwatch"
+    },
+    "SelectBoxGroup": {
+      "canonical": "SelectBox",
+      "externalName": "SelectBoxGroup"
+    },
+    "ActionButtonGroup": {
+      "canonical": "ActionGroup",
+      "externalName": "ActionButtonGroup"
+    },
+    "Dialog": {
+      "canonical": "StandardDialog",
+      "externalName": "Dialog"
+    },
+    "FullscreenDialog": {
+      "canonical": "TakeoverDialog",
+      "externalName": "Dialog"
+    },
+    "InlineAlert": {
+      "canonical": "InLineAlert",
+      "externalName": "InlineAlert"
+    },
+    "TableView": {
+      "canonical": "Table",
+      "externalName": "TableView"
+    },
+    "Radio": {
+      "canonical": "RadioButton",
+      "externalName": "RadioGroup"
+    }
   },
   "figma": {
-    "In-line alert": "InlineAlert",
-    "In Line Alert": "InlineAlert",
+    "In-line alert": "InLineAlert",
+    "In Line Alert": "InLineAlert",
     "Card": "Cards",
     "Cards (Asset)": "Cards",
     "Cards (Collection)": "Cards",
@@ -34,6 +67,6 @@
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",
     "Slider (Range)": "Slider",
-    "Radio button": "RadioGroup"
+    "Side navigation": "SideNav"
   }
 }

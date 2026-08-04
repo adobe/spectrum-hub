@@ -487,6 +487,83 @@ describe('buildRspSnippet — composite components', () => {
   });
 });
 
+// --- buildRspSnippet — self-closing / no-children components ----------------
+
+// Mirrors deps/rsp/playground/snippets/divider.jsx — Divider has no children/text
+// prop at all, so its fragment is authored self-closing with no text of its own.
+describe('buildRspSnippet — self-closing components', () => {
+  it('renders self-closing when the fragment has no text and no matching prop', () => {
+    expect(buildRspSnippet('Divider', {}, '<Divider />')).to.equal('<Divider />');
+  });
+
+  it('renders self-closing with attributes on their own lines', () => {
+    const snippet = buildRspSnippet('Divider', { size: { value: 'L' } }, '<Divider />');
+    expect(snippet).to.equal('<Divider\n  size="L"\n/>');
+  });
+
+  it('still falls back to Label when the fragment has its own text (e.g. Button)', () => {
+    expect(buildRspSnippet('Button', {}, '<Button>Button</Button>')).to.equal('<Button>Label</Button>');
+  });
+
+  it('still falls back to Label when no fragment is given at all', () => {
+    expect(buildRspSnippet('ActionButton', {})).to.equal('<ActionButton>Label</ActionButton>');
+  });
+});
+
+// --- buildRspSnippet — overlay trigger wrapping ------------------------------
+
+// Mirrors deps/rsp/playground/snippets/alert-dialog.jsx (see overlay-triggers.js).
+describe('buildRspSnippet — overlay trigger wrapping', () => {
+  const alertDialogMarkup = '<AlertDialog title="Delete file?" primaryActionLabel="Delete">This action cannot be undone.</AlertDialog>';
+
+  it('wraps a DialogTrigger-family route in DialogTrigger + a labeled Button', () => {
+    // No `children` in currentProps, so it falls back to 'Label' like any leaf snippet.
+    const snippet = buildRspSnippet('AlertDialog', {}, alertDialogMarkup, false, 'alert-dialog');
+    expect(snippet).to.equal([
+      '<DialogTrigger>',
+      '  <Button>Open dialog</Button>',
+      '  <AlertDialog',
+      '    title="Delete file?"',
+      '    primaryActionLabel="Delete">',
+      '    Label',
+      '  </AlertDialog>',
+      '</DialogTrigger>',
+    ].join('\n'));
+  });
+
+  it('wraps the tooltip route in TooltipTrigger, not DialogTrigger', () => {
+    const snippet = buildRspSnippet('Tooltip', {}, '<Tooltip>Helpful tip text</Tooltip>', false, 'tooltip');
+    expect(snippet.startsWith('<TooltipTrigger>')).to.be.true;
+    expect(snippet.includes('<Button>Hover me</Button>')).to.be.true;
+  });
+
+  it('does not wrap a route with no OVERLAY_TRIGGERS entry', () => {
+    const snippet = buildRspSnippet('ActionButton', { children: { value: 'Action' } }, undefined, false, 'action-button');
+    expect(snippet).to.equal('<ActionButton>Action</ActionButton>');
+  });
+
+  it('does not wrap when routeName is omitted (back-compat with existing callers)', () => {
+    const snippet = buildRspSnippet('AlertDialog', {}, alertDialogMarkup);
+    expect(snippet.startsWith('<DialogTrigger>')).to.be.false;
+    expect(snippet.startsWith('<AlertDialog')).to.be.true;
+  });
+
+  it('shows the toast route\'s Button as a sibling line, not a wrapper', () => {
+    const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast-container');
+    // Same multi-attribute formatting as any other element serializeElement prints (e.g.
+    // the DialogTrigger case's AlertDialog above) — onPress is a JSX expression (unquoted),
+    // variant is a normal string attribute.
+    expect(snippet).to.equal([
+      '<Button',
+      '  onPress={() => ToastQueue.info(\'Toasting…\')}',
+      '  variant="accent">',
+      '  Show Toast',
+      '</Button>',
+      '<ToastContainer />',
+    ].join('\n'));
+  });
+});
+
 // Guards against a typo/malformed-markup regression in the real committed
 // fragment files, which have no other build-time validation. Real (unmocked)
 // fetches — window.fetch is only stubbed inside the init() describe block below.
@@ -523,6 +600,34 @@ describe('composite snippet fragments — real committed files', () => {
     const markup = await (await fetch('/deps/rsp/playground/snippets/button-group.jsx')).text();
     const snippet = buildRspSnippet('ButtonGroup', {}, markup);
     expect(snippet.includes('<Button\n')).to.be.true;
+  });
+
+  it('renders the real RSP divider JSX snippet self-closing', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/divider.jsx')).text();
+    expect(buildRspSnippet('Divider', {}, markup)).to.equal('<Divider />');
+  });
+
+  // Regression guard against a typo in overlay-triggers.js or a route's .jsx file.
+  it('wraps the real RSP alert-dialog JSX snippet in a DialogTrigger', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/alert-dialog.jsx')).text();
+    const snippet = buildRspSnippet('AlertDialog', {}, markup, false, 'alert-dialog');
+    expect(snippet.startsWith('<DialogTrigger>')).to.be.true;
+    expect(snippet.includes('<Button>Open dialog</Button>')).to.be.true;
+    expect(snippet.includes('<AlertDialog')).to.be.true;
+  });
+
+  it('wraps the real RSP tooltip JSX snippet in a TooltipTrigger', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/tooltip.jsx')).text();
+    const snippet = buildRspSnippet('Tooltip', {}, markup, false, 'tooltip');
+    expect(snippet.startsWith('<TooltipTrigger>')).to.be.true;
+    expect(snippet.includes('<Tooltip>')).to.be.true;
+  });
+
+  it('gives the real RSP toast-container JSX snippet a sibling trigger Button', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/toast-container.jsx')).text();
+    const snippet = buildRspSnippet('ToastContainer', {}, markup, false, 'toast-container');
+    expect(snippet.includes('onPress={() => ToastQueue.info(\'Toasting…\')}')).to.be.true;
+    expect(snippet.includes('<ToastContainer />')).to.be.true;
   });
 });
 
@@ -766,6 +871,55 @@ describe('playground block — init()', () => {
     }));
     otherFrame.remove();
     expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'prop-update')).to.be.false;
+  });
+
+  // The shell used to re-fetch snippets/<component>.html itself; it now asks the
+  // block for the copy already fetched by fetchPlaygroundInputs, over the same
+  // postMessage channel as preview-ready, so the file is only ever fetched once.
+  it('answers the iframe\'s markup-request with the already-fetched snippet markup', async () => {
+    sandbox.stub(window, 'fetch').callsFake(async (input) => {
+      const url = String(input);
+      if (url.includes('sheet=components')) {
+        return jsonResponse({ data: [{ Component: 'Button', Properties: 'isDisabled' }] });
+      }
+      if (url.includes('sheet=controls')) {
+        return jsonResponse({ data: [{ Property: 'isDisabled', control: 'picker' }] });
+      }
+      if (url.includes('/deps/rsp/data/')) { return jsonResponse([]); }
+      if (url.includes('/deps/swc/data/')) {
+        return jsonResponse([{ property: 'disabled', attribute: 'disabled', type: 'boolean' }]);
+      }
+      if (url.includes('/deps/swc/playground/snippets/button.html')) {
+        return new Response('<swc-button>Label</swc-button>', { status: 200 });
+      }
+      return new Response('', { status: 404 });
+    });
+    await init(el);
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'markup-request' },
+      source: iframe.contentWindow,
+    }));
+    expect(postMessageSpy.calledWith(
+      { type: 'markup-response', markup: '<swc-button>Label</swc-button>' },
+      '*',
+    )).to.be.true;
+  });
+
+  it('ignores a markup-request from an unrelated frame', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const otherFrame = document.createElement('iframe');
+    document.body.append(otherFrame);
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'markup-request' },
+      source: otherFrame.contentWindow,
+    }));
+    otherFrame.remove();
+    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'markup-response')).to.be.false;
   });
 
   it('posts an updated prop value to the iframe when a control changes', async () => {

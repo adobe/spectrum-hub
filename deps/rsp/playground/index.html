@@ -12,12 +12,13 @@
   <div id="mount"></div>
 
   <script type="module">
-    import { listenForPropUpdates, notifyPreviewReady } from '../../shared/playground/prop-listener.js';
+    import { listenForPropUpdates, notifyPreviewReady, requestMarkup } from '../../shared/playground/prop-listener.js';
     import { applyAttribute } from '../../shared/playground/apply-attribute.js';
     import { resolveRspPropKey, hasLabelProp } from './apply-rsp-prop.js';
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
+    import { OVERLAY_TRIGGERS, overlayShape } from './overlay-triggers.js';
     import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
@@ -30,19 +31,47 @@
     // RSP's internal React are the same module instance.
 
     // XML (case-sensitive) parsing so PascalCase tags like `TabList` round-trip.
-    async function fetchCompositeRoot(name) {
-      try {
-        const resp = await fetch(`./snippets/${name}.jsx`);
-        if (!resp.ok) { return null; }
-        const markup = await resp.text();
-        const doc = new DOMParser().parseFromString(markup.trim(), 'application/xml');
-        return doc.querySelector('parsererror') ? null : doc.documentElement;
-      } catch {
-        return null;
-      }
+    // The parent block (playground.js) already fetched this fragment for the
+    // code disclosure — requestMarkup() gets it from there instead of a second fetch.
+    async function fetchCompositeRoot() {
+      const markup = await requestMarkup();
+      if (!markup) { return null; }
+      const doc = new DOMParser().parseFromString(markup.trim(), 'application/xml');
+      return doc.querySelector('parsererror') ? null : doc.documentElement;
     }
     // Virtualized — silently render zero rows without a real sized box.
     const VIRTUALIZED_RSP_COMPONENTS = new Set(['card-view', 'table-view']);
+    // No intrinsic content of their own (no text/children) — same #mount flex-item
+    // shrink-to-fit collapse as VIRTUALIZED_RSP_COMPONENTS, just width, no forced height.
+    const FULL_WIDTH_RSP_COMPONENTS = new Set(['divider', 'select-box-group']);
+    // Vertical divider needs #mount height, not width, or it collapses.
+    const VERTICAL_ORIENTATION_COMPONENTS = new Set(['divider', 'select-box-group']);
+
+    // Sizes #mount for a component with no intrinsic size; re-run on orientation change.
+    function applyMountSizing(orientation) {
+      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
+        // CardView shrink-to-fits to 0 width under #mount's flex layout.
+        mount.style.display = 'block';
+        mount.style.width = 'min(90vw, 400px)';
+        mount.style.height = '20rem';
+        return;
+      }
+      if (!FULL_WIDTH_RSP_COMPONENTS.has(component)) { return; }
+      if (VERTICAL_ORIENTATION_COMPONENTS.has(component) && orientation === 'vertical') {
+        // stretch (not the shell's default center) gives Provider's root real height.
+        mount.style.display = 'flex';
+        mount.style.alignItems = 'stretch';
+        mount.style.width = '';
+        mount.style.height = '10rem';
+        mount.setAttribute('data-vertical-divider', '');
+      } else {
+        mount.style.display = 'block';
+        mount.style.alignItems = '';
+        mount.style.width = 'min(90vw, 400px)';
+        mount.style.height = '';
+        mount.removeAttribute('data-vertical-divider');
+      }
+    }
 
     // Listened for at module top-level, before initRsp()'s awaited network
     // calls, so the first `theme-update` isn't missed mid-flight.
@@ -57,18 +86,13 @@
     async function initRsp() {
       const PKG = '@react-spectrum/s2';
       const exportName = pascalCase(component);
-
-      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
-        // CardView shrink-to-fits to 0 width under #mount's flex layout.
-        mount.style.display = 'block';
-        mount.style.width = 'min(90vw, 400px)';
-        mount.style.height = '20rem';
-      }
+      const overlayTrigger = OVERLAY_TRIGGERS[component];
+      const shape = overlayShape(component);
 
       try {
         const [pkg, compositeRoot, ownRspProps] = await Promise.all([
           fetch(`https://esm.sh/${PKG}/package.json`).then((r) => r.json()),
-          fetchCompositeRoot(component),
+          fetchCompositeRoot(),
           // A 404 or malformed file just means "no label prop" — see apply-rsp-prop.js.
           fetch(`../data/${exportName}.json`)
             .then((r) => (r.ok ? r.json() : []))
@@ -84,11 +108,15 @@
           ? collectFragmentTagNames(compositeRoot).filter((tag) => tag !== exportName)
           : [];
         // `Text` lets an icon+label composition wrap the label for real TextContext styling.
-        const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports])].join(',');
+        // A trigger route also needs its Trigger (or queue) export + Button (overlay-triggers.js).
+        const triggerExports = shape === 'none'
+          ? []
+          : [overlayTrigger.trigger ?? overlayTrigger.queueExport, 'Button'].filter(Boolean);
+        const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports, ...triggerExports])].join(',');
 
         // `?bundle` drops CSS side-effect imports — a bare import() can't load
         // them (wrong MIME type). Visual CSS is loaded separately below.
-        const [{ createElement }, { createRoot }, RSP] = await Promise.all([
+        const [{ createElement, Fragment }, { createRoot }, RSP] = await Promise.all([
           import(`https://esm.sh/react@${reactVersion}`),
           import(`https://esm.sh/react-dom@${reactVersion}/client`),
           import(`https://esm.sh/${PKG}@${pkg.version}?bundle&exports=${exports}&deps=${deps}`),
@@ -121,6 +149,7 @@
             [...compositeRoot.attributes].map((attr) => [attr.name, attr.value === '' ? true : attr.value]),
           )
           : { children: capitalize(component) };
+        applyMountSizing(currentProps.orientation);
 
         // render() must read currentProps.children live, not as a frozen
         // child arg, or a text control's prop-updates never reach the preview.
@@ -134,9 +163,31 @@
 
         function render() {
           const scheme = resolveColorScheme(currentScheme, matchMedia('(prefers-color-scheme: dark)').matches);
-          const rootElement = compositeChildren.length
+          const innerElement = compositeChildren.length
             ? createElement(Component, currentProps, ...rootChildArgs)
             : createElement(Component, currentProps);
+          // Overlay routes need a real Trigger to mount anything, or (with no
+          // `trigger` of their own, e.g. toast-container) a sibling Button
+          // that fires imperatively (overlay-triggers.js).
+          let rootElement = innerElement;
+          if (shape === 'wrap') {
+            rootElement = createElement(
+              RSP[overlayTrigger.trigger],
+              {},
+              createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
+              innerElement,
+            );
+          } else if (shape === 'sibling') {
+            rootElement = createElement(
+              Fragment,
+              {},
+              createElement(RSP.Button, {
+                onPress: () => RSP[overlayTrigger.queueExport].info(overlayTrigger.toastMessage),
+                variant: 'accent',
+              }, overlayTrigger.triggerLabel),
+              innerElement,
+            );
+          }
           // Forces a full remount — an in-place update leaves `light-dark()` descendant
           // styles stuck on their old value
           const key = `${scheme}-${currentProps.staticColor ?? 'none'}-${currentProps.variant ?? 'none'}`;
@@ -182,6 +233,7 @@
               currentProps[key] = value;
             }
           }
+          if (property === 'orientation') { applyMountSizing(value); }
           // RSP doesn't reflect most props as real DOM attributes, so mirror
           // onto #mount for CSS that keys off one (e.g. static-color backdrop).
           applyAttribute(mount, attribute, property === 'staticColor' && value === NO_STATIC_COLOR ? null : value);

@@ -26,7 +26,13 @@
      same conservative choice illustrated-message.jsx makes elsewhere in this
      directory: plain text over an unverified sub-component API. -->
 <SelectBoxGroup aria-label="Choose a plan" selectionMode="single">
-  <SelectBox id="starter">Starter</SelectBox>
-  <SelectBox id="pro">Pro</SelectBox>
-  <SelectBox id="enterprise">Enterprise</SelectBox>
+  <SelectBox id="starter">
+    <Text slot="label">Starter</Text>
+  </SelectBox>
+  <SelectBox id="pro">
+    <Text slot="label">Pro</Text>
+  </SelectBox>
+  <SelectBox id="enterprise">
+    <Text slot="label">Enterprise</Text>
+  </SelectBox>
 </SelectBoxGroup>

@@ -1,13 +1,16 @@
-<!-- Dev-authored, for the code disclosure AND the live RSP preview (initRsp()
-     in deps/rsp/playground/index.html reads this same fragment) — RSP has no preview
-     markup file of its own to source this from, since it renders via
-     React.createElement rather than an HTML string. This is a leaf component
-     (no real subcomponent structure), so the ONLY reason this file exists is
-     to fix the label: without it, initRsp()'s generic fallback capitalizes
-     just the first letter of the whole hyphenated component name —
-     "Illustrated-message" — instead of real content. Unlike
-     deps/swc/playground/snippets/illustrated-message.html's SWC counterpart, RSP's
-     IllustratedMessage has no documented heading/description sub-slots in
-     this repo's extracted prop data, so this uses one plain text child
-     rather than guessing at an unverified sub-component API. -->
-<IllustratedMessage>No results found</IllustratedMessage>
+<!-- Dev-authored fragment for code disclosure + live RSP preview (see divider.jsx).
+     `illustration` marks Image as one of S2's illustration assets — a real usage
+     imports it by path, e.g. `import Image from
+     '@react-spectrum/s2/illustrations/gradient/generic1/Image'` — not the
+     package's main `Image` export (see build-composite-element.js). Matches the
+     real docs' rendered example (an inline illustration SVG, not a generic
+     <img>) — a plain Image picks up IllustratedMessage's generic-photo frame
+     styling instead, which looks different (see image.jsx for that case). -->
+<IllustratedMessage>
+  <Heading>Create your first asset.</Heading>
+  <Content>Get started by uploading or importing some assets.</Content>
+  <ButtonGroup>
+    <Button variant="secondary">Import</Button>
+    <Button variant="accent">Upload</Button>
+  </ButtonGroup>
+</IllustratedMessage>

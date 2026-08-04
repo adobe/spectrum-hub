@@ -12,11 +12,8 @@
      for the full explanation of why they have no catalog entry of their
      own), used here the same way as dialog.jsx's default content.
 
-     BLANK-PREVIEW LIMITATION: expected to have the same limitation
-     confirmed live for Dialog, Menu, and Tooltip (see tooltip.jsx) — a
-     CustomDialog is still always rendered as a DialogTrigger's child in real
-     usage, for the same open/anchor-state reasons. Not independently
-     re-verified live for this specific component — flag for a double-check. -->
+     CustomDialog has no standalone open state, so initRsp()/buildRspSnippet()
+     wrap it in a real DialogTrigger + Button (overlay-triggers.js). -->
 <CustomDialog>
   <Heading>Share this file</Heading>
   <Content>Anyone with the link will be able to view this file.</Content>

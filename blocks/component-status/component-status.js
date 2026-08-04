@@ -19,6 +19,7 @@ import { getSvgRef } from '../../scripts/utils/svg.js';
 import { getConfig } from '../../scripts/ak.js';
 import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
 import { figmaNodeUrl } from '../../scripts/utils/figma.js';
+import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -46,11 +47,7 @@ const STATUS_ICONS = {
  *   `/…/components/<slug>` under a registered code implementation (rsp/swc, never figma).
  */
 export function resolveContext(pathname) {
-  const parts = pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('components');
-  if (idx < 1) { return null; }
-  const impl = parts[idx - 1];
-  const slug = parts[idx + 1];
+  const { impl, slug } = implAndSlugFromPath(pathname);
   if (!slug || !getImplementationById(impl)) { return null; }
   return { impl, slug };
 }
@@ -103,8 +100,8 @@ export async function fetchComponentSlice(slug) {
 
 /**
  * Kicks off (or reuses) the component's status-slice fetch. Called speculatively from
- * scripts.js's buildPageHeader as soon as the placeholder exists — well before this block's
- * own init() would normally run via the section-decoration loop — and stashes the in-flight
+ * scripts.js's loadPage as soon as the placeholder exists — well before this block's own
+ * init() would normally run via the section-decoration loop — and stashes the in-flight
  * promise on the element itself, so init() awaits the same request instead of starting a
  * second one. Scoped to the element (not a module-level singleton) so two different
  * pages/tests never share stale state.
@@ -130,7 +127,9 @@ export function buildPills(pathname, componentData) {
 
   // Development reuses the page-nav widgets' URL logic exactly; Design links straight to
   // the node id the build already resolved (no client-side Figma roster search needed).
-  const impl = resolveImplementation(pathname);
+  // The current impl's own cell may carry `originalName` (an aliased/shared page's real
+  // upstream name) — see resolveImplementation.
+  const impl = resolveImplementation(pathname, web[context.impl]?.originalName);
   const figmaHref = figmaNodeUrl(componentData.figmaPageId);
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,

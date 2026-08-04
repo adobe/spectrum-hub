@@ -18,26 +18,46 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
+const VERSION_FILE = join(__dirname, 'version.json');
 const PACKAGE_NAME = '@adobe/spectrum-wc';
+const DIST_TAG = 'beta';
 
 // components.json maps bare component name -> module subpath; extraction only
 // needs the roster of names. Tags carry the `swc-` prefix in the CEM.
 const ALLOW_LIST = Object.keys(JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8')));
 
-const CDN_URLS = [
-  () => `https://unpkg.com/${PACKAGE_NAME}@beta/dist/custom-elements.json`,
-  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}@beta/dist/custom-elements.json`,
+const CDN_BASE_URLS = [
+  () => `https://unpkg.com/${PACKAGE_NAME}@${DIST_TAG}`,
+  () => `https://cdn.jsdelivr.net/npm/${PACKAGE_NAME}@${DIST_TAG}`,
 ];
 
-export async function fetchCEM() {
-  for (const buildUrl of CDN_URLS) {
-    const url = buildUrl();
+// Shared CDN-fallback: tries each CDN's version of `path` in turn, returning
+// the first successful `parse(response)`. Used for both the CEM itself and
+// (separately) resolving the concrete version `@beta` currently points to.
+async function fetchFromCdns(path, parse) {
+  for (const buildBase of CDN_BASE_URLS) {
     try {
-      const res = await fetch(url);
-      if (res.ok) return res.json();
+      const res = await fetch(`${buildBase()}${path}`);
+      if (res.ok) return await parse(res);
     } catch { /* try next CDN */ }
   }
-  throw new Error(`Failed to fetch CEM for ${PACKAGE_NAME} from all CDNs`);
+  return null;
+}
+
+export async function fetchCEM() {
+  const cem = await fetchFromCdns('/dist/custom-elements.json', (res) => res.json());
+  if (!cem) { throw new Error(`Failed to fetch CEM for ${PACKAGE_NAME} from all CDNs`); }
+  return cem;
+}
+
+// The concrete version `@beta` resolves to right now — written to version.json
+// (see main()) so the browser-side playground (deps/swc/playground/define-swc.js)
+// loads a committed, always-daily-fresh version instead of independently
+// floating on `@beta` on every single page load with no record of what ran.
+export async function fetchResolvedVersion() {
+  const version = await fetchFromCdns('/package.json', async (res) => (await res.json()).version);
+  if (!version) { throw new Error(`Failed to resolve the published version of ${PACKAGE_NAME}`); }
+  return version;
 }
 
 function getInheritedFromName(attr) {
@@ -93,12 +113,19 @@ async function main() {
   const cemPath = process.argv[2];
   mkdirSync(OUTPUT_DIR, { recursive: true });
   let cem;
+  let version;
   if (cemPath) {
     console.log(`Reading CEM from ${cemPath}...`);
     cem = JSON.parse(readFileSync(cemPath, 'utf8'));
   } else {
     console.log(`Fetching CEM for ${PACKAGE_NAME}...`);
     cem = await fetchCEM();
+    version = await fetchResolvedVersion();
+  }
+
+  if (version) {
+    writeFileSync(VERSION_FILE, `${JSON.stringify({ version }, null, 2)}\n`);
+    console.log(`Wrote resolved version ${version} to ${VERSION_FILE}`);
   }
 
   let count = 0;

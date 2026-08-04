@@ -10,12 +10,8 @@
      @react-spectrum/s2 exports (confirmed via Content.d.ts — see dialog.jsx
      for why they have no catalog entry of their own).
 
-     BLANK-PREVIEW LIMITATION: expected to have the same limitation
-     confirmed live for Dialog, Menu, and Tooltip (see tooltip.jsx) — like
-     Dialog, FullscreenDialog extends react-aria-components' DialogProps and
-     is always rendered as a DialogTrigger's child in real usage for the same
-     open/anchor-state reasons. Not independently re-verified live for this
-     specific component — flag for a double-check. -->
+     FullscreenDialog has no standalone open state, so initRsp()/buildRspSnippet()
+     wrap it in a real DialogTrigger + Button (overlay-triggers.js). -->
 <FullscreenDialog>
   <Heading>Edit your profile</Heading>
   <Content>Update your name, photo, and preferences below.</Content>

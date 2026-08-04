@@ -14,15 +14,8 @@
      because they aren't real components. Used here for a heading + body
      text pair, same as Dialog's real documented usage.
 
-     KNOWN LIMITATION, confirmed via live browser reproduction (see
-     tooltip.jsx for the full mechanism writeup): real Dialog is always a
-     child of a DialogTrigger + Modal/Popover pair that supplies open/anchor
-     state via context; rendered standalone the way this harness renders
-     every component, it mounts nothing at all — no DOM, no error. Fixing
-     this would need initRsp() to wrap the fetched Component in a second,
-     unfetched Trigger component, which the current one-`component`-per-route
-     model can't express. Left as-is; this fragment still gives the code
-     disclosure panel (and any future harness) real, correct content. -->
+     Dialog has no standalone open state, so initRsp()/buildRspSnippet() wrap
+     it in a real DialogTrigger + Button (overlay-triggers.js). -->
 <Dialog>
   <Heading>Enable notifications</Heading>
   <Content>You can turn this off anytime in Settings.</Content>

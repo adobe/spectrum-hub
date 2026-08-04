@@ -12,6 +12,7 @@ import {
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
+import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -57,15 +58,23 @@ export function debounce(fn, delayMs) {
   };
 }
 
-// Prints an element's real attribute list the way a code editor would.
+// Prints an element's real attribute list the way a code editor would. A value already
+// wrapped in braces (e.g. an onPress handler) is a JSX expression, not a string — rendered
+// unquoted (`name={value}`) instead of the usual `name="value"`.
 function serializeAttrs(el) {
-  return [...el.attributes].map((attr) => (attr.value === '' ? attr.name : `${attr.name}="${attr.value}"`));
+  return [...el.attributes].map((attr) => {
+    if (attr.value === '') { return attr.name; }
+    if (attr.value.startsWith('{') && attr.value.endsWith('}')) { return `${attr.name}=${attr.value}`; }
+    return `${attr.name}="${attr.value}"`;
+  });
 }
 
 // Recursively prints an element and any nested subcomponents (tabs >
 // tab/tab-panel, RSP's Tabs > TabList > Tab, ...), one attribute per line.
 // Collapses to a single line when there are no attributes/element children.
-function serializeElement(el, depth = 0) {
+// `selfClosing` (RSP/JSX only — real HTML custom elements can't self-close)
+// renders a childless, textless element as `<Tag />` instead of `<Tag></Tag>`.
+function serializeElement(el, depth = 0, selfClosing = false) {
   const indent = '  '.repeat(depth);
   const childIndent = '  '.repeat(depth + 1);
   const tag = el.localName;
@@ -74,24 +83,30 @@ function serializeElement(el, depth = 0) {
 
   if (!elementChildren.length) {
     const text = el.textContent;
+    if (selfClosing && !text) {
+      const attrLines = attrs.map((attr) => `${childIndent}${attr}`).join('\n');
+      return attrs.length ? `${indent}<${tag}\n${attrLines}\n${indent}/>` : `${indent}<${tag} />`;
+    }
     if (!attrs.length) { return `${indent}<${tag}>${text}</${tag}>`; }
     const attrLines = attrs.map((attr) => `${childIndent}${attr}`).join('\n');
     return `${indent}<${tag}\n${attrLines}>\n${childIndent}${text}\n${indent}</${tag}>`;
   }
 
-  const childLines = elementChildren.map((child) => serializeElement(child, depth + 1)).join('\n');
+  const childLines = elementChildren.map((child) => serializeElement(child, depth + 1, selfClosing)).join('\n');
   if (!attrs.length) { return `${indent}<${tag}>\n${childLines}\n${indent}</${tag}>`; }
   const attrLines = attrs.map((attr) => `${childIndent}${attr}`).join('\n');
   return `${indent}<${tag}\n${attrLines}>\n${childLines}\n${indent}</${tag}>`;
 }
 
-// Extracts a composite component's real fragment root with its own attributes
-// plus real subcomponent children (swc-tab/swc-tab-panel).
-function parseHtmlFragmentRoot(markup) {
-  if (!markup) { return null; }
+// Matched by tag, not first-child — a trigger-anchored component (popover/tooltip)
+// has a real trigger element ahead of it; other siblings are returned separately.
+function parseHtmlFragmentRoot(markup, tagName) {
+  if (!markup) { return { fragmentRoot: null, siblings: [] }; }
   const template = document.createElement('template');
   template.innerHTML = markup.trim();
-  return template.content.firstElementChild ?? null;
+  const children = [...template.content.children];
+  const fragmentRoot = children.find((el) => el.localName === tagName) ?? children[0] ?? null;
+  return { fragmentRoot, siblings: children.filter((el) => el !== fragmentRoot) };
 }
 
 // Same idea as parseHtmlFragmentRoot, but for RSP's JSX snippet fragments.
@@ -115,6 +130,10 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
     }
     return;
   }
+  // A fragment authored with no text of its own (e.g. Divider's `<Divider />`) has no
+  // text slot at all — leave it empty instead of injecting a placeholder it can't take.
+  if (fragmentRoot && !fragmentRoot.textContent) { return; }
+
   const fallbackKeys = hasRealLabelTarget ? new Set(['text', 'children']) : TEXT_KEYS;
   const textEntry = Object.entries(currentProps).find(([prop]) => fallbackKeys.has(prop));
   el.textContent = textEntry?.[1]?.value ?? 'Label';
@@ -133,33 +152,66 @@ function buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelTarget,
   });
 
   applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget);
-  return serializeElement(el);
 }
 
 export function buildSwcSnippet(tagName, currentProps, markup) {
-  const el = document.createElement(tagName);
-  const fragmentRoot = parseHtmlFragmentRoot(markup);
+  const { fragmentRoot, siblings } = parseHtmlFragmentRoot(markup, tagName);
+  // A handful of components (e.g. link) render as native markup with no
+  // swc-<name> custom element of their own — build the disclosure/live
+  // element with the fragment's real root tag instead of the assumed one.
+  const el = document.createElement(fragmentRoot?.localName ?? tagName);
   // "label" is normally flat text content (see TEXT_KEYS), but if this SWC
   // component documents a real "label" attribute, apply it as an attribute
   // instead — currentProps.label.attribute already carries that name through
   // from resolveControl.
   const hasRealLabelAttribute = Boolean(currentProps.label?.attribute);
-  return buildSnippetElement(
+  buildSnippetElement(
     el,
     currentProps,
     fragmentRoot,
     hasRealLabelAttribute,
     (prop, { attribute }) => attribute,
   );
+  const rootMarkup = serializeElement(el);
+  // A trigger-anchored component's real usage needs its trigger too, or the
+  // `for="..."` on the copied snippet dangles — include it verbatim.
+  if (!siblings.length) { return rootMarkup; }
+  return [...siblings.map((sibling) => serializeElement(sibling)), rootMarkup].join('\n');
 }
 
-export function buildRspSnippet(componentName, currentProps, markup, hasRealLabelProp = false) {
+export function buildRspSnippet(
+  componentName,
+  currentProps,
+  markup,
+  hasRealLabelProp = false,
+  routeName = null,
+) {
   // needed for RSP's PascalCase component names.
   const xmlDoc = document.implementation.createDocument(null, null, null);
   const el = xmlDoc.createElement(componentName);
   const fragmentRoot = parseXmlFragmentRoot(markup);
   // RSP prop names are used as-authored, unlike SWC.
-  return buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
+  buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
+
+  // Some routes need a real Trigger wrapper to be usable; a route with no
+  // `trigger` of its own (e.g. toast-container) fires imperatively instead,
+  // so its Button is a sibling line rather than a parent (overlay-triggers.js).
+  const shape = overlayShape(routeName);
+  if (shape === 'none') { return serializeElement(el, 0, true); }
+  const overlayTrigger = OVERLAY_TRIGGERS[routeName];
+
+  const triggerButton = xmlDoc.createElement('Button');
+  triggerButton.textContent = overlayTrigger.triggerLabel;
+
+  if (shape === 'sibling') {
+    triggerButton.setAttribute('onPress', `{() => ${overlayTrigger.queueExport}.info('${overlayTrigger.toastMessage}')}`);
+    triggerButton.setAttribute('variant', 'accent');
+    return [serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n');
+  }
+
+  const trigger = xmlDoc.createElement(overlayTrigger.trigger);
+  trigger.append(triggerButton, el);
+  return serializeElement(trigger, 0, true);
 }
 
 // --- Code disclosure --------------------------------------------------------
@@ -412,8 +464,10 @@ function createPreviewIframe(iframeUrl, title) {
   return iframe;
 }
 
-function wireIframeMessaging(iframe, currentProps) {
+function wireIframeMessaging(iframe, currentProps, snippetMarkup) {
   function postPropUpdate(property, attribute, value, controlType) {
+    // Don't clobber the preview's own default with "no value to contribute".
+    if (value === undefined) { return; }
     const normalized = FREEFORM_CONTROLS.has(controlType) ? value : yesNoToBoolean(value);
     iframe.contentWindow?.postMessage({ type: 'prop-update', property, attribute, value: normalized }, '*');
   }
@@ -444,6 +498,14 @@ function wireIframeMessaging(iframe, currentProps) {
     if (event.source !== iframe.contentWindow) { return; }
     if (event.data?.type !== 'preview-ready') { return; }
     sendAllProps();
+  });
+
+  // Answers the shell's markup-request with the fragment already fetched by
+  // fetchPlaygroundInputs, instead of the shell fetching the same file again.
+  window.addEventListener('message', (event) => {
+    if (event.source !== iframe.contentWindow) { return; }
+    if (event.data?.type !== 'markup-request') { return; }
+    iframe.contentWindow?.postMessage({ type: 'markup-response', markup: snippetMarkup }, '*');
   });
 
   iframe.addEventListener('load', () => {
@@ -549,7 +611,7 @@ export default async function init(el) {
   const hasRealLabelProp = hasLabelProp(rspProps);
 
   const buildSnippet = implementation === 'rsp'
-    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp)
+    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, component)
     : (name, props) => buildSwcSnippet(name, props, snippetMarkup);
 
   const controlsMap = buildControlsMap(controlsSheet);
@@ -572,7 +634,7 @@ export default async function init(el) {
   // loads from esm.sh; for ios/android it shows the image viewer.
   const iframeUrl = `${base}/${previewShellPath}?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
   const iframe = createPreviewIframe(iframeUrl, `${componentTitle} component preview`);
-  const postPropUpdate = wireIframeMessaging(iframe, currentProps);
+  const postPropUpdate = wireIframeMessaging(iframe, currentProps, snippetMarkup);
 
   const pre = document.createElement('pre');
   updateDisclosure(pre, buildSnippet, previewName, currentProps);

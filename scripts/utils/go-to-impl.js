@@ -1,4 +1,6 @@
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
+import IMPL_ALIASES from '../../deps/impl-aliases.js';
+import { toSlug, implAndSlugFromPath } from './component-path.js';
 
 // Each web implementation's docs site, keyed by the URL slug used in
 // /web/<implementation>/components/<component>. `href` deep-links to the
@@ -14,19 +16,25 @@ const IMPLEMENTATIONS = {
   },
 };
 
-export function resolveImplementation(pathname) {
-  const parts = pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('components');
-  if (idx < 1) { return null; }
-  const impl = IMPLEMENTATIONS[parts[idx - 1]];
-  const component = parts[idx + 1];
-  if (!impl || !component) { return null; }
+/** `originalName` overrides the URL slug when the upstream docs site uses a different name. */
+export function resolveImplementation(pathname, originalName) {
+  const { impl: implId, slug } = implAndSlugFromPath(pathname);
+  const impl = IMPLEMENTATIONS[implId];
+  if (!impl || !slug) { return null; }
+  const component = originalName ? toSlug(originalName) : slug;
   return { label: impl.label, href: impl.href(component) };
 }
 
-//  if the page has no resolvable implementation the widget removes itself.
+// deps/impl-aliases.js (built by deps/build-status-index.js) is a couple dozen entries at
+// most — small enough to ship as a static import instead of a per-page fetch, since the
+// overwhelming majority of component pages have no alias at all for their impl/slug pair.
+//
+// if the page has no resolvable implementation the widget removes itself.
 export function decorateGoToImpl(a, span) {
-  const target = resolveImplementation(window.location.pathname);
+  const { pathname } = window.location;
+  const { impl, slug } = implAndSlugFromPath(pathname);
+  const originalName = (impl && slug) ? IMPL_ALIASES[impl]?.[slug] ?? null : null;
+  const target = resolveImplementation(pathname, originalName);
   if (!target) {
     a.remove();
     return;

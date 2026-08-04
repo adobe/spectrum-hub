@@ -31,7 +31,15 @@
       "rsp": {
         "status": "available",
         "context": "Stable",
-        "note": "Built into color components instead."
+        "note": "Built into color components instead.",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
+      },
+      "swc": {
+        "status": "available",
+        "context": "Stable",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
       }
     }
   },
@@ -40,7 +48,15 @@
       "rsp": {
         "status": "available",
         "context": "Stable",
-        "note": "Built into color components instead."
+        "note": "Built into color components instead.",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
+      },
+      "swc": {
+        "status": "available",
+        "context": "Stable",
+        "page": "color-handle-and-loupe",
+        "originalName": "ColorHandle"
       }
     }
   },
@@ -50,6 +66,15 @@
         "status": "available",
         "context": "Stable",
         "note": "React Spectrum splits this into separate Date Field, Date Picker, Date Range Picker, and Time Field components; this row mirrors their availability."
+      }
+    }
+  },
+  "CoachMark": {
+    "web": {
+      "rsp": {
+        "status": "available",
+        "hasPage": false,
+        "note": "Docs page not yet written."
       }
     }
   }

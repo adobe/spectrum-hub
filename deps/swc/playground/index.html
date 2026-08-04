@@ -7,13 +7,20 @@
   <link rel="stylesheet" href="../../../blocks/playground/preview-shell.css" />
   <link rel="stylesheet" href="../../shared/playground/shared-fonts.css" />
   <script type="module" src="../../shared/playground/theme-sync.js"></script>
+  <style>
+    /* Divider has no intrinsic size — reflected purely in CSS, keyed off the real
+       `vertical` attribute applySwcProp already sets, so a live prop update swaps the
+       axis on its own with no JS. */
+    swc-divider { inline-size: 200px; }
+    swc-divider[vertical] { inline-size: auto; block-size: 200px; }
+  </style>
 </head>
 <body class="swc-theme swc-theme--sizeM swc-theme--light">
   <div id="mount"></div>
 
   <script type="module">
-    import { defineSwc } from './define-swc.js';
-    import { listenForPropUpdates, notifyPreviewReady } from '../../shared/playground/prop-listener.js';
+    import { defineSwc, VERSION } from './define-swc.js';
+    import { listenForPropUpdates, notifyPreviewReady, requestMarkup } from '../../shared/playground/prop-listener.js';
     import { applySwcProp } from './apply-swc-prop.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
 
@@ -22,39 +29,42 @@
 
     // Per-component markup lives in snippets/<component>.html (bare
     // web-component HTML, no shell boilerplate). Adding a component is a
-    // one-file markup edit.
+    // one-file markup edit. Fetched once by the parent block (playground.js)
+    // and handed over via requestMarkup() rather than fetched again here.
     // Loaded from a raw CDN (not esm.sh) since swc.css's relative @import of
     // tokens.css only resolves when served verbatim. Loaded here (not
     // statically in <head>) so its unscoped `:root { font-size }` rule only
-    // applies to the SWC route, not RSP/native previews.
+    // applies to the SWC route, not RSP/native previews. Same VERSION as the
+    // JS (define-swc.js) so markup/CSS/behavior always come from one release.
     function loadSwcCss() {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/@adobe/spectrum-wc@0.3.0/dist/swc.css';
+      link.href = `https://unpkg.com/@adobe/spectrum-wc@${VERSION}/dist/swc.css`;
       document.head.appendChild(link);
     }
 
     async function initSwc() {
       loadSwcCss();
 
-      let markup;
-      try {
-        const resp = await fetch(`./snippets/${component}.html`);
-        if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
-        markup = await resp.text();
-      } catch (err) {
-        showError(`Failed to load preview markup for ${component} (${err.message})`);
-        throw err;
+      const markup = await requestMarkup();
+      if (!markup) {
+        showError(`Failed to load preview markup for ${component}`);
+        throw new Error(`No preview markup available for ${component}`);
       }
 
       mount.innerHTML = markup;
 
-      const root = mount.firstElementChild;
+      // Looked up by tag, not firstElementChild — a trigger-anchored component
+      // (popover/tooltip) has a real sibling trigger element ahead of it. A
+      // handful of components (e.g. link) render as native markup + utility
+      // classes with no swc-<name> custom element of their own — fall back to
+      // the fragment's own root in that case.
+      const rootTag = `swc-${component}`;
+      const root = mount.querySelector(rootTag) ?? mount.firstElementChild;
       if (!root) {
         showError(`Preview markup for ${component} has no root element`);
         throw new Error('Empty preview fragment');
       }
-      const rootTag = root.localName;
 
       // Register every swc-* tag the fragment uses (families like tabs ->
       // tab/tab-panel are discovered from the markup, not a define list).
@@ -84,7 +94,20 @@
         }
       });
 
-      listenForPropUpdates((update) => applySwcProp(root, update));
+      // A `for`-anchored trigger (popover/tooltip) resolves its trigger element
+      // as soon as `for` is set — if that happened before the trigger tag
+      // finished upgrading (raced against defineSwc above), the click/hover
+      // wiring silently never attaches. Re-asserting `for` now that every
+      // swc-* tag is defined forces it to re-resolve against the real trigger.
+      mount.querySelectorAll('[for]').forEach((el) => {
+        const forId = el.getAttribute('for');
+        el.removeAttribute('for');
+        el.setAttribute('for', forId);
+      });
+
+      listenForPropUpdates((update) => {
+        applySwcProp(root, update);
+      });
       notifyPreviewReady();
     }
 
