@@ -282,9 +282,13 @@
 
     button {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: var(--s2-spacing-85);
       width: 100%;
+
+      .list-item-label {
+        flex: 1;
+      }
 
       .icon {
         width: 10px;
