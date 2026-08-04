@@ -4,12 +4,17 @@
 // exist and where each tag's module lives.
 import COMPONENTS from '../components.json' with { type: 'json' };
 
-// `@beta` matches the dist-tag extract-cem-components.js pulls the CEM
-// from — components.json/data would drift from what's actually loadable
-// here if this pinned an older release (e.g. 0.3.0 predates progress-bar).
-export const BASE = 'https://esm.sh/@adobe/spectrum-wc@beta';
+// The concrete version `@beta` resolved to as of the last daily extraction run
+// (deps/swc/extract-cem-components.js writes this file) — not a live `@beta`
+// tag read here directly, so this never drifts from what components.json/data
+// were actually extracted from (a hardcoded stale pin caused exactly that: an
+// old 0.3.0 pin predated progress-bar). Refreshed automatically every day;
+// never hand-edit.
+import VERSION from '../version.json' with { type: 'json' };
 
-export { COMPONENTS };
+export const BASE = `https://esm.sh/@adobe/spectrum-wc@${VERSION}`;
+
+export { COMPONENTS, VERSION };
 
 // PascalCase export name -> custom element tag, e.g. TabPanel -> swc-tab-panel.
 export const tagFor = (exportName) => `swc-${exportName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`;

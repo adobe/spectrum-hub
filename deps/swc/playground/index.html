@@ -19,7 +19,7 @@
   <div id="mount"></div>
 
   <script type="module">
-    import { defineSwc } from './define-swc.js';
+    import { defineSwc, VERSION } from './define-swc.js';
     import { listenForPropUpdates, notifyPreviewReady, requestMarkup } from '../../shared/playground/prop-listener.js';
     import { applySwcProp } from './apply-swc-prop.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
@@ -34,11 +34,12 @@
     // Loaded from a raw CDN (not esm.sh) since swc.css's relative @import of
     // tokens.css only resolves when served verbatim. Loaded here (not
     // statically in <head>) so its unscoped `:root { font-size }` rule only
-    // applies to the SWC route, not RSP/native previews.
+    // applies to the SWC route, not RSP/native previews. Same VERSION as the
+    // JS (define-swc.js) so markup/CSS/behavior always come from one release.
     function loadSwcCss() {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/@adobe/spectrum-wc@beta/dist/swc.css';
+      link.href = `https://unpkg.com/@adobe/spectrum-wc@${VERSION}/dist/swc.css`;
       document.head.appendChild(link);
     }
 

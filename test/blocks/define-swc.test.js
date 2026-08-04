@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import {
   BASE,
+  VERSION,
   COMPONENTS,
   tagFor,
   registerElements,
@@ -26,6 +27,18 @@ function fakeRegistry() {
 }
 
 const makeElement = () => class extends HTMLElement {};
+
+describe('BASE', () => {
+  // VERSION is deps/swc/version.json — the concrete release the last daily
+  // extraction run resolved `@beta` to (see extract-cem-components.js), not a
+  // live `@beta` tag read here — so BASE never drifts from what
+  // components.json/data were actually extracted from.
+  it('is built from the committed VERSION, not a live @beta tag', () => {
+    expect(VERSION).to.be.a('string').with.length.greaterThan(0);
+    expect(BASE).to.equal(`https://esm.sh/@adobe/spectrum-wc@${VERSION}`);
+    expect(BASE).to.not.include('@beta');
+  });
+});
 
 describe('tagFor', () => {
   it('kebab-cases PascalCase export names into swc-* tags', () => {
