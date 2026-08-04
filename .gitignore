@@ -5,12 +5,14 @@ node_modules/
 
 helix-importer-ui
 .env
+.dev.env
 .DS_Store
 *.bak
 .idea
 .wrangler
 .claude
 .cursor
+
 
 .superpowers/
 tools/indexer/out/

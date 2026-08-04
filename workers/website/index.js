@@ -11,18 +11,42 @@
  */
 
 import { fetchFromAem } from './handlers/aem.js';
+import { createSession } from './handlers/auth.js';
+
+const notFound = () => new Response('Not found', { status: 404 });
+
+// The whole /auth/ namespace is claimed here so that nothing under it can
+// ever reach the AEM proxy, which would attach the origin credential and
+// forward the request body - the IMS access token - upstream. A path that
+// is not an exact match for a known endpoint is a 404, not a proxy. This
+// also reserves the namespace for the planned DELETE.
+// A Map, not an object literal: the key is a request path, and a plain
+// object would resolve '/auth/constructor'-shaped lookups off the prototype.
+const AUTH_ENDPOINTS = new Map([
+  ['/auth/session', createSession],
+]);
+
+const isAuthPath = (path) => path === '/auth' || path.startsWith('/auth/');
+
+const handleAuth = (context) => (AUTH_ENDPOINTS.get(context.url.pathname) ?? notFound)(context);
 
 const ROUTES = [
-  // Handle drafts
+  // Session cookie endpoint - handled locally, never proxied to AEM
   {
-    match: (path) => path.startsWith('/drafts'),
-    handler: () => new Response('Not found - drafts are denied on production.', { status: 404 }),
+    match: isAuthPath,
+    handler: handleAuth,
   },
+  // // Handle drafts
+  // {
+  //   match: (path) => path.startsWith('/drafts'),
+  //   handler: () => new Response('Not found - drafts are denied on production.', { status: 404 }),
+  // },
   // Default AEM handler should be last
   {
     match: () => true,
     handler: fetchFromAem,
     cache: true,
+    proxy: true,
   },
 ];
 
@@ -84,11 +108,25 @@ const getValidLogin = async (env, request, url) => {
 
 const formatRequest = async (env, request, url) => {
   const aemUrl = new URL(url.href);
-  aemUrl.hostname = `main--${env.AEM_SITE}--${env.AEM_ORG}.aem.live`;
-  aemUrl.port = '';
-  aemUrl.protocol = 'https:';
+
+  // ORIGIN overrides the AEM origin (set in [env.dev] to proxy a local `aem up` server)
+  const origin = env.ORIGIN ? new URL(env.ORIGIN) : null;
+  if (origin) {
+    aemUrl.protocol = origin.protocol;
+    aemUrl.hostname = origin.hostname;
+    aemUrl.port = origin.port;
+  } else {
+    aemUrl.hostname = `main--${env.AEM_SITE}--${env.AEM_ORG}.aem.live`;
+    aemUrl.port = '';
+    aemUrl.protocol = 'https:';
+  }
+
   const req = new Request(aemUrl, request);
   req.headers.set('x-forwarded-host', req.headers.get('host'));
+
+  // The remaining headers are aem.live specific
+  if (origin) { return req; }
+
   req.headers.set('x-byo-cdn-type', 'cloudflare');
   if (env.PUSH_INVALIDATION !== 'disabled') {
     req.headers.set('x-push-invalidation', 'enabled');
@@ -110,12 +148,18 @@ export default {
     const rumResp = getRUMRequest(req, url);
     if (rumResp) { return rumResp; }
 
+    const route = ROUTES.find((r) => r.match(url.pathname));
+    if (!route) { return notFound(); }
+
+    // Non-proxy routes need the original request, not one rewritten to AEM
+    if (!route.proxy) { return route.handler({ url, env, request: req }); }
+
     const request = await formatRequest(env, req, url);
 
     const savedSearch = formatSearchParams(url);
 
-    const { handler, cache } = ROUTES.find((route) => route.match(url.pathname));
-
-    return handler({ url, env, request, cache, savedSearch });
+    return route.handler({
+      url, env, request, cache: route.cache, savedSearch,
+    });
   },
 };

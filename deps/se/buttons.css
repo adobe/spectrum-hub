@@ -3,11 +3,12 @@
   --se-button-background-color: light-dark(var(--s2-blue-900), var(--s2-blue-700));
   --se-button-border-color: var(--se-button-background-color);
   --se-button-outline-color: var(--se-button-background-color);
-  --se-button-line-height: var(--s2-component-xl-bold-line-height);
-  --se-button-padding: 14px;
-  --button-height: var(--s2-component-xl-height);
-  --button-border-radius: 24px;
-  --button-font-size: var(--s2-component-xl-regular-font-size);
+  --se-button-line-height: var(--s2-component-m-bold-line-height);
+  --se-button-padding: var(--s2-spacing-300);
+  --button-height: var(--s2-component-m-height);
+  --button-border-radius: var(--s2-corner-radius-800);
+  --button-font-size: var(--s2-component-m-regular-font-size);
+  --button-font-weight: 500;
 
   /* main CTA button on homepage, XL */
   button, a {
@@ -29,7 +30,7 @@
     outline-offset: 0;
     transition: outline-offset 0.2s;
     text-decoration: none;
-    font-weight: 700;
+    font-weight: var(--button-font-weight);
     text-align: center;
     cursor: pointer;
     block-size: var(--button-height);
@@ -81,17 +82,18 @@
       padding: 5px 0;
     }
 
+    &.text-size-xl {
+      --se-button-line-height: var(--s2-component-xl-bold-line-height);
+      --se-button-padding: 24px;
+      --button-height: var(--s2-component-xl-height);
+      --button-border-radius: 24px;
+      --button-font-size: var(--s2-component-xl-regular-font-size);
+      --button-font-weight: 700;
+    }
+
     &:disabled {
       opacity: 0.6;
       pointer-events: none;
     }
-  }
-
-  &.size-m {
-    --se-button-line-height: var(--s2-component-m-bold-line-height);;
-    --se-button-padding: 10px;
-    --button-height: var(--s2-component-m-height);
-    --button-border-radius: var(--s2-corner-radius-800);
-    --button-font-size: var(--s2-component-m-regular-font-size);
   }
 }

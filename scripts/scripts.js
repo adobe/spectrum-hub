@@ -5,13 +5,14 @@ const hostnames = ['spectrum.adobe.com'];
 const linkBlocks = [
   { 'action-button': '/tools/widgets/action-button' },
   { search: '/tools/widgets/search-bar' },
+  { profile: '/tools/widgets/profile' },
   { fragment: '/fragments/' },
   { schedule: '/schedules/' },
   { youtube: 'https://www.youtube' },
 ];
 
 // Blocks that do not need their own styles
-const components = ['fragment'];
+const components = ['fragment', 'profile'];
 
 // Setup basic state of the doc
 document.documentElement.classList.add('spectrum-edge');
@@ -21,6 +22,17 @@ const scheme = setScheme(document.body);
 const template = getMetadata('template');
 const breadcrumbMeta = getMetadata('breadcrumbs');
 const heroMeta = getMetadata('hero');
+
+// Only preload IMS if a valid returning visitor
+const preloadIms = async () => {
+  const imsMarker = 'spectrum-ims-user';
+
+  const returning = localStorage.getItem(imsMarker);
+  if (!returning) { return; }
+
+  const { loadIms } = await import('./utils/ims.js');
+  loadIms();
+};
 
 // Optionally build a page hero
 const buildAutoHero = () => {
@@ -91,6 +103,9 @@ const decorateBackground = async () => {
 
 export async function loadPage() {
   setConfig({ hostnames, linkBlocks, components, decorateArea });
+
+  preloadIms();
+
   decorateBackground();
 
   // Auto blocks

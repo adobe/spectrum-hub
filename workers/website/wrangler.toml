@@ -1,3 +1,31 @@
+# Deploy requirements
+#
+# Secrets (NOT stored here - set once per environment before deploying):
+#
+#   wrangler secret put SESSION_SECRET               # production
+#   wrangler secret put SESSION_SECRET --env dev     # dev
+#
+#   SESSION_SECRET signs the spectrum_session cookie. Without it every
+#   POST /auth/session returns 500, with no build-time or deploy-time
+#   signal. Rotating it invalidates every issued session cookie.
+#
+# Optional vars:
+#
+#   ALLOWED_ORIGINS  Comma-separated origins permitted to POST /auth/session.
+#                    Unset means "the request's own origin only", which is
+#                    the right answer for a single-host deployment.
+#                    e.g. ALLOWED_ORIGINS = "https://spectrum.adobe.com,https://www.adobe.com"
+#
+# Session duration (SESSION_MAX_AGE_MS) is NOT set here on purpose:
+# website/lib/session.js already defaults it to 24h, and two sources of
+# truth for the same number is one too many. Set it only to override that
+# default.
+#
+# NOTE: keep_vars = true means wrangler leaves existing dashboard vars in
+# place on deploy. Any environment already carrying SESSION_MAX_AGE_MS or
+# SESSION_HINT_MAX_AGE_MS from an earlier deploy keeps them until they are
+# deleted by hand in the Cloudflare dashboard.
+
 name = "spectrum-hub-website"
 main = "index.js"
 compatibility_date = "2025-02-14"
@@ -6,4 +34,4 @@ keep_vars = true
 vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub" }
 
 [env.dev]
-vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub" }
+vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub", ORIGIN = "http://localhost:3000" }
