@@ -131,9 +131,9 @@ viewport edges instead of the anchor. */
       display: inline-flex;
       align-items: center;
       height: var(--se-component-m-height);
-      padding: 0 var(--s2-spacing-150);
+      padding-inline: var(--s2-spacing-100);
       border-radius: var(--s2-corner-radius-500);
-      background-color: var(--s2-gray-100);
+      background-color: var(--s2-gray-50);
       font-size: var(--s2-component-s-regular-font-size);
       white-space: nowrap;
     }
