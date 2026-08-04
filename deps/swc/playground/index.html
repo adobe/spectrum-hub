@@ -20,7 +20,7 @@
 
   <script type="module">
     import { defineSwc } from './define-swc.js';
-    import { listenForPropUpdates, notifyPreviewReady } from '../../shared/playground/prop-listener.js';
+    import { listenForPropUpdates, notifyPreviewReady, requestMarkup } from '../../shared/playground/prop-listener.js';
     import { applySwcProp } from './apply-swc-prop.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
 
@@ -29,7 +29,8 @@
 
     // Per-component markup lives in snippets/<component>.html (bare
     // web-component HTML, no shell boilerplate). Adding a component is a
-    // one-file markup edit.
+    // one-file markup edit. Fetched once by the parent block (playground.js)
+    // and handed over via requestMarkup() rather than fetched again here.
     // Loaded from a raw CDN (not esm.sh) since swc.css's relative @import of
     // tokens.css only resolves when served verbatim. Loaded here (not
     // statically in <head>) so its unscoped `:root { font-size }` rule only
@@ -44,14 +45,10 @@
     async function initSwc() {
       loadSwcCss();
 
-      let markup;
-      try {
-        const resp = await fetch(`./snippets/${component}.html`);
-        if (!resp.ok) { throw new Error(`HTTP ${resp.status}`); }
-        markup = await resp.text();
-      } catch (err) {
-        showError(`Failed to load preview markup for ${component} (${err.message})`);
-        throw err;
+      const markup = await requestMarkup();
+      if (!markup) {
+        showError(`Failed to load preview markup for ${component}`);
+        throw new Error(`No preview markup available for ${component}`);
       }
 
       mount.innerHTML = markup;

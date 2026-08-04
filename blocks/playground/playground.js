@@ -464,7 +464,7 @@ function createPreviewIframe(iframeUrl, title) {
   return iframe;
 }
 
-function wireIframeMessaging(iframe, currentProps) {
+function wireIframeMessaging(iframe, currentProps, snippetMarkup) {
   function postPropUpdate(property, attribute, value, controlType) {
     // Don't clobber the preview's own default with "no value to contribute".
     if (value === undefined) { return; }
@@ -498,6 +498,14 @@ function wireIframeMessaging(iframe, currentProps) {
     if (event.source !== iframe.contentWindow) { return; }
     if (event.data?.type !== 'preview-ready') { return; }
     sendAllProps();
+  });
+
+  // Answers the shell's markup-request with the fragment already fetched by
+  // fetchPlaygroundInputs, instead of the shell fetching the same file again.
+  window.addEventListener('message', (event) => {
+    if (event.source !== iframe.contentWindow) { return; }
+    if (event.data?.type !== 'markup-request') { return; }
+    iframe.contentWindow?.postMessage({ type: 'markup-response', markup: snippetMarkup }, '*');
   });
 
   iframe.addEventListener('load', () => {
@@ -626,7 +634,7 @@ export default async function init(el) {
   // loads from esm.sh; for ios/android it shows the image viewer.
   const iframeUrl = `${base}/${previewShellPath}?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
   const iframe = createPreviewIframe(iframeUrl, `${componentTitle} component preview`);
-  const postPropUpdate = wireIframeMessaging(iframe, currentProps);
+  const postPropUpdate = wireIframeMessaging(iframe, currentProps, snippetMarkup);
 
   const pre = document.createElement('pre');
   updateDisclosure(pre, buildSnippet, previewName, currentProps);

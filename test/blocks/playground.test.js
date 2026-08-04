@@ -873,6 +873,55 @@ describe('playground block — init()', () => {
     expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'prop-update')).to.be.false;
   });
 
+  // The shell used to re-fetch snippets/<component>.html itself; it now asks the
+  // block for the copy already fetched by fetchPlaygroundInputs, over the same
+  // postMessage channel as preview-ready, so the file is only ever fetched once.
+  it('answers the iframe\'s markup-request with the already-fetched snippet markup', async () => {
+    sandbox.stub(window, 'fetch').callsFake(async (input) => {
+      const url = String(input);
+      if (url.includes('sheet=components')) {
+        return jsonResponse({ data: [{ Component: 'Button', Properties: 'isDisabled' }] });
+      }
+      if (url.includes('sheet=controls')) {
+        return jsonResponse({ data: [{ Property: 'isDisabled', control: 'picker' }] });
+      }
+      if (url.includes('/deps/rsp/data/')) { return jsonResponse([]); }
+      if (url.includes('/deps/swc/data/')) {
+        return jsonResponse([{ property: 'disabled', attribute: 'disabled', type: 'boolean' }]);
+      }
+      if (url.includes('/deps/swc/playground/snippets/button.html')) {
+        return new Response('<swc-button>Label</swc-button>', { status: 200 });
+      }
+      return new Response('', { status: 404 });
+    });
+    await init(el);
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'markup-request' },
+      source: iframe.contentWindow,
+    }));
+    expect(postMessageSpy.calledWith(
+      { type: 'markup-response', markup: '<swc-button>Label</swc-button>' },
+      '*',
+    )).to.be.true;
+  });
+
+  it('ignores a markup-request from an unrelated frame', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const otherFrame = document.createElement('iframe');
+    document.body.append(otherFrame);
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'markup-request' },
+      source: otherFrame.contentWindow,
+    }));
+    otherFrame.remove();
+    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'markup-response')).to.be.false;
+  });
+
   it('posts an updated prop value to the iframe when a control changes', async () => {
     stubPlaygroundFetch(sandbox);
     const postMessageSpy = sandbox.stub();
