@@ -26,6 +26,15 @@
       }
     }
   },
+  "Link": {
+     "web": {
+      "swc": {
+        "status": "available",
+        "context": "Stable",
+        "note": "Native anchor element with global CSS classes."
+      }
+    }
+  },
   "ColorHandle": {
     "web": {
       "rsp": {

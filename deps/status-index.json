@@ -826,7 +826,9 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable",
+            "note": "Native anchor element with global CSS classes."
           }
         }
       }
