@@ -106,6 +106,44 @@ describe('sh-search', () => {
     });
   });
 
+  describe('arrow-key navigation', () => {
+    function dispatchKey(el, key) {
+      el.shadowRoot.querySelector('se-input').dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, composed: true }),
+      );
+      return el.updateComplete;
+    }
+
+    it('ArrowUp moves the active option backward', async () => {
+      const el = await mountSearch(sandbox);
+      await dispatchKey(el, 'ArrowDown'); // -> index 1
+      await dispatchKey(el, 'ArrowUp'); // -> index 0
+      const active = el.shadowRoot.querySelector('li[aria-selected="true"]');
+      expect(active).to.equal(el.shadowRoot.querySelector('#result-0'));
+    });
+
+    it('ArrowDown wraps from the last option to the first', async () => {
+      const el = await mountSearch(sandbox);
+      await dispatchKey(el, 'ArrowDown'); // -> index 1 (last)
+      await dispatchKey(el, 'ArrowDown'); // -> wraps to index 0
+      const active = el.shadowRoot.querySelector('li[aria-selected="true"]');
+      expect(active).to.equal(el.shadowRoot.querySelector('#result-0'));
+    });
+
+    it('ArrowUp wraps from the first option to the last', async () => {
+      const el = await mountSearch(sandbox);
+      await dispatchKey(el, 'ArrowUp'); // -> wraps to index 1 (last)
+      const active = el.shadowRoot.querySelector('li[aria-selected="true"]');
+      expect(active).to.equal(el.shadowRoot.querySelector('#result-1'));
+    });
+
+    it('sets aria-selected="true" on only the active option', async () => {
+      const el = await mountSearch(sandbox);
+      const options = [...el.shadowRoot.querySelectorAll('li[role="option"]')];
+      expect(options.map((o) => o.getAttribute('aria-selected'))).to.deep.equal(['true', 'false']);
+    });
+  });
+
   describe('nav areas fail to load', () => {
     it('shows an empty-state message instead of a blank popover', async () => {
       const el = await mountSearchWithFailedFetch(sandbox);
@@ -141,6 +179,21 @@ describe('sh-search', () => {
       el.shadowRoot.querySelector('.hit-title').closest('button').click();
 
       expect(spy.calledOnce).to.be.true;
+    });
+
+    it('Enter selects the active area, same as clicking it', async () => {
+      const el = await mountSearch(sandbox);
+      const spy = sinon.spy();
+      document.addEventListener('sitenav:expand-level1', spy);
+
+      const seInput = el.shadowRoot.querySelector('se-input');
+      seInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }));
+      await el.updateComplete;
+      seInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
+
+      expect(spy.calledOnce).to.be.true;
+      expect(spy.firstCall.args[0].detail.label).to.equal('Foundations');
+      document.removeEventListener('sitenav:expand-level1', spy);
     });
   });
 
