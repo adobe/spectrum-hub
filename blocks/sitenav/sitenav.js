@@ -261,6 +261,23 @@ export const setupOutsideClose = (sitenav) => {
   });
 };
 
+// search.js dispatches this on `document` when the user selects a level-1
+// area from its own popover, e.g. document.dispatchEvent(new
+// CustomEvent(SEARCH_EXPAND_EVENT, { detail: { label } })). Not imported
+// directly by search.js — its module body is a side-effecting IIFE that
+// would inject the whole sitenav rail onto pages that don't want one — so
+// the string must stay in sync manually if ever renamed.
+export const SEARCH_EXPAND_EVENT = 'sitenav:expand-level1';
+
+// Reuses the level-1 button's own click handler (built in decorateLevel)
+// rather than duplicating its sibling-collapsing logic here.
+export const setupSearchIntegration = (navList) => {
+  document.addEventListener(SEARCH_EXPAND_EVENT, (e) => {
+    const menuId = toClassName(e.detail.label);
+    navList.querySelector(`.level-1-button[aria-controls="${menuId}"]`)?.click();
+  });
+};
+
 // Escape and clicking outside behave the same way regardless of which button
 // (expand or trigger) opened the sitenav.
 export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
@@ -307,6 +324,7 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   const triggerBtn = await getTriggerButton(sitenav);
   setupSitenavKeyboardHandling(sitenav, [expandBtn, triggerBtn]);
   setupOutsideClose(sitenav);
+  setupSearchIntegration(navList);
 
   // Stitch index-based nav post DOM injection
   const index = await fetchRes(`${codeBase}/query-index.json`);
