@@ -7,7 +7,6 @@
   --m-image-size: 502px;
 
   max-inline-size: var(--se-grid-container-width);
-  margin-inline: auto;
   inline-size: 100%;
   margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
   container-type: inline-size;
