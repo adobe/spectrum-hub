@@ -114,10 +114,10 @@ viewport edges instead of the anchor. */
       font-size: var(--s2-component-l-regular-font-size);
       font-weight: 700;
       line-height: 1;
+      color: var(--s2-gray-800);
     }
 
     .hit-description {
-      color: var(--s2-gray-900);
       font-size: var(--s2-component-m-regular-font-size);
     }
 

@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from 'lit';
 import { getConfig } from '../../scripts/ak.js';
 import loadStyle from '../../scripts/utils/styles.js';
 import { fetchNavAreas } from './nav-areas.js';
+import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import '../../deps/se/se.js';
 
 const { codeBase } = getConfig();
@@ -15,13 +16,6 @@ const APP_ID = '464UXSQJQC';
 const SEARCH_KEY = '271461afa0e340546d112204c7520c1e';
 const INDEX_NAME = 'spectrum-docs-public';
 const DEBOUNCE_MS = 250;
-
-// Dispatched on document when a nav area is selected, mirroring a real click
-// on the sitenav's own level-1 button. Kept as a local string rather than
-// imported from blocks/sitenav/sitenav.js — that module's body is a
-// side-effecting IIFE that would inject the whole sitenav rail onto pages
-// that load search but intentionally have no sitenav.
-const SEARCH_EXPAND_EVENT = 'sitenav:expand-level1';
 
 class SHSearch extends LitElement {
   static properties = {

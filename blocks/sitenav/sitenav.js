@@ -1,5 +1,6 @@
 import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
+import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 
 const { codeBase, log } = getConfig();
 
@@ -260,14 +261,6 @@ export const setupOutsideClose = (sitenav) => {
     closeSitenav(sitenav);
   });
 };
-
-// search.js dispatches this on `document` when the user selects a level-1
-// area from its own popover, e.g. document.dispatchEvent(new
-// CustomEvent(SEARCH_EXPAND_EVENT, { detail: { label } })). Not imported
-// directly by search.js — its module body is a side-effecting IIFE that
-// would inject the whole sitenav rail onto pages that don't want one — so
-// the string must stay in sync manually if ever renamed.
-export const SEARCH_EXPAND_EVENT = 'sitenav:expand-level1';
 
 // Reuses the level-1 button's own click handler (built in decorateLevel)
 // rather than duplicating its sibling-collapsing logic here.
