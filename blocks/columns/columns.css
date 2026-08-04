@@ -132,7 +132,7 @@
   .col-caption {
     margin: 0;
     font-size: var(--s2-body-size-s, 14px);
-    color: var(--s2-gray-1000, #000);
+    color: var(--e-body-color);
     max-inline-size: 80ch;
     text-align: start;
     text-wrap: balance;
