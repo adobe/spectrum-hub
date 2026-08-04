@@ -17,7 +17,9 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
-    margin-inline-start: clamp(var(--pagenav-inline-start-margin), var(--pagenav-clamp-preferred-width), 100%);
+    margin-inline: 
+      clamp(var(--pagenav-inline-start-margin), var(--pagenav-clamp-preferred-width), 100%)
+      24px;
     
     & ul {
       border-inline-start: 2px solid rgb(from var(--s2-gray-1000) r g b / 12%);
