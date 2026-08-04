@@ -5,24 +5,40 @@
 
   /* Content spans every panel row; panels stack in the second column. */
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   column-gap: var(--usage-gap);
   /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
   row-gap: var(--s2-spacing-400);
   align-items: start;
   margin-block: var(--s2-spacing-500) var(--s2-spacing-600);
 
+  /* A container can't query its own size, so containment lives on the block wrapper. */
+  .section > .block-content:has(> &) {
+    container-name: usage;
+    container-type: inline-size;
+  }
+
   .section > .block-content:last-child & {
       padding-block-end: var(--s2-spacing-600);
+  }
+
+  @container usage (width >= 800px) {
+    grid-template-columns: 1fr 1fr;
   }
 
   /* Side-by-side: one shared [media, caption, indicator] row-group, N columns.
   each column is a full panel instead of each panel getting its own rows. */
   &.side-by-side {
-    grid-template-columns: repeat(var(--usage-panel-count, 2), 1fr);
+    grid-template-columns: 1fr;
+
+    @container usage (width >= 800px) {
+      grid-template-columns: repeat(var(--usage-panel-count, 2), 1fr);
+    }
 
     &.has-content {
-      grid-template-columns: 1fr repeat(var(--usage-panel-count, 2), 1fr);
+      @container usage (width >= 800px) {
+        grid-template-columns: 1fr repeat(var(--usage-panel-count, 2), 1fr);
+      }
     }
 
     .usage-content {
@@ -44,14 +60,6 @@
         object-fit: cover;
       }
     }
-
-    @media (width < 600px) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (width < 600px) {
-    grid-template-columns: 1fr;
   }
 
   .usage-content {
@@ -70,13 +78,13 @@
   }
 
   .usage-panel {
-    grid-column: 2;
+    grid-column: 1;
     position: relative;
     margin: 0;
     display: flex;
     flex-direction: column;
     gap: var(--s2-spacing-100);
-    
+
     picture {
       background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
       display: block;
@@ -89,11 +97,9 @@
       inline-size: 100%;
       block-size: auto;
     }
-  }
 
-  @media (width < 600px) {
-    .usage-panel {
-      grid-column: 1;
+    @container usage (width >= 800px) {
+      grid-column: 2;
     }
   }
 
