@@ -203,11 +203,11 @@ svg.icon {
     width: 100%;
     min-inline-size: 104px;
     padding: 0 12px;
-    background: var(--s2-gray-100);
+    background: var(--s2-gray-200);
     font-family: var(--s2-font-family);
     font-size: var(--s2-component-m-regular-font-size);
     line-height: var(--se-field-height);
-    border: 2px solid var(--s2-gray-100);
+    border: 2px solid var(--s2-gray-200);
     border-radius: var(--s2-corner-radius-500);
     outline-offset: 0;
     transition: border-color 0.2s, outline-offset 0.2s;
