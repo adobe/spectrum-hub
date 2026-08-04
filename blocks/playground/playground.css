@@ -11,6 +11,7 @@
   background-color: var(--s2-gray-25);
   border-radius: var(--playground-border-radius);
   container-type: inline-size;
+  box-shadow: 40px 40px 100px rgb(0 0 0 / 12%);
 }
 
 /*
