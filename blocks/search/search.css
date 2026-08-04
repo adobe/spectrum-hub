@@ -59,14 +59,14 @@ viewport edges instead of the anchor. */
     li {
       scroll-margin-block: 4px;
       border-radius: 10px;
+    }
 
-      &[aria-selected="true"] .result-row {
-        background-color: var(--s2-gray-100);
-      }
+    .result-row[aria-selected="true"] {
+      background-color: var(--s2-gray-100);
     }
 
     /* Remove selected background when any sibling is hovered */
-    &:has(.result-row:hover) li[aria-selected="true"] .result-row:not(:hover) {
+    &:has(.result-row:hover) .result-row[aria-selected="true"]:not(:hover) {
       background-color: transparent;
       outline: none;
     }

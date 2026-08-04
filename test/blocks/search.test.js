@@ -118,7 +118,7 @@ describe('sh-search', () => {
       const el = await mountSearch(sandbox);
       await dispatchKey(el, 'ArrowDown'); // -> index 1
       await dispatchKey(el, 'ArrowUp'); // -> index 0
-      const active = el.shadowRoot.querySelector('li[aria-selected="true"]');
+      const active = el.shadowRoot.querySelector('[aria-selected="true"]');
       expect(active).to.equal(el.shadowRoot.querySelector('#result-0'));
     });
 
@@ -126,20 +126,20 @@ describe('sh-search', () => {
       const el = await mountSearch(sandbox);
       await dispatchKey(el, 'ArrowDown'); // -> index 1 (last)
       await dispatchKey(el, 'ArrowDown'); // -> wraps to index 0
-      const active = el.shadowRoot.querySelector('li[aria-selected="true"]');
+      const active = el.shadowRoot.querySelector('[aria-selected="true"]');
       expect(active).to.equal(el.shadowRoot.querySelector('#result-0'));
     });
 
     it('ArrowUp wraps from the first option to the last', async () => {
       const el = await mountSearch(sandbox);
       await dispatchKey(el, 'ArrowUp'); // -> wraps to index 1 (last)
-      const active = el.shadowRoot.querySelector('li[aria-selected="true"]');
+      const active = el.shadowRoot.querySelector('[aria-selected="true"]');
       expect(active).to.equal(el.shadowRoot.querySelector('#result-1'));
     });
 
     it('sets aria-selected="true" on only the active option', async () => {
       const el = await mountSearch(sandbox);
-      const options = [...el.shadowRoot.querySelectorAll('li[role="option"]')];
+      const options = [...el.shadowRoot.querySelectorAll('[role="option"]')];
       expect(options.map((o) => o.getAttribute('aria-selected'))).to.deep.equal(['true', 'false']);
     });
   });

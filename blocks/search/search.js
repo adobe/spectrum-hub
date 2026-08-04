@@ -227,13 +227,13 @@ class SHSearch extends LitElement {
   _renderNavArea(area, index) {
     const isActive = index === this.activeIndex;
     return html`
-      <li
-        id="result-${index}"
-        role="option"
-        aria-selected=${isActive}>
+      <li role="presentation">
         <button
+          id="result-${index}"
           type="button"
           class="result-row"
+          role="option"
+          aria-selected=${isActive}
           tabindex="-1"
           @click=${() => this._selectNavArea(area)}>
           <div class="result-text">
@@ -252,12 +252,12 @@ class SHSearch extends LitElement {
     const isActive = index === this.activeIndex;
     const pills = this._pillsFor(hit);
     return html`
-      <li
-        id="result-${index}"
-        role="option"
-        aria-selected=${isActive}>
+      <li role="presentation">
         <a
+          id="result-${index}"
           class="result-row"
+          role="option"
+          aria-selected=${isActive}
           href=${hit.url}
           target=${hit.external ? '_blank' : nothing}
           rel=${hit.external ? 'noopener' : nothing}
@@ -290,11 +290,14 @@ class SHSearch extends LitElement {
         </se-input>
       </form>
       <div class="results-popover" popover="manual">
-        ${this._isNavView ? nothing : html`<p class="results-heading">${this._resultsCountText}</p>`}
+        ${this._isNavView ? nothing : html`
+          <p class="results-heading" role="status" aria-live="polite" aria-atomic="true">
+            ${this._resultsCountText}
+          </p>`}
         ${this._navAreasUnavailable
     ? html`<p class="results-empty">Navigation is unavailable right now.</p>`
     : nothing}
-        <ul id="listbox" class="results-list" aria-live="polite" role="listbox">
+        <ul id="listbox" class="results-list" role="listbox">
           ${this._isNavView
     ? this.navAreas.map((area, index) => this._renderNavArea(area, index))
     : this.results.map((hit, index) => this._renderHit(hit, index))}
