@@ -9,14 +9,22 @@ const NAV_HTML = `<body><header></header><main><div><ul>
   <li><p>Foundations</p><ul><li><a href="/b">b</a></li></ul></li>
 </ul></div></main></body>`;
 
-async function mountSearch(sandbox) {
-  sandbox.stub(window, 'fetch').resolves(new Response(NAV_HTML, { status: 200 }));
+async function mountSearchWithResponse(sandbox, response) {
+  sandbox.stub(window, 'fetch').resolves(response);
   const el = document.createElement('sh-search');
   document.body.append(el);
   await el.updateComplete;
   await new Promise((resolve) => { setTimeout(resolve); }); // let fetchNavAreas resolve
   await el.updateComplete;
   return el;
+}
+
+function mountSearch(sandbox) {
+  return mountSearchWithResponse(sandbox, new Response(NAV_HTML, { status: 200 }));
+}
+
+function mountSearchWithFailedFetch(sandbox) {
+  return mountSearchWithResponse(sandbox, new Response('', { status: 404 }));
 }
 
 describe('sh-search', () => {
@@ -51,6 +59,20 @@ describe('sh-search', () => {
       // node on the "actual" side of a failed equality assertion makes chai
       // serialize it for the diff, which can hang/crash the test runner.
       expect(el.shadowRoot.querySelector('.results-heading') === null).to.be.true;
+    });
+  });
+
+  describe('nav areas fail to load', () => {
+    it('shows an empty-state message instead of a blank popover', async () => {
+      const el = await mountSearchWithFailedFetch(sandbox);
+      const empty = el.shadowRoot.querySelector('.results-empty');
+      expect(empty === null).to.be.false;
+      expect(empty.textContent).to.equal('Navigation is unavailable right now.');
+    });
+
+    it('hides the keyboard-instruction footer since there is nothing to navigate', async () => {
+      const el = await mountSearchWithFailedFetch(sandbox);
+      expect(el.shadowRoot.querySelector('.results-popover-footer') === null).to.be.true;
     });
   });
 

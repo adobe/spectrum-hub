@@ -28,6 +28,7 @@ class SHSearch extends LitElement {
     query: { type: String, state: true },
     results: { type: Array, state: true },
     navAreas: { type: Array, state: true },
+    navAreasLoaded: { state: true },
     activeIndex: { state: true },
   };
 
@@ -36,6 +37,7 @@ class SHSearch extends LitElement {
     this.query = '';
     this.results = [];
     this.navAreas = [];
+    this.navAreasLoaded = false;
     this.activeIndex = -1;
     this._debounceTimeout = null;
     this._handleOutsideClick = this._handleOutsideClick.bind(this);
@@ -44,7 +46,10 @@ class SHSearch extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.shadowRoot.adoptedStyleSheets = styles;
-    fetchNavAreas().then((areas) => { this.navAreas = areas; });
+    fetchNavAreas().then((areas) => {
+      this.navAreas = areas;
+      this.navAreasLoaded = true;
+    });
     // Deferred: the same click that inserted this element (the action-button
     // icon click) is still bubbling to `document` right now. Registering
     // immediately would have this fire on that same click and self-close.
@@ -76,6 +81,10 @@ class SHSearch extends LitElement {
 
   get _currentItems() {
     return this._isNavView ? this.navAreas : this.results;
+  }
+
+  get _navAreasUnavailable() {
+    return this._isNavView && this.navAreasLoaded && this.navAreas.length === 0;
   }
 
   updated(changed) {
@@ -278,11 +287,15 @@ class SHSearch extends LitElement {
       </form>
       <div class="results-popover" popover="manual">
         ${this._isNavView ? nothing : html`<p class="results-heading">${this._resultsCountText}</p>`}
+        ${this._navAreasUnavailable
+    ? html`<p class="results-empty">Navigation is unavailable right now.</p>`
+    : nothing}
         <ul id="listbox" class="results-list" aria-live="polite" role="listbox">
           ${this._isNavView
     ? this.navAreas.map((area, index) => this._renderNavArea(area, index))
     : this.results.map((hit, index) => this._renderHit(hit, index))}
         </ul>
+        ${this._navAreasUnavailable ? nothing : html`
         <div class="results-popover-footer">
           <div class="instruction">
             <div class="key">
@@ -306,6 +319,7 @@ class SHSearch extends LitElement {
             <span class="text">to navigate</span>
           </div>
         </div>
+        `}
       </div>
     `;
   }

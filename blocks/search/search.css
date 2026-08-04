@@ -43,6 +43,12 @@ viewport edges instead of the anchor. */
     padding: var(--s2-spacing-75) var(--s2-spacing-100);
   }
 
+  .results-empty {
+    color: var(--s2-gray-900);
+    font-size: var(--s2-component-m-regular-font-size);
+    padding: var(--s2-spacing-75) var(--s2-spacing-100);
+  }
+
   .results-list {
     margin: 0;
     padding: 0 0 var(--s2-spacing-300);
