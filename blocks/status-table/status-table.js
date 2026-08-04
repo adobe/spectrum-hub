@@ -4,6 +4,7 @@ import { STATUSES } from '../../scripts/utils/status-model.js';
 import { fetchSvgEl } from '../../scripts/utils/svg.js';
 import { getImplementationById, IMPLEMENTATIONS } from '../../scripts/utils/implementations.js';
 import { toCsv, downloadCsv } from '../../scripts/utils/csv.js';
+import { toSlug } from '../../scripts/utils/component-path.js';
 
 const config = getConfig();
 
@@ -33,12 +34,6 @@ const isLinkableColumn = (columnId) => getImplementationById(columnId) !== null;
 const isDesignOnly = (web = {}) => IMPLEMENTATIONS.every(
   (impl) => (web[impl.id]?.status ?? NOT_AVAILABLE) === NOT_AVAILABLE,
 );
-
-/** `ActionButton` > `action-button`: the kebab slug used in component page URLs. */
-const toSlug = (name) => name
-  .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-  .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-  .toLowerCase();
 
 /** The internal component-page URL for a status cell, or null when it shouldn't link. */
 const componentPageHref = (columnId, status, name, web, cell = {}) => {

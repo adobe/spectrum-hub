@@ -40,6 +40,7 @@ import { fileURLToPath } from 'url';
 import { getComponentStatus } from '../scripts/utils/component-status.js';
 import { STATUSES, getUnifiedStatus } from '../scripts/utils/status-model.js';
 import { getImplementationById } from '../scripts/utils/implementations.js';
+import { toSlug } from '../scripts/utils/component-path.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_FILE = join(__dirname, 'status-index.json');
@@ -88,22 +89,6 @@ const OVERLAY_FILES = {
 
 // Small words kept lowercase (except when first) when title-casing a Figma display name.
 const SMALL_WORDS = new Set(['and', 'or', 'of', 'the', 'to', 'a', 'an', 'for', 'in', 'on', 'with']);
-
-/**
- * `ActionButton` -> `action-button`: the kebab slug used in component-page URLs
- * (`/web/<impl>/components/<slug>`) and in the per-component status file names
- * (`deps/status/<slug>.json`). Shared between the browser (component-status.js) and the
- * Node build script (deps/build-status-index.js) — dependency-free so it's safe in both.
- *
- * @param {string} name - a canonical PascalCase component name.
- * @returns {string}
- */
-export function toSlug(name) {
-  return name
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-    .toLowerCase();
-}
 
 /**
  * Normalizes a human display name to a canonical PascalCase key.

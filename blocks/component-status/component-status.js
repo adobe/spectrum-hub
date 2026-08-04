@@ -19,6 +19,7 @@ import { getSvgRef } from '../../scripts/utils/svg.js';
 import { getConfig } from '../../scripts/ak.js';
 import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
 import { figmaNodeUrl } from '../../scripts/utils/figma.js';
+import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -46,11 +47,7 @@ const STATUS_ICONS = {
  *   `/…/components/<slug>` under a registered code implementation (rsp/swc, never figma).
  */
 export function resolveContext(pathname) {
-  const parts = pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('components');
-  if (idx < 1) { return null; }
-  const impl = parts[idx - 1];
-  const slug = parts[idx + 1];
+  const { impl, slug } = implAndSlugFromPath(pathname);
   if (!slug || !getImplementationById(impl)) { return null; }
   return { impl, slug };
 }
