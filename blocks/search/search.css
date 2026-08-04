@@ -60,7 +60,7 @@ viewport edges instead of the anchor. */
       scroll-margin-block: 4px;
       border-radius: 10px;
 
-      &[aria-selected="true"] a {
+      &[aria-selected="true"] .result-row {
         background-color: var(--s2-gray-100);
       }
     }
@@ -68,6 +68,7 @@ viewport edges instead of the anchor. */
     /* Remove selected background when any sibling is hovered */
     &:has(.result-row:hover) li[aria-selected="true"] .result-row:not(:hover) {
       background-color: transparent;
+      outline: none;
     }
 
     a.result-row, button.result-row {
