@@ -550,8 +550,13 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
 
   it('shows the toast route\'s Button as a sibling line, not a wrapper', () => {
     const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast-container');
+    // Same multi-attribute formatting as any other element serializeElement prints (e.g.
+    // the DialogTrigger case's AlertDialog above) — onPress is a JSX expression (unquoted),
+    // variant is a normal string attribute.
     expect(snippet).to.equal([
-      '<Button onPress={() => ToastQueue.info(\'Toasting…\')} variant="accent">',
+      '<Button',
+      '  onPress={() => ToastQueue.info(\'Toasting…\')}',
+      '  variant="accent">',
       '  Show Toast',
       '</Button>',
       '<ToastContainer />',

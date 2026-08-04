@@ -18,7 +18,7 @@
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
-    import { OVERLAY_TRIGGERS } from './overlay-triggers.js';
+    import { OVERLAY_TRIGGERS, overlayShape } from './overlay-triggers.js';
     import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
@@ -90,6 +90,7 @@
       const PKG = '@react-spectrum/s2';
       const exportName = pascalCase(component);
       const overlayTrigger = OVERLAY_TRIGGERS[component];
+      const shape = overlayShape(component);
 
       try {
         const [pkg, compositeRoot, ownRspProps] = await Promise.all([
@@ -111,9 +112,9 @@
           : [];
         // `Text` lets an icon+label composition wrap the label for real TextContext styling.
         // A trigger route also needs its Trigger (or queue) export + Button (overlay-triggers.js).
-        const triggerExports = overlayTrigger
-          ? [overlayTrigger.trigger ?? overlayTrigger.queueExport, 'Button'].filter(Boolean)
-          : [];
+        const triggerExports = shape === 'none'
+          ? []
+          : [overlayTrigger.trigger ?? overlayTrigger.queueExport, 'Button'].filter(Boolean);
         const exports = [...new Set([exportName, 'Provider', 'Text', ...extraExports, ...triggerExports])].join(',');
 
         // `?bundle` drops CSS side-effect imports — a bare import() can't load
@@ -172,14 +173,14 @@
           // `trigger` of their own, e.g. toast-container) a sibling Button
           // that fires imperatively (overlay-triggers.js).
           let rootElement = innerElement;
-          if (overlayTrigger?.trigger) {
+          if (shape === 'wrap') {
             rootElement = createElement(
               RSP[overlayTrigger.trigger],
               {},
               createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
               innerElement,
             );
-          } else if (overlayTrigger) {
+          } else if (shape === 'sibling') {
             rootElement = createElement(
               Fragment,
               {},

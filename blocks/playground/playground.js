@@ -12,7 +12,7 @@ import {
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
-import { OVERLAY_TRIGGERS } from '../../deps/rsp/playground/overlay-triggers.js';
+import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -58,9 +58,15 @@ export function debounce(fn, delayMs) {
   };
 }
 
-// Prints an element's real attribute list the way a code editor would.
+// Prints an element's real attribute list the way a code editor would. A value already
+// wrapped in braces (e.g. an onPress handler) is a JSX expression, not a string — rendered
+// unquoted (`name={value}`) instead of the usual `name="value"`.
 function serializeAttrs(el) {
-  return [...el.attributes].map((attr) => (attr.value === '' ? attr.name : `${attr.name}="${attr.value}"`));
+  return [...el.attributes].map((attr) => {
+    if (attr.value === '') { return attr.name; }
+    if (attr.value.startsWith('{') && attr.value.endsWith('}')) { return `${attr.name}=${attr.value}`; }
+    return `${attr.name}="${attr.value}"`;
+  });
 }
 
 // Recursively prints an element and any nested subcomponents (tabs >
@@ -190,22 +196,20 @@ export function buildRspSnippet(
   // Some routes need a real Trigger wrapper to be usable; a route with no
   // `trigger` of its own (e.g. toast-container) fires imperatively instead,
   // so its Button is a sibling line rather than a parent (overlay-triggers.js).
+  const shape = overlayShape(routeName);
+  if (shape === 'none') { return serializeElement(el, 0, true); }
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
-  if (!overlayTrigger) { return serializeElement(el, 0, true); }
 
-  if (!overlayTrigger.trigger) {
-    // Hardcoded rather than built via serializeElement: onPress is a real
-    // JSX expression, not a quoted string attribute.
-    const onPress = `() => ${overlayTrigger.queueExport}.info('${overlayTrigger.toastMessage}')`;
-    return [
-      `<Button onPress={${onPress}} variant="accent">\n  ${overlayTrigger.triggerLabel}\n</Button>`,
-      serializeElement(el, 0, true),
-    ].join('\n');
+  const triggerButton = xmlDoc.createElement('Button');
+  triggerButton.textContent = overlayTrigger.triggerLabel;
+
+  if (shape === 'sibling') {
+    triggerButton.setAttribute('onPress', `{() => ${overlayTrigger.queueExport}.info('${overlayTrigger.toastMessage}')}`);
+    triggerButton.setAttribute('variant', 'accent');
+    return [serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n');
   }
 
   const trigger = xmlDoc.createElement(overlayTrigger.trigger);
-  const triggerButton = xmlDoc.createElement('Button');
-  triggerButton.textContent = overlayTrigger.triggerLabel;
   trigger.append(triggerButton, el);
   return serializeElement(trigger, 0, true);
 }
