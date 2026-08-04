@@ -17,6 +17,7 @@ import {
   applyOverrides,
   buildIndex,
   buildComponentSlices,
+  buildImplAliases,
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
@@ -586,5 +587,41 @@ describe('buildComponentSlices', () => {
       [{ name: 'Action Button', figmaPageId: '1:1' }],
     );
     assert.equal(slices[0].data.figmaPageId, '1:1');
+  });
+});
+
+describe('buildImplAliases', () => {
+  it('keys an originalName by impl and the slice\'s own slug', () => {
+    const slices = [
+      { slug: 'action-group', data: { web: { rsp: { status: 'available', originalName: 'ActionButtonGroup' } } } },
+    ];
+    assert.deepEqual(buildImplAliases(slices), { rsp: { 'action-group': 'ActionButtonGroup' } });
+  });
+
+  it('picks up a page override\'s shared slug, since it reads the slice\'s slug directly', () => {
+    const slices = [
+      {
+        slug: 'color-handle-and-loupe',
+        data: {
+          web: {
+            rsp: { status: 'available', originalName: 'ColorHandle' },
+            swc: { status: 'available', originalName: 'ColorHandle' },
+          },
+        },
+      },
+    ];
+    assert.deepEqual(buildImplAliases(slices), {
+      rsp: { 'color-handle-and-loupe': 'ColorHandle' },
+      swc: { 'color-handle-and-loupe': 'ColorHandle' },
+    });
+  });
+
+  it('omits a cell with no originalName', () => {
+    const slices = [{ slug: 'action-button', data: { web: { rsp: { status: 'available' } } } }];
+    assert.deepEqual(buildImplAliases(slices), {});
+  });
+
+  it('returns an empty object for no slices', () => {
+    assert.deepEqual(buildImplAliases([]), {});
   });
 });

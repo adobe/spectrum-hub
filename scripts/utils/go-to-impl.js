@@ -1,5 +1,5 @@
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
-import { getConfig } from '../ak.js';
+import IMPL_ALIASES from '../../deps/impl-aliases.js';
 
 // Each web implementation's docs site, keyed by the URL slug used in
 // /web/<implementation>/components/<component>. `href` deep-links to the
@@ -21,18 +21,6 @@ const toSlug = (name) => name
   .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
   .toLowerCase();
 
-/** `originalName` overrides the URL slug when the upstream docs site uses a different name. */
-export function resolveImplementation(pathname, originalName) {
-  const parts = pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('components');
-  if (idx < 1) { return null; }
-  const impl = IMPLEMENTATIONS[parts[idx - 1]];
-  const slug = parts[idx + 1];
-  if (!impl || !slug) { return null; }
-  const component = originalName ? toSlug(originalName) : slug;
-  return { label: impl.label, href: impl.href(component) };
-}
-
 /** The URL's impl segment (`rsp`/`swc`) and component slug, or both null. */
 function implAndSlugFromPath(pathname) {
   const parts = pathname.split('/').filter(Boolean);
@@ -41,24 +29,24 @@ function implAndSlugFromPath(pathname) {
   return { impl: parts[idx - 1] ?? null, slug: parts[idx + 1] ?? null };
 }
 
-/** Fetches the current page's status slice for its impl cell's `originalName`, or null. */
-async function fetchOriginalName(slug, impl) {
-  const { codeBase = '' } = getConfig();
-  try {
-    const resp = await fetch(`${codeBase}/deps/status/${slug}.json`);
-    if (!resp.ok) { return null; }
-    const data = await resp.json();
-    return data.web?.[impl]?.originalName ?? null;
-  } catch {
-    return null;
-  }
+/** `originalName` overrides the URL slug when the upstream docs site uses a different name. */
+export function resolveImplementation(pathname, originalName) {
+  const { impl: implId, slug } = implAndSlugFromPath(pathname);
+  const impl = IMPLEMENTATIONS[implId];
+  if (!impl || !slug) { return null; }
+  const component = originalName ? toSlug(originalName) : slug;
+  return { label: impl.label, href: impl.href(component) };
 }
 
-//  if the page has no resolvable implementation the widget removes itself.
-export async function decorateGoToImpl(a, span) {
+// deps/impl-aliases.json (built by deps/build-status-index.js) is a couple dozen entries
+// at most — small enough to ship as a static import instead of a per-page fetch, since the
+// overwhelming majority of component pages have no alias at all for their impl/slug pair.
+//
+// if the page has no resolvable implementation the widget removes itself.
+export function decorateGoToImpl(a, span) {
   const { pathname } = window.location;
   const { impl, slug } = implAndSlugFromPath(pathname);
-  const originalName = (impl && slug) ? await fetchOriginalName(slug, impl) : null;
+  const originalName = (impl && slug) ? IMPL_ALIASES[impl]?.[slug] ?? null : null;
   const target = resolveImplementation(pathname, originalName);
   if (!target) {
     a.remove();
