@@ -59,6 +59,21 @@ class SEFormElement extends LitElement {
 }
 
 class SEInput extends SEFormElement {
+  // role/aria-label/aria-expanded/autocomplete forward straight onto the
+  // real <input>. aria-controls/aria-activedescendant can't: their targets
+  // live in the caller's shadow root, one level up, and id strings don't
+  // cross that boundary. Cross-root ARIA Reflection (ariaControlsElements/
+  // ariaActiveDescendantElement) takes live Element references instead, so
+  // callers pass those via the controlsElement/activeDescendantElement props.
+  static properties = {
+    role: { type: String },
+    autocomplete: { type: String },
+    'aria-label': { type: String },
+    'aria-expanded': { type: String },
+    controlsElement: { attribute: false },
+    activeDescendantElement: { attribute: false },
+  };
+
   async focus() {
     this._programmaticFocus = true;
     await this.updateComplete;
@@ -131,6 +146,12 @@ class SEInput extends SEFormElement {
           ${this.type === 'search' ? this.renderSearchIcon() : nothing}
           <input
             type=${this.type}
+            role=${this.role || nothing}
+            autocomplete=${this.autocomplete || nothing}
+            aria-label=${this['aria-label'] || nothing}
+            aria-expanded=${this['aria-expanded'] || nothing}
+            .ariaControlsElements=${this.controlsElement ? [this.controlsElement] : []}
+            .ariaActiveDescendantElement=${this.activeDescendantElement ?? null}
             name=${this.name}
             id=${this._idHash}
             placeholder=${this.placeholder || nothing}

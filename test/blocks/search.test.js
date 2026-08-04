@@ -62,6 +62,50 @@ describe('sh-search', () => {
     });
   });
 
+  describe('combobox semantics reach the real <input>', () => {
+    // se-input has its own shadow root; role/aria-*/autocomplete set on the
+    // <se-input> tag only matter if se-input forwards them onto the native
+    // <input> inside it.
+    function realInput(el) {
+      return el.shadowRoot.querySelector('se-input').shadowRoot.querySelector('input');
+    }
+
+    it('forwards role, aria-label, aria-expanded, and autocomplete', async () => {
+      const el = await mountSearch(sandbox);
+      const input = realInput(el);
+      expect(input.getAttribute('role')).to.equal('combobox');
+      expect(input.getAttribute('aria-label')).to.equal('Search');
+      expect(input.getAttribute('aria-expanded')).to.equal('true');
+      expect(input.getAttribute('autocomplete')).to.equal('off');
+    });
+
+    it('points aria-controls at the listbox via an element reference', async () => {
+      const el = await mountSearch(sandbox);
+      const input = realInput(el);
+      const listbox = el.shadowRoot.querySelector('#listbox');
+      expect([...input.ariaControlsElements]).to.deep.equal([listbox]);
+    });
+
+    it('points aria-activedescendant at the active option via an element reference', async () => {
+      const el = await mountSearch(sandbox);
+      const input = realInput(el);
+      const active = el.shadowRoot.querySelector('#result-0');
+      expect(input.ariaActiveDescendantElement).to.equal(active);
+    });
+
+    it('moves aria-activedescendant when the active option changes', async () => {
+      const el = await mountSearch(sandbox);
+      el.shadowRoot.querySelector('se-input').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }),
+      );
+      await el.updateComplete;
+
+      const input = realInput(el);
+      const active = el.shadowRoot.querySelector('#result-1');
+      expect(input.ariaActiveDescendantElement).to.equal(active);
+    });
+  });
+
   describe('nav areas fail to load', () => {
     it('shows an empty-state message instead of a blank popover', async () => {
       const el = await mountSearchWithFailedFetch(sandbox);

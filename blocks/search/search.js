@@ -17,6 +17,10 @@ const SEARCH_KEY = '271461afa0e340546d112204c7520c1e';
 const INDEX_NAME = 'spectrum-docs-public';
 const DEBOUNCE_MS = 250;
 
+/**
+ * Follows the WAI-ARIA APG editable combobox with list autocomplete pattern
+ * (https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-autocomplete-list/)
+ */
 class SHSearch extends LitElement {
   static properties = {
     query: { type: String, state: true },
@@ -59,7 +63,9 @@ class SHSearch extends LitElement {
   }
 
   firstUpdated() {
-    this.shadowRoot.querySelector('se-input').focus();
+    this._input.focus();
+    // Set once; the listbox element never changes.
+    this._input.controlsElement = this.shadowRoot.querySelector('#listbox');
     this._popover.showPopover();
   }
 
@@ -82,9 +88,13 @@ class SHSearch extends LitElement {
   }
 
   updated(changed) {
-    if (changed.has('activeIndex') && this.activeIndex > -1) {
-      const el = this.shadowRoot.querySelector(`#result-${this.activeIndex}`);
-      el?.scrollIntoView({ block: 'nearest' });
+    if (changed.has('activeIndex')) {
+      const active = this.activeIndex > -1
+        ? this.shadowRoot.querySelector(`#result-${this.activeIndex}`)
+        : null;
+      active?.scrollIntoView({ block: 'nearest' });
+      // Element ref, not an id — see SEInput in deps/se/se.js.
+      this._input.activeDescendantElement = active;
     }
   }
 
@@ -191,6 +201,10 @@ class SHSearch extends LitElement {
     return this.shadowRoot.querySelector('.results-popover');
   }
 
+  get _input() {
+    return this.shadowRoot.querySelector('se-input');
+  }
+
   _handleOutsideClick(e) {
     // Click events crossing a shadow boundary retarget `e.target` to the
     // host, so this correctly excludes every click inside this component.
@@ -259,8 +273,6 @@ class SHSearch extends LitElement {
   }
 
   render() {
-    const activeId = this.activeIndex > -1 ? `result-${this.activeIndex}` : '';
-
     return html`
       <form class="search-form" @submit=${this._handleSubmit}>
         <se-input
@@ -271,8 +283,6 @@ class SHSearch extends LitElement {
           placeholder="Search everything..."
           aria-label="Search"
           aria-expanded="true"
-          aria-controls="listbox"
-          aria-activedescendant=${activeId}
           autocomplete="off"
           .value=${this.query}
           @input=${this._handleInput}
