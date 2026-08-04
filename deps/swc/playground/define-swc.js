@@ -10,11 +10,12 @@ import COMPONENTS from '../components.json' with { type: 'json' };
 // were actually extracted from (a hardcoded stale pin caused exactly that: an
 // old 0.3.0 pin predated progress-bar). Refreshed automatically every day;
 // never hand-edit.
-import VERSION from '../version.json' with { type: 'json' };
+import VERSION_INFO from '../version.json' with { type: 'json' };
 
+export const VERSION = VERSION_INFO.version;
 export const BASE = `https://esm.sh/@adobe/spectrum-wc@${VERSION}`;
 
-export { COMPONENTS, VERSION };
+export { COMPONENTS };
 
 // PascalCase export name -> custom element tag, e.g. TabPanel -> swc-tab-panel.
 export const tagFor = (exportName) => `swc-${exportName.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`;

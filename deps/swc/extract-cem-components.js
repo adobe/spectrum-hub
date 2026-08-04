@@ -124,7 +124,7 @@ async function main() {
   }
 
   if (version) {
-    writeFileSync(VERSION_FILE, `${JSON.stringify(version)}\n`);
+    writeFileSync(VERSION_FILE, `${JSON.stringify({ version }, null, 2)}\n`);
     console.log(`Wrote resolved version ${version} to ${VERSION_FILE}`);
   }
 
