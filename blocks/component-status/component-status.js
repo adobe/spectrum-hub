@@ -100,8 +100,8 @@ export async function fetchComponentSlice(slug) {
 
 /**
  * Kicks off (or reuses) the component's status-slice fetch. Called speculatively from
- * scripts.js's buildPageHeader as soon as the placeholder exists — well before this block's
- * own init() would normally run via the section-decoration loop — and stashes the in-flight
+ * scripts.js's loadPage as soon as the placeholder exists — well before this block's own
+ * init() would normally run via the section-decoration loop — and stashes the in-flight
  * promise on the element itself, so init() awaits the same request instead of starting a
  * second one. Scoped to the element (not a module-level singleton) so two different
  * pages/tests never share stale state.
