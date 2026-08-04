@@ -1,5 +1,10 @@
 # Search Popover Refactor Implementation Plan
 
+**Status: implemented and committed** (2026-08-04) — all 4 tasks done, verified against the live dev preview. Notable findings from live verification, kept here for whoever next touches this code:
+- The live `site-nav.html` fragment currently has **5** level-1 areas (Getting started, Foundations, Content, Web, Support) — no separate "Mobile" entry, unlike the design reference this plan was written from. Confirms the dynamic-fetch design decision was the right call: nothing hardcodes the count, so it just reflects whatever's live. The unused `Mobile` entry in `NAV_AREA_DESCRIPTIONS` is harmless dead data, not a bug.
+- Pill fallback order (implementation → platform → tags, filtering empties) was confirmed against real Algolia data, including a case where `implementation` is empty and the pills correctly fall back to `[platform, tags[0]]`.
+- One test file (`test/blocks/search.test.js`) reliably crashed the wtr/puppeteer browser (`Profiler.takePreciseCoverage: Session closed` / "browser disconnected") rather than just failing — root cause was `expect(domNode).to.equal(null)` / `.to.not.equal(null)` where the assertion was guaranteed to fail against a live DOM node pre-refactor; chai's diff-serialization of that node crashed the tab. Fixed by comparing `node === null` as a boolean instead. This is the same failure mode as `[[feedback_chai_dom_assertion_hangs]]`, just with a sharper, reproducible signature than "hangs" — worth checking first if a wtr run reports a browser disconnect instead of a normal test failure.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Follow `.ai/skills/test-driven-development/SKILL.md` for every task below — write the failing test first, watch it fail, then implement.
 
 **Goal:** `blocks/search/search.js` (`<sh-search>`) currently opens its results popover only once a typed query returns hits, and shows title+description per hit. Change it to: (1) show a popover of the sitenav's level-1 areas (title, description, chevron) as soon as the search input mounts/is empty; (2) once the user types, replace that with title + up to 2 tag pills per hit (no description); (3) close (and collapse the input back to its icon button) on click-away or Escape. Clicking a level-1 area expands that same area in the real sitenav, rather than navigating anywhere.
@@ -63,7 +68,7 @@ Task order: build `nav-areas.js` first (pure, no dependents yet), then the `site
   - `fetchNavAreas(fetchImpl = fetch): Promise<{ label: string, description: string }[]>` — cached at module scope; resolves `[]` on any fetch/parse failure rather than throwing (a broken fragment fetch shouldn't crash the whole search popover).
   - `resetNavAreasCacheForTests()` — test-only, clears the module cache between tests.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/blocks/search-nav-areas.test.js`:
 
@@ -141,12 +146,12 @@ describe('fetchNavAreas', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm run test:file -- test/blocks/search-nav-areas.test.js`
 Expected: FAIL — `Failed to fetch dynamically imported module` / `Cannot find module '.../blocks/search/nav-areas.js'`.
 
-- [ ] **Step 3: Implement `blocks/search/nav-areas.js`**
+- [x] **Step 3: Implement `blocks/search/nav-areas.js`**
 
 ```js
 /**
@@ -210,17 +215,17 @@ export function resetNavAreasCacheForTests() {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm run test:file -- test/blocks/search-nav-areas.test.js`
 Expected: PASS, 9 tests.
 
-- [ ] **Step 5: Lint**
+- [x] **Step 5: Lint**
 
 Run: `npx eslint blocks/search/nav-areas.js test/blocks/search-nav-areas.test.js`
 Expected: no output.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add blocks/search/nav-areas.js test/blocks/search-nav-areas.test.js
@@ -239,7 +244,7 @@ git commit -m "feat(search): add level-1 nav area data module"
 - Consumes: nothing new (operates on the `navList` already built by `decorateLevel`).
 - Produces: `setupSearchIntegration(navList): void` — exported, called from the existing top-level IIFE alongside `setupOutsideClose`/`setupSitenavKeyboardHandling`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `test/blocks/sitenav.test.js` (import `setupSearchIntegration` in the existing destructured import at the top of the file, alongside `decorateLevel` etc.):
 
@@ -278,12 +283,12 @@ describe('setupSearchIntegration', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npm run test:file -- test/blocks/sitenav.test.js`
 Expected: FAIL — `setupSearchIntegration is not a function` (or import error).
 
-- [ ] **Step 3: Implement in `blocks/sitenav/sitenav.js`**
+- [x] **Step 3: Implement in `blocks/sitenav/sitenav.js`**
 
 Add near the other `setup*` exports (after `setupSitenavKeyboardHandling`, before the closing IIFE):
 
@@ -313,12 +318,12 @@ Wire it into the IIFE, alongside the other `setup*` calls:
   setupSearchIntegration(navList);
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npm run test:file -- test/blocks/sitenav.test.js`
 Expected: PASS, all existing tests plus the 2 new ones.
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 Run: `npx eslint blocks/sitenav/sitenav.js test/blocks/sitenav.test.js`
 
@@ -343,7 +348,7 @@ git commit -m "feat(sitenav): listen for search-triggered level-1 expand"
   - `_currentItems` getter (returns `navAreas` or `results` depending on view).
   - `_selectNavArea(area)` — dispatches `sitenav:expand-level1`, then closes.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `test/blocks/search.test.js`:
 
@@ -489,12 +494,12 @@ describe('sh-search', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm run test:file -- test/blocks/search.test.js`
 Expected: FAIL — nav-area assertions fail (nothing renders before a query today), close/collapse assertions fail (`clear` never dispatched today).
 
-- [ ] **Step 3: Implement in `blocks/search/search.js`**
+- [x] **Step 3: Implement in `blocks/search/search.js`**
 
 Replace the file's body with (imports/customElements.define/init unchanged at top and bottom):
 
@@ -824,22 +829,22 @@ Notes on the rewrite:
 - `_renderNavArea` keeps the exact markup/classes (`hit-title`, `hit-description`, `result-text`, chevron) the old `_renderResult` used — that markup already matches the nav-area screenshot (title + subtext + chevron). Only the interactive element changed from `<a href>` to `<button>` (nav areas don't navigate), sharing a new `.result-row` class with the results-view `<a>` so CSS isn't duplicated (see Task 4).
 - `_renderHit` is new: title + up to 2 pills, no description, no chevron — matching the typed-results screenshot exactly (no chevron shown there).
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npm run test:file -- test/blocks/search.test.js`
 Expected: PASS, all tests.
 
-- [ ] **Step 5: Run the full unit suite to check for regressions**
+- [x] **Step 5: Run the full unit suite to check for regressions**
 
 Run: `npm run test:unit`
 Expected: PASS. Pay particular attention to any pre-existing search-adjacent tests in `test/blocks/action-button.test.js` if one exists — grep for it first (`grep -rl "action-button" test/`); the `clear` event is now actually dispatched where before it never was.
 
-- [ ] **Step 6: Lint**
+- [x] **Step 6: Lint**
 
 Run: `npx eslint blocks/search/search.js test/blocks/search.test.js`
 Expected: no output.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add blocks/search/search.js test/blocks/search.test.js
@@ -857,7 +862,7 @@ git commit -m "feat(search): nav-area popover view, tag pills on results, close-
 - Consumes: the `.result-row`, `.hit-tags`, `.tag-pill` classes introduced in Task 3's markup.
 - Produces: visual result matching both attached screenshots.
 
-- [ ] **Step 1: Rename the shared row selector**
+- [x] **Step 1: Rename the shared row selector**
 
 In `blocks/search/search.css`, the existing `.results-list a { ... }` block (grid layout, padding, hover, min-height) now needs to apply to both the nav-area `<button>` and the results `<a>`. Change the selector:
 
@@ -889,7 +894,7 @@ A `<button>` has no default text-align/border/background reset the way an `<a>` 
     }
 ```
 
-- [ ] **Step 2: Add pill styles**
+- [x] **Step 2: Add pill styles**
 
 After the `.hit-description` rule:
 
@@ -912,7 +917,7 @@ After the `.hit-description` rule:
     }
 ```
 
-- [ ] **Step 3: Verify in the browser**
+- [x] **Step 3: Verify in the browser**
 
 Start the dev server (see `.claude/launch.json` / project run instructions), open a page with the search action button, and check:
 - Clicking the icon opens the input with the 5 (or 6, once Support copy lands) nav areas below it, each with title/description/chevron, first one highlighted.
@@ -921,7 +926,7 @@ Start the dev server (see `.claude/launch.json` / project run instructions), ope
 - Clicking outside, or pressing Escape, closes the popover and collapses the input back to the icon button.
 - Selecting a nav area closes search and expands that area in the sitenav (if the current page renders one).
 
-- [ ] **Step 4: Lint and commit**
+- [x] **Step 4: Lint and commit**
 
 Run: `npx eslint blocks/search/search.css` if a stylelint config covers this file, otherwise skip lint and just visually verify.
 
