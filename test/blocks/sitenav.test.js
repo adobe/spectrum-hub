@@ -148,6 +148,56 @@ describe('sitenav block', () => {
   // decorateIndexBasedNav stitches query-index pages under the "Components"
   // item of a known implementation. It finds that item by the marker
   // decorateLevel stamps here, so the marker is the contract between them.
+  describe('decorateLevel — level-1 tooltips', () => {
+    it('renders a swc-tooltip for a level-1 button, associated by id', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const btn = ul.querySelector('button.level-1-button');
+      const tooltip = ul.querySelector('swc-tooltip');
+
+      expect(tooltip).to.not.be.null;
+      expect(tooltip.getAttribute('for')).to.equal(btn.id);
+      expect(tooltip.getAttribute('placement')).to.equal('end');
+      expect(tooltip.getAttribute('delay')).to.equal('200');
+      expect(tooltip.textContent).to.equal('Foundations');
+    });
+
+    // Regression guard: the tooltip must not land between the button and its
+    // menu, or it breaks the `[aria-expanded="true"] + .level-2-menu` CSS
+    // adjacency the disclosure relies on to show/hide the flyout.
+    it('does not break the button-to-menu adjacency the disclosure CSS relies on', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const btn = ul.querySelector('button.level-1-button');
+      const menu = ul.querySelector('.level-2-menu');
+
+      expect(btn.nextElementSibling).to.equal(menu);
+    });
+
+    it('does not add a tooltip for nested (depth 2+) buttons', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Foundations</p>
+            <ul><li><p>Overview</p><ul><li><a href="/x">Intro</a></li></ul></li></ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const level2Btn = ul.querySelector('button.level-2-button');
+
+      expect(level2Btn.closest('li').querySelector('swc-tooltip')).to.be.null;
+    });
+  });
+
   describe('decorateLevel — index-based nav marker', () => {
     function buildImplList(parentLabel) {
       return buildNavList(`
@@ -205,9 +255,23 @@ describe('sitenav block', () => {
 
       const btn = await getExpandButton(sitenav);
 
-      expect(btn.getAttribute('aria-label')).to.equal('Toggle site navigation');
+      expect(btn.getAttribute('aria-label')).to.equal('Expand navigation');
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
       expect(btn.getAttribute('aria-controls')).to.equal('sitenav');
+    });
+
+    it('renders a tooltip mirroring the aria-label, associated by id', async () => {
+      stubMatchMedia(sandbox, false);
+      stubIconFetch(sandbox);
+      const sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      document.body.append(sitenav);
+
+      const btn = await getExpandButton(sitenav);
+
+      const tooltip = sitenav.querySelector('swc-tooltip');
+      expect(tooltip.getAttribute('for')).to.equal(btn.id);
+      expect(tooltip.textContent).to.equal('Expand navigation');
     });
   });
 
@@ -237,6 +301,18 @@ describe('sitenav block', () => {
       btn.click();
       expect(sitenav.hasAttribute('is-expanded')).to.be.false;
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('flips aria-label and the tooltip text together with is-expanded', () => {
+      const tooltip = sitenav.querySelector('swc-tooltip');
+
+      btn.click();
+      expect(btn.getAttribute('aria-label')).to.equal('Collapse navigation');
+      expect(tooltip.textContent).to.equal('Collapse navigation');
+
+      btn.click();
+      expect(btn.getAttribute('aria-label')).to.equal('Expand navigation');
+      expect(tooltip.textContent).to.equal('Expand navigation');
     });
 
     it('does not open the mobile tray — the rail width is a separate state', () => {

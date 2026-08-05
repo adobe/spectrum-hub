@@ -2,6 +2,7 @@ import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js
 import { loadIms } from '../../scripts/utils/ims.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
+import '../../deps/components/swc-tooltip/dist/index.js';
 
 const { codeBase, log, cdnEnv } = getConfig();
 
@@ -100,6 +101,25 @@ export const decorateLevel = (ul, depth) => {
     decorateLevel(childList, depth + 1);
 
     heading.replaceWith(btn);
+
+    // PROOF-OF-CONCEPT: wired for level-1 buttons only, to confirm the vendored
+    // swc-tooltip dependency renders/positions correctly before the full
+    // leaf-item + collapsed-state + touch logic is added.
+    //
+    // Appended at the end of li (after menuWrapper), not right after btn:
+    // the `[aria-expanded="true"] + .level-2-menu` CSS rule needs menuWrapper
+    // to stay btn's immediate next sibling. swc-tooltip doesn't need DOM
+    // adjacency to its trigger — it positions via the Popover API using the
+    // for/id link, so it can live anywhere.
+    if (depth === 1) {
+      btn.id = `sitenav-level-1-tooltip-${toClassName(labelText)}`;
+      const tooltip = document.createElement('swc-tooltip');
+      tooltip.setAttribute('for', btn.id);
+      tooltip.setAttribute('placement', 'end');
+      tooltip.setAttribute('delay', '200');
+      tooltip.textContent = labelText;
+      li.append(tooltip);
+    }
   });
 
   return ul;
@@ -208,19 +228,39 @@ const getFocusableEls = (container) => [...container.querySelectorAll(
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
 )].filter((el) => el.checkVisibility());
 
+// The tooltip text is the single source of truth for this button's accessible
+// name too — aria-label is kept in sync rather than duplicating the copy.
+const EXPAND_BTN_LABELS = { expanded: 'Collapse navigation', collapsed: 'Expand navigation' };
+
 export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
+  btn.id = 'sitenav-expand-btn';
   btn.classList.add('sitenav-expand-btn');
-  btn.setAttribute('aria-label', 'Toggle site navigation');
   btn.setAttribute('aria-expanded', 'false');
   btn.setAttribute('aria-controls', sitenav.id);
 
   const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');
   btn.append(svg);
 
+  const tooltip = document.createElement('swc-tooltip');
+  tooltip.setAttribute('for', btn.id);
+  tooltip.setAttribute('placement', 'end');
+  tooltip.setAttribute('delay', '200');
+  sitenav.append(tooltip);
+
+  const syncLabel = () => {
+    const label = sitenav.hasAttribute('is-expanded')
+      ? EXPAND_BTN_LABELS.expanded
+      : EXPAND_BTN_LABELS.collapsed;
+    btn.setAttribute('aria-label', label);
+    tooltip.textContent = label;
+  };
+  syncLabel();
+
   btn.addEventListener('click', () => {
     const isExpanded = sitenav.toggleAttribute('is-expanded');
     btn.setAttribute('aria-expanded', String(isExpanded));
+    syncLabel();
   });
 
   return btn;
