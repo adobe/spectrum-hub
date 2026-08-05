@@ -566,6 +566,7 @@ svg.icon {
 .se-inputfield > label,
 .se-segmentedcontrol-field > label {
   max-inline-size: 140px;
+  min-inline-size: fit-content;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
