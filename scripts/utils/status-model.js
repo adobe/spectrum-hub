@@ -43,7 +43,7 @@ export const STATUSES = {
   'not-available': {
     id: 'not-available',
     label: 'Not available',
-    color: '--s2-gray-500',
+    color: '--s2-gray-600',
     definition: 'Not currently available or applicable for this implementation or design library.',
   },
   deprecated: {
