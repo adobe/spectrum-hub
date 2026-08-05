@@ -102,23 +102,11 @@ export const decorateLevel = (ul, depth) => {
 
     heading.replaceWith(btn);
 
-    // PROOF-OF-CONCEPT: wired for level-1 buttons only, to confirm the vendored
-    // swc-tooltip dependency renders/positions correctly before the full
-    // leaf-item + collapsed-state + touch logic is added.
-    //
-    // Appended at the end of li (after menuWrapper), not right after btn:
-    // the `[aria-expanded="true"] + .level-2-menu` CSS rule needs menuWrapper
-    // to stay btn's immediate next sibling. swc-tooltip doesn't need DOM
-    // adjacency to its trigger — it positions via the Popover API using the
-    // for/id link, so it can live anywhere.
+    // Stable id for the tooltip's `for` attribute — see syncLevel1Tooltips,
+    // which adds/removes the tooltip itself based on whether the rail is
+    // currently showing labels. Not created unconditionally here.
     if (depth === 1) {
       btn.id = `sitenav-level-1-tooltip-${toClassName(labelText)}`;
-      const tooltip = document.createElement('swc-tooltip');
-      tooltip.setAttribute('for', btn.id);
-      tooltip.setAttribute('placement', 'end');
-      tooltip.setAttribute('delay', '200');
-      tooltip.textContent = labelText;
-      li.append(tooltip);
     }
   });
 
@@ -228,6 +216,35 @@ const getFocusableEls = (container) => [...container.querySelectorAll(
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
 )].filter((el) => el.checkVisibility());
 
+// Level-1 buttons only need a tooltip while the rail is collapsed
+export const syncLevel1Tooltips = (sitenav) => {
+  const isExpanded = sitenav.hasAttribute('is-expanded');
+
+  sitenav.querySelectorAll('.level-1-button').forEach((btn) => {
+    const li = btn.closest('li');
+    const existingTooltip = li.querySelector('swc-tooltip');
+
+    if (isExpanded) {
+      existingTooltip?.remove();
+      return;
+    }
+
+    if (existingTooltip) { return; }
+
+    const labelText = btn.querySelector('.list-item-label')?.textContent
+      ?? btn.getAttribute('aria-label')
+      ?? '';
+    const tooltip = document.createElement('swc-tooltip');
+    tooltip.setAttribute('for', btn.id);
+    tooltip.setAttribute('placement', 'end');
+    tooltip.setAttribute('delay', '200');
+    tooltip.textContent = labelText;
+    // swc-tooltip doesn't need DOM adjacency to its trigger — it positions via the Popover API
+    // using the for/id link
+    li.append(tooltip);
+  });
+};
+
 // The tooltip text is the single source of truth for this button's accessible
 // name too — aria-label is kept in sync rather than duplicating the copy.
 const EXPAND_BTN_LABELS = { expanded: 'Collapse navigation', collapsed: 'Expand navigation' };
@@ -261,6 +278,7 @@ export const getExpandButton = async (sitenav) => {
     const isExpanded = sitenav.toggleAttribute('is-expanded');
     btn.setAttribute('aria-expanded', String(isExpanded));
     syncLabel();
+    syncLevel1Tooltips(sitenav);
   });
 
   return btn;
@@ -380,6 +398,10 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   // that hiding nav below 900px doesn't take the mobile trigger down with it.
   nav.append(navList, expandBtn);
   sitenav.append(triggerBtn);
+
+  // Seed level-1 tooltips for the rail's default (collapsed) state
+  syncLevel1Tooltips(sitenav);
+
   const main = document.querySelector('main');
   if (!main) { return; }
   main.before(sitenav);
