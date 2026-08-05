@@ -1,0 +1,175 @@
+:host {
+  --s2-avatar-100: var(--s2-component-s-height);
+
+  button {
+    font-family: unset;
+  }
+}
+
+#avatar-button {
+  all: unset;
+  anchor-name: --avatar-button;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--se-component-m-height);
+  width: var(--se-component-m-height);
+  cursor: pointer;
+  user-select: none;
+
+  &:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+    outline-offset: var(--se-focus-indicator-offset);
+  }
+
+  &:disabled {
+    cursor: default;
+    color: var(--s2-gray-400);
+  }
+
+  img {
+    width: var(--s2-avatar-100);
+    height: var(--s2-avatar-100);
+    border-radius: calc(var(--s2-avatar-100) / 2);
+    overflow: hidden;
+  }
+}
+
+#se-profile-popover {
+  position-anchor: --avatar-button;
+  pointer-events: none;
+  top: anchor(bottom);
+  right: anchor(right);
+  margin: 6px 0 0;
+  left: auto;
+  padding: 0;
+  border: none;
+  border-radius: var(--s2-corner-radius-800);
+  z-index: 100000;
+  transform: translateY(4px);
+  opacity: 0;
+  transition:
+    opacity 0.4s cubic-bezier(0, 0, 0.4, 1),
+    transform 0.4s cubic-bezier(0, 0, 0.4, 1),
+    display 0.4s allow-discrete,
+    overlay 0.4s allow-discrete;
+  box-shadow:
+    0 0 6px 0 rgb(0 0 0 / 24%),
+    0 3px 20px 0 rgb(0 0 0 / 16%),
+    0 4px 20px 0 rgb(0 0 0 / 24%);
+
+  &:popover-open {
+    display: grid;
+    align-content: start;
+    align-items: start;
+    pointer-events: revert;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @starting-style {
+    &:popover-open {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+}
+
+.se-profile-btn {
+  margin: -1px 0 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.se-profile-btn::before {
+  position: absolute;
+  inset: 0 24px auto;
+  content: "";
+  height: 1px;
+  background: var(--s2-gray-100);
+  transition: all 0.2s ease-in-out;
+}
+
+.se-profile-btn::after {
+  position: absolute;
+  inset: auto 24px 0;
+  content: "";
+  height: 1px;
+  background: var(--s2-gray-100);
+  transition: all 0.2s ease-in-out;
+}
+
+.se-profile-btn:hover {
+  color: var(--s2-blue-900);
+  background: var(--s2-blue-200);
+  z-index: 2;
+}
+
+.se-profile-btn:hover::before {
+  inset: 0 0 auto;
+  background: var(--s2-blue-900);
+}
+
+.se-profile-btn:hover::after {
+  inset: auto 0 0;
+  background: var(--s2-blue-900);
+}
+
+.se-profile-btn-details {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: transparent;
+  border: none;
+  padding: 24px 44px 24px 24px;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+}
+
+.se-profile-btn-details picture {
+  display: block;
+  border-radius: 38px;
+  overflow: hidden;
+}
+
+.se-profile-btn-details img {
+  display: block;
+  width: 75px;
+  height: 75px;
+}
+
+.se-profile-details-name {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  text-align: left;
+  word-break: break-all;
+}
+
+.se-profile-display-name {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+
+.se-profile-email {
+  margin: 0;
+}
+
+.se-profile-details-wrapper {
+  position: relative;
+}
+
+.se-profile-btn-signout {
+  text-align: left;
+  font-size: 16px;
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 24px;
+  transition: all 0.2s ease-in-out;
+  margin: -1px 0;
+}

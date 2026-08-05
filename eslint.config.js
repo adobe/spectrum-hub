@@ -67,12 +67,20 @@ export default defineConfig([
   test,
   {
     // Allow console in test files
-    files: ['test/**/*.js'],
+    files: ['test/**/*.js', '**/*.test.js'],
     rules: {
       'max-classes-per-file': 0,
       'no-console': 'off',
       'no-underscore-dangle': 0,
       'no-unused-expressions': 0,
+      'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    },
+  },
+  {
+    // Workers have their own node_modules, allow unresolved test imports
+    files: ['workers/**/*.test.js'],
+    rules: {
+      'import/no-unresolved': ['error', { ignore: ['^vitest'] }],
     },
   },
   {

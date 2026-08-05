@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "wrangler dev --env dev",
+    "test": "vitest run",
     "deploy:prod": "wrangler deploy --env=\"\"",
     "deploy:stage": "wrangler deploy --env stage"
   },
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "vitest": "^3.2.4",
     "wrangler": "^4.40.0"
   }
 }
