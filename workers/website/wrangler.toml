@@ -7,7 +7,10 @@
 #
 #   SESSION_SECRET signs the spectrum_session cookie. Without it every
 #   POST /auth/session returns 500, with no build-time or deploy-time
-#   signal. Rotating it invalidates every issued session cookie.
+#   signal. Rotating it invalidates every issued session cookie - there is
+#   no per-session revocation, so this is also the only way to end a
+#   session before its natural SESSION_MAX_AGE_MS expiry, and it affects
+#   every session at once.
 #
 # Optional vars:
 #
@@ -15,6 +18,13 @@
 #                    Unset means "the request's own origin only", which is
 #                    the right answer for a single-host deployment.
 #                    e.g. ALLOWED_ORIGINS = "https://spectrum.adobe.com,https://www.adobe.com"
+#
+#   IMS_ENV          Which IMS environment's public keys to verify access
+#                    tokens against: "dev", "stage", or "prod". Unset means
+#                    "prod". dev and stage both resolve to the stg1 keyset,
+#                    matching scripts/utils/ims.js's own IMS_ENV mapping -
+#                    a mismatch here means every real login gets a correct
+#                    but unverifiable token and 401s.
 #
 # Session duration (SESSION_MAX_AGE_MS) is NOT set here on purpose:
 # website/lib/session.js already defaults it to 24h, and two sources of
@@ -34,4 +44,4 @@ keep_vars = true
 vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub" }
 
 [env.dev]
-vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub", ORIGIN = "http://localhost:3000" }
+vars = { AEM_ORG = "adobe", AEM_SITE = "spectrum-hub", ORIGIN = "http://localhost:3000", IMS_ENV = "dev" }

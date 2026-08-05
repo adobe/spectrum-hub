@@ -1,8 +1,14 @@
-import env from './env.js';
+import { env, cdnEnv } from './env.js';
 
 const IMS_CLIENT_ID = 'spectrumhub';
 const IMS_SCOPES = 'AdobeID,openid';
 const IMS_MARKER = 'spectrum-ims-user';
+
+// The server's answer to POST /auth/session, not the client's own claim
+const IMS_SERVER_EXPIRE = 'spectrum-ims-server-expire';
+
+// How long before the stored expiry we start refreshing again
+const SESSION_REFRESH_WINDOW_MS = 60 * 60 * 1000;
 
 const IMS_URL = 'https://auth.services.adobe.com/imslib/imslib.min.js';
 const IMS_TIMEOUT = 5000;
@@ -86,6 +92,40 @@ const getTenantId = (profile) => {
   return found?.prodCtx.serviceCode;
 };
 
+// null (never stored), unparseable, or within the refresh window all mean
+// "send the POST" - only a comfortably future stored expiry skips it.
+const dueForRefresh = () => {
+  const raw = localStorage.getItem(IMS_SERVER_EXPIRE);
+  if (raw === null) { return true; }
+  const storedExpiresAt = Number(raw);
+  if (!Number.isFinite(storedExpiresAt)) { return true; }
+  return Date.now() >= storedExpiresAt - SESSION_REFRESH_WINDOW_MS;
+};
+
+const setSession = async (accessToken) => {
+  localStorage.setItem(IMS_MARKER, Date.now());
+  if (cdnEnv !== true || !dueForRefresh()) { return; }
+
+  const opts = {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ access_token: accessToken.token }),
+  };
+  try {
+    const resp = await fetch('/auth/session', opts);
+    if (!resp.ok) { return; }
+    const { expiresAt } = await resp.json();
+    if (Number.isFinite(expiresAt)) {
+      localStorage.setItem(IMS_SERVER_EXPIRE, String(expiresAt));
+    }
+  } catch (e) {
+    // Best-effort: onReady calls this without awaiting it, so a network
+    // failure here must not become an unhandled rejection. Nothing stored
+    // means dueForRefresh() tries again on the next onReady.
+  }
+};
+
 async function loadDetails(clientId, accessToken) {
   const profile = await window.adobeIMS.getProfile();
   const tenantId = getTenantId(profile);
@@ -111,7 +151,7 @@ export const loadIms = (() => {
       onReady: () => {
         const accessToken = window.adobeIMS.getAccessToken();
         if (accessToken) {
-          localStorage.setItem(IMS_MARKER, Date.now());
+          setSession(accessToken);
           loadDetails(IMS_CLIENT_ID, accessToken).then((details) => resolve(details));
         } else {
           resolve({ anonymous: true });
