@@ -450,7 +450,7 @@ div[data-status],
     /* pagenav */
     --pagenav-inline-start-margin: 56px;
     --pagenav-inline-end-margin: 24px;
-    --pagenav-min-inline-size: 150px;
+    --pagenav-min-inline-size: 216px;
 
     /* deep link scrollling */
     scroll-behavior: smooth;

@@ -11,7 +11,6 @@ from the DOM and the accessibility tree (see page-nav.js). */
     display: block;
     position: sticky;
     inset-block-start: var(--sh-header-height); /* match the header so the page nav sticks in place */
-    max-inline-size: max-content;
     max-block-size: calc(100vh - var(--sh-header-height, 0px));
     font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
     font-size: var(--s2-component-m-medium-font-size);
