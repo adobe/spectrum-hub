@@ -1,5 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { createSession } from './auth.js';
+import {
+  describe, it, expect, vi, beforeAll,
+} from 'vitest';
+import { createSession, deleteSession } from './auth.js';
+
+// createSession now verifies access_token against IMS's JWKS (handlers/jwks.js).
+// That module does real network I/O, so it is mocked here; its own fetch/cache
+// behaviour is covered by jwks.test.js.
+let testJwk;
+
+vi.mock('./jwks.js', () => ({
+  getJwk: vi.fn(async () => testJwk),
+}));
 
 const ORIGIN = 'https://example.com';
 const env = { SESSION_SECRET: 'test-secret' };
@@ -13,27 +24,68 @@ const post = (body, { origin = ORIGIN, method = 'POST' } = {}) => {
   });
 };
 
-const imsBody = () => ({
-  access_token: 'header.payload.signature',
-  expires_in: '86400000',
-  created_at: String(Date.now()),
-  scope: 'AdobeID,openid',
+const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+const base64urlJson = (obj) => base64url(new TextEncoder().encode(JSON.stringify(obj)));
+
+let privateKey;
+
+beforeAll(async () => {
+  const keyPair = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  privateKey = keyPair.privateKey;
+  testJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
 });
+
+// Signs a token shaped like a real IMS access token: created_at/expires_in
+// are claims in the payload, not fields the caller repeats in the POST body.
+const signToken = async (payloadOverrides = {}) => {
+  const payload = {
+    expires_in: '86400000',
+    created_at: String(Date.now()),
+    scope: 'AdobeID,openid',
+    ...payloadOverrides,
+  };
+  const signingInput = `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}`;
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    privateKey,
+    new TextEncoder().encode(signingInput),
+  );
+  return `${signingInput}.${base64url(new Uint8Array(signature))}`;
+};
+
+const imsBody = async (payloadOverrides) => ({ access_token: await signToken(payloadOverrides) });
 
 const call = (request) => createSession({ url: new URL(request.url), env, request });
 
 const findCookie = (cookies, name) => cookies.find((cookie) => cookie.startsWith(`${name}=`));
 
 describe('createSession', () => {
-  it('returns 204 with a Set-Cookie header on success', async () => {
-    const resp = await call(post(imsBody()));
-    expect(resp.status).toBe(204);
+  it('returns 200 with a Set-Cookie header on success', async () => {
+    const resp = await call(post(await imsBody()));
+    expect(resp.status).toBe(200);
     expect(resp.headers.getSetCookie()).toHaveLength(1);
   });
 
-  it('returns an empty body on success', async () => {
-    const resp = await call(post(imsBody()));
-    expect(await resp.text()).toBe('');
+  it('returns the session expiry as JSON on success', async () => {
+    const now = Date.now();
+    const resp = await call(post(await imsBody()));
+    const json = await resp.json();
+    // 86400000 (the default max age) from roughly now, give or take the
+    // time this test itself took to run - not the literal token claim,
+    // since SESSION_MAX_AGE_MS may have clamped it.
+    expect(json.expiresAt).toBeGreaterThan(now + 86400000 - 5000);
+    expect(json.expiresAt).toBeLessThanOrEqual(now + 86400000);
+  });
+
+  it('marks the JSON response content-type', async () => {
+    const resp = await call(post(await imsBody()));
+    expect(resp.headers.get('content-type')).toBe('application/json; charset=utf-8');
   });
 
   it('rejects non-POST methods with 405', async () => {
@@ -47,23 +99,23 @@ describe('createSession', () => {
   });
 
   it('rejects a missing Origin header with 403', async () => {
-    const resp = await call(post(imsBody(), { origin: null }));
+    const resp = await call(post(await imsBody(), { origin: null }));
     expect(resp.status).toBe(403);
   });
 
   it('rejects a foreign Origin with 403', async () => {
-    const resp = await call(post(imsBody(), { origin: 'https://evil.example' }));
+    const resp = await call(post(await imsBody(), { origin: 'https://evil.example' }));
     expect(resp.status).toBe(403);
   });
 
   it('accepts a foreign Origin present in ALLOWED_ORIGINS', async () => {
-    const request = post(imsBody(), { origin: 'https://allowed.example' });
+    const request = post(await imsBody(), { origin: 'https://allowed.example' });
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, ALLOWED_ORIGINS: 'https://allowed.example, https://other.example' },
       request,
     });
-    expect(resp.status).toBe(204);
+    expect(resp.status).toBe(200);
   });
 
   it('returns 400 rather than 500 on malformed JSON', async () => {
@@ -71,19 +123,19 @@ describe('createSession', () => {
     expect(resp.status).toBe(400);
   });
 
-  it('propagates the status from the pure module', async () => {
-    const resp = await call(post({ ...imsBody(), access_token: undefined }));
+  it('rejects a missing access_token with 400, without requiring anything else', async () => {
+    const resp = await call(post({}));
     expect(resp.status).toBe(400);
   });
 
   it('returns 500 when SESSION_SECRET is unset', async () => {
-    const request = post(imsBody());
+    const request = post(await imsBody());
     const resp = await createSession({ url: new URL(request.url), env: {}, request });
     expect(resp.status).toBe(500);
   });
 
   it('names the cookie exactly spectrum_session and marks it HttpOnly', async () => {
-    const resp = await call(post(imsBody()));
+    const resp = await call(post(await imsBody()));
     const cookies = resp.headers.getSetCookie();
     const sessionCookie = findCookie(cookies, 'spectrum_session');
     expect(sessionCookie).toBeDefined();
@@ -91,7 +143,7 @@ describe('createSession', () => {
   });
 
   it('sets Secure on the cookie for an https request URL', async () => {
-    const resp = await call(post(imsBody()));
+    const resp = await call(post(await imsBody()));
     const cookies = resp.headers.getSetCookie();
     for (const cookie of cookies) { expect(cookie).toMatch(/Secure/); }
   });
@@ -100,7 +152,7 @@ describe('createSession', () => {
     const request = new Request('http://example.com/auth/session', {
       method: 'POST',
       headers: { origin: 'http://example.com', 'content-type': 'application/json' },
-      body: JSON.stringify(imsBody()),
+      body: JSON.stringify(await imsBody()),
     });
     const resp = await createSession({ url: new URL(request.url), env, request });
     const cookies = resp.headers.getSetCookie();
@@ -108,8 +160,22 @@ describe('createSession', () => {
     for (const cookie of cookies) { expect(cookie).not.toMatch(/Secure/); }
   });
 
+  it('ignores an expires_in the caller puts in the POST body, not the token', async () => {
+    // The body's expires_in must not leak into the derived expiry - only
+    // the verified JWT claim counts. A tiny value here that got trusted
+    // would immediately fail the "under a second left" guard.
+    const resp = await call(post({
+      access_token: await signToken(),
+      expires_in: '500',
+    }));
+    const sessionCookie = findCookie(resp.headers.getSetCookie(), 'spectrum_session');
+    // 86400 or 86399 depending on how many ms elapsed between signing the
+    // token above and createSessionCookies calling Date.now() - not 0.
+    expect(sessionCookie).toMatch(/Max-Age=(86399|86400)(;|$)/);
+  });
+
   it('falls back to the default max age when SESSION_MAX_AGE_MS is non-numeric', async () => {
-    const request = post({ ...imsBody(), expires_in: String(999999999999) });
+    const request = post(await imsBody({ expires_in: String(999999999999) }));
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, SESSION_MAX_AGE_MS: '1d' },
@@ -120,7 +186,7 @@ describe('createSession', () => {
   });
 
   it('falls back to the default max age when SESSION_MAX_AGE_MS is an empty string', async () => {
-    const request = post({ ...imsBody(), expires_in: String(999999999999) });
+    const request = post(await imsBody({ expires_in: String(999999999999) }));
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, SESSION_MAX_AGE_MS: '' },
@@ -131,7 +197,7 @@ describe('createSession', () => {
   });
 
   it('honors a valid numeric-string override for SESSION_MAX_AGE_MS', async () => {
-    const request = post({ ...imsBody(), expires_in: String(999999999999) });
+    const request = post(await imsBody({ expires_in: String(999999999999) }));
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, SESSION_MAX_AGE_MS: '10000' },
@@ -142,16 +208,49 @@ describe('createSession', () => {
   });
 });
 
+describe('createSession access_token verification', () => {
+  it('rejects a token that is not a JWT with 401', async () => {
+    const resp = await call(post({ access_token: 'not-a-jwt' }));
+    expect(resp.status).toBe(401);
+  });
+
+  it('rejects a JWT signed by a key IMS does not recognize with 401', async () => {
+    const { getJwk } = await import('./jwks.js');
+    getJwk.mockResolvedValueOnce(null);
+    const resp = await call(post(await imsBody()));
+    expect(resp.status).toBe(401);
+  });
+
+  it('rejects a JWT whose signature does not verify with 401', async () => {
+    const { getJwk } = await import('./jwks.js');
+    getJwk.mockResolvedValueOnce({ ...testJwk, kty: 'EC' });
+    const resp = await call(post(await imsBody()));
+    expect(resp.status).toBe(401);
+  });
+
+  it('returns 502 rather than 500 when the JWKS lookup fails', async () => {
+    const { getJwk } = await import('./jwks.js');
+    getJwk.mockRejectedValueOnce(new Error('network down'));
+    const resp = await call(post(await imsBody()));
+    expect(resp.status).toBe(502);
+  });
+
+  it('marks the 401 no-store', async () => {
+    const resp = await call(post({ access_token: 'not-a-jwt' }));
+    expect(resp.headers.get('cache-control')).toBe('no-store');
+  });
+});
+
 // This endpoint mints credentials and sits behind a CDN.
 describe('createSession caching', () => {
-  it('marks the 204 no-store', async () => {
-    const resp = await call(post(imsBody()));
-    expect(resp.status).toBe(204);
+  it('marks the 200 no-store', async () => {
+    const resp = await call(post(await imsBody()));
+    expect(resp.status).toBe(200);
     expect(resp.headers.get('cache-control')).toBe('no-store');
   });
 
   it('marks the 403 no-store', async () => {
-    const resp = await call(post(imsBody(), { origin: 'https://evil.example' }));
+    const resp = await call(post(await imsBody(), { origin: 'https://evil.example' }));
     expect(resp.headers.get('cache-control')).toBe('no-store');
   });
 
@@ -170,8 +269,8 @@ describe('createSession caching', () => {
 });
 
 describe('ALLOWED_ORIGINS parsing', () => {
-  const withOrigins = (allowedOrigins, origin) => {
-    const request = post(imsBody(), { origin });
+  const withOrigins = async (allowedOrigins, origin) => {
+    const request = post(await imsBody(), { origin });
     return createSession({
       url: new URL(request.url),
       env: { ...env, ALLOWED_ORIGINS: allowedOrigins },
@@ -180,11 +279,11 @@ describe('ALLOWED_ORIGINS parsing', () => {
   };
 
   it('falls back to the request origin when ALLOWED_ORIGINS is only whitespace', async () => {
-    expect((await withOrigins('  ', ORIGIN)).status).toBe(204);
+    expect((await withOrigins('  ', ORIGIN)).status).toBe(200);
   });
 
   it('falls back to the request origin when ALLOWED_ORIGINS is only separators', async () => {
-    expect((await withOrigins(',,', ORIGIN)).status).toBe(204);
+    expect((await withOrigins(',,', ORIGIN)).status).toBe(200);
   });
 
   it('still rejects a foreign origin when ALLOWED_ORIGINS is empty', async () => {
@@ -192,33 +291,103 @@ describe('ALLOWED_ORIGINS parsing', () => {
   });
 
   it('ignores empty entries between commas', async () => {
-    expect((await withOrigins('https://a.example,,https://example.com', ORIGIN)).status).toBe(204);
+    expect((await withOrigins('https://a.example,,https://example.com', ORIGIN)).status).toBe(200);
   });
 
   it('matches a configured entry carrying a trailing slash', async () => {
-    expect((await withOrigins('https://example.com/', ORIGIN)).status).toBe(204);
+    expect((await withOrigins('https://example.com/', ORIGIN)).status).toBe(200);
   });
 
   it('matches a configured entry with an uppercase host', async () => {
-    expect((await withOrigins('https://EXAMPLE.com', ORIGIN)).status).toBe(204);
+    expect((await withOrigins('https://EXAMPLE.com', ORIGIN)).status).toBe(200);
   });
 
   it('matches an uppercase Origin header against a lowercase entry', async () => {
     const request = new Request(`${ORIGIN}/auth/session`, {
       method: 'POST',
       headers: { origin: 'HTTPS://EXAMPLE.COM', 'content-type': 'application/json' },
-      body: JSON.stringify(imsBody()),
+      body: JSON.stringify(await imsBody()),
     });
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, ALLOWED_ORIGINS: 'https://example.com' },
       request,
     });
-    expect(resp.status).toBe(204);
+    expect(resp.status).toBe(200);
   });
 
   it('does not let normalization widen the allowlist to a different host', async () => {
     expect((await withOrigins('https://example.com', 'https://example.com.evil.example')).status)
       .toBe(403);
+  });
+});
+
+describe('deleteSession', () => {
+  const del = (origin = ORIGIN) => new Request(`${ORIGIN}/auth/session`, {
+    method: 'DELETE',
+    headers: origin ? { origin } : {},
+  });
+
+  it('returns 204 with a single Set-Cookie header', async () => {
+    const request = del();
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    expect(resp.status).toBe(204);
+    expect(resp.headers.getSetCookie()).toHaveLength(1);
+  });
+
+  it('clears the spectrum_session cookie: empty value, Max-Age=0, HttpOnly', async () => {
+    const request = del();
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    const cookie = findCookie(resp.headers.getSetCookie(), 'spectrum_session');
+    expect(cookie).toBeDefined();
+    expect(cookie.split('; ')[0]).toBe('spectrum_session=');
+    expect(cookie).toMatch(/Max-Age=0(;|$)/);
+    expect(cookie).toMatch(/HttpOnly/);
+  });
+
+  it('rejects non-DELETE methods with 405', async () => {
+    const request = new Request(`${ORIGIN}/auth/session`, { method: 'GET', headers: { origin: ORIGIN } });
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    expect(resp.status).toBe(405);
+    expect(resp.headers.get('allow')).toBe('DELETE');
+  });
+
+  it('rejects a missing Origin header with 403', async () => {
+    const request = del(null);
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    expect(resp.status).toBe(403);
+  });
+
+  it('rejects a foreign Origin with 403', async () => {
+    const request = del('https://evil.example');
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    expect(resp.status).toBe(403);
+  });
+
+  it('does not require SESSION_SECRET', async () => {
+    const request = del();
+    const resp = await deleteSession({ url: new URL(request.url), env: {}, request });
+    expect(resp.status).toBe(204);
+  });
+
+  it('sets Secure for an https request URL and omits it for http', async () => {
+    const httpsRequest = del();
+    const httpsUrl = new URL(httpsRequest.url);
+    const httpsResp = await deleteSession({ url: httpsUrl, env, request: httpsRequest });
+    expect(findCookie(httpsResp.headers.getSetCookie(), 'spectrum_session')).toMatch(/Secure/);
+
+    const httpRequest = new Request('http://example.com/auth/session', {
+      method: 'DELETE',
+      headers: { origin: 'http://example.com' },
+    });
+    const httpUrl = new URL(httpRequest.url);
+    const httpResp = await deleteSession({ url: httpUrl, env, request: httpRequest });
+    expect(findCookie(httpResp.headers.getSetCookie(), 'spectrum_session')).not.toMatch(/Secure/);
+  });
+
+  it('marks the response no-store', async () => {
+    const request = del();
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    expect(resp.headers.get('cache-control')).toBe('no-store');
   });
 });

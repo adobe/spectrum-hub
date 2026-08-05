@@ -210,6 +210,17 @@ describe('createSessionCookies', () => {
     expect(attr(byName(cookies, 'spectrum_session'), 'Max-Age')).toBe('86400');
   });
 
+  it('returns the derived expiresAt alongside the cookie', async () => {
+    const result = await createSessionCookies({ body: imsBody(), now: NOW, config: config() });
+    expect(result.expiresAt).toBe(1785898670230);
+  });
+
+  it('returns the clamped expiresAt, not the token-claimed one, once maxAgeMs caps it', async () => {
+    const body = imsBody({ expires_in: String(10 * 365 * 24 * 60 * 60 * 1000) });
+    const { expiresAt } = await createSessionCookies({ body, now: NOW, config: config() });
+    expect(expiresAt).toBe(NOW + DEFAULT_MAX_AGE_MS);
+  });
+
   it('rejects a missing access_token', async () => {
     const { error } = await createSessionCookies({
       body: imsBody({ access_token: undefined }), now: NOW, config: config(),

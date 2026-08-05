@@ -11,24 +11,37 @@
  */
 
 import { fetchFromAem } from './handlers/aem.js';
-import { createSession } from './handlers/auth.js';
+import { createSession, deleteSession } from './handlers/auth.js';
 
 const notFound = () => new Response('Not found', { status: 404 });
 
 // The whole /auth/ namespace is claimed here so that nothing under it can
 // ever reach the AEM proxy, which would attach the origin credential and
 // forward the request body - the IMS access token - upstream. A path that
-// is not an exact match for a known endpoint is a 404, not a proxy. This
-// also reserves the namespace for the planned DELETE.
+// is not an exact match for a known endpoint is a 404, not a proxy.
 // A Map, not an object literal: the key is a request path, and a plain
 // object would resolve '/auth/constructor'-shaped lookups off the prototype.
 const AUTH_ENDPOINTS = new Map([
-  ['/auth/session', createSession],
+  ['/auth/session', { POST: createSession, DELETE: deleteSession }],
 ]);
 
 const isAuthPath = (path) => path === '/auth' || path.startsWith('/auth/');
 
-const handleAuth = (context) => (AUTH_ENDPOINTS.get(context.url.pathname) ?? notFound)(context);
+const methodNotAllowed = (methods) => {
+  const resp = new Response('Method Not Allowed', { status: 405 });
+  resp.headers.set('allow', methods.join(', '));
+  return resp;
+};
+
+// The per-method dispatch happens here, not inside each handler, so a
+// wrong method for this path is answered with every valid method for the
+// path - not just the one handler that happened to be looked up.
+const handleAuth = (context) => {
+  const handlers = AUTH_ENDPOINTS.get(context.url.pathname);
+  if (!handlers) { return notFound(); }
+  const handler = handlers[context.request.method];
+  return handler ? handler(context) : methodNotAllowed(Object.keys(handlers));
+};
 
 const ROUTES = [
   // Session cookie endpoint - handled locally, never proxied to AEM

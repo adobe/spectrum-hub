@@ -125,5 +125,9 @@ export const createSessionCookies = async ({ body, now, config }) => {
     return fail(413, 'session cookie exceeds the 4096 byte browser limit');
   }
 
-  return { cookies: [sessionCookie] };
+  // expiresAt is the clamped value, not whatever the token itself claims -
+  // it is what the cookie's own Max-Age is actually good for, so a caller
+  // that wants to tell the client when to expect sign-out needs this one,
+  // not deriveExpiry's unclamped result.
+  return { cookies: [sessionCookie], expiresAt };
 };

@@ -1,22 +1,35 @@
 import {
-  describe, it, expect, vi, beforeEach,
+  describe, it, expect, vi, beforeEach, beforeAll,
 } from 'vitest';
 
 // fetchFromAem is stubbed so a routing test never makes a network call.
-// Nothing else is mocked: createSession keeps its real behaviour and is
-// only wrapped so the test can inspect the request it was handed.
+// createSession/deleteSession keep their real behaviour and are only
+// wrapped so tests can inspect the request they were handed.
 vi.mock('./handlers/aem.js', () => ({
   fetchFromAem: vi.fn(async () => new Response('aem body', { status: 200 })),
 }));
 
 vi.mock('./handlers/auth.js', async (importOriginal) => {
   const actual = await importOriginal();
-  return { ...actual, createSession: vi.fn(actual.createSession) };
+  return {
+    ...actual,
+    createSession: vi.fn(actual.createSession),
+    deleteSession: vi.fn(actual.deleteSession),
+  };
 });
+
+// createSession verifies access_token against IMS's JWKS (handlers/jwks.js).
+// That module does real network I/O, so it is mocked here; its own
+// fetch/cache behaviour is covered by handlers/jwks.test.js.
+let testJwk;
+
+vi.mock('./handlers/jwks.js', () => ({
+  getJwk: vi.fn(async () => testJwk),
+}));
 
 const { default: worker } = await import('./index.js');
 const { fetchFromAem } = await import('./handlers/aem.js');
-const { createSession } = await import('./handlers/auth.js');
+const { createSession, deleteSession } = await import('./handlers/auth.js');
 
 const ORIGIN = 'https://example.com';
 
@@ -27,12 +40,40 @@ const env = {
   SESSION_SECRET: 'test-secret',
 };
 
-const imsBody = () => JSON.stringify({
-  access_token: 'header.payload.signature',
-  expires_in: '86400000',
-  created_at: String(Date.now()),
-  scope: 'AdobeID,openid',
+const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+const base64urlJson = (obj) => base64url(new TextEncoder().encode(JSON.stringify(obj)));
+
+// A real RS256-signed token, built once, so createSession's verification
+// step has something genuine to check rather than a stubbed-out no-op.
+let signedAccessToken;
+
+beforeAll(async () => {
+  const { publicKey, privateKey } = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  testJwk = await crypto.subtle.exportKey('jwk', publicKey);
+
+  // created_at/expires_in are claims IMS puts in the payload itself, not
+  // fields the caller repeats in the POST body.
+  const payload = {
+    expires_in: '86400000',
+    created_at: String(Date.now()),
+    scope: 'AdobeID,openid',
+  };
+  const signingInput = `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}`;
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    privateKey,
+    new TextEncoder().encode(signingInput),
+  );
+  signedAccessToken = `${signingInput}.${base64url(new Uint8Array(signature))}`;
 });
+
+const imsBody = () => JSON.stringify({ access_token: signedAccessToken });
 
 const postSession = (path = '/auth/session', origin = ORIGIN) => new Request(`${ORIGIN}${path}`, {
   method: 'POST',
@@ -40,16 +81,22 @@ const postSession = (path = '/auth/session', origin = ORIGIN) => new Request(`${
   body: imsBody(),
 });
 
+const deleteSessionRequest = (path = '/auth/session', origin = ORIGIN) => new Request(`${ORIGIN}${path}`, {
+  method: 'DELETE',
+  headers: { origin },
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe('routing /auth/session', () => {
-  it('reaches the session handler on GET, answering 405 rather than proxying', async () => {
+  it('answers 405 with every method this path supports, without invoking either handler', async () => {
     const resp = await worker.fetch(new Request(`${ORIGIN}/auth/session`, { method: 'GET' }), env);
     expect(resp.status).toBe(405);
-    expect(resp.headers.get('allow')).toBe('POST');
-    expect(createSession).toHaveBeenCalledTimes(1);
+    expect(resp.headers.get('allow')).toBe('POST, DELETE');
+    expect(createSession).not.toHaveBeenCalled();
+    expect(deleteSession).not.toHaveBeenCalled();
     expect(fetchFromAem).not.toHaveBeenCalled();
   });
 
@@ -61,8 +108,22 @@ describe('routing /auth/session', () => {
 
   it('creates the session on a well-formed POST', async () => {
     const resp = await worker.fetch(postSession(), env);
+    expect(resp.status).toBe(200);
+    expect(resp.headers.getSetCookie()).toHaveLength(1);
+    expect(fetchFromAem).not.toHaveBeenCalled();
+  });
+
+  it('deletes the session on a well-formed DELETE', async () => {
+    const resp = await worker.fetch(deleteSessionRequest(), env);
     expect(resp.status).toBe(204);
     expect(resp.headers.getSetCookie()).toHaveLength(1);
+    expect(deleteSession).toHaveBeenCalledTimes(1);
+    expect(fetchFromAem).not.toHaveBeenCalled();
+  });
+
+  it('reaches the delete handler on a foreign Origin, answering 403 rather than proxying', async () => {
+    const resp = await worker.fetch(deleteSessionRequest('/auth/session', 'https://evil.com'), {});
+    expect(resp.status).toBe(403);
     expect(fetchFromAem).not.toHaveBeenCalled();
   });
 
