@@ -48,6 +48,7 @@
   z-index: 100000;
   transform: translateY(4px);
   opacity: 0;
+  overflow: hidden;
   transition:
     opacity 0.4s cubic-bezier(0, 0, 0.4, 1),
     transform 0.4s cubic-bezier(0, 0, 0.4, 1),
