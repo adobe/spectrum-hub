@@ -54,10 +54,7 @@
     transform 0.4s cubic-bezier(0, 0, 0.4, 1),
     display 0.4s allow-discrete,
     overlay 0.4s allow-discrete;
-  box-shadow:
-    0 0 6px 0 rgb(0 0 0 / 24%),
-    0 3px 20px 0 rgb(0 0 0 / 16%),
-    0 4px 20px 0 rgb(0 0 0 / 24%);
+  box-shadow: var(--s2-elevated-shadow);
 
   &:popover-open {
     display: grid;
