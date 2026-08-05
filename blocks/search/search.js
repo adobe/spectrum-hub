@@ -63,10 +63,13 @@ class SHSearch extends LitElement {
   }
 
   firstUpdated() {
-    this._input.focus();
     // Set once; the listbox element never changes.
     this._input.controlsElement = this.shadowRoot.querySelector('#listbox');
     this._popover.showPopover();
+    // This element was just inserted; focusing immediately outruns the
+    // browser posting its a11y tree, so screen readers don't follow. Wait
+    // a full paint (double rAF) before moving focus.
+    requestAnimationFrame(() => requestAnimationFrame(() => this._input.focus()));
   }
 
   willUpdate(changed) {
@@ -185,6 +188,7 @@ class SHSearch extends LitElement {
     if (hit.url) {
       window.open(hit.url, '_blank');
     }
+    this._close();
   }
 
   _selectNavArea(area) {
@@ -218,6 +222,10 @@ class SHSearch extends LitElement {
     return `${length} results`;
   }
 
+  get _listboxLabel() {
+    return this._isNavView ? 'Navigation areas' : 'Search results';
+  }
+
   _pillsFor(hit) {
     return [hit.implementation, hit.platform, ...(hit.tags || [])]
       .filter(Boolean)
@@ -240,7 +248,7 @@ class SHSearch extends LitElement {
             <p class="hit-title">${area.label}</p>
             ${area.description ? html`<p class="hit-description">${area.description}</p>` : nothing}
           </div>
-          <svg class="icon" viewBox="0 0 20 20">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true">
             <use href="/img/icons/s2-icon-chevronright-20-n.svg#icon"></use>
           </svg>
         </button>
@@ -261,7 +269,8 @@ class SHSearch extends LitElement {
           href=${hit.url}
           target=${hit.external ? '_blank' : nothing}
           rel=${hit.external ? 'noopener' : nothing}
-          tabindex="-1">
+          tabindex="-1"
+          @click=${() => this._close()}>
           <p class="hit-title">${hit.title || hit.objectID}</p>
           ${pills.length ? html`
             <div class="hit-tags">
@@ -283,6 +292,7 @@ class SHSearch extends LitElement {
           placeholder="Search everything..."
           aria-label="Search"
           aria-expanded="true"
+          aria-autocomplete="list"
           autocomplete="off"
           .value=${this.query}
           @input=${this._handleInput}
@@ -297,7 +307,7 @@ class SHSearch extends LitElement {
         ${this._navAreasUnavailable
     ? html`<p class="results-empty">Navigation is unavailable right now.</p>`
     : nothing}
-        <ul id="listbox" class="results-list" role="listbox">
+        <ul id="listbox" class="results-list" role="listbox" aria-label=${this._listboxLabel}>
           ${this._isNavView
     ? this.navAreas.map((area, index) => this._renderNavArea(area, index))
     : this.results.map((hit, index) => this._renderHit(hit, index))}
@@ -306,7 +316,7 @@ class SHSearch extends LitElement {
         <div class="results-popover-footer">
           <div class="instruction">
             <div class="key">
-              <svg class="icon" viewBox="0 0 12 12">
+              <svg class="icon" viewBox="0 0 12 12" aria-hidden="true">
                 <use href="/img/icons/s2-icon-return-12-n.svg#icon"></use>
               </svg>
             </div>
@@ -314,12 +324,12 @@ class SHSearch extends LitElement {
           </div>
           <div class="instruction">
             <div class="key">
-              <svg class="icon" viewBox="0 0 12 12">
+              <svg class="icon" viewBox="0 0 12 12" aria-hidden="true">
                 <use href="/img/icons/s2-icon-up-12-n.svg#icon"></use>
               </svg>
             </div>
             <div class="key">
-              <svg class="icon" viewBox="0 0 12 12">
+              <svg class="icon" viewBox="0 0 12 12" aria-hidden="true">
                 <use href="/img/icons/s2-icon-down-12-n.svg#icon"></use>
               </svg>
             </div>

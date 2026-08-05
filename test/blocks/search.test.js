@@ -70,13 +70,25 @@ describe('sh-search', () => {
       return el.shadowRoot.querySelector('se-input').shadowRoot.querySelector('input');
     }
 
-    it('forwards role, aria-label, aria-expanded, and autocomplete', async () => {
+    it('forwards role, aria-label, aria-expanded, aria-autocomplete, and autocomplete', async () => {
       const el = await mountSearch(sandbox);
       const input = realInput(el);
       expect(input.getAttribute('role')).to.equal('combobox');
       expect(input.getAttribute('aria-label')).to.equal('Search');
       expect(input.getAttribute('aria-expanded')).to.equal('true');
+      expect(input.getAttribute('aria-autocomplete')).to.equal('list');
       expect(input.getAttribute('autocomplete')).to.equal('off');
+    });
+
+    it("labels the listbox by view: 'Navigation areas' before typing, 'Search results' after", async () => {
+      const el = await mountSearch(sandbox);
+      expect(el.shadowRoot.querySelector('#listbox').getAttribute('aria-label')).to.equal('Navigation areas');
+
+      el.query = 'button';
+      el.results = [{ objectID: '/a', title: 'Button' }];
+      await el.updateComplete;
+
+      expect(el.shadowRoot.querySelector('#listbox').getAttribute('aria-label')).to.equal('Search results');
     });
 
     it('points aria-controls at the listbox via an element reference', async () => {
@@ -244,6 +256,40 @@ describe('sh-search', () => {
 
       const titles = [...el.shadowRoot.querySelectorAll('.hit-title')].map((n) => n.textContent);
       expect(titles).to.deep.equal(['Getting started', 'Foundations']);
+    });
+  });
+
+  describe('selecting a result', () => {
+    it('closes (dispatches clear) after selecting the active result with Enter', async () => {
+      const el = await mountSearch(sandbox);
+      sandbox.stub(window, 'open');
+      el.query = 'button';
+      el.results = [{ objectID: '/a', title: 'Button', url: '/a' }];
+      await el.updateComplete;
+
+      const spy = sinon.spy();
+      el.addEventListener('clear', spy);
+      el.shadowRoot.querySelector('se-input').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }),
+      );
+
+      expect(spy.calledOnce).to.be.true;
+    });
+
+    it('closes (dispatches clear) after clicking a result', async () => {
+      const el = await mountSearch(sandbox);
+      el.query = 'button';
+      el.results = [{ objectID: '/a', title: 'Button', url: '/a' }];
+      await el.updateComplete;
+
+      const spy = sinon.spy();
+      el.addEventListener('clear', spy);
+      const anchor = el.shadowRoot.querySelector('.hit-title').closest('a');
+      // Prevent the real navigation a genuine click on this href would trigger.
+      anchor.addEventListener('click', (e) => e.preventDefault(), { once: true });
+      anchor.click();
+
+      expect(spy.calledOnce).to.be.true;
     });
   });
 
