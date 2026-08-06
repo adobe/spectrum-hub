@@ -1,8 +1,9 @@
-import { env, cdnEnv } from './env.js';
+import { getConfig } from '../ak.js';
+
+const { env, cdnEnv } = getConfig();
 
 const IMS_CLIENT_ID = 'spectrumhub';
 const IMS_SCOPES = 'AdobeID,openid';
-const IMS_MARKER = 'spectrum-ims-user';
 
 // The server's answer to POST /auth/session, not the client's own claim
 const IMS_SERVER_EXPIRE = 'spectrum-ims-server-expire';
@@ -32,7 +33,12 @@ export function handleSignIn() {
   window.adobeIMS.signIn();
 }
 
-export function handleSignOut() {
+export async function handleSignOut() {
+  // Do before the browser takes user to IMS for sign out
+  localStorage.removeItem(IMS_SERVER_EXPIRE);
+  if (cdnEnv) {
+    await fetch('/auth/session', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+  }
   window.adobeIMS.signOut();
 }
 
@@ -103,7 +109,6 @@ const dueForRefresh = () => {
 };
 
 const setSession = async (accessToken) => {
-  localStorage.setItem(IMS_MARKER, Date.now());
   if (cdnEnv !== true || !dueForRefresh()) { return; }
 
   const opts = {

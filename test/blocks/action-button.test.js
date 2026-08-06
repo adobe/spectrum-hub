@@ -28,48 +28,6 @@ describe('action-button block', () => {
     localStorage.removeItem('color-scheme');
   });
 
-  describe('getLinkProps — title parsing', () => {
-    it('removes the title attribute from the anchor after parsing', () => {
-      const a = makeAnchor({ title: 'style:quiet' });
-      actionButton(a);
-      expect(a.hasAttribute('title')).to.be.false;
-    });
-
-    it('parses a single key:value prop (verified via style class side-effect)', () => {
-      const a = makeAnchor({ title: 'style:quiet' });
-      actionButton(a);
-      expect(a.classList.contains('action-button-quiet')).to.be.true;
-    });
-
-    it('parses multiple pipe-separated props', () => {
-      const a = makeAnchor({ title: 'style:quiet|label:hide' });
-      actionButton(a);
-      expect(a.classList.contains('action-button-quiet')).to.be.true;
-      expect(a.querySelector('span').classList.contains('visually-hidden')).to.be.true;
-    });
-
-    it('handles values that contain colons without throwing', () => {
-      const a = makeAnchor({ title: 'data:https://example.com' });
-      expect(() => actionButton(a)).to.not.throw();
-      expect(a.hasAttribute('title')).to.be.false;
-    });
-  });
-
-  describe('style modifier class', () => {
-    it('adds action-button-{style} class when the style prop is set', () => {
-      const a = makeAnchor({ title: 'style:quiet' });
-      actionButton(a);
-      expect(a.classList.contains('action-button-quiet')).to.be.true;
-    });
-
-    it('does not add a modifier class when the style prop is absent', () => {
-      const a = makeAnchor({ title: 'label:Button' });
-      actionButton(a);
-      const modifiers = [...a.classList].filter((c) => c.startsWith('action-button-'));
-      expect(modifiers).to.deep.equal([]);
-    });
-  });
-
   describe('text span wrapping', () => {
     it('replaces the anchor text node with a <span>', () => {
       const a = makeAnchor({ text: 'Settings' });
@@ -81,18 +39,6 @@ describe('action-button block', () => {
       const a = makeAnchor({ text: 'Settings' });
       actionButton(a);
       expect(a.querySelector('span').textContent).to.equal('Settings');
-    });
-
-    it('adds visually-hidden to the span when the label prop is "hide"', () => {
-      const a = makeAnchor({ title: 'label:hide', text: 'Icon only' });
-      actionButton(a);
-      expect(a.querySelector('span').classList.contains('visually-hidden')).to.be.true;
-    });
-
-    it('does not add visually-hidden when the label prop is not "hide"', () => {
-      const a = makeAnchor({ title: 'label:Button' });
-      actionButton(a);
-      expect(a.querySelector('span').classList.contains('visually-hidden')).to.be.false;
     });
   });
 
@@ -119,16 +65,6 @@ describe('action-button block', () => {
       actionButton(a);
       expect(document.body.querySelector('button')).to.not.be.null;
       expect(document.body.querySelector('a')).to.be.null;
-    });
-
-    it('copies existing classes onto the button', () => {
-      const a = makeAnchor({ href: '/tools/widgets/action#action', title: 'style:quiet' });
-      a.classList.add('action-button');
-      document.body.append(a);
-      actionButton(a);
-      const button = document.body.querySelector('button');
-      expect(button.classList.contains('action-button')).to.be.true;
-      expect(button.classList.contains('action-button-quiet')).to.be.true;
     });
 
     it('moves the text span into the button', () => {

@@ -20,7 +20,7 @@
     color: light-dark(var(--s2-blue-1000), var(--s2-banner-blue));
     border-radius: 100px;
     align-items: center;
-    padding: 8px 8px 8px 16px;
+    padding: var(--s2-spacing-100) var(--s2-spacing-100) var(--s2-spacing-100) var(--s2-spacing-300);
     box-sizing: border-box;
 
     /* Column */
@@ -28,6 +28,12 @@
       display: flex;
       gap: 8px;
       align-items: center;
+    }
+
+    /* if no cta, style it as such */
+    &:has(> :only-child) {
+      /* 18px is to balance the lack of icon which has an internal 2px padding */
+      padding: var(--s2-spacing-100) 18px var(--s2-spacing-100) var(--s2-spacing-300);
     }
   }
 }

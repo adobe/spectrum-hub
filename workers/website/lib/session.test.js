@@ -8,7 +8,7 @@ import {
 const NOW = 1785812270230;
 
 const imsBody = (overrides = {}) => ({
-  access_token: 'header.payload.signature',
+  token: 'header.payload.signature',
   expires_in: '86400000',
   created_at: '1785812270230',
   scope: 'AdobeID,openid',
@@ -221,9 +221,9 @@ describe('createSessionCookies', () => {
     expect(expiresAt).toBe(NOW + DEFAULT_MAX_AGE_MS);
   });
 
-  it('rejects a missing access_token', async () => {
+  it('rejects a missing token', async () => {
     const { error } = await createSessionCookies({
-      body: imsBody({ access_token: undefined }), now: NOW, config: config(),
+      body: imsBody({ token: undefined }), now: NOW, config: config(),
     });
     expect(error.status).toBe(400);
   });
@@ -248,7 +248,7 @@ describe('createSessionCookies', () => {
   });
 
   it('rejects a token too large for the cookie limit with 413', async () => {
-    const body = imsBody({ access_token: 'x'.repeat(MAX_COOKIE_BYTES) });
+    const body = imsBody({ token: 'x'.repeat(MAX_COOKIE_BYTES) });
     const { error } = await createSessionCookies({ body, now: NOW, config: config() });
     expect(error.status).toBe(413);
   });
@@ -268,7 +268,7 @@ describe('createSessionCookies', () => {
 
   it('returns no cookies alongside an error', async () => {
     const result = await createSessionCookies({
-      body: imsBody({ access_token: undefined }), now: NOW, config: config(),
+      body: imsBody({ token: undefined }), now: NOW, config: config(),
     });
     expect(result.cookies).toBeUndefined();
   });

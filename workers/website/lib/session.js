@@ -51,8 +51,8 @@ export const base64urlEncode = (bytes) => {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 
-// The IMS JWT carries its own signature; this HMAC is a second, independent
-// layer so a later gating pass can trust the cookie locally.
+// HMACs an arbitrary string so a later gating pass can trust the cookie's
+// contents locally, without re-deriving them from wherever they came from.
 export const signToken = async (token, secret) => {
   const encoder = new TextEncoder();
   const payload = base64urlEncode(encoder.encode(token));
@@ -98,9 +98,12 @@ export const createSessionCookies = async ({ body, now, config }) => {
   const maxAgeMs = durationMs(config?.maxAgeMs, DEFAULT_MAX_AGE_MS);
   const sessionName = cookieName(config?.sessionCookieName, DEFAULT_SESSION_COOKIE_NAME);
 
-  const token = body?.access_token;
+  // "token" is whatever the caller wants signed into the cookie - a
+  // minted claims blob today, an opaque bearer token before that. This
+  // module signs strings; it does not know or care what they represent.
+  const token = body?.token;
   if (typeof token !== 'string' || token === '') {
-    return fail(400, 'access_token is required');
+    return fail(400, 'token is required');
   }
 
   const derived = deriveExpiry(body);

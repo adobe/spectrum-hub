@@ -14,12 +14,13 @@
   align-items: center;
   height: var(--se-component-m-height);
   width: var(--se-component-m-height);
+  border-radius: var(--s2-corner-radius-500);
   cursor: pointer;
   user-select: none;
 
   &:focus-visible {
     outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-    outline-offset: var(--se-focus-indicator-offset);
+    outline-offset: var(--s2-spacing-50);
   }
 
   &:disabled {

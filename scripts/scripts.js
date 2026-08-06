@@ -1,4 +1,11 @@
-import { loadArea, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
+import {
+  loadArea,
+  getMetadata,
+  setConfig,
+  setScheme,
+  makePicture,
+  checkIms,
+} from './ak.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -14,6 +21,17 @@ const linkBlocks = [
 // Blocks that do not need their own styles
 const components = ['fragment', 'profile'];
 
+// Setup state of the environment
+const { host, port, search } = window.location;
+const searchParams = new URLSearchParams(search);
+const isStage = () => ((host.includes('.aem.') && !host.endsWith('.live')) || host.endsWith('workers.dev'));
+const cdnEnv = port === '8787' || host.endsWith('adobe.com') || searchParams.get('cdn') === 'mock';
+const env = (() => {
+  if (host.includes('local')) { return 'dev'; }
+  if (isStage()) { return 'stage'; }
+  return 'prod';
+})();
+
 // Setup basic state of the doc
 document.documentElement.classList.add('spectrum-edge');
 const isSession = sessionStorage.getItem('session');
@@ -22,17 +40,6 @@ const scheme = setScheme(document.body);
 const template = getMetadata('template');
 const breadcrumbMeta = getMetadata('breadcrumbs');
 const heroMeta = getMetadata('hero');
-
-// Only preload IMS if a valid returning visitor
-const preloadIms = async () => {
-  const imsMarker = 'spectrum-ims-user';
-
-  const returning = localStorage.getItem(imsMarker);
-  if (!returning) { return; }
-
-  const { loadIms } = await import('./utils/ims.js');
-  loadIms();
-};
 
 // Optionally build a page hero
 const buildAutoHero = () => {
@@ -102,9 +109,17 @@ const decorateBackground = async () => {
 };
 
 export async function loadPage() {
-  setConfig({ hostnames, linkBlocks, components, decorateArea });
+  setConfig({
+    hostnames,
+    linkBlocks,
+    components,
+    decorateArea,
+    cdnEnv,
+    env,
+  });
 
-  preloadIms();
+  // Preload IMS if returning visitor
+  await checkIms();
 
   decorateBackground();
 
