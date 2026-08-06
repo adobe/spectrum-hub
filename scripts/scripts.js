@@ -83,7 +83,12 @@ const decorateArea = ({ area = document }) => {
     img.removeAttribute('loading');
     img.fetchPriority = 'high';
   };
-  eagerLoad(area, 'img:not([src*=".svg"])');
+
+  // If doc, do not allow decorating background
+  const select = area === document
+    ? 'main img:not([src*=".svg"])'
+    : 'img:not([src*=".svg"])';
+  eagerLoad(area, select);
 };
 
 const decorateBackground = async () => {

@@ -571,6 +571,7 @@ div[data-status],
         'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(var(--pagenav-track-width), auto);
       min-height: 100svh;
       margin: 0;
+      background-color: var(--se-body-background-color);
       color: var(--se-body-color);
       font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);

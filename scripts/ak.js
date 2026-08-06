@@ -415,6 +415,11 @@ async function loadNav() {
   const sitenav = getMetadata('sitenav');
   const pagenav = getMetadata('pagenav');
 
+  // Do not eager load for anonymous CDN visitors
+  const { cdnEnv } = getConfig();
+  const ims = await checkIms();
+  if (cdnEnv && ims.anonymous) { return; }
+
   if (sitenav !== 'off') {
     await Promise.all([
       loadStyle('/blocks/sitenav/sitenav.css'),
