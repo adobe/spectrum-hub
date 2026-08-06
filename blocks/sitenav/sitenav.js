@@ -18,7 +18,7 @@ const INDEX_BASED_NAV = [
   { prefix: '/mobile/android', count: 0 },
 ];
 
-export const decorateLevel = (ul, depth) => {
+export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
   ul.classList.add(`level-${depth}-list`);
 
   const listItems = [...ul.querySelectorAll(':scope > li')];
@@ -83,7 +83,12 @@ export const decorateLevel = (ul, depth) => {
       btn.setAttribute('aria-expanded', String(!isOpen));
     });
 
-    const menuId = toClassName(labelText);
+    // "increments" any repetitive labelText id's
+    let menuId = toClassName(labelText);
+    for (let n = 2; seenMenuIds.has(menuId); n += 1) {
+      menuId = `${toClassName(labelText)}-${n}`;
+    }
+    seenMenuIds.add(menuId);
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', menuId);
 
@@ -98,7 +103,7 @@ export const decorateLevel = (ul, depth) => {
     menuWrapper.id = menuId;
     li.append(menuWrapper);
 
-    decorateLevel(childList, depth + 1);
+    decorateLevel(childList, depth + 1, seenMenuIds);
 
     heading.replaceWith(btn);
 

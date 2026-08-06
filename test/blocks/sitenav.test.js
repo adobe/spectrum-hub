@@ -150,6 +150,32 @@ describe('sitenav block', () => {
       expect(ul.querySelector('button')).to.be.null;
       expect(ul.querySelector('a').getAttribute('href')).to.equal('/x');
     });
+
+    // Real content repeats this shape: the index-based nav stitches a sibling
+    // "Components" item under each of rsp/swc/ios/android, so two menu
+    // wrappers with the same label can legitimately land in the same list.
+    it('disambiguates menu ids when sibling items share a label', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Overview</p>
+            <ul><li><a href="/web/rsp/overview/intro">Intro</a></li></ul>
+          </li>
+          <li>
+            <p>Overview</p>
+            <ul><li><a href="/web/swc/overview/intro">Intro</a></li></ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const [firstBtn, secondBtn] = ul.querySelectorAll('button.level-1-button');
+      const [firstMenu, secondMenu] = ul.querySelectorAll('.level-2-menu');
+
+      expect(firstMenu.id).to.equal('overview');
+      expect(secondMenu.id).to.equal('overview-2');
+      expect(firstBtn.getAttribute('aria-controls')).to.equal(firstMenu.id);
+      expect(secondBtn.getAttribute('aria-controls')).to.equal(secondMenu.id);
+    });
   });
 
   // decorateIndexBasedNav stitches query-index pages under the "Components"
