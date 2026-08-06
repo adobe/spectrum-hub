@@ -95,14 +95,15 @@ describe('sh-search', () => {
       const el = await mountSearch(sandbox);
       const input = realInput(el);
       const listbox = el.shadowRoot.querySelector('#listbox');
-      expect([...input.ariaControlsElements]).to.deep.equal([listbox]);
+      const controlsElements = [...input.ariaControlsElements];
+      expect(controlsElements.length === 1 && controlsElements[0] === listbox).to.be.true;
     });
 
     it('points aria-activedescendant at the active option via an element reference', async () => {
       const el = await mountSearch(sandbox);
       const input = realInput(el);
       const active = el.shadowRoot.querySelector('#result-0');
-      expect(input.ariaActiveDescendantElement).to.equal(active);
+      expect(input.ariaActiveDescendantElement === active).to.be.true;
     });
 
     it('moves aria-activedescendant when the active option changes', async () => {
@@ -114,7 +115,61 @@ describe('sh-search', () => {
 
       const input = realInput(el);
       const active = el.shadowRoot.querySelector('#result-1');
-      expect(input.ariaActiveDescendantElement).to.equal(active);
+      expect(input.ariaActiveDescendantElement === active).to.be.true;
+    });
+  });
+
+  describe('moving focus into the input on open', () => {
+    let clock;
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers({ toFake: ['requestAnimationFrame'] });
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+
+    it('moves real focus onto the innermost <input>, three shadow roots deep', async () => {
+      const el = await mountSearch(sandbox);
+
+      // firstUpdated() defers the real focus() call via two chained rAFs.
+      // tickAsync(0) doesn't reach a faked rAF's scheduled frame boundary —
+      // nextAsync() fires whatever's next regardless of timer type.
+      await clock.nextAsync();
+      await clock.nextAsync();
+
+      const seInput = el.shadowRoot.querySelector('se-input');
+      const realInput = seInput.shadowRoot.querySelector('input');
+      expect(document.activeElement === el).to.be.true;
+      expect(el.shadowRoot.activeElement === seInput).to.be.true;
+      expect(seInput.shadowRoot.activeElement === realInput).to.be.true;
+    });
+  });
+
+  describe('option/listbox structure', () => {
+    it('puts role="option" on the interactive row (not the <li>) in nav view', async () => {
+      const el = await mountSearch(sandbox);
+      const li = el.shadowRoot.querySelector('.results-list > li');
+      const row = li.querySelector('.result-row');
+
+      expect(li.getAttribute('role')).to.equal('presentation');
+      expect(row.getAttribute('role')).to.equal('option');
+      expect(row.tagName).to.equal('BUTTON');
+    });
+
+    it('puts role="option" on the interactive row (not the <li>) in results view', async () => {
+      const el = await mountSearch(sandbox);
+      el.query = 'button';
+      el.results = [{ objectID: '/a', title: 'Button', url: '/a' }];
+      await el.updateComplete;
+
+      const li = el.shadowRoot.querySelector('.results-list > li');
+      const row = li.querySelector('.result-row');
+
+      expect(li.getAttribute('role')).to.equal('presentation');
+      expect(row.getAttribute('role')).to.equal('option');
+      expect(row.tagName).to.equal('A');
     });
   });
 
@@ -131,7 +186,7 @@ describe('sh-search', () => {
       await dispatchKey(el, 'ArrowDown'); // -> index 1
       await dispatchKey(el, 'ArrowUp'); // -> index 0
       const active = el.shadowRoot.querySelector('[aria-selected="true"]');
-      expect(active).to.equal(el.shadowRoot.querySelector('#result-0'));
+      expect(active === el.shadowRoot.querySelector('#result-0')).to.be.true;
     });
 
     it('ArrowDown wraps from the last option to the first', async () => {
@@ -139,14 +194,14 @@ describe('sh-search', () => {
       await dispatchKey(el, 'ArrowDown'); // -> index 1 (last)
       await dispatchKey(el, 'ArrowDown'); // -> wraps to index 0
       const active = el.shadowRoot.querySelector('[aria-selected="true"]');
-      expect(active).to.equal(el.shadowRoot.querySelector('#result-0'));
+      expect(active === el.shadowRoot.querySelector('#result-0')).to.be.true;
     });
 
     it('ArrowUp wraps from the first option to the last', async () => {
       const el = await mountSearch(sandbox);
       await dispatchKey(el, 'ArrowUp'); // -> wraps to index 1 (last)
       const active = el.shadowRoot.querySelector('[aria-selected="true"]');
-      expect(active).to.equal(el.shadowRoot.querySelector('#result-1'));
+      expect(active === el.shadowRoot.querySelector('#result-1')).to.be.true;
     });
 
     it('sets aria-selected="true" on only the active option', async () => {

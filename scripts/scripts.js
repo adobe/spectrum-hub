@@ -1,5 +1,4 @@
 import { loadArea, getMetadata, setConfig, setScheme, makePicture } from './ak.js';
-import { prefetchStatusData } from '../blocks/component-status/component-status.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -112,11 +111,6 @@ export async function loadPage() {
   // Auto blocks
   const hero = buildAutoHero();
   buildBreadcrumbs(hero);
-
-  // Kick off the component-status block's data fetch now, before loadArea's
-  // section-by-section decoration loop reaches it (see prefetchStatusData).
-  const componentStatus = document.querySelector('.component-status');
-  if (componentStatus) { prefetchStatusData(componentStatus); }
 
   await loadArea();
 }

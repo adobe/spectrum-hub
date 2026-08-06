@@ -90,6 +90,12 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 - **Purpose**: Red–green–refactor TDD for agents — define behavior with a failing test first, implement the smallest change that passes, then refactor with tests green. Covers when TDD applies (features, bug fixes, refactors, behavior changes), exceptions that need human agreement, and the red–green–refactor cycle. Companion reference: [`.ai/skills/test-driven-development/testing-anti-patterns.md`](./skills/test-driven-development/testing-anti-patterns.md) (mock misuse, test-only production hooks, and related smells); load it when adding mocks or heavy test doubles.
 - **How to invoke**: Use before writing implementation code for a feature or fix (per the skill frontmatter). Ask explicitly (e.g. "use TDD", "write the failing test first", "red–green–refactor") or mention `@test-driven-development` / the skill path in Cursor.
 
+#### EDS performance & lifecycle review
+
+- **File**: [`.ai/skills/eds-performance-review/SKILL.md`](./skills/eds-performance-review/SKILL.md)
+- **Purpose**: Reviews a diff against the actual page-load lifecycle in `scripts.js`/`ak.js`/`lazy.js`/`postlcp.js` — flags fragile, duplicative, or unmeasured "performance" code added to the core loader instead of a block's own `init()`. Walks the lifecycle step-by-step, gives a ruthless CLS/LCP test for anything proposed ahead of `loadArea`, and includes a worked case study (the `component-status` prefetch hook) of the pattern to catch.
+- **How to invoke**: Ask before opening a PR that touches `scripts.js` or `ak.js` (e.g. "review this against the performance skill", "does this belong in scripts.js"), or when auditing for CLS/LCP regressions or speculative optimizations.
+
 ## Specs and plans
 
 Design specs and implementation plans live in [`.ai/docs/`](./docs/):
