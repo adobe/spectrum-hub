@@ -5,8 +5,17 @@ import {
   DEFAULT_MAX_AGE_MS,
   DEFAULT_SESSION_COOKIE_NAME,
 } from '../lib/session.js';
-import { decodeJwt, verifyJwt } from '../lib/jwt.js';
-import { getJwk } from './jwks.js';
+import { decodeJwt } from '../lib/jwt.js';
+
+// Not a secret - a public OAuth client_id, same one scripts/utils/ims.js
+// uses to sign in. IMS's profile endpoint requires it on every call.
+const IMS_CLIENT_ID = 'spectrumhub';
+
+const IMS_PROFILE_URL = {
+  dev: 'https://ims-na1-stg1.adobelogin.com/ims/profile/v1',
+  stage: 'https://ims-na1-stg1.adobelogin.com/ims/profile/v1',
+  prod: 'https://ims-na1.adobelogin.com/ims/profile/v1',
+};
 
 // Config is a plain object, never a Cloudflare binding, so process.env
 // serves the Lambda and I/O Runtime ports without code changes. Everything
@@ -46,19 +55,19 @@ const problem = (status, message) => new Response(message, {
   },
 });
 
-// Confirms the token was actually issued by IMS rather than just shaped
-// like one, and hands back its verified claims. A bad kid or a signature
-// that does not match is the same "no" as a token that is not a JWT at
-// all - none of these are worth distinguishing to the caller. Returning
-// the decoded payload (rather than a boolean) lets the caller trust
-// created_at/expires_in straight out of it instead of asking the client
-// to repeat them, unverified, alongside the token.
-const verifyAccessToken = async (token, imsEnv) => {
-  const decoded = decodeJwt(token);
-  if (!decoded) { return null; }
-  const jwk = await getJwk(imsEnv, decoded.header?.kid);
-  if (!jwk) { return null; }
-  return (await verifyJwt(decoded, jwk)) ? decoded : null;
+// Lets IMS itself decide whether the token is real, instead of checking a
+// signature locally: a 401/403 here means IMS rejected it, which this
+// worker has no need to second-guess. Anything else non-2xx is IMS having
+// a problem, not proof of a forged token, so it is surfaced separately
+// (see the try/catch at the call site) rather than folded into "rejected".
+const fetchImsProfile = async (token, imsEnv) => {
+  const base = IMS_PROFILE_URL[imsEnv] ?? IMS_PROFILE_URL.prod;
+  const resp = await fetch(`${base}?client_id=${IMS_CLIENT_ID}`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (resp.status === 401 || resp.status === 403) { return { rejected: true }; }
+  if (!resp.ok) { throw new Error(`IMS profile request failed with status ${resp.status}`); }
+  return { rejected: false, profile: await resp.json() };
 };
 
 export const createSession = async ({ url, env, request }) => {
@@ -88,25 +97,38 @@ export const createSession = async ({ url, env, request }) => {
     return problem(400, 'access_token is required');
   }
 
-  let decoded;
+  let outcome;
   try {
-    decoded = await verifyAccessToken(token, env.IMS_ENV ?? 'prod');
+    outcome = await fetchImsProfile(token, env.IMS_ENV ?? 'prod');
   } catch {
-    // A network failure reaching IMS is not the caller's fault, and is not
-    // the same as a forged token - a client retry has a real chance of
-    // succeeding, so this must not collapse into the 401 case below.
+    // A network failure or an IMS 5xx is not the caller's fault, and is
+    // not the same as a forged token - a client retry has a real chance
+    // of succeeding, so this must not collapse into the 401 case below.
     return problem(502, 'Unable to verify access_token against IMS');
   }
-  if (!decoded) {
-    return problem(401, 'access_token failed signature verification');
+  if (outcome.rejected) {
+    return problem(401, 'access_token was rejected by IMS');
   }
 
-  // created_at/expires_in come from the verified JWT payload, not the
-  // request body: IMS embeds them as literal claims, and trusting the
-  // client to also state them separately would only be verifying the
-  // token while still taking its expiry on faith.
+  // created_at/expires_in are the JWT's own claims, read without checking
+  // a signature - safe here specifically because IMS's 200 above already
+  // vouched for this exact token. email comes from the profile response:
+  // the one thing the JWT never carries, and the reason this worker asks
+  // IMS at all rather than just decoding the token itself.
+  const email = outcome.profile?.email;
+  const decoded = decodeJwt(token);
+  if (typeof email !== 'string' || email === '' || !decoded) {
+    return problem(502, 'IMS returned a token or profile this worker could not use');
+  }
+
+  const claims = {
+    email,
+    created_at: decoded.payload?.created_at,
+    expires_in: decoded.payload?.expires_in,
+  };
+
   const result = await createSessionCookies({
-    body: { access_token: token, ...decoded.payload },
+    body: { token: JSON.stringify(claims), ...claims },
     now: Date.now(),
     config: configFromEnv(env, url),
   });
@@ -123,9 +145,9 @@ export const createSession = async ({ url, env, request }) => {
   // The cookie's own expiry is unreadable to the client: Set-Cookie is a
   // forbidden response header for fetch, and HttpOnly hides it from
   // document.cookie too. Stating it here is the only way the client
-  // learns it - and it is safe to state, unlike the body fields this
-  // replaced, because it is read from the verified JWT, not asserted by
-  // whoever is calling this endpoint.
+  // learns it - and it is safe to state, unlike a client-asserted value
+  // would be, because it is read from a token IMS just vouched for, not
+  // asserted by whoever is calling this endpoint.
   return new Response(JSON.stringify({ expiresAt: result.expiresAt }), { status: 200, headers });
 };
 

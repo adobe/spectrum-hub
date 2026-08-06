@@ -63,6 +63,40 @@ export const [setConfig, getConfig] = (() => {
   ];
 })();
 
+const isImsHash = () => {
+  const { hash } = window.location;
+  const hashKeys = ['access_token', 'old_hash', 'ld_hash'];
+  return hashKeys.some((key) => hash.includes(key));
+};
+
+// Load IMS if marker says user is returning
+export const checkIms = async () => {
+  const imsServer = 'spectrum-ims-server-expire';
+  const imsHash = isImsHash();
+
+  // Soft check
+  if (!(window.adobeIMS && imsHash)) {
+    // We don't care if expired, we care if the prop exists
+    const returning = localStorage.getItem(imsServer);
+    if (!returning) { return { anonymous: true }; }
+  }
+
+  // Hard check
+  const { loadIms } = await import('./utils/ims.js');
+  return loadIms();
+};
+
+export const removeForAudience = async ({ publicEl, privateEl }) => {
+  // Always remove public if not on CDN
+  if (!getConfig().cdnEnv) {
+    publicEl?.remove();
+    return;
+  }
+  const ims = await checkIms();
+  const toRemove = ims.anonymous ? privateEl : publicEl;
+  toRemove?.remove();
+};
+
 export async function loadStyle(path) {
   const href = path.startsWith('/') ? `${getConfig().codeBase}${path}` : path;
 
@@ -178,6 +212,24 @@ function decoratePictures(el) {
 }
 
 function decorateButton(link) {
+  // Property detection
+  const { title } = link;
+  if (title && title.includes(':')) {
+    title.split('|').forEach((kv) => {
+      const [key, val] = kv.replaceAll(' ', '').split(':');
+      link.dataset[key] = val;
+    });
+    link.removeAttribute('title');
+  }
+  const { audience } = link.dataset;
+  if (audience) {
+    // async for perf, will be left detached from doc
+    removeForAudience({
+      privateEl: audience === 'private' ? link : null,
+      publicEl: audience === 'public' ? link : null,
+    });
+  }
+
   const isEm = link.closest('em');
   const isStrong = link.closest('strong');
   const isStrike = link.closest('del');
@@ -196,8 +248,9 @@ function decorateButton(link) {
   );
   if (!hasSibling) { return; }
 
-  // Always add the se-button wrapper
+  // Always add the se-button wrapper and load buttons.css
   trueParent.classList.add('btn-group', 'se-button');
+  loadStyle('/deps/se/buttons.css');
 
   link.classList.add('btn');
   if (isStrike) {

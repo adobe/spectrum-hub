@@ -1,4 +1,6 @@
-import { loadArea } from '../../scripts/ak.js';
+import { loadArea, getConfig } from '../../scripts/ak.js';
+
+const cdnEnv = getConfig();
 
 function replaceDotMedia(path, doc) {
   const resetAttributeBase = (tag, attr) => {
@@ -98,7 +100,14 @@ function getRequestPath(a) {
 }
 
 export default async function init(a) {
-  const path = getRequestPath(a);
+  let path = getRequestPath(a);
+  if (path.includes('/private/') && cdnEnv) {
+    const { loadIms } = await import('../../scripts/utils/ims.js');
+    const ims = await loadIms();
+    if (ims.anonymous) {
+      path = path.replace('/private/', '/public/');
+    }
+  }
 
   const { fragment } = await loadFragment(path);
   if (fragment) {

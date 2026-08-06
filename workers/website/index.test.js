@@ -1,5 +1,5 @@
 import {
-  describe, it, expect, vi, beforeEach, beforeAll,
+  describe, it, expect, vi, beforeEach, afterEach,
 } from 'vitest';
 
 // fetchFromAem is stubbed so a routing test never makes a network call.
@@ -17,15 +17,6 @@ vi.mock('./handlers/auth.js', async (importOriginal) => {
     deleteSession: vi.fn(actual.deleteSession),
   };
 });
-
-// createSession verifies access_token against IMS's JWKS (handlers/jwks.js).
-// That module does real network I/O, so it is mocked here; its own
-// fetch/cache behaviour is covered by handlers/jwks.test.js.
-let testJwk;
-
-vi.mock('./handlers/jwks.js', () => ({
-  getJwk: vi.fn(async () => testJwk),
-}));
 
 const { default: worker } = await import('./index.js');
 const { fetchFromAem } = await import('./handlers/aem.js');
@@ -45,35 +36,19 @@ const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
 
 const base64urlJson = (obj) => base64url(new TextEncoder().encode(JSON.stringify(obj)));
 
-// A real RS256-signed token, built once, so createSession's verification
-// step has something genuine to check rather than a stubbed-out no-op.
-let signedAccessToken;
-
-beforeAll(async () => {
-  const { publicKey, privateKey } = await crypto.subtle.generateKey(
-    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
-    true,
-    ['sign', 'verify'],
-  );
-  testJwk = await crypto.subtle.exportKey('jwk', publicKey);
-
-  // created_at/expires_in are claims IMS puts in the payload itself, not
-  // fields the caller repeats in the POST body.
+// createSession no longer verifies a signature - it asks IMS's profile
+// endpoint (stubbed via global fetch below), so this only needs to look
+// like a JWT for the created_at/expires_in claims it carries.
+const accessToken = (() => {
   const payload = {
     expires_in: '86400000',
     created_at: String(Date.now()),
     scope: 'AdobeID,openid',
   };
-  const signingInput = `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}`;
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    privateKey,
-    new TextEncoder().encode(signingInput),
-  );
-  signedAccessToken = `${signingInput}.${base64url(new Uint8Array(signature))}`;
-});
+  return `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}.fake-signature`;
+})();
 
-const imsBody = () => JSON.stringify({ access_token: signedAccessToken });
+const imsBody = () => JSON.stringify({ access_token: accessToken });
 
 const postSession = (path = '/auth/session', origin = ORIGIN) => new Request(`${ORIGIN}${path}`, {
   method: 'POST',
@@ -88,6 +63,13 @@ const deleteSessionRequest = (path = '/auth/session', origin = ORIGIN) => new Re
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ email: 'user@example.com' }), {
+    status: 200,
+  })));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('routing /auth/session', () => {

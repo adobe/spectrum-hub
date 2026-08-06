@@ -1,16 +1,7 @@
 import {
-  describe, it, expect, vi, beforeAll,
+  describe, it, expect, vi, beforeEach, afterEach,
 } from 'vitest';
 import { createSession, deleteSession } from './auth.js';
-
-// createSession now verifies access_token against IMS's JWKS (handlers/jwks.js).
-// That module does real network I/O, so it is mocked here; its own fetch/cache
-// behaviour is covered by jwks.test.js.
-let testJwk;
-
-vi.mock('./jwks.js', () => ({
-  getJwk: vi.fn(async () => testJwk),
-}));
 
 const ORIGIN = 'https://example.com';
 const env = { SESSION_SECRET: 'test-secret' };
@@ -29,37 +20,39 @@ const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
 
 const base64urlJson = (obj) => base64url(new TextEncoder().encode(JSON.stringify(obj)));
 
-let privateKey;
-
-beforeAll(async () => {
-  const keyPair = await crypto.subtle.generateKey(
-    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
-    true,
-    ['sign', 'verify'],
-  );
-  privateKey = keyPair.privateKey;
-  testJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-});
-
-// Signs a token shaped like a real IMS access token: created_at/expires_in
-// are claims in the payload, not fields the caller repeats in the POST body.
-const signToken = async (payloadOverrides = {}) => {
+// createSession no longer checks a signature - IMS does, via the profile
+// call mocked below - so this only needs to look like a JWT, not be a
+// genuinely signed one.
+const makeToken = (payloadOverrides = {}) => {
   const payload = {
     expires_in: '86400000',
     created_at: String(Date.now()),
     scope: 'AdobeID,openid',
     ...payloadOverrides,
   };
-  const signingInput = `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}`;
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    privateKey,
-    new TextEncoder().encode(signingInput),
-  );
-  return `${signingInput}.${base64url(new Uint8Array(signature))}`;
+  return `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}.fake-signature`;
 };
 
-const imsBody = async (payloadOverrides) => ({ access_token: await signToken(payloadOverrides) });
+const imsBody = (payloadOverrides) => ({ access_token: makeToken(payloadOverrides) });
+
+const TEST_EMAIL = 'user@example.com';
+
+// Stands in for IMS's /ims/profile/v1. Defaults to accepting the token
+// and returning an email; tests override status/body to exercise the
+// rejection and malformed-response paths.
+const mockImsProfile = (status = 200, body = { email: TEST_EMAIL }) => {
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify(body), { status }));
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+};
+
+beforeEach(() => {
+  mockImsProfile();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 const call = (request) => createSession({ url: new URL(request.url), env, request });
 
@@ -67,14 +60,14 @@ const findCookie = (cookies, name) => cookies.find((cookie) => cookie.startsWith
 
 describe('createSession', () => {
   it('returns 200 with a Set-Cookie header on success', async () => {
-    const resp = await call(post(await imsBody()));
+    const resp = await call(post(imsBody()));
     expect(resp.status).toBe(200);
     expect(resp.headers.getSetCookie()).toHaveLength(1);
   });
 
   it('returns the session expiry as JSON on success', async () => {
     const now = Date.now();
-    const resp = await call(post(await imsBody()));
+    const resp = await call(post(imsBody()));
     const json = await resp.json();
     // 86400000 (the default max age) from roughly now, give or take the
     // time this test itself took to run - not the literal token claim,
@@ -84,7 +77,7 @@ describe('createSession', () => {
   });
 
   it('marks the JSON response content-type', async () => {
-    const resp = await call(post(await imsBody()));
+    const resp = await call(post(imsBody()));
     expect(resp.headers.get('content-type')).toBe('application/json; charset=utf-8');
   });
 
@@ -99,17 +92,17 @@ describe('createSession', () => {
   });
 
   it('rejects a missing Origin header with 403', async () => {
-    const resp = await call(post(await imsBody(), { origin: null }));
+    const resp = await call(post(imsBody(), { origin: null }));
     expect(resp.status).toBe(403);
   });
 
   it('rejects a foreign Origin with 403', async () => {
-    const resp = await call(post(await imsBody(), { origin: 'https://evil.example' }));
+    const resp = await call(post(imsBody(), { origin: 'https://evil.example' }));
     expect(resp.status).toBe(403);
   });
 
   it('accepts a foreign Origin present in ALLOWED_ORIGINS', async () => {
-    const request = post(await imsBody(), { origin: 'https://allowed.example' });
+    const request = post(imsBody(), { origin: 'https://allowed.example' });
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, ALLOWED_ORIGINS: 'https://allowed.example, https://other.example' },
@@ -128,14 +121,20 @@ describe('createSession', () => {
     expect(resp.status).toBe(400);
   });
 
+  it('does not call IMS when access_token is missing', async () => {
+    const fetchMock = mockImsProfile();
+    await call(post({}));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('returns 500 when SESSION_SECRET is unset', async () => {
-    const request = post(await imsBody());
+    const request = post(imsBody());
     const resp = await createSession({ url: new URL(request.url), env: {}, request });
     expect(resp.status).toBe(500);
   });
 
   it('names the cookie exactly spectrum_session and marks it HttpOnly', async () => {
-    const resp = await call(post(await imsBody()));
+    const resp = await call(post(imsBody()));
     const cookies = resp.headers.getSetCookie();
     const sessionCookie = findCookie(cookies, 'spectrum_session');
     expect(sessionCookie).toBeDefined();
@@ -143,7 +142,7 @@ describe('createSession', () => {
   });
 
   it('sets Secure on the cookie for an https request URL', async () => {
-    const resp = await call(post(await imsBody()));
+    const resp = await call(post(imsBody()));
     const cookies = resp.headers.getSetCookie();
     for (const cookie of cookies) { expect(cookie).toMatch(/Secure/); }
   });
@@ -152,7 +151,7 @@ describe('createSession', () => {
     const request = new Request('http://example.com/auth/session', {
       method: 'POST',
       headers: { origin: 'http://example.com', 'content-type': 'application/json' },
-      body: JSON.stringify(await imsBody()),
+      body: JSON.stringify(imsBody()),
     });
     const resp = await createSession({ url: new URL(request.url), env, request });
     const cookies = resp.headers.getSetCookie();
@@ -161,21 +160,18 @@ describe('createSession', () => {
   });
 
   it('ignores an expires_in the caller puts in the POST body, not the token', async () => {
-    // The body's expires_in must not leak into the derived expiry - only
-    // the verified JWT claim counts. A tiny value here that got trusted
-    // would immediately fail the "under a second left" guard.
-    const resp = await call(post({
-      access_token: await signToken(),
-      expires_in: '500',
-    }));
+    // The body only ever carries access_token now, but this also proves a
+    // stray extra field cannot influence expiry - only the token's own
+    // claim, as read out of the JWT payload, is used.
+    const resp = await call(post({ access_token: makeToken(), expires_in: '500' }));
     const sessionCookie = findCookie(resp.headers.getSetCookie(), 'spectrum_session');
-    // 86400 or 86399 depending on how many ms elapsed between signing the
+    // 86400 or 86399 depending on how many ms elapsed between building the
     // token above and createSessionCookies calling Date.now() - not 0.
     expect(sessionCookie).toMatch(/Max-Age=(86399|86400)(;|$)/);
   });
 
   it('falls back to the default max age when SESSION_MAX_AGE_MS is non-numeric', async () => {
-    const request = post(await imsBody({ expires_in: String(999999999999) }));
+    const request = post(imsBody({ expires_in: String(999999999999) }));
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, SESSION_MAX_AGE_MS: '1d' },
@@ -186,7 +182,7 @@ describe('createSession', () => {
   });
 
   it('falls back to the default max age when SESSION_MAX_AGE_MS is an empty string', async () => {
-    const request = post(await imsBody({ expires_in: String(999999999999) }));
+    const request = post(imsBody({ expires_in: String(999999999999) }));
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, SESSION_MAX_AGE_MS: '' },
@@ -197,7 +193,7 @@ describe('createSession', () => {
   });
 
   it('honors a valid numeric-string override for SESSION_MAX_AGE_MS', async () => {
-    const request = post(await imsBody({ expires_in: String(999999999999) }));
+    const request = post(imsBody({ expires_in: String(999999999999) }));
     const resp = await createSession({
       url: new URL(request.url),
       env: { ...env, SESSION_MAX_AGE_MS: '10000' },
@@ -208,35 +204,64 @@ describe('createSession', () => {
   });
 });
 
-describe('createSession access_token verification', () => {
-  it('rejects a token that is not a JWT with 401', async () => {
+describe('createSession IMS verification', () => {
+  it('calls the IMS profile endpoint with the token as a bearer credential', async () => {
+    const fetchMock = mockImsProfile();
+    const token = makeToken();
+    await call(post({ access_token: token }));
+    const [calledUrl, calledOpts] = fetchMock.mock.calls[0];
+    expect(calledUrl).toBe('https://ims-na1.adobelogin.com/ims/profile/v1?client_id=spectrumhub');
+    expect(calledOpts.headers.authorization).toBe(`Bearer ${token}`);
+  });
+
+  it('routes dev and stage to the shared stg1 profile endpoint', async () => {
+    const fetchMock = mockImsProfile();
+    await createSession({
+      url: new URL(post(imsBody()).url),
+      env: { ...env, IMS_ENV: 'stage' },
+      request: post(imsBody()),
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://ims-na1-stg1.adobelogin.com/ims/profile/v1?client_id=spectrumhub');
+  });
+
+  it('rejects with 401 when IMS returns 401', async () => {
+    mockImsProfile(401, {});
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(401);
+  });
+
+  it('rejects with 401 when IMS returns 403', async () => {
+    mockImsProfile(403, {});
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(401);
+  });
+
+  it('returns 502 rather than 500 when IMS itself errors', async () => {
+    mockImsProfile(500, {});
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(502);
+  });
+
+  it('returns 502 rather than 500 when the network request to IMS fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network down'); }));
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(502);
+  });
+
+  it('returns 502 when the profile response has no email', async () => {
+    mockImsProfile(200, { userId: 'abc123' });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(502);
+  });
+
+  it('returns 502 when access_token is accepted by IMS but is not itself a JWT', async () => {
     const resp = await call(post({ access_token: 'not-a-jwt' }));
-    expect(resp.status).toBe(401);
-  });
-
-  it('rejects a JWT signed by a key IMS does not recognize with 401', async () => {
-    const { getJwk } = await import('./jwks.js');
-    getJwk.mockResolvedValueOnce(null);
-    const resp = await call(post(await imsBody()));
-    expect(resp.status).toBe(401);
-  });
-
-  it('rejects a JWT whose signature does not verify with 401', async () => {
-    const { getJwk } = await import('./jwks.js');
-    getJwk.mockResolvedValueOnce({ ...testJwk, kty: 'EC' });
-    const resp = await call(post(await imsBody()));
-    expect(resp.status).toBe(401);
-  });
-
-  it('returns 502 rather than 500 when the JWKS lookup fails', async () => {
-    const { getJwk } = await import('./jwks.js');
-    getJwk.mockRejectedValueOnce(new Error('network down'));
-    const resp = await call(post(await imsBody()));
     expect(resp.status).toBe(502);
   });
 
   it('marks the 401 no-store', async () => {
-    const resp = await call(post({ access_token: 'not-a-jwt' }));
+    mockImsProfile(401, {});
+    const resp = await call(post(imsBody()));
     expect(resp.headers.get('cache-control')).toBe('no-store');
   });
 });
@@ -244,13 +269,13 @@ describe('createSession access_token verification', () => {
 // This endpoint mints credentials and sits behind a CDN.
 describe('createSession caching', () => {
   it('marks the 200 no-store', async () => {
-    const resp = await call(post(await imsBody()));
+    const resp = await call(post(imsBody()));
     expect(resp.status).toBe(200);
     expect(resp.headers.get('cache-control')).toBe('no-store');
   });
 
   it('marks the 403 no-store', async () => {
-    const resp = await call(post(await imsBody(), { origin: 'https://evil.example' }));
+    const resp = await call(post(imsBody(), { origin: 'https://evil.example' }));
     expect(resp.headers.get('cache-control')).toBe('no-store');
   });
 
@@ -269,8 +294,8 @@ describe('createSession caching', () => {
 });
 
 describe('ALLOWED_ORIGINS parsing', () => {
-  const withOrigins = async (allowedOrigins, origin) => {
-    const request = post(await imsBody(), { origin });
+  const withOrigins = (allowedOrigins, origin) => {
+    const request = post(imsBody(), { origin });
     return createSession({
       url: new URL(request.url),
       env: { ...env, ALLOWED_ORIGINS: allowedOrigins },
@@ -306,7 +331,7 @@ describe('ALLOWED_ORIGINS parsing', () => {
     const request = new Request(`${ORIGIN}/auth/session`, {
       method: 'POST',
       headers: { origin: 'HTTPS://EXAMPLE.COM', 'content-type': 'application/json' },
-      body: JSON.stringify(await imsBody()),
+      body: JSON.stringify(imsBody()),
     });
     const resp = await createSession({
       url: new URL(request.url),

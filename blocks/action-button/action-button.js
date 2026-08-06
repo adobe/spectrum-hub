@@ -52,27 +52,13 @@ const BUTTONS = {
   action: {},
 };
 
-function getLinkProps(a) {
-  const { title } = a;
-  a.removeAttribute('title');
-  return title.split('|').reduce((acc, prop) => {
-    // The first split will be key
-    const [key, ...values] = prop.split(':');
-    // The values may have colons in them, join them back.
-    const value = values.length === 1 ? values[0] : values.join(':');
-    acc[key.trim()] = value.trim();
-    return acc;
-  }, {});
-}
-
 export default async function actionButton(a) {
-  const props = getLinkProps(a);
-  if (props.style) { a.classList.add(`action-button-${props.style}`); }
+  if (a.dataset.style) { a.classList.add(`action-button-${a.dataset.style}`); }
 
   // Wrap the text in a span
   const span = document.createElement('span');
   span.textContent = a.lastChild.textContent;
-  if (props.label === 'hide') { span.classList.add('visually-hidden'); }
+  if (a.dataset.label === 'hide') { span.classList.add('visually-hidden'); }
   a.lastChild.replaceWith(span);
 
   // The widget name (last path segment) is stamped as data-widget.
