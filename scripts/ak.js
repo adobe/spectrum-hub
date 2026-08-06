@@ -220,6 +220,15 @@ function decorateButton(link) {
       link.dataset[key] = val;
     });
     link.removeAttribute('title');
+
+    // async for perf, will be left detached from doc
+    const { audience } = link.dataset;
+    if (audience) {
+      removeForAudience({
+        privateEl: audience === 'private' ? link : null,
+        publicEl: audience === 'public' ? link : null,
+      });
+    }
   }
 
   const isEm = link.closest('em');
@@ -261,15 +270,6 @@ function decorateButton(link) {
   }
   const toReplace = [isEm, isStrong, isStrike].find((el) => el?.parentNode === trueParent);
   if (toReplace) { toReplace.replaceWith(link); }
-
-  // async for perf, will be left detached from doc
-  const { audience } = link.dataset;
-  if (audience) {
-    removeForAudience({
-      privateEl: audience === 'private' ? link : null,
-      publicEl: audience === 'public' ? link : null,
-    });
-  }
 }
 
 export function localizeUrl({ config, url }) {

@@ -153,10 +153,10 @@ export const loadIms = (() => {
       environment: IMS_ENV[env],
       useLocalStorage: true,
       onError: reject,
-      onReady: () => {
+      onReady: async () => {
         const accessToken = window.adobeIMS.getAccessToken();
         if (accessToken) {
-          setSession(accessToken);
+          await setSession(accessToken);
           loadDetails(IMS_CLIENT_ID, accessToken).then((details) => resolve(details));
         } else {
           resolve({ anonymous: true });
