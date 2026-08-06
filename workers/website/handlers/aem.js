@@ -7,7 +7,16 @@ const getRedirect = (resp, savedSearch) => {
 };
 
 export const fetchFromAem = async ({ request, cache, savedSearch }) => {
-  let resp = await fetch(request, { method: request.method, cf: { cacheEverything: cache } });
+  // cacheEverything only forces caching of content Cloudflare wouldn't
+  // otherwise cache (e.g. HTML); it does nothing to content Cloudflare
+  // already caches by default based on file extension (.js, .css, images).
+  // When cache is false, cache: 'no-store' is needed too - it's the one
+  // documented way to bypass Cloudflare's edge cache entirely (read and
+  // write) regardless of content type.
+  const init = cache
+    ? { method: request.method, cf: { cacheEverything: true } }
+    : { method: request.method, cache: 'no-store' };
+  let resp = await fetch(request, init);
 
   // Recreate a mutable response
   resp = new Response(resp.body, resp);

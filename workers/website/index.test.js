@@ -142,7 +142,7 @@ describe('routing the /auth/ namespace', () => {
     expect(createSession).not.toHaveBeenCalled();
     const { request, cache } = fetchFromAem.mock.calls[0][0];
     expect(new URL(request.url).hostname).toBe('main--spectrum-hub--adobe.aem.live');
-    expect(cache).toBe(true);
+    expect(cache).toBe(false);
   });
 
   // A trailing slash used to fall through to the AEM proxy, which attaches

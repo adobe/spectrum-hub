@@ -55,10 +55,18 @@ const ROUTES = [
   //   handler: () => new Response('Not found - drafts are denied on production.', { status: 404 }),
   // },
   // Default AEM handler should be last
+  //
+  // cache is false: AEM's edge sends a long CDN-Cache-Control TTL (days)
+  // that's meant to be purged by push-invalidation when content changes,
+  // but that purge only reaches Cloudflare zones registered with AEM. This
+  // worker isn't bound to one (workers.dev has no zone AEM can purge), so
+  // cacheEverything would just serve stale content for the full TTL with
+  // no way to invalidate it. Flip back to true once this is on a real
+  // domain with push-invalidation wired up on the AEM side.
   {
     match: () => true,
     handler: fetchFromAem,
-    cache: true,
+    cache: false,
     proxy: true,
   },
 ];
