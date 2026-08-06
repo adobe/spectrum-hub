@@ -75,7 +75,7 @@ export const checkIms = async () => {
   const imsHash = isImsHash();
 
   // Soft check
-  if (!(window.adobeIMS && imsHash)) {
+  if (!imsHash) {
     // We don't care if expired, we care if the prop exists
     const returning = localStorage.getItem(imsServer);
     if (!returning) { return { anonymous: true }; }
