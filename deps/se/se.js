@@ -59,6 +59,23 @@ class SEFormElement extends LitElement {
 }
 
 class SEInput extends SEFormElement {
+  // role/aria-label/aria-expanded/aria-autocomplete/autocomplete forward
+  // straight onto the real <input>. aria-controls/aria-activedescendant
+  // can't: their targets
+  // live in the caller's shadow root, one level up, and id strings don't
+  // cross that boundary. Cross-root ARIA Reflection (ariaControlsElements/
+  // ariaActiveDescendantElement) takes live Element references instead, so
+  // callers pass those via the controlsElement/activeDescendantElement props.
+  static properties = {
+    role: { type: String },
+    autocomplete: { type: String },
+    'aria-label': { type: String },
+    'aria-expanded': { type: String },
+    'aria-autocomplete': { type: String },
+    controlsElement: { attribute: false },
+    activeDescendantElement: { attribute: false },
+  };
+
   async focus() {
     this._programmaticFocus = true;
     await this.updateComplete;
@@ -109,15 +126,15 @@ class SEInput extends SEFormElement {
 
   renderSearchIcon() {
     return html`
-      <svg class="icon icon-search" viewBox="0 0 20 20">
+      <svg class="icon icon-search" viewBox="0 0 20 20" aria-hidden="true">
         <use href="/img/icons/s2-icon-search-20-n.svg#icon"></use>
       </svg>`;
   }
 
   renderSearchClear() {
     return html`
-      <button @click=${this.handleClear}>
-        <svg class="icon icon-close" viewBox="0 0 10 10">
+      <button @click=${this.handleClear} aria-label="Clear search">
+        <svg class="icon icon-close" viewBox="0 0 10 10" aria-hidden="true">
           <use href="/img/icons/s2-icon-close-10-n.svg#icon"></use>
         </svg>
       </button>`;
@@ -131,6 +148,13 @@ class SEInput extends SEFormElement {
           ${this.type === 'search' ? this.renderSearchIcon() : nothing}
           <input
             type=${this.type}
+            role=${this.role || nothing}
+            autocomplete=${this.autocomplete || nothing}
+            aria-label=${this['aria-label'] || nothing}
+            aria-expanded=${this['aria-expanded'] || nothing}
+            aria-autocomplete=${this['aria-autocomplete'] || nothing}
+            .ariaControlsElements=${this.controlsElement ? [this.controlsElement] : []}
+            .ariaActiveDescendantElement=${this.activeDescendantElement ?? null}
             name=${this.name}
             id=${this._idHash}
             placeholder=${this.placeholder || nothing}

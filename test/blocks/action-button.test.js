@@ -266,6 +266,31 @@ describe('action-button block', () => {
     });
   });
 
+  describe('#search — focus on close', () => {
+    async function waitForSearchElement() {
+      for (let i = 0; i < 50; i += 1) {
+        const el = document.querySelector('sh-search');
+        if (el) { return el; }
+        await new Promise((resolve) => { setTimeout(resolve, 10); });
+      }
+      throw new Error('sh-search did not appear');
+    }
+
+    it('returns focus to the toggle button once the popover clears', async () => {
+      const a = makeAnchor({ href: '/tools/widgets/search' });
+      a.classList.add('action-button');
+      document.body.append(a);
+      actionButton(a);
+      const button = document.body.querySelector('button');
+      button.click();
+
+      const shSearch = await waitForSearchElement();
+      shSearch.dispatchEvent(new CustomEvent('clear'));
+
+      expect(document.activeElement).to.equal(button);
+    });
+  });
+
   // copy-markdown, go-to-impl, and see-in-figma are no longer owned by
   // action-button.js — page-nav builds and decorates those widgets itself
   // directly against copy-md.js/go-to-impl.js/figma.js (see

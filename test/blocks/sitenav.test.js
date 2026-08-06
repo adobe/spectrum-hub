@@ -8,7 +8,7 @@ const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('',
 
 const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
-  isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling,
+  isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -552,6 +552,39 @@ describe('sitenav block', () => {
     it('is false at or above the breakpoint', () => {
       stubMatchMedia(sandbox, false);
       expect(isMobileViewport()).to.be.false;
+    });
+  });
+
+  describe('setupSearchIntegration', () => {
+    let navList;
+
+    beforeEach(() => {
+      navList = buildNavList(`
+        <ul>
+          <li><p>Getting started</p><ul><li><a href="/a">a</a></li></ul></li>
+          <li><p>Foundations</p><ul><li><a href="/b">b</a></li></ul></li>
+        </ul>
+      `);
+      decorateLevel(navList, 1);
+      document.body.append(navList);
+      setupSearchIntegration(navList);
+    });
+
+    afterEach(() => navList.remove());
+
+    it('expands the level-1 button matching the dispatched label', () => {
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Foundations' } }));
+
+      const btn = navList.querySelector('.level-1-button[aria-controls="foundations"]');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('does nothing when no level-1 button matches the label', () => {
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Nonexistent' } }));
+
+      const anyExpanded = [...navList.querySelectorAll('.level-1-button')]
+        .some((btn) => btn.getAttribute('aria-expanded') === 'true');
+      expect(anyExpanded).to.be.false;
     });
   });
 });

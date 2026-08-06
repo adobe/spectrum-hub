@@ -43,6 +43,12 @@ viewport edges instead of the anchor. */
     padding: var(--s2-spacing-75) var(--s2-spacing-100);
   }
 
+  .results-empty {
+    color: var(--s2-gray-900);
+    font-size: var(--s2-component-m-regular-font-size);
+    padding: var(--s2-spacing-75) var(--s2-spacing-100);
+  }
+
   .results-list {
     margin: 0;
     padding: 0 0 var(--s2-spacing-300);
@@ -53,18 +59,19 @@ viewport edges instead of the anchor. */
     li {
       scroll-margin-block: 4px;
       border-radius: 10px;
+    }
 
-      &[aria-selected="true"] a {
-        background-color: var(--s2-gray-100);
-      }
+    .result-row[aria-selected="true"] {
+      background-color: var(--s2-gray-100);
     }
 
     /* Remove selected background when any sibling is hovered */
-    &:has(a:hover) li[aria-selected="true"] a:not(:hover) {
+    &:has(.result-row:hover) .result-row[aria-selected="true"]:not(:hover) {
       background-color: transparent;
+      outline: none;
     }
 
-    a {
+    a.result-row, button.result-row {
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
@@ -74,6 +81,7 @@ viewport edges instead of the anchor. */
       min-height: 72px;
       color: var(--se-body-color);
       box-sizing: border-box;
+      width: 100%;
 
       div.result-text {
         display: grid;
@@ -91,15 +99,44 @@ viewport edges instead of the anchor. */
       }
     }
 
+    /* Nav-area rows use a <button> (they toggle a sitenav section, not a
+    destination URL) but share a.result-row's layout, so reset the button
+    chrome an <a> never had in the first place. */
+    button.result-row {
+      appearance: none;
+      background: none;
+      border: none;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+    }
+
     .hit-title {
       font-size: var(--s2-component-l-regular-font-size);
       font-weight: 700;
       line-height: 1;
+      color: var(--s2-gray-800);
     }
 
     .hit-description {
-      color: var(--s2-gray-900);
       font-size: var(--s2-component-m-regular-font-size);
+    }
+
+    .hit-tags {
+      display: flex;
+      gap: var(--s2-spacing-100);
+      justify-self: end;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      height: var(--se-component-m-height);
+      padding-inline: var(--s2-spacing-100);
+      border-radius: var(--s2-corner-radius-500);
+      background-color: var(--s2-gray-50);
+      font-size: var(--s2-component-s-regular-font-size);
+      white-space: nowrap;
     }
   }
 

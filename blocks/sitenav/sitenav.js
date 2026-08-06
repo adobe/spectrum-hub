@@ -1,5 +1,6 @@
 import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
+import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 
 const { codeBase, log } = getConfig();
 
@@ -261,6 +262,15 @@ export const setupOutsideClose = (sitenav) => {
   });
 };
 
+// Reuses the level-1 button's own click handler (built in decorateLevel)
+// rather than duplicating its sibling-collapsing logic here.
+export const setupSearchIntegration = (navList) => {
+  document.addEventListener(SEARCH_EXPAND_EVENT, (e) => {
+    const menuId = toClassName(e.detail.label);
+    navList.querySelector(`.level-1-button[aria-controls="${menuId}"]`)?.click();
+  });
+};
+
 // Escape and clicking outside behave the same way regardless of which button
 // (expand or trigger) opened the sitenav.
 export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
@@ -307,6 +317,7 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   const triggerBtn = await getTriggerButton(sitenav);
   setupSitenavKeyboardHandling(sitenav, [expandBtn, triggerBtn]);
   setupOutsideClose(sitenav);
+  setupSearchIntegration(navList);
 
   // Stitch index-based nav post DOM injection
   const index = await fetchRes(`${codeBase}/query-index.json`);
