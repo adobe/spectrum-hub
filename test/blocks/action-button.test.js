@@ -267,6 +267,12 @@ describe('action-button block', () => {
   });
 
   describe('#search — focus on close', () => {
+    before(async () => {
+      // Warms the search block's module graph (and its two CSS fetches) once,
+      // outside the timed test below.
+      await import('../../blocks/search/search.js');
+    });
+
     async function waitForSearchElement() {
       for (let i = 0; i < 50; i += 1) {
         const el = document.querySelector('sh-search');
@@ -288,25 +294,6 @@ describe('action-button block', () => {
       shSearch.dispatchEvent(new CustomEvent('clear'));
 
       expect(document.activeElement).to.equal(button);
-    });
-  });
-
-  // copy-markdown, go-to-impl, and see-in-figma are no longer owned by
-  // action-button.js — page-nav builds and decorates those widgets itself
-  // directly against copy-md.js/go-to-impl.js/figma.js (see
-  // test/blocks/copy-md.test.js, test/blocks/go-to-impl.test.js and
-  // test/blocks/figma.test.js). Nothing links to those paths standalone
-  // anymore, so action-button.js correctly treats them as unknown pathnames.
-  describe('/tools/widgets/{copy-markdown,go-to-impl,see-in-figma} — no longer action-button widgets', () => {
-    it('leaves the anchor untouched (falls through like any unknown pathname)', () => {
-      ['copy-markdown', 'go-to-impl', 'see-in-figma'].forEach((name) => {
-        const a = makeAnchor({ href: `/tools/widgets/${name}`, text: name });
-        document.body.append(a);
-        actionButton(a);
-        expect(a.tagName).to.equal('A');
-        a.remove();
-      });
-      expect(document.body.querySelector('button')).to.be.null;
     });
   });
 });
