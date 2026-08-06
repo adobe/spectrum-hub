@@ -178,9 +178,6 @@ describe('sitenav block', () => {
     });
   });
 
-  // decorateIndexBasedNav stitches query-index pages under the "Components"
-  // item of a known implementation. It finds that item by the marker
-  // decorateLevel stamps here, so the marker is the contract between them.
   describe('decorateLevel — level-1 tooltip id', () => {
     it('gives a level-1 button a stable id for a tooltip to target via `for`', () => {
       const ul = buildNavList(`
@@ -333,6 +330,9 @@ describe('sitenav block', () => {
     });
   });
 
+  // decorateIndexBasedNav stitches query-index pages under the "Components"
+  // item of a known implementation. It finds that item by the marker
+  // decorateLevel stamps here, so the marker is the contract between them.
   describe('decorateLevel — index-based nav marker', () => {
     function buildImplList(parentLabel) {
       return buildNavList(`
