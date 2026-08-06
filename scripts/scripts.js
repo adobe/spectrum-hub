@@ -24,7 +24,7 @@ const components = ['fragment', 'profile'];
 // Setup state of the environment
 const { host, port, search } = window.location;
 const searchParams = new URLSearchParams(search);
-const isStage = () => ((host.includes('.aem.') && !host.endsWith('.live')) || host.endsWith('workers.dev'));
+const isStage = () => ((host.includes('.aem.') && !host.endsWith('.live')));
 const cdnEnv = port === '8787'
   || host.endsWith('adobe.com')
   || searchParams.get('cdn') === 'mock'
