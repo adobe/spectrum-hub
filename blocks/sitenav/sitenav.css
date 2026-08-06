@@ -57,6 +57,22 @@
   a {
     color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
     text-decoration: none;
+    outline: none;
+
+      &[class="is-current-page"] {
+        position: relative;
+      }
+
+      &[class="is-current-page"]::before {
+        content: '';
+        position: absolute;
+        inset-inline-start: -6px;
+        inset-block: 0;
+        inline-size: 2px;
+        block-size: 18px;
+        margin-block: auto;
+        background-color: var(--s2-gray-800);
+      }
 
     &:hover {
       color:  var(--s2-gray-700);
@@ -83,6 +99,7 @@
     all: unset;
     cursor: pointer;
     font-size: inherit;
+    /* outline: none; */
 
     &:hover,
     &[aria-expanded="true"] {
@@ -144,7 +161,6 @@
     extends far past the 32px closed rail, with only its left edge visible. */
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s2-spacing-100);
-    overflow: hidden;
     transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
   }
 
@@ -154,6 +170,19 @@
     gap: var(--s2-spacing-85);
     width: 100%;
     overflow: hidden;
+    position: relative;
+
+    &[aria-expanded="true"]::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      inline-size: 2px;
+      block-size: calc(100% - 12px);
+      margin-block: auto;
+      background-color: var(--s2-gray-800);
+      pointer-events: none;
+      transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+    }
 
     svg {
       margin: var(--level-1-content-margin);
@@ -254,6 +283,25 @@
           color: var(--s2-gray-800);
         }
       }
+
+      .level-2-button {
+        position: relative;
+      }
+
+      .level-2-button[aria-expanded="true"] {
+        font-weight: 700;
+      }
+    /* TODO: add the selection indicator when a child page is selected but the parent is collapsed. 
+      .level-2-button[aria-expanded="false"]::before + .level-3-menu .level-3-list:has(a.is-current-page) {
+        content: '';
+        position: absolute;
+        inset-inline-start: -6px;
+        inset-block: 0;
+        inline-size: 2px;
+        block-size: 18px;
+        margin-block: auto;
+        background-color: var(--s2-gray-800);
+      } */
     }
 
     .level-3-menu {
@@ -269,8 +317,7 @@
     }
 
     .level-3-list {
-      margin-inline-start: var(--s2-spacing-300);
-      padding: 0;
+      padding-inline-start: var(--s2-spacing-300);
       list-style: none;
       overflow: hidden;
     }
