@@ -135,7 +135,6 @@ export async function loadPage() {
 await loadPage();
 
 (function da() {
-  const { searchParams } = new URL(window.location.href);
   const hasPreview = searchParams.has('dapreview');
   if (hasPreview) { import('../tools/da/da.js').then((mod) => mod.default(loadPage)); }
   const hasQE = searchParams.has('quick-edit');

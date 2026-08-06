@@ -221,14 +221,6 @@ function decorateButton(link) {
     });
     link.removeAttribute('title');
   }
-  const { audience } = link.dataset;
-  if (audience) {
-    // async for perf, will be left detached from doc
-    removeForAudience({
-      privateEl: audience === 'private' ? link : null,
-      publicEl: audience === 'public' ? link : null,
-    });
-  }
 
   const isEm = link.closest('em');
   const isStrong = link.closest('strong');
@@ -269,6 +261,15 @@ function decorateButton(link) {
   }
   const toReplace = [isEm, isStrong, isStrike].find((el) => el?.parentNode === trueParent);
   if (toReplace) { toReplace.replaceWith(link); }
+
+  // async for perf, will be left detached from doc
+  const { audience } = link.dataset;
+  if (audience) {
+    removeForAudience({
+      privateEl: audience === 'private' ? link : null,
+      publicEl: audience === 'public' ? link : null,
+    });
+  }
 }
 
 export function localizeUrl({ config, url }) {
