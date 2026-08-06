@@ -25,7 +25,10 @@ const components = ['fragment', 'profile'];
 const { host, port, search } = window.location;
 const searchParams = new URLSearchParams(search);
 const isStage = () => ((host.includes('.aem.') && !host.endsWith('.live')) || host.endsWith('workers.dev'));
-const cdnEnv = !host.includes('.aem.') || port === '8787' || host.endsWith('adobe.com') || searchParams.get('cdn') === 'mock';
+const cdnEnv = port === '8787'
+  || host.endsWith('adobe.com')
+  || searchParams.get('cdn') === 'mock'
+  || host.endsWith('workers.dev');
 const env = (() => {
   if (host.includes('local')) { return 'dev'; }
   if (isStage()) { return 'stage'; }
