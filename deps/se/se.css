@@ -589,15 +589,22 @@ svg.icon {
 .se-inputfield.side-label,
 .se-switch.side-label label,
 .se-segmentedcontrol-field.side-label {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   inline-size: 100%;
   gap: var(--s2-spacing-300);
-  justify-content: space-between;
   align-items: center;
 }
 
+/* aligns the fieldset to the end of the playground container */
+.se-segmentedcontrol-field.side-label .se-segmentedcontrol {
+  margin-inline-start: auto;
+}
+
 .se-switch.side-label label {
+  display: flex;
   flex-direction: row-reverse;
+  justify-content: space-between;
 }
 
 /* Pulled from styles.css */
