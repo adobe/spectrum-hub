@@ -7,6 +7,7 @@ export default {
     "in-line-alert": "InlineAlert",
     "radio-button": "RadioGroup",
     "select-box": "SelectBoxGroup",
+    "side-navigation": "SideNav",
     "standard-dialog": "Dialog",
     "swatch": "ColorSwatch",
     "swatch-group": "ColorSwatchPicker",

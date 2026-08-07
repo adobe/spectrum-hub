@@ -54,6 +54,10 @@
     "Image": {
       "canonical": "Thumbnail",
       "externalName": "Image"
+    },
+    "SideNav": {
+      "canonical": "SideNavigation",
+      "externalName": "SideNav"
     }
   },
   "figma": {
@@ -70,7 +74,6 @@
     "Button (Gradient)": "Button",
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",
-    "Slider (Range)": "Slider",
-    "Side navigation": "SideNav"
+    "Slider (Range)": "Slider"
   }
 }
