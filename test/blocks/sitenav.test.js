@@ -377,14 +377,7 @@ describe('sitenav block', () => {
     });
   });
 
-  // design-only pages ride the exact same query-index-driven pipeline as rsp/swc
-  // (decorateLevel's marker -> decorateIndexBasedNav -> decorateBadges), including the
-  // [auto-generated] placeholder convention — the nav content is expected to use it too.
-  //
-  // decorateBadges reads counts off the module-level INDEX_BASED_NAV singleton, which
-  // decorateIndexBasedNav mutates in place and never resets — so this is deliberately one
-  // test rather than several, to avoid one call's count leaking into another's assertion.
-  describe('decorateIndexBasedNav + decorateBadges — design-only', () => {
+  describe('decorateIndexBasedNav + decorateBadges', () => {
     it('counts design-only pages from the query index, badges the label, and lists them', () => {
       const ul = buildNavList(`
         <ul>
@@ -414,6 +407,32 @@ describe('sitenav block', () => {
       expect(items.map((li) => li.querySelector('a').getAttribute('href'))).to.deep.equal([
         '/web/design-only/components/alert-banner',
         '/web/design-only/components/coach-mark',
+      ]);
+    });
+
+    it('alphabetizes the auto-generated links by title, independent of the query index order', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>SWC</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 2);
+      const index = [
+        { path: '/web/swc/components/zebra', title: 'Zebra' },
+        { path: '/web/swc/components/action-bar', title: 'Action bar' },
+        { path: '/web/swc/components/monkey', title: 'Monkey' },
+        { path: '/web/swc/components/apple', title: 'Apple' },
+      ];
+
+      decorateIndexBasedNav(navList, index);
+
+      const items = [...navList.querySelectorAll('.level-3-list li')];
+      expect(items.map((li) => li.textContent)).to.deep.equal([
+        'Action bar', 'Apple', 'Monkey', 'Zebra',
       ]);
     });
   });

@@ -122,7 +122,9 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
 };
 
 export const decorateIndexBasedNav = (navList, index) => {
-  index.forEach((entry) => {
+  // Sorting the whole index up front
+  const sortedIndex = [...index].sort((a, b) => a.title.localeCompare(b.title));
+  sortedIndex.forEach((entry) => {
     const parentPrefix = INDEX_BASED_NAV.find((top) => entry.path.startsWith(`${top.prefix}/`));
     if (!parentPrefix) { return; }
     const parentLabel = navList.querySelector(`[index-based-nav-prefix^="${parentPrefix.prefix}"]`);
