@@ -5,9 +5,10 @@
  * block that lists or links implementations (picker, sitenav, related resources,
  * status table, implementation cards) imports from this file.
  *
- * Each `id` matches the data-extraction directory under `deps/` (e.g. `rsp` →
- * `deps/rsp/`) and the per-implementation source keys in status-model.js, so the
- * mapping from an implementation to its data source stays obvious.
+ * For the data-extracted implementations, `id` matches both the directory under
+ * `deps/` (e.g. `rsp` → `deps/rsp/`) and the source key in status-model.js, so the
+ * mapping from an implementation to its data source stays obvious. `design-only`
+ * has no extraction directory or status-model source — it's Figma-only.
  */
 
 export const IMPLEMENTATIONS = [
