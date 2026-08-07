@@ -67,6 +67,26 @@ export function findComponentPages(basePath, componentNames, setStatus) {
   return results.then(() => matches);
 }
 
+function createMetadataBlock() {
+  const metadata = document.createElement('div');
+  metadata.className = 'metadata';
+  return metadata;
+}
+
+function createDescriptionRow(description) {
+  const row = document.createElement('div');
+
+  const key = document.createElement('div');
+  key.textContent = 'description';
+
+  const val = document.createElement('div');
+  val.textContent = description;
+
+  row.append(key, val);
+
+  return row;
+}
+
 async function saveDoc(path, token, doc) {
   const body = new FormData();
   const html = doc.body.outerHTML;
@@ -81,120 +101,30 @@ async function saveDoc(path, token, doc) {
   return { message: 'Successfully saved.', status: resp.status, type: 'success' };
 }
 
-// Fragment docs reference sibling media as "./media_xxx.jpg", relative to the
-// fragment's own location. Once copied into a different page doc, that base
-// changes, so rewrite each reference against the fragment's site path first -
-// mirrors blocks/fragment/fragment.js's replaceDotMedia for runtime transclusion.
-function resolveFragmentMedia(sitePath, doc) {
-  const resolveAttr = (selector, attr) => {
-    doc.querySelectorAll(selector).forEach((el) => {
-      const value = el.getAttribute(attr);
-      if (!value?.startsWith('./')) { return; }
-      const resolved = new URL(value, new URL(sitePath, 'https://placeholder')).pathname;
-      el.setAttribute(attr, resolved);
-    });
-  };
-  resolveAttr('img[src^="./"]', 'src');
-  resolveAttr('source[srcset^="./"]', 'srcset');
-}
+export async function savePageDescription(path, token, description) {
+  const descriptionRow = createDescriptionRow(description);
 
-async function fetchFragmentSections(adminFragmentPath, sitePath, token) {
-  const docHtml = await fetchDoc(adminFragmentPath, token);
-  if (!docHtml) { return []; }
-  const fragmentDoc = new DOMParser().parseFromString(docHtml, 'text/html');
-  resolveFragmentMedia(sitePath, fragmentDoc);
-  return [...fragmentDoc.body.querySelectorAll('main > div')];
-}
-
-// Mirrors blocks/fragment/fragment.js's getReplaceEl: walk up from the link while
-// its parent has no other children, so we remove the smallest wrapper that held
-// only the link (a bare paragraph, typically) rather than leaving an empty shell.
-// Source docs are undecorated (no ".section" class yet), so the boundary here is
-// the raw "main > div" section instead.
-function getReplaceTarget(a) {
-  const sectionEl = a.closest('main > div');
-  let current = a;
-  while (current.parentElement && current.parentElement !== sectionEl) {
-    if (current.parentElement.children.length <= 1) {
-      current = current.parentElement;
-    } else {
-      break;
-    }
-  }
-  return { elToReplace: current, sectionEl };
-}
-
-// Authors paste these as full URLs (whatever domain they're previewing on -
-// .aem.page, .aem.live, a custom domain, ...), not the bare site-relative path,
-// so match by pathname rather than a literal href string.
-function findFragmentLink(doc, sitePath) {
-  const anchors = [...doc.querySelectorAll('main a[href]')];
-  return anchors.find((a) => {
-    try {
-      const { pathname } = new URL(a.getAttribute('href'), 'https://placeholder');
-      return pathname.replace(/\.html$/, '') === sitePath;
-    } catch {
-      return false;
-    }
-  });
-}
-
-// An author may have already dropped in a plain link to the fragment (the old
-// authoring convention, or a manual link). Replace it in place with the real
-// content instead of leaving both the link and a duplicated copy on the page.
-function replaceFragmentLink(doc, sitePath, importedSections) {
-  const link = findFragmentLink(doc, sitePath);
-  if (!link) { return false; }
-
-  const { elToReplace, sectionEl } = getReplaceTarget(link);
-  const [firstSection, ...extraSections] = importedSections;
-
-  [...firstSection.children].forEach((child) => elToReplace.insertAdjacentElement('beforebegin', child));
-  elToReplace.remove();
-  sectionEl.dataset.seoFragment = sitePath;
-
-  // A single-section fragment (the common case) is now fully inlined. A
-  // multi-section fragment can't nest further sections inside this one, so its
-  // remaining sections get spliced in as new top-level sections right after.
-  let anchor = sectionEl;
-  extraSections.forEach((section) => {
-    anchor.insertAdjacentElement('afterend', section);
-    anchor = section;
-  });
-
-  return true;
-}
-
-// adminFragmentPath (DA admin, org/repo-prefixed) fetches the fragment; sitePath
-// (site-relative, no org/repo prefix) resolves its media and tags the inlined
-// content so re-runs don't duplicate it.
-export async function savePageDescription(path, token, adminFragmentPath, sitePath) {
-  const [docHtml, sections] = await Promise.all([
-    fetchDoc(path, token),
-    fetchFragmentSections(adminFragmentPath, sitePath, token),
-  ]);
-  if (!sections.length) {
-    return { message: 'Could not load fragment content.', status: 404, type: 'error' };
-  }
-
+  // Always work from a fresh doc
+  const docHtml = await fetchDoc(path, token);
   const doc = new DOMParser().parseFromString(docHtml, 'text/html');
 
-  if (doc.querySelector(`main > div[data-seo-fragment="${sitePath}"]`)) {
-    return { message: 'Already up to date.', status: 200, type: 'success' };
-  }
-
-  const importedSections = sections.map((section) => doc.importNode(section, true));
-
-  if (!replaceFragmentLink(doc, sitePath, importedSections)) {
-    importedSections[0].dataset.seoFragment = sitePath;
-    // Keep an existing metadata block (title, robots, etc.) last on the page.
-    const metadataSection = doc.querySelector('.metadata')?.closest('main > div');
-    if (metadataSection) {
-      importedSections.forEach((section) => metadataSection.insertAdjacentElement('beforebegin', section));
+  const metaEl = doc.querySelector('.metadata');
+  if (metaEl) {
+    const metaRows = metaEl.querySelectorAll(':scope > div');
+    const foundRow = [...metaRows].find((row) => {
+      const text = row.children[0].textContent.trim().toLowerCase();
+      return text === 'description';
+    });
+    if (foundRow) {
+      foundRow.parentElement.replaceChild(descriptionRow, foundRow);
     } else {
-      doc.body.querySelector('main').append(...importedSections);
+      metaEl.append(descriptionRow);
     }
+  } else {
+    // Make net-new metadata block
+    const newMetaEl = createMetadataBlock();
+    newMetaEl.append(descriptionRow);
+    doc.body.querySelector('main > div:last-child').append(newMetaEl);
   }
-
   return saveDoc(path, token, doc);
 }
