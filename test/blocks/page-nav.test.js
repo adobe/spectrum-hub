@@ -319,6 +319,58 @@ describe('page-nav block', () => {
       expect(document.querySelector('main h2').id).to.equal('my-custom-id');
     });
 
+    it('strips a single-letter size modifier prefix (e.g. "size-m-") from an existing id', async () => {
+      const main = document.createElement('main');
+      const h1 = document.createElement('h1');
+      h1.textContent = 'Page';
+      const h2 = document.createElement('h2');
+      h2.id = 'size-m-anatomy';
+      h2.textContent = 'Anatomy';
+      main.append(h1, h2);
+      document.body.append(main);
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('anatomy');
+    });
+
+    it('strips a multi-character size modifier prefix (e.g. "size-xl-") from an existing id', async () => {
+      const main = document.createElement('main');
+      const h1 = document.createElement('h1');
+      h1.textContent = 'Page';
+      const h2 = document.createElement('h2');
+      h2.id = 'size-xl-component-options';
+      h2.textContent = 'Component options';
+      main.append(h1, h2);
+      document.body.append(main);
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('component-options');
+    });
+
+    it('strips only the leading size modifier, keeping a hyphenated id intact', async () => {
+      const main = document.createElement('main');
+      const h1 = document.createElement('h1');
+      h1.textContent = 'Page';
+      const h2 = document.createElement('h2');
+      h2.id = 'size-2xl-multi-word-heading';
+      h2.textContent = 'Multi word heading';
+      main.append(h1, h2);
+      document.body.append(main);
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('multi-word-heading');
+    });
+
+    it('does not touch an id that merely starts with "size" but has no modifier prefix', async () => {
+      const main = document.createElement('main');
+      const h1 = document.createElement('h1');
+      h1.textContent = 'Page';
+      const h2 = document.createElement('h2');
+      h2.id = 'sizeable-content';
+      h2.textContent = 'Sizeable content';
+      main.append(h1, h2);
+      document.body.append(main);
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('sizeable-content');
+    });
+
     it('deduplicates ids by appending a numeric suffix when two h2s share text', async () => {
       makeDOM({ h2Texts: ['Overview', 'Overview'] });
       await loadPageNav();
