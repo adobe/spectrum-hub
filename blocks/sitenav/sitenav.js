@@ -2,6 +2,7 @@ import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js
 import { loadIms } from '../../scripts/utils/ims.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
+import '../../deps/components/swc-tooltip/dist/index.js';
 
 const { codeBase, log, cdnEnv } = getConfig();
 
@@ -9,15 +10,16 @@ loadStyle(import.meta.url.replace('js', 'css'));
 
 const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
-const INDEX_BASED_PARENT_NAMES = ['rsp', 'swc'];
+const INDEX_BASED_PARENT_NAMES = ['rsp', 'swc', 'design-only'];
 const INDEX_BASED_NAV = [
   { prefix: '/web/rsp', count: 0 },
   { prefix: '/web/swc', count: 0 },
+  { prefix: '/web/design-only', count: 0 },
   { prefix: '/mobile/ios', count: 0 },
   { prefix: '/mobile/android', count: 0 },
 ];
 
-export const decorateLevel = (ul, depth) => {
+export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
   ul.classList.add(`level-${depth}-list`);
 
   const listItems = [...ul.querySelectorAll(':scope > li')];
@@ -54,7 +56,9 @@ export const decorateLevel = (ul, depth) => {
       btn.setAttribute('aria-label', labelText);
     } else {
       if (labelText === 'Components') {
-        const prevLiLabel = li.previousElementSibling.textContent.trim().toLowerCase();
+        // Normalized to match a URL segment (e.g. "Design only" -> "design-only") so nav
+        // content can use natural spacing rather than being authored pre-hyphenated.
+        const prevLiLabel = li.previousElementSibling.textContent.trim().toLowerCase().replace(/\s+/g, '-');
         if (INDEX_BASED_PARENT_NAMES.some((name) => name === prevLiLabel)) {
           label.setAttribute('index-based-nav-prefix', `/web/${prevLiLabel}`);
         }
@@ -82,7 +86,12 @@ export const decorateLevel = (ul, depth) => {
       btn.setAttribute('aria-expanded', String(!isOpen));
     });
 
-    const menuId = toClassName(labelText);
+    // "increments" any repetitive labelText id's
+    let menuId = toClassName(labelText);
+    for (let n = 2; seenMenuIds.has(menuId); n += 1) {
+      menuId = `${toClassName(labelText)}-${n}`;
+    }
+    seenMenuIds.add(menuId);
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', menuId);
 
@@ -97,16 +106,25 @@ export const decorateLevel = (ul, depth) => {
     menuWrapper.id = menuId;
     li.append(menuWrapper);
 
-    decorateLevel(childList, depth + 1);
+    decorateLevel(childList, depth + 1, seenMenuIds);
 
     heading.replaceWith(btn);
+
+    // Stable id for the tooltip's `for` attribute — see syncLevel1Tooltips,
+    // which adds/removes the tooltip itself based on whether the rail is
+    // currently showing labels. Not created unconditionally here.
+    if (depth === 1) {
+      btn.id = `sitenav-level-1-tooltip-${toClassName(labelText)}`;
+    }
   });
 
   return ul;
 };
 
-const decorateIndexBasedNav = (navList, index) => {
-  index.forEach((entry) => {
+export const decorateIndexBasedNav = (navList, index) => {
+  // Sorting the whole index up front
+  const sortedIndex = [...index].sort((a, b) => a.title.localeCompare(b.title));
+  sortedIndex.forEach((entry) => {
     const parentPrefix = INDEX_BASED_NAV.find((top) => entry.path.startsWith(`${top.prefix}/`));
     if (!parentPrefix) { return; }
     const parentLabel = navList.querySelector(`[index-based-nav-prefix^="${parentPrefix.prefix}"]`);
@@ -139,7 +157,7 @@ const decorateIndexBasedNav = (navList, index) => {
   });
 };
 
-const decorateBadges = () => {
+export const decorateBadges = () => {
   INDEX_BASED_NAV.forEach((parentPrefix) => {
     if (!parentPrefix.count) { return; }
     const badge = document.createElement('span');
@@ -208,19 +226,69 @@ const getFocusableEls = (container) => [...container.querySelectorAll(
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
 )].filter((el) => el.checkVisibility());
 
+// Level-1 buttons only need a tooltip while the rail is collapsed
+export const syncLevel1Tooltips = (sitenav) => {
+  const isExpanded = sitenav.hasAttribute('is-expanded');
+
+  sitenav.querySelectorAll('.level-1-button').forEach((btn) => {
+    const li = btn.closest('li');
+    const existingTooltip = li.querySelector('swc-tooltip');
+
+    if (isExpanded) {
+      existingTooltip?.remove();
+      return;
+    }
+
+    if (existingTooltip) { return; }
+
+    const labelText = btn.querySelector('.list-item-label')?.textContent
+      ?? btn.getAttribute('aria-label')
+      ?? '';
+    const tooltip = document.createElement('swc-tooltip');
+    tooltip.setAttribute('for', btn.id);
+    tooltip.setAttribute('placement', 'end');
+    tooltip.setAttribute('delay', '200');
+    tooltip.textContent = labelText;
+    // swc-tooltip doesn't need DOM adjacency to its trigger — it positions via the Popover API
+    // using the for/id link
+    li.append(tooltip);
+  });
+};
+
+// The tooltip text is the single source of truth for this button's accessible
+// name too — aria-label is kept in sync rather than duplicating the copy.
+const EXPAND_BTN_LABELS = { expanded: 'Collapse navigation', collapsed: 'Expand navigation' };
+
 export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
+  btn.id = 'sitenav-expand-btn';
   btn.classList.add('sitenav-expand-btn');
-  btn.setAttribute('aria-label', 'Toggle site navigation');
   btn.setAttribute('aria-expanded', 'false');
   btn.setAttribute('aria-controls', sitenav.id);
 
   const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');
   btn.append(svg);
 
+  const tooltip = document.createElement('swc-tooltip');
+  tooltip.setAttribute('for', btn.id);
+  tooltip.setAttribute('placement', 'end');
+  tooltip.setAttribute('delay', '200');
+  sitenav.append(tooltip);
+
+  const syncLabel = () => {
+    const label = sitenav.hasAttribute('is-expanded')
+      ? EXPAND_BTN_LABELS.expanded
+      : EXPAND_BTN_LABELS.collapsed;
+    btn.setAttribute('aria-label', label);
+    tooltip.textContent = label;
+  };
+  syncLabel();
+
   btn.addEventListener('click', () => {
     const isExpanded = sitenav.toggleAttribute('is-expanded');
     btn.setAttribute('aria-expanded', String(isExpanded));
+    syncLabel();
+    syncLevel1Tooltips(sitenav);
   });
 
   return btn;
@@ -340,6 +408,10 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   // that hiding nav below 900px doesn't take the mobile trigger down with it.
   nav.append(navList, expandBtn);
   sitenav.append(triggerBtn);
+
+  // Seed level-1 tooltips for the rail's default (collapsed) state
+  syncLevel1Tooltips(sitenav);
+
   const main = document.querySelector('main');
   if (!main) { return; }
   main.before(sitenav);

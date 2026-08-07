@@ -9,8 +9,8 @@ import {
 } from '../../scripts/utils/implementations.js';
 
 describe('IMPLEMENTATIONS', () => {
-  it('lists the web implementations with ids matching the deps/ directories', () => {
-    assert.deepEqual(IMPLEMENTATIONS.map((impl) => impl.id), ['rsp', 'swc']);
+  it('lists the known implementation ids in order', () => {
+    assert.deepEqual(IMPLEMENTATIONS.map((impl) => impl.id), ['rsp', 'swc', 'design-only']);
   });
 
   it('gives every implementation a non-empty id and label', () => {
@@ -51,10 +51,10 @@ describe('getImplementationById', () => {
 
 describe('getOtherImplementations', () => {
   it('returns every implementation except the given one', () => {
-    assert.deepEqual(getOtherImplementations('rsp').map((impl) => impl.id), ['swc']);
+    assert.deepEqual(getOtherImplementations('rsp').map((impl) => impl.id), ['swc', 'design-only']);
   });
 
   it('returns all implementations when the id is not one of them', () => {
-    assert.deepEqual(getOtherImplementations('all').map((impl) => impl.id), ['rsp', 'swc']);
+    assert.deepEqual(getOtherImplementations('all').map((impl) => impl.id), ['rsp', 'swc', 'design-only']);
   });
 });

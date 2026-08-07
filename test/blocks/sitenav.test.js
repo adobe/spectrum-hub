@@ -9,6 +9,7 @@ const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('',
 const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
+  syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -55,7 +56,13 @@ describe('sitenav block', () => {
     document.body.innerHTML = '';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // swc-tooltip's own Lit update cycle is async; if a test leaves one newly
+    // created without awaiting it, the *next* test's beforeEach wipes
+    // document.body out from under it mid-render, logging an unrelated error.
+    await Promise.all(
+      [...document.querySelectorAll('swc-tooltip')].map((tooltip) => tooltip.updateComplete),
+    );
     sandbox.restore();
   });
 
@@ -143,6 +150,184 @@ describe('sitenav block', () => {
       expect(ul.querySelector('button')).to.be.null;
       expect(ul.querySelector('a').getAttribute('href')).to.equal('/x');
     });
+
+    // Real content repeats this shape: the index-based nav stitches a sibling
+    // "Components" item under each of rsp/swc/ios/android, so two menu
+    // wrappers with the same label can legitimately land in the same list.
+    it('disambiguates menu ids when sibling items share a label', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Overview</p>
+            <ul><li><a href="/web/rsp/overview/intro">Intro</a></li></ul>
+          </li>
+          <li>
+            <p>Overview</p>
+            <ul><li><a href="/web/swc/overview/intro">Intro</a></li></ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const [firstBtn, secondBtn] = ul.querySelectorAll('button.level-1-button');
+      const [firstMenu, secondMenu] = ul.querySelectorAll('.level-2-menu');
+
+      expect(firstMenu.id).to.equal('overview');
+      expect(secondMenu.id).to.equal('overview-2');
+      expect(firstBtn.getAttribute('aria-controls')).to.equal(firstMenu.id);
+      expect(secondBtn.getAttribute('aria-controls')).to.equal(secondMenu.id);
+    });
+  });
+
+  describe('decorateLevel — level-1 tooltip id', () => {
+    it('gives a level-1 button a stable id for a tooltip to target via `for`', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const btn = ul.querySelector('button.level-1-button');
+
+      expect(btn.id).to.equal('sitenav-level-1-tooltip-foundations');
+    });
+
+    it('does not id a nested (depth 2+) button the same way', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Foundations</p>
+            <ul><li><p>Overview</p><ul><li><a href="/x">Intro</a></li></ul></li></ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const level2Btn = ul.querySelector('button.level-2-button');
+
+      expect(level2Btn.id).to.equal('');
+    });
+  });
+
+  describe('syncLevel1Tooltips', () => {
+    function buildSitenavWithLevel1(html) {
+      const sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      const ul = buildNavList(html);
+      decorateLevel(ul, 1);
+      sitenav.append(ul);
+      document.body.append(sitenav);
+      return sitenav;
+    }
+
+    it('adds a tooltip for each level-1 button while the rail is collapsed (default)', () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+
+      syncLevel1Tooltips(sitenav);
+
+      const btn = sitenav.querySelector('.level-1-button');
+      const tooltip = sitenav.querySelector('swc-tooltip');
+      expect(tooltip).to.not.be.null;
+      expect(tooltip.getAttribute('for')).to.equal(btn.id);
+      expect(tooltip.getAttribute('placement')).to.equal('end');
+      expect(tooltip.getAttribute('delay')).to.equal('200');
+      expect(tooltip.textContent).to.equal('Foundations');
+    });
+
+    it('removes the tooltip once the rail is expanded', async () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+      syncLevel1Tooltips(sitenav);
+      // Let swc-tooltip's own Lit update cycle settle before removing it
+      await sitenav.querySelector('swc-tooltip').updateComplete;
+
+      sitenav.setAttribute('is-expanded', '');
+      syncLevel1Tooltips(sitenav);
+
+      expect(sitenav.querySelector('swc-tooltip')).to.be.null;
+    });
+
+    it('re-adds the tooltip once the rail collapses again', async () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+      syncLevel1Tooltips(sitenav);
+      await sitenav.querySelector('swc-tooltip').updateComplete;
+      sitenav.setAttribute('is-expanded', '');
+      syncLevel1Tooltips(sitenav);
+
+      sitenav.removeAttribute('is-expanded');
+      syncLevel1Tooltips(sitenav);
+      await sitenav.querySelector('swc-tooltip').updateComplete;
+
+      expect(sitenav.querySelector('swc-tooltip')).to.not.be.null;
+    });
+
+    it('does not duplicate a tooltip on repeated calls while collapsed', () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+
+      syncLevel1Tooltips(sitenav);
+      syncLevel1Tooltips(sitenav);
+
+      expect(sitenav.querySelectorAll('swc-tooltip').length).to.equal(1);
+    });
+
+    it('does not add a tooltip for nested (depth 2+) buttons', () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li>
+            <p>Foundations</p>
+            <ul><li><p>Overview</p><ul><li><a href="/x">Intro</a></li></ul></li></ul>
+          </li>
+        </ul>
+      `);
+
+      syncLevel1Tooltips(sitenav);
+
+      const level2Btn = sitenav.querySelector('button.level-2-button');
+      expect(level2Btn.closest('li').querySelector('swc-tooltip')).to.be.null;
+      expect(sitenav.querySelectorAll('swc-tooltip').length).to.equal(1);
+    });
+
+    it('does not break the button-to-menu adjacency the disclosure CSS relies on', () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li><p>Foundations</p><ul><li><a href="/x">Overview</a></li></ul></li>
+        </ul>
+      `);
+
+      syncLevel1Tooltips(sitenav);
+
+      const btn = sitenav.querySelector('.level-1-button');
+      const menu = sitenav.querySelector('.level-2-menu');
+      expect(btn.nextElementSibling).to.equal(menu);
+    });
+
+    it('uses the aria-label as the tooltip text for a linked heading', () => {
+      const sitenav = buildSitenavWithLevel1(`
+        <ul>
+          <li>
+            <p><a href="/web/rsp/components">Components</a></p>
+            <ul><li><a href="/web/rsp/components/action-bar">Action bar</a></li></ul>
+          </li>
+        </ul>
+      `);
+
+      syncLevel1Tooltips(sitenav);
+
+      expect(sitenav.querySelector('swc-tooltip').textContent).to.equal('Components');
+    });
   });
 
   // decorateIndexBasedNav stitches query-index pages under the "Components"
@@ -172,6 +357,83 @@ describe('sitenav block', () => {
       const ul = buildImplList('Foundations');
       decorateLevel(ul, 2);
       expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
+    });
+
+    // The parent heading is authored with natural spacing ("Design only"), not
+    // pre-hyphenated — decorateLevel normalizes spaces to hyphens to match the
+    // "design-only" URL segment, the same way "RSP"/"SWC" already lowercase directly.
+    it('marks a Components item that follows "Design only" with its prefix', () => {
+      const ul = buildImplList('Design only');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+    });
+
+    it('matches the "Design only" parent label regardless of case', () => {
+      const ul = buildImplList('DESIGN ONLY');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+    });
+  });
+
+  describe('decorateIndexBasedNav + decorateBadges', () => {
+    it('counts design-only pages from the query index, badges the label, and lists them', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Design only</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 2);
+      const index = [
+        { path: '/web/design-only/components/alert-banner', title: 'Alert banner' },
+        { path: '/web/design-only/components/coach-mark', title: 'Coach mark' },
+        { path: '/web/rsp/components/action-button', title: 'Action button' },
+      ];
+
+      decorateIndexBasedNav(navList, index);
+      decorateBadges();
+
+      const label = navList.querySelector('[index-based-nav-prefix="/web/design-only"]');
+      const badge = label.nextElementSibling;
+      expect(badge.classList.contains('count-badge')).to.be.true;
+      expect(badge.textContent).to.equal('2');
+
+      const items = [...navList.querySelectorAll('.level-3-list li')];
+      expect(items.map((li) => li.querySelector('a').getAttribute('href'))).to.deep.equal([
+        '/web/design-only/components/alert-banner',
+        '/web/design-only/components/coach-mark',
+      ]);
+    });
+
+    it('alphabetizes the auto-generated links by title, independent of the query index order', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>SWC</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 2);
+      const index = [
+        { path: '/web/swc/components/zebra', title: 'Zebra' },
+        { path: '/web/swc/components/action-bar', title: 'Action bar' },
+        { path: '/web/swc/components/monkey', title: 'Monkey' },
+        { path: '/web/swc/components/apple', title: 'Apple' },
+      ];
+
+      decorateIndexBasedNav(navList, index);
+
+      const items = [...navList.querySelectorAll('.level-3-list li')];
+      expect(items.map((li) => li.textContent)).to.deep.equal([
+        'Action bar', 'Apple', 'Monkey', 'Zebra',
+      ]);
     });
   });
 
@@ -205,9 +467,23 @@ describe('sitenav block', () => {
 
       const btn = await getExpandButton(sitenav);
 
-      expect(btn.getAttribute('aria-label')).to.equal('Toggle site navigation');
+      expect(btn.getAttribute('aria-label')).to.equal('Expand navigation');
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
       expect(btn.getAttribute('aria-controls')).to.equal('sitenav');
+    });
+
+    it('renders a tooltip mirroring the aria-label, associated by id', async () => {
+      stubMatchMedia(sandbox, false);
+      stubIconFetch(sandbox);
+      const sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      document.body.append(sitenav);
+
+      const btn = await getExpandButton(sitenav);
+
+      const tooltip = sitenav.querySelector('swc-tooltip');
+      expect(tooltip.getAttribute('for')).to.equal(btn.id);
+      expect(tooltip.textContent).to.equal('Expand navigation');
     });
   });
 
@@ -237,6 +513,18 @@ describe('sitenav block', () => {
       btn.click();
       expect(sitenav.hasAttribute('is-expanded')).to.be.false;
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('flips aria-label and the tooltip text together with is-expanded', () => {
+      const tooltip = sitenav.querySelector('swc-tooltip');
+
+      btn.click();
+      expect(btn.getAttribute('aria-label')).to.equal('Collapse navigation');
+      expect(tooltip.textContent).to.equal('Collapse navigation');
+
+      btn.click();
+      expect(btn.getAttribute('aria-label')).to.equal('Expand navigation');
+      expect(tooltip.textContent).to.equal('Expand navigation');
     });
 
     it('does not open the mobile tray — the rail width is a separate state', () => {

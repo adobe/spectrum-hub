@@ -146,7 +146,10 @@ function watchScrollSpy(headings, linkById) {
   // on every heading so clicking a page-nav link moves focus to the target
   const usedIds = new Set();
   headings.forEach((h) => {
-    if (!h.id) {
+    if (h.id) {
+      // Strip an authored `size-*-` modifier
+      h.id = h.id.replace(/^size-[a-z0-9]+-/, '');
+    } else {
       const base = slugify(h.textContent);
       let id = base;
       let suffix = 2;
