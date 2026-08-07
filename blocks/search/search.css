@@ -36,6 +36,7 @@ viewport edges instead of the anchor. */
   transition:
     opacity 0.4s cubic-bezier(0, 0, 0.4, 1),
     transform 0.4s cubic-bezier(0, 0, 0.4, 1);
+  background-color: var(--s2-gray-50);
 
   .results-heading {
     font-weight: 700;
