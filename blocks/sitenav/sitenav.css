@@ -72,6 +72,7 @@
         block-size: 18px;
         margin-block: auto;
         background-color: var(--s2-gray-800);
+        border-radius: 2px;
       }
 
     &:hover {
@@ -99,7 +100,6 @@
     all: unset;
     cursor: pointer;
     font-size: inherit;
-    /* outline: none; */
 
     &:hover,
     &[aria-expanded="true"] {
@@ -162,6 +162,10 @@
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s2-spacing-100);
     transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   .level-1-button {
@@ -182,6 +186,7 @@
       background-color: var(--s2-gray-800);
       pointer-events: none;
       transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+      border-radius: 2px;
     }
 
     svg {
@@ -377,6 +382,10 @@
 
     #animate-panel-bar {
       transition: width var(--expand-toggle-hover-duration) var(--expand-toggle-hover-ease);
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
     }
   }
 

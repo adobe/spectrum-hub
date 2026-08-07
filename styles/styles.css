@@ -483,6 +483,10 @@ div[data-status],
       transition:
         --sitenav-nav-width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease),
         --sitenav-level-2-width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
     }
 
     /* marketing page/homepage */
