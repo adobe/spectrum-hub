@@ -54,12 +54,11 @@ export function resolveContext(pathname) {
 
 /**
  * One status pill: a per-status icon + "<kind> <status>" label. Rendered as an
- * external link when `link` resolves, otherwise a static span. Returns `null`
- * when the cell is absent.
+ * external link when `link` resolves, otherwise a static span. An absent cell
+ * (e.g. Development on a design-only component) renders as Not available.
  */
 function buildPill({ kind, label: prefix }, cell, link) {
-  if (!cell) { return null; }
-  const status = STATUSES[cell.status] ?? STATUSES[NOT_AVAILABLE];
+  const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
   const text = `${prefix} ${status.label.toLowerCase()}`; // e.g. "Development available"
 
   const pill = document.createElement(link ? 'a' : 'span');

@@ -13,6 +13,7 @@
 export const IMPLEMENTATIONS = [
   { id: 'rsp', label: 'React Spectrum', shortLabel: 'RSP' },
   { id: 'swc', label: 'Spectrum Web Components', shortLabel: 'SWC' },
+  { id: 'design-only', label: 'Design only', shortLabel: 'Figma' },
 ];
 
 /**
