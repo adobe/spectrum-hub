@@ -10,10 +10,11 @@ loadStyle(import.meta.url.replace('js', 'css'));
 
 const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
-const INDEX_BASED_PARENT_NAMES = ['rsp', 'swc'];
+const INDEX_BASED_PARENT_NAMES = ['rsp', 'swc', 'design-only'];
 const INDEX_BASED_NAV = [
   { prefix: '/web/rsp', count: 0 },
   { prefix: '/web/swc', count: 0 },
+  { prefix: '/web/design-only', count: 0 },
   { prefix: '/mobile/ios', count: 0 },
   { prefix: '/mobile/android', count: 0 },
 ];
@@ -55,7 +56,9 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       btn.setAttribute('aria-label', labelText);
     } else {
       if (labelText === 'Components') {
-        const prevLiLabel = li.previousElementSibling.textContent.trim().toLowerCase();
+        // Normalized to match a URL segment (e.g. "Design only" -> "design-only") so nav
+        // content can use natural spacing rather than being authored pre-hyphenated.
+        const prevLiLabel = li.previousElementSibling.textContent.trim().toLowerCase().replace(/\s+/g, '-');
         if (INDEX_BASED_PARENT_NAMES.some((name) => name === prevLiLabel)) {
           label.setAttribute('index-based-nav-prefix', `/web/${prevLiLabel}`);
         }
@@ -118,7 +121,7 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
   return ul;
 };
 
-const decorateIndexBasedNav = (navList, index) => {
+export const decorateIndexBasedNav = (navList, index) => {
   index.forEach((entry) => {
     const parentPrefix = INDEX_BASED_NAV.find((top) => entry.path.startsWith(`${top.prefix}/`));
     if (!parentPrefix) { return; }
@@ -152,7 +155,7 @@ const decorateIndexBasedNav = (navList, index) => {
   });
 };
 
-const decorateBadges = () => {
+export const decorateBadges = () => {
   INDEX_BASED_NAV.forEach((parentPrefix) => {
     if (!parentPrefix.count) { return; }
     const badge = document.createElement('span');

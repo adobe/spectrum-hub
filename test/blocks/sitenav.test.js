@@ -9,7 +9,7 @@ const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('',
 const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
-  syncLevel1Tooltips,
+  syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -357,6 +357,64 @@ describe('sitenav block', () => {
       const ul = buildImplList('Foundations');
       decorateLevel(ul, 2);
       expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
+    });
+
+    // The parent heading is authored with natural spacing ("Design only"), not
+    // pre-hyphenated — decorateLevel normalizes spaces to hyphens to match the
+    // "design-only" URL segment, the same way "RSP"/"SWC" already lowercase directly.
+    it('marks a Components item that follows "Design only" with its prefix', () => {
+      const ul = buildImplList('Design only');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+    });
+
+    it('matches the "Design only" parent label regardless of case', () => {
+      const ul = buildImplList('DESIGN ONLY');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+    });
+  });
+
+  // design-only pages ride the exact same query-index-driven pipeline as rsp/swc
+  // (decorateLevel's marker -> decorateIndexBasedNav -> decorateBadges), including the
+  // [auto-generated] placeholder convention — the nav content is expected to use it too.
+  //
+  // decorateBadges reads counts off the module-level INDEX_BASED_NAV singleton, which
+  // decorateIndexBasedNav mutates in place and never resets — so this is deliberately one
+  // test rather than several, to avoid one call's count leaking into another's assertion.
+  describe('decorateIndexBasedNav + decorateBadges — design-only', () => {
+    it('counts design-only pages from the query index, badges the label, and lists them', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Design only</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 2);
+      const index = [
+        { path: '/web/design-only/components/alert-banner', title: 'Alert banner' },
+        { path: '/web/design-only/components/coach-mark', title: 'Coach mark' },
+        { path: '/web/rsp/components/action-button', title: 'Action button' },
+      ];
+
+      decorateIndexBasedNav(navList, index);
+      decorateBadges();
+
+      const label = navList.querySelector('[index-based-nav-prefix="/web/design-only"]');
+      const badge = label.nextElementSibling;
+      expect(badge.classList.contains('count-badge')).to.be.true;
+      expect(badge.textContent).to.equal('2');
+
+      const items = [...navList.querySelectorAll('.level-3-list li')];
+      expect(items.map((li) => li.querySelector('a').getAttribute('href'))).to.deep.equal([
+        '/web/design-only/components/alert-banner',
+        '/web/design-only/components/coach-mark',
+      ]);
     });
   });
 
