@@ -50,6 +50,10 @@
     "Radio": {
       "canonical": "RadioButton",
       "externalName": "RadioGroup"
+    },
+    "Image": {
+      "canonical": "Thumbnail",
+      "externalName": "Image"
     }
   },
   "figma": {

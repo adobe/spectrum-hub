@@ -1446,7 +1446,9 @@
             "status": "available"
           },
           "rsp": {
-            "status": "not-available",
+            "status": "available",
+            "context": "Stable",
+            "originalName": "Image",
             "secondary": "Use image"
           },
           "swc": {

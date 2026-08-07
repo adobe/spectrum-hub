@@ -11,7 +11,8 @@ export default {
     "swatch": "ColorSwatch",
     "swatch-group": "ColorSwatchPicker",
     "table": "TableView",
-    "takeover-dialog": "Dialog"
+    "takeover-dialog": "Dialog",
+    "thumbnail": "Image"
   },
   "swc": {
     "color-handle-and-loupe": "ColorHandle"
