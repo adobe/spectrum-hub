@@ -296,6 +296,7 @@
       .level-2-button[aria-expanded="true"] {
         font-weight: 700;
       }
+      
     /* TODO: add the selection indicator when a child page is selected but the parent is collapsed. 
       .level-2-button[aria-expanded="false"]::before + .level-3-menu .level-3-list:has(a.is-current-page) {
         content: '';
