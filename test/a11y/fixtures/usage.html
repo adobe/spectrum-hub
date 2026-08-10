@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usage block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/usage/usage.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <!-- single stacked panel: [content + media], [caption], [indicator] -->
+      <div class="usage">
+        <div>
+          <div>
+            <h2>Do</h2>
+            <p>Use a single primary action per view.</p>
+          </div>
+          <div>
+            <picture>
+              <img
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                alt="Example of correct usage"
+                width="180"
+                height="120"
+              >
+            </picture>
+          </div>
+        </div>
+        <div>
+          <div>Keep the primary action visually distinct.</div>
+        </div>
+        <div>
+          <div><span class="icon icon-docheck"></span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/usage/usage.js';
+    document.querySelectorAll('.usage').forEach(init);
+  </script>
+</body>
+</html>

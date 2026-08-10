@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component-status block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/component-status/component-status.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="component-status"></div>
+    </div>
+  </main>
+  <script type="module">
+    // resolveContext needs a real /web/<impl>/components/<slug> path — this fixture's own
+    // served URL doesn't look like one, so rewrite it before init() reads window.location.
+    history.pushState({}, '', '/web/swc/components/button');
+    import init from '/blocks/component-status/component-status.js';
+    document.querySelectorAll('.component-status').forEach(init);
+  </script>
+</body>
+</html>

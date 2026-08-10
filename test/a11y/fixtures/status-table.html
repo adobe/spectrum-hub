@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status-table block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/status-table/status-table.css">
+  <!-- status-table imports deps/se/se.js, which imports the bare "lit" specifier -->
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <h2 id="status-table-heading">Component availability</h2>
+      <div class="status-table"></div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/status-table/status-table.js';
+    document.querySelectorAll('.status-table').forEach(init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banner block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/banner/banner.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <!-- a single row = ungated (public-only) content, skips the audience-removal path -->
+      <div class="banner">
+        <div>
+          <p>New release available.</p>
+          <p><a href="/whats-new" class="btn primary">Learn more</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/banner/banner.js';
+    document.querySelectorAll('.banner').forEach(init);
+  </script>
+</body>
+</html>
