@@ -204,6 +204,7 @@ const fetchRes = async (path) => {
 export const getSiteNav = () => {
   const sitenav = document.createElement('div');
   sitenav.id = 'sitenav';
+  sitenav.setAttribute('is-expanded', '');
 
   const nav = document.createElement('nav');
   nav.setAttribute('aria-label', DEF_SITE_NAME);
@@ -283,7 +284,7 @@ export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
   btn.id = 'sitenav-expand-btn';
   btn.classList.add('sitenav-expand-btn');
-  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-expanded', String(sitenav.hasAttribute('is-expanded')));
   btn.setAttribute('aria-controls', sitenav.id);
 
   const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');

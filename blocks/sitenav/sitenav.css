@@ -1,6 +1,6 @@
 #sitenav {
   --sitenav-blur: 32px;
-  --sitenav-corner-radius: var(--s2-corner-radius-850);
+  --sitenav-corner-radius: var(--s2-corner-radius-950);
   --sitenav-children-transition-duration: 160ms;
   --sitenav-children-transition-ease: cubic-bezier(0.23, 1, 0.32, 1);
 
@@ -395,12 +395,6 @@
   sitenav-expand-btn inside it to reveal labels, same as desktop. */
   .sitenav-trigger-btn {
     display: none;
-    justify-content: center;
-    align-items: center;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    background-color: var(--s2-gray-1000);
 
     > svg,
     &[aria-expanded="true"] svg {
@@ -432,8 +426,8 @@
     }
   }
 
-  &[is-expanded] {
-    --sitenav-corner-radius: var(--s2-corner-radius-950);
+  &:not([is-expanded]) {
+    --sitenav-corner-radius: var(--s2-corner-radius-850);
     --expand-panel-width: 5px;
 
     .sitenav-expand-btn:hover {
@@ -449,6 +443,12 @@
     }
 
     &[is-open] {
+      justify-content: center;
+      align-items: center;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      background-color: var(--s2-gray-1000);
       position: fixed;
       z-index: 300;
       top: auto;

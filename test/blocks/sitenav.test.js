@@ -74,6 +74,11 @@ describe('sitenav block', () => {
       expect(nav.getAttribute('aria-label')).to.equal('Spectrum Hub');
       expect(nav.parentElement).to.equal(sitenav);
     });
+
+    it('starts expanded by default', () => {
+      const { sitenav } = getSiteNav();
+      expect(sitenav.hasAttribute('is-expanded')).to.be.true;
+    });
   });
 
   describe('decorateLevel — accessible name for icon-only toggle buttons', () => {
@@ -544,6 +549,20 @@ describe('sitenav block', () => {
       const tooltip = sitenav.querySelector('swc-tooltip');
       expect(tooltip.getAttribute('for')).to.equal(btn.id);
       expect(tooltip.textContent).to.equal('Expand navigation');
+    });
+
+    it('starts expanded when the sitenav already carries is-expanded', async () => {
+      stubMatchMedia(sandbox, false);
+      stubIconFetch(sandbox);
+      const sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      sitenav.setAttribute('is-expanded', '');
+      document.body.append(sitenav);
+
+      const btn = await getExpandButton(sitenav);
+
+      expect(btn.getAttribute('aria-label')).to.equal('Collapse navigation');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
     });
   });
 
