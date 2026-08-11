@@ -9,7 +9,7 @@ const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('',
 const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
-  syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
+  syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex, fetchRes,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -54,6 +54,7 @@ describe('sitenav block', () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     document.body.innerHTML = '';
+    sessionStorage.clear();
   });
 
   afterEach(async () => {
