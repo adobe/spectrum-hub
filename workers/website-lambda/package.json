@@ -1,0 +1,11 @@
+{
+  "name": "website-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "bash deploy.sh"
+  },
+  "author": "",
+  "license": "Apache-2.0"
+}

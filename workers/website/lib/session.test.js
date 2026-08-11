@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   deriveExpiry, clampExpiry, DEFAULT_MAX_AGE_MS, signToken,
   serializeCookie, createSessionCookies, MAX_COOKIE_BYTES, durationMs,
-  DEFAULT_SESSION_COOKIE_NAME,
+  DEFAULT_SESSION_COOKIE_NAME, base64urlDecode, verifySignedToken, readSession,
 } from './session.js';
 
 const NOW = 1785812270230;
@@ -336,5 +336,86 @@ describe('createSessionCookies config defaults and guards', () => {
   it('returns 500 when no config is supplied at all', async () => {
     const { error } = await createSessionCookies({ body: imsBody(), now: NOW });
     expect(error.status).toBe(500);
+  });
+});
+
+const SECRET = 'test-secret';
+
+// The claims blob createSession signs into the cookie: a JSON string of
+// email/created_at/expires_in, HMACed by signToken.
+const claims = (overrides = {}) => JSON.stringify({
+  email: 'user@example.com',
+  created_at: String(NOW),
+  expires_in: '86400000',
+  ...overrides,
+});
+
+describe('base64urlDecode', () => {
+  it('round-trips arbitrary UTF-8 through signToken payloads', async () => {
+    const signed = await signToken('héllo.world', SECRET);
+    const payload = signed.slice(0, signed.indexOf('.'));
+    expect(new TextDecoder().decode(base64urlDecode(payload))).toBe('héllo.world');
+  });
+
+  it('throws on input that is not valid base64', () => {
+    expect(() => base64urlDecode('@@@not-base64@@@')).toThrow();
+  });
+});
+
+describe('verifySignedToken', () => {
+  it('returns the original string for a signature made with the same secret', async () => {
+    const signed = await signToken('the-payload', SECRET);
+    expect(await verifySignedToken(signed, SECRET)).toBe('the-payload');
+  });
+
+  it('returns null when the secret does not match', async () => {
+    const signed = await signToken('the-payload', SECRET);
+    expect(await verifySignedToken(signed, 'other-secret')).toBe(null);
+  });
+
+  it('returns null when the payload is tampered with but the signature is kept', async () => {
+    const signed = await signToken('the-payload', SECRET);
+    const tampered = `${await signToken('evil', SECRET)}`.split('.')[0].concat('.', signed.split('.')[1]);
+    expect(await verifySignedToken(tampered, SECRET)).toBe(null);
+  });
+
+  it('returns null for a value with no dot, or more than one', async () => {
+    expect(await verifySignedToken('nodot', SECRET)).toBe(null);
+    expect(await verifySignedToken('a.b.c', SECRET)).toBe(null);
+  });
+
+  it('returns null for a non-string value or empty secret', async () => {
+    const signed = await signToken('x', SECRET);
+    expect(await verifySignedToken(null, SECRET)).toBe(null);
+    expect(await verifySignedToken(signed, '')).toBe(null);
+  });
+});
+
+describe('readSession', () => {
+  const sign = (overrides) => signToken(claims(overrides), SECRET);
+
+  it('returns the decoded claims for a valid, unexpired cookie', async () => {
+    const session = await readSession(await sign(), SECRET, NOW);
+    expect(session.email).toBe('user@example.com');
+  });
+
+  it('returns null once the cookie is at or past its expiry', async () => {
+    const signed = await sign({ created_at: String(NOW), expires_in: '1000' });
+    expect(await readSession(signed, SECRET, NOW + 1000)).toBe(null);
+    expect(await readSession(signed, SECRET, NOW + 999)).not.toBe(null);
+  });
+
+  it('returns null when the signature does not verify', async () => {
+    expect(await readSession(await sign(), 'wrong-secret', NOW)).toBe(null);
+  });
+
+  it('returns null when the signed payload is not JSON', async () => {
+    const signed = await signToken('not-json', SECRET);
+    expect(await readSession(signed, SECRET, NOW)).toBe(null);
+  });
+
+  it('returns null when the claims carry no usable expiry', async () => {
+    const signed = await sign({ expires_in: undefined });
+    expect(await readSession(signed, SECRET, NOW)).toBe(null);
   });
 });

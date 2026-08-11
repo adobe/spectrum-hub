@@ -1,6 +1,7 @@
 import {
   describe, it, expect, vi, beforeEach, afterEach,
 } from 'vitest';
+import { signToken } from './lib/session.js';
 
 // fetchFromAem is stubbed so a routing test never makes a network call.
 // createSession/deleteSession keep their real behaviour and are only
@@ -29,6 +30,9 @@ const env = {
   AEM_SITE: 'spectrum-hub',
   ORIGIN_AUTHENTICATION: 'origin-secret',
   SESSION_SECRET: 'test-secret',
+  IMS_CLIENT_ID: 'service-client',
+  IMS_CLIENT_SECRET: 'service-secret',
+  IMS_SCOPE: 'openid,AdobeID',
 };
 
 const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
@@ -61,11 +65,40 @@ const deleteSessionRequest = (path = '/auth/session', origin = ORIGIN) => new Re
   headers: { origin },
 });
 
+// A real, HMAC-valid session cookie for the gate to accept - the same shape
+// createSession mints (signed JSON claims), so index.js's readSession
+// verifies it against the real lib rather than a stub.
+const sessionCookie = async (overrides = {}) => {
+  const claims = JSON.stringify({
+    email: 'user@example.com',
+    created_at: String(Date.now()),
+    expires_in: '86400000',
+    ...overrides,
+  });
+  return `${'spectrum_session'}=${await signToken(claims, env.SESSION_SECRET)}`;
+};
+
+// GET a path as an authenticated visitor (valid session cookie present).
+const authedGet = async (path) => new Request(`${ORIGIN}${path}`, {
+  method: 'GET',
+  headers: { cookie: await sessionCookie() },
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ email: 'user@example.com' }), {
-    status: 200,
-  })));
+  // createSession fans out to IMS profile, the IMS token endpoint, and the
+  // DA visitor allowlist; route by URL so each leg answers plausibly and the
+  // configured user is admitted by the '@example.com' wildcard.
+  vi.stubGlobal('fetch', vi.fn(async (url) => {
+    const u = String(url);
+    if (u.includes('/ims/token/')) {
+      return new Response(JSON.stringify({ access_token: 'service-token' }), { status: 200 });
+    }
+    if (u.includes('admin.da.live/config/')) {
+      return new Response(JSON.stringify({ visitors: { data: [{ email: '@example.com' }] } }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ email: 'user@example.com' }), { status: 200 });
+  }));
 });
 
 afterEach(() => {
@@ -127,7 +160,7 @@ describe('routing /auth/session', () => {
   it('still attaches the origin credential on the proxy route', async () => {
     // Proves the assertion above is not vacuous: this env really does
     // produce an authorization header on the path that is meant to have one.
-    await worker.fetch(new Request(`${ORIGIN}/`, { method: 'GET' }), env);
+    await worker.fetch(await authedGet('/'), env);
     expect(fetchFromAem).toHaveBeenCalledTimes(1);
     const { request } = fetchFromAem.mock.calls[0][0];
     expect(request.headers.get('authorization')).toBe('token origin-secret');
@@ -136,7 +169,7 @@ describe('routing /auth/session', () => {
 
 describe('routing the /auth/ namespace', () => {
   it('routes / to the proxy handler', async () => {
-    const resp = await worker.fetch(new Request(`${ORIGIN}/`, { method: 'GET' }), env);
+    const resp = await worker.fetch(await authedGet('/'), env);
     expect(resp.status).toBe(200);
     expect(fetchFromAem).toHaveBeenCalledTimes(1);
     expect(createSession).not.toHaveBeenCalled();
@@ -173,8 +206,84 @@ describe('routing the /auth/ namespace', () => {
   });
 
   it('leaves a lookalike path outside the namespace on the proxy route', async () => {
-    const resp = await worker.fetch(new Request(`${ORIGIN}/authors/index.html`, { method: 'GET' }), env);
+    const resp = await worker.fetch(await authedGet('/authors/index.html'), env);
     expect(resp.status).toBe(200);
     expect(fetchFromAem).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('access gate', () => {
+  const anonGet = (path) => new Request(`${ORIGIN}${path}`, { method: 'GET' });
+
+  it('serves public prefixes to an anonymous visitor', async () => {
+    const resp = await worker.fetch(anonGet('/styles/styles.css'), env);
+    expect(resp.status).toBe(200);
+    expect(fetchFromAem).toHaveBeenCalledTimes(1);
+    // Public assets are still proxied with the origin credential attached.
+    const { request } = fetchFromAem.mock.calls[0][0];
+    expect(request.headers.get('authorization')).toBe('token origin-secret');
+  });
+
+  it('serves a /media_ path to an anonymous visitor', async () => {
+    const resp = await worker.fetch(anonGet('/content/page/media_deadbeef.png'), env);
+    expect(resp.status).toBe(200);
+    expect(fetchFromAem).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves telemetry (RUM/OpTel) to an anonymous visitor', async () => {
+    expect((await worker.fetch(anonGet('/.rum/web-vitals.js'), env)).status).toBe(200);
+    expect((await worker.fetch(anonGet('/.optel/optel.js'), env)).status).toBe(200);
+    expect(fetchFromAem).toHaveBeenCalledTimes(2);
+  });
+
+  it('strips the session cookie from the request it proxies upstream', async () => {
+    await worker.fetch(await authedGet('/some/gated/page'), env);
+    expect(fetchFromAem).toHaveBeenCalledTimes(1);
+    const { request } = fetchFromAem.mock.calls[0][0];
+    expect(request.headers.get('cookie')).toBe(null);
+  });
+
+  it('404s the site root for an anonymous visitor, without proxying', async () => {
+    const resp = await worker.fetch(anonGet('/'), env);
+    expect(resp.status).toBe(404);
+    expect(fetchFromAem).not.toHaveBeenCalled();
+  });
+
+  it('404s a content page for an anonymous visitor', async () => {
+    const resp = await worker.fetch(anonGet('/some/gated/page'), env);
+    expect(resp.status).toBe(404);
+    expect(fetchFromAem).not.toHaveBeenCalled();
+  });
+
+  it('404s /query-index.json (filter category, punted) for an anonymous visitor', async () => {
+    const resp = await worker.fetch(anonGet('/query-index.json'), env);
+    expect(resp.status).toBe(404);
+    expect(fetchFromAem).not.toHaveBeenCalled();
+  });
+
+  it('serves a gated page to an authenticated visitor', async () => {
+    const resp = await worker.fetch(await authedGet('/some/gated/page'), env);
+    expect(resp.status).toBe(200);
+    expect(fetchFromAem).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats a tampered / wrong-secret cookie as anonymous (404 on a gated path)', async () => {
+    const badCookie = `spectrum_session=${await signToken('{"email":"x"}', 'wrong-secret')}`;
+    const resp = await worker.fetch(new Request(`${ORIGIN}/some/gated/page`, {
+      method: 'GET', headers: { cookie: badCookie },
+    }), env);
+    expect(resp.status).toBe(404);
+    expect(fetchFromAem).not.toHaveBeenCalled();
+  });
+
+  it('treats an expired session as anonymous (404 on a gated path)', async () => {
+    const expired = `spectrum_session=${await signToken(JSON.stringify({
+      email: 'user@example.com', created_at: '1000', expires_in: '1000',
+    }), env.SESSION_SECRET)}`;
+    const resp = await worker.fetch(new Request(`${ORIGIN}/some/gated/page`, {
+      method: 'GET', headers: { cookie: expired },
+    }), env);
+    expect(resp.status).toBe(404);
+    expect(fetchFromAem).not.toHaveBeenCalled();
   });
 });

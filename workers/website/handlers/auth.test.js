@@ -4,7 +4,16 @@ import {
 import { createSession, deleteSession } from './auth.js';
 
 const ORIGIN = 'https://example.com';
-const env = { SESSION_SECRET: 'test-secret' };
+// IMS_CLIENT_ID/SECRET/SCOPE are the service credential for the DA visitor
+// lookup; without them createSession short-circuits to 500 before any fetch.
+const env = {
+  SESSION_SECRET: 'test-secret',
+  IMS_CLIENT_ID: 'service-client',
+  IMS_CLIENT_SECRET: 'service-secret',
+  IMS_SCOPE: 'openid,AdobeID',
+  AEM_ORG: 'adobe',
+  AEM_SITE: 'spectrum-hub',
+};
 
 const post = (body, { origin = ORIGIN, method = 'POST' } = {}) => {
   const payload = typeof body === 'string' ? body : JSON.stringify(body);
@@ -37,14 +46,42 @@ const imsBody = (payloadOverrides) => ({ access_token: makeToken(payloadOverride
 
 const TEST_EMAIL = 'user@example.com';
 
-// Stands in for IMS's /ims/profile/v1. Defaults to accepting the token
-// and returning an email; tests override status/body to exercise the
-// rejection and malformed-response paths.
-const mockImsProfile = (status = 200, body = { email: TEST_EMAIL }) => {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify(body), { status }));
+// createSession now fans out to three upstreams: IMS profile (auth), the
+// IMS token endpoint, and the DA config (visitor allowlist). The mock routes
+// by URL so each can be controlled independently. Defaults are the happy
+// path: token accepted, service token minted, and a '@example.com' wildcard
+// that admits TEST_EMAIL.
+const mockUpstreams = ({
+  profileStatus = 200,
+  profile = { email: TEST_EMAIL },
+  tokenStatus = 200,
+  tokenBody = { access_token: 'service-token' },
+  daStatus = 200,
+  visitors = [{ email: '@example.com' }],
+} = {}) => {
+  const fetchMock = vi.fn(async (url) => {
+    const u = String(url);
+    if (u.includes('/ims/profile/')) {
+      return new Response(JSON.stringify(profile), { status: profileStatus });
+    }
+    if (u.includes('/ims/token/')) {
+      return new Response(JSON.stringify(tokenBody), { status: tokenStatus });
+    }
+    if (u.includes('admin.da.live/config/')) {
+      return new Response(JSON.stringify({ visitors: { data: visitors } }), { status: daStatus });
+    }
+    throw new Error(`unexpected fetch: ${u}`);
+  });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
 };
+
+// Kept as a thin wrapper so the many profile-focused tests read unchanged;
+// it only steers the profile leg and leaves token + DA on their defaults.
+const mockImsProfile = (status = 200, body = { email: TEST_EMAIL }) => mockUpstreams({
+  profileStatus: status,
+  profile: body,
+});
 
 beforeEach(() => {
   mockImsProfile();
@@ -263,6 +300,105 @@ describe('createSession IMS verification', () => {
     mockImsProfile(401, {});
     const resp = await call(post(imsBody()));
     expect(resp.headers.get('cache-control')).toBe('no-store');
+  });
+});
+
+describe('createSession visitor authorization', () => {
+  it('returns 500 when the service credential is not configured', async () => {
+    mockUpstreams();
+    const request = post(imsBody());
+    const resp = await createSession({
+      url: new URL(request.url),
+      env: { ...env, IMS_CLIENT_SECRET: undefined },
+      request,
+    });
+    expect(resp.status).toBe(500);
+  });
+
+  it('admits an email whose domain matches a wildcard entry', async () => {
+    mockUpstreams({ profile: { email: 'someone@example.com' }, visitors: [{ email: '@example.com' }] });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(200);
+  });
+
+  it('admits an exact email match', async () => {
+    mockUpstreams({ profile: { email: TEST_EMAIL }, visitors: [{ email: TEST_EMAIL }] });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(200);
+  });
+
+  it('matches case-insensitively on both address and domain', async () => {
+    mockUpstreams({ profile: { email: 'User@Example.COM' }, visitors: [{ email: '@example.com' }] });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(200);
+  });
+
+  it('returns 403 when neither the email nor its domain is listed', async () => {
+    mockUpstreams({ profile: { email: 'user@example.com' }, visitors: [{ email: '@adobe.com' }, { email: 'other@example.com' }] });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(403);
+  });
+
+  it('does not mint a cookie for an unlisted visitor', async () => {
+    mockUpstreams({ visitors: [{ email: '@adobe.com' }] });
+    const resp = await call(post(imsBody()));
+    expect(resp.headers.getSetCookie()).toHaveLength(0);
+  });
+
+  it('denies everyone when the allowlist is empty (fail closed)', async () => {
+    mockUpstreams({ visitors: [] });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(403);
+  });
+
+  it('sends the service token as a bearer credential to the DA config URL', async () => {
+    const fetchMock = mockUpstreams();
+    await call(post(imsBody()));
+    const daCall = fetchMock.mock.calls.find(([u]) => String(u).includes('admin.da.live/config/'));
+    expect(daCall[0]).toBe('https://admin.da.live/config/adobe/spectrum-hub/');
+    expect(daCall[1].headers.authorization).toBe('Bearer service-token');
+  });
+
+  it('mints the service token with a client_credentials grant', async () => {
+    const fetchMock = mockUpstreams();
+    await call(post(imsBody()));
+    const tokenCall = fetchMock.mock.calls.find(([u]) => String(u).includes('/ims/token/'));
+    expect(tokenCall[0]).toBe('https://ims-na1.adobelogin.com/ims/token/v3');
+    expect(tokenCall[1].body.get('grant_type')).toBe('client_credentials');
+    expect(tokenCall[1].body.get('client_id')).toBe('service-client');
+  });
+
+  it('returns 502 rather than minting a cookie when the DA config request fails', async () => {
+    mockUpstreams({ daStatus: 500 });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(502);
+    expect(resp.headers.getSetCookie()).toHaveLength(0);
+  });
+
+  it('returns 502 when the service token request fails', async () => {
+    mockUpstreams({ tokenStatus: 500 });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(502);
+  });
+
+  it('returns 502 when the service token response has no access_token', async () => {
+    mockUpstreams({ tokenBody: {} });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(502);
+  });
+
+  it('marks the 403 no-store', async () => {
+    mockUpstreams({ visitors: [{ email: '@adobe.com' }] });
+    const resp = await call(post(imsBody()));
+    expect(resp.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it('does not touch DA when IMS rejects the token (IMS is the rate limiter)', async () => {
+    const fetchMock = mockUpstreams({ profileStatus: 401, profile: {} });
+    const resp = await call(post(imsBody()));
+    expect(resp.status).toBe(401);
+    const touchedDa = fetchMock.mock.calls.some(([u]) => String(u).includes('/ims/token/') || String(u).includes('admin.da.live'));
+    expect(touchedDa).toBe(false);
   });
 });
 

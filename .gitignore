@@ -6,6 +6,7 @@ node_modules/
 helix-importer-ui
 .env
 .dev.env
+.dev.vars
 .DS_Store
 *.bak
 .idea

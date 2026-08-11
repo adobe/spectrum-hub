@@ -67,6 +67,61 @@ export const signToken = async (token, secret) => {
   return `${payload}.${base64urlEncode(new Uint8Array(signature))}`;
 };
 
+// Inverse of base64urlEncode. atob throws on input that is not valid
+// base64, which every caller here treats as a verification failure.
+export const base64urlDecode = (value) => {
+  const b64 = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64.padEnd(Math.ceil(b64.length / 4) * 4, '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) { bytes[i] = binary.charCodeAt(i); }
+  return bytes;
+};
+
+// The read side of signToken, for the gating pass: recomputes the HMAC over
+// the payload and lets crypto.subtle.verify do the constant-time compare.
+// Returns the original signed string (the JSON claims blob) on success, or
+// null on any failure - wrong shape, bad base64, or a signature that does
+// not match the secret. A value is `base64url(token).base64url(hmac)`, so a
+// genuine value carries exactly one '.'.
+export const verifySignedToken = async (signed, secret) => {
+  if (typeof signed !== 'string' || typeof secret !== 'string' || secret === '') { return null; }
+  const dot = signed.indexOf('.');
+  if (dot < 1 || dot !== signed.lastIndexOf('.')) { return null; }
+  const payload = signed.slice(0, dot);
+  const encoder = new TextEncoder();
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    );
+    const signature = base64urlDecode(signed.slice(dot + 1));
+    const ok = await crypto.subtle.verify('HMAC', key, signature, encoder.encode(payload));
+    if (!ok) { return null; }
+    return new TextDecoder().decode(base64urlDecode(payload));
+  } catch {
+    return null;
+  }
+};
+
+// Verifies a cookie value and confirms it has not outlived the IMS token's
+// own expiry, returning the decoded claims ({ email, created_at, expires_in })
+// or null. `now` is passed in rather than read here so the module stays pure.
+// The browser's own Max-Age already deletes the cookie on schedule; this
+// second check bounds replay of a captured value to the token's natural life.
+export const readSession = async (signed, secret, now) => {
+  const decoded = await verifySignedToken(signed, secret);
+  if (decoded === null) { return null; }
+  let claims;
+  try { claims = JSON.parse(decoded); } catch { return null; }
+  const expiresAt = deriveExpiry(claims);
+  if (expiresAt === null || now >= expiresAt) { return null; }
+  return claims;
+};
+
 // Browsers cap a single cookie at 4096 bytes and silently drop anything
 // larger, so an oversized token must be an explicit error instead.
 export const MAX_COOKIE_BYTES = 4096;

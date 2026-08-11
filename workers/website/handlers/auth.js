@@ -8,7 +8,9 @@ import {
 import { decodeJwt } from '../lib/jwt.js';
 
 // Not a secret - a public OAuth client_id, same one scripts/utils/ims.js
-// uses to sign in. IMS's profile endpoint requires it on every call.
+// uses to sign in. IMS's profile endpoint requires it on every call. This
+// is distinct from env.IMS_CLIENT_ID, which is the confidential service
+// credential used below to mint a client_credentials token for DA.
 const IMS_CLIENT_ID = 'spectrumhub';
 
 const IMS_PROFILE_URL = {
@@ -16,6 +18,18 @@ const IMS_PROFILE_URL = {
   stage: 'https://ims-na1-stg1.adobelogin.com/ims/profile/v1',
   prod: 'https://ims-na1.adobelogin.com/ims/profile/v1',
 };
+
+// client_credentials endpoint for the DA service token. dev and stage share
+// the stg1 host, matching IMS_PROFILE_URL and scripts/utils/ims.js.
+const IMS_TOKEN_URL = {
+  dev: 'https://ims-na1-stg1.adobelogin.com/ims/token/v3',
+  stage: 'https://ims-na1-stg1.adobelogin.com/ims/token/v3',
+  prod: 'https://ims-na1.adobelogin.com/ims/token/v3',
+};
+
+// Where the visitor allowlist lives. admin.da.live keys config by org/site,
+// the same two values the AEM proxy already uses.
+const daConfigUrl = (env) => `https://admin.da.live/config/${env.AEM_ORG}/${env.AEM_SITE}/`;
 
 // Config is a plain object, never a Cloudflare binding, so process.env
 // serves the Lambda and I/O Runtime ports without code changes. Everything
@@ -70,6 +84,58 @@ const fetchImsProfile = async (token, imsEnv) => {
   return { rejected: false, profile: await resp.json() };
 };
 
+// A client_credentials token for this worker's own service identity - not
+// the visitor's token. It authorizes the DA config read below and is never
+// stored or handed back to the client. Scopes may be comma- or
+// space-separated in config; IMS wants commas, so whitespace is stripped.
+const fetchServiceToken = async (env, imsEnv) => {
+  const url = IMS_TOKEN_URL[imsEnv] ?? IMS_TOKEN_URL.prod;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: env.IMS_CLIENT_ID,
+      client_secret: env.IMS_CLIENT_SECRET,
+      scope: (env.IMS_SCOPE ?? '').replace(/\s+/g, ''),
+    }),
+  });
+  if (!resp.ok) { throw new Error(`IMS token request failed with status ${resp.status}`); }
+  const token = (await resp.json())?.access_token;
+  if (typeof token !== 'string' || token === '') {
+    throw new Error('IMS token response carried no access_token');
+  }
+  return token;
+};
+
+// Reads the DA config with a freshly minted service token and returns the
+// raw visitor rows (visitors.data). A throw here means "could not decide" -
+// the caller must fail closed, never mint a cookie on an unresolved check.
+const fetchVisitorAllowlist = async (env, imsEnv) => {
+  const token = await fetchServiceToken(env, imsEnv);
+  const resp = await fetch(daConfigUrl(env), {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok) { throw new Error(`DA config request failed with status ${resp.status}`); }
+  const rows = (await resp.json())?.visitors?.data;
+  return Array.isArray(rows) ? rows : [];
+};
+
+// An entry is either a full address (exact match) or a leading-'@' domain
+// wildcard, e.g. "@adobe.com" allows anyone at adobe.com. All comparison is
+// case-insensitive. An empty or malformed row never matches, so a config
+// with no usable rows denies everyone - fail closed by construction.
+const isVisitorAllowed = (email, rows) => {
+  const normalized = email.trim().toLowerCase();
+  const at = normalized.lastIndexOf('@');
+  const domain = at >= 0 ? normalized.slice(at) : '';
+  return rows.some((row) => {
+    const entry = typeof row?.email === 'string' ? row.email.trim().toLowerCase() : '';
+    if (entry === '') { return false; }
+    return entry.startsWith('@') ? entry === domain : entry === normalized;
+  });
+};
+
 export const createSession = async ({ url, env, request }) => {
   if (request.method !== 'POST') {
     const resp = problem(405, 'Method Not Allowed');
@@ -85,6 +151,13 @@ export const createSession = async ({ url, env, request }) => {
     return problem(500, 'Session signing is not configured');
   }
 
+  // The service credential is required to read the visitor allowlist. A
+  // missing one is a deploy mistake, not a caller error - surface it as 500
+  // rather than letting it collapse into the 502 "DA unreachable" path.
+  if (!env.IMS_CLIENT_ID || !env.IMS_CLIENT_SECRET || !env.IMS_SCOPE) {
+    return problem(500, 'Visitor authorization is not configured');
+  }
+
   let body;
   try {
     body = await request.json();
@@ -97,13 +170,18 @@ export const createSession = async ({ url, env, request }) => {
     return problem(400, 'access_token is required');
   }
 
+  // Verify the caller's token against IMS first, before spending a service
+  // token on the DA lookup. The DA read is deliberately gated behind a
+  // successful profile call so IMS acts as the rate limiter: an invalid or
+  // spoofed token never reaches DA, no matter how often it is retried.
+  const imsEnv = env.IMS_ENV ?? 'prod';
   let outcome;
   try {
-    outcome = await fetchImsProfile(token, env.IMS_ENV ?? 'prod');
+    outcome = await fetchImsProfile(token, imsEnv);
   } catch {
-    // A network failure or an IMS 5xx is not the caller's fault, and is
-    // not the same as a forged token - a client retry has a real chance
-    // of succeeding, so this must not collapse into the 401 case below.
+    // A network failure or an IMS 5xx is not the caller's fault, and is not
+    // the same as a forged token - a client retry has a real chance of
+    // succeeding, so this must not collapse into the 401 case below.
     return problem(502, 'Unable to verify access_token against IMS');
   }
   if (outcome.rejected) {
@@ -119,6 +197,21 @@ export const createSession = async ({ url, env, request }) => {
   const decoded = decodeJwt(token);
   if (typeof email !== 'string' || email === '' || !decoded) {
     return problem(502, 'IMS returned a token or profile this worker could not use');
+  }
+
+  // Authorization, distinct from the authentication above: IMS proved who
+  // this is, DA decides whether they may in. Only reached once the token is
+  // known good. Fail closed - a cookie is only ever minted for an email (or
+  // its domain) present in the allowlist, and an unreachable DA is a 502,
+  // never an admit.
+  let allowlist;
+  try {
+    allowlist = await fetchVisitorAllowlist(env, imsEnv);
+  } catch {
+    return problem(502, 'Unable to verify access against DA');
+  }
+  if (!isVisitorAllowed(email, allowlist)) {
+    return problem(403, 'Not authorized');
   }
 
   const claims = {
