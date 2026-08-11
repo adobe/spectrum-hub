@@ -631,7 +631,7 @@ div[data-status],
           height: 100%;
           object-fit: cover;
           object-position: top;
-          transition: --sh-decode-transition;
+          transition: var(--sh-decode-transition);
 
           &.decoded {
             opacity: 1;
@@ -648,9 +648,6 @@ div[data-status],
         --sh-header-height: 0;
       }
 
-      &.is-returning {
-        --sh-decode-transition: none;
-      }
     }
 
     .scheme-aware-pic {

@@ -111,9 +111,15 @@ const decorateBackground = async () => {
   pics.forEach((pic) => {
     if (!pic) { return; }
     const img = pic.querySelector('img');
-    img.decode()
-      .then(() => img.classList.add('decoded'))
-      .catch(() => img.classList.add('decoded'));
+    const reveal = () => img.classList.add('decoded');
+    // decode() can resolve before the image is fully downloaded, so gate on
+    // load/complete (fully fetched) instead of decode readiness.
+    if (img.complete) {
+      reveal();
+    } else {
+      img.addEventListener('load', reveal, { once: true });
+      img.addEventListener('error', reveal, { once: true });
+    }
   });
 };
 
