@@ -154,9 +154,10 @@
       opacity: 1;
     }
 
-    /* Only let a level-3 sub-list re-assert visibility:visible (see
-    .level-3-menu) while its own level-2-menu is the active/visible one. */
-    button[aria-expanded="true"] + .level-3-menu {
+    /* Only let a level-3 or level-4 sub-list re-assert visibility:visible
+    (see .level-3-menu/.level-4-menu) while its own level-2-menu is the
+    active/visible one. */
+    button[aria-expanded="true"] + :is(.level-3-menu, .level-4-menu) {
       visibility: visible;
     }
   }
@@ -302,7 +303,7 @@
         position: relative;
       }
 
-      .level-2-button[aria-expanded="true"] {
+      :is(.level-2-button, .level-3-button)[aria-expanded="true"] {
         font-weight: 700;
       }
       
@@ -319,7 +320,8 @@
       } */
     }
 
-    .level-3-menu {
+    .level-3-menu,
+    .level-4-menu {
       display: grid;
       grid-template-rows: 0fr;
 
@@ -340,6 +342,8 @@
     .level-4-list {
       margin-inline-start: var(--s2-spacing-300);
       padding: 0;
+      list-style: none;
+      overflow: hidden;
     }
 
     button {
@@ -368,7 +372,7 @@
           transform: rotate(90deg);
         }
 
-        & + .level-3-menu {
+        & + :is(.level-3-menu, .level-4-menu) {
           grid-template-rows: 1fr;
         }
       }
@@ -422,6 +426,12 @@
       inset-block-end: var(--s2-spacing-400);
       z-index: 1;
       border-radius: var(--s2-corner-radius-600);
+      justify-content: center;
+      align-items: center;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      background-color: var(--s2-gray-1000);
 
       &::before {
         content: "";
@@ -454,10 +464,7 @@
     &[is-open] {
       justify-content: center;
       align-items: center;
-      width: 32px;
-      height: 32px;
       flex-shrink: 0;
-      background-color: var(--s2-gray-1000);
       position: fixed;
       z-index: 300;
       top: auto;
