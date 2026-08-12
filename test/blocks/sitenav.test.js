@@ -184,6 +184,72 @@ describe('sitenav block', () => {
     });
   });
 
+  describe('decorateLevel — depth-3 toggle buttons match depth-2 treatment', () => {
+    function buildFourLevelList() {
+      return buildNavList(`
+        <ul>
+          <li>
+            <p>Foundations</p>
+            <ul>
+              <li>
+                <p>Layout and structure</p>
+                <ul>
+                  <li>
+                    <p>Spacing</p>
+                    <ul>
+                      <li>
+                        <p>Overview</p>
+                        <ul><li><a href="/x">Intro</a></li></ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+    }
+
+    it('gives a depth-3 button the same expanding chevron icon as depth-2, but stops there', () => {
+      const ul = buildFourLevelList();
+      decorateLevel(ul, 1);
+
+      const level1Btn = ul.querySelector('.level-1-button');
+      const level2Btn = ul.querySelector('.level-2-button');
+      const level3Btn = ul.querySelector('.level-3-button');
+      const level4Btn = ul.querySelector('.level-4-button');
+
+      expect(level1Btn.querySelector('.icon')).to.be.null;
+      expect(level2Btn.querySelector('.icon')).to.not.be.null;
+      expect(level3Btn.querySelector('.icon')).to.not.be.null;
+      expect(level4Btn.querySelector('.icon')).to.be.null;
+    });
+
+    it('toggles aria-expanded on the depth-3 button independently, same as depth-2', () => {
+      const ul = buildFourLevelList();
+      decorateLevel(ul, 1);
+      const level3Btn = ul.querySelector('.level-3-button');
+
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('false');
+      level3Btn.click();
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('true');
+      level3Btn.click();
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('keeps the depth-3 button immediately followed by its level-4-menu wrapper', () => {
+      const ul = buildFourLevelList();
+      decorateLevel(ul, 1);
+      const level3Btn = ul.querySelector('.level-3-button');
+      const level4Menu = ul.querySelector('.level-4-menu');
+
+      expect(level3Btn.nextElementSibling).to.equal(level4Menu);
+      expect(level4Menu.classList.contains('can-expand')).to.be.true;
+      expect(level3Btn.getAttribute('aria-controls')).to.equal(level4Menu.id);
+    });
+  });
+
   describe('decorateLevel — level-1 tooltip id', () => {
     it('gives a level-1 button a stable id for a tooltip to target via `for`', () => {
       const ul = buildNavList(`
