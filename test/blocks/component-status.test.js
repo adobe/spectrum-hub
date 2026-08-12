@@ -21,7 +21,7 @@ describe('component-status block', () => {
     });
   });
 
-  describe('buildPills — Development pill link', () => {
+  describe('buildPills — Code pill link', () => {
     it('deep-links to the current impl\'s own name by default (no originalName on the cell)', () => {
       const componentData = { web: { rsp: { status: 'available' }, figma: { status: 'available' } } };
       const pills = buildPills('/web/rsp/components/action-button', componentData);
@@ -69,17 +69,17 @@ describe('component-status block', () => {
   });
 
   // A design-only component's slice never carries a `design-only` key in `web` (only
-  // figma/rsp/swc) — the Development pill must still render as Not available rather
+  // figma/rsp/swc) — the Development/code pill must still render as Not available rather
   // than being silently omitted.
   describe('buildPills — design-only components', () => {
-    it('renders Development as not available, with no link, when there is no code cell', () => {
+    it('renders Code pill as not available, with no link, when there is no code cell', () => {
       const componentData = { web: { figma: { status: 'available' } } };
       const pills = buildPills('/web/design-only/components/alert-banner', componentData);
       const dev = pills.find((p) => p.dataset.kind === 'dev');
 
       expect(dev.dataset.status).to.equal('not-available');
       expect(dev.tagName).to.equal('SPAN');
-      expect(dev.querySelector('.component-status-label').textContent).to.equal('Development not available');
+      expect(dev.querySelector('.component-status-label').textContent).to.equal('Code not available');
     });
 
     it('still renders the Design pill from the figma cell', () => {
