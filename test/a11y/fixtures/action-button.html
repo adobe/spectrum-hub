@@ -11,7 +11,10 @@
   <main id="main-content">
     <div class="section">
       <p>
-        <a class="action-button" href="/tools/widgets/action" title="style:primary">
+        <!-- title="style:primary" is only ever parsed into dataset.style by ak.js's
+             decorateButton() during full-page decoration, which this isolated fixture
+             skips — author the already-parsed form directly. -->
+        <a class="action-button" href="/tools/widgets/action" data-style="primary">
           <span>Settings</span>
         </a>
       </p>

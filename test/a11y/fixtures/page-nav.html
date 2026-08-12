@@ -16,11 +16,12 @@
     <p>Notes on keyboard navigation, ARIA patterns, and screen reader behaviour.</p>
     <h2>API reference</h2>
     <p>Properties, events, and slots exposed by the component.</p>
-    <div class="page-nav"></div>
   </main>
   <script type="module">
-    import init from '/blocks/page-nav/page-nav.js';
-    document.querySelectorAll('.page-nav').forEach(init);
+    // page-nav.js has no default export and no init(el) — it's a self-executing
+    // block that scans main h1/h2 and appends its own <nav class="page-nav">
+    // to document.body. There's nothing here to call it on.
+    import '/blocks/page-nav/page-nav.js';
   </script>
 </body>
 </html>

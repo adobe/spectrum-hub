@@ -9,28 +9,29 @@
 </head>
 <body>
   <main id="main-content">
+    <!-- styles.css hides any bare `main > div` until decorated (`display: none`);
+         .section is the specific override back to `display: block`. Without this
+         wrapper .card never becomes visible, no matter its content. -->
     <div class="section">
-      <div class="card-wrapper">
-        <div class="card">
+      <div class="card">
+        <!-- each row needs a cell-level <div> — card.js's :scope > div cell lookup
+             expects one, not raw content directly inside the row -->
+        <div>
           <div>
-            <div>
-              <p>
-                <picture>
-                  <img
-                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                    alt="A scenic landscape photo"
-                    width="180"
-                    height="120"
-                  >
-                </picture>
-              </p>
-              <h3>Card heading</h3>
-              <p>Concise supporting text that gives context for the card action.</p>
-            </div>
+            <picture>
+              <img
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                alt="A scenic landscape photo"
+                width="180"
+                height="120"
+              >
+            </picture>
           </div>
+        </div>
+        <div>
           <div>
-            <div>button</div>
-            <div><a href="/learn-more">Learn more</a></div>
+            <h3>Card heading</h3>
+            <p>Concise supporting text that gives context for the card action.</p>
           </div>
         </div>
       </div>
