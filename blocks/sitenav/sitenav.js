@@ -66,8 +66,8 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       btn.append(label);
     }
 
-    // Depth 2 gets a chevron for expanding
-    if (depth === 2) {
+    // Depths 2 and 3 get a chevron for expanding
+    if (depth === 2 || depth === 3) {
       const chevron = getSvgRef('chevronleft', 'icon', 10, '0 0 10 10');
       btn.append(chevron);
     }
