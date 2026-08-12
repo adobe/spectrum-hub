@@ -149,7 +149,7 @@ const BLOCKS = [
   {
     name: 'card',
     path: '/test/a11y/fixtures/card.html',
-    readySelector: '.card-content',
+    readySelector: '.card-content-container',
   },
   {
     name: 'columns',
@@ -195,8 +195,7 @@ const BLOCKS = [
   {
     name: 'page-nav',
     path: '/test/a11y/fixtures/page-nav.html',
-    // details is open but positioned sticky with no block height at fixture scroll origin
-    readySelector: { selector: '.page-nav details', state: 'attached' },
+    readySelector: 'nav.page-nav',
   },
   {
     name: 'playground',
@@ -336,8 +335,15 @@ const BLOCKS = [
   {
     name: 'sitenav',
     path: '/test/a11y/fixtures/sitenav.html',
-    readySelector: '.sitenav .sitenav-list',
+    // getSiteNav() builds <div id="sitenav">, not .sitenav; decorateLevel adds
+    // level-<depth>-list, not sitenav-list.
+    readySelector: '#sitenav .level-1-list',
     routes: [
+      {
+        url: '**/fragments/nav/site-nav',
+        contentType: 'text/html',
+        body: MOCKS.navAreasFragment,
+      },
       {
         url: '**/query-index.json',
         contentType: 'application/json',
@@ -393,7 +399,7 @@ test('every block under blocks/ is registered in the a11y BLOCKS registry', () =
 });
 
 for (const block of BLOCKS) {
-  test(`${block.name} block has no WCAG 2.2 AA violations`, async ({ page }) => {
+  test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page }) => {
     for (const { url, contentType, body } of (block.routes ?? [])) {
       await page.route(url, (r) => r.fulfill({ contentType, body }));
     }
@@ -413,6 +419,42 @@ for (const block of BLOCKS) {
       .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
       .disableRules(block.disableRules ?? [])
       .analyze();
+
+    const formatted = results.violations
+      .map(({ id, impact, description, nodes }) =>
+        `[${impact}] ${id}: ${description}\n${nodes.map((n) => `  ${n.html}`).join('\n')}`)
+      .join('\n\n');
+
+    expect(results.violations, formatted).toHaveLength(0);
+  });
+
+  test(`${block.name} block in dark mode have no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+
+    for (const { url, contentType, body } of (block.routes ?? [])) {
+      await page.route(url, (r) => r.fulfill({ contentType, body }));
+    }
+
+    await page.goto(block.path);
+
+    const { readySelector } = block;
+    if (typeof readySelector === 'string') {
+      await page.waitForSelector(readySelector);
+    } else if (readySelector?.selector) {
+      await page.waitForSelector(readySelector.selector, { state: readySelector.state });
+    } else {
+      await page.waitForLoadState('networkidle');
+    }
+
+    const results = await new AxeBuilder({ page })
+      .withRules(['color-contrast'])
+      .analyze();
+
+      await testInfo.attach('accessibility-scan-results', {
+        body: JSON.stringify(results, null, 2),
+        contentType: 'application/json'
+      });
+
 
     const formatted = results.violations
       .map(({ id, impact, description, nodes }) =>
