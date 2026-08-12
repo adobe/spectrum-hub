@@ -24,7 +24,7 @@ import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
 const NOT_AVAILABLE = 'not-available';
 
 // The two pills. `column` overrides the index column looked up; when absent the
-// pill uses the current code implementation from the path (the Development pill).
+// pill uses the current code implementation from the path (the Development/Code pill).
 const PILLS = [
   { kind: 'dev', label: 'Code' },
   { kind: 'design', label: 'Design', column: 'figma' },
