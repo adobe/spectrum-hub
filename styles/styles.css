@@ -639,6 +639,13 @@ div[data-status],
         }
       }
 
+      /* A returning navigation within the same tab session already has this
+      background asset cache-warm from the previous page, so skip the
+      hidden-until-loaded state that the first (genuinely cold) load needs. */
+      &.is-returning .bg-img img {
+        opacity: 1;
+      }
+
       /* Don't let fonts load unless there's a session */
       &.session {
         font-family: var(--s2-font-family);
