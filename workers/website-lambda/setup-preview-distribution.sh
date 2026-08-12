@@ -8,10 +8,19 @@
 # being run automatically). Each step prints what the next one needs.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Optional local config for account-specific values, kept out of git.
+# See deploy.env.example.
+# shellcheck source=/dev/null
+[ -f "$SCRIPT_DIR/deploy.env" ] && . "$SCRIPT_DIR/deploy.env"
+
 PROFILE="${AWS_PROFILE:-spectrumHub}"
 REGION="${AWS_REGION:-us-east-2}"
 FUNCTION_NAME="${FUNCTION_NAME:-website-lambda-hello-world}"
-ORIGIN_DOMAIN="${ORIGIN_DOMAIN:-hlime4kmkskytr3zgg4l6mgguq0hzvet.lambda-url.us-east-2.on.aws}"
+# The Lambda Function URL host, e.g. xxxxxxxx.lambda-url.us-east-2.on.aws
+# (get it with: aws lambda get-function-url-config --function-name "$FUNCTION_NAME").
+ORIGIN_DOMAIN="${ORIGIN_DOMAIN:?Set ORIGIN_DOMAIN (e.g. in deploy.env - see deploy.env.example) to the Lambda Function URL host}"
 
 # 1. Origin Access Control so CloudFront can invoke the (still
 #    IAM-authenticated, still non-public) Function URL.

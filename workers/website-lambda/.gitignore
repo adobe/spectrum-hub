@@ -1,1 +1,4 @@
 function.zip
+env.json
+debug.mjs
+deploy.env

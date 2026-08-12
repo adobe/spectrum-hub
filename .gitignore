@@ -17,3 +17,4 @@ helix-importer-ui
 
 .superpowers/
 tools/indexer/out/
+workers/website-lambda/env.json
