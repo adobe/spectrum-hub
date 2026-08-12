@@ -36,13 +36,27 @@ function generateSidekickPayload() {
   };
 }
 
+const REF_PATTERN = /^[a-zA-Z0-9-]+$/;
+
+export function resolveOrigin(ref) {
+  if (!ref || ref === 'on') {
+    return 'https://da.live';
+  }
+  if (ref === 'local') {
+    return 'http://localhost:6456';
+  }
+  if (REF_PATTERN.test(ref)) {
+    return `https://${ref}--da-nx--adobe.aem.live`;
+  }
+  return null;
+}
+
 export default function init(payload) {
   const { search } = window.location;
   const ref = new URLSearchParams(search).get('quick-edit');
-  let origin;
-  if (ref === 'on' || !ref) { origin = 'https://da.live'; }
-  if (ref === 'local') { origin = 'http://localhost:6456'; }
-  if (!origin) { origin = `https://${ref}--da-nx--adobe.aem.live`; }
-  addImportmap();
-  loadMoudle(origin, payload || generateSidekickPayload());
+  const origin = resolveOrigin(ref);
+  if (origin) {
+    addImportmap();
+    loadMoudle(origin, payload || generateSidekickPayload());
+  }
 }
