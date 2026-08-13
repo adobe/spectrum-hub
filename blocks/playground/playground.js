@@ -11,7 +11,8 @@ import {
   TEXT_KEYS,
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
-import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
+import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
+import { toSlug } from '../../scripts/utils/component-path.js';
 import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
@@ -376,11 +377,14 @@ function fetchText(url) {
 // PascalCase title, code-disclosure name, dev-authored fragment markup URL
 // (drives both the live preview and, for composites, subcomponent structure),
 // and which preview shell renders the live iframe.
-function resolveComponentMeta(component, implementation, base) {
-  const componentTitle = pascalCase(component);
+export function resolveComponentMeta(component, implementation, base) {
+  const componentTitle = resolveRspComponentName(component);
   const previewName = implementation === 'rsp' ? componentTitle : `swc-${component}`;
+  // RSP snippet files are named after the real export's kebab slug, not the authored
+  // block slug (e.g. "cards" resolves to Card -> card.jsx, "table" to TableView ->
+  // table-view.jsx) — same alias componentTitle already applies, just kebabbed back.
   const markupUrl = implementation === 'rsp'
-    ? `${base}/deps/rsp/playground/snippets/${component}.jsx`
+    ? `${base}/deps/rsp/playground/snippets/${toSlug(componentTitle)}.jsx`
     : `${base}/deps/swc/playground/snippets/${component}.html`;
   // RSP and SWC each have their own preview shell; anything else (ios/android,
   // unrecognized) falls back to this block's own generic shell.
@@ -610,8 +614,11 @@ export default async function init(el) {
   // side of this same decision.
   const hasRealLabelProp = hasLabelProp(rspProps);
 
+  // OVERLAY_TRIGGERS/overlayShape (inside buildRspSnippet) are keyed by the real export's
+  // kebab slug, same as markupUrl above — not every authored block slug matches it 1:1.
+  const rspRouteSlug = toSlug(componentTitle);
   const buildSnippet = implementation === 'rsp'
-    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, component)
+    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, rspRouteSlug)
     : (name, props) => buildSwcSnippet(name, props, snippetMarkup);
 
   const controlsMap = buildControlsMap(controlsSheet);

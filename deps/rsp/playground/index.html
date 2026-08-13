@@ -21,11 +21,17 @@
     import { OVERLAY_TRIGGERS, overlayShape } from './overlay-triggers.js';
     import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
-    import { capitalize, pascalCase } from './pascal-case.js';
+    import { capitalize, resolveRspComponentName } from './pascal-case.js';
+    import { toSlug } from '../../../scripts/utils/component-path.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
 
     const mount = document.getElementById('mount');
     const { component, implementation } = resolvePreviewParams();
+    const exportName = resolveRspComponentName(component);
+    // Route-identifying lookups below (OVERLAY_TRIGGERS, the sizing Sets) are keyed by the
+    // real export's kebab slug, not the authored block slug — same alias exportName already
+    // applies, just kebabbed back (mirrors blocks/playground/playground.js's markupUrl fix).
+    const routeSlug = toSlug(exportName);
 
     // React version pinned via esm.sh's `?deps=` param so the app's React and
     // RSP's internal React are the same module instance.
@@ -49,15 +55,15 @@
 
     // Sizes #mount for a component with no intrinsic size; re-run on orientation change.
     function applyMountSizing(orientation) {
-      if (VIRTUALIZED_RSP_COMPONENTS.has(component)) {
+      if (VIRTUALIZED_RSP_COMPONENTS.has(routeSlug)) {
         // CardView shrink-to-fits to 0 width under #mount's flex layout.
         mount.style.display = 'block';
         mount.style.width = 'min(90vw, 400px)';
         mount.style.height = '20rem';
         return;
       }
-      if (!FULL_WIDTH_RSP_COMPONENTS.has(component)) { return; }
-      if (VERTICAL_ORIENTATION_COMPONENTS.has(component) && orientation === 'vertical') {
+      if (!FULL_WIDTH_RSP_COMPONENTS.has(routeSlug)) { return; }
+      if (VERTICAL_ORIENTATION_COMPONENTS.has(routeSlug) && orientation === 'vertical') {
         // stretch (not the shell's default center) gives Provider's root real height.
         mount.style.display = 'flex';
         mount.style.alignItems = 'stretch';
@@ -85,9 +91,8 @@
 
     async function initRsp() {
       const PKG = '@react-spectrum/s2';
-      const exportName = pascalCase(component);
-      const overlayTrigger = OVERLAY_TRIGGERS[component];
-      const shape = overlayShape(component);
+      const overlayTrigger = OVERLAY_TRIGGERS[routeSlug];
+      const shape = overlayShape(routeSlug);
 
       try {
         const [pkg, compositeRoot, ownRspProps] = await Promise.all([

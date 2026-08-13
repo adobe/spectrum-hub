@@ -6,9 +6,11 @@ import init, {
   buildSwcSnippet,
   buildRspSnippet,
   debounce,
+  resolveComponentMeta,
 } from '../../blocks/playground/playground.js';
 import { clearFetchCache } from '../../blocks/playground/playground-data.js';
 import { setConfig } from '../../scripts/ak.js';
+import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 
 // Minimal DOM-like helpers — just enough structure for the pure-function tests.
 function makeRow(key, value, href = null) {
@@ -63,6 +65,71 @@ describe('parseBlockMetadata', () => {
   it('ignores rows with missing cells', () => {
     const el = { children: [{ children: [] }] };
     expect(parseBlockMetadata(el)).to.deep.equal({});
+  });
+});
+
+// --- resolveRspComponentName --------------------------------------------------
+
+describe('resolveRspComponentName', () => {
+  it('falls back to plain pascalCase for a slug with no alias', () => {
+    expect(resolveRspComponentName('action-button')).to.equal('ActionButton');
+  });
+
+  it('aliases "cards" to the real "Card" export/data-file name', () => {
+    expect(resolveRspComponentName('cards')).to.equal('Card');
+  });
+
+  it('aliases "standard-dialog" to the real "Dialog" export/data-file name', () => {
+    expect(resolveRspComponentName('standard-dialog')).to.equal('Dialog');
+  });
+
+  it('aliases "table" to the real "TableView" export/data-file name', () => {
+    expect(resolveRspComponentName('table')).to.equal('TableView');
+  });
+});
+
+// --- resolveComponentMeta ----------------------------------------------------
+
+describe('resolveComponentMeta', () => {
+  it('uses the aliased name for an RSP component whose slug does not match its export', () => {
+    const meta = resolveComponentMeta('table', 'rsp', '/base');
+    expect(meta.componentTitle).to.equal('TableView');
+    expect(meta.previewName).to.equal('TableView');
+  });
+
+  it('leaves an unaliased RSP component on plain pascalCase', () => {
+    const meta = resolveComponentMeta('text-field', 'rsp', '/base');
+    expect(meta.componentTitle).to.equal('TextField');
+    expect(meta.previewName).to.equal('TextField');
+  });
+
+  it('still resolves the aliased RSP data-file name even for an SWC preview', () => {
+    // resolveControl cross-references RSP data for every implementation (findRspProp),
+    // so componentTitle must resolve correctly regardless of which shell renders live.
+    const meta = resolveComponentMeta('standard-dialog', 'swc', '/base');
+    expect(meta.componentTitle).to.equal('Dialog');
+    expect(meta.previewName).to.equal('swc-standard-dialog');
+  });
+
+  it('resolves the markup snippet from the aliased export name, not the authored slug', () => {
+    // card.jsx/dialog.jsx/table-view.jsx exist; cards.jsx/standard-dialog.jsx/table.jsx don't.
+    expect(resolveComponentMeta('cards', 'rsp', '/base').markupUrl)
+      .to.equal('/base/deps/rsp/playground/snippets/card.jsx');
+    expect(resolveComponentMeta('standard-dialog', 'rsp', '/base').markupUrl)
+      .to.equal('/base/deps/rsp/playground/snippets/dialog.jsx');
+    expect(resolveComponentMeta('table', 'rsp', '/base').markupUrl)
+      .to.equal('/base/deps/rsp/playground/snippets/table-view.jsx');
+  });
+
+  it('leaves an unaliased RSP snippet path unchanged, and points at the correct shell', () => {
+    const meta = resolveComponentMeta('text-field', 'rsp', '/base');
+    expect(meta.markupUrl).to.equal('/base/deps/rsp/playground/snippets/text-field.jsx');
+    expect(meta.previewShellPath).to.equal('deps/rsp/playground/index.html');
+  });
+
+  it('does not touch the SWC markup path, which keeps the authored slug as-is', () => {
+    const meta = resolveComponentMeta('standard-dialog', 'swc', '/base');
+    expect(meta.markupUrl).to.equal('/base/deps/swc/playground/snippets/standard-dialog.html');
   });
 });
 
