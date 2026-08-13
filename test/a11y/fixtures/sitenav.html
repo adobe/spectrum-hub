@@ -8,14 +8,11 @@
   <link rel="stylesheet" href="/blocks/sitenav/sitenav.css">
 </head>
 <body>
-  <main id="main-content">
-    <div class="section">
-      <div class="sitenav"></div>
-    </div>
-  </main>
+  <main id="main-content"></main>
   <script type="module">
-    import init from '/blocks/sitenav/sitenav.js';
-    init(document.querySelector('.sitenav'));
+    // sitenav.js is a self-executing block that fetches its nav data and inserts its own #sitenav element as
+    // a sibling before <main>.
+    import '/blocks/sitenav/sitenav.js';
   </script>
 </body>
 </html>

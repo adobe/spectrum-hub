@@ -6,9 +6,6 @@ import { navAreasFragment, sitenavIndex } from '../mocks.js';
 const block = {
   name: 'sitenav',
   path: '/test/a11y/fixtures/sitenav.html',
-  // getSiteNav() builds <div id="sitenav">, not .sitenav; decorateLevel adds
-  // level-<depth>-list, not sitenav-list.
-  readySelector: '#sitenav .level-1-list',
   routes: [
     {
       url: '**/fragments/nav/site-nav',
@@ -23,8 +20,23 @@ const block = {
   ],
 };
 
-test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+// Below 900px the rail collapses behind a hamburger trigger (see sitenav.css) and only
+// opens on click — on mobile projects, open it first so the scan covers the real
+// collapsed/expanded mobile experience instead of waiting forever on a closed panel.
+async function waitForNavReady(page, isMobile) {
+  if (isMobile) {
+    await page.waitForSelector('.sitenav-trigger-btn');
+    await page.click('.sitenav-trigger-btn');
+  }
+
+  // getSiteNav() builds <div id="sitenav">, not .sitenav; decorateLevel adds
+  // level-<depth>-list, not sitenav-list.
+  await page.waitForSelector('#sitenav .level-1-list');
+}
+
+test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
   await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
 
   const results = await makeAxeBuilder()
     .disableRules(block.disableRules ?? [])
@@ -33,10 +45,11 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
-test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
+test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page, isMobile }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
   await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])

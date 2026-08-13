@@ -8,7 +8,12 @@ const block = {
   readySelector: 'nav.page-nav',
 };
 
-test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+// Below 900px, page-nav.js removes the nav from the DOM entirely — there's nothing to
+// scan on mobile viewports, and that removal behavior is already covered by
+// test/blocks/page-nav.test.js ("the nav is removed from the DOM below the desktop breakpoint").
+test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
+  test.skip(isMobile, 'page-nav is fully removed below 900px by design — see test/blocks/page-nav.test.js');
+
   await gotoBlock(page, block);
 
   const results = await makeAxeBuilder()
@@ -18,7 +23,9 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
-test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
+test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page, isMobile }, testInfo) => {
+  test.skip(isMobile, 'page-nav is fully removed below 900px by design — see test/blocks/page-nav.test.js');
+
   await page.emulateMedia({ colorScheme: 'dark' });
 
   await gotoBlock(page, block);
