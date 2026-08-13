@@ -9,6 +9,8 @@ const block = {
   readySelector: { selector: '.section-metadata', state: 'detached' },
 };
 
+// No accessibility-tree snapshot test here: the block removes its own root from the DOM on
+// init, so there's no persistent element left to snapshot.
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
   await gotoBlock(page, block);
 

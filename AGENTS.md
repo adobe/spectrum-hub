@@ -44,14 +44,14 @@ When a task matches one of the following, read and apply the corresponding rule 
 
 ## Accessibility tests
 
-The project runs axe-core WCAG 2.2 AA scans against every block and template via Playwright. Tests live in `test/a11y/` and run on every PR via `.github/workflows/a11y.yml`.
+The project runs axe-core WCAG 2.2 AA scans plus a Playwright `toMatchAriaSnapshot()` accessibility-tree check against every block and template. Tests live in `test/a11y/` and run on every PR via `.github/workflows/a11y.yml`.
 
 ### When you add a block or template
 
 Each block gets its own pair of files — no shared registry to edit.
 
 1. Create an HTML fixture in `test/a11y/fixtures/<name>.html` that initializes the block in isolation. Fixtures are served locally by `aem up` (falls back to a static file when one exists at the requested path) — load block CSS and JS directly with `<link>` and `<script type="module">`.
-2. Create `test/a11y/blocks/<name>.spec.js`. Copy an existing file (e.g. [`test/a11y/blocks/card.spec.js`](./test/a11y/blocks/card.spec.js) for the simple case, or [`test/a11y/blocks/header.spec.js`](./test/a11y/blocks/header.spec.js) for one with mocked routes) as a template: define a `block` object (`name`, `path`, `readySelector`, optionally `routes`/`disableRules`), then the light-mode and dark-mode test pair, using `test`/`expect` from `../axe-test.js` and `gotoBlock`/`formatViolations` from `../block-a11y.js`.
+2. Create `test/a11y/blocks/<name>.spec.js`. Copy an existing file (e.g. [`test/a11y/blocks/card.spec.js`](./test/a11y/blocks/card.spec.js) for the simple case, or [`test/a11y/blocks/header.spec.js`](./test/a11y/blocks/header.spec.js) for one with mocked routes) as a template: define a `block` object (`name`, `path`, `readySelector`, optionally `routes`/`disableRules`/`ariaRoot`), then the light-mode axe test, the accessibility-tree snapshot test, and the dark-mode axe test, in that order, using `test`/`expect` from `../axe-test.js` and `gotoBlock`/`formatViolations` from `../block-a11y.js`.
 
 `readySelector` is a CSS selector that appears in the DOM once the block has finished initializing (or `{ selector, state: 'detached' }` for a block that removes itself from the DOM on init).
 
@@ -59,16 +59,40 @@ For blocks that fetch remote data at runtime (header, footer, sitenav, schedule,
 
 For templates, call `setConfig({ components: [], hostnames: [], linkBlocks: [] })` before `init()` in the fixture script — templates use `loadBlock()` internally, which requires `components` to be defined.
 
-Some blocks render arbitrary, CMS-authored content passed through verbatim (e.g. `fragment`) rather than a fixed structure — an a11y scan of a canned mock wouldn't test anything real. These are explicitly excluded via the `EXCLUDED` set in [`test/a11y/coverage.spec.js`](./test/a11y/coverage.spec.js) rather than given a spec file.
+Some blocks render arbitrary, CMS-authored content passed through verbatim (e.g. `fragment`) rather than a fixed structure — an a11y scan of a canned mock wouldn't test anything real. These are explicitly excluded via the `EXCLUDED` set in [`test/a11y/coverage.spec.js`](./test/a11y/coverage.spec.js) rather than given a spec file. A block whose render output isn't deterministic yet (a known bug), or that removes its own root from the DOM on init, should skip the accessibility-tree snapshot test specifically (with a comment explaining why — see `schedule.spec.js`/`section-metadata.spec.js`) while keeping its axe tests.
 
 Playwright's file/line attribution follows wherever `test()` is actually called — so the light/dark `test(...)` calls must live directly in `test/a11y/blocks/<name>.spec.js`, not inside a shared helper function, or failures will misreport as coming from `block-a11y.js`.
+
+#### Accessibility-tree snapshot test
+
+Alongside the axe scans, each block spec has one more test asserting the block's accessible tree matches a known-good shape — this catches semantic regressions (a heading demoted to a `div`, a landmark losing its name, a role getting clobbered) that axe's rule-based scan won't flag as long as no WCAG rule is technically violated. Pattern (modeled on the one already in use in the sibling `spectrum-web-components` repo):
+
+```js
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - ...
+  `);
+});
+```
+
+- **One test, not a light/dark pair** — tree structure doesn't vary by color scheme.
+- **Gate to the `chromium` project by name, not the `browserName` fixture.** `Mobile Chrome` also runs on the Chromium engine, so `browserName !== 'chromium'` alone lets it slip through as a redundant second run.
+- **`ariaRoot`** is an optional field on the `block` object for the block's root locator selector; it defaults to `` `.${block.name}` ``. Set it explicitly when the block's root isn't that class — e.g. it replaces itself with a custom element (`profile` → `se-profile`, `search` → `sh-search`, `youtube` → `.video`) or uses an id instead of a class (`sitenav` → `#sitenav`).
+- **Generate/update the snapshot** with `npx playwright test test/a11y/blocks/<name>.spec.js --project=chromium -g "accessibility tree" --update-snapshots`. This writes a `test-results/rebaselines.patch` rather than patching the spec file directly — review it, then `git apply test-results/rebaselines.patch` and delete `test-results/`.
+- Review the generated tree like any other diff, and treat it as living documentation: update the snapshot when a tree change is intentional, fix the block when it isn't.
 
 ### When you change a block or template
 
 | What changed | What to update |
 | --- | --- |
 | A WCAG violation is introduced | Fix the accessibility issue in the block |
-| The init-produced DOM structure changes | Update `readySelector` in `test/a11y/blocks/<name>.spec.js` |
+| The init-produced DOM structure changes | Update `readySelector` in `test/a11y/blocks/<name>.spec.js`, and regenerate the accessibility-tree snapshot if the change was intentional |
 | A fetch URL or response format changes | Update the `routes` mock in `test/a11y/blocks/<name>.spec.js` (and/or `test/a11y/mocks.js`) |
 
 ### File locations

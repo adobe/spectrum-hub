@@ -6,6 +6,8 @@ import { navAreasFragment, sitenavIndex } from '../mocks.js';
 const block = {
   name: 'sitenav',
   path: '/test/a11y/fixtures/sitenav.html',
+  // getSiteNav() builds <div id="sitenav">, not .sitenav
+  ariaRoot: '#sitenav',
   routes: [
     {
       url: '**/fragments/nav/site-nav',
@@ -43,6 +45,26 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
     .analyze();
 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} block matches its expected accessibility tree`, async ({ page, isMobile }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
+
+  await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
+    - navigation "Spectrum Hub":
+      - list:
+        - listitem:
+          - button "Getting started"
+        - listitem:
+          - button "Foundations"
+      - button "Expand navigation":
+        - img
+  `);
 });
 
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page, isMobile }, testInfo) => {

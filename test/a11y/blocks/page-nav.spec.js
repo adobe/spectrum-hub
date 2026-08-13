@@ -23,6 +23,35 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice. This also
+  // means we never hit the below-900px removal case, so no isMobile skip is needed here.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - navigation "On this page":
+      - list:
+        - listitem:
+          - link "Usage guidelines":
+            - /url: "#usage-guidelines"
+        - listitem:
+          - link "Accessibility":
+            - /url: "#accessibility"
+        - listitem:
+          - link "API reference":
+            - /url: "#api-reference"
+        - listitem:
+          - link "Back to top":
+            - /url: "#component-overview"
+      - button "Copy markdown":
+        - img
+        - text: ""
+  `);
+});
+
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page, isMobile }, testInfo) => {
   test.skip(isMobile, 'page-nav is fully removed below 900px by design — see test/blocks/page-nav.test.js');
 

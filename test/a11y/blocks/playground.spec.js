@@ -50,6 +50,24 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - iframe
+    - switch "isDisabled"
+    - text: isDisabled
+    - button "Copy code"
+    - status
+    - text: <swc-button>Label</swc-button>
+    - button "Expand code"
+  `);
+});
+
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 

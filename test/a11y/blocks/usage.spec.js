@@ -18,6 +18,22 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - heading "Do" [level=2]
+    - paragraph: Use a single primary action per view.
+    - figure "Keep the primary action visually distinct.":
+      - img "Example of correct usage"
+      - text: Recommended Keep the primary action visually distinct.
+  `);
+});
+
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 

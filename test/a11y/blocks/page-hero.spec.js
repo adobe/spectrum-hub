@@ -27,6 +27,36 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - navigation "Breadcrumb":
+      - list:
+        - listitem:
+          - link "Web":
+            - /url: /web/overview
+        - listitem:
+          - text: ›
+          - link "SWC":
+            - /url: /web/swc
+        - listitem: › Components
+    - heading "Button" [level=1]
+    - paragraph: A clickable action.
+    - group "Component status":
+      - link "Development available. Opens SWC documentation in a new tab.":
+        - /url: https://spectrum-web-components.adobe.com/?path=/docs/components-button--docs
+        - text: ""
+      - link "Design experimental. Opens Figma in a new tab.":
+        - /url: https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev
+        - text: ""
+  `);
+});
+
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 

@@ -22,6 +22,9 @@ const block = {
   ],
 };
 
+// No accessibility-tree snapshot test here: the destructuring mismatch above means the
+// rendered structure isn't deterministic, so there's no stable root to snapshot yet.
+// Revisit once that bug is fixed.
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
   await gotoBlock(page, block);
 

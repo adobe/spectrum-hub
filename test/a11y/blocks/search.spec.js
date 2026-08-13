@@ -7,6 +7,8 @@ const block = {
   name: 'search',
   path: '/test/a11y/fixtures/search.html',
   readySelector: 'sh-search .hit-title',
+  // search.js does el.replaceWith(cmp) — the .search div is gone, replaced by <sh-search>
+  ariaRoot: 'sh-search',
   routes: [
     {
       url: '**/fragments/nav/site-nav',
@@ -30,6 +32,28 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
     .analyze();
 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - combobox "Search" [expanded]:
+      - combobox "Search" [expanded]
+      - button "Clear search"
+    - listbox "Navigation areas":
+      - option "Getting started Introduction, principles, and how to begin" [selected]:
+        - paragraph: Getting started
+        - paragraph: Introduction, principles, and how to begin
+      - option "Foundations Color, typography, spacing, and design principles":
+        - paragraph: Foundations
+        - paragraph: Color, typography, spacing, and design principles
+    - text: to select to navigate
+  `);
 });
 
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {

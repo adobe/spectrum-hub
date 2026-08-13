@@ -1,15 +1,38 @@
 # Accessibility tests
 
-This suite runs [axe-core](https://github.com/dequelabs/axe-core) WCAG 2.2 AA scans against every block and template, using [Playwright](https://playwright.dev/). Tests run on every pull request via [`.github/workflows/a11y.yml`](../../.github/workflows/a11y.yml).
+This suite runs [axe-core](https://github.com/dequelabs/axe-core) WCAG 2.2 AA scans plus Playwright's [`toMatchAriaSnapshot()`](https://playwright.dev/docs/aria-snapshots) accessibility-tree checks against every block and template, using [Playwright](https://playwright.dev/). Tests run on every pull request via [`.github/workflows/a11y.yml`](../../.github/workflows/a11y.yml).
 
 ## What we're testing for
 
-Each block gets two checks:
+Each block gets three checks:
 
 - **Light/default mode** — a full WCAG 2.2 A/AA scan (`wcag2a`, `wcag2aa`, `wcag22aa` tags), covering ARIA usage, semantic structure, labeling, keyboard/focus concerns, target size, and more.
-- **Dark mode** — a focused color-contrast scan only. Dark mode reuses the same tokens and markup as light mode, so re-running the full ruleset would just repeat checks that don't vary by color scheme; contrast is the one thing that does.
+- **Accessibility tree** — a `toMatchAriaSnapshot()` assertion against the block's root element, asserting its accessible roles/names/structure match a committed baseline. Axe only flags known WCAG rule violations; it won't notice a heading silently demoted to a `div`, a landmark losing its name, or a role getting clobbered, as long as nothing technically violates a rule. This test runs once, gated to the `chromium` project (the tree is browser/viewport-agnostic — see the gotcha below), and is skipped for a couple of blocks noted inline in their spec files (`schedule`: non-deterministic render pending a bug fix; `section-metadata`: removes its own root from the DOM on init).
+- **Dark mode** — a focused color-contrast scan only. Dark mode reuses the same tokens and markup as light mode, so re-running the full ruleset (or the tree snapshot) would just repeat checks that don't vary by color scheme; contrast is the one thing that does.
 
-`accessibility.homepage.spec.js` runs the same scans against the real homepage (proxied through a local [`aem up`](https://github.com/adobe/helix-cli) dev server — see [Running the tests](#running-the-tests)), rather than an isolated fixture.
+`accessibility.homepage.spec.js` runs the same axe scans against the real homepage (proxied through a local [`aem up`](https://github.com/adobe/helix-cli) dev server — see [Running the tests](#running-the-tests)), rather than an isolated fixture.
+
+### Accessibility-tree snapshots
+
+```js
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+  await gotoBlock(page, block);
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - ...
+  `);
+});
+```
+
+- **Gate by `testInfo.project.name`, not the `browserName` fixture.** `Mobile Chrome` also runs on the Chromium *engine*, so `browserName !== 'chromium'` alone lets it slip through as a redundant second run of a check that's supposed to be identical everywhere.
+- **`ariaRoot`** is an optional field on the `block` config object giving the root locator selector; defaults to `` `.${block.name}` ``. Override it when the block replaces its root with something else on init — a custom element (`profile` → `se-profile`, `search` → `sh-search`, `youtube` → `.video`) or an id instead of a class (`sitenav` → `#sitenav`, since `getSiteNav()` builds `<div id="sitenav">`).
+- **Snapshots are inline template-literal strings**, not external `.aria.yml` files — this keeps the expected tree visible directly in the PR diff instead of a separate baseline file to review.
+- **Generate or update** a snapshot with:
+  ```bash
+  npx playwright test test/a11y/blocks/<name>.spec.js --project=chromium -g "accessibility tree" --update-snapshots
+  ```
+  This writes `test-results/rebaselines.patch` rather than patching the spec file in place — review the diff, then `git apply test-results/rebaselines.patch` and delete `test-results/`.
+- Treat the snapshot as living documentation: update it when a tree change is intentional, fix the block when it isn't.
 
 ## Fixture markup requirements
 

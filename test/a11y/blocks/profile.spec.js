@@ -8,6 +8,8 @@ const block = {
   path: '/test/a11y/fixtures/profile.html',
   // rendered once loadIms() resolves and the placeholder is swapped for <se-profile>
   readySelector: 'se-profile se-button',
+  // profile.js does el.replaceWith(cmp) — the .profile div is gone, replaced by <se-profile>
+  ariaRoot: 'se-profile',
   routes: [
     {
       url: 'https://auth.services.adobe.com/imslib/imslib.min.js',
@@ -25,6 +27,18 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
     .analyze();
 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - button "Sign in"
+  `);
 });
 
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {

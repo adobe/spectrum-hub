@@ -31,6 +31,51 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - region "Component availability":
+      - list:
+        - listitem: Available Ready for use. Fidelity may vary.
+        - listitem: Experimental Available for exploration and testing, but not recommended for production use.
+        - listitem: Not available Not currently available or applicable for this implementation or design library.
+      - button "Search components"
+      - switch "Show details"
+      - text: Show details
+      - button "Download CSV"
+      - table "Component availability":
+        - rowgroup:
+          - row "Component Figma Spectrum Web Components":
+            - columnheader "Component":
+              - button "Component"
+            - columnheader "Figma":
+              - button "Figma"
+            - columnheader "Spectrum Web Components":
+              - button "Spectrum Web Components"
+        - rowgroup:
+          - row "Button Available Button, Available in Spectrum Web Components":
+            - rowheader "Button"
+            - cell "Available"
+            - cell "Button, Available in Spectrum Web Components":
+              - link "Button, Available in Spectrum Web Components":
+                - /url: /web/swc/components/button
+                - text: ""
+          - row "Calendar Not available Calendar, Experimental in Spectrum Web Components":
+            - rowheader "Calendar"
+            - cell "Not available"
+            - cell "Calendar, Experimental in Spectrum Web Components":
+              - link "Calendar, Experimental in Spectrum Web Components":
+                - /url: /web/swc/components/calendar
+                - text: ""
+      - status: Sorted by Component, ascending
+  `);
+});
+
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 

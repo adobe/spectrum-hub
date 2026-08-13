@@ -6,6 +6,8 @@ const block = {
   name: 'youtube',
   path: '/test/a11y/fixtures/youtube.html',
   readySelector: 'iframe',
+  // youtube.js replaces the authored <a> with <div class="video">, not .youtube
+  ariaRoot: '.video',
   routes: [
     // prevent real network requests to YouTube in CI
     {
@@ -24,6 +26,18 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
     .analyze();
 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - iframe
+  `);
 });
 
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
