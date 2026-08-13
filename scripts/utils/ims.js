@@ -128,7 +128,11 @@ const dueForRefresh = () => {
 const setSession = async (accessToken) => {
   if (cdnEnv !== true || !dueForRefresh()) { return false; }
 
-  const body = JSON.stringify({ access_token: accessToken });
+  // Hash the EXACT bytes we send: CloudFront's OAC forwards this as the
+  // signed payload hash (x-amz-content-sha256), and the Function URL recomputes
+  // it over the received body - any difference fails SigV4 with a signature
+  // mismatch. So `body` must be both what we hash and what we POST.
+  const body = JSON.stringify({ access_token: accessToken.token });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
   const hashHex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 
@@ -139,7 +143,7 @@ const setSession = async (accessToken) => {
       'content-type': 'application/json',
       'x-amz-content-sha256': hashHex,
     },
-    body: JSON.stringify({ access_token: accessToken.token }),
+    body,
   };
   try {
     const resp = await fetch('/auth/session', opts);
