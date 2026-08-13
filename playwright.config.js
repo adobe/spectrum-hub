@@ -6,7 +6,7 @@ export default defineConfig({
     ? [['github'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],
   webServer: {
-    command: 'npx serve . -l 3001 --no-clipboard',
+    command: 'npx aem up --port 3001 --no-open',
     port: 3001,
     reuseExistingServer: !process.env.CI,
   },
@@ -15,5 +15,10 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    /* Test against mobile viewports. */
+    { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
+    { name: 'Mobile Safari', use: { ...devices['iPhone 12'] } },
   ],
 });

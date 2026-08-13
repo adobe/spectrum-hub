@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { test, expect } from './axe-test.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BLOCKS_DIR = path.resolve(__dirname, '../../blocks');
@@ -399,7 +399,7 @@ test('every block under blocks/ is registered in the a11y BLOCKS registry', () =
 });
 
 for (const block of BLOCKS) {
-  test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page }) => {
+  test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
     for (const { url, contentType, body } of (block.routes ?? [])) {
       await page.route(url, (r) => r.fulfill({ contentType, body }));
     }
@@ -415,8 +415,7 @@ for (const block of BLOCKS) {
       await page.waitForLoadState('networkidle');
     }
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+    const results = await makeAxeBuilder()
       .disableRules(block.disableRules ?? [])
       .analyze();
 

@@ -7,7 +7,7 @@
     "lint:js": "eslint .",
     "lint:css": "stylelint blocks/**/*.css styles/*.css",
     "lint": "npm run lint:js && npm run lint:css",
-    "test": "npm run test:unit; e1=$?; npm run test:extractions; e2=$?; exit $((e1 | e2))",
+    "test": "npm run test:unit; e1=$?; npm run test:extractions; e2=$?; npm run test:a11y; e3=$?; exit $((e1 | e2 | e3))",
     "test:unit": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --concurrent-browsers 4",
     "test:extractions": "node --test test/extractions/*.node.test.js test/indexer/*.node.test.js",
     "test:watch": "npm run test:unit -- --watch",
@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/adobe/spectrum-hub#readme",
   "devDependencies": {
+    "@adobe/aem-cli": "^16.20.9",
     "@adobe/eslint-config-helix": "^3.0.17",
     "@axe-core/playwright": "^4.11.3",
     "@esm-bundle/chai": "4.3.4-fix.0",
