@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>se-switch fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <!-- se.js imports the bare "lit" specifier -->
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <div class="test-container">
+    <se-switch name="notifications">Notifications</se-switch>
+    <se-switch name="dark-mode" checked>Dark mode</se-switch>
+  </div>
+  <script type="module">
+    import '/deps/se/se.js';
+  </script>
+</body>
+</html>

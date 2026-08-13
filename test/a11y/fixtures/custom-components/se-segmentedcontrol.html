@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>se-segmentedcontrol fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <!-- se.js imports the bare "lit" specifier -->
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <div class="test-container">
+    <se-segmentedcontrol label="View" labelPosition="side">
+      <fieldset>
+        <label>
+          <input type="radio" name="view" value="map" checked>
+          <span>Map</span>
+        </label>
+        <label>
+          <input type="radio" name="view" value="list">
+          <span>List</span>
+        </label>
+        <label>
+          <input type="radio" name="view" value="grid">
+          <span>Grid</span>
+        </label>
+      </fieldset>
+    </se-segmentedcontrol>
+  </div>
+  <script type="module">
+    import '/deps/se/se.js';
+  </script>
+</body>
+</html>

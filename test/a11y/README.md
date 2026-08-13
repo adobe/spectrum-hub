@@ -1,6 +1,6 @@
 # Accessibility tests
 
-This suite runs [axe-core](https://github.com/dequelabs/axe-core) WCAG 2.2 AA scans plus Playwright's [`toMatchAriaSnapshot()`](https://playwright.dev/docs/aria-snapshots) accessibility-tree checks against every block and template, using [Playwright](https://playwright.dev/). Tests run on every pull request via [`.github/workflows/a11y.yml`](../../.github/workflows/a11y.yml).
+This suite runs [axe-core](https://github.com/dequelabs/axe-core) WCAG 2.2 AA scans plus Playwright's [`toMatchAriaSnapshot()`](https://playwright.dev/docs/aria-snapshots) accessibility-tree checks against every block, template, and shared custom element, using [Playwright](https://playwright.dev/). Tests run on every pull request via [`.github/workflows/a11y.yml`](../../.github/workflows/a11y.yml).
 
 ## What we're testing for
 
@@ -113,6 +113,21 @@ Use a `data:` URI placeholder for any authored image so fixtures don't depend on
 <picture><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" alt=""></picture>
 ```
 
+## Shared custom elements (`test/a11y/custom-components/`)
+
+`deps/se/se.js` registers shared form/UI web components (`se-button`, `se-input`, `se-textarea`, `se-checkbox`, `se-switch`, `se-select`, `se-segmentedcontrol`, `se-dialog`) used across several blocks. Rather than rely on whichever block happens to exercise them — which misses states like `disabled`/`error`/`checked` and, in a couple of cases, missed the element entirely — each gets its own fixture and spec, parallel to the block convention:
+
+- `test/a11y/fixtures/custom-components/<name>.html` imports `/deps/se/se.js` directly (a bare side-effect import registers every element) and lays out the element's meaningful states side-by-side inside `<div class="test-container">`, so one axe pass and one aria-snapshot cover all of them.
+- `test/a11y/custom-components/<name>.spec.js` is identical in shape to a block spec, with `ariaRoot: '.test-container'` (there's no single `.${name}` class to default to, since a fixture holds multiple instances).
+- `test/a11y/coverage.spec.js` parses `customElements.define(...)` calls out of `deps/se/se.js` and fails if a registered element has no matching spec — a new element can't ship without a11y coverage.
+
+Direct testing of these components surfaced real, pre-existing bugs that incidental block-level coverage had missed — left failing and documented rather than fixed as part of adding the tests:
+
+- `se-checkbox`: native checkbox renders at 12–13px, below the WCAG 2.2 AA 2.5.8 Target Size minimum (24px).
+- `se-checkbox`, `se-input`, `se-textarea`, `se-select`, `se-segmentedcontrol`, `se-switch`: dark mode doesn't work — label/helper text swaps to a near-white color while its background stays white. (`se-button`'s own stylesheet handles dark mode correctly; the shared form-element stylesheet doesn't.)
+- `se-textarea`: the `<textarea>` never gets an `id`, so its `<label for="...">` points at nothing — the field has no accessible label at all.
+- `se-dialog`: its default/"secondary" action buttons render with insufficient contrast (down to 3.24:1, need 4.5:1) specifically inside the dialog.
+
 ## Running the tests
 
 Playwright's `webServer` config starts a local [`aem up`](https://github.com/adobe/helix-cli) dev server automatically — you don't need to start anything yourself. It serves fixture files (and any other local file) directly, and proxies real page content from the linked preview environment for everything else (e.g. the homepage spec).
@@ -126,6 +141,9 @@ npx playwright test test/a11y/blocks/card.spec.js
 
 # One block, one browser
 npx playwright test test/a11y/blocks/card.spec.js --project=chromium
+
+# One custom element, all browsers
+npx playwright test test/a11y/custom-components/se-button.spec.js
 
 # Filter by test name
 npx playwright test -g "sitenav"
@@ -144,7 +162,9 @@ npx playwright test -g "sitenav"
 | [`mocks.js`](./mocks.js) | Reusable mock HTML/JSON for blocks that fetch remote data at runtime. |
 | [`blocks/<name>.spec.js`](./blocks/) | One file per block — the actual light/dark-mode test pair. |
 | [`fixtures/<name>.html`](./fixtures/) | One fixture per block/template — the isolated page each spec loads. |
-| [`coverage.spec.js`](./coverage.spec.js) | Fails if a block under `blocks/` (repo root) has no matching spec file, unless explicitly exempted. |
+| [`custom-components/<name>.spec.js`](./custom-components/) | One file per shared `deps/se/se.js` element. |
+| [`fixtures/custom-components/<name>.html`](./fixtures/custom-components/) | One fixture per shared custom element. |
+| [`coverage.spec.js`](./coverage.spec.js) | Fails if a block under `blocks/` (repo root), or a `deps/se/se.js` custom element, has no matching spec file, unless explicitly exempted. |
 | [`accessibility.homepage.spec.js`](./accessibility.homepage.spec.js) | Scans the real, live-proxied homepage rather than an isolated fixture. |
 
 ## Adding a new block

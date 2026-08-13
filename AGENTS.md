@@ -44,7 +44,7 @@ When a task matches one of the following, read and apply the corresponding rule 
 
 ## Accessibility tests
 
-The project runs axe-core WCAG 2.2 AA scans plus a Playwright `toMatchAriaSnapshot()` accessibility-tree check against every block and template. Tests live in `test/a11y/` and run on every PR via `.github/workflows/a11y.yml`.
+The project runs axe-core WCAG 2.2 AA scans plus a Playwright `toMatchAriaSnapshot()` accessibility-tree check against every block, template, and shared custom element. Tests live in `test/a11y/` and run on every PR via `.github/workflows/a11y.yml`.
 
 ### When you add a block or template
 
@@ -103,9 +103,16 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 | Shared per-block test utilities (`gotoBlock`, `formatViolations`) | `test/a11y/block-a11y.js` |
 | Shared mock HTTP responses | `test/a11y/mocks.js` |
 | Per-block spec files (one per block/template) | `test/a11y/blocks/<name>.spec.js` |
-| Coverage check (fails if a block under `blocks/` has no spec file) | `test/a11y/coverage.spec.js` |
-| HTML fixtures (one per block/template) | `test/a11y/fixtures/` |
+| Per-custom-element spec files (one per `deps/se/se.js` element) | `test/a11y/custom-components/<name>.spec.js` |
+| Coverage check (fails if a block under `blocks/`, or a custom element in `deps/se/se.js`, has no spec file) | `test/a11y/coverage.spec.js` |
+| HTML fixtures (one per block/template, or per custom element under `fixtures/custom-components/`) | `test/a11y/fixtures/` |
 | GitHub Actions workflow | `.github/workflows/a11y.yml` |
+
+### Shared custom elements (`deps/se/se.js`)
+
+`deps/se/se.js` registers a handful of shared form/UI web components (`se-button`, `se-input`, `se-textarea`, `se-checkbox`, `se-switch`, `se-select`, `se-segmentedcontrol`, `se-dialog`) used across multiple blocks. They get the same three-test treatment as blocks, in a parallel `test/a11y/custom-components/` suite rather than `test/a11y/blocks/`, since they aren't blocks themselves — testing them directly (rather than relying on incidental coverage from whichever block happens to use them) catches gaps a block fixture wouldn't reach, and covers states (disabled, error, checked) a single block's usage might not exercise.
+
+Convention: one fixture (`test/a11y/fixtures/custom-components/<name>.html`) importing `/deps/se/se.js` directly (a side-effect import registers all elements at once) and authoring the element's meaningful states side-by-side (e.g. `se-input`: default, `type="search"`, error) inside a `<div class="test-container">` wrapper; one spec (`test/a11y/custom-components/<name>.spec.js`) with `ariaRoot: '.test-container'`, otherwise identical in shape to a block spec. `test/a11y/coverage.spec.js` parses `customElements.define(...)` calls out of `deps/se/se.js` and fails if a registered element has no matching spec file, so a newly added element can't ship untested.
 
 ### Running a single block's tests
 
