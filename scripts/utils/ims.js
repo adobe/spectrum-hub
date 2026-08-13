@@ -111,10 +111,17 @@ const dueForRefresh = () => {
 const setSession = async (accessToken) => {
   if (cdnEnv !== true || !dueForRefresh()) { return; }
 
+  const body = JSON.stringify({ access_token: accessToken });
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
+  const hashHex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+
   const opts = {
     method: 'POST',
     credentials: 'include',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      'x-amz-content-sha256': hashHex,
+    },
     body: JSON.stringify({ access_token: accessToken.token }),
   };
   try {
