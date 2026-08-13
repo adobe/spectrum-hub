@@ -2,8 +2,7 @@
 
 export function formatViolations(violations) {
   return violations
-    .map(({ id, impact, description, nodes }) =>
-      `[${impact}] ${id}: ${description}\n${nodes.map((n) => `  ${n.html}`).join('\n')}`)
+    .map(({ id, impact, description, nodes }) => `[${impact}] ${id}: ${description}\n${nodes.map((n) => `  ${n.html}`).join('\n')}`)
     .join('\n\n');
 }
 

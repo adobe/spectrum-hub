@@ -33,7 +33,6 @@
     "@adobe/eslint-config-helix": "^3.0.17",
     "@axe-core/playwright": "^4.11.3",
     "@esm-bundle/chai": "4.3.4-fix.0",
-    "@playwright/test": "^1.60.0",
     "@web/dev-server-import-maps": "^0.3.0",
     "@web/test-runner": "^1.0.0",
     "@web/test-runner-commands": "1.0.0",
@@ -52,6 +51,7 @@
     "algoliasearch": "^5.56.0",
     "esbuild": "^0.28.0",
     "lit": "^3.3.1",
+    "@playwright/test": "^1.60.0",
     "turndown": "^7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
     "node-html-parser": "^9.0.1"
