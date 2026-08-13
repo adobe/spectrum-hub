@@ -13,6 +13,20 @@
 #   session before its natural SESSION_MAX_AGE_MS expiry, and it affects
 #   every session at once.
 #
+#   wrangler secret put IMS_CLIENT_ID       # + --env dev / --env stage
+#   wrangler secret put IMS_CLIENT_SECRET    # + --env dev / --env stage
+#   wrangler secret put IMS_SCOPE            # + --env dev / --env stage
+#
+#   IMS_CLIENT_ID / IMS_CLIENT_SECRET / IMS_SCOPE are the confidential
+#   service credential POST /auth/session uses to mint a client_credentials
+#   token and read the DA visitor allowlist
+#   (admin.da.live/config/<AEM_ORG>/<AEM_SITE>/). A session cookie is only
+#   issued when the caller's IMS email - or its domain, via an "@domain"
+#   wildcard row - appears in that allowlist. Any of the three missing
+#   makes every POST /auth/session return 500; a DA/IMS-token failure
+#   returns 502 (retryable) and mints no cookie. Distinct from the public
+#   'spectrumhub' client_id the profile check uses - see handlers/auth.js.
+#
 # Optional vars:
 #
 #   ALLOWED_ORIGINS  Comma-separated origins permitted to POST /auth/session.

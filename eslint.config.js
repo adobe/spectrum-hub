@@ -5,6 +5,8 @@ import { recommended, source, test } from '@adobe/eslint-config-helix';
 export default defineConfig([
   globalIgnores([
     '**/deps',
+    // workers/ are self-contained deployables with their own tooling/tests
+    'workers/**',
   ]),
   {
     languageOptions: {
@@ -74,13 +76,6 @@ export default defineConfig([
       'no-underscore-dangle': 0,
       'no-unused-expressions': 0,
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-    },
-  },
-  {
-    // Workers have their own node_modules, allow unresolved test imports
-    files: ['workers/**/*.test.js'],
-    rules: {
-      'import/no-unresolved': ['error', { ignore: ['^vitest'] }],
     },
   },
   {

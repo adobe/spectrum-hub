@@ -1,0 +1,4 @@
+SESSION_SECRET="local-dev-secret"
+IMS_CLIENT_ID=""
+IMS_CLIENT_SECRET=""
+IMS_SCOPE=""

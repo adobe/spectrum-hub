@@ -6,6 +6,7 @@ node_modules/
 helix-importer-ui
 .env
 .dev.env
+.dev.vars
 .DS_Store
 *.bak
 .idea
@@ -16,3 +17,4 @@ helix-importer-ui
 
 .superpowers/
 tools/indexer/out/
+workers/website-lambda/env.json

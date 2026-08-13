@@ -1,0 +1,12 @@
+{
+  "name": "website-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda (Function URL) port of the ../website Cloudflare Worker",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "bash deploy.sh"
+  },
+  "author": "",
+  "license": "Apache-2.0"
+}

@@ -12,6 +12,8 @@
 
 import { fetchFromAem } from './handlers/aem.js';
 import { createSession, deleteSession } from './handlers/auth.js';
+import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
+import { classifyPublicPath } from './lib/gate.js';
 
 const notFound = () => new Response('Not found', { status: 404 });
 
@@ -121,10 +123,36 @@ const formatSearchParams = (url) => {
   return search;
 };
 
-const getValidLogin = async (env, request, url) => {
-  const { pathname } = url;
-  if (pathname.endsWith('.css') || pathname.endsWith('.js')) { return true; }
-  return true;
+// Pulls one named value out of the Cookie header. Cookie values here are
+// base64url, so a split on the first '=' recovers the value intact.
+const readCookie = (request, name) => {
+  const header = request.headers.get('cookie');
+  if (!header) { return null; }
+  for (const part of header.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq < 0) { continue; }
+    if (part.slice(0, eq).trim() === name) { return part.slice(eq + 1).trim(); }
+  }
+  return null;
+};
+
+// A valid session cookie means an authenticated caller. Verification is
+// local (HMAC + expiry) - no store, no network - so it is cheap enough to
+// run per request.
+const isAuthenticated = async (request, env) => {
+  if (!env.SESSION_SECRET) { return false; }
+  const cookie = readCookie(request, DEFAULT_SESSION_COOKIE_NAME);
+  if (!cookie) { return false; }
+  return (await readSession(cookie, env.SESSION_SECRET, Date.now())) !== null;
+};
+
+// The access gate. Public resources are served to anyone, so their check is
+// first and avoids the crypto for the common case (css/js/img/media).
+// Everything else requires a valid session; without one it is a 404 -
+// deliberately indistinguishable from a path that does not exist.
+const isAllowed = async (request, env, url) => {
+  if (classifyPublicPath(url.pathname) === 'allow') { return true; }
+  return isAuthenticated(request, env);
 };
 
 const formatRequest = async (env, request, url) => {
@@ -145,6 +173,11 @@ const formatRequest = async (env, request, url) => {
   const req = new Request(aemUrl, request);
   req.headers.set('x-forwarded-host', req.headers.get('host'));
 
+  // The session cookie is the worker's own credential; no upstream (aem.live
+  // or a local `aem up`) needs any browser cookie, so drop the whole header
+  // rather than leak spectrum_session past the edge.
+  req.headers.delete('cookie');
+
   // The remaining headers are aem.live specific
   if (origin) { return req; }
 
@@ -152,10 +185,9 @@ const formatRequest = async (env, request, url) => {
   if (env.PUSH_INVALIDATION !== 'disabled') {
     req.headers.set('x-push-invalidation', 'enabled');
   }
-  const validLogin = await getValidLogin(env, request, url);
-  if (validLogin) {
-    req.headers.set('authorization', `token ${env.ORIGIN_AUTHENTICATION}`);
-  }
+  // Only allowed requests reach this point (see the gate in fetch), so the
+  // origin credential is always attached to what gets proxied upstream.
+  req.headers.set('authorization', `token ${env.ORIGIN_AUTHENTICATION}`);
   return req;
 };
 
@@ -174,6 +206,10 @@ export default {
 
     // Non-proxy routes need the original request, not one rewritten to AEM
     if (!route.proxy) { return route.handler({ url, env, request: req }); }
+
+    // Gate before proxying: a denied request never reaches AEM, and never
+    // has the origin credential attached (that happens in formatRequest).
+    if (!(await isAllowed(req, env, url))) { return notFound(); }
 
     const request = await formatRequest(env, req, url);
 

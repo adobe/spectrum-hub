@@ -8,6 +8,13 @@ const IMS_SCOPES = 'AdobeID,openid';
 // The server's answer to POST /auth/session, not the client's own claim
 const IMS_SERVER_EXPIRE = 'spectrum-ims-server-expire';
 
+// Set just before an explicit sign-in redirect. When we return and establish
+// the server session, it signals a one-time page reload so the current path
+// re-fetches with the new cookie - the page may still be showing the gated/404
+// content that rendered before the cookie existed. sessionStorage survives the
+// IMS round-trip, and clearing it after the reload prevents a loop.
+const SIGN_IN_RELOAD = 'spectrum-ims-signin-reload';
+
 // How long before the stored expiry we start refreshing again
 const SESSION_REFRESH_WINDOW_MS = 60 * 60 * 1000;
 
@@ -29,7 +36,14 @@ const IO_ENV = {
 
 export const IMS_ORIGIN = (() => `https://${IMS_ENDPOINT[env]}`)();
 
+// True when the current document is the site's 404 page (served by CloudFront's
+// custom error response for gated or missing paths). 404.html carries this
+// marker; public pages like the homepage don't, so they never need a reload -
+// their own code reveals logged-in content without one.
+const onErrorPage = () => document.querySelector('meta[name="error"]')?.content === '404';
+
 export function handleSignIn() {
+  sessionStorage.setItem(SIGN_IN_RELOAD, '1');
   window.adobeIMS.signIn();
 }
 
@@ -108,12 +122,15 @@ const dueForRefresh = () => {
   return Date.now() >= storedExpiresAt - SESSION_REFRESH_WINDOW_MS;
 };
 
+// Returns true only when it successfully (re)established the server session
+// with a fresh cookie, so the caller can decide whether a post-sign-in reload
+// is warranted.
 const setSession = async (accessToken) => {
-  if (cdnEnv !== true || !dueForRefresh()) { return; }
+  if (cdnEnv !== true || !dueForRefresh()) { return false; }
 
   const body = JSON.stringify({ access_token: accessToken });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
-  const hashHex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 
   const opts = {
     method: 'POST',
@@ -126,15 +143,17 @@ const setSession = async (accessToken) => {
   };
   try {
     const resp = await fetch('/auth/session', opts);
-    if (!resp.ok) { return; }
+    if (!resp.ok) { return false; }
     const { expiresAt } = await resp.json();
     if (Number.isFinite(expiresAt)) {
       localStorage.setItem(IMS_SERVER_EXPIRE, String(expiresAt));
     }
+    return true;
   } catch (e) {
     // Best-effort: onReady calls this without awaiting it, so a network
     // failure here must not become an unhandled rejection. Nothing stored
     // means dueForRefresh() tries again on the next onReady.
+    return false;
   }
 };
 
@@ -163,13 +182,26 @@ export const loadIms = (() => {
       onReady: async () => {
         const accessToken = window.adobeIMS.getAccessToken();
         if (accessToken) {
-          await setSession(accessToken);
+          const established = await setSession(accessToken);
+          // After an explicit sign-in that established the session, reload once
+          // ONLY if we're on the 404 page - it's showing gated content that
+          // rendered before the cookie existed, and the URL is unchanged so a
+          // reload re-fetches it authenticated. Public pages (e.g. the
+          // homepage) reveal logged-in content on their own, so they skip this.
+          const pendingReload = sessionStorage.getItem(SIGN_IN_RELOAD);
+          sessionStorage.removeItem(SIGN_IN_RELOAD);
+          if (established && pendingReload && onErrorPage()) {
+            clearTimeout(timeout);
+            window.location.reload();
+            return;
+          }
           loadDetails(IMS_CLIENT_ID, accessToken).then((details) => resolve(details));
         } else {
           resolve({ anonymous: true });
         }
         clearTimeout(timeout);
       },
+
     };
     loadScript(IMS_URL);
   });
