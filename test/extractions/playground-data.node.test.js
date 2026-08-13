@@ -261,6 +261,21 @@ describe('parsePickerOptions', () => {
     assert.deepEqual(parsePickerOptions(null), []);
     assert.deepEqual(parsePickerOptions(undefined), []);
   });
+
+  it('extracts bare numeric literals from a union with no quotes (AvatarGroup.size)', () => {
+    assert.deepEqual(
+      parsePickerOptions('16 | 20 | 24 | 28 | 32 | 36 | 40 | 44 | 48 | 56 | 64 | 80 | 96 | 112 | (number & {})'),
+      ['16', '20', '24', '28', '32', '36', '40', '44', '48', '56', '64', '80', '96', '112'],
+    );
+  });
+
+  it('returns an empty array for an open-ended numeric type with no literal options', () => {
+    assert.deepEqual(parsePickerOptions('number'), []);
+  });
+
+  it('prefers quoted string options over numeric ones when a type has both', () => {
+    assert.deepEqual(parsePickerOptions("'auto' | 16 | 24"), ['auto']);
+  });
 });
 
 describe('resolvePickerOptions', () => {
