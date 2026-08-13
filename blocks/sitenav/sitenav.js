@@ -214,14 +214,14 @@ export const getSiteNav = () => {
   return { sitenav, nav };
 };
 
-const findCurrentPageInNav = (navList) => {
+export const findCurrentPageInNav = (navList) => {
   const { pathname } = window.location;
   const currentLink = [...navList.querySelectorAll('a')]
     .find((a) => a.pathname === pathname);
   if (!currentLink) { return null; }
   currentLink.classList.add('is-current-page');
 
-  [1, 2].forEach((level) => {
+  [1, 2, 3].forEach((level) => {
     const li = currentLink.closest(`.level-${level}`);
     if (!li) { return; }
     const button = li.querySelector(`.level-${level}-button`);
