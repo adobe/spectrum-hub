@@ -248,7 +248,7 @@ Unit tests live in `test/blocks/<name>.test.js` and run in a real browser via `@
 
 ### Accessibility tests
 
-axe-core WCAG 2.2 AA scans run against every block and template via Playwright. When you add a new block:
+axe-core WCAG 2.2 AA scans run against every block and template via Playwright. **A new block is not done until it has both of these files** — a background check (`test/a11y/coverage.spec.js`) fails CI if a block under `blocks/` has no matching spec file, so don't skip this step when scaffolding.
 
 1. Create `test/a11y/fixtures/<name>.html`. The fixture is a minimal HTML page that loads the block's CSS with `<link>` and initializes it with `<script type="module">`. Use a `data:` URI image placeholder so fixture images never 404.
 
@@ -274,33 +274,50 @@ axe-core WCAG 2.2 AA scans run against every block and template via Playwright. 
    </html>
    ```
 
-2. Add an entry to the `BLOCKS` array in `test/a11y/accessibility.spec.js`:
+2. Create `test/a11y/blocks/<name>.spec.js` — one file per block, no shared registry to edit. Copy [`test/a11y/blocks/card.spec.js`](../../../test/a11y/blocks/card.spec.js) as a starting template:
 
    ```js
-   {
+   import AxeBuilder from '@axe-core/playwright';
+   import { test, expect } from '../axe-test.js';
+   import { gotoBlock, formatViolations } from '../block-a11y.js';
+
+   const block = {
      name: 'my-block',
      path: '/test/a11y/fixtures/my-block.html',
      readySelector: '.my-block-inner', // element that appears after init completes
-   }
+   };
+
+   test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+     await gotoBlock(page, block);
+
+     const results = await makeAxeBuilder()
+       .disableRules(block.disableRules ?? [])
+       .analyze();
+
+     expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+   });
+
+   test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
+     await page.emulateMedia({ colorScheme: 'dark' });
+     await gotoBlock(page, block);
+
+     const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+
+     await testInfo.attach('accessibility-scan-results', {
+       body: JSON.stringify(results, null, 2),
+       contentType: 'application/json',
+     });
+
+     expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+   });
    ```
 
    `readySelector` is a CSS selector for any element created by `init` — the test waits for it before running axe. If the block removes itself from the DOM on init (like `section-metadata`), use `{ selector: '.my-block', state: 'detached' }` instead of a string.
 
-   If the block fetches remote data at runtime, add a `routes` array to mock those requests:
+   **Both `test(...)` calls must be written directly in this file**, not moved into a shared helper — Playwright reports a failing test's file/line as wherever `test()` is literally called, so hiding it in `block-a11y.js` would make every block's failures misreport as coming from that one shared file.
 
-   ```js
-   {
-     name: 'my-block',
-     path: '/test/a11y/fixtures/my-block.html',
-     readySelector: '.my-block-result',
-     routes: [
-       {
-         url: '**/my-data-endpoint',
-         contentType: 'application/json',
-         body: JSON.stringify({ data: [] }),
-       },
-     ],
-   }
-   ```
+   If the block fetches remote data at runtime, add a `routes` array to the `block` object to mock those requests — copy [`test/a11y/blocks/header.spec.js`](../../../test/a11y/blocks/header.spec.js) for a worked example. Add reusable mock strings to [`test/a11y/mocks.js`](../../../test/a11y/mocks.js); keep one-off mocks inline in the spec file.
 
-For full guidance on the fixture format, route mocking, and template-specific requirements (`setConfig`), see the **Accessibility tests** section in [`AGENTS.md`](../../../AGENTS.md).
+   The rare block that renders arbitrary passthrough content with no fixed structure to assert against (e.g. `fragment`) can be exempted instead of given a spec file — see the `EXCLUDED` set in `test/a11y/coverage.spec.js`. This should be an explicit, justified exception, not a default.
+
+For full guidance on route mocking, template-specific requirements (`setConfig`), and running a single block's tests (forward slashes only, even on Windows), see the **Accessibility tests** section in [`AGENTS.md`](../../../AGENTS.md).

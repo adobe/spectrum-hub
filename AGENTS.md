@@ -48,28 +48,48 @@ The project runs axe-core WCAG 2.2 AA scans against every block and template via
 
 ### When you add a block or template
 
-1. Create an HTML fixture in `test/a11y/fixtures/<name>.html` that initializes the block in isolation. Fixtures are served as static files by `serve .` — load block CSS and JS directly with `<link>` and `<script type="module">`.
-2. Add an entry to the `BLOCKS` array in `test/a11y/accessibility.spec.js` with a `name`, `path`, and `readySelector` (a CSS selector that appears in the DOM once the block has finished initializing).
+Each block gets its own pair of files — no shared registry to edit.
 
-For blocks that fetch remote data at runtime (header, footer, sitenav, fragment, schedule), add a `routes` array to the entry. Each route intercepts a network request with `page.route()` and returns mock HTML or JSON so the test runs without a live server.
+1. Create an HTML fixture in `test/a11y/fixtures/<name>.html` that initializes the block in isolation. Fixtures are served locally by `aem up` (falls back to a static file when one exists at the requested path) — load block CSS and JS directly with `<link>` and `<script type="module">`.
+2. Create `test/a11y/blocks/<name>.spec.js`. Copy an existing file (e.g. [`test/a11y/blocks/card.spec.js`](./test/a11y/blocks/card.spec.js) for the simple case, or [`test/a11y/blocks/header.spec.js`](./test/a11y/blocks/header.spec.js) for one with mocked routes) as a template: define a `block` object (`name`, `path`, `readySelector`, optionally `routes`/`disableRules`), then the light-mode and dark-mode test pair, using `test`/`expect` from `../axe-test.js` and `gotoBlock`/`formatViolations` from `../block-a11y.js`.
+
+`readySelector` is a CSS selector that appears in the DOM once the block has finished initializing (or `{ selector, state: 'detached' }` for a block that removes itself from the DOM on init).
+
+For blocks that fetch remote data at runtime (header, footer, sitenav, schedule, playground, profile, component-status, page-hero, status-table, search, youtube), add a `routes` array to the `block` object. Each route intercepts a network request with `page.route()` and returns mock HTML or JSON so the test runs without a live server. Add reusable mock strings to [`test/a11y/mocks.js`](./test/a11y/mocks.js) and import them; keep one-off mocks inline in the spec file.
 
 For templates, call `setConfig({ components: [], hostnames: [], linkBlocks: [] })` before `init()` in the fixture script — templates use `loadBlock()` internally, which requires `components` to be defined.
+
+Some blocks render arbitrary, CMS-authored content passed through verbatim (e.g. `fragment`) rather than a fixed structure — an a11y scan of a canned mock wouldn't test anything real. These are explicitly excluded via the `EXCLUDED` set in [`test/a11y/coverage.spec.js`](./test/a11y/coverage.spec.js) rather than given a spec file.
+
+Playwright's file/line attribution follows wherever `test()` is actually called — so the light/dark `test(...)` calls must live directly in `test/a11y/blocks/<name>.spec.js`, not inside a shared helper function, or failures will misreport as coming from `block-a11y.js`.
 
 ### When you change a block or template
 
 | What changed | What to update |
 | --- | --- |
 | A WCAG violation is introduced | Fix the accessibility issue in the block |
-| The init-produced DOM structure changes | Update `readySelector` in the `BLOCKS` entry |
-| A fetch URL or response format changes | Update the `routes` mock in the `BLOCKS` entry |
+| The init-produced DOM structure changes | Update `readySelector` in `test/a11y/blocks/<name>.spec.js` |
+| A fetch URL or response format changes | Update the `routes` mock in `test/a11y/blocks/<name>.spec.js` (and/or `test/a11y/mocks.js`) |
 
 ### File locations
 
 | What | Path |
 | --- | --- |
-| Test spec and `BLOCKS` registry | `test/a11y/accessibility.spec.js` |
+| Shared AxeBuilder fixture (`test`/`expect`/`makeAxeBuilder`) | `test/a11y/axe-test.js` |
+| Shared per-block test utilities (`gotoBlock`, `formatViolations`) | `test/a11y/block-a11y.js` |
+| Shared mock HTTP responses | `test/a11y/mocks.js` |
+| Per-block spec files (one per block/template) | `test/a11y/blocks/<name>.spec.js` |
+| Coverage check (fails if a block under `blocks/` has no spec file) | `test/a11y/coverage.spec.js` |
 | HTML fixtures (one per block/template) | `test/a11y/fixtures/` |
 | GitHub Actions workflow | `.github/workflows/a11y.yml` |
+
+### Running a single block's tests
+
+Playwright's CLI treats file-path arguments as regexes matched against forward-slash paths — always use forward slashes, even in PowerShell on Windows, or the match silently fails:
+
+```bash
+npx playwright test test/a11y/blocks/card.spec.js
+```
 
 ## IDE-specific folders
 
