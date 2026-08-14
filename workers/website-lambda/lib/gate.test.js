@@ -29,13 +29,15 @@ describe('classifyPublicPath', () => {
     expect(classifyPublicPath('/.optel/optel.js')).toBe('allow');
   });
 
-  it('classifies /query-index.json as filter (punted, 404 for now)', () => {
+  it('classifies /query-index.json as filter (private rows stripped for anon)', () => {
     expect(classifyPublicPath('/query-index.json')).toBe('filter');
   });
 
-  it('allows the site root and /404.html exactly (served without a meta parse)', () => {
-    expect(classifyPublicPath('/')).toBe('allow');
-    expect(classifyPublicPath('/404.html')).toBe('allow');
+  it('gates the site root and /404.html when they are not in the allow-exact list', () => {
+    // PUBLIC_ALLOW_EXACT is currently empty (site-wide public-path review in
+    // progress), so these page-like paths fall through to the 'gate' verdict.
+    expect(classifyPublicPath('/')).toBe('gate');
+    expect(classifyPublicPath('/404.html')).toBe('gate');
   });
 
   it('gates page-like paths so the private meta can be checked post-fetch', () => {

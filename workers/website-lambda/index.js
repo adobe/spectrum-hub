@@ -35,12 +35,18 @@
 import { fetchFromAem } from './handlers/aem.js';
 import { createSession, deleteSession } from './handlers/auth.js';
 import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
-import { classifyPublicPath, isPrivateHtml } from './lib/gate.js';
+import { classifyPublicPath, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
 import { filterAudienceBlocks } from './lib/audience.js';
+import { filterPrivateEntries, compactEntries } from './lib/query-index.js';
 
 const env = process.env;
 
-const notFound = () => new Response('Not found', { status: 404 });
+// no-store: many 404s here are gate decisions that vary by viewer (a private
+// page, a stripped index), so they must never be reused from a shared cache.
+const notFound = () => new Response('Not found', {
+  status: 404,
+  headers: { 'cache-control': 'no-store' },
+});
 
 // The whole /auth/ namespace is claimed here so that nothing under it can
 // ever reach the AEM proxy, which would attach the origin credential and
@@ -66,7 +72,13 @@ const methodNotAllowed = (methods) => {
 const handleAuth = (context) => {
   const handlers = AUTH_ENDPOINTS.get(context.url.pathname);
   if (!handlers) { return notFound(); }
-  const handler = handlers[context.request.method];
+  // hasOwnProperty, not a bare lookup: a method like 'constructor' or
+  // '__proto__' would otherwise resolve to an Object.prototype member and get
+  // called (or crash serialization) instead of answering a clean 405.
+  const { method } = context.request;
+  const handler = Object.prototype.hasOwnProperty.call(handlers, method)
+    ? handlers[method]
+    : undefined;
   return handler ? handler(context) : methodNotAllowed(Object.keys(handlers));
 };
 
@@ -171,7 +183,35 @@ const processHtmlResponse = async (resp, authed) => {
   const body = await resp.text();
   if (!authed && isPrivateHtml(body)) { return notFound(); }
   const filtered = filterAudienceBlocks(body, authed);
-  return new Response(filtered, resp);
+  const out = new Response(filtered, resp);
+  // This HTML was filtered for a specific viewer; never let a shared cache
+  // reuse one audience's copy for another.
+  out.headers.set('cache-control', 'private, no-store');
+  out.headers.delete('age');
+  return out;
+};
+
+// Post-fetch transform for the query-index JSON: for anonymous visitors strip
+// the private rows and the whole `audience` column (so private paths/titles/
+// excerpts never reach an anonymous client, and it can't even tell which rows
+// were private), and optionally project every row to the columns the site nav
+// needs (?compact=true). Fails closed: a non-200, a non-JSON body, or an index
+// shape it can't recognize is a 404 for anonymous callers rather than an
+// unfiltered index. Authenticated callers see the raw body.
+const transformQueryIndex = async (resp, { removePrivate, compact }) => {
+  if (resp.status !== 200) { return removePrivate ? notFound() : resp; }
+  let json;
+  try {
+    json = await resp.json();
+  } catch {
+    return removePrivate ? notFound() : resp;
+  }
+  if (removePrivate) {
+    json = filterPrivateEntries(json);
+    if (json === null) { return notFound(); }
+  }
+  if (compact) { json = compactEntries(json); }
+  return new Response(JSON.stringify(json), resp);
 };
 
 const formatRequest = async (request, url) => {
@@ -238,23 +278,44 @@ const route = async (req) => {
 
   // Authenticated callers bypass the path gate entirely (verdict 'allow'); auth
   // is computed once here and reused (also by processHtmlResponse). For an
-  // anonymous visitor the path verdict decides: 'deny'/'filter' are a 404 before
-  // proxying, so the request never reaches AEM and never gets the origin
-  // credential (attached in formatRequest); 'allow'/'gate' are proxied and then
-  // handed to processHtmlResponse for the meta gate and audience filtering.
+  // anonymous visitor the path verdict decides: 'deny' is a 404 before proxying,
+  // so the request never reaches AEM and never gets the origin credential
+  // (attached in formatRequest); 'allow'/'gate'/'filter' are proxied and then
+  // post-processed below.
   const authed = await isAuthenticated(req);
   const verdict = authed ? 'allow' : classifyPublicPath(url.pathname);
-  if (verdict === 'deny' || verdict === 'filter') { return notFound(); }
+  if (verdict === 'deny') { return notFound(); }
 
-  const request = await formatRequest(req, url);
+  // Read the compact opt-in before formatSearchParams strips it (it keeps only
+  // limit/offset/sheet for JSON) - the query-index transform below reads it.
+  const compact = url.searchParams.get('compact') === 'true';
+
+  // Normalize the query string first, then build the upstream request from the
+  // normalized url - so the stripping/sorting actually reaches AEM. (formatRequest
+  // snapshots url.href, so it must run after formatSearchParams, not before.)
   const savedSearch = formatSearchParams(url);
+  const request = await formatRequest(req, url);
 
   const resp = await matched.handler({
     url, env, request, cache: matched.cache, savedSearch,
   });
 
-  // Every proxied HTML page is processed - not just 'gate' pages - so allow-
-  // listed content (e.g. the homepage, which carries audience blocks) is
+  // The query-index JSON is the one 'filter' path: strip audience:private rows
+  // (and the audience column) for anonymous visitors and honour ?compact=true
+  // for either audience. Authed + non-compact is served untouched (the full
+  // index). Either way the full index carries private rows, so mark it
+  // uncacheable so a shared cache can't hand it to the wrong audience.
+  if (PUBLIC_FILTER_PATHS.includes(url.pathname)) {
+    const out = (!authed || compact)
+      ? await transformQueryIndex(resp, { removePrivate: !authed, compact })
+      : resp;
+    out.headers.set('cache-control', 'private, no-store');
+    out.headers.delete('age');
+    return out;
+  }
+
+  // Every other proxied HTML page is processed - not just 'gate' pages - so
+  // allow-listed content (e.g. the homepage, which carries audience blocks) is
   // filtered too. processHtmlResponse no-ops on non-HTML responses.
   return processHtmlResponse(resp, authed);
 };
@@ -295,6 +356,14 @@ const toRequest = (event) => {
   return new Request(requestUrl, { method, headers, body });
 };
 
+// A Lambda Function URL response is buffered, not streamed: the whole body is
+// base64'd into a single JSON payload capped at 6 MB. Base64 inflates ~33% and
+// the headers/cookies share the budget, so refuse a body whose encoded size
+// would blow the cap rather than let the platform truncate it into a corrupt
+// reply. Assets this large should be served off a path that does not transit
+// this Lambda. Margin left for the response envelope.
+const MAX_LAMBDA_BODY_BASE64_BYTES = 6 * 1024 * 1024 - 256 * 1024;
+
 // Hop-by-hop and length/encoding headers describe the upstream transfer, not
 // ours: fetch() already decoded any content-encoding when we read the body, so
 // re-advertising it (or a now-wrong content-length) would corrupt the reply.
@@ -323,12 +392,23 @@ const toLambdaResponse = async (response) => {
     : [];
 
   const buffer = Buffer.from(await response.arrayBuffer());
+  const body = buffer.length ? buffer.toString('base64') : '';
+
+  if (body.length > MAX_LAMBDA_BODY_BASE64_BYTES) {
+    console.error(`website-lambda: response body ${buffer.length} bytes exceeds the Function URL payload limit; refusing to truncate`);
+    return {
+      statusCode: 502,
+      headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+      body: 'Response too large',
+      isBase64Encoded: false,
+    };
+  }
 
   return {
     statusCode: response.status,
     headers,
     cookies,
-    body: buffer.length ? buffer.toString('base64') : '',
+    body,
     isBase64Encoded: buffer.length > 0,
   };
 };

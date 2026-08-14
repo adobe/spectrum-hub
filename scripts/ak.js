@@ -102,6 +102,31 @@ export const removeForAudience = async ({ publicEl, privateEl }) => {
   }
 };
 
+// Class-based counterpart to removeForAudience for whole blocks marked with an
+// `audience-public` / `audience-private` class. On the production CDN the worker
+// strips these server-side, so this is the authoritative pass only where the
+// worker is bypassed - notably the aem.page staging origin - and defense in
+// depth elsewhere. It follows the same rule as removeForAudience: off-CDN shows
+// the gated (private) content; on-CDN it keys off IMS. Runs before blocks load
+// so a hidden block is never fetched or decorated.
+export const decorateAudience = async (area) => {
+  const publicEls = [...area.querySelectorAll('.audience-public')];
+  const privateEls = [...area.querySelectorAll('.audience-private')];
+  if (!publicEls.length && !privateEls.length) { return; }
+
+  const remove = (els) => els.forEach((el) => el.remove());
+
+  // Off-CDN (authoring/preview): show the gated content, drop the public copy.
+  if (!getConfig().cdnEnv) {
+    remove(publicEls);
+    return;
+  }
+
+  // On-CDN these are usually already gone (worker-stripped); if not, honour IMS.
+  const { anonymous } = await checkIms();
+  remove(anonymous ? privateEls : publicEls);
+};
+
 export async function loadStyle(path) {
   const href = path.startsWith('/') ? `${getConfig().codeBase}${path}` : path;
 
@@ -468,6 +493,11 @@ export async function loadArea({ area } = { area: document }) {
   if (isDoc) { decorateDoc(isSession); }
   const { decorateArea } = getConfig();
   if (decorateArea) { decorateArea({ area }); }
+  // Resolve audience-gated blocks before decorating/loading, so a block this
+  // viewer must not see is never fetched. On the CDN the worker already did
+  // this; it matters where the worker is bypassed (e.g. the aem.page staging
+  // origin).
+  await decorateAudience(area);
   decoratePictures(area);
   const sections = decorateSections(area, isDoc);
   if (isDoc && isSession) { loadSession(); }

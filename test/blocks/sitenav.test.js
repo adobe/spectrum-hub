@@ -9,7 +9,7 @@ const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('',
 const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
-  syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges,
+  syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -434,6 +434,66 @@ describe('sitenav block', () => {
       expect(items.map((li) => li.textContent)).to.deep.equal([
         'Action bar', 'Apple', 'Monkey', 'Zebra',
       ]);
+    });
+  });
+
+  describe('filterNavByIndex', () => {
+    const paths = (ul) => [...ul.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+
+    it('removes a leaf link whose path is not in the index', () => {
+      const ul = buildNavList('<ul><li><a href="/a">A</a></li><li><a href="/secret">Secret</a></li></ul>');
+      filterNavByIndex(ul, [{ path: '/a' }]);
+      expect(paths(ul)).to.deep.equal(['/a']);
+    });
+
+    it('keeps a leaf whose path is in the index', () => {
+      const ul = buildNavList('<ul><li><a href="/a">A</a></li></ul>');
+      filterNavByIndex(ul, [{ path: '/a' }]);
+      expect(paths(ul)).to.deep.equal(['/a']);
+    });
+
+    it('removes a private leaf but keeps the section parent and its visible siblings', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Support</p>
+            <ul>
+              <li><a href="/support/faqs">FAQs</a></li>
+              <li><a href="/support/contact">Contact</a></li>
+            </ul>
+          </li>
+        </ul>
+      `);
+      filterNavByIndex(ul, [{ path: '/support/faqs' }]);
+      expect(paths(ul)).to.deep.equal(['/support/faqs']);
+      // The section wrapper (a parent with a nested list) is untouched.
+      expect(ul.querySelector('li > p').textContent).to.equal('Support');
+    });
+
+    it('does not drop a parent whose own link is unindexed when it has children', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p><a href="/parent">Parent</a></p>
+            <ul><li><a href="/parent/child">Child</a></li></ul>
+          </li>
+        </ul>
+      `);
+      filterNavByIndex(ul, [{ path: '/parent/child' }]);
+      expect(ul.querySelector('a[href="/parent"]')).to.not.be.null;
+      expect(ul.querySelector('a[href="/parent/child"]')).to.not.be.null;
+    });
+
+    it('ignores external (non-root-relative) links', () => {
+      const ul = buildNavList('<ul><li><a href="https://example.com">Ext</a></li></ul>');
+      filterNavByIndex(ul, [{ path: '/a' }]);
+      expect(ul.querySelector('a[href="https://example.com"]')).to.not.be.null;
+    });
+
+    it('is a no-op (fail-open) when the index is missing', () => {
+      const ul = buildNavList('<ul><li><a href="/secret">Secret</a></li></ul>');
+      filterNavByIndex(ul, null);
+      expect(paths(ul)).to.deep.equal(['/secret']);
     });
   });
 

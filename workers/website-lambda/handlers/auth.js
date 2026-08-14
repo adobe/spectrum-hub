@@ -46,6 +46,10 @@ const configFromEnv = (env, url) => ({
 // that shape on both sides so a hand-written env entry still compares.
 const normalizeOrigin = (value) => value.trim().replace(/\/+$/, '').toLowerCase();
 
+// Warn (once per container) rather than per request, so an unset
+// ALLOWED_ORIGINS is visible in CloudWatch without flooding the logs.
+let warnedMissingAllowedOrigins = false;
+
 // Blunts session fixation, where an attacker makes a victim's browser
 // adopt an attacker-controlled session.
 const isAllowedOrigin = (request, url, env) => {
@@ -56,6 +60,14 @@ const isAllowedOrigin = (request, url, env) => {
     .map(normalizeOrigin)
     .filter((value) => value !== '');
   // An all-whitespace ALLOWED_ORIGINS must mean "unset", not "allow nothing".
+  // The fallback trusts url.origin, which is derived from the client-supplied
+  // x-forwarded-host - only safe behind CloudFront/OAC (which sets that header
+  // and blocks direct Function URL calls). Set ALLOWED_ORIGINS explicitly in
+  // production so the check does not depend on that; a missing one is flagged.
+  if (configured.length === 0 && !warnedMissingAllowedOrigins) {
+    warnedMissingAllowedOrigins = true;
+    console.warn('website-lambda: ALLOWED_ORIGINS is unset; falling back to the request origin (x-forwarded-host). Set it explicitly in production.');
+  }
   const allowed = configured.length > 0 ? configured : [normalizeOrigin(url.origin)];
   return allowed.includes(normalizeOrigin(origin));
 };

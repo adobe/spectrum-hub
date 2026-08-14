@@ -44,8 +44,11 @@ export const filterAudienceBlocks = (html, authed) => {
   if (!blocks.length) { return html; }
 
   // Splice from the tail so each removal leaves earlier offsets valid.
+  // node-html-parser always populates `range`; the guard is belt-and-suspenders
+  // so a missing one can never throw mid-splice.
   const ranges = blocks
     .map((el) => el.range)
+    .filter((range) => Array.isArray(range) && range.length === 2)
     .sort((a, b) => b[0] - a[0]);
 
   let out = html;
