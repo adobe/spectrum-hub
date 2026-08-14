@@ -1,12 +1,9 @@
-import { getConfig } from '../ak.js';
+import { getConfig, AUTHORIZED_SESSION_EXPIRY } from '../ak.js';
 
 const { env, cdnEnv } = getConfig();
 
 const IMS_CLIENT_ID = 'spectrumhub';
 const IMS_SCOPES = 'AdobeID,openid';
-
-// The server's answer to POST /auth/session, not the client's own claim
-const IMS_SERVER_EXPIRE = 'spectrum-ims-server-expire';
 
 // Set just before an explicit sign-in redirect. When we return and establish
 // the server session, it signals a one-time page reload so the current path
@@ -34,14 +31,6 @@ const IO_ENV = {
   prod: 'cc-collab.adobe.io',
 };
 
-export const IMS_ORIGIN = (() => `https://${IMS_ENDPOINT[env]}`)();
-
-// True when the current document is the site's 404 page (served by CloudFront's
-// custom error response for gated or missing paths). 404.html carries this
-// marker; public pages like the homepage don't, so they never need a reload -
-// their own code reveals logged-in content without one.
-const onErrorPage = () => document.querySelector('meta[name="error"]')?.content === '404';
-
 export function handleSignIn() {
   sessionStorage.setItem(SIGN_IN_RELOAD, '1');
   window.adobeIMS.signIn();
@@ -49,7 +38,7 @@ export function handleSignIn() {
 
 export async function handleSignOut() {
   // Do before the browser takes user to IMS for sign out
-  localStorage.removeItem(IMS_SERVER_EXPIRE);
+  localStorage.removeItem(AUTHORIZED_SESSION_EXPIRY);
   if (cdnEnv) {
     await fetch('/auth/session', { method: 'DELETE', credentials: 'include' }).catch(() => {});
   }
@@ -115,7 +104,7 @@ const getTenantId = (profile) => {
 // null (never stored), unparseable, or within the refresh window all mean
 // "send the POST" - only a comfortably future stored expiry skips it.
 const dueForRefresh = () => {
-  const raw = localStorage.getItem(IMS_SERVER_EXPIRE);
+  const raw = localStorage.getItem(AUTHORIZED_SESSION_EXPIRY);
   if (raw === null) { return true; }
   const storedExpiresAt = Number(raw);
   if (!Number.isFinite(storedExpiresAt)) { return true; }
@@ -150,7 +139,7 @@ const setSession = async (accessToken) => {
     if (!resp.ok) { return false; }
     const { expiresAt } = await resp.json();
     if (Number.isFinite(expiresAt)) {
-      localStorage.setItem(IMS_SERVER_EXPIRE, String(expiresAt));
+      localStorage.setItem(AUTHORIZED_SESSION_EXPIRY, String(expiresAt));
     }
     return true;
   } catch (e) {
@@ -184,17 +173,23 @@ export const loadIms = (() => {
       useLocalStorage: true,
       onError: reject,
       onReady: async () => {
+        // loadIms only distinguishes SIGNED-OUT ({ anonymous: true }) from
+        // SIGNED-IN (full details). Whether a signed-in user is AUTHORIZED is a
+        // separate, server-owned fact: setSession records it via
+        // AUTHORIZED_SESSION_EXPIRY and the CDN enforces it on gated paths.
         const accessToken = window.adobeIMS.getAccessToken();
         if (accessToken) {
           const established = await setSession(accessToken);
-          // After an explicit sign-in that established the session, reload once
-          // ONLY if we're on the 404 page - it's showing gated content that
-          // rendered before the cookie existed, and the URL is unchanged so a
-          // reload re-fetches it authenticated. Public pages (e.g. the
-          // homepage) reveal logged-in content on their own, so they skip this.
+          // After an explicit sign-in that established the session, reload once.
+          // The page was fetched before the cookie existed, so the server
+          // rendered its anonymous view: a gated path is the 404 page, and a
+          // public page has had its audience-private blocks stripped. Both only
+          // become correct once re-fetched with the cookie, and the URL is
+          // unchanged, so a single reload fixes either. sessionStorage survives
+          // the IMS round-trip; clearing it before the reload prevents a loop.
           const pendingReload = sessionStorage.getItem(SIGN_IN_RELOAD);
           sessionStorage.removeItem(SIGN_IN_RELOAD);
-          if (established && pendingReload && onErrorPage()) {
+          if (established && pendingReload) {
             clearTimeout(timeout);
             window.location.reload();
             return;

@@ -69,32 +69,37 @@ const isImsHash = () => {
   return hashKeys.some((key) => hash.includes(key));
 };
 
-// Load IMS if marker says user is returning
+// localStorage key set by ims.js on authorization. Its PRESENCE means the
+// browser was authorized (has access); its VALUE is the epoch-ms session expiry
+// ims.js uses to refresh.
+export const AUTHORIZED_SESSION_EXPIRY = 'spectrum-authorized-session-expiry';
+
+const hasStoredSession = () => localStorage.getItem(AUTHORIZED_SESSION_EXPIRY) !== null;
+
 export const checkIms = async () => {
-  const imsServer = 'spectrum-ims-server-expire';
-  const imsHash = isImsHash();
+  // Soft check: not returning from IMS and no session marker => anonymous.
+  if (!isImsHash() && !hasStoredSession()) { return { anonymous: true }; }
 
-  // Soft check
-  if (!imsHash) {
-    // We don't care if expired, we care if the prop exists
-    const returning = localStorage.getItem(imsServer);
-    if (!returning) { return { anonymous: true }; }
-  }
-
-  // Hard check
+  // Hard check: loadIms returns { anonymous: true } or the full details.
   const { loadIms } = await import('./utils/ims.js');
   return loadIms();
 };
 
 export const removeForAudience = async ({ publicEl, privateEl }) => {
-  // Always remove public if not on CDN
+  // Off-CDN (authoring/preview): always show the private/gated content.
   if (!getConfig().cdnEnv) {
     publicEl?.remove();
     return;
   }
-  const ims = await checkIms();
-  const toRemove = ims.anonymous ? privateEl : publicEl;
-  toRemove?.remove();
+
+  // On-CDN: only an authorized session keeps the private el; anonymous and
+  // signed-in-without-access both report anonymous here and keep the public el.
+  const { anonymous } = await checkIms();
+  if (anonymous) {
+    privateEl?.remove();
+  } else {
+    publicEl?.remove();
+  }
 };
 
 export async function loadStyle(path) {
@@ -415,7 +420,7 @@ async function loadNav() {
   const sitenav = getMetadata('sitenav');
   const pagenav = getMetadata('pagenav');
 
-  // Do not eager load for anonymous CDN visitors
+  // Do not eager load for anonymous CDN visitors (no authorized session)
   const { cdnEnv } = getConfig();
   const ims = await checkIms();
   if (cdnEnv && ims.anonymous) { return; }

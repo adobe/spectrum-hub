@@ -55,6 +55,10 @@ for dir in handlers lib; do
   done
 done
 
+# Vendored third-party ESM (node-html-parser) - copied verbatim so the
+# self-contained artifact needs no npm install. The zip below recurses lib/.
+[ -d "$SCRIPT_DIR/lib/vendor" ] && cp -R "$SCRIPT_DIR/lib/vendor" "$BUILD_DIR/lib/vendor"
+
 ( cd "$BUILD_DIR" && zip -q -r "$ZIP_FILE" index.js package.json handlers lib )
 
 if aws lambda get-function --function-name "$FUNCTION_NAME" --profile "$PROFILE" --region "$REGION" >/dev/null 2>&1; then

@@ -35,7 +35,8 @@
 import { fetchFromAem } from './handlers/aem.js';
 import { createSession, deleteSession } from './handlers/auth.js';
 import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
-import { classifyPublicPath } from './lib/gate.js';
+import { classifyPublicPath, isPrivateHtml } from './lib/gate.js';
+import { filterAudienceBlocks } from './lib/audience.js';
 
 const env = process.env;
 
@@ -151,13 +152,26 @@ const isAuthenticated = async (request) => {
   return (await readSession(cookie, env.SESSION_SECRET, Date.now())) !== null;
 };
 
-// The access gate. Public resources are served to anyone, so their check is
-// first and avoids the crypto for the common case (css/js/img/media).
-// Everything else requires a valid session; without one it is a 404 -
-// deliberately indistinguishable from a path that does not exist.
-const isAllowed = async (request, url) => {
-  if (classifyPublicPath(url.pathname) === 'allow') { return true; }
-  return isAuthenticated(request);
+// Post-fetch processing of a proxied HTML page, in two passes that both need
+// the body (which lives in the HTML and so can only be inspected after
+// proxying):
+//   1. Meta gate (anonymous only): a page that opts into privacy with
+//      <meta name="audience" content="private"> becomes a 404, indistinguishable
+//      from a path that does not exist. Authenticated viewers see it.
+//   2. Audience blocks: content blocks the viewer must not see are stripped
+//      (audience-private for anonymous, audience-public for authenticated) so
+//      private markup never leaves the edge.
+// Non-HTML/non-200 responses (assets, redirects, 304, the AEM 404 for a missing
+// page) pass through untouched without reading the body. content-length and
+// content-encoding are stripped in toLambdaResponse, so re-wrapping the
+// already-read body here stays consistent.
+const processHtmlResponse = async (resp, authed) => {
+  const contentType = resp.headers.get('content-type') || '';
+  if (resp.status !== 200 || !contentType.includes('text/html')) { return resp; }
+  const body = await resp.text();
+  if (!authed && isPrivateHtml(body)) { return notFound(); }
+  const filtered = filterAudienceBlocks(body, authed);
+  return new Response(filtered, resp);
 };
 
 const formatRequest = async (request, url) => {
@@ -222,16 +236,27 @@ const route = async (req) => {
   // Non-proxy routes need the original request, not one rewritten to AEM
   if (!matched.proxy) { return matched.handler({ url, env, request: req }); }
 
-  // Gate before proxying: a denied request never reaches AEM, and never
-  // has the origin credential attached (that happens in formatRequest).
-  if (!(await isAllowed(req, url))) { return notFound(); }
+  // Authenticated callers bypass the path gate entirely (verdict 'allow'); auth
+  // is computed once here and reused (also by processHtmlResponse). For an
+  // anonymous visitor the path verdict decides: 'deny'/'filter' are a 404 before
+  // proxying, so the request never reaches AEM and never gets the origin
+  // credential (attached in formatRequest); 'allow'/'gate' are proxied and then
+  // handed to processHtmlResponse for the meta gate and audience filtering.
+  const authed = await isAuthenticated(req);
+  const verdict = authed ? 'allow' : classifyPublicPath(url.pathname);
+  if (verdict === 'deny' || verdict === 'filter') { return notFound(); }
 
   const request = await formatRequest(req, url);
   const savedSearch = formatSearchParams(url);
 
-  return matched.handler({
+  const resp = await matched.handler({
     url, env, request, cache: matched.cache, savedSearch,
   });
+
+  // Every proxied HTML page is processed - not just 'gate' pages - so allow-
+  // listed content (e.g. the homepage, which carries audience blocks) is
+  // filtered too. processHtmlResponse no-ops on non-HTML responses.
+  return processHtmlResponse(resp, authed);
 };
 
 /*
