@@ -181,7 +181,7 @@ export const makePicture = (path, opts = {}) => {
 
   // Smallest rendition is served at reduced quality
   // doubles as mobile <source> and the <img> fallback.
-  const mobile = opts.dnf ? base : makeUrl({ width: 750, format, quality: 100 });
+  const mobile = opts.dnf ? base : makeUrl({ width: 750, format, quality: 80 });
 
   const picture = document.createElement('picture');
   if (opts.class) { picture.className = opts.class; }
@@ -197,7 +197,7 @@ export const makePicture = (path, opts = {}) => {
     img.sizes = 'auto';
     img.srcset = [
       `${mobile} 750w`,
-      ...sizes.map((size) => `${makeUrl({ width: size, format, quality: 100 })} ${size}w`),
+      ...sizes.map((size) => `${makeUrl({ width: size, format, quality: 80 })} ${size}w`),
     ].join(',');
 
     const source = document.createElement('source');
