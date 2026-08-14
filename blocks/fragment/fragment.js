@@ -101,7 +101,8 @@ function getRequestPath(a) {
 
 export default async function init(a) {
   let path = getRequestPath(a);
-  if (path.includes('/private/') && cdnEnv) {
+  const isPrivate = path.includes('/private/') && cdnEnv;
+  if (isPrivate) {
     const { loadIms } = await import('../../scripts/utils/ims.js');
     const ims = await loadIms();
     if (ims.anonymous) {
@@ -123,5 +124,8 @@ export default async function init(a) {
       elToReplace.insertAdjacentElement('afterend', child);
     }
     elToReplace.remove();
+    return;
   }
+  // Remove the link completely if private and /public/ 404s
+  if (isPrivate) { a.remove(); }
 }
