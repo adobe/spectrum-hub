@@ -9,8 +9,18 @@
      throws an accessible-name error at render time without an aria-label or
      aria-labelledby. Each TreeViewItem's `textValue` and `children` are
      marked required in its extracted prop data; TreeViewItemContent wraps
-     the row's own label, distinct from any nested child TreeViewItems. -->
-<TreeView aria-label="File browser">
+     the row's own label, distinct from any nested child TreeViewItems.
+
+     selectionMode="multiple" is required for the playground's `selectionStyle`
+     control (highlight vs. checkbox) to have any visible effect at all — RAC's
+     underlying Tree defaults selectionMode to 'none', in which case neither
+     value renders a selection UI (confirmed via a live reproduction: with no
+     selectionMode, "checkbox" renders no <input type="checkbox">, and swapping
+     to "highlight" changes nothing). selectionMode itself isn't a playground
+     control (not in this repo's extracted TreeView prop data — it's inherited
+     further up than this repo's one-hop extends resolution reaches, same
+     mechanism as the LabelableProps gap), so it's hardcoded here instead. -->
+<TreeView aria-label="File browser" selectionMode="multiple">
   <TreeViewItem id="assets" textValue="Assets">
     <TreeViewItemContent>Assets</TreeViewItemContent>
     <TreeViewItem id="logo" textValue="logo.svg">

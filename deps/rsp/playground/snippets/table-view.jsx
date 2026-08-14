@@ -15,8 +15,16 @@
      — this fragment is parsed as strict XML (see fetchCompositeRoot in
      deps/rsp/playground/index.html), which has no concept of a valueless attribute;
      an empty string round-trips to `true` the same way (see
-     buildCompositeElement/buildRspSnippet's `value === '' ? true : value`). -->
-<TableView aria-label="Files">
+     buildCompositeElement/buildRspSnippet's `value === '' ? true : value`).
+
+     selectionMode="multiple" is required for the playground's `selectionStyle`
+     control (highlight vs. checkbox) to have any visible effect — RAC's
+     underlying Table defaults selectionMode to 'none', same as Tree
+     (tree-view.jsx) and TagList (tag-group.jsx), so without it neither value
+     renders a selection UI at all. Hardcoded here for the same reason: it
+     isn't in this repo's extracted TableView prop data (inherited further up
+     than this repo's one-hop extends resolution reaches). -->
+<TableView aria-label="Files" selectionMode="multiple">
   <TableHeader>
     <Column isRowHeader="">Name</Column>
     <Column>Type</Column>
