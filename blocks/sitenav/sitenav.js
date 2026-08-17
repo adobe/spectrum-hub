@@ -1,10 +1,9 @@
 import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js';
-import { loadIms } from '../../scripts/utils/ims.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
-const { codeBase, log, cdnEnv } = getConfig();
+const { log } = getConfig();
 
 loadStyle(import.meta.url.replace('js', 'css'));
 
@@ -119,6 +118,27 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
   });
 
   return ul;
+};
+
+// Remove nav links to pages the current visitor can't see. The worker filters
+// query-index by audience (private rows dropped for anonymous visitors, kept for
+// authenticated ones), so "path not present in the index" means "hide it" for
+// exactly the right audience without a separate auth check here. Only leaf items
+// are removed so a parent with visible children is never dropped; the page gate
+// already 404s these paths, so this is purely to avoid dead links. Fail-open:
+// with no index (fetch failed) nothing is hidden.
+export const filterNavByIndex = (ul, index) => {
+  if (!index) { return; }
+  const known = new Set(index.map((entry) => entry.path));
+  ul.querySelectorAll('a[href^="/"]').forEach((a) => {
+    if (known.has(a.pathname)) { return; }
+    const li = a.closest('li');
+    // Skip parents: a list item that contains a nested list may hold visible
+    // children even when its own link is private/unindexed.
+    if (!li || li.querySelector('ul')) { return; }
+    log(`sitenav: hiding ${a.pathname} (not in query-index for this audience)`);
+    li.remove();
+  });
 };
 
 export const decorateIndexBasedNav = (navList, index) => {
@@ -373,18 +393,22 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
 };
 
 (async () => {
-  // Only check IMS on CDN.
-  if (cdnEnv) {
-    const ims = await loadIms();
-    if (ims.anonymous) { return; }
-  }
-
   // Build the nav element
   const { sitenav, nav } = getSiteNav();
 
-  // Fetch and decorate the currated nav list
-  const ul = await fetchRes(DEF_SITE_NAV_PATH);
+  // Fetch the curated nav fragment and the query index in parallel. Both are
+  // root-relative so they hit this origin's worker, which audience-filters the
+  // index and honours ?compact=true (projecting to the path/title columns the
+  // nav needs, ~90% smaller).
+  const [ul, index] = await Promise.all([
+    fetchRes(DEF_SITE_NAV_PATH),
+    fetchRes('/query-index.json?compact=true'),
+  ]);
   if (!ul) { return; }
+
+  // Drop links to pages this visitor can't see before decorating the tree.
+  filterNavByIndex(ul, index);
+
   const navList = decorateLevel(ul, 1);
 
   // Build the desktop expand button and its mobile trigger-button counterpart
@@ -394,8 +418,7 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   setupOutsideClose(sitenav);
   setupSearchIntegration(navList);
 
-  // Stitch index-based nav post DOM injection
-  const index = await fetchRes(`${codeBase}/query-index.json`);
+  // Stitch index-based nav post DOM injection (reuses the index fetched above)
   if (index) { decorateIndexBasedNav(navList, index); }
 
   // decorate the badge counts

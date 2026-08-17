@@ -10,6 +10,7 @@ import {
   localizeUrl,
   decorateLink,
   loadArea,
+  decorateAudience,
 } from '../../scripts/ak.js';
 
 // Minimal config that won't throw inside decorateLink / loadBlock
@@ -157,6 +158,49 @@ describe('ak.js', () => {
       const locale = getLocale({ '': {}, '/de': { lang: 'de' }, '/fr': { lang: 'fr' } });
       expect(locale.prefix).to.equal('/fr');
       meta.remove();
+    });
+  });
+
+  describe('decorateAudience', () => {
+    const buildArea = () => {
+      const area = document.createElement('main');
+      area.innerHTML = `
+        <div class="section">
+          <div class="banner audience-public">public</div>
+          <div class="banner audience-private">private</div>
+          <div class="columns">shared</div>
+        </div>`;
+      return area;
+    };
+    const classes = (area) => [...area.querySelectorAll('.banner, .columns')].map((el) => {
+      if (el.classList.contains('audience-public')) { return 'public'; }
+      if (el.classList.contains('audience-private')) { return 'private'; }
+      return 'shared';
+    });
+
+    beforeEach(() => { localStorage.clear(); });
+    afterEach(() => { localStorage.clear(); });
+
+    it('off-CDN shows the gated (private) block and drops the public copy', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      const area = buildArea();
+      await decorateAudience(area);
+      expect(classes(area)).to.deep.equal(['private', 'shared']);
+    });
+
+    it('on-CDN drops the private block for an anonymous viewer', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      const area = buildArea();
+      await decorateAudience(area); // no IMS hash / session marker => anonymous
+      expect(classes(area)).to.deep.equal(['public', 'shared']);
+    });
+
+    it('leaves an area without audience blocks untouched', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      const area = document.createElement('main');
+      area.innerHTML = '<div class="section"><div class="columns">only</div></div>';
+      await decorateAudience(area);
+      expect(area.querySelectorAll('.columns').length).to.equal(1);
     });
   });
 

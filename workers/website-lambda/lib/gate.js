@@ -52,10 +52,10 @@ export const PUBLIC_ALLOW_PREFIX = [
   // '/robots.txt',
 ];
 
-// JSON resources that must be filtered before an anonymous visitor may see
-// them. The filter itself is a later pass; until it lands these fail closed -
-// classified 'filter' here, answered with a 404 at the call site. Only
-// /query-index.json needs it today.
+// JSON resources served to an anonymous visitor only after a content filter.
+// Classified 'filter' here; index.js proxies them and strips the private rows
+// (see transformQueryIndex / lib/query-index.js) instead of serving them raw.
+// Only /query-index.json needs it today.
 export const PUBLIC_FILTER_PATHS = [
   '/query-index.json',
 ];
@@ -83,7 +83,7 @@ const isPageLike = (pathname) => {
 
 // Verdict for an anonymous visitor:
 //   'allow'  - serve as-is (no meta parse)
-//   'filter' - JSON that needs filtering first; 404 until that pass lands
+//   'filter' - JSON proxied, then private rows stripped before serving
 //   'gate'   - page-like: proxy, then 404 only if the HTML opts into privacy
 //   'deny'   - 404 up front, indistinguishable from a path that does not exist
 // Order matters: an explicitly-private path is denied before any allow/gate.
