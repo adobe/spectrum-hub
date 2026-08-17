@@ -128,6 +128,10 @@ Direct testing of these components surfaced real, pre-existing bugs that inciden
 - `se-textarea`: the `<textarea>` never gets an `id`, so its `<label for="...">` points at nothing — the field has no accessible label at all.
 - `se-dialog`: its default/"secondary" action buttons render with insufficient contrast (down to 3.24:1, need 4.5:1) specifically inside the dialog.
 
+## CI policy
+
+`a11y.yml` fails the job on any violation, but it isn't a required check yet — merges aren't blocked.
+
 ## Running the tests
 
 Playwright's `webServer` config starts a local [`aem up`](https://github.com/adobe/helix-cli) dev server automatically — you don't need to start anything yourself. It serves fixture files (and any other local file) directly, and proxies real page content from the linked preview environment for everything else (e.g. the homepage spec).
