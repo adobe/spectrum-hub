@@ -3,29 +3,11 @@ import { describe, it } from 'node:test';
 
 import {
   buildComponentData,
-  collectComponentProps,
-  extractExtends,
-  extractInterfaceBlock,
-  parseJSDoc,
-  parseProps,
+  findInterfaceDeclaration,
+  extractPropsFromType,
+  extractComponentProps,
 } from '../../deps/rsp/extract-props.js';
-
-const MOCK_BASE_PROPS = {
-  StyleProps: [
-    {
-      property: 'styles',
-      type: 'StylesProp',
-      description: 'Spectrum-defined styles, returned by the `style()` macro.',
-    },
-  ],
-  ButtonProps: [
-    {
-      property: 'isPending',
-      type: 'boolean',
-      description: 'Whether the button is in a pending state.',
-    },
-  ],
-};
+import { buildProgram } from '../../deps/rsp/ts-cdn-host.js';
 
 describe('buildComponentData', () => {
   const props = [{ property: 'size', type: "'M'" }];
@@ -51,286 +33,144 @@ describe('buildComponentData', () => {
   });
 });
 
-describe('parseJSDoc', () => {
-  it('extracts description and @default', () => {
-    assert.deepEqual(
-      parseJSDoc('/** The size of the Button.\n * @default \'M\'\n */'),
-      { description: 'The size of the Button.', default: "'M'" },
-    );
+describe('findInterfaceDeclaration', () => {
+  it('finds a named top-level interface in a source file', () => {
+    const fileCache = new Map([['f.d.ts', 'export interface Foo { a: string; }\nexport interface Bar { b: string; }']]);
+    const { program } = buildProgram(fileCache, ['f.d.ts']);
+    const sourceFile = program.getSourceFile('f.d.ts');
+
+    const decl = findInterfaceDeclaration(sourceFile, 'Bar');
+    assert.equal(decl.name.text, 'Bar');
   });
 
-  it('stops description at the first @tag', () => {
-    assert.deepEqual(
-      parseJSDoc('/** Line one.\n * @deprecated use other\n */'),
-      { description: 'Line one.', default: null },
-    );
+  it('returns undefined when the interface is not present', () => {
+    const fileCache = new Map([['f.d.ts', 'export interface Foo { a: string; }']]);
+    const { program } = buildProgram(fileCache, ['f.d.ts']);
+    const sourceFile = program.getSourceFile('f.d.ts');
+
+    assert.equal(findInterfaceDeclaration(sourceFile, 'Missing'), undefined);
   });
 });
 
-describe('parseProps', () => {
-  it('parses optional and required props with JSDoc', () => {
-    const block = `
-      /**
-       * The size of the Button.
-       * @default 'M'
-       */
-      size?: 'S' | 'M' | 'L';
-      /** Button label. */
-      children: ReactNode;
-    `;
+// extractPropsFromType is the actual fix this rewrite is for: it's what replaces the
+// previous one-hop extends/includes lookup with the real checker's transitive resolution.
+describe('extractPropsFromType', () => {
+  function typeFor(fileCache, entryFile, interfaceName) {
+    const { program, checker } = buildProgram(fileCache, [entryFile]);
+    const sourceFile = program.getSourceFile(entryFile);
+    const decl = findInterfaceDeclaration(sourceFile, interfaceName);
+    return { checker, type: checker.getTypeAtLocation(decl) };
+  }
 
-    assert.deepEqual(parseProps(block), [
-      {
-        property: 'size',
-        type: "'S' | 'M' | 'L'",
-        default: "'M'",
-        description: 'The size of the Button.',
-      },
-      {
-        property: 'children',
-        type: 'ReactNode',
-        required: true,
-        description: 'Button label.',
-      },
+  it('flattens props inherited transitively across multiple files, not just one hop', () => {
+    const fileCache = new Map([
+      ['a.d.ts', [
+        "import { BaseProps } from './b';",
+        'export interface ButtonProps extends BaseProps {',
+        '  ownProp: string;',
+        '}',
+      ].join('\n')],
+      ['b.d.ts', [
+        "import { DeepProps } from './c';",
+        'export interface BaseProps extends DeepProps {',
+        '  midProp?: number;',
+        '}',
+      ].join('\n')],
+      ['c.d.ts', [
+        'export interface DeepProps {',
+        '  /**',
+        '   * Deep doc.',
+        '   * @default true',
+        '   */',
+        '  deepProp: boolean;',
+        '}',
+      ].join('\n')],
     ]);
-  });
-});
 
-describe('extractInterfaceBlock', () => {
-  it('handles nested object types in the interface body', () => {
-    const source = `
-      export interface Example {
-        nested: { inner: string };
-        plain?: boolean;
-      }
-    `;
-    const block = extractInterfaceBlock(source, 'Example');
-    // Nested `{ }` types can produce a partial property match; `plain` always parses.
-    assert.ok(parseProps(block).some((p) => p.property === 'plain'));
-  });
-
-  it('finds non-exported interfaces in the same file', () => {
-    const source = 'interface LocalOnly { foo?: string; }';
-    const block = extractInterfaceBlock(source, 'LocalOnly');
-    assert.equal(parseProps(block)[0].property, 'foo');
-  });
-});
-
-describe('extractExtends', () => {
-  it('returns known base types and ignores Omit and keyof tokens', () => {
-    const source = `
-      export interface ButtonProps extends Omit<RACButtonProps, 'children'>, StyleProps {
-        children: ReactNode;
-      }
-    `;
+    const { checker, type } = typeFor(fileCache, 'a.d.ts', 'ButtonProps');
+    const props = extractPropsFromType(checker, type, 'ButtonProps');
 
     assert.deepEqual(
-      extractExtends(source, 'ButtonProps', { StyleProps: [] }),
-      ['StyleProps'],
+      props.map((p) => p.property).sort(),
+      ['deepProp', 'midProp', 'ownProp'],
     );
+
+    const deepProp = props.find((p) => p.property === 'deepProp');
+    assert.equal(deepProp.description, 'Deep doc.');
+    assert.equal(deepProp.default, 'true');
+    assert.equal(deepProp.required, true);
+    assert.equal(deepProp.inheritedFrom, 'DeepProps');
+
+    const midProp = props.find((p) => p.property === 'midProp');
+    assert.equal(midProp.required, undefined);
+    assert.equal(midProp.inheritedFrom, 'BaseProps');
+
+    // Declared directly on the primary interface — no inheritedFrom, matching prior shape.
+    const ownProp = props.find((p) => p.property === 'ownProp');
+    assert.equal(ownProp.inheritedFrom, undefined);
+  });
+
+  it('excludes className and the UNSAFE_ style/className escape hatches', () => {
+    const fileCache = new Map([
+      ['a.d.ts', [
+        'export interface Wide {',
+        '  className?: string;',
+        '  UNSAFE_className?: string;',
+        '  UNSAFE_style?: object;',
+        '  kept: string;',
+        '}',
+        'export interface Narrow extends Wide {}',
+      ].join('\n')],
+    ]);
+
+    const { checker, type } = typeFor(fileCache, 'a.d.ts', 'Narrow');
+    const props = extractPropsFromType(checker, type, 'Narrow');
+
+    assert.deepEqual(props.map((p) => p.property), ['kept']);
   });
 });
 
-describe('collectComponentProps', () => {
-  it('merges includes, interface body, and configured base types', () => {
-    const source = `
-      interface ButtonStyleProps {
-        /** Visual variant. */
-        variant?: 'primary' | 'secondary';
-      }
+describe('extractComponentProps', () => {
+  function makeMockFetch(sourcesByCanonicalPath) {
+    return async (url) => {
+      const canonicalPath = url.replace(/^https:\/\/unpkg\.com\//, '');
+      const text = sourcesByCanonicalPath[canonicalPath];
+      return { ok: text !== undefined, status: text !== undefined ? 200 : 404, text: async () => text ?? '' };
+    };
+  }
 
-      export interface ButtonProps extends Omit<RACButtonProps, 'children'>, ButtonStyleProps {
-        /** Button label. */
-        children: ReactNode;
-      }
-    `;
-
-    const props = collectComponentProps(
-      source,
-      {
-        interface: 'ButtonProps',
-        includes: ['ButtonStyleProps'],
-        extends: ['ButtonProps', 'StyleProps'],
-      },
-      MOCK_BASE_PROPS,
-    );
-
-    assert.deepEqual(props, [
-      {
-        property: 'variant',
-        type: "'primary' | 'secondary'",
-        description: 'Visual variant.',
-        inheritedFrom: 'ButtonStyleProps',
-      },
-      {
-        property: 'children',
-        type: 'ReactNode',
-        required: true,
-        description: 'Button label.',
-      },
-      {
-        property: 'isPending',
-        type: 'boolean',
-        description: 'Whether the button is in a pending state.',
-        inheritedFrom: 'ButtonProps',
-      },
-      {
-        property: 'styles',
-        type: 'StylesProp',
-        description: 'Spectrum-defined styles, returned by the `style()` macro.',
-        inheritedFrom: 'StyleProps',
-      },
-    ]);
+  it('resolves a component end to end from its own .d.ts source', async () => {
+    const fetchImpl = makeMockFetch({
+      '@react-spectrum/s2/dist/types/src/Example.d.ts': [
+        'export interface ExampleProps {',
+        '  size?: string;',
+        '}',
+      ].join('\n'),
+    });
+    // extractComponentProps calls crawl() with the module-level `fetch`; simulate its
+    // effect directly via a pre-populated shared cache instead of monkey-patching global fetch.
+    const sharedFileCache = new Map();
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchImpl;
+    try {
+      const props = await extractComponentProps('Example', { interface: 'ExampleProps' }, sharedFileCache);
+      assert.deepEqual(props, [{ property: 'size', type: 'string' }]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
-  it('lets own props win over inherited base props on name collision', () => {
-    const source = `
-      export interface ExampleProps {
-        /** Local children description. */
-        children: ReactNode;
-      }
-    `;
-
-    const props = collectComponentProps(
-      source,
-      { interface: 'ExampleProps', extends: ['ButtonProps'] },
-      {
-        ButtonProps: [
-          { property: 'children', type: 'string', description: 'Base children.' },
-          { property: 'isPending', type: 'boolean' },
-        ],
-      },
-    );
-
-    assert.deepEqual(props, [
-      {
-        property: 'children',
-        type: 'ReactNode',
-        required: true,
-        description: 'Local children description.',
-      },
-      {
-        property: 'isPending',
-        type: 'boolean',
-        inheritedFrom: 'ButtonProps',
-      },
-    ]);
-  });
-
-  it('does not auto-merge base types when extends is omitted', () => {
-    const source = `
-      interface BadgeStyleProps { variant?: string; }
-      export interface BadgeProps extends DOMProps, StyleProps, BadgeStyleProps {
-        children: ReactNode;
-      }
-    `;
-
-    const props = collectComponentProps(
-      source,
-      { interface: 'BadgeProps', includes: ['BadgeStyleProps'] },
-      MOCK_BASE_PROPS,
-    );
-
-    assert.deepEqual(props, [
-      {
-        property: 'variant',
-        type: 'string',
-        inheritedFrom: 'BadgeStyleProps',
-      },
-      {
-        property: 'children',
-        type: 'ReactNode',
-        required: true,
-      },
-    ]);
-  });
-
-  it('omits className from inherited react-aria base props', () => {
-    const props = collectComponentProps(
-      'export interface ButtonProps { children: ReactNode; }',
-      { interface: 'ButtonProps', extends: ['ButtonProps'] },
-      {
-        ButtonProps: [
-          {
-            property: 'className',
-            type: 'string',
-            description: 'RAC className.',
-          },
-          { property: 'isPending', type: 'boolean' },
-        ],
-      },
-    );
-
-    assert.deepEqual(props, [
-      { property: 'children', type: 'ReactNode', required: true },
-      {
-        property: 'isPending',
-        type: 'boolean',
-        inheritedFrom: 'ButtonProps',
-      },
-    ]);
-  });
-
-  it('merges only configured extends bases', () => {
-    const source = `
-      export interface BadgeProps extends DOMProps, StyleProps, BadgeStyleProps {
-        children: ReactNode;
-      }
-    `;
-
-    const props = collectComponentProps(
-      source,
-      { interface: 'BadgeProps', extends: ['StyleProps'] },
-      MOCK_BASE_PROPS,
-    );
-
-    assert.deepEqual(props, [
-      {
-        property: 'children',
-        type: 'ReactNode',
-        required: true,
-      },
-      {
-        property: 'styles',
-        type: 'StylesProp',
-        description: 'Spectrum-defined styles, returned by the `style()` macro.',
-        inheritedFrom: 'StyleProps',
-      },
-    ]);
-  });
-
-  it('merges includes using includeFiles from components.json', () => {
-    const main = `
-      export interface ToggleButtonProps {
-        isEmphasized?: boolean;
-      }
-    `;
-    const actionButton = `
-      interface ActionButtonStyleProps { isQuiet?: boolean; }
-    `;
-
-    const props = collectComponentProps(
-      main,
-      {
-        interface: 'ToggleButtonProps',
-        includes: ['ActionButtonStyleProps'],
-        includeFiles: { ActionButtonStyleProps: 'ActionButton' },
-      },
-      {},
-      { ActionButtonStyleProps: actionButton },
-    );
-    assert.deepEqual(props, [
-      { property: 'isQuiet', type: 'boolean', inheritedFrom: 'ActionButtonStyleProps' },
-      { property: 'isEmphasized', type: 'boolean' },
-    ]);
-  });
-
-  it('returns null when the interface and includes are missing', () => {
-    assert.equal(
-      collectComponentProps('export interface Other {}', {
-        interface: 'ButtonProps',
-      }),
-      null,
-    );
+  it('returns null when the named interface is not found in the component file', async () => {
+    const fetchImpl = makeMockFetch({
+      '@react-spectrum/s2/dist/types/src/Example.d.ts': 'export interface SomethingElse {}',
+    });
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchImpl;
+    try {
+      const props = await extractComponentProps('Example', { interface: 'ExampleProps' }, new Map());
+      assert.equal(props, null);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

@@ -2,20 +2,26 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the CloseButton."
     },
     {
       "property": "staticColor",
-      "type": "'white' | 'black' | 'auto'",
+      "type": "\"white\" | \"black\" | \"auto\"",
       "description": "The static color style to apply. Useful when the Button appears over a color background."
     },
     {
-      "property": "isPending",
+      "property": "isDisabled",
       "type": "boolean",
-      "description": "Whether the button is in a pending state. This disables press and hover events while retaining focusability, and announces the pending state to screen readers.",
+      "description": "Whether the button is disabled.",
       "inheritedFrom": "ButtonProps"
+    },
+    {
+      "property": "onPress",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when the press is released over the target.",
+      "inheritedFrom": "PressEvents"
     },
     {
       "property": "styles",

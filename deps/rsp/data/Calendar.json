@@ -12,17 +12,151 @@
       "description": "The number of months to display at once."
     },
     {
-      "property": "visibleDuration",
-      "type": "DateDuration",
-      "default": "{ months: 1 }",
-      "description": "The amount of days that will be displayed at once. This affects how pagination works.",
-      "inheritedFrom": "CalendarProps"
+      "property": "selectionMode",
+      "type": "M",
+      "default": "'single'",
+      "description": "Whether single or multiple selection is enabled."
+    },
+    {
+      "property": "isDateUnavailable",
+      "type": "(date: DateValue) => boolean",
+      "description": "Callback that is called for each date of the calendar. If it returns true, then the date is\nunavailable."
+    },
+    {
+      "property": "minValue",
+      "type": "DateValue",
+      "description": "The minimum allowed date that a user may select.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "maxValue",
+      "type": "DateValue",
+      "description": "The maximum allowed date that a user may select.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the calendar is disabled.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the calendar value is immutable.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether to automatically focus the calendar when it mounts.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "focusedValue",
+      "type": "DateValue",
+      "description": "Controls the currently focused date within the calendar.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "defaultFocusedValue",
+      "type": "DateValue",
+      "description": "The date that is focused when the calendar first mounts (uncontrolled).",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(date: CalendarDate) => void",
+      "description": "Handler that is called when the focused date changes.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "description": "Whether the current selection is invalid according to application logic.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "pageBehavior",
+      "type": "PageBehavior",
+      "default": "visible",
+      "description": "Controls the behavior of paging. Pagination either works by advancing the visible page by\nvisibleDuration (default) or one unit of visibleDuration.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "firstDayOfWeek",
+      "type": "\"sun\" | \"mon\" | \"tue\" | \"wed\" | \"thu\" | \"fri\" | \"sat\"",
+      "description": "The day that starts the week.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "selectionAlignment",
+      "type": "\"start\" | \"center\" | \"end\"",
+      "default": "'center'",
+      "description": "Determines the alignment of the visible months on initial render based on the current selection\nor current date if there is no selection.",
+      "inheritedFrom": "CalendarPropsBase"
+    },
+    {
+      "property": "value",
+      "type": "CalendarValueType<T, M>",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "CalendarValueType<T, M>",
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: CalendarValueType<MappedDateValue<T>, M>) => void",
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
       "property": "createCalendar",
-      "type": "(identifier: CalendarIdentifier) => ICalendar",
-      "description": "A function to create a new [Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a given calendar identifier. If not provided, the `createCalendar` function from `@internationalized/date` will be used.",
-      "inheritedFrom": "CalendarProps"
+      "type": "(identifier: CalendarIdentifier) => Calendar",
+      "description": "A function to create a new\n[Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a\ngiven calendar identifier. If not provided, the `createCalendar` function from\n`@internationalized/date` will be used."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",

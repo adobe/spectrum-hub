@@ -1,6 +1,102 @@
 {
   "props": [
     {
+      "property": "onChange",
+      "type": "(value: Color) => void",
+      "description": "Handler that is called when the value changes, as the user drags."
+    },
+    {
+      "property": "value",
+      "type": "string | Color",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "string | Color",
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "xName",
+      "type": "string",
+      "description": "The name of the x channel input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "AriaColorAreaProps"
+    },
+    {
+      "property": "yName",
+      "type": "string",
+      "description": "The name of the y channel input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "AriaColorAreaProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "description": "The `<form>` element to associate the ColorArea with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "AriaColorAreaProps"
+    },
+    {
+      "property": "colorSpace",
+      "type": "ColorSpace",
+      "description": "The color space that the color area operates in. The `xChannel` and `yChannel` must be in this\ncolor space. If not provided, this defaults to the color space of the `color` or `defaultColor`\nvalue."
+    },
+    {
+      "property": "xChannel",
+      "type": "ColorChannel",
+      "description": "Color channel for the horizontal axis."
+    },
+    {
+      "property": "yChannel",
+      "type": "ColorChannel",
+      "description": "Color channel for the vertical axis."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the ColorArea is disabled."
+    },
+    {
+      "property": "onChangeEnd",
+      "type": "(value: Color) => void",
+      "description": "Handler that is called when the user stops dragging."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",

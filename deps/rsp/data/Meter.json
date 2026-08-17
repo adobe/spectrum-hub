@@ -1,22 +1,97 @@
 {
   "props": [
     {
+      "property": "label",
+      "type": "ReactNode",
+      "description": "The content to display as the label."
+    },
+    {
+      "property": "value",
+      "type": "number",
+      "default": "0",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "minValue",
+      "type": "number",
+      "default": "0",
+      "description": "The smallest value allowed for the input.",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "maxValue",
+      "type": "number",
+      "default": "100",
+      "description": "The largest value allowed for the input.",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "formatOptions",
+      "type": "NumberFormatOptions",
+      "default": "{ style: 'percent' }",
+      "description": "The display format of the value label.",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "valueLabel",
+      "type": "ReactNode",
+      "description": "The content to display as the value's label (e.g. 1 of 4).",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "variant",
-      "type": "'informative' | 'positive' | 'notice' | 'negative'",
+      "type": "\"informative\" | \"positive\" | \"notice\" | \"negative\"",
       "default": "'informative'",
       "description": "The [visual style](https://spectrum.adobe.com/page/meter/#-Options) of the Meter.",
       "inheritedFrom": "MeterStyleProps"
     },
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the Meter.",
       "inheritedFrom": "MeterStyleProps"
     },
     {
       "property": "staticColor",
-      "type": "'white' | 'black' | 'auto'",
+      "type": "\"white\" | \"black\" | \"auto\"",
       "description": "The static color style to apply. Useful when the button appears over a color background.",
       "inheritedFrom": "MeterStyleProps"
     },
@@ -26,11 +101,6 @@
       "default": "'top'",
       "description": "The label's overall position relative to the element it is labeling.",
       "inheritedFrom": "MeterStyleProps"
-    },
-    {
-      "property": "label",
-      "type": "ReactNode",
-      "description": "The content to display as the label."
     },
     {
       "property": "styles",

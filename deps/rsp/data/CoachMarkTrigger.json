@@ -5,6 +5,24 @@
       "type": "ReactNode",
       "required": true,
       "inheritedFrom": "DialogTriggerProps"
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "description": "Whether the overlay is open by default (controlled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "defaultOpen",
+      "type": "boolean",
+      "description": "Whether the overlay is open by default (uncontrolled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean) => void",
+      "description": "Handler that is called when the overlay's open state changes.",
+      "inheritedFrom": "OverlayTriggerProps"
     }
   ]
 }

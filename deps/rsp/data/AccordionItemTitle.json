@@ -8,9 +8,15 @@
     },
     {
       "property": "children",
-      "type": "React.ReactNode",
+      "type": "ReactNode",
       "required": true,
       "description": "The contents of the accordion item title."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ]
 }

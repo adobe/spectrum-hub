@@ -14,7 +14,7 @@
     },
     {
       "property": "selectionMode",
-      "type": "'single' | 'multiple'",
+      "type": "\"single\" | \"multiple\"",
       "default": "'single'",
       "description": "The selection mode for the SelectBoxGroup."
     },
@@ -30,30 +30,107 @@
       "inheritedFrom": "StyleProps"
     },
     {
-      "property": "selectionBehavior",
-      "type": "SelectionBehavior",
-      "default": "'toggle'",
-      "description": "How multiple selection should behave in the collection.",
+      "property": "escapeKeyBehavior",
+      "type": "\"clearSelection\" | \"none\"",
+      "default": "'clearSelection'",
+      "description": "Whether pressing the escape key should clear selection in the listbox or not.\n\nMost experiences should not modify this option as it eliminates a keyboard user's ability to\neasily clear selection. Only use if the escape key is being handled externally or should not\ntrigger selection clearing contextually.",
+      "inheritedFrom": "AriaListBoxPropsBase"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean | FocusStrategy",
+      "description": "Whether to auto focus the listbox or an option.",
       "inheritedFrom": "ListBoxProps"
     },
     {
-      "property": "dragAndDropHooks",
-      "type": "DragAndDropHooks<NoInfer<T>>",
-      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the ListBox.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "items",
+      "type": "Iterable<T>",
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
     },
     {
-      "property": "renderEmptyState",
-      "type": "(props: ListBoxRenderProps) => ReactNode",
-      "description": "Provides content to display when there are no items in the list.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
     },
     {
-      "property": "layout",
-      "type": "'stack' | 'grid'",
-      "default": "'stack'",
-      "description": "Whether the items are arranged in a stack or grid.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "description": "Whether the collection allows empty selection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "selectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "description": "The currently selected keys in the collection (controlled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "defaultSelectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(keys: Selection) => void",
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

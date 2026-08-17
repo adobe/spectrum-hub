@@ -11,6 +11,11 @@
       "description": "A string representation of the SelectBox's contents, used for features like typeahead."
     },
     {
+      "property": "aria-label",
+      "type": "string",
+      "description": "An accessibility label for this item."
+    },
+    {
       "property": "children",
       "type": "ReactNode",
       "required": true,

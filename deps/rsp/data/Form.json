@@ -1,8 +1,13 @@
 {
   "props": [
     {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true
+    },
+    {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "Size of the Form elements.",
       "inheritedFrom": "FormStyleProps"
@@ -20,16 +25,122 @@
       "inheritedFrom": "FormStyleProps"
     },
     {
-      "property": "children",
-      "type": "ReactNode",
-      "required": true
+      "property": "labelPosition",
+      "type": "LabelPosition",
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "Alignment",
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "necessityIndicator",
+      "type": "NecessityIndicator",
+      "default": "'icon'",
+      "description": "Whether the required state should be shown as an icon or text.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "description": "Whether the label is labeling a required field or group.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
       "property": "validationBehavior",
-      "type": "'aria' | 'native'",
+      "type": "\"aria\" | \"native\"",
       "default": "'native'",
-      "description": "Whether to use native HTML form validation to prevent form submission when a field value is missing or invalid, or mark fields as required or invalid via ARIA.",
-      "inheritedFrom": "FormProps"
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen a field value is missing or invalid, or mark fields as required\nor invalid via ARIA."
+    },
+    {
+      "property": "validationErrors",
+      "type": "ValidationErrors",
+      "description": "Validation errors for the form, typically returned by a server.\nThis should be set to an object mapping from input names to errors."
+    },
+    {
+      "property": "action",
+      "type": "string | ((formData: FormData) => void | Promise<void>)",
+      "description": "Where to send the form-data when the form is submitted.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#action)."
+    },
+    {
+      "property": "encType",
+      "type": "\"application/x-www-form-urlencoded\" | \"multipart/form-data\" | \"text/plain\"",
+      "description": "The enctype attribute specifies how the form-data should be encoded when submitting it to the\nserver. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#enctype)."
+    },
+    {
+      "property": "method",
+      "type": "\"get\" | \"post\" | \"dialog\"",
+      "description": "The HTTP method to submit the form with.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#method)."
+    },
+    {
+      "property": "target",
+      "type": "\"_blank\" | \"_self\" | \"_parent\" | \"_top\"",
+      "description": "The target attribute specifies a name or a keyword that indicates where to display the response\nthat is received after submitting the form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#target)."
+    },
+    {
+      "property": "onSubmit",
+      "type": "(event: FormEvent<HTMLFormElement>) => void",
+      "description": "Triggered when a user submits the form."
+    },
+    {
+      "property": "onReset",
+      "type": "(event: FormEvent<HTMLFormElement>) => void",
+      "description": "Triggered when a user resets the form."
+    },
+    {
+      "property": "onInvalid",
+      "type": "(event: FormEvent<HTMLFormElement>) => void",
+      "description": "Triggered for each invalid field when a user submits the form."
+    },
+    {
+      "property": "autoComplete",
+      "type": "\"off\" | \"on\"",
+      "description": "Indicates whether input elements can by default have their values automatically completed by\nthe browser. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#autocomplete)."
+    },
+    {
+      "property": "autoCapitalize",
+      "type": "\"off\" | \"on\" | \"none\" | \"sentences\" | \"words\" | \"characters\"",
+      "description": "Controls whether inputted text is automatically capitalized and, if so, in what manner.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/autocapitalize)."
+    },
+    {
+      "property": "role",
+      "type": "\"search\" | \"presentation\"",
+      "description": "An ARIA role override to apply to the form element."
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     },
     {
       "property": "styles",

@@ -3,20 +3,17 @@
     {
       "property": "columns",
       "type": "Iterable<T>",
-      "description": "A list of table columns.",
-      "inheritedFrom": "TableHeaderProps"
+      "description": "A list of table columns."
     },
     {
       "property": "children",
-      "type": "ReactNode | ((item: T) => ReactElement)",
-      "description": "A list of `Column(s)` or a function. If the latter, a list of columns must be provided using the `columns` prop.",
-      "inheritedFrom": "TableHeaderProps"
+      "type": "ReactNode | ((item: T) => ReactElement<unknown, string | JSXElementConstructor<any>>)",
+      "description": "A list of `Column(s)` or a function. If the latter, a list of columns must be provided using\nthe `columns` prop."
     },
     {
       "property": "dependencies",
-      "type": "ReadonlyArray<any>",
-      "description": "Values that should invalidate the column cache when using dynamic collections.",
-      "inheritedFrom": "TableHeaderProps"
+      "type": "readonly any[]",
+      "description": "Values that should invalidate the column cache when using dynamic collections."
     }
   ]
 }

@@ -1,43 +1,217 @@
 {
   "props": [
     {
-      "property": "variant",
-      "type": "'primary' | 'secondary' | 'accent' | 'negative' | 'premium' | 'genai'",
-      "default": "'primary'",
-      "description": "The [visual style](https://spectrum.adobe.com/page/button/#Options) of the button.",
-      "inheritedFrom": "ButtonStyleProps"
-    },
-    {
-      "property": "fillStyle",
-      "type": "'fill' | 'outline'",
-      "default": "'fill'",
-      "description": "The background style of the Button.",
-      "inheritedFrom": "ButtonStyleProps"
-    },
-    {
-      "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
-      "default": "'M'",
-      "description": "The size of the Button.",
-      "inheritedFrom": "ButtonStyleProps"
-    },
-    {
-      "property": "staticColor",
-      "type": "'white' | 'black' | 'auto'",
-      "description": "The static color style to apply. Useful when the Button appears over a color background.",
-      "inheritedFrom": "ButtonStyleProps"
-    },
-    {
       "property": "children",
       "type": "ReactNode",
       "required": true,
       "description": "The content to display in the Button."
     },
     {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the link is disabled.",
+      "inheritedFrom": "AriaLinkOptions"
+    },
+    {
+      "property": "onPress",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when the press is released over the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressStart",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press interaction starts.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressEnd",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press interaction ends, either\nover the target or when the pointer leaves the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressChange",
+      "type": "(isPressed: boolean) => void",
+      "description": "Handler that is called when the press state changes.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressUp",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press is released over the target, regardless of\nwhether it started on the target or not.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "href",
+      "type": "string",
+      "description": "A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "hrefLang",
+      "type": "string",
+      "description": "Hints at the human language of the linked URL.\nSee[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "target",
+      "type": "HTMLAttributeAnchorTarget",
+      "description": "The target window for the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "rel",
+      "type": "string",
+      "description": "The relationship between the linked resource and the current page. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "download",
+      "type": "string | boolean",
+      "description": "Causes the browser to download the linked URL. A string may be provided to suggest a file name.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "ping",
+      "type": "string",
+      "description": "A space-separated list of URLs to ping when the link is followed. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "referrerPolicy",
+      "type": "HTMLAttributeReferrerPolicy",
+      "description": "How much of the referrer to send when following the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "routerOptions",
+      "type": "never",
+      "description": "Options for the configured client side router.",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "onHoverStart",
+      "type": "(e: HoverEvent) => void",
+      "description": "Handler that is called when a hover interaction starts.",
+      "inheritedFrom": "HoverEvents"
+    },
+    {
+      "property": "onHoverEnd",
+      "type": "(e: HoverEvent) => void",
+      "description": "Handler that is called when a hover interaction ends.",
+      "inheritedFrom": "HoverEvents"
+    },
+    {
+      "property": "onHoverChange",
+      "type": "(isHovering: boolean) => void",
+      "description": "Handler that is called when the hover state changes.",
+      "inheritedFrom": "HoverEvents"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "variant",
+      "type": "\"primary\" | \"secondary\" | \"accent\" | \"negative\" | \"premium\" | \"genai\"",
+      "default": "'primary'",
+      "description": "The [visual style](https://spectrum.adobe.com/page/button/#Options) of the button.",
+      "inheritedFrom": "ButtonStyleProps"
+    },
+    {
+      "property": "fillStyle",
+      "type": "\"fill\" | \"outline\"",
+      "default": "'fill'",
+      "description": "The background style of the Button.",
+      "inheritedFrom": "ButtonStyleProps"
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "default": "'M'",
+      "description": "The size of the Button.",
+      "inheritedFrom": "ButtonStyleProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "\"white\" | \"black\" | \"auto\"",
+      "description": "The static color style to apply. Useful when the Button appears over a color background.",
+      "inheritedFrom": "ButtonStyleProps"
     }
   ],
   "status": "stable"

@@ -2,7 +2,7 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the Menu."
     },
@@ -18,16 +18,120 @@
       "description": "Hides the default link out icons on menu items that open links in a new tab."
     },
     {
-      "property": "renderEmptyState",
-      "type": "() => ReactNode",
-      "description": "Provides content to display when there are no items in the list.",
-      "inheritedFrom": "MenuProps"
+      "property": "escapeKeyBehavior",
+      "type": "\"clearSelection\" | \"none\"",
+      "default": "'clearSelection'",
+      "description": "Whether pressing the escape key should clear selection in the menu or not.\n\nMost experiences should not modify this option as it eliminates a keyboard user's ability to\neasily clear selection. Only use if the escape key is being handled externally or should not\ntrigger selection clearing contextually.",
+      "inheritedFrom": "AriaMenuProps"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean | FocusStrategy",
+      "description": "Where the focus should be set."
+    },
+    {
+      "property": "shouldFocusWrap",
+      "type": "boolean",
+      "description": "Whether keyboard navigation is circular."
+    },
+    {
+      "property": "onAction",
+      "type": "(key: Key, value: T) => void",
+      "description": "Handler that is called when an item is selected."
+    },
+    {
+      "property": "onClose",
+      "type": "() => void",
+      "description": "Handler that is called when the menu should close after selecting an item."
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "selectionMode",
+      "type": "SelectionMode",
+      "description": "The type of selection that is allowed in the collection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "description": "Whether the collection allows empty selection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "selectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "description": "The currently selected keys in the collection (controlled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "defaultSelectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(keys: Selection) => void",
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
       "property": "shouldCloseOnSelect",
       "type": "boolean",
-      "description": "Whether the menu should close when the menu item is selected.",
-      "inheritedFrom": "MenuProps"
+      "description": "Whether the menu should close when the menu item is selected."
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "CollectionProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",

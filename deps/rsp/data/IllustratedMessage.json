@@ -1,20 +1,6 @@
 {
   "props": [
     {
-      "property": "size",
-      "type": "'S' | 'M' | 'L'",
-      "default": "'M'",
-      "description": "The size of the IllustratedMessage.",
-      "inheritedFrom": "IllustratedMessageStyleProps"
-    },
-    {
-      "property": "orientation",
-      "type": "'horizontal' | 'vertical'",
-      "default": "'vertical'",
-      "description": "The direction that the IllustratedMessage should be laid out in.",
-      "inheritedFrom": "IllustratedMessageStyleProps"
-    },
-    {
       "property": "styles",
       "type": "StylesPropWithHeight",
       "description": "Spectrum-defined styles, returned by the `style()` macro."
@@ -24,6 +10,26 @@
       "type": "ReactNode",
       "required": true,
       "description": "The content to display in the IllustratedMessage."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\"",
+      "default": "'M'",
+      "description": "The size of the IllustratedMessage.",
+      "inheritedFrom": "IllustratedMessageStyleProps"
+    },
+    {
+      "property": "orientation",
+      "type": "\"horizontal\" | \"vertical\"",
+      "default": "'vertical'",
+      "description": "The direction that the IllustratedMessage should be laid out in.",
+      "inheritedFrom": "IllustratedMessageStyleProps"
     }
   ],
   "status": "stable"

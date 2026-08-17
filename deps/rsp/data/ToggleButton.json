@@ -1,25 +1,6 @@
 {
   "props": [
     {
-      "property": "size",
-      "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
-      "default": "'M'",
-      "description": "The size of the ActionButton.",
-      "inheritedFrom": "ActionButtonStyleProps"
-    },
-    {
-      "property": "staticColor",
-      "type": "'black' | 'white' | 'auto'",
-      "description": "The static color style to apply. Useful when the ActionButton appears over a color background.",
-      "inheritedFrom": "ActionButtonStyleProps"
-    },
-    {
-      "property": "isQuiet",
-      "type": "boolean",
-      "description": "Whether the button should be displayed with a [quiet style](https://spectrum.adobe.com/page/action-button/#Quiet).",
-      "inheritedFrom": "ActionButtonStyleProps"
-    },
-    {
       "property": "children",
       "type": "ReactNode",
       "required": true,
@@ -28,19 +9,196 @@
     {
       "property": "isEmphasized",
       "type": "boolean",
-      "description": "Whether the button should be displayed with an [emphasized style](https://spectrum.adobe.com/page/action-button/#Emphasis)."
+      "description": "Whether the button should be displayed with an [emphasized\nstyle](https://spectrum.adobe.com/page/action-button/#Emphasis)."
     },
     {
       "property": "id",
       "type": "Key",
-      "description": "When used in a ToggleButtonGroup, an identifier for the item in `selectedKeys`. When used standalone, a DOM id.",
-      "inheritedFrom": "ToggleButtonProps"
+      "description": "When used in a ToggleButtonGroup, an identifier for the item in `selectedKeys`. When used\nstandalone, a DOM id."
+    },
+    {
+      "property": "aria-disabled",
+      "type": "boolean | \"true\" | \"false\"",
+      "description": "Indicates whether the element is disabled to users of assistive technology.",
+      "inheritedFrom": "AriaBaseButtonProps"
+    },
+    {
+      "property": "aria-expanded",
+      "type": "boolean | \"true\" | \"false\"",
+      "description": "Indicates whether the element, or another grouping element it controls, is currently expanded\nor collapsed.",
+      "inheritedFrom": "AriaBaseButtonProps"
+    },
+    {
+      "property": "aria-haspopup",
+      "type": "boolean | \"true\" | \"false\" | \"menu\" | \"listbox\" | \"tree\" | \"grid\" | \"dialog\"",
+      "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that\ncan be triggered by an element.",
+      "inheritedFrom": "AriaBaseButtonProps"
+    },
+    {
+      "property": "aria-controls",
+      "type": "string",
+      "description": "Identifies the element (or elements) whose contents or presence are controlled by the current\nelement.",
+      "inheritedFrom": "AriaBaseButtonProps"
+    },
+    {
+      "property": "aria-pressed",
+      "type": "boolean | \"true\" | \"false\" | \"mixed\"",
+      "description": "Indicates the current \"pressed\" state of toggle buttons.",
+      "inheritedFrom": "AriaBaseButtonProps"
+    },
+    {
+      "property": "preventFocusOnPress",
+      "type": "boolean",
+      "description": "Whether to prevent focus from moving to the button when pressing it.\n\nCaution, this can make the button inaccessible and should only be used when alternative\nkeyboard interaction is provided, such as ComboBox's MenuTrigger or a NumberField's\nincrement/decrement control.",
+      "inheritedFrom": "AriaBaseButtonProps"
+    },
+    {
+      "property": "excludeFromTabOrder",
+      "type": "boolean",
+      "description": "Whether to exclude the element from the sequential tab order. If true,\nthe element will not be focusable via the keyboard by tabbing. This should\nbe avoided except in rare scenarios where an alternative means of accessing\nthe element or its functionality via the keyboard is available.",
+      "inheritedFrom": "FocusableDOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "description": "Whether the element should be selected (controlled)."
+    },
+    {
+      "property": "defaultSelected",
+      "type": "boolean",
+      "description": "Whether the element should be selected (uncontrolled)."
+    },
+    {
+      "property": "onChange",
+      "type": "(isSelected: boolean) => void",
+      "description": "Handler that is called when the element's selection state changes."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the button is disabled.",
+      "inheritedFrom": "ButtonProps"
+    },
+    {
+      "property": "onPress",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when the press is released over the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressStart",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press interaction starts.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressEnd",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press interaction ends, either\nover the target or when the pointer leaves the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressChange",
+      "type": "(isPressed: boolean) => void",
+      "description": "Handler that is called when the press state changes.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressUp",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press is released over the target, regardless of\nwhether it started on the target or not.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "size",
+      "type": "\"XS\" | \"S\" | \"M\" | \"L\" | \"XL\"",
+      "default": "'M'",
+      "description": "The size of the ActionButton.",
+      "inheritedFrom": "ActionButtonStyleProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "\"black\" | \"white\" | \"auto\"",
+      "description": "The static color style to apply. Useful when the ActionButton appears over a color background.",
+      "inheritedFrom": "ActionButtonStyleProps"
+    },
+    {
+      "property": "isQuiet",
+      "type": "boolean",
+      "description": "Whether the button should be displayed with a [quiet\nstyle](https://spectrum.adobe.com/page/action-button/#Quiet).",
+      "inheritedFrom": "ActionButtonStyleProps"
     }
   ],
   "status": "stable"

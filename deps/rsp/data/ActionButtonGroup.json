@@ -13,20 +13,20 @@
     },
     {
       "property": "size",
-      "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
+      "type": "\"XS\" | \"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "Size of the buttons."
     },
     {
       "property": "density",
-      "type": "'compact' | 'regular'",
+      "type": "\"compact\" | \"regular\"",
       "default": "'regular'",
       "description": "Spacing between the buttons."
     },
     {
       "property": "isQuiet",
       "type": "boolean",
-      "description": "Whether the button should be displayed with a [quiet style](https://spectrum.adobe.com/page/action-button/#Quiet)."
+      "description": "Whether the button should be displayed with a [quiet\nstyle](https://spectrum.adobe.com/page/action-button/#Quiet)."
     },
     {
       "property": "isJustified",
@@ -35,12 +35,12 @@
     },
     {
       "property": "staticColor",
-      "type": "'white' | 'black' | 'auto'",
-      "description": "The static color style to apply. Useful when the ActionButtonGroup appears over a color background."
+      "type": "\"white\" | \"black\" | \"auto\"",
+      "description": "The static color style to apply. Useful when the ActionButtonGroup appears over a color\nbackground."
     },
     {
       "property": "orientation",
-      "type": "'horizontal' | 'vertical'",
+      "type": "\"horizontal\" | \"vertical\"",
       "default": "'horizontal'",
       "description": "The axis the group should align with."
     },
@@ -48,6 +48,36 @@
       "property": "isDisabled",
       "type": "boolean",
       "description": "Whether the group is disabled."
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

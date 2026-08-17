@@ -13,8 +13,8 @@
     },
     {
       "property": "selectedItemCount",
-      "type": "number | 'all'",
-      "description": "The number of selected items that the ActionBar is currently linked to. If 0, the ActionBar is hidden."
+      "type": "number | \"all\"",
+      "description": "The number of selected items that the ActionBar is currently linked to. If 0, the ActionBar is\nhidden."
     },
     {
       "property": "onClearSelection",
@@ -23,14 +23,26 @@
     },
     {
       "property": "scrollRef",
-      "type": "RefObject<HTMLElement | null>",
+      "type": "RefObject<HTMLElement>",
       "description": "A ref to the scrollable element the ActionBar appears above."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ],
   "status": "stable"

@@ -2,15 +2,254 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the DateField."
+    },
+    {
+      "property": "validationBehavior",
+      "type": "\"native\" | \"aria\"",
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen the value is missing or invalid, or mark the field as required\nor invalid via ARIA.",
+      "inheritedFrom": "RACValidation"
+    },
+    {
+      "property": "autoComplete",
+      "type": "string",
+      "description": "Describes the type of autocomplete functionality the input should provide if any. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefautocomplete).",
+      "inheritedFrom": "AriaDateFieldProps"
+    },
+    {
+      "property": "minValue",
+      "type": "DateValue",
+      "description": "The minimum allowed date that a user may select.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "maxValue",
+      "type": "DateValue",
+      "description": "The maximum allowed date that a user may select.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "isDateUnavailable",
+      "type": "(date: DateValue) => boolean",
+      "description": "Callback that is called for each date of the calendar. If it returns true, then the date is\nunavailable.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "placeholderValue",
+      "type": "T",
+      "description": "A placeholder date that influences the format of the placeholder shown when no value is\nselected. Defaults to today's date at midnight.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "hourCycle",
+      "type": "12 | 24",
+      "description": "Whether to display the time in 12 or 24 hour format. By default, this is determined by the\nuser's locale.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "granularity",
+      "type": "Granularity",
+      "description": "Determines the smallest unit that is displayed in the date picker. By default, this is `\"day\"`\nfor dates, and `\"minute\"` for times.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "hideTimeZone",
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether to hide the time zone abbreviation.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "shouldForceLeadingZeros",
+      "type": "boolean",
+      "description": "Whether to always show leading zeros in the month, day, and hour fields.\nBy default, this is determined by the user's locale.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the input is disabled.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "description": "Whether the input can be selected but not changed by the user.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "description": "Whether user input is required on the input before form submission.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "description": "Whether the input value is invalid.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "validate",
+      "type": "(value: MappedDateValue<T>) => true | ValidationError",
+      "description": "A function that returns an error message if a given value is invalid.\nValidation errors are displayed to the user when the form is submitted\nif `validationBehavior=\"native\"`. For realtime validation, use the `isInvalid`\nprop instead.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "T",
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: MappedDateValue<T>) => void",
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "LabelPosition",
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "Alignment",
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "necessityIndicator",
+      "type": "NecessityIndicator",
+      "default": "'icon'",
+      "description": "Whether the required state should be shown as an icon or text.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "ReactNode",
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "label",
+      "type": "ReactNode",
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
+    },
+    {
+      "property": "description",
+      "type": "ReactNode",
+      "description": "A description for the field. Provides a hint such as specific requirements for what to choose.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
+      "property": "errorMessage",
+      "type": "ReactNode | ((v: ValidationResult) => ReactNode)",
+      "description": "An error message for the field.",
+      "inheritedFrom": "HelpTextProps"
     }
   ],
   "status": "stable"

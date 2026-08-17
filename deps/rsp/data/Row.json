@@ -1,64 +1,433 @@
 {
   "props": [
     {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the row."
+    },
+    {
       "property": "columns",
       "type": "Iterable<T>",
-      "description": "A list of columns used when dynamically rendering cells.",
-      "inheritedFrom": "RowProps"
-    },
-    {
-      "property": "children",
-      "type": "ReactNode | ((item: T) => ReactElement)",
-      "description": "The cells within the row. Supports static items or a function for dynamic rendering.",
-      "inheritedFrom": "RowProps"
-    },
-    {
-      "property": "value",
-      "type": "T",
-      "description": "The object value that this row represents. When using dynamic collections, this is set automatically.",
-      "inheritedFrom": "RowProps"
-    },
-    {
-      "property": "dependencies",
-      "type": "ReadonlyArray<any>",
-      "description": "Values that should invalidate the cell cache when using dynamic collections.",
-      "inheritedFrom": "RowProps"
-    },
-    {
-      "property": "textValue",
-      "type": "string",
-      "description": "A string representation of the row's contents, used for features like typeahead.",
-      "inheritedFrom": "RowProps"
+      "description": "A list of columns used when dynamically rendering cells."
     },
     {
       "property": "isDisabled",
       "type": "boolean",
-      "description": "Whether the row is disabled.",
-      "inheritedFrom": "RowProps"
-    },
-    {
-      "property": "disabledBehavior",
-      "type": "DisabledBehavior",
-      "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
-      "inheritedFrom": "RowProps"
+      "description": "Whether the row is disabled."
     },
     {
       "property": "onAction",
       "type": "() => void",
-      "description": "Handler that is called when a user performs an action on the row. The exact user event depends on the collection's `selectionBehavior` prop and the interaction modality.",
-      "inheritedFrom": "RowProps"
+      "description": "Handler that is called when a user performs an action on the row. The exact user event depends\non the collection's `selectionBehavior` prop and the interaction modality."
     },
     {
-      "property": "id",
-      "type": "Key",
-      "description": "The unique id of the row.",
-      "inheritedFrom": "RowProps"
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactElement<unknown, string | JSXElementConstructor<any>>)",
+      "description": "The cells within the row. Supports static items or a function for dynamic rendering."
     },
     {
-      "property": "hasChildItems",
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the row's contents, used for features like typeahead."
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "description": "Values that should invalidate the cell cache when using dynamic collections."
+    },
+    {
+      "property": "dir",
+      "type": "string",
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "lang",
+      "type": "string",
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "hidden",
       "type": "boolean",
-      "description": "Whether this row has children, even if not loaded yet.",
-      "inheritedFrom": "RowProps"
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "inert",
+      "type": "boolean",
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "translate",
+      "type": "\"yes\" | \"no\"",
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "onClick",
+      "type": "(e: MouseEvent<FocusableElement, MouseEvent>) => void",
+      "description": "**Not recommended – use `onPress` instead.** `onClick` is an alias for `onPress`\nprovided for compatibility with other libraries. `onPress` provides\nadditional event details for non-mouse interactions.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onClickCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAuxClick",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAuxClickCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onContextMenu",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onContextMenuCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onDoubleClick",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onDoubleClickCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseDown",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseDownCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseEnter",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseLeave",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseMove",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseMoveCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOut",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOutCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOver",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOverCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseUp",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseUpCapture",
+      "type": "MouseEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchCancel",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchCancelCapture",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchEnd",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchEndCapture",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchMove",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchMoveCapture",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchStart",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchStartCapture",
+      "type": "TouchEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerDown",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerDownCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerMove",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerMoveCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerUp",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerUpCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerCancel",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerCancelCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerEnter",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerLeave",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOver",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOverCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOut",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOutCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onGotPointerCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onGotPointerCaptureCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onLostPointerCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onLostPointerCaptureCapture",
+      "type": "PointerEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onScroll",
+      "type": "UIEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onScrollCapture",
+      "type": "UIEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onWheel",
+      "type": "WheelEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onWheelCapture",
+      "type": "WheelEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationStart",
+      "type": "AnimationEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationStartCapture",
+      "type": "AnimationEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationEnd",
+      "type": "AnimationEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationEndCapture",
+      "type": "AnimationEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationIteration",
+      "type": "AnimationEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationIterationCapture",
+      "type": "AnimationEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionCancel",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionCancelCapture",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionEnd",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionEndCapture",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionRun",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionRunCapture",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionStart",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionStartCapture",
+      "type": "TransitionEventHandler<HTMLTableRowElement>",
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "href",
+      "type": "string",
+      "description": "A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "hrefLang",
+      "type": "string",
+      "description": "Hints at the human language of the linked URL.\nSee[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "target",
+      "type": "HTMLAttributeAnchorTarget",
+      "description": "The target window for the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "rel",
+      "type": "string",
+      "description": "The relationship between the linked resource and the current page. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "download",
+      "type": "string | boolean",
+      "description": "Causes the browser to download the linked URL. A string may be provided to suggest a file name.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "ping",
+      "type": "string",
+      "description": "A space-separated list of URLs to ping when the link is followed. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "referrerPolicy",
+      "type": "HTMLAttributeReferrerPolicy",
+      "description": "How much of the referrer to send when following the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "routerOptions",
+      "type": "never",
+      "description": "Options for the configured client side router.",
+      "inheritedFrom": "LinkDOMProps"
     }
   ]
 }
