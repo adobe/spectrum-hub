@@ -6,6 +6,81 @@
       "default": "192"
     },
     {
+      "property": "onChange",
+      "type": "(value: Color) => void",
+      "description": "Handler that is called when the value changes, as the user drags."
+    },
+    {
+      "property": "value",
+      "type": "string | Color",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "string | Color",
+      "default": "'hsl(0, 100%, 50%)'",
+      "description": "The default value (uncontrolled)."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the ColorWheel is disabled."
+    },
+    {
+      "property": "onChangeEnd",
+      "type": "(value: Color) => void",
+      "description": "Handler that is called when the user stops dragging."
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",

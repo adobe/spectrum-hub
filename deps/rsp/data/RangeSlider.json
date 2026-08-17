@@ -3,17 +3,169 @@
     {
       "property": "startName",
       "type": "string",
-      "description": "The name of the start input element, used when submitting an HTML form. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname)."
+      "description": "The name of the start input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname)."
     },
     {
       "property": "endName",
       "type": "string",
-      "description": "The name of the end input element, used when submitting an HTML form. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname)."
+      "description": "The name of the end input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname)."
     },
     {
       "property": "form",
       "type": "string",
-      "description": "The `<form>` element to associate the input with. The value of this attribute must be the id of a `<form>` in the same document. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form)."
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form)."
+    },
+    {
+      "property": "label",
+      "type": "ReactNode",
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the whole Slider is disabled.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "onChangeEnd",
+      "type": "(value: RangeValue<number>) => void",
+      "description": "Fired when the slider stops moving, due to being let go.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "minValue",
+      "type": "number",
+      "default": "0",
+      "description": "The slider's minimum value.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "maxValue",
+      "type": "number",
+      "default": "100",
+      "description": "The slider's maximum value.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "step",
+      "type": "number",
+      "default": "1",
+      "description": "The slider's step value.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "value",
+      "type": "RangeValue<number>",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "RangeValue<number>",
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: RangeValue<number>) => void",
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "formatOptions",
+      "type": "NumberFormatOptions",
+      "description": "The display format of the value label.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "LabelPosition",
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "Alignment",
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "ReactNode",
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "default": "'M'",
+      "description": "The size of the Slider.",
+      "inheritedFrom": "SliderBaseProps"
+    },
+    {
+      "property": "isEmphasized",
+      "type": "boolean",
+      "description": "Whether the Slider should be displayed with an emphasized style.",
+      "inheritedFrom": "SliderBaseProps"
+    },
+    {
+      "property": "trackStyle",
+      "type": "\"thin\" | \"thick\"",
+      "default": "'thin'",
+      "description": "The style of the Slider's track.",
+      "inheritedFrom": "SliderBaseProps"
+    },
+    {
+      "property": "thumbStyle",
+      "type": "\"default\" | \"precise\"",
+      "default": "'default'",
+      "description": "The style of the Slider's thumb.",
+      "inheritedFrom": "SliderBaseProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
     }
   ],
   "status": "stable"

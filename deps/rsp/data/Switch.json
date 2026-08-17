@@ -1,8 +1,229 @@
 {
   "props": [
     {
+      "property": "children",
+      "type": "ReactNode"
+    },
+    {
+      "property": "validationBehavior",
+      "type": "\"native\" | \"aria\"",
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen the value is missing or invalid, or mark the field as required\nor invalid via ARIA.",
+      "inheritedFrom": "RACValidation"
+    },
+    {
+      "property": "aria-controls",
+      "type": "string",
+      "description": "Identifies the element (or elements) whose contents or presence are controlled by the current\nelement.",
+      "inheritedFrom": "AriaSwitchProps"
+    },
+    {
+      "property": "value",
+      "type": "string",
+      "description": "The value of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefvalue).",
+      "inheritedFrom": "ToggleProps"
+    },
+    {
+      "property": "defaultSelected",
+      "type": "boolean",
+      "description": "Whether the element should be selected (uncontrolled).",
+      "inheritedFrom": "ToggleStateOptions"
+    },
+    {
+      "property": "isSelected",
+      "type": "boolean",
+      "description": "Whether the element should be selected (controlled).",
+      "inheritedFrom": "ToggleStateOptions"
+    },
+    {
+      "property": "onChange",
+      "type": "(isSelected: boolean) => void",
+      "description": "Handler that is called when the element's selection state changes.",
+      "inheritedFrom": "ToggleStateOptions"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the input is disabled.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "description": "Whether the input can be selected but not changed by the user.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "description": "Whether user input is required on the input before form submission.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "description": "Whether the input value is invalid.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "validate",
+      "type": "(value: boolean) => true | ValidationError",
+      "description": "A function that returns an error message if a given value is invalid.\nValidation errors are displayed to the user when the form is submitted\nif `validationBehavior=\"native\"`. For realtime validation, use the `isInvalid`\nprop instead.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "excludeFromTabOrder",
+      "type": "boolean",
+      "description": "Whether to exclude the element from the sequential tab order. If true,\nthe element will not be focusable via the keyboard by tabbing. This should\nbe avoided except in rare scenarios where an alternative means of accessing\nthe element or its functionality via the keyboard is available.",
+      "inheritedFrom": "FocusableDOMProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-errormessage",
+      "type": "string",
+      "description": "Identifies the element that provides an error message for the object.",
+      "inheritedFrom": "AriaValidationProps"
+    },
+    {
+      "property": "onPress",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when the press is released over the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressStart",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press interaction starts.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressEnd",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press interaction ends, either\nover the target or when the pointer leaves the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressChange",
+      "type": "(isPressed: boolean) => void",
+      "description": "Handler that is called when the press state changes.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressUp",
+      "type": "(e: PressEvent) => void",
+      "description": "Handler that is called when a press is released over the target, regardless of\nwhether it started on the target or not.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "inputRef",
+      "type": "RefObject<HTMLInputElement>",
+      "description": "A ref for the HTML input element.",
+      "inheritedFrom": "SwitchFieldProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "description",
+      "type": "ReactNode",
+      "description": "A description for the field. Provides a hint such as specific requirements for what to choose.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
+      "property": "errorMessage",
+      "type": "ReactNode | ((v: ValidationResult) => ReactNode)",
+      "description": "An error message for the field.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
+      "property": "styles",
+      "type": "StylesProp",
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    },
+    {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the Switch.",
       "inheritedFrom": "SwitchStyleProps"
@@ -12,22 +233,6 @@
       "type": "boolean",
       "description": "Whether the Switch should be displayed with an emphasized style.",
       "inheritedFrom": "SwitchStyleProps"
-    },
-    {
-      "property": "children",
-      "type": "ReactNode"
-    },
-    {
-      "property": "inputRef",
-      "type": "RefObject<HTMLInputElement | null>",
-      "description": "A ref for the HTML input element.",
-      "inheritedFrom": "SwitchFieldProps"
-    },
-    {
-      "property": "styles",
-      "type": "StylesProp",
-      "description": "Spectrum-defined styles, returned by the `style()` macro.",
-      "inheritedFrom": "StyleProps"
     }
   ],
   "status": "stable"

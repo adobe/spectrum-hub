@@ -12,7 +12,7 @@
     },
     {
       "property": "align",
-      "type": "'start' | 'center' | 'end'",
+      "type": "\"start\" | \"center\" | \"end\"",
       "default": "'start'",
       "description": "The alignment of the column's contents relative to its allotted width."
     },
@@ -30,62 +30,52 @@
     {
       "property": "id",
       "type": "Key",
-      "description": "The unique id of the column.",
-      "inheritedFrom": "ColumnProps"
+      "description": "The unique id of the column."
     },
     {
       "property": "allowsSorting",
       "type": "boolean",
-      "description": "Whether the column allows sorting.",
-      "inheritedFrom": "ColumnProps"
+      "description": "Whether the column allows sorting."
     },
     {
       "property": "isRowHeader",
       "type": "boolean",
-      "description": "Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be announced by assistive technology during row navigation.",
-      "inheritedFrom": "ColumnProps"
+      "description": "Whether a column is a [row header](https://www.w3.org/TR/wai-aria-1.1/#rowheader) and should be\nannounced by assistive technology during row navigation."
     },
     {
       "property": "textValue",
       "type": "string",
-      "description": "A string representation of the column's contents, used for accessibility announcements.",
-      "inheritedFrom": "ColumnProps"
+      "description": "A string representation of the column's contents, used for accessibility announcements."
     },
     {
       "property": "width",
-      "type": "ColumnSize | null",
-      "description": "The width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-      "inheritedFrom": "ColumnProps"
+      "type": "ColumnSize",
+      "description": "The width of the column. This prop only applies when the `<Table>` is wrapped in a\n`<ResizableTableContainer>`."
     },
     {
       "property": "defaultWidth",
-      "type": "ColumnSize | null",
-      "description": "The default width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-      "inheritedFrom": "ColumnProps"
+      "type": "ColumnSize",
+      "description": "The default width of the column. This prop only applies when the `<Table>` is wrapped in a\n`<ResizableTableContainer>`."
     },
     {
       "property": "minWidth",
-      "type": "ColumnStaticSize | null",
-      "description": "The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-      "inheritedFrom": "ColumnProps"
+      "type": "ColumnStaticSize",
+      "description": "The minimum width of the column. This prop only applies when the `<Table>` is wrapped in a\n`<ResizableTableContainer>`."
     },
     {
       "property": "maxWidth",
-      "type": "ColumnStaticSize | null",
-      "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a `<ResizableTableContainer>`.",
-      "inheritedFrom": "ColumnProps"
+      "type": "ColumnStaticSize",
+      "description": "The maximum width of the column. This prop only applies when the `<Table>` is wrapped in a\n`<ResizableTableContainer>`."
     },
     {
       "property": "focusMode",
-      "type": "'child' | 'cell'",
-      "description": "Whether the column header or its first focusable child element should be focused when the column header is focused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard navigation mode.",
-      "inheritedFrom": "ColumnProps"
+      "type": "\"child\" | \"cell\"",
+      "description": "Whether the column header or its first focusable child element should be focused when the\ncolumn header is focused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in\ntab keyboard navigation mode."
     },
     {
       "property": "allowsArrowNavigation",
       "type": "boolean",
-      "description": "Whether the column should support arrow key navigation even when the containing table uses tab keyboard navigation. Allows users to navigate between columns and rows with arrow keys while focus is on an interactive child element within the column header.",
-      "inheritedFrom": "ColumnProps"
+      "description": "Whether the column should support arrow key navigation even when the containing table uses tab\nkeyboard navigation. Allows users to navigate between columns and rows with arrow keys while\nfocus is on an interactive child element within the column header."
     }
   ]
 }

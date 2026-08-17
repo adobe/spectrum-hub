@@ -12,11 +12,40 @@
       "description": "The content to display in the tab panels."
     },
     {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the tab.",
+      "inheritedFrom": "AriaTabPanelProps"
+    },
+    {
       "property": "shouldForceMount",
       "type": "boolean",
       "default": "false",
-      "description": "Whether to mount the tab panel in the DOM even when it is not currently selected. Inactive tab panels are inert and cannot be interacted with. They must be styled appropriately so this is clear to the user visually.",
-      "inheritedFrom": "TabPanelProps"
+      "description": "Whether to mount the tab panel in the DOM even when it is not currently selected. Inactive tab\npanels are inert and cannot be interacted with. They must be styled appropriately so this is\nclear to the user visually."
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     }
   ]
 }

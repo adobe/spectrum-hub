@@ -2,7 +2,7 @@
   "props": [
     {
       "property": "children",
-      "type": "React.ReactNode",
+      "type": "ReactNode",
       "required": true,
       "description": "The accordion item elements in the accordion."
     },
@@ -13,13 +13,13 @@
     },
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the accordion."
     },
     {
       "property": "density",
-      "type": "'compact' | 'regular' | 'spacious'",
+      "type": "\"compact\" | \"regular\" | \"spacious\"",
       "default": "'regular'",
       "description": "The amount of space between the accordion items."
     },
@@ -52,6 +52,18 @@
       "property": "onExpandedChange",
       "type": "(keys: Set<Key>) => any",
       "description": "Handler that is called when accordion items are expanded or collapsed."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

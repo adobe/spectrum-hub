@@ -9,8 +9,79 @@
     {
       "property": "id",
       "type": "Key",
-      "description": "A unique id for the breadcrumb, which will be passed to `onAction` when the breadcrumb is pressed.",
-      "inheritedFrom": "BreadcrumbProps"
+      "description": "A unique id for the breadcrumb, which will be passed to `onAction` when the breadcrumb is\npressed."
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "href",
+      "type": "string",
+      "description": "A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "hrefLang",
+      "type": "string",
+      "description": "Hints at the human language of the linked URL.\nSee[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "target",
+      "type": "HTMLAttributeAnchorTarget",
+      "description": "The target window for the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "rel",
+      "type": "string",
+      "description": "The relationship between the linked resource and the current page. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "download",
+      "type": "string | boolean",
+      "description": "Causes the browser to download the linked URL. A string may be provided to suggest a file name.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "ping",
+      "type": "string",
+      "description": "A space-separated list of URLs to ping when the link is followed. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "referrerPolicy",
+      "type": "HTMLAttributeReferrerPolicy",
+      "description": "How much of the referrer to send when following the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "routerOptions",
+      "type": "never",
+      "description": "Options for the configured client side router.",
+      "inheritedFrom": "LinkDOMProps"
     }
   ]
 }

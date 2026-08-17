@@ -1,6 +1,158 @@
 {
   "props": [
     {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "description": "The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "description": "A list of row keys to disable.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "escapeKeyBehavior",
+      "type": "\"clearSelection\" | \"none\"",
+      "default": "'clearSelection'",
+      "description": "Whether pressing the escape key should clear selection in the table or not.\n\nMost experiences should not modify this option as it eliminates a keyboard user's ability to\neasily clear selection. Only use if the escape key is being handled externally or should not\ntrigger selection clearing contextually.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "shouldSelectOnPressUp",
+      "type": "boolean",
+      "description": "Whether selection should occur on press up instead of press down.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "treeColumn",
+      "type": "Key",
+      "description": "The id of the column that displays hierarchical data.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "keyboardNavigationBehavior",
+      "type": "\"arrow\" | \"tab\"",
+      "default": "'arrow'",
+      "description": "Whether keyboard navigation to focusable elements within the cells is\nvia the left/right arrow keys or the tab key.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "selectionMode",
+      "type": "SelectionMode",
+      "description": "The type of selection that is allowed in the collection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "description": "Whether the collection allows empty selection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "selectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "description": "The currently selected keys in the collection (controlled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "defaultSelectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(keys: Selection) => void",
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "sortDescriptor",
+      "type": "SortDescriptor",
+      "description": "The current sorted column and direction.",
+      "inheritedFrom": "Sortable"
+    },
+    {
+      "property": "onSortChange",
+      "type": "(descriptor: SortDescriptor) => any",
+      "description": "Handler that is called when the sorted column or direction changes.",
+      "inheritedFrom": "Sortable"
+    },
+    {
+      "property": "expandedKeys",
+      "type": "Iterable<Key>",
+      "description": "The currently expanded keys in the collection (controlled).",
+      "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "defaultExpandedKeys",
+      "type": "Iterable<Key>",
+      "description": "The initial expanded keys in the collection (uncontrolled).",
+      "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "onExpandedChange",
+      "type": "(keys: Set<Key>) => any",
+      "description": "Handler that is called when items are expanded or collapsed.",
+      "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "disabledBehavior",
+      "type": "DisabledBehavior",
+      "default": "'all'",
+      "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "dragAndDropHooks",
+      "type": "DragAndDropHooks",
+      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for\nthe Table.",
+      "inheritedFrom": "TableProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
       "property": "isQuiet",
       "type": "boolean",
       "description": "Whether the Table should be displayed with a quiet style.",
@@ -8,14 +160,14 @@
     },
     {
       "property": "density",
-      "type": "'compact' | 'spacious' | 'regular'",
+      "type": "\"compact\" | \"spacious\" | \"regular\"",
       "default": "'regular'",
       "description": "Sets the amount of vertical padding within each cell.",
       "inheritedFrom": "S2TableProps"
     },
     {
       "property": "overflowMode",
-      "type": "'wrap' | 'truncate'",
+      "type": "\"wrap\" | \"truncate\"",
       "default": "'truncate'",
       "description": "Sets the overflow behavior for the cell contents.",
       "inheritedFrom": "S2TableProps"
@@ -35,13 +187,13 @@
     {
       "property": "onResize",
       "type": "(widths: Map<Key, ColumnSize>) => void",
-      "description": "Handler that is called when a user performs a column resize. Can be used with the width property on columns to put the column widths into a controlled state.",
+      "description": "Handler that is called when a user performs a column resize.\nCan be used with the width property on columns to put the column widths into\na controlled state.",
       "inheritedFrom": "S2TableProps"
     },
     {
       "property": "onResizeEnd",
       "type": "(widths: Map<Key, ColumnSize>) => void",
-      "description": "Handler that is called after a user performs a column resize. Can be used to store the widths of columns for another future session.",
+      "description": "Handler that is called after a user performs a column resize.\nCan be used to store the widths of columns for another future session.",
       "inheritedFrom": "S2TableProps"
     },
     {
@@ -58,53 +210,16 @@
     },
     {
       "property": "renderActionBar",
-      "type": "(selectedKeys: 'all' | Set<Key>) => ReactElement",
+      "type": "(selectedKeys: \"all\" | Set<Key>) => ReactElement<unknown, string | JSXElementConstructor<any>>",
       "description": "Provides the ActionBar to display when rows are selected in the TableView.",
       "inheritedFrom": "S2TableProps"
     },
     {
       "property": "selectionStyle",
-      "type": "'checkbox' | 'highlight'",
+      "type": "\"checkbox\" | \"highlight\"",
       "default": "'checkbox'",
       "description": "How selection should be displayed.",
       "inheritedFrom": "S2TableProps"
-    },
-    {
-      "property": "styles",
-      "type": "StylesPropWithHeight",
-      "description": "Spectrum-defined styles, returned by the `style()` macro."
-    },
-    {
-      "property": "children",
-      "type": "ReactNode",
-      "description": "The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows.",
-      "inheritedFrom": "TableProps"
-    },
-    {
-      "property": "selectionBehavior",
-      "type": "SelectionBehavior",
-      "default": "'toggle'",
-      "description": "How multiple selection should behave in the collection.",
-      "inheritedFrom": "TableProps"
-    },
-    {
-      "property": "disabledBehavior",
-      "type": "DisabledBehavior",
-      "default": "'all'",
-      "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
-      "inheritedFrom": "TableProps"
-    },
-    {
-      "property": "onRowAction",
-      "type": "(key: Key) => void",
-      "description": "Handler that is called when a user performs an action on the row.",
-      "inheritedFrom": "TableProps"
-    },
-    {
-      "property": "dragAndDropHooks",
-      "type": "DragAndDropHooks",
-      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Table.",
-      "inheritedFrom": "TableProps"
     }
   ],
   "status": "stable"

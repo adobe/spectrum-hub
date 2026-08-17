@@ -1,44 +1,80 @@
 {
   "props": [
     {
-      "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
-      "default": "'S'",
-      "description": "The size of the badge.",
-      "inheritedFrom": "BadgeStyleProps"
-    },
-    {
-      "property": "variant",
-      "type": "'accent' | 'informative' | 'neutral' | 'positive' | 'notice' | 'negative' | 'gray' | 'red' | 'orange' | 'yellow' | 'chartreuse' | 'celery' | 'green' | 'seafoam' | 'cyan' | 'blue' | 'indigo' | 'purple' | 'fuchsia' | 'magenta' | 'pink' | 'turquoise' | 'brown' | 'cinnamon' | 'silver'",
-      "default": "'neutral'",
-      "description": "The variant changes the background color of the badge. When badge has a semantic meaning, they should use the variant for semantic colors.",
-      "inheritedFrom": "BadgeStyleProps"
-    },
-    {
-      "property": "fillStyle",
-      "type": "'bold' | 'subtle' | 'outline'",
-      "default": "'bold'",
-      "description": "The fill of the badge.",
-      "inheritedFrom": "BadgeStyleProps"
-    },
-    {
-      "property": "overflowMode",
-      "type": "'wrap' | 'truncate'",
-      "default": "'wrap'",
-      "description": "Sets the text behavior for the contents.",
-      "inheritedFrom": "BadgeStyleProps"
-    },
-    {
       "property": "children",
       "type": "ReactNode",
       "required": true,
       "description": "The content to display in the badge."
     },
     {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "default": "'S'",
+      "description": "The size of the badge.",
+      "inheritedFrom": "BadgeStyleProps"
+    },
+    {
+      "property": "variant",
+      "type": "\"accent\" | \"informative\" | \"neutral\" | \"positive\" | \"notice\" | \"negative\" | \"gray\" | \"red\" | \"orange\" | \"yellow\" | \"chartreuse\" | \"celery\" | \"green\" | \"seafoam\" | \"cyan\" | \"blue\" | ... 8 more ... | \"silver\"",
+      "default": "'neutral'",
+      "description": "The variant changes the background color of the badge. When badge has a semantic meaning, they\nshould use the variant for semantic colors.",
+      "inheritedFrom": "BadgeStyleProps"
+    },
+    {
+      "property": "fillStyle",
+      "type": "\"bold\" | \"subtle\" | \"outline\"",
+      "default": "'bold'",
+      "description": "The fill of the badge.",
+      "inheritedFrom": "BadgeStyleProps"
+    },
+    {
+      "property": "overflowMode",
+      "type": "\"wrap\" | \"truncate\"",
+      "default": "'wrap'",
+      "description": "Sets the text behavior for the contents.",
+      "inheritedFrom": "BadgeStyleProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

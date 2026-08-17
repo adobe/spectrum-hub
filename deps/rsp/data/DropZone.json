@@ -24,9 +24,81 @@
     },
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L'",
+      "type": "\"S\" | \"M\" | \"L\"",
       "default": "'M'",
       "description": "The size of the DropZone."
+    },
+    {
+      "property": "getDropOperation",
+      "type": "(types: DragTypes, allowedOperations: DropOperation[]) => DropOperation",
+      "description": "A function returning the drop operation to be performed when items matching the given types are\ndropped on the drop target.",
+      "inheritedFrom": "DropOptions"
+    },
+    {
+      "property": "onDropEnter",
+      "type": "(e: DropEnterEvent) => void",
+      "description": "Handler that is called when a valid drag enters the drop target.",
+      "inheritedFrom": "DropOptions"
+    },
+    {
+      "property": "onDropMove",
+      "type": "(e: DropMoveEvent) => void",
+      "description": "Handler that is called when a valid drag is moved within the drop target.",
+      "inheritedFrom": "DropOptions"
+    },
+    {
+      "property": "onDropActivate",
+      "type": "(e: DropActivateEvent) => void",
+      "description": "Handler that is called after a valid drag is held over the drop target for a period of time.\nThis typically opens the item so that the user can drop within it.",
+      "inheritedFrom": "DropOptions"
+    },
+    {
+      "property": "onDropExit",
+      "type": "(e: DropExitEvent) => void",
+      "description": "Handler that is called when a valid drag exits the drop target.",
+      "inheritedFrom": "DropOptions"
+    },
+    {
+      "property": "onDrop",
+      "type": "(e: DropEvent) => void",
+      "description": "Handler that is called when a valid drag is dropped on the drop target.",
+      "inheritedFrom": "DropOptions"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ],
   "status": "stable"

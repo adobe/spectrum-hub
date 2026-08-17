@@ -1,70 +1,52 @@
 {
   "props": [
     {
-      "property": "showDivider",
-      "type": "boolean",
-      "description": "Whether the column should render a divider between it and the next column.",
-      "inheritedFrom": "ColumnProps"
-    },
-    {
-      "property": "allowsResizing",
-      "type": "boolean",
-      "description": "Whether the column allows resizing.",
-      "inheritedFrom": "ColumnProps"
-    },
-    {
-      "property": "align",
-      "type": "'start' | 'center' | 'end'",
-      "default": "'start'",
-      "description": "The alignment of the column's contents relative to its allotted width.",
-      "inheritedFrom": "ColumnProps"
+      "property": "isSticky",
+      "type": "boolean"
     },
     {
       "property": "children",
       "type": "ReactNode",
       "required": true,
-      "description": "The content to render as the column header.",
-      "inheritedFrom": "ColumnProps"
-    },
-    {
-      "property": "menuItems",
-      "type": "ReactNode",
-      "description": "Menu fragment to be rendered inside the column header's menu.",
-      "inheritedFrom": "ColumnProps"
-    },
-    {
-      "property": "isSticky",
-      "type": "boolean"
+      "description": "The content to render as the cell children."
     },
     {
       "property": "id",
       "type": "Key",
-      "description": "The unique id of the cell.",
-      "inheritedFrom": "CellProps"
+      "description": "The unique id of the cell."
     },
     {
       "property": "textValue",
       "type": "string",
-      "description": "A string representation of the cell's contents, used for features like typeahead.",
-      "inheritedFrom": "CellProps"
+      "description": "A string representation of the cell's contents, used for features like typeahead."
     },
     {
       "property": "colSpan",
       "type": "number",
-      "description": "Indicates how many columns the data cell spans.",
-      "inheritedFrom": "CellProps"
+      "description": "Indicates how many columns the data cell spans."
     },
     {
       "property": "focusMode",
-      "type": "'child' | 'cell'",
-      "description": "Whether the cell or its first focusable child element should be focused when the cell is focused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard navigation mode.",
-      "inheritedFrom": "CellProps"
+      "type": "\"child\" | \"cell\"",
+      "description": "Whether the cell or its first focusable child element should be focused when the cell is\nfocused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard\nnavigation mode."
     },
     {
       "property": "allowsArrowNavigation",
       "type": "boolean",
-      "description": "Whether the cell should support arrow key navigation even when the containing table uses tab keyboard navigation. Allows users to navigate between cells and rows with arrow keys while focus is on an interactive child element within the cell.",
-      "inheritedFrom": "CellProps"
+      "description": "Whether the cell should support arrow key navigation even when the containing table uses\ntab keyboard navigation. Allows users to navigate between cells and rows with arrow keys while\nfocus is on an interactive child element within the cell."
+    },
+    {
+      "property": "align",
+      "type": "\"start\" | \"center\" | \"end\"",
+      "default": "'start'",
+      "description": "The alignment of the column's contents relative to its allotted width.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "showDivider",
+      "type": "boolean",
+      "description": "Whether the column should render a divider between it and the next column.",
+      "inheritedFrom": "ColumnProps"
     }
   ]
 }

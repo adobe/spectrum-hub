@@ -1,18 +1,6 @@
 {
   "props": [
     {
-      "property": "isSticky",
-      "type": "boolean",
-      "inheritedFrom": "CellProps"
-    },
-    {
-      "property": "children",
-      "type": "ReactNode",
-      "required": true,
-      "description": "The content to render as the cell children.",
-      "inheritedFrom": "CellProps"
-    },
-    {
       "property": "renderEditing",
       "type": "() => ReactNode",
       "required": true,
@@ -35,8 +23,58 @@
     },
     {
       "property": "action",
-      "type": "string | FormHTMLAttributes<HTMLFormElement>['action']",
+      "type": "string | ((formData: FormData) => void | Promise<void>)",
       "description": "The action to submit the form to. Only available in React 19+."
+    },
+    {
+      "property": "id",
+      "type": "Key",
+      "description": "The unique id of the cell.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "description": "A string representation of the cell's contents, used for features like typeahead.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "colSpan",
+      "type": "number",
+      "description": "Indicates how many columns the data cell spans.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "focusMode",
+      "type": "\"child\" | \"cell\"",
+      "description": "Whether the cell or its first focusable child element should be focused when the cell is\nfocused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard\nnavigation mode.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "description": "Whether the cell should support arrow key navigation even when the containing table uses\ntab keyboard navigation. Allows users to navigate between cells and rows with arrow keys while\nfocus is on an interactive child element within the cell.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "children",
+      "type": "ReactNode",
+      "required": true,
+      "description": "The content to render as the cell children.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "align",
+      "type": "\"start\" | \"center\" | \"end\"",
+      "default": "'start'",
+      "description": "The alignment of the column's contents relative to its allotted width.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "showDivider",
+      "type": "boolean",
+      "description": "Whether the column should render a divider between it and the next column.",
+      "inheritedFrom": "ColumnProps"
     }
   ]
 }

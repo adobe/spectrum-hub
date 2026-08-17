@@ -1,3 +1,22 @@
 {
-  "props": []
+  "props": [
+    {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactNode)",
+      "description": "The contents of the collection.",
+      "inheritedFrom": "CollectionProps"
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "CollectionProps"
+    }
+  ]
 }

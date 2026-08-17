@@ -1,8 +1,234 @@
 {
   "props": [
     {
+      "property": "children",
+      "type": "ReactNode | ((item: T) => ReactNode)",
+      "required": true,
+      "description": "The contents of the collection."
+    },
+    {
+      "property": "direction",
+      "type": "\"bottom\" | \"top\"",
+      "default": "'bottom'",
+      "description": "Direction the menu will render relative to the ComboBox."
+    },
+    {
+      "property": "align",
+      "type": "\"start\" | \"end\"",
+      "default": "'start'",
+      "description": "Alignment of the menu relative to the input target."
+    },
+    {
+      "property": "menuWidth",
+      "type": "number",
+      "description": "Width of the menu. By default, matches width of the trigger. Note that the minimum width of the\ndropdown is always equal to the trigger's width."
+    },
+    {
+      "property": "loadingState",
+      "type": "LoadingState",
+      "description": "The current loading state of the ComboBox. Determines whether or not the progress circle should\nbe shown."
+    },
+    {
+      "property": "validationBehavior",
+      "type": "\"native\" | \"aria\"",
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen the value is missing or invalid, or mark the field as required\nor invalid via ARIA.",
+      "inheritedFrom": "RACValidation"
+    },
+    {
+      "property": "shouldFocusWrap",
+      "type": "boolean",
+      "description": "Whether keyboard navigation is circular.",
+      "inheritedFrom": "AriaComboBoxProps"
+    },
+    {
+      "property": "defaultItems",
+      "type": "Iterable<T>",
+      "description": "The list of ComboBox items (uncontrolled)."
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "description": "The list of ComboBox items (controlled)."
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean, menuTrigger?: MenuTriggerAction) => void",
+      "description": "Method that is called when the open state of the menu changes. Returns the new open state and\nthe action that caused the opening of the menu."
+    },
+    {
+      "property": "inputValue",
+      "type": "string",
+      "description": "The value of the ComboBox input (controlled)."
+    },
+    {
+      "property": "defaultInputValue",
+      "type": "string",
+      "description": "The default value of the ComboBox input (uncontrolled)."
+    },
+    {
+      "property": "onInputChange",
+      "type": "(value: string) => void",
+      "description": "Handler that is called when the ComboBox input value changes."
+    },
+    {
+      "property": "allowsCustomValue",
+      "type": "boolean",
+      "description": "Whether the ComboBox allows a non-item matching input value to be set."
+    },
+    {
+      "property": "menuTrigger",
+      "type": "MenuTriggerAction",
+      "default": "'input'",
+      "description": "The interaction required to display the ComboBox menu."
+    },
+    {
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "description": "Whether the input is disabled.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "description": "Whether the input can be selected but not changed by the user.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "description": "Whether user input is required on the input before form submission.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "description": "Whether the input value is invalid.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "validate",
+      "type": "(value: ComboBoxValidationValue<\"single\">) => true | ValidationError",
+      "description": "A function that returns an error message if a given value is invalid.\nValidation errors are displayed to the user when the form is submitted\nif `validationBehavior=\"native\"`. For realtime validation, use the `isInvalid`\nprop instead.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<HTMLInputElement, Element>) => void",
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<HTMLInputElement, Element>) => void",
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "formValue",
+      "type": "\"text\" | \"key\"",
+      "default": "'key'",
+      "description": "Whether the text or key of the selected item is submitted as part of an HTML form. When\n`allowsCustomValue` is `true`, this option does not apply and the text is always submitted."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "selectedKey",
+      "type": "Key",
+      "description": "The currently selected key in the collection (controlled).",
+      "inheritedFrom": "SingleSelection"
+    },
+    {
+      "property": "defaultSelectedKey",
+      "type": "Key",
+      "description": "The initial selected key in the collection (uncontrolled).",
+      "inheritedFrom": "SingleSelection"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(key: Key) => void",
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "SingleSelection"
+    },
+    {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
       "default": "'M'",
       "description": "The size of the Combobox.",
       "inheritedFrom": "ComboboxStyleProps"
@@ -14,139 +240,79 @@
       "inheritedFrom": "ComboboxStyleProps"
     },
     {
-      "property": "children",
-      "type": "ReactNode | ((item: T) => ReactNode)",
-      "required": true,
-      "description": "The contents of the collection."
-    },
-    {
-      "property": "direction",
-      "type": "'bottom' | 'top'",
-      "default": "'bottom'",
-      "description": "Direction the menu will render relative to the ComboBox."
-    },
-    {
-      "property": "align",
-      "type": "'start' | 'end'",
-      "default": "'start'",
-      "description": "Alignment of the menu relative to the input target."
-    },
-    {
-      "property": "menuWidth",
-      "type": "number",
-      "description": "Width of the menu. By default, matches width of the trigger. Note that the minimum width of the dropdown is always equal to the trigger's width."
-    },
-    {
-      "property": "loadingState",
-      "type": "LoadingState",
-      "description": "The current loading state of the ComboBox. Determines whether or not the progress circle should be shown."
-    },
-    {
-      "property": "defaultFilter",
-      "type": "(textValue: string, inputValue: string) => boolean",
-      "description": "The filter function used to determine if an option should be included in the combo box list. By default, a language-sensitive \"contains\" filter from `useFilter` is used.",
-      "inheritedFrom": "ComboBoxProps"
-    },
-    {
-      "property": "formValue",
-      "type": "'text' | 'key'",
-      "default": "'key'",
-      "description": "Whether the text or key of the selected item is submitted as part of an HTML form. When `allowsCustomValue` is `true`, this option does not apply and the text is always submitted.",
-      "inheritedFrom": "ComboBoxProps"
-    },
-    {
-      "property": "allowsEmptyCollection",
-      "type": "boolean",
-      "description": "Whether the combo box allows the menu to be open when the collection is empty.",
-      "inheritedFrom": "ComboBoxProps"
-    },
-    {
       "property": "styles",
       "type": "StylesProp",
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     },
     {
-      "property": "selectionBehavior",
-      "type": "SelectionBehavior",
-      "default": "'toggle'",
-      "description": "How multiple selection should behave in the collection.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "labelPosition",
+      "type": "LabelPosition",
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
-      "property": "dragAndDropHooks",
-      "type": "DragAndDropHooks<NoInfer<T>>",
-      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the ListBox.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "labelAlign",
+      "type": "Alignment",
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
-      "property": "renderEmptyState",
-      "type": "(props: ListBoxRenderProps) => ReactNode",
-      "description": "Provides content to display when there are no items in the list.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "necessityIndicator",
+      "type": "NecessityIndicator",
+      "default": "'icon'",
+      "description": "Whether the required state should be shown as an icon or text.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
-      "property": "layout",
-      "type": "'stack' | 'grid'",
-      "default": "'stack'",
-      "description": "Whether the items are arranged in a stack or grid.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "contextualHelp",
+      "type": "ReactNode",
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
-      "property": "orientation",
-      "type": "Orientation",
-      "default": "'vertical'",
-      "description": "The primary orientation of the items. Usually this is the direction that the collection scrolls.",
-      "inheritedFrom": "ListBoxProps"
+      "property": "label",
+      "type": "ReactNode",
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
     },
     {
-      "property": "trigger",
-      "type": "string",
-      "description": "The name of the component that triggered the popover. This is reflected on the element as the `data-trigger` attribute, and can be used to provide specific styles for the popover depending on which element triggered it.",
-      "inheritedFrom": "PopoverProps"
+      "property": "description",
+      "type": "ReactNode",
+      "description": "A description for the field. Provides a hint such as specific requirements for what to choose.",
+      "inheritedFrom": "HelpTextProps"
     },
     {
-      "property": "triggerRef",
-      "type": "RefObject<Element | null>",
-      "description": "The ref for the element which the popover positions itself with respect to. When used within a trigger component such as DialogTrigger, MenuTrigger, Select, etc., this is set automatically. It is only required when used standalone.",
-      "inheritedFrom": "PopoverProps"
+      "property": "errorMessage",
+      "type": "ReactNode | ((v: ValidationResult) => ReactNode)",
+      "description": "An error message for the field.",
+      "inheritedFrom": "HelpTextProps"
     },
     {
-      "property": "isEntering",
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "CollectionProps"
+    },
+    {
+      "property": "shouldFlip",
       "type": "boolean",
-      "description": "Whether the popover is currently performing an entry animation.",
-      "inheritedFrom": "PopoverProps"
+      "default": "true",
+      "description": "Whether the element should flip its orientation (e.g. top to bottom or left to right) when\nthere is insufficient room for it to render completely.",
+      "inheritedFrom": "PositionProps"
     },
     {
-      "property": "isExiting",
-      "type": "boolean",
-      "description": "Whether the popover is currently performing an exit animation.",
-      "inheritedFrom": "PopoverProps"
-    },
-    {
-      "property": "shouldSkipAnimation",
-      "type": "boolean",
-      "description": "Whether the popover should appear and disappear without an entry or exit animation. This is used by components such as PreviewTrigger to skip animations when quickly swapping between overlays.",
-      "inheritedFrom": "PopoverProps"
-    },
-    {
-      "property": "UNSTABLE_portalContainer",
-      "type": "Element",
-      "default": "document.body",
-      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
-      "inheritedFrom": "PopoverProps"
-    },
-    {
-      "property": "offset",
-      "type": "number",
-      "default": "8",
-      "description": "The additional offset applied along the main axis between the element and its anchor element.",
-      "inheritedFrom": "PopoverProps"
+      "property": "onLoadMore",
+      "type": "() => any",
+      "description": "Handler that is called when more items should be loaded, e.g. while scrolling near the bottom.",
+      "inheritedFrom": "AsyncLoadable"
     },
     {
       "property": "placeholder",
       "type": "string",
-      "description": "Temporary text that occupies the text input when it is empty. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
+      "description": "Temporary text that occupies the text input when it is empty.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
       "inheritedFrom": "InputProps"
     }
   ],

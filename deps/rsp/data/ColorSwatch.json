@@ -2,13 +2,13 @@
   "props": [
     {
       "property": "size",
-      "type": "'XS' | 'S' | 'M' | 'L'",
+      "type": "\"XS\" | \"S\" | \"M\" | \"L\"",
       "default": "'M'",
       "description": "The size of the ColorSwatch."
     },
     {
       "property": "rounding",
-      "type": "'default' | 'none' | 'full'",
+      "type": "\"default\" | \"none\" | \"full\"",
       "default": "'default'",
       "description": "The corner rounding of the ColorSwatch."
     },
@@ -16,6 +16,54 @@
       "property": "styles",
       "type": "StylesPropWithHeight",
       "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "color",
+      "type": "string | Color",
+      "description": "The color value to display in the swatch.",
+      "inheritedFrom": "AriaColorSwatchProps"
+    },
+    {
+      "property": "colorName",
+      "type": "string",
+      "description": "A localized accessible name for the color.\nBy default, a description is generated from the color value,\nbut this can be overridden if you have a more specific color\nname (e.g. Pantone colors).",
+      "inheritedFrom": "AriaColorSwatchProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"
