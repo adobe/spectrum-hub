@@ -124,9 +124,8 @@ Use a `data:` URI placeholder for any authored image so fixtures don't depend on
 Direct testing of these components surfaced real, pre-existing bugs that incidental block-level coverage had missed — left failing and documented rather than fixed as part of adding the tests:
 
 - `se-checkbox`: native checkbox renders at 12–13px, below the WCAG 2.2 AA 2.5.8 Target Size minimum (24px).
-- `se-checkbox`, `se-input`, `se-textarea`, `se-select`, `se-segmentedcontrol`, `se-switch`: dark mode doesn't work — label/helper text swaps to a near-white color while its background stays white. (`se-button`'s own stylesheet handles dark mode correctly; the shared form-element stylesheet doesn't.)
 - `se-textarea`: the `<textarea>` never gets an `id`, so its `<label for="...">` points at nothing — the field has no accessible label at all.
-- `se-dialog`: its default/"secondary" action buttons render with insufficient contrast (down to 3.24:1, need 4.5:1) specifically inside the dialog.
+- `se-dialog`/`se-button`: insufficient button contrast (down to ~2.25:1, need 4.5:1) in both light and dark mode — not dark-mode-specific as first suspected.
 
 ## CI policy
 
@@ -137,7 +136,7 @@ Direct testing of these components surfaced real, pre-existing bugs that inciden
 Playwright's `webServer` config starts a local [`aem up`](https://github.com/adobe/helix-cli) dev server automatically — you don't need to start anything yourself. It serves fixture files (and any other local file) directly, and proxies real page content from the linked preview environment for everything else (e.g. the homepage spec).
 
 ```bash
-# Full suite, all browsers (chromium, firefox, webkit, + mobile emulation)
+# Full suite, all projects (chromium desktop + Mobile Chrome)
 npm run test:a11y
 
 # One block, all browsers
