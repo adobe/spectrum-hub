@@ -6,7 +6,25 @@ import {
   extractImportSpecifiers,
   createCdnCompilerHost,
   buildProgram,
+  crawl,
 } from '../../deps/rsp/ts-cdn-host.js';
+
+// A fetchImpl stand-in that serves fixed content for known canonical paths and 404s
+// otherwise — records every URL it's asked for so tests can assert on fetch counts.
+function makeMockFetch(sourcesByCanonicalPath) {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    const canonicalPath = url.replace(/^https:\/\/unpkg\.com\//, '');
+    const text = sourcesByCanonicalPath[canonicalPath];
+    return {
+      ok: text !== undefined,
+      status: text !== undefined ? 200 : 404,
+      text: async () => text ?? '',
+    };
+  };
+  return { fetchImpl, calls };
+}
 
 describe('extractImportSpecifiers', () => {
   it('finds specifiers from both import and export-from statements', () => {
@@ -127,6 +145,52 @@ describe('buildProgram — transitive cross-file extends resolution', () => {
     const propNames = checker.getPropertiesOfType(type).map((s) => s.name).sort();
 
     assert.deepEqual(propNames, ['extra', 'kept']);
+  });
+});
+
+describe('crawl', () => {
+  it('discovers and fetches every file reachable via import/export specifiers', async () => {
+    const { fetchImpl } = makeMockFetch({
+      'pkg/dist/types/src/A.d.ts': "import { B } from './B';\nexport interface A extends B {}",
+      'pkg/dist/types/src/B.d.ts': 'export interface B { fromB: string; }',
+    });
+
+    const fileCache = await crawl(['pkg/dist/types/src/A.d.ts'], { fetchImpl });
+
+    assert.equal(fileCache.size, 2);
+    assert.ok(fileCache.get('pkg/dist/types/src/A.d.ts').includes('extends B'));
+    assert.ok(fileCache.get('pkg/dist/types/src/B.d.ts').includes('fromB'));
+  });
+
+  it('records an unreachable file as null instead of omitting it, and does not retry it', async () => {
+    const { fetchImpl, calls } = makeMockFetch({
+      'pkg/dist/types/src/A.d.ts': "import { Missing } from './gone';\nexport interface A {}",
+    });
+
+    const fileCache = await crawl(['pkg/dist/types/src/A.d.ts'], { fetchImpl });
+
+    assert.equal(fileCache.get('pkg/dist/types/src/gone.d.ts'), null);
+    // unpkg + jsdelivr fallback = 2 attempts for the missing file, not more.
+    assert.equal(calls.filter((u) => u.includes('gone.d.ts')).length, 2);
+  });
+
+  it('reuses a shared cache across calls instead of re-fetching already-known files', async () => {
+    const sources = {
+      'pkg/dist/types/src/Shared.d.ts': 'export interface Shared { s: string; }',
+      'pkg/dist/types/src/A.d.ts': "import { Shared } from './Shared';\nexport interface A extends Shared {}",
+      'pkg/dist/types/src/B.d.ts': "import { Shared } from './Shared';\nexport interface B extends Shared {}",
+    };
+    const { fetchImpl, calls } = makeMockFetch(sources);
+    const cache = new Map();
+
+    await crawl(['pkg/dist/types/src/A.d.ts'], { fetchImpl, cache });
+    const sharedFetchesAfterFirst = calls.filter((u) => u.includes('Shared.d.ts')).length;
+    await crawl(['pkg/dist/types/src/B.d.ts'], { fetchImpl, cache });
+    const sharedFetchesAfterSecond = calls.filter((u) => u.includes('Shared.d.ts')).length;
+
+    assert.equal(sharedFetchesAfterFirst, 1);
+    assert.equal(sharedFetchesAfterSecond, 1, 'Shared.d.ts should not be fetched again for the second entry');
+    assert.equal(cache.size, 3);
   });
 });
 

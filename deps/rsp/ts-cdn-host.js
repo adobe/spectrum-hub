@@ -58,11 +58,17 @@ async function fetchWithFallback(canonicalPath, fetchImpl) {
  * reachable .d.ts file. Returns a Map<canonicalPath, sourceText>. A file that fails to fetch
  * is recorded as `null` (rather than omitted) so callers/tests can tell "not reachable" from
  * "fetch failed" without re-attempting it mid-crawl.
+ *
+ * `cache` lets a caller extracting many components share one Map across calls instead of
+ * re-fetching the same ~200 base files (react-aria-components, @react-types/shared, ...) once
+ * per component — those are identical across every component's crawl. Passed in AND returned;
+ * already-cached entries (including prior failures) are never re-fetched.
  */
-export async function crawl(entryCanonicalPaths, { fetchImpl = fetch, concurrency = 20 } = {}) {
-  const fileCache = new Map();
-  const queued = new Set(entryCanonicalPaths);
-  let queue = [...entryCanonicalPaths];
+export async function crawl(entryCanonicalPaths, { fetchImpl = fetch, concurrency = 20, cache } = {}) {
+  const fileCache = cache ?? new Map();
+  const queued = new Set(fileCache.keys());
+  let queue = entryCanonicalPaths.filter((p) => !queued.has(p));
+  queue.forEach((p) => queued.add(p));
 
   while (queue.length) {
     const batch = queue.slice(0, concurrency);
