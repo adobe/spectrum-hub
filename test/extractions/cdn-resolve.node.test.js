@@ -27,6 +27,17 @@ describe('packageEntryPath', () => {
     assert.equal(packageEntryPath('@types/react'), '@types/react/index.d.ts');
   });
 
+  it('resolves react-stately to its dist/types/exports entry', () => {
+    assert.equal(packageEntryPath('react-stately'), 'react-stately/dist/types/exports/index.d.ts');
+  });
+
+  it('resolves @internationalized/date to its src entry (no exports-map indirection)', () => {
+    assert.equal(
+      packageEntryPath('@internationalized/date'),
+      '@internationalized/date/dist/types/src/index.d.ts',
+    );
+  });
+
   it('returns null for an unregistered package', () => {
     assert.equal(packageEntryPath('@react-spectrum/s2'), null);
   });
@@ -52,6 +63,12 @@ describe('resolveSpecifier — relative imports', () => {
       resolveSpecifier('./Foo.d.ts', 'pkg/dir/Bar.d.ts'),
       'pkg/dir/Foo.d.ts',
     );
+  });
+
+  it('resolves a relative import from a containing file with no directory component at all', () => {
+    // Regression: lastIndexOf('/') is -1 with no slash at all, and naively slicing to that
+    // index chops the last character off the filename instead of yielding an empty dir.
+    assert.equal(resolveSpecifier('./b', 'a.d.ts'), 'b.d.ts');
   });
 });
 

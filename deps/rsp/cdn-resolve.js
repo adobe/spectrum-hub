@@ -36,6 +36,16 @@
 export const PACKAGE_BASES = {
   'react-aria-components': 'dist/types/exports',
   'react-aria': 'dist/types/exports',
+  // react-stately follows the same exports-map pattern as react-aria/react-aria-components.
+  // @internationalized/date has no exports-map indirection — same direct dist/types/src/
+  // layout as @react-types/shared. Both found by scanning real RAC files (Select, ListBox,
+  // Popover, DatePicker, Calendar, Table, GridList, Dialog) for bare specifiers this
+  // resolver didn't recognize — same "Omit<> collapses to nothing" failure mode as the
+  // react-aria/@types/react gap already documented below, just surfacing on a different
+  // component cluster (Picker/ComboBox/DatePicker/SelectBoxGroup/SideNav/ListView/TableView/
+  // Tooltip all lost their overlay-trigger and collection props until these were added).
+  'react-stately': 'dist/types/exports',
+  '@internationalized/date': 'dist/types/src',
   '@react-types/shared': 'src',
   '@types/react': '',
 };
@@ -88,7 +98,8 @@ function normalizeSegments(path) {
  */
 export function resolveSpecifier(specifier, fromCanonicalPath) {
   if (specifier.startsWith('.')) {
-    const dir = fromCanonicalPath.slice(0, fromCanonicalPath.lastIndexOf('/'));
+    const slashIndex = fromCanonicalPath.lastIndexOf('/');
+    const dir = slashIndex === -1 ? '' : fromCanonicalPath.slice(0, slashIndex);
     const resolved = normalizeSegments(`${dir}/${specifier}`);
     return resolved.endsWith('.d.ts') ? resolved : `${resolved}.d.ts`;
   }
