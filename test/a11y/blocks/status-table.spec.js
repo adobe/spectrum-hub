@@ -65,13 +65,10 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
               - link "Button, Available in Spectrum Web Components":
                 - /url: /web/swc/components/button
                 - text: ""
-          - row "Calendar Not available Calendar, Experimental in Spectrum Web Components":
+          - row "Calendar Not available Experimental":
             - rowheader "Calendar"
             - cell "Not available"
-            - cell "Calendar, Experimental in Spectrum Web Components":
-              - link "Calendar, Experimental in Spectrum Web Components":
-                - /url: /web/swc/components/calendar
-                - text: ""
+            - cell "Experimental"
       - status: Sorted by Component, ascending
   `);
 });
