@@ -35,7 +35,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - group "Component status":
-      - link "Development available. Opens SWC documentation in a new tab.":
+      - link "Code available. Opens SWC documentation in a new tab.":
         - /url: https://spectrum-web-components.adobe.com/?path=/docs/components-button--docs
         - text: ""
       - link "Design experimental. Opens Figma in a new tab.":
