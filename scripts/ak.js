@@ -445,7 +445,7 @@ export async function loadNav() {
 function decorateDoc() {
   const template = getMetadata('template');
   if (template !== 'marketing') {
-    document.documentElement.toggleAttribute('expand-sitenav');
+    document.documentElement.toggleAttribute('expand-sitenav', true);
   }
 
   decorateHeader();
@@ -459,7 +459,7 @@ async function loadSession() {
   document.body.classList.add('session');
   const header = document.querySelector('header');
   if (header) { loadBlock(header); }
-  if (!document.body.classList.includes('is-returning')) {
+  if (!document.body.classList.contains('is-returning')) {
     loadNav();
   }
 }
