@@ -21,6 +21,7 @@ const block = {
   // into the accessibility tree across the shadow boundary but leaves the plain
   // aria-controls="" string attribute empty by design — axe-core only inspects that
   // attribute and doesn't yet recognize this newer element-reflection API.
+  // Reviewed: 2026-08-17. Revisit once axe-core recognizes Cross-root ARIA Reflection.
   disableRules: ['aria-required-attr'],
 };
 
