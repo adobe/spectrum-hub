@@ -41,19 +41,18 @@
     "eslint-plugin-chai-friendly": "^1.1.0",
     "eslint-plugin-import": "^2.32.0",
     "globals": "^17.0.0",
-    "serve": "^14.2.6",
     "sinon": "^21.0.1",
     "stylelint": "^17.1.0",
     "stylelint-config-standard": "^40.0.0"
   },
   "dependencies": {
     "@adobe/spectrum-wc": "2.0.0-beta.0",
+    "@playwright/test": "^1.60.0",
     "algoliasearch": "^5.56.0",
     "esbuild": "^0.28.0",
     "lit": "^3.3.1",
-    "@playwright/test": "^1.60.0",
+    "node-html-parser": "^9.0.1",
     "turndown": "^7.2.4",
-    "turndown-plugin-gfm": "^1.0.2",
-    "node-html-parser": "^9.0.1"
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }
