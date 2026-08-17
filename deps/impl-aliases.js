@@ -7,11 +7,13 @@ export default {
     "in-line-alert": "InlineAlert",
     "radio-button": "RadioGroup",
     "select-box": "SelectBoxGroup",
+    "side-navigation": "SideNav",
     "standard-dialog": "Dialog",
     "swatch": "ColorSwatch",
     "swatch-group": "ColorSwatchPicker",
     "table": "TableView",
-    "takeover-dialog": "Dialog"
+    "takeover-dialog": "Dialog",
+    "thumbnail": "Image"
   },
   "swc": {
     "color-handle-and-loupe": "ColorHandle"

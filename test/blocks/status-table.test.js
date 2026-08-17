@@ -99,6 +99,34 @@ const MOCK_INDEX = {
         },
       },
     },
+    // Design-only, and the index has no hasPage override — but no documentation page has
+    // been written yet, so the query-index (the source of truth for what's actually
+    // published) won't list it. The link must be suppressed anyway.
+    {
+      name: 'BarPanelAndToolbar',
+      label: 'Bar Panel And Toolbar',
+      platforms: {
+        web: {
+          figma: { status: 'available' },
+          rsp: { status: 'not-available' },
+          swc: { status: 'not-available' },
+        },
+      },
+    },
+  ],
+};
+
+// Mirrors query-index.json's shape ({ data: [{ path, title, ... }] }). Deliberately omits
+// Bar Panel And Toolbar's design-only page — it has a Figma component but no doc page yet.
+const MOCK_QUERY_INDEX = {
+  data: [
+    { path: '/web/rsp/components/calendar', title: 'Calendar' },
+    { path: '/web/rsp/components/button', title: 'Button' },
+    { path: '/web/swc/components/button', title: 'Button' },
+    { path: '/web/rsp/components/color-area', title: 'Color Area' },
+    { path: '/web/design-only/components/whiteboard', title: 'Whiteboard' },
+    { path: '/web/rsp/components/color-handle-and-loupe', title: 'Color Handle And Loupe' },
+    { path: '/web/swc/components/color-handle-and-loupe', title: 'Color Handle And Loupe' },
   ],
 };
 
@@ -120,11 +148,14 @@ describe('status-table block', () => {
     sandbox.restore();
   });
 
-  function stubFetchOk(index = MOCK_INDEX) {
+  function stubFetchOk(index = MOCK_INDEX, queryIndex = MOCK_QUERY_INDEX) {
     return sandbox.stub(window, 'fetch').callsFake(async (input) => {
       const url = typeof input === 'string' ? input : input?.url ?? '';
       if (url.endsWith('.svg')) {
         return new Response('<svg xmlns="http://www.w3.org/2000/svg"><path/></svg>', { status: 200 });
+      }
+      if (url.endsWith('query-index.json')) {
+        return new Response(JSON.stringify(queryIndex), { status: 200 });
       }
       return new Response(JSON.stringify(index), { status: 200 });
     });
@@ -176,7 +207,7 @@ describe('status-table block', () => {
     });
 
     it('renders one body row per component', () => {
-      expect(el.querySelectorAll('tbody tr')).to.have.length(7);
+      expect(el.querySelectorAll('tbody tr')).to.have.length(8);
     });
 
     it('renders the component display label in the row header cell', () => {
@@ -266,6 +297,14 @@ describe('status-table block', () => {
       expect(coachMarkCell.textContent).to.include('Available');
     });
 
+    it('does not link a design-only Figma cell when no query-index entry exists for its page', () => {
+      // Bar Panel And Toolbar: Figma-available, design-only, hasPage isn't overridden — but
+      // no documentation page has been published for it yet, so it's absent from query-index.
+      const barCell = cell(el, 'Bar Panel And Toolbar', 'figma');
+      expect(barCell.querySelector('a')).to.be.null;
+      expect(barCell.textContent).to.include('Available');
+    });
+
     it('does not link a Figma cell when the component has a real code implementation', () => {
       expect(cell(el, 'Button', 'figma').querySelector('a')).to.be.null;
     });
@@ -312,6 +351,44 @@ describe('status-table block', () => {
       expect(sameRow).to.equal(false);
       const loupeSwcCell = cell(el, 'Color Loupe', 'swc');
       expect(loupeSwcCell.textContent).to.include('Experimental');
+    });
+  });
+
+  describe('query-index gating', () => {
+    const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
+      .find((tr) => tr.querySelector('th').textContent === name);
+    const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
+
+    it('fetches query-index.json alongside the status index', async () => {
+      const stub = stubFetchOk();
+      await init(makeEl());
+      const urls = stub.getCalls().map((call) => (
+        typeof call.args[0] === 'string' ? call.args[0] : call.args[0]?.url ?? ''));
+      expect(urls.some((url) => url.endsWith('query-index.json'))).to.be.true;
+    });
+
+    it('still links a page that is present in query-index', async () => {
+      stubFetchOk();
+      const el = makeEl();
+      await init(el);
+      const link = cell(el, 'Calendar', 'rsp').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+    });
+
+    it('falls back to trusting the index (does not hide every link) when query-index.json fails to load', async () => {
+      sandbox.stub(window, 'fetch').callsFake(async (input) => {
+        const url = typeof input === 'string' ? input : input?.url ?? '';
+        if (url.endsWith('query-index.json')) { return new Response('', { status: 500 }); }
+        if (url.endsWith('.svg')) {
+          return new Response('<svg xmlns="http://www.w3.org/2000/svg"><path/></svg>', { status: 200 });
+        }
+        return new Response(JSON.stringify(MOCK_INDEX), { status: 200 });
+      });
+      const el = makeEl();
+      await init(el);
+      const link = cell(el, 'Calendar', 'rsp').querySelector('a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/web/rsp/components/calendar');
     });
   });
 
@@ -407,7 +484,7 @@ describe('status-table block', () => {
       expect(region.textContent).to.equal('3 components');
       input.value = '';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('7 components');
+      expect(region.textContent).to.equal('8 components');
     });
   });
 
@@ -524,7 +601,7 @@ describe('status-table block', () => {
 
     it('loads sorted by Component ascending', () => {
       expect(names(el)).to.deep.equal([
-        'Button', 'Calendar', 'Coach Mark', 'Color Area', 'Color Handle', 'Color Loupe', 'Whiteboard',
+        'Bar Panel And Toolbar', 'Button', 'Calendar', 'Coach Mark', 'Color Area', 'Color Handle', 'Color Loupe', 'Whiteboard',
       ]);
       expect(el.querySelector('thead th:first-child').getAttribute('aria-sort')).to.equal('ascending');
     });
@@ -538,7 +615,7 @@ describe('status-table block', () => {
       header.querySelector('.status-table-sort-header').click();
       expect(header.getAttribute('aria-sort')).to.equal('descending');
       expect(names(el)).to.deep.equal([
-        'Whiteboard', 'Color Loupe', 'Color Handle', 'Color Area', 'Coach Mark', 'Calendar', 'Button',
+        'Whiteboard', 'Color Loupe', 'Color Handle', 'Color Area', 'Coach Mark', 'Calendar', 'Button', 'Bar Panel And Toolbar',
       ]);
     });
 

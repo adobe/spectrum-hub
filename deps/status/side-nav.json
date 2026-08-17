@@ -4,8 +4,7 @@
       "status": "available"
     },
     "rsp": {
-      "status": "available",
-      "context": "Alpha"
+      "status": "not-available"
     },
     "swc": {
       "status": "not-available"

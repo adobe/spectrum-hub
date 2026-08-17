@@ -15,6 +15,11 @@ const CSV_FILENAME = 'component-status.csv';
 // reads the canonical one.
 const DEFAULT_INDEX = '/deps/status-index.json';
 
+// Site-wide published-page list (aem.live convention). A component can be Available in
+// Figma/RSP/SWC well before its documentation page is written, so this is the source of
+// truth for whether a status-table link actually resolves to a live page.
+const QUERY_INDEX = '/query-index.json';
+
 const NOT_AVAILABLE = 'not-available';
 
 // The platform segment of the component-page route `/<platform>/<impl>/components/<slug>`.
@@ -35,17 +40,45 @@ const isDesignOnly = (web = {}) => IMPLEMENTATIONS.every(
   (impl) => (web[impl.id]?.status ?? NOT_AVAILABLE) === NOT_AVAILABLE,
 );
 
-/** The internal component-page URL for a status cell, or null when it shouldn't link. */
-const componentPageHref = (columnId, status, name, web, cell = {}) => {
+/**
+ * Reads the site's published-page list so link generation can confirm a target page
+ * actually exists, not just that the data says it should. Returns null when the index
+ * can't be read (network error or non-2xx) — callers fall back to trusting `hasPage`
+ * rather than hiding every link on a transient fetch failure.
+ */
+async function fetchPublishedPaths() {
+  try {
+    const resp = await fetch(`${config.codeBase}${QUERY_INDEX}`);
+    if (!resp.ok) { return null; }
+    const { data } = await resp.json();
+    return new Set((data ?? []).map((row) => row.path));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The internal component-page URL for a status cell, or null when it shouldn't link.
+ * `publishedPaths` (from fetchPublishedPaths) gates the result on the page actually being
+ * live — a component can be Available in the roster well before its doc page is written.
+ * Passing null (index unreadable) skips that gate.
+ */
+const componentPageHref = (columnId, status, name, web, cell = {}, publishedPaths = null) => {
   const { hasPage = true, page } = cell;
   if (!name || !LINKED_STATUSES.has(status) || !hasPage) { return null; }
   // `page` (deps/build-status-index.js's override pipeline) redirects a row that keeps its
   // own statuses/cells to a slug shared with another component documented on the same page.
   const slug = page ?? toSlug(name);
+
+  let path = null;
   if (columnId === 'figma') {
-    return isDesignOnly(web) ? `/${PLATFORM}/${DESIGN_ONLY}/components/${slug}` : null;
+    if (isDesignOnly(web)) { path = `/${PLATFORM}/${DESIGN_ONLY}/components/${slug}`; }
+  } else if (isLinkableColumn(columnId)) {
+    path = `/${PLATFORM}/${columnId}/components/${slug}`;
   }
-  return isLinkableColumn(columnId) ? `/${PLATFORM}/${columnId}/components/${slug}` : null;
+  if (!path) { return null; }
+
+  return (publishedPaths && !publishedPaths.has(path)) ? null : path;
 };
 
 // explicitly reset table roles so that when the CSS display property changes on small
@@ -80,12 +113,12 @@ const buildBadge = (cell) => {
 /** One implementation cell: the status badge plus an optional secondary guidance line. */
 const buildStatusCell = (cell, context = {}) => {
   const {
-    columnId, columnLabel, componentName, componentLabel, web,
+    columnId, columnLabel, componentName, componentLabel, web, publishedPaths,
   } = context;
   const td = withRole(document.createElement('td'), 'cell');
 
   const badge = buildBadge(cell);
-  const href = componentPageHref(columnId, cell?.status, componentName, web, cell);
+  const href = componentPageHref(columnId, cell?.status, componentName, web, cell, publishedPaths);
   if (href) {
     const status = STATUSES[cell.status];
     const link = document.createElement('a');
@@ -111,7 +144,7 @@ const buildStatusCell = (cell, context = {}) => {
   return td;
 };
 
-const buildTable = (index) => {
+const buildTable = (index, publishedPaths) => {
   // Columns come from the index (each `{ id, label }`), never hard-coded — onboarding a
   // source is a data change. Figma rides here as a column without being a code
   // implementation in scripts/utils/implementations.js.
@@ -152,6 +185,7 @@ const buildTable = (index) => {
         componentName: component.name,
         componentLabel: component.label ?? component.name,
         web,
+        publishedPaths,
       });
       cell.dataset.col = id;
       row.append(cell);
@@ -558,8 +592,9 @@ export default async function init(el) {
     return;
   }
   const index = await resp.json();
+  const publishedPaths = await fetchPublishedPaths();
 
-  const table = buildTable(index);
+  const table = buildTable(index, publishedPaths);
   labelTable(el, table);
 
   const { region, announce } = buildAnnouncer();

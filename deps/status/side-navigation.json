@@ -4,7 +4,9 @@
       "status": "available"
     },
     "rsp": {
-      "status": "not-available"
+      "status": "available",
+      "context": "Alpha",
+      "originalName": "SideNav"
     },
     "swc": {
       "status": "not-available",
