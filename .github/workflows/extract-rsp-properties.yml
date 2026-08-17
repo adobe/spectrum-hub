@@ -20,11 +20,13 @@ jobs:
         with:
           node-version: 20
 
+      # extract-props.js now uses the real `typescript` compiler API (deps/rsp/ts-cdn-host.js)
+      # instead of regex parsing, so this step is required — it wasn't before.
+      - name: Install dependencies
+        run: npm ci
+
       - name: Discover published S2 components
         run: node deps/rsp/discover-components.js
-
-      - name: Extract base shared properties
-        run: node deps/rsp/extract-base-props.js
 
       - name: Extract component properties
         run: node deps/rsp/extract-props.js

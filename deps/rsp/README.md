@@ -4,16 +4,17 @@ Extracts component prop metadata from [@react-spectrum/s2](https://www.npmjs.com
 
 ## How it works
 
-S2 publishes compiled TypeScript declaration files at `@react-spectrum/s2/dist/types/src/{Component}.d.ts`. Three scripts work together:
+S2 publishes compiled TypeScript declaration files at `@react-spectrum/s2/dist/types/src/{Component}.d.ts`. Two scripts work together, backed by a small shared engine:
 
 | Script | Role |
 | ------ | ---- |
-| **`discover-components.js`** | Scans published S2 types on unpkg and regenerates `components.json` (allow list, `includes`, cross-file `includeFiles`, and `extends`). S2 has no CEM-style index, so discovery replaces a hand-maintained component list. |
-| **`extract-base-props.js`** | Builds shared base types in `data/rsp-base-props.json` from `@react-types/shared`, all of `react-aria-components`, and S2 `style-utils.d.ts`. |
-| **`extract-props.js`** | Reads `components.json`, fetches each component (and any `includeFiles`) `.d.ts`, parses props, merges configured `includes` and `extends`, and attaches doc **status** from the published S2 site. |
+| **`discover-components.js`** | Scans published S2 types on unpkg and regenerates `components.json` — for each exported component, just its primary props interface name and (when it differs) source file. S2 has no CEM-style index, so discovery replaces a hand-maintained component list. |
+| **`extract-props.js`** | Reads `components.json`; for each component, crawls its `.d.ts` file's real import graph and asks the TypeScript compiler for the named interface's fully resolved, transitively-inherited property set — no manual per-hop merging. |
 | **`extract-doc-status.js`** | Resolves `alpha` / `beta` / `rc` / `stable` from [react-spectrum.adobe.com](https://react-spectrum.adobe.com) via `fetchComponentDocStatus` (used by `extract-props.js`; runnable alone for debugging). |
+| **`cdn-resolve.js`** | Pure module-specifier → CDN URL resolution (relative imports, and known packages' real `package.json` "exports" map). No network, no filesystem. |
+| **`ts-cdn-host.js`** | The extraction engine: asynchronously crawls a component's import graph into an in-memory file cache, then builds a fully synchronous `ts.CompilerHost` from that cache and a real `ts.Program`/`TypeChecker` — all without installing `@react-spectrum/s2`, `react-aria-components`, or any of their dependencies as real npm packages. |
 
-Unlike SWC's Custom Elements Manifest, React Spectrum has no structured metadata format — properties are parsed from TypeScript source with known regex limitations (see [Known limitations](#known-limitations)).
+Unlike SWC's Custom Elements Manifest, React Spectrum has no structured metadata format of its own — but props are resolved via the real TypeScript compiler API against CDN-fetched `.d.ts` content, not regex, so inheritance (including `Omit<>`/`Pick<>` and multi-hop `extends` chains) resolves the same way a real TypeScript consumer of these packages would see it.
 
 ### Parallel with SWC extraction
 
@@ -21,7 +22,7 @@ Each package writes one JSON file per component. RSP files use `{ "status": "sta
 
 The per-component pipeline in `extract-props.js` is:
 
-1. **`collectComponentProps`** — TypeScript source + `components.json` config → prop rows.
+1. **`extractComponentProps`** — crawls the component's `.d.ts` import graph (`ts-cdn-host.js`'s `crawl`), builds a real `ts.Program` over it (`buildProgram`), finds the named interface (`findInterfaceDeclaration`), and resolves its properties (`extractPropsFromType`, using `checker.getPropertiesOfType()`).
 2. **`fetchComponentDocStatus`** — doc maturity from the S2 docs site (see `extract-doc-status.js`).
 3. **`buildComponentData(props, status)`** — wraps props and optional `status` for the JSON file.
 
@@ -43,11 +44,9 @@ Prerelease labels come from the **S2 documentation site**, not from `@react-spec
 
 ### What gets merged into each component
 
-1. **`includes`** — S2 often defines Spectrum-specific props in sibling interfaces in the same file (or a sibling import), such as `ButtonStyleProps` or `ActionButtonStyleProps`. Discover adds these from the primary interface header; `extract-props.js` merges them first and tags rows with `inheritedFrom`.
-2. **Primary `interface`** — Props on the exported component interface (e.g. `ButtonProps`).
-3. **`extends`** — Only **StyleProps** and **react-aria-components** types from `rsp-base-props.json`. Discover intentionally omits `DOMProps`, `SlotProps`, `GlobalDOMAttributes`, and similar utilities so per-component tables stay focused.
+`checker.getPropertiesOfType()` on the component's primary props interface returns everything the real TypeScript type resolves to — every `extends`/`Omit`/`Pick` level, however many hops deep, exactly as a real consumer's editor/compiler would see it. No separate `includes`/`extends` bookkeeping is needed; `components.json` only records which interface (and, when it differs, which file) to inspect. Rows carry `inheritedFrom` set to whichever interface actually declares that property, omitted when it's the primary interface itself.
 
-Inherited react-aria **`className`** is excluded from output (`EXCLUDED_PROPERTIES` in `extract-props.js`). S2 documents styling via the `styles` prop instead.
+`className`, `UNSAFE_className`, and `UNSAFE_style` are excluded from output (`EXCLUDED_PROPERTIES` in `extract-props.js`) — S2 documents styling via the `styles` prop/`style()` macro instead, and treats these as internal escape hatches, not part of the documented public API.
 
 ### Display in Spectrum Hub
 
@@ -57,51 +56,38 @@ The table block (`blocks/table/table.js`) hides rows whose `inheritedFrom` is **
 
 ```sh
 node deps/rsp/discover-components.js   # refresh components.json from published S2 types
-node deps/rsp/extract-base-props.js
 node deps/rsp/extract-props.js
 npm run test:extractions
 ```
 
-**In GitHub Actions:** The `Update React Spectrum Component Properties` workflow runs all three scripts daily at 7am UTC (and on manual dispatch), then commits `components.json` and `data/`. Everything is published on unpkg, so no manual type checkout is required (unlike SWC, which waits on a published CEM).
+**In GitHub Actions:** The `Update React Spectrum Component Properties` workflow runs both scripts daily at 7am UTC (and on manual dispatch), then commits `components.json` and `data/`. Everything is published on unpkg, so no manual type checkout is required (unlike SWC, which waits on a published CEM).
+
+A full-catalog run (~120 components) takes several minutes — `extract-props.js` shares one file cache across all components in a run (`ts-cdn-host.js`'s `crawl`'s `cache` option), so the ~250+ base files common to every component (react-aria-components, react-aria, react-stately, @react-types/shared, @internationalized/date, @types/react) are fetched once, not once per component.
 
 ## `components.json` schema
 
-Discovery writes most entries automatically. You can edit the file when a component needs a one-off fix.
+Discovery writes every entry automatically. You can edit the file by hand for a one-off fix, but **any hand edit will be silently overwritten the next time `discover-components.js` runs** (it always writes a fresh file, not a merge) — if a fix needs to survive, it has to change what discovery itself derives, not just the output file.
 
 | Field | Required | Description |
 | ----- | -------- | ----------- |
 | **Key** | yes | Output filename (`Button` → `data/Button.json`). |
 | **`interface`** | yes | Primary exported props interface (e.g. `ButtonProps`, not legacy `SpectrumButtonProps`). |
 | **`file`** | no | `.d.ts` basename when it differs from the key (e.g. `Tab` uses `Tabs.d.ts`, `LinkButton` uses `Button.d.ts`). |
-| **`includes`** | no | Extra interfaces whose props are merged first (`ButtonStyleProps`, cross-file `ActionButtonStyleProps`, etc.). |
-| **`includeFiles`** | no | Maps include names to `.d.ts` basenames when the interface is in another file (written by `discover-components.js`). |
-| **`extends`** | no | Base type names from `rsp-base-props.json` — typically RAC types plus `StyleProps`. |
 
 Example (discover output is similar):
 
 ```json
 {
   "Button": {
-    "interface": "ButtonProps",
-    "includes": ["ButtonStyleProps"],
-    "extends": ["ButtonProps", "StyleProps"]
-  },
-  "ActionButton": {
-    "interface": "ActionButtonProps",
-    "includes": ["ActionButtonStyleProps"],
-    "extends": ["ButtonProps", "StyleProps"]
-  },
-  "ToggleButton": {
-    "interface": "ToggleButtonProps",
-    "includes": ["ActionButtonStyleProps"],
-    "includeFiles": { "ActionButtonStyleProps": "ActionButton" },
-    "extends": ["ToggleButtonProps", "StyleProps"]
+    "interface": "ButtonProps"
   },
   "LinkButton": {
     "interface": "LinkButtonProps",
-    "file": "Button",
-    "includes": ["ButtonStyleProps"],
-    "extends": ["ButtonProps", "StyleProps"]
+    "file": "Button"
+  },
+  "Tab": {
+    "interface": "TabProps",
+    "file": "Tabs"
   }
 }
 ```
@@ -112,7 +98,6 @@ Example (discover output is similar):
 
 ```sh
 node deps/rsp/discover-components.js
-node deps/rsp/extract-base-props.js
 node deps/rsp/extract-props.js
 ```
 
@@ -122,34 +107,29 @@ node deps/rsp/extract-props.js
 - Interface name does not match `ComponentProps` or `S2SpectrumComponentProps`.
 - Props live only in a file discover skips (`SKIP_FILES` in `discover-components.js`).
 
-Add or adjust an entry in `components.json` by hand, then rerun `extract-props.js` (and `extract-base-props.js` if you need new RAC types in the catalog). Browse types on [unpkg](https://unpkg.com/@react-spectrum/s2/dist/types/src/).
+Add or adjust an entry in `components.json` by hand, then rerun `extract-props.js`. Browse types on [unpkg](https://unpkg.com/@react-spectrum/s2/dist/types/src/). Remember: a hand edit to `components.json` won't survive the next `discover-components.js` run unless discovery itself is taught to derive it (see the schema section above).
 
 Spot-check output against [S2 component docs](https://react-spectrum.adobe.com/beta/s2/index.html) (e.g. `size` on Button and ActionButton).
 
-## Base props catalog (`rsp-base-props.json`)
+## The CDN-crawling engine (`cdn-resolve.js` + `ts-cdn-host.js`)
 
-`extract-base-props.js` auto-discovers types — there is no manual file list to maintain:
+`ts.CompilerHost`'s `getSourceFile`/`readFile`/`fileExists` are synchronous, but fetching `.d.ts` files from a CDN is async, and the import graph isn't known upfront. This works in two phases:
 
-- **`@react-types/shared`** — all `.d.ts` files via unpkg `?meta`
-- **`react-aria-components`** — all `.d.ts` under `dist/types/src/` via `?meta`
-- **`@react-spectrum/s2`** — `style-utils.d.ts` for S2 `StyleProps` and related layout types
+1. **`crawl()`** (async) — starting from a component's own `.d.ts`, fetches it, does a cheap regex scan of its `import`/`export ... from` specifiers (not a real parse — that happens in phase 2), resolves each to another file via `cdn-resolve.js`, and recurses until nothing new is discovered. Returns `Map<canonicalPath, sourceText | null>` (`null` records "fetched, but 404'd" so a failure isn't silently retried or confused with "never reached").
+2. **`buildProgram()`** (sync from here on) — builds a `ts.CompilerHost` backed entirely by that now-fully-populated cache, then a real `ts.Program`/`TypeChecker`.
 
-Fetches run in parallel per package. If a CDN request fails, the script logs a warning and continues so a partial catalog is still written.
+**Known packages** (`cdn-resolve.js`'s `PACKAGE_BASES`): `react-aria-components`, `react-aria`, `react-stately` (all follow the same `package.json` "exports"-map indirection — a subpath like `react-aria-components/Tree` resolves through `dist/types/exports/Tree.d.ts`, a thin re-export wrapper, not a guessed `dist/types/src/Tree.d.ts` path, which isn't always the real filename), `@react-types/shared` and `@internationalized/date` (direct `src`/`dist/types/src`, no exports-map indirection), and `@types/react` (DefinitelyTyped — `react` itself ships no `.d.ts` of its own; needed because several RAC interfaces use `React.JSX.IntrinsicElements` in a generic constraint position). None of these are real npm dependencies of this repo — only `typescript` itself is (it's the compiler tool, not one of the packages under analysis).
 
-When upstream adds new RAC interfaces, rerun `extract-base-props.js` before `extract-props.js` so `extends` names resolve.
+**Standard-library types** (`Array`, `Promise`, `Omit`, `Pick`, `Record`, ...) come from the **locally installed** `typescript` package's `lib/lib.*.d.ts` files, not the CDN — they're TypeScript's own ambient globals, and reading them from disk avoids fetching megabytes of unrelated content while guaranteeing `Omit<>`/`Pick<>` resolve correctly (the previous regex pipeline couldn't handle these at all — it just skipped the token name).
 
 ## Known limitations
 
-**Manual header token lists** — `discover-components.js` (`IGNORE_EXTENDS`) and `extract-props.js` (`extractExtends` → `ignored`) each keep a hand-edited set of TypeScript utility and shared type names to skip when reading interface headers. They are not generated from the compiler. If S2 introduces new tokens in `extends` clauses, both lists may need updates; updating only one can cause discovery and `extractExtends` tests to disagree. Production extraction follows `extends` in `components.json` from discovery, so discovery’s list is the one that matters for CI.
+**`typescript` must stay on the 5.x line.** As of mid-2026, npm's `typescript` `latest` tag points at a different, native/Go-ported compiler whose default export has no classic `createProgram`/`TypeChecker` API at all (2 exports total, vs. 2000+ on the classic line). `package.json` pins `^5.9.3` deliberately — don't let this float to a `^6`/`latest` range without first confirming the classic API still exists there.
 
-**Parser scope** — `parseProps` uses a single-line regex and may skip multi-line unions, generics, and function types. Spot-check JSON against S2 docs.
+**`Omit<T, K>` collapses to zero properties if `T` has any unresolved heritage member anywhere in its chain** — not just the unresolved piece, the whole result. This is why `cdn-resolve.js`'s known-package list exists at all; if S2/RAC add a dependency on a new package this pipeline doesn't yet crawl, expect large, not small, prop losses on whatever components reach it — a missing single prop is unlikely, a missing *cluster* (e.g. every overlay-trigger prop on every popover-based component at once) is the actual failure signature to watch for.
 
-**`Omit<>` and prop exclusions** — `extends` lists what to merge in; props removed via `Omit<RACButtonProps, 'className' | …>` are not subtracted from inherited output. Spot-check when upstream changes `Omit` lists.
+**Discovery coverage** — Only `export declare const` components in published `.d.ts` files are registered. Function-exported components need manual `components.json` entries (which, per the schema note above, only survive if discovery itself is updated to derive them).
 
-**Name collisions** — S2 `ButtonProps` (component API) and `react-aria-components` `ButtonProps` (RAC base) share a name. Component config uses RAC `ButtonProps` in `extends` for inherited press/focus props; the S2 interface body supplies `children`, and `includes` supplies Spectrum variants.
+**Deprecated props** — S2 does not currently author `@deprecated` JSDoc tags (verified across `@react-spectrum/s2/src`, including Button), so none reach the extracted `.d.ts`. If S2 adds them later they are extracted as ordinary prop rows (`readJsDoc` in `extract-props.js` only reads the description and `@default` — `@deprecated` itself is dropped), and there is no display-layer filter. See [../docs/DATA-CONTRACT.md](../docs/DATA-CONTRACT.md).
 
-**Discovery coverage** — Only `export declare const` components in published `.d.ts` files are registered. Function-exported components need manual `components.json` entries.
-
-**Deprecated props** — S2 does not currently author `@deprecated` JSDoc tags (verified across `@react-spectrum/s2/src`, including Button), so none reach the extracted `.d.ts`. If S2 adds them later they are extracted as ordinary prop rows, but `parseJSDoc` keeps only the description and `@default` — the `@deprecated` tag itself is dropped — and there is no display-layer filter. See [../docs/DATA-CONTRACT.md](../docs/DATA-CONTRACT.md).
-
-**Performance** — `discover-components.js` and `extract-props.js` fetch types sequentially (~90+ components). `extract-base-props.js` parallelizes per-file fetches.
+**Performance** — `discover-components.js` fetches component list files sequentially (~120 components). `extract-props.js` shares one file cache across the whole run (see "Running the extraction" above), so a full run takes minutes, not the many-times-longer it would take fetching every base file once per component.
