@@ -479,10 +479,9 @@ async function loadSession() {
   document.body.classList.add('session');
   const header = document.querySelector('header');
   if (header) { loadBlock(header); }
-  if (template !== 'marketing') {
-    document.documentElement.toggleAttribute('expand-sitenav');
+  if (!document.body.classList.includes('is-returning')) {
+    loadNav();
   }
-  loadNav();
 }
 
 export async function loadArea({ area } = { area: document }) {

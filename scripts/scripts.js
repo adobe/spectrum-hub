@@ -5,6 +5,7 @@ import {
   setScheme,
   makePicture,
   checkIms,
+  loadNav,
 } from './ak.js';
 
 const hostnames = ['spectrum.adobe.com'];
@@ -137,6 +138,9 @@ export async function loadPage() {
   await checkIms();
 
   if (isReturning) {
+    if (template !== 'marketing') {
+      document.documentElement.toggleAttribute('expand-sitenav', true);
+    }
     await loadNav();
   }
 

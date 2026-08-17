@@ -365,7 +365,7 @@
 
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);
-  --sh-decode-transition: opacity 0.2s ease-in-out;
+  --sh-decode-transition: opacity 2s ease-in-out;
 
   /* color schemes */
   color-scheme: light dark;
