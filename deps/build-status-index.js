@@ -99,7 +99,7 @@ const SMALL_WORDS = new Set(['and', 'or', 'of', 'the', 'to', 'a', 'an', 'for', '
  */
 export function normalizeName(name) {
   return name
-    .replace(/[()+]/g, ' ')
+    .replace(/[(),+]/g, ' ')
     .split(/[\s-]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
