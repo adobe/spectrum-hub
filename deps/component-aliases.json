@@ -61,19 +61,28 @@
     }
   },
   "figma": {
+    "Action bar (dark theme)": "ActionBar",
+    "Action bar (light theme)": "ActionBar",
+    "Badge (Notification)": "Badge",
+    "Badge (Indicator)": "Badge",
+    "Combo box (In-line)": "ComboBox",
     "In-line alert": "InLineAlert",
     "In Line Alert": "InLineAlert",
     "Card": "Cards",
-    "Cards (Asset)": "Cards",
-    "Cards (Collection)": "Cards",
-    "Cards (Gallery)": "Cards",
-    "Cards (Horizontal)": "Cards",
-    "Cards (Product)": "Cards",
-    "Cards (User)": "Cards",
-    "Badge (Notification + Indicator)": "NotificationBadge",
+    "Card (Asset)": "Cards",
+    "Card (Collection)": "Cards",
+    "Card (Gallery)": "Cards",
+    "Card (Horizontal)": "Cards",
+    "Card (Horizontal basic)": "Cards",
+    "Card (Product)": "Cards",
+    "Card (User)": "Cards",
     "Button (Gradient)": "Button",
+    "Number field (In-line)": "NumberField",
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",
-    "Slider (Range)": "Slider"
+    "Slider (Range)": "Slider",
+    "Select box group": "SelectBox",
+    "Text field (In-line)": "TextField",
+    "Text area (In-line)": "TextArea"
   }
 }
