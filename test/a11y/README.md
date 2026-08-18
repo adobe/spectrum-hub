@@ -113,6 +113,22 @@ Use a `data:` URI placeholder for any authored image so fixtures don't depend on
 <picture><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" alt=""></picture>
 ```
 
+### Templates need `setConfig` before `init`
+
+Templates use `loadBlock()` internally, which requires `components` to be defined. Call `setConfig` in the fixture script before `init()`:
+
+```js
+setConfig({ components: [], hostnames: [], linkBlocks: [] });
+```
+
+## When you change a block or template
+
+| What changed | What to update |
+| --- | --- |
+| A WCAG violation is introduced | Fix the accessibility issue in the block |
+| The init-produced DOM structure changes | Update `readySelector` in `test/a11y/blocks/<name>.spec.js`, and regenerate the accessibility-tree snapshot if the change was intentional |
+| A fetch URL or response format changes | Update the `routes` mock in `test/a11y/blocks/<name>.spec.js` (and/or `test/a11y/mocks.js`) |
+
 ## Shared custom elements (`test/a11y/custom-components/`)
 
 `deps/se/se.js` registers shared form/UI web components (`se-button`, `se-input`, `se-textarea`, `se-checkbox`, `se-switch`, `se-select`, `se-segmentedcontrol`, `se-dialog`) used across several blocks. Rather than rely on whichever block happens to exercise them — which misses states like `disabled`/`error`/`checked` and, in a couple of cases, missed the element entirely — each gets its own fixture and spec, parallel to the block convention:
@@ -163,7 +179,7 @@ This suite is **not** part of `npm test` (that runs unit + extraction tests only
 | [`axe-test.js`](./axe-test.js) | Shared Playwright `test`/`expect`, extended with a `makeAxeBuilder` fixture (consistent WCAG 2.2 tags). |
 | [`block-a11y.js`](./block-a11y.js) | Shared `gotoBlock()` and `formatViolations()` utilities used by every block spec. |
 | [`mocks.js`](./mocks.js) | Reusable mock HTML/JSON for blocks that fetch remote data at runtime. |
-| [`blocks/<name>.spec.js`](./blocks/) | One file per block — the actual light/dark-mode test pair. |
+| [`blocks/<name>.spec.js`](./blocks/) | One file per block — the light-mode, accessibility-tree, and dark-mode tests. |
 | [`fixtures/<name>.html`](./fixtures/) | One fixture per block/template — the isolated page each spec loads. |
 | [`custom-components/<name>.spec.js`](./custom-components/) | One file per shared `deps/se/se.js` element. |
 | [`fixtures/custom-components/<name>.html`](./fixtures/custom-components/) | One fixture per shared custom element. |
@@ -172,4 +188,4 @@ This suite is **not** part of `npm test` (that runs unit + extraction tests only
 
 ## Adding a new block
 
-See the **Accessibility tests** section of [`AGENTS.md`](../../AGENTS.md) or the [`create-new-block`](../../.ai/skills/create-new-block/SKILL.md) skill for the full walkthrough — fixture template, spec template, and route-mocking example.
+See the [`create-new-block`](../../.ai/skills/create-new-block/SKILL.md) skill's "Accessibility tests" step for the full walkthrough — fixture template, spec template, and route-mocking example.

@@ -250,7 +250,7 @@ Unit tests live in `test/blocks/<name>.test.js` and run in a real browser via `@
 
 axe-core WCAG 2.2 AA scans run against every block and template via Playwright. **A new block is not done until it has both of these files** — a background check (`test/a11y/coverage.spec.js`) fails CI if a block under `blocks/` has no matching spec file, so don't skip this step when scaffolding.
 
-1. Create `test/a11y/fixtures/<name>.html`. The fixture is a minimal HTML page that loads the block's CSS with `<link>` and initializes it with `<script type="module">`. Use a `data:` URI image placeholder so fixture images never 404.
+1. Create `test/a11y/fixtures/<name>.html`. The fixture is a minimal HTML page that loads the block's CSS with `<link>` and initializes it with `<script type="module">`. Use a `data:` URI image placeholder so fixture images never 404. Two easy-to-miss requirements that fail *silently* (the block just quietly renders nothing, with no error) rather than throwing: author the block's own markup in raw row → cell(div) → content shape, not simplified/decorated HTML, since `init()` reads it by walking `:scope > div`; and wrap the block in a `<div class="section">` — a block placed directly under `<main>` is hidden by EDS's flash-of-undecorated-content guard.
 
    ```html
    <!DOCTYPE html>
@@ -264,7 +264,13 @@ axe-core WCAG 2.2 AA scans run against every block and template via Playwright. 
    </head>
    <body>
      <main id="main-content">
-       <div class="my-block"><!-- authored content here --></div>
+       <div class="section">
+         <div class="my-block">
+           <div>
+             <div><!-- cell content here --></div>
+           </div>
+         </div>
+       </div>
      </main>
      <script type="module">
        import init from '/blocks/my-block/my-block.js';
@@ -274,7 +280,7 @@ axe-core WCAG 2.2 AA scans run against every block and template via Playwright. 
    </html>
    ```
 
-2. Create `test/a11y/blocks/<name>.spec.js` — one file per block, no shared registry to edit. Copy [`test/a11y/blocks/card.spec.js`](../../../test/a11y/blocks/card.spec.js) as a starting template:
+2. Create `test/a11y/blocks/<name>.spec.js` — one file per block, no shared registry to edit. Copy [`test/a11y/blocks/card.spec.js`](../../../test/a11y/blocks/card.spec.js) as a starting template: a light-mode axe scan, an accessibility-tree snapshot, and a dark-mode axe scan, in that order:
 
    ```js
    import AxeBuilder from '@axe-core/playwright';
@@ -297,6 +303,18 @@ axe-core WCAG 2.2 AA scans run against every block and template via Playwright. 
      expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
    });
 
+   test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+     // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+     // single run — check the project by name to actually run this once, not twice.
+     test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+     await gotoBlock(page, block);
+
+     await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+       - ...
+     `);
+   });
+
    test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
      await page.emulateMedia({ colorScheme: 'dark' });
      await gotoBlock(page, block);
@@ -314,10 +332,10 @@ axe-core WCAG 2.2 AA scans run against every block and template via Playwright. 
 
    `readySelector` is a CSS selector for any element created by `init` — the test waits for it before running axe. If the block removes itself from the DOM on init (like `section-metadata`), use `{ selector: '.my-block', state: 'detached' }` instead of a string.
 
-   **Both `test(...)` calls must be written directly in this file**, not moved into a shared helper — Playwright reports a failing test's file/line as wherever `test()` is literally called, so hiding it in `block-a11y.js` would make every block's failures misreport as coming from that one shared file.
+   **All three `test(...)` calls must be written directly in this file**, not moved into a shared helper — Playwright reports a failing test's file/line as wherever `test()` is literally called, so hiding it in `block-a11y.js` would make every block's failures misreport as coming from that one shared file. Generate/update the accessibility-tree snapshot with `npx playwright test test/a11y/blocks/<name>.spec.js --project=chromium -g "accessibility tree" --update-snapshots`.
 
    If the block fetches remote data at runtime, add a `routes` array to the `block` object to mock those requests — copy [`test/a11y/blocks/header.spec.js`](../../../test/a11y/blocks/header.spec.js) for a worked example. Add reusable mock strings to [`test/a11y/mocks.js`](../../../test/a11y/mocks.js); keep one-off mocks inline in the spec file.
 
    The rare block that renders arbitrary passthrough content with no fixed structure to assert against (e.g. `fragment`) can be exempted instead of given a spec file — see the `EXCLUDED` set in `test/a11y/coverage.spec.js`. This should be an explicit, justified exception, not a default.
 
-For full guidance on route mocking, template-specific requirements (`setConfig`), and running a single block's tests (forward slashes only, even on Windows), see the **Accessibility tests** section in [`AGENTS.md`](../../../AGENTS.md).
+For template-specific requirements (`setConfig`), the fixture-markup gotchas in full, and what to update when an existing block's behavior changes, see [`test/a11y/README.md`](../../../test/a11y/README.md).
