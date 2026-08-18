@@ -174,6 +174,40 @@
       }
     },
     {
+      "name": "AppFrameSideNavigationBrowsing",
+      "label": "App Frame Side Navigation (browsing)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AppFrameSideNavItemBrowsing",
+      "label": "App Frame Side Nav Item (browsing)",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Avatar",
       "label": "Avatar",
       "platforms": {
@@ -506,7 +540,8 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "not-available"
+            "status": "available",
+            "note": "See color handle."
           },
           "rsp": {
             "status": "available",

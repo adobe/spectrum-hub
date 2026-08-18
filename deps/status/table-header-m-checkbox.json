@@ -4,13 +4,11 @@
       "status": "available"
     },
     "rsp": {
-      "status": "available",
-      "context": "Stable",
-      "originalName": "SelectBoxGroup"
+      "status": "not-available"
     },
     "swc": {
       "status": "not-available"
     }
   },
-  "figmaPageId": "9966:49777"
+  "figmaPageId": "10634:8114"
 }
