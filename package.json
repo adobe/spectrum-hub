@@ -13,6 +13,7 @@
     "test:watch": "npm run test:unit -- --watch",
     "test:file": "wtr --node-resolve --port=2000 --coverage",
     "test:file:watch": "wtr --config ./web-test-runner.config.mjs --node-resolve --port=2000 --coverage --watch",
+    "test:a11y": "playwright test",
     "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js",
     "build:turndown": "esbuild --format=esm --minify ./deps/turndown/src/index.js --bundle --outfile=./deps/turndown/dist/index.js",
     "build:swc-tooltip": "esbuild --format=esm --minify ./deps/components/swc-tooltip/src/index.js --bundle --outfile=./deps/components/swc-tooltip/dist/index.js"
@@ -28,8 +29,11 @@
   },
   "homepage": "https://github.com/adobe/spectrum-hub#readme",
   "devDependencies": {
+    "@adobe/aem-cli": "^16.20.9",
     "@adobe/eslint-config-helix": "^3.0.17",
+    "@axe-core/playwright": "^4.11.3",
     "@esm-bundle/chai": "4.3.4-fix.0",
+    "@playwright/test": "^1.60.0",
     "@web/dev-server-import-maps": "^0.3.0",
     "@web/test-runner": "^1.0.0",
     "@web/test-runner-commands": "1.0.0",
@@ -47,8 +51,8 @@
     "algoliasearch": "^5.56.0",
     "esbuild": "^0.28.0",
     "lit": "^3.3.1",
+    "node-html-parser": "^9.0.1",
     "turndown": "^7.2.4",
-    "turndown-plugin-gfm": "^1.0.2",
-    "node-html-parser": "^9.0.1"
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }

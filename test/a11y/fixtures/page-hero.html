@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- page-hero.js reads these at module-evaluation time, so they must be static
+       markup present before any script runs — not set via inline JS. -->
+  <meta name="template" content="component">
+  <meta name="description" content="A clickable action.">
+  <title>Page-hero block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/page-hero/page-hero.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="page-hero">
+        <div class="breadcrumbs"></div>
+        <h1>Button</h1>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { setConfig } from '/scripts/ak.js';
+    // init() loads nested blocks via ak.js's loadBlock, which reads config.components —
+    // normally set by scripts.js's loadPage(), which this fixture never calls.
+    setConfig({ components: [] });
+    history.pushState({}, '', '/web/swc/components/button');
+    import init from '/blocks/page-hero/page-hero.js';
+    document.querySelectorAll('.page-hero').forEach(init);
+  </script>
+</body>
+</html>

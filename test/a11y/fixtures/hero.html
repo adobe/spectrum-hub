@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hero block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/hero/hero.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="hero-wrapper">
+        <div class="hero">
+          <!-- background row -->
+          <div>
+            <div>
+              <picture>
+                <img
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  alt=""
+                  width="1440"
+                  height="600"
+                >
+              </picture>
+            </div>
+          </div>
+          <!-- foreground row (last) -->
+          <div>
+            <div>
+              <h1>Build faster with Author Kit</h1>
+              <p>A component library for Edge Delivery Services that makes building accessible, performant sites straightforward.</p>
+              <p><strong><a href="/get-started">Get started</a></strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/hero/hero.js';
+    document.querySelectorAll('.hero').forEach(init);
+  </script>
+</body>
+</html>

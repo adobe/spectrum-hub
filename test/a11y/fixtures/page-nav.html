@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page-nav block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/page-nav/page-nav.css">
+</head>
+<body>
+  <main id="main-content">
+    <h1>Component overview</h1>
+    <h2>Usage guidelines</h2>
+    <p>Guidance on when and how to use this component in your designs.</p>
+    <h2>Accessibility</h2>
+    <p>Notes on keyboard navigation, ARIA patterns, and screen reader behaviour.</p>
+    <h2>API reference</h2>
+    <p>Properties, events, and slots exposed by the component.</p>
+  </main>
+  <script type="module">
+    // page-nav.js has no default export and no init(el) — it's a self-executing
+    // block that scans main h1/h2 and appends its own <nav class="page-nav">
+    // to document.body. There's nothing here to call it on.
+    import '/blocks/page-nav/page-nav.js';
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/media/media.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <!-- the authored size-400 class is read and stripped by init() -->
+      <div class="media size-400">
+        <picture>
+          <img
+            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+            alt="A decorative wave pattern"
+            width="400"
+            height="300"
+          >
+        </picture>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/media/media.js';
+    document.querySelectorAll('.media').forEach(init);
+  </script>
+</body>
+</html>

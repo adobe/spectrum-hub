@@ -42,6 +42,13 @@ When a task matches one of the following, read and apply the corresponding rule 
 | Drafting a PR description | [`.ai/rules/pr-descriptions.md`](./.ai/rules/pr-descriptions.md) |
 | Drafting a Jira ticket or GitHub issue | [`.ai/rules/issue-ticket.md`](./.ai/rules/issue-ticket.md) |
 
+## Accessibility tests
+
+The project runs axe-core WCAG 2.2 AA scans plus a Playwright `toMatchAriaSnapshot()` accessibility-tree check against every block, template, and shared custom element. Tests live in `test/a11y/` and run on every PR via `.github/workflows/a11y.yml`; a background check (`test/a11y/coverage.spec.js`) fails CI if a block or shared custom element has no matching spec file.
+
+- **Creating a new block or template?** The [`create-new-block`](./.ai/skills/create-new-block/SKILL.md) skill's "Accessibility tests" step walks through the fixture + spec files it needs.
+- **Changing an existing block, or the test conventions themselves?** See [`test/a11y/README.md`](./test/a11y/README.md) — fixture-markup gotchas, the accessibility-tree snapshot pattern, route-mocking, what to update when a block's behavior changes, and the known-issues list.
+
 ## IDE-specific folders
 
 Some editors load extra project config from their own directories (for example `.cursor/` and `.claude/`). Those locations are thin adapters that symlink back to `.ai/`. **`.ai/` remains the portable source of truth** for rules and skills documented here. If instructions conflict, prefer **`.ai/README.md`** and the files under **`.ai/rules/`** and **`.ai/skills/`**.

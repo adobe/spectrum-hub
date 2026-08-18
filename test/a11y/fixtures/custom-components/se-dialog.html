@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>se-dialog fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <!-- se.js imports the bare "lit" specifier -->
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <div class="test-container">
+    <!-- se-dialog calls showModal() itself 20ms after connecting -->
+    <se-dialog heading="Modal example" closedby="any">
+      <div>
+        <se-input type="text" name="dialog-field" label="Textfield" placeholder="Anything you want..."></se-input>
+      </div>
+      <div class="dialog-actions">
+        <se-button class="secondary">Cancel</se-button>
+        <se-button>Submit</se-button>
+      </div>
+    </se-dialog>
+  </div>
+  <script type="module">
+    import '/deps/se/se.js';
+  </script>
+</body>
+</html>

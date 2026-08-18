@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playground block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/playground/playground.css">
+  <!-- playground.js imports deps/se/se.js, which imports the bare "lit" specifier -->
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <!-- parseBlockMetadata reads authored key/value rows directly off the block div -->
+      <div class="playground">
+        <div><div>implementation</div><div>swc</div></div>
+        <div><div>component</div><div>button</div></div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/playground/playground.js';
+    document.querySelectorAll('.playground').forEach(init);
+  </script>
+</body>
+</html>

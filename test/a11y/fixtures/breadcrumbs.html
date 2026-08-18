@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breadcrumbs block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/breadcrumbs/breadcrumbs.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <!-- resolveContext reads window.location.pathname directly — this fixture's own
+           served path (/test/a11y/fixtures/breadcrumbs.html) already has enough segments
+           to resolve a trail, so no history.pushState trick is needed. -->
+      <div class="breadcrumbs"></div>
+      <h1>Breadcrumbs</h1>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/breadcrumbs/breadcrumbs.js';
+    document.querySelectorAll('.breadcrumbs').forEach(init);
+  </script>
+</body>
+</html>

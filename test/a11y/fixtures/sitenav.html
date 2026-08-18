@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitenav block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/sitenav/sitenav.css">
+</head>
+<body>
+  <main id="main-content"></main>
+  <script type="module">
+    // sitenav.js is a self-executing block that fetches its nav data and inserts its own #sitenav element as
+    // a sibling before <main>.
+    import '/blocks/sitenav/sitenav.js';
+  </script>
+</body>
+</html>

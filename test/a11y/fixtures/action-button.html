@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Action-button block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/action-button/action-button.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <p>
+        <!-- title="style:primary" is only ever parsed into dataset.style by ak.js's
+             decorateButton() during full-page decoration, which this isolated fixture
+             skips — author the already-parsed form directly. -->
+        <a class="action-button" href="/tools/widgets/action" data-style="primary">
+          <span>Settings</span>
+        </a>
+      </p>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/action-button/action-button.js';
+    document.querySelectorAll('.action-button').forEach(init);
+  </script>
+</body>
+</html>

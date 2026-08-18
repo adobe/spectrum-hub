@@ -1,0 +1,59 @@
+import AxeBuilder from '@axe-core/playwright';
+import { test, expect } from '../axe-test.js';
+import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { imsScript } from '../mocks.js';
+
+const block = {
+  name: 'profile',
+  path: '/test/a11y/fixtures/profile.html',
+  // rendered once loadIms() resolves and the placeholder is swapped for <se-profile>
+  readySelector: 'se-profile se-button',
+  // profile.js does el.replaceWith(cmp) — the .profile div is gone, replaced by <se-profile>
+  ariaRoot: 'se-profile',
+  routes: [
+    {
+      url: 'https://auth.services.adobe.com/imslib/imslib.min.js',
+      contentType: 'application/javascript',
+      body: imsScript,
+    },
+  ],
+};
+
+test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+  await gotoBlock(page, block);
+
+  const results = await makeAxeBuilder()
+    .disableRules(block.disableRules ?? [])
+    .analyze();
+
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, block);
+
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - button "Sign in"
+  `);
+});
+
+test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+
+  await gotoBlock(page, block);
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['color-contrast'])
+    .analyze();
+
+  await testInfo.attach('accessibility-scan-results', {
+    body: JSON.stringify(results, null, 2),
+    contentType: 'application/json',
+  });
+
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});

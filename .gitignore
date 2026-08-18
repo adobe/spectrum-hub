@@ -13,6 +13,8 @@ helix-importer-ui
 .wrangler
 .claude
 .cursor
+playwright-report/
+test-results/
 
 
 .superpowers/
