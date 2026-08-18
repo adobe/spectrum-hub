@@ -29,7 +29,7 @@ const cdnEnv = port === '8787'
   || host.endsWith('adobe.com')
   || searchParams.get('cdn') === 'mock'
   || host.endsWith('workers.dev')
-  || host === 'd2fh4e6818mjc6.cloudfront.net';
+  || host.endsWith('6.cloudfront.net');
 const env = (() => {
   if (host.includes('local')) { return 'dev'; }
   if (isStage()) { return 'stage'; }
