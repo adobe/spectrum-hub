@@ -154,7 +154,7 @@ npx playwright test -g "sitenav"
 
 > **Windows/PowerShell:** always use forward slashes in file-path arguments, even on Windows — `test/a11y/blocks/card.spec.js`, not `.\test\a11y\blocks\card.spec.js`. Playwright treats the argument as a regex matched against forward-slash paths; backslashes get parsed as regex escapes (`\t`, `\s`, etc.) and silently match nothing.
 
-`npm test` runs this suite alongside unit and extraction tests, and fails overall if any of the three fail.
+This suite is **not** part of `npm test` (that runs unit + extraction tests only) — it's kept separate since it needs its own browser install and dev server. Run it with `npm run test:a11y`, or via the dedicated [`a11y.yml`](../../.github/workflows/a11y.yml) workflow in CI.
 
 ## File structure
 
