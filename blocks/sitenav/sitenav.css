@@ -106,7 +106,7 @@
     font-size: inherit;
 
     &:hover,
-    &[aria-expanded="true"] {
+    &:not(.sitenav-expand-btn)[aria-expanded="true"] {
       color: var(--s2-gray-800);
 
       svg {
@@ -449,6 +449,11 @@
     --sitenav-corner-radius: var(--s2-corner-radius-850);
     --expand-panel-width: 5px;
 
+    /* Only the top level gets the 20px corner radius, second-level menu remains 32px */
+    .level-2-menu {
+      --sitenav-corner-radius: var(--s2-corner-radius-950);
+    }
+
     .sitenav-expand-btn:hover {
       --expand-panel-width: 1.5px;
     }
@@ -494,10 +499,14 @@ html:has(meta[name="template"][content="marketing"]) {
 
 /* Lifted direct from prototype */
 .light-scheme {
-  nav::before, .level-2-menu, .sitenav-expand-btn::before {
+  .level-2-menu, .sitenav-expand-btn::before {
     box-shadow: inset 0 0 3px #fff, 0 0 .5px #0000001a, 0 9px 94.8px #0000000d;
     background-color: #ffffff80;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+  }
+  
+  nav::before {
+    background-color: #fff;
   }
 }
 
