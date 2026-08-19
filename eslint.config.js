@@ -5,6 +5,7 @@ import { recommended, source, test } from '@adobe/eslint-config-helix';
 export default defineConfig([
   globalIgnores([
     '**/deps',
+    '.claude/**',
     // workers/ are self-contained deployables with their own tooling/tests
     'workers/**',
   ]),
