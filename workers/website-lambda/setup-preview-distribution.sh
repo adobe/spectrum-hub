@@ -127,6 +127,47 @@ JSON
 [ -z "$MEDIA_CACHE_POLICY_ID" ] && MEDIA_CACHE_POLICY_ID="$(ensure_media_cache_policy)"
 echo "Media cache policy: $MEDIA_CACHE_POLICY_ID"
 
+# 1d. Custom content cache policy for the DEFAULT (Lambda) behavior. Honours AEM's
+#     Cache-Control (so the Lambda's no-store on viewer-varying responses keeps
+#     them uncached) and keys on the spectrum_session cookie + query strings, so
+#     anonymous entries are shared and authenticated/private entries stay separate.
+CONTENT_CACHE_POLICY_NAME="${CONTENT_CACHE_POLICY_NAME:-spectrum-content}"
+CONTENT_CACHE_POLICY_ID="${CONTENT_CACHE_POLICY_ID:-}"
+ensure_content_cache_policy() {
+  local id cfgfile etag
+  cfgfile="$(mktemp)"
+  cat > "$cfgfile" <<JSON
+{
+  "Name": "$CONTENT_CACHE_POLICY_NAME",
+  "Comment": "Content: honour AEM Cache-Control; key on spectrum_session + query strings",
+  "DefaultTTL": 0,
+  "MaxTTL": 31536000,
+  "MinTTL": 0,
+  "ParametersInCacheKeyAndForwardedToOrigin": {
+    "EnableAcceptEncodingGzip": true,
+    "EnableAcceptEncodingBrotli": true,
+    "HeadersConfig": { "HeaderBehavior": "none" },
+    "CookiesConfig": { "CookieBehavior": "whitelist", "Cookies": { "Quantity": 1, "Items": ["spectrum_session"] } },
+    "QueryStringsConfig": { "QueryStringBehavior": "all" }
+  }
+}
+JSON
+  id="$(aws cloudfront list-cache-policies --type custom --profile "$PROFILE" --region us-east-1 \
+    --query "CachePolicyList.Items[?CachePolicy.CachePolicyConfig.Name=='$CONTENT_CACHE_POLICY_NAME'].CachePolicy.Id | [0]" --output text 2>/dev/null || true)"
+  if [ -z "$id" ] || [ "$id" = "None" ]; then
+    id="$(aws cloudfront create-cache-policy --profile "$PROFILE" --region us-east-1 \
+      --cache-policy-config "file://$cfgfile" --query 'CachePolicy.Id' --output text)"
+  else
+    etag="$(aws cloudfront get-cache-policy --id "$id" --profile "$PROFILE" --region us-east-1 --query ETag --output text)"
+    aws cloudfront update-cache-policy --id "$id" --if-match "$etag" --profile "$PROFILE" --region us-east-1 \
+      --cache-policy-config "file://$cfgfile" >/dev/null
+  fi
+  rm -f "$cfgfile"
+  printf '%s' "$id"
+}
+[ -z "$CONTENT_CACHE_POLICY_ID" ] && CONTENT_CACHE_POLICY_ID="$(ensure_content_cache_policy)"
+echo "Content cache policy: $CONTENT_CACHE_POLICY_ID"
+
 # Media origin custom headers (+ optional X-Forwarded-Host) and the media
 # behavior's viewer-response function association, injected into the config below.
 MEDIA_HEADERS_QTY=2
@@ -192,7 +233,7 @@ $MEDIA_HEADERS_ITEMS
       "Items": ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
       "CachedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] }
     },
-    "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+    "CachePolicyId": "$CONTENT_CACHE_POLICY_ID",
     "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
     "Compress": true
   },
