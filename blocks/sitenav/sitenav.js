@@ -1,9 +1,10 @@
 import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js';
+import { loadIms } from '../../scripts/utils/ims.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
-const { log } = getConfig();
+const { codeBase, log, cdnEnv } = getConfig();
 
 loadStyle(import.meta.url.replace('js', 'css'));
 
