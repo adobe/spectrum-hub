@@ -1,10 +1,9 @@
 import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js';
-import { loadIms } from '../../scripts/utils/ims.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
-const { codeBase, log, cdnEnv } = getConfig();
+const { log } = getConfig();
 
 loadStyle(import.meta.url.replace('js', 'css'));
 
@@ -394,13 +393,7 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   });
 };
 
-await (async () => {
-  // Only check IMS on CDN.
-  if (cdnEnv) {
-    const ims = await loadIms();
-    if (ims.anonymous) { return; }
-  }
-
+(async () => {
   // Build the nav element
   const { sitenav, nav } = getSiteNav();
 

@@ -22,15 +22,9 @@
   white-space: nowrap;
   color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
   z-index: 100;
-  opacity: 1;
-  transition: opacity 200ms ease-in-out;
 
   @media (prefers-reduced-motion: reduce) {
     transition: none;
-  }
-
-  @starting-style {
-    opacity: 0;
   }
 
   nav {
