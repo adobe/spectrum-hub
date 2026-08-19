@@ -12,10 +12,14 @@ const IMS_SCOPES = 'AdobeID,openid';
 // IMS round-trip, and clearing it after the reload prevents a loop.
 const SIGN_IN_RELOAD = 'spectrum-ims-signin-reload';
 
-// One-shot per-tab guard for the reconciliation reloads below (a newly minted
-// session, or a torn-down stale one). It survives the reload it triggers, so a
-// cookie/token desync can never turn into a reload loop.
-const RECONCILE_RELOAD = 'spectrum-ims-reconcile-reload';
+// One-shot per-tab guards for the two silent reconciliation reloads below -
+// keyed separately so establishing a new session and tearing down a stale one
+// never suppress each other. Each survives the reload it triggers, so a
+// cookie/token desync can never turn into a reload loop. The explicit sign-in
+// reload does NOT use these: it has its own SIGN_IN_RELOAD one-shot and must
+// fire every time, even if a reconcile already ran earlier in this tab.
+const ESTABLISH_RELOAD = 'spectrum-ims-establish-reload';
+const TEARDOWN_RELOAD = 'spectrum-ims-teardown-reload';
 
 // How long before the stored expiry we start refreshing again
 const SESSION_REFRESH_WINDOW_MS = 60 * 60 * 1000;
@@ -36,12 +40,12 @@ const IO_ENV = {
   prod: 'cc-collab.adobe.io',
 };
 
-// Reload the current path at most once per tab. The guard survives the reload,
-// so if the cookie, IMS token, and page state are still mismatched afterwards
-// we do not loop.
-const reloadOnce = () => {
-  if (sessionStorage.getItem(RECONCILE_RELOAD)) { return false; }
-  sessionStorage.setItem(RECONCILE_RELOAD, '1');
+// Reload the current path at most once per tab for the given guard key. The key
+// survives the reload, so if the cookie, IMS token, and page state are still
+// mismatched afterwards we do not loop.
+const reloadOnce = (key) => {
+  if (sessionStorage.getItem(key)) { return false; }
+  sessionStorage.setItem(key, '1');
   window.location.reload();
   return true;
 };
@@ -208,16 +212,24 @@ export const loadIms = (() => {
           // fetched anonymously and needs a reload to reveal gated content".
           const hadSession = readHintExpiry() !== null;
           const established = await setSession(accessToken);
+          // The page was fetched before the cookie existed, so the server
+          // rendered its anonymous view (a gated path is the 404 page; a public
+          // page has had its audience-private blocks stripped). A single reload
+          // re-fetches the same URL with the cookie and fixes either.
           const pendingReload = sessionStorage.getItem(SIGN_IN_RELOAD);
           sessionStorage.removeItem(SIGN_IN_RELOAD);
-          // Reload once when the session was just established but the page was
-          // fetched before the cookie existed, so the server rendered its
-          // anonymous view (a gated path is the 404 page; a public page has had
-          // its audience-private blocks stripped). This covers an explicit
-          // sign-in (pendingReload) and a silent IMS auto-login onto a page with
-          // no prior session (!hadSession); a mere in-window refresh of an
-          // existing cookie does not reload. reloadOnce guards against a loop.
-          if (established && (pendingReload || !hadSession) && reloadOnce()) {
+          if (established && pendingReload) {
+            // Explicit sign-in: reload directly. SIGN_IN_RELOAD (set on the
+            // click, cleared just above) already makes this fire exactly once,
+            // and it must not be suppressed by an earlier reconcile in this tab.
+            clearTimeout(timeout);
+            window.location.reload();
+            return;
+          }
+          if (established && !hadSession && reloadOnce(ESTABLISH_RELOAD)) {
+            // Silent IMS auto-login onto a page with no prior session: same
+            // anonymous-view problem, but no click to key off. Guarded so a
+            // cookie the browser refuses to store cannot loop the reload.
             clearTimeout(timeout);
             return;
           }
@@ -229,7 +241,7 @@ export const loadIms = (() => {
           // then reload once into the anonymous view. reloadOnce prevents a loop
           // (and the DELETE clears the companion cookie regardless).
           await fetch('/auth/session', { method: 'DELETE', credentials: 'include' }).catch(() => {});
-          if (reloadOnce()) {
+          if (reloadOnce(TEARDOWN_RELOAD)) {
             clearTimeout(timeout);
             return;
           }
