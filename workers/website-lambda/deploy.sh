@@ -13,6 +13,14 @@
 # AWSLambdaBasicExecutionRole policy (or equivalent) attached. Not created here
 # since IAM changes are account-wide. Set it (and any other account-specific
 # overrides) in a local, gitignored deploy.env - see deploy.env.example.
+#
+# Usage:
+#   TARGET=prod  ./deploy.sh   # spectrum-prod-lambda-proxy  + env.json
+#   TARGET=stage ./deploy.sh   # spectrum-stage-lambda-proxy + env.stage.json
+# TARGET (default prod) selects the function and its matching env file together,
+# so the two can't be pointed at different environments by accident. A guard
+# still cross-checks any explicit FUNCTION_NAME/ENV_FILE override and aborts on a
+# mismatch (override with ALLOW_ENV_MISMATCH=1).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,13 +32,32 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PROFILE="${AWS_PROFILE:-spectrumHub}"
 REGION="${AWS_REGION:-us-east-2}"
-FUNCTION_NAME="${FUNCTION_NAME:-spectrum-prod-lambda-proxy}"
 AUTH_TYPE="${FUNCTION_URL_AUTH_TYPE:-AWS_IAM}"
 ROLE_ARN="${LAMBDA_ROLE_ARN:?Set LAMBDA_ROLE_ARN (e.g. in workers/website-lambda/deploy.env - see deploy.env.example) to an existing Lambda execution role ARN}"
-# Lambda environment variables, in AWS CLI --environment file:// format
-# ({ "Variables": { ... } }). Gitignored, so secrets stay out of the repo.
-# Pushed on both create and update; skipped (with a warning) if absent.
-ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/env.json}"
+
+# TARGET pairs the function with its matching env file so the two can never be
+# pointed at different environments by accident - which is how a stage env file
+# (env.stage.json) once landed on the prod function, overwriting prod's env with
+# stage values. Usage:  TARGET=prod ./deploy.sh   or   TARGET=stage ./deploy.sh
+# FUNCTION_NAME/ENV_FILE can still be overridden explicitly, but the mismatch
+# guard below then still applies (override it with ALLOW_ENV_MISMATCH=1).
+# ENV_FILE is a Lambda env-vars file in AWS CLI --environment file:// format
+# ({ "Variables": { ... } }); gitignored so secrets stay out of the repo.
+TARGET="${TARGET:-prod}"
+case "$TARGET" in
+  prod)
+    FUNCTION_NAME="${FUNCTION_NAME:-spectrum-prod-lambda-proxy}"
+    ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/env.json}"
+    ;;
+  stage)
+    FUNCTION_NAME="${FUNCTION_NAME:-spectrum-stage-lambda-proxy}"
+    ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/env.stage.json}"
+    ;;
+  *)
+    echo "ERROR: TARGET must be 'prod' or 'stage' (got '$TARGET')." >&2
+    exit 1
+    ;;
+esac
 # This proxy buffers each upstream response and base64-encodes it, so it needs
 # more than Lambda's 128 MB / 3 s defaults: image derivatives (e.g. a 3000px
 # webp) can be several MB, and when aem.live/aem.page regenerates one the round
@@ -40,15 +67,47 @@ ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/env.json}"
 FUNCTION_MEMORY="${FUNCTION_MEMORY:-1024}"
 FUNCTION_TIMEOUT="${FUNCTION_TIMEOUT:-30}"
 
+# The environment an env file targets is identified by AEM_HOST_SUFFIX: the
+# stage env proxies preview (aem.page); prod omits it (defaults to aem.live).
+# Empty when the file is absent or the key is unset (i.e. prod).
+ENV_SUFFIX=""
+[ -f "$ENV_FILE" ] && ENV_SUFFIX="$(sed -nE 's/.*"AEM_HOST_SUFFIX"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' "$ENV_FILE" | head -n1)"
+
 echo "Deploying with:"
+echo "  TARGET:         $TARGET"
 echo "  AWS_PROFILE:    $PROFILE"
 echo "  AWS_REGION:     $REGION"
 echo "  FUNCTION_NAME:  $FUNCTION_NAME"
 echo "  AUTH_TYPE:      $AUTH_TYPE"
 echo "  LAMBDA_ROLE_ARN: $ROLE_ARN"
 echo "  ENV_FILE:       $ENV_FILE$([ -f "$ENV_FILE" ] || echo ' (missing - env vars will NOT be pushed)')"
+echo "  AEM_HOST_SUFFIX: ${ENV_SUFFIX:-<unset -> aem.live>}"
 echo "  MEMORY/TIMEOUT: ${FUNCTION_MEMORY} MB / ${FUNCTION_TIMEOUT} s"
 echo
+
+# Refuse to push an env file whose environment does not match the function it is
+# going to. This is the guard against the exact footgun that put a stage env on
+# prod: a prod-named function must not receive a preview (aem.page) env, and a
+# stage-named function must not receive a non-preview env. Skippable with
+# ALLOW_ENV_MISMATCH=1 for genuinely non-standard setups.
+if [ -f "$ENV_FILE" ] && [ "${ALLOW_ENV_MISMATCH:-0}" != "1" ]; then
+  case "$FUNCTION_NAME" in
+    *prod*)
+      if [ "$ENV_SUFFIX" = "aem.page" ]; then
+        echo "ERROR: refusing to push a stage env file (AEM_HOST_SUFFIX=aem.page) to prod function '$FUNCTION_NAME'." >&2
+        echo "       Did you mean TARGET=stage? Or set ALLOW_ENV_MISMATCH=1 to override." >&2
+        exit 1
+      fi
+      ;;
+    *stage*)
+      if [ "$ENV_SUFFIX" != "aem.page" ]; then
+        echo "ERROR: refusing to push a non-stage env file (AEM_HOST_SUFFIX='${ENV_SUFFIX:-unset}') to stage function '$FUNCTION_NAME'." >&2
+        echo "       Did you mean TARGET=prod? Or set ALLOW_ENV_MISMATCH=1 to override." >&2
+        exit 1
+      fi
+      ;;
+  esac
+fi
 
 # Assemble the deployment bundle in a throwaway build dir. package.json is
 # included so Node loads the .js files as ESM ("type": "module"); handlers/ and
