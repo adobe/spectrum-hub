@@ -1,4 +1,4 @@
-import { getConfig, AUTHORIZED_SESSION_EXPIRY } from '../ak.js';
+import { getConfig } from '../ak.js';
 
 const { env, cdnEnv } = getConfig();
 
@@ -11,6 +11,11 @@ const IMS_SCOPES = 'AdobeID,openid';
 // content that rendered before the cookie existed. sessionStorage survives the
 // IMS round-trip, and clearing it after the reload prevents a loop.
 const SIGN_IN_RELOAD = 'spectrum-ims-signin-reload';
+
+// One-shot per-tab guard for the reconciliation reloads below (a newly minted
+// session, or a torn-down stale one). It survives the reload it triggers, so a
+// cookie/token desync can never turn into a reload loop.
+const RECONCILE_RELOAD = 'spectrum-ims-reconcile-reload';
 
 // How long before the stored expiry we start refreshing again
 const SESSION_REFRESH_WINDOW_MS = 60 * 60 * 1000;
@@ -31,14 +36,33 @@ const IO_ENV = {
   prod: 'cc-collab.adobe.io',
 };
 
+// Reload the current path at most once per tab. The guard survives the reload,
+// so if the cookie, IMS token, and page state are still mismatched afterwards
+// we do not loop.
+const reloadOnce = () => {
+  if (sessionStorage.getItem(RECONCILE_RELOAD)) { return false; }
+  sessionStorage.setItem(RECONCILE_RELOAD, '1');
+  window.location.reload();
+  return true;
+};
+
+// Presence of the readable companion cookie means a live server session exists;
+// its value is the clamped expiry. Returns null when no session cookie is set.
+// Exported for unit tests.
+export const readHintExpiry = () => {
+  const match = document.cookie.match(/(?:^|;\s*)spectrum_session_active=([^;]+)/);
+  const expiresAt = match ? Number(match[1]) : NaN;
+  return Number.isFinite(expiresAt) ? expiresAt : null;
+};
+
 export function handleSignIn() {
   sessionStorage.setItem(SIGN_IN_RELOAD, '1');
   window.adobeIMS.signIn();
 }
 
 export async function handleSignOut() {
-  // Do before the browser takes user to IMS for sign out
-  localStorage.removeItem(AUTHORIZED_SESSION_EXPIRY);
+  // Do before the browser takes user to IMS for sign out. The DELETE clears
+  // both the session cookie and its readable companion.
   if (cdnEnv) {
     await fetch('/auth/session', { method: 'DELETE', credentials: 'include' }).catch(() => {});
   }
@@ -101,14 +125,15 @@ const getTenantId = (profile) => {
   return found?.prodCtx.serviceCode;
 };
 
-// null (never stored), unparseable, or within the refresh window all mean
-// "send the POST" - only a comfortably future stored expiry skips it.
-const dueForRefresh = () => {
-  const raw = localStorage.getItem(AUTHORIZED_SESSION_EXPIRY);
-  if (raw === null) { return true; }
-  const storedExpiresAt = Number(raw);
-  if (!Number.isFinite(storedExpiresAt)) { return true; }
-  return Date.now() >= storedExpiresAt - SESSION_REFRESH_WINDOW_MS;
+// No session cookie (so nothing to lose by minting one) or one inside the
+// refresh window both mean "send the POST"; only a comfortably future cookie
+// skips it. Reading the companion cookie rather than a localStorage proxy is
+// what lets setSession self-heal: if the real cookie is gone, the hint is gone
+// too, so we re-mint instead of trusting a stale marker. Exported for unit tests.
+export const dueForRefresh = () => {
+  const expiresAt = readHintExpiry();
+  if (expiresAt === null) { return true; }
+  return Date.now() >= expiresAt - SESSION_REFRESH_WINDOW_MS;
 };
 
 // Returns true only when it successfully (re)established the server session
@@ -137,15 +162,13 @@ const setSession = async (accessToken) => {
   try {
     const resp = await fetch('/auth/session', opts);
     if (!resp.ok) { return false; }
-    const { expiresAt } = await resp.json();
-    if (Number.isFinite(expiresAt)) {
-      localStorage.setItem(AUTHORIZED_SESSION_EXPIRY, String(expiresAt));
-    }
+    // The worker sets the readable spectrum_session_active cookie on success;
+    // dueForRefresh reads that, so there is nothing to persist here.
     return true;
   } catch (e) {
     // Best-effort: onReady calls this without awaiting it, so a network
-    // failure here must not become an unhandled rejection. Nothing stored
-    // means dueForRefresh() tries again on the next onReady.
+    // failure here must not become an unhandled rejection. No cookie was set,
+    // so dueForRefresh() stays true and the next onReady tries again.
     return false;
   }
 };
@@ -175,26 +198,42 @@ export const loadIms = (() => {
       onReady: async () => {
         // loadIms only distinguishes SIGNED-OUT ({ anonymous: true }) from
         // SIGNED-IN (full details). Whether a signed-in user is AUTHORIZED is a
-        // separate, server-owned fact: setSession records it via
-        // AUTHORIZED_SESSION_EXPIRY and the CDN enforces it on gated paths.
+        // separate, server-owned fact: setSession mints the spectrum_session
+        // cookie (and its readable companion), and the CDN enforces it on gated
+        // paths.
         const accessToken = window.adobeIMS.getAccessToken();
         if (accessToken) {
+          // Whether a live session cookie existed BEFORE this POST - the signal
+          // for "the page was already fetched with the cookie" vs "it was
+          // fetched anonymously and needs a reload to reveal gated content".
+          const hadSession = readHintExpiry() !== null;
           const established = await setSession(accessToken);
-          // After an explicit sign-in that established the session, reload once.
-          // The page was fetched before the cookie existed, so the server
-          // rendered its anonymous view: a gated path is the 404 page, and a
-          // public page has had its audience-private blocks stripped. Both only
-          // become correct once re-fetched with the cookie, and the URL is
-          // unchanged, so a single reload fixes either. sessionStorage survives
-          // the IMS round-trip; clearing it before the reload prevents a loop.
           const pendingReload = sessionStorage.getItem(SIGN_IN_RELOAD);
           sessionStorage.removeItem(SIGN_IN_RELOAD);
-          if (established && pendingReload) {
+          // Reload once when the session was just established but the page was
+          // fetched before the cookie existed, so the server rendered its
+          // anonymous view (a gated path is the 404 page; a public page has had
+          // its audience-private blocks stripped). This covers an explicit
+          // sign-in (pendingReload) and a silent IMS auto-login onto a page with
+          // no prior session (!hadSession); a mere in-window refresh of an
+          // existing cookie does not reload. reloadOnce guards against a loop.
+          if (established && (pendingReload || !hadSession) && reloadOnce()) {
             clearTimeout(timeout);
-            window.location.reload();
             return;
           }
           loadDetails(IMS_CLIENT_ID, accessToken).then((details) => resolve(details));
+        } else if (cdnEnv === true && readHintExpiry() !== null) {
+          // IMS is signed out, yet a server session cookie lingers - e.g. the
+          // user signed out of IMS in another tab/site on this domain. Tear it
+          // down so gated content the user is no longer entitled to disappears,
+          // then reload once into the anonymous view. reloadOnce prevents a loop
+          // (and the DELETE clears the companion cookie regardless).
+          await fetch('/auth/session', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+          if (reloadOnce()) {
+            clearTimeout(timeout);
+            return;
+          }
+          resolve({ anonymous: true });
         } else {
           resolve({ anonymous: true });
         }

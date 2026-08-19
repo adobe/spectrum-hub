@@ -69,12 +69,12 @@ const isImsHash = () => {
   return hashKeys.some((key) => hash.includes(key));
 };
 
-// localStorage key set by ims.js on authorization. Its PRESENCE means the
-// browser was authorized (has access); its VALUE is the epoch-ms session expiry
-// ims.js uses to refresh.
-export const AUTHORIZED_SESSION_EXPIRY = 'spectrum-authorized-session-expiry';
-
-const hasStoredSession = () => localStorage.getItem(AUTHORIZED_SESSION_EXPIRY) !== null;
+// The readable companion to the HttpOnly spectrum_session cookie, set by the
+// worker in lockstep with it (see DEFAULT_SESSION_HINT_COOKIE_NAME). Its
+// presence in document.cookie means a live server session exists; unlike a
+// localStorage proxy it expires and clears with the real cookie, so it cannot
+// drift out of sync.
+const hasStoredSession = () => document.cookie.includes('spectrum_session_active=');
 
 export const checkIms = async () => {
   // Soft check: not returning from IMS and no session marker => anonymous.

@@ -4,6 +4,7 @@ import {
   durationMs,
   DEFAULT_MAX_AGE_MS,
   DEFAULT_SESSION_COOKIE_NAME,
+  DEFAULT_SESSION_HINT_COOKIE_NAME,
 } from '../lib/session.js';
 import { decodeJwt } from '../lib/jwt.js';
 
@@ -274,13 +275,22 @@ export const deleteSession = async ({ url, env, request }) => {
 
   // Path and SameSite must match the cookie that createSession set, or the
   // browser treats this as an unrelated cookie and never clears the real one.
+  const secure = url.protocol === 'https:';
   const cookie = serializeCookie(DEFAULT_SESSION_COOKIE_NAME, '', {
     maxAgeSeconds: 0,
     httpOnly: true,
-    secure: url.protocol === 'https:',
+    secure,
+  });
+  // Clear the readable companion in lockstep so the client stops believing a
+  // session exists.
+  const hintCookie = serializeCookie(DEFAULT_SESSION_HINT_COOKIE_NAME, '', {
+    maxAgeSeconds: 0,
+    httpOnly: false,
+    secure,
   });
 
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', cookie);
+  headers.append('set-cookie', hintCookie);
   return new Response(null, { status: 204, headers });
 };
