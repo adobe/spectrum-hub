@@ -1,4 +1,5 @@
 function.zip
 env.json
+env.stage.json
 debug.mjs
 deploy.env

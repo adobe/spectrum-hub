@@ -224,7 +224,10 @@ const formatRequest = async (request, url) => {
     aemUrl.hostname = origin.hostname;
     aemUrl.port = origin.port;
   } else {
-    aemUrl.hostname = `main--${env.AEM_SITE}--${env.AEM_ORG}.aem.live`;
+    // aem.live (the published tier) by default; set AEM_HOST_SUFFIX=aem.page to
+    // proxy the preview tier instead (used by the stage Lambda).
+    const aemHostSuffix = env.AEM_HOST_SUFFIX || 'aem.live';
+    aemUrl.hostname = `main--${env.AEM_SITE}--${env.AEM_ORG}.${aemHostSuffix}`;
     aemUrl.port = '';
     aemUrl.protocol = 'https:';
   }
