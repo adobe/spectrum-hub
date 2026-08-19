@@ -463,11 +463,6 @@ export async function loadNav() {
 }
 
 function decorateDoc() {
-  const template = getMetadata('template');
-  if (template !== 'marketing') {
-    document.documentElement.toggleAttribute('expand-sitenav', true);
-  }
-
   decorateHeader();
 
   const pageId = window.location.hash?.replace('#', '');

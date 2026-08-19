@@ -43,6 +43,9 @@ const isReturning = sessionStorage.getItem('session');
 if (isReturning) { document.body.classList.add('is-returning'); }
 const scheme = setScheme(document.body);
 const template = getMetadata('template');
+if (template !== 'marketing') {
+  document.documentElement.toggleAttribute('expand-sitenav', true);
+}
 const breadcrumbMeta = getMetadata('breadcrumbs');
 const heroMeta = getMetadata('hero');
 
@@ -132,9 +135,6 @@ export async function loadPage() {
   await checkIms();
 
   if (isReturning) {
-    if (template !== 'marketing') {
-      document.documentElement.toggleAttribute('expand-sitenav', true);
-    }
     await loadNav();
   }
 
