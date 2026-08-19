@@ -20,7 +20,7 @@
   top: var(--sh-header-height);
   font-size: var(--s2-component-m-regular-font-size);
   white-space: nowrap;
-  color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
+  color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
   z-index: 100;
 
   @media (prefers-reduced-motion: reduce) {
@@ -59,7 +59,7 @@
   }
 
   a {
-    color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
+    color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
     text-decoration: none;
     outline: none;
 
@@ -286,7 +286,7 @@
       }
 
       button {
-        color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
+        color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
 
         &:hover {
           color: var(--s2-gray-800);
