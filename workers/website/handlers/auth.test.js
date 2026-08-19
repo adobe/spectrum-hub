@@ -96,10 +96,15 @@ const call = (request) => createSession({ url: new URL(request.url), env, reques
 const findCookie = (cookies, name) => cookies.find((cookie) => cookie.startsWith(`${name}=`));
 
 describe('createSession', () => {
-  it('returns 200 with a Set-Cookie header on success', async () => {
+  it('returns 200 and sets both the session cookie and its readable companion', async () => {
     const resp = await call(post(imsBody()));
     expect(resp.status).toBe(200);
-    expect(resp.headers.getSetCookie()).toHaveLength(1);
+    const cookies = resp.headers.getSetCookie();
+    expect(cookies).toHaveLength(2);
+    expect(findCookie(cookies, 'spectrum_session')).toBeDefined();
+    const hint = findCookie(cookies, 'spectrum_session_active');
+    expect(hint).toBeDefined();
+    expect(hint).not.toMatch(/HttpOnly/);
   });
 
   it('returns the session expiry as JSON on success', async () => {
@@ -192,7 +197,7 @@ describe('createSession', () => {
     });
     const resp = await createSession({ url: new URL(request.url), env, request });
     const cookies = resp.headers.getSetCookie();
-    expect(cookies).toHaveLength(1);
+    expect(cookies).toHaveLength(2);
     for (const cookie of cookies) { expect(cookie).not.toMatch(/Secure/); }
   });
 
@@ -489,11 +494,11 @@ describe('deleteSession', () => {
     headers: origin ? { origin } : {},
   });
 
-  it('returns 204 with a single Set-Cookie header', async () => {
+  it('returns 204 clearing both the session cookie and its companion', async () => {
     const request = del();
     const resp = await deleteSession({ url: new URL(request.url), env, request });
     expect(resp.status).toBe(204);
-    expect(resp.headers.getSetCookie()).toHaveLength(1);
+    expect(resp.headers.getSetCookie()).toHaveLength(2);
   });
 
   it('clears the spectrum_session cookie: empty value, Max-Age=0, HttpOnly', async () => {
@@ -504,6 +509,16 @@ describe('deleteSession', () => {
     expect(cookie.split('; ')[0]).toBe('spectrum_session=');
     expect(cookie).toMatch(/Max-Age=0(;|$)/);
     expect(cookie).toMatch(/HttpOnly/);
+  });
+
+  it('clears the companion cookie: empty value, Max-Age=0, not HttpOnly', async () => {
+    const request = del();
+    const resp = await deleteSession({ url: new URL(request.url), env, request });
+    const cookie = findCookie(resp.headers.getSetCookie(), 'spectrum_session_active');
+    expect(cookie).toBeDefined();
+    expect(cookie.split('; ')[0]).toBe('spectrum_session_active=');
+    expect(cookie).toMatch(/Max-Age=0(;|$)/);
+    expect(cookie).not.toMatch(/HttpOnly/);
   });
 
   it('rejects non-DELETE methods with 405', async () => {

@@ -24,9 +24,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PROFILE="${AWS_PROFILE:-spectrumHub}"
 REGION="${AWS_REGION:-us-east-2}"
-FUNCTION_NAME="${FUNCTION_NAME:-website-lambda-hello-world}"
+FUNCTION_NAME="${FUNCTION_NAME:-spectrum-prod-lambda-proxy}"
 AUTH_TYPE="${FUNCTION_URL_AUTH_TYPE:-AWS_IAM}"
 ROLE_ARN="${LAMBDA_ROLE_ARN:?Set LAMBDA_ROLE_ARN (e.g. in workers/website-lambda/deploy.env - see deploy.env.example) to an existing Lambda execution role ARN}"
+# Lambda environment variables, in AWS CLI --environment file:// format
+# ({ "Variables": { ... } }). Gitignored, so secrets stay out of the repo.
+# Pushed on both create and update; skipped (with a warning) if absent.
+ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/env.json}"
+# This proxy buffers each upstream response and base64-encodes it, so it needs
+# more than Lambda's 128 MB / 3 s defaults: image derivatives (e.g. a 3000px
+# webp) can be several MB, and when aem.live/aem.page regenerates one the round
+# trip plus encode exceeds 3 s and the Function URL returns a platform 502.
+# More memory also buys proportionally more CPU (faster fetch + encode). Timeout
+# stays at/under CloudFront's 30 s OriginReadTimeout.
+FUNCTION_MEMORY="${FUNCTION_MEMORY:-1024}"
+FUNCTION_TIMEOUT="${FUNCTION_TIMEOUT:-30}"
 
 echo "Deploying with:"
 echo "  AWS_PROFILE:    $PROFILE"
@@ -34,6 +46,8 @@ echo "  AWS_REGION:     $REGION"
 echo "  FUNCTION_NAME:  $FUNCTION_NAME"
 echo "  AUTH_TYPE:      $AUTH_TYPE"
 echo "  LAMBDA_ROLE_ARN: $ROLE_ARN"
+echo "  ENV_FILE:       $ENV_FILE$([ -f "$ENV_FILE" ] || echo ' (missing - env vars will NOT be pushed)')"
+echo "  MEMORY/TIMEOUT: ${FUNCTION_MEMORY} MB / ${FUNCTION_TIMEOUT} s"
 echo
 
 # Assemble the deployment bundle in a throwaway build dir. package.json is
@@ -67,13 +81,41 @@ if aws lambda get-function --function-name "$FUNCTION_NAME" --profile "$PROFILE"
     --zip-file "fileb://$ZIP_FILE" \
     --profile "$PROFILE" \
     --region "$REGION"
+
+  # update-function-code and update-function-configuration cannot overlap, so
+  # wait for the code update to settle before pushing configuration (memory,
+  # timeout, and env vars).
+  aws lambda wait function-updated \
+    --function-name "$FUNCTION_NAME" \
+    --profile "$PROFILE" \
+    --region "$REGION"
+  CONFIG_ARG=(--memory-size "$FUNCTION_MEMORY" --timeout "$FUNCTION_TIMEOUT")
+  if [ -f "$ENV_FILE" ]; then
+    CONFIG_ARG+=(--environment "file://$ENV_FILE")
+  else
+    echo "WARNING: $ENV_FILE not found - leaving existing Lambda env vars unchanged." >&2
+  fi
+  aws lambda update-function-configuration \
+    --function-name "$FUNCTION_NAME" \
+    "${CONFIG_ARG[@]}" \
+    --profile "$PROFILE" \
+    --region "$REGION"
 else
+  ENV_ARG=()
+  if [ -f "$ENV_FILE" ]; then
+    ENV_ARG=(--environment "file://$ENV_FILE")
+  else
+    echo "WARNING: $ENV_FILE not found - function created without env vars." >&2
+  fi
   aws lambda create-function \
     --function-name "$FUNCTION_NAME" \
     --runtime nodejs22.x \
     --handler index.handler \
     --role "$ROLE_ARN" \
+    --memory-size "$FUNCTION_MEMORY" \
+    --timeout "$FUNCTION_TIMEOUT" \
     --zip-file "fileb://$ZIP_FILE" \
+    "${ENV_ARG[@]+"${ENV_ARG[@]}"}" \
     --profile "$PROFILE" \
     --region "$REGION"
 fi

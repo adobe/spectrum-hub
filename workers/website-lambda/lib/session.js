@@ -6,6 +6,14 @@
 export const DEFAULT_MAX_AGE_MS = 86400000;
 export const DEFAULT_SESSION_COOKIE_NAME = 'spectrum_session';
 
+// A non-HttpOnly companion to the session cookie, set and cleared in lockstep
+// with it. The real session cookie is HttpOnly, so browser JS cannot observe
+// whether it exists; this readable hint lets the client detect the live
+// session (and its expiry) without a stale localStorage proxy drifting out of
+// sync. It carries only the public clamped expiry - no token, no email - and
+// the server never trusts it for gating (that reads the signed cookie only).
+export const DEFAULT_SESSION_HINT_COOKIE_NAME = 'spectrum_session_active';
+
 // A session with under a second left would be issued with Max-Age=0, which
 // the browser deletes on arrival. Refuse it rather than emit a cookie that
 // is already dead.
@@ -173,8 +181,10 @@ export const createSessionCookies = async ({ body, now, config }) => {
 
   const signed = await signToken(token, secret);
 
+  const maxAgeSeconds = Math.floor((expiresAt - now) / 1000);
+
   const sessionCookie = serializeCookie(sessionName, signed, {
-    maxAgeSeconds: Math.floor((expiresAt - now) / 1000),
+    maxAgeSeconds,
     httpOnly: true,
     secure: config.secure,
   });
@@ -183,9 +193,18 @@ export const createSessionCookies = async ({ body, now, config }) => {
     return fail(413, 'session cookie exceeds the 4096 byte browser limit');
   }
 
+  // Readable companion, same lifetime and Secure flag but NOT HttpOnly. Its
+  // value is the clamped expiry so the client can tell both that a session
+  // exists and when to refresh it, all from document.cookie.
+  const hintCookie = serializeCookie(DEFAULT_SESSION_HINT_COOKIE_NAME, String(expiresAt), {
+    maxAgeSeconds,
+    httpOnly: false,
+    secure: config.secure,
+  });
+
   // expiresAt is the clamped value, not whatever the token itself claims -
   // it is what the cookie's own Max-Age is actually good for, so a caller
   // that wants to tell the client when to expect sign-out needs this one,
   // not deriveExpiry's unclamped result.
-  return { cookies: [sessionCookie], expiresAt };
+  return { cookies: [sessionCookie, hintCookie], expiresAt };
 };

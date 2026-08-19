@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   deriveExpiry, clampExpiry, DEFAULT_MAX_AGE_MS, signToken,
   serializeCookie, createSessionCookies, MAX_COOKIE_BYTES, durationMs,
-  DEFAULT_SESSION_COOKIE_NAME, base64urlDecode, verifySignedToken, readSession,
+  DEFAULT_SESSION_COOKIE_NAME, DEFAULT_SESSION_HINT_COOKIE_NAME,
+  base64urlDecode, verifySignedToken, readSession,
 } from './session.js';
 
 const NOW = 1785812270230;
@@ -182,10 +183,26 @@ describe('serializeCookie', () => {
 });
 
 describe('createSessionCookies', () => {
-  it('returns the session cookie', async () => {
+  it('returns the session cookie and its readable companion', async () => {
     const { cookies } = await createSessionCookies({ body: imsBody(), now: NOW, config: config() });
-    expect(cookies).toHaveLength(1);
+    expect(cookies).toHaveLength(2);
     expect(byName(cookies, 'spectrum_session')).toBeDefined();
+    expect(byName(cookies, 'spectrum_session_active')).toBeDefined();
+  });
+
+  it('makes the companion cookie readable (not HttpOnly) with the clamped expiry as its value', async () => {
+    const { cookies, expiresAt } = await createSessionCookies({ body: imsBody(), now: NOW, config: config() });
+    const hint = byName(cookies, 'spectrum_session_active');
+    expect(hint).not.toContain('HttpOnly');
+    expect(hint.split('; ')[0]).toBe(`spectrum_session_active=${expiresAt}`);
+  });
+
+  it('gives the companion cookie the same Max-Age and Secure flag as the session cookie', async () => {
+    const { cookies } = await createSessionCookies({ body: imsBody(), now: NOW, config: config() });
+    const session = byName(cookies, 'spectrum_session');
+    const hint = byName(cookies, 'spectrum_session_active');
+    expect(attr(hint, 'Max-Age')).toBe(attr(session, 'Max-Age'));
+    expect(hint).toContain('Secure');
   });
 
   it('marks the session cookie HttpOnly', async () => {
@@ -281,13 +298,17 @@ describe('createSessionCookies config defaults and guards', () => {
     expect(DEFAULT_SESSION_COOKIE_NAME).toBe('spectrum_session');
   });
 
+  it('exports the exact companion cookie name', () => {
+    expect(DEFAULT_SESSION_HINT_COOKIE_NAME).toBe('spectrum_session_active');
+  });
+
   it('names the cookie correctly when the config omits it', async () => {
     const { cookies } = await createSessionCookies({
       body: imsBody(),
       now: NOW,
       config: { secret: 'test-secret', secure: true },
     });
-    expect(cookies).toHaveLength(1);
+    expect(cookies).toHaveLength(2);
     expect(byName(cookies, 'spectrum_session')).toBeDefined();
     for (const cookie of cookies) { expect(cookie).not.toContain('undefined='); }
   });
