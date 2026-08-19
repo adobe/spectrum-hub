@@ -293,25 +293,32 @@
         }
       }
 
-      .level-2-button {
+      :is(.level-2-button, .level-3-button) {
         position: relative;
       }
 
       :is(.level-2-button, .level-3-button)[aria-expanded="true"] {
         font-weight: 700;
       }
-      
-    /* TODO: add the selection indicator when a child page is selected but the parent is collapsed. 
-      .level-2-button[aria-expanded="false"]::before + .level-3-menu .level-3-list:has(a.is-current-page) {
-        content: '';
-        position: absolute;
-        inset-inline-start: -6px;
-        inset-block: 0;
-        inline-size: 2px;
-        block-size: 18px;
-        margin-block: auto;
-        background-color: var(--s2-gray-800);
-      } */
+
+      /* a child page is selected but the parent is collapsed. */
+      :is(.level-2-button, .level-3-button)[aria-expanded="false"]:has(
+        + :is(.level-3-menu, .level-4-menu) .is-current-page
+      ) {
+        font-weight: 700;
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset-inline-start: -6px;
+          inset-block: 0;
+          inline-size: 2px;
+          block-size: 18px;
+          margin-block: auto;
+          background-color: var(--s2-gray-800);
+          border-radius: 2px;
+        }
+      }
     }
 
     .level-3-menu,
