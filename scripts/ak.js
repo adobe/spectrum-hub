@@ -440,7 +440,7 @@ function decorateHeader() {
   header.className = meta;
 }
 
-async function loadNav() {
+export async function loadNav() {
   const template = getMetadata('template');
   const sitenav = getMetadata('sitenav');
   const pagenav = getMetadata('pagenav');
@@ -479,6 +479,9 @@ async function loadSession() {
   document.body.classList.add('session');
   const header = document.querySelector('header');
   if (header) { loadBlock(header); }
+  if (template !== 'marketing') {
+    document.documentElement.toggleAttribute('expand-sitenav');
+  }
   loadNav();
 }
 

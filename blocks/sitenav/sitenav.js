@@ -393,7 +393,13 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   });
 };
 
-(async () => {
+await (async () => {
+  // Only check IMS on CDN.
+  if (cdnEnv) {
+    const ims = await loadIms();
+    if (ims.anonymous) { return; }
+  }
+
   // Build the nav element
   const { sitenav, nav } = getSiteNav();
 
