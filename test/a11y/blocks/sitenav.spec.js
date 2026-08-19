@@ -62,7 +62,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
           - button "Getting started"
         - listitem:
           - button "Foundations"
-      - button "Expand navigation":
+      - button "Collapse navigation" [expanded]:
         - img
   `);
 });
