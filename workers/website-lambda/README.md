@@ -22,6 +22,8 @@ Set these on the Lambda (they are read from `process.env`):
 - `AEM_HOST_SUFFIX` — the AEM tier to proxy: `aem.live` (published, the default) or `aem.page`
   (preview). The stage Lambda (`spectrum-stage-lambda-proxy`) sets this to `aem.page`; prod leaves it
   unset.
+- `ANON_CACHE_MAX_AGE` — TTL (seconds, default 300) for edge-cached anonymous HTML / query-index.
+  Bounds how long a publish takes to show up when edge caching is on (see "Content caching").
 - Optional: `ORIGIN` (dev origin override), `ORIGIN_AUTHENTICATION`, `IMS_ENV`, `SESSION_MAX_AGE_MS`,
   `PUSH_INVALIDATION`.
 
@@ -119,43 +121,53 @@ AEM's `Cache-Control` (`DefaultTTL 0` ⇒ nothing caches unless AEM says so) and
 `set-content-caching.sh` on a distribution to enable it; `REVERT=1` puts the
 behavior back on `CachingDisabled`.
 
-**What actually caches: public static assets only.** Responses vary by viewer, but
-the Lambda already sends `no-store` on every viewer-varying response — filtered
-HTML, the query index, and gate 404s are all `private, no-store` (see
-[index.js](./index.js) `processHtmlResponse`, the query-index transform, and
-`notFound()`). So with this policy in place:
+**What caches, and how it's kept safe.** The `spectrum_session` cache key is what
+makes this safe: anonymous requests (no cookie) share one entry; authenticated
+requests (unique cookie) get their own, and their viewer-varying responses are
+`no-store` so they're never cached at all.
 
-- **Assets** (js/css/svg/fragments — public, path-determined) carry AEM's
-  `max-age … must-revalidate` and cache at the edge, shared across anonymous
-  visitors. An authenticated `/drafts/` asset (which anon gets as a `no-store` 404)
-  caches under the **cookie** key, so it can never be served to anon.
-- **HTML and `/query-index.json` still do not cache** — they stay `no-store` for
-  every viewer. Keying on `spectrum_session` is what makes the asset caching safe
-  regardless (anon and authenticated entries never collide).
+- **Assets** (js/css/svg/fragments — public, path-determined) keep AEM's
+  `max-age … must-revalidate` and cache at the edge. An authenticated `/drafts/`
+  asset (anon gets a `no-store` 404) caches under the **cookie** key, never
+  reaching anon.
+- **Anonymous HTML and `/query-index.json`** ([index.js](./index.js)
+  `processHtmlResponse` / query-index transform via `setContentCacheControl`) get
+  a **short shared TTL** — `public, max-age=<ANON_CACHE_MAX_AGE>` (default 300s,
+  env-overridable) — so a publish shows up within a few minutes **without push
+  invalidation**. `isPrivateHtml` has already 404'd private pages, so the anon body
+  is the public, audience-stripped view.
+- **Authenticated HTML / the full query index** stay `private, no-store`, and
+  **gate 404s** stay `no-store` (no negative caching).
 
-> ⚠️ **Leak-test after enabling.** Verify: an asset (e.g. `/scripts/scripts.js`)
-> caches (repeat = `X-Cache: Hit`); an anonymous `/` and `/query-index.json` stay
-> `Miss` + `no-store`; and an authenticated request (send a valid
-> `spectrum_session` cookie) never returns a cache `Hit` for a path an anonymous
-> visitor could also request.
+Assets and anon content keep AEM's **ETag**, so CloudFront's post-TTL revalidation
+is a cheap conditional `304` (skips the fetch/filter/re-encode) rather than a full
+re-fetch.
 
-### Deferred: caching anonymous HTML
+> ⚠️ **ETag caveat — invalidate on filtering-logic deploys.** The ETag tracks the
+> AEM page, not this Lambda's filtering/gating code. If you change
+> `filterAudienceBlocks` / `isPrivateHtml` / the gate without the page content
+> changing, already-cached anonymous bodies keep `304`'ing (serving the old
+> filtered output) until the page next changes. For a benign change that's fine
+> (bounded by the short TTL); for a **security-relevant** change (something that
+> should now be stripped/gated) you **must** run a one-off invalidation:
+> `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` — this
+> uses your role's permission, not a standing IAM user, so it works in the
+> klam-federated account.
 
-Caching anonymous HTML/query-index too (a bigger win) is possible — make
-`processHtmlResponse` and the query-index transform emit a cacheable
-`Cache-Control` when `!authed` (the cookie-keyed policy already isolates anon from
-authenticated, and `isPrivateHtml` 404s private pages before that point). It is
-**deferred** because cached HTML goes stale on publish and needs **push
-invalidation** to purge — an IAM user with `cloudfront:CreateInvalidation` + a
-config-service `POST …/cdn/prod.json`
-([guide](https://www.aem.live/docs/setup-byo-cdn-push-invalidation-for-cloudfront)).
-This account is klam-federated and does **not** permit the long-lived IAM keys
-that AEM's automated push invalidation requires, so anonymous HTML stays
-`no-store` for now. Revisit if a scoped `CreateInvalidation` service credential
-becomes available.
+> ⚠️ **Leak test before prod (mandatory).** With a real `spectrum_session` cookie:
+> an anonymous public page + `/query-index.json` cache (repeat = `X-Cache: Hit`)
+> with `audience-private` content stripped; the **authenticated** fetch of the same
+> URL is `no-store` and never a `Hit`; a private page is `404` for anon and real
+> content for authed, neither served to the other. If any authed request returns a
+> `Hit`, or any anon request returns private content, revert
+> (`REVERT=1 … ./set-content-caching.sh`).
 
-Note: assets also go stale on deploy, bounded by AEM's `must-revalidate` TTL
-(~60s on the `aem.page`/stage tier, ~2h on `aem.live`/prod) — CloudFront
-revalidates against the origin after that. To purge sooner after a deploy, run a
-one-off `aws cloudfront create-invalidation` yourself (this needs the permission
-on your role, not a standing IAM user).
+Future option (not needed with the short TTL): a standing push-invalidation
+credential (IAM `cloudfront:CreateInvalidation` + config-service
+`POST …/cdn/prod.json`,
+[guide](https://www.aem.live/docs/setup-byo-cdn-push-invalidation-for-cloudfront))
+would let you raise the TTL and purge instantly on publish — but the
+klam-federated account doesn't permit those long-lived keys, and the short TTL
+makes them unnecessary. Hardening option: add `Vary: Cookie` to the anonymous
+response so cookie-blind browser/proxy caches can't serve it to a signed-in
+viewer (CloudFront already keys on the cookie).

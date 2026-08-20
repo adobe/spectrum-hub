@@ -41,6 +41,29 @@ import { filterPrivateEntries, compactEntries } from './lib/query-index.js';
 
 const env = process.env;
 
+// Anonymous, cacheable content (public HTML and the filtered query index) gets a
+// short shared TTL so a publish becomes visible within a few minutes without push
+// invalidation; authenticated/private responses stay no-store. Env-overridable
+// (ANON_CACHE_MAX_AGE, seconds; default 300).
+const ANON_CACHE_MAX_AGE = (() => {
+  const n = Number(env.ANON_CACHE_MAX_AGE);
+  return Number.isInteger(n) && n > 0 ? n : 300;
+})();
+
+// Cache-Control for a post-filter content response: a short shared TTL for
+// anonymous (the body is the public, audience-stripped view, and CloudFront's
+// cache key includes spectrum_session so it can never reach an authenticated
+// viewer), no-store for authenticated/private. The AEM ETag is deliberately left
+// in place so CloudFront's post-TTL revalidation is a cheap conditional 304, not
+// a full re-fetch + re-filter. NB: the ETag tracks the AEM page, not this
+// filtering code - a change to the filtering/gating logic won't bust already
+// cached bodies until the page itself changes, so run a manual CloudFront
+// invalidation when deploying such a change (see README "Content caching").
+const setContentCacheControl = (resp, authed) => {
+  resp.headers.set('cache-control', authed ? 'private, no-store' : `public, max-age=${ANON_CACHE_MAX_AGE}`);
+  resp.headers.delete('age');
+};
+
 // no-store: many 404s here are gate decisions that vary by viewer (a private
 // page, a stripped index), so they must never be reused from a shared cache.
 const notFound = () => new Response('Not found', {
@@ -177,17 +200,24 @@ const isAuthenticated = async (request) => {
 // page) pass through untouched without reading the body. content-length and
 // content-encoding are stripped in toLambdaResponse, so re-wrapping the
 // already-read body here stays consistent.
-const processHtmlResponse = async (resp, authed) => {
+const processHtmlResponse = async (resp, authed, pageLike) => {
   const contentType = resp.headers.get('content-type') || '';
+  // Revalidation of a cached anonymous page: a 304 carries no body to filter,
+  // but its Cache-Control must still be the short anon TTL (not AEM's longer one)
+  // so the refreshed edge entry keeps its short lifetime. Only for page-like
+  // paths - asset 304s pass through untouched with AEM's own Cache-Control.
+  if (resp.status === 304 && pageLike) {
+    setContentCacheControl(resp, authed);
+    return resp;
+  }
   if (resp.status !== 200 || !contentType.includes('text/html')) { return resp; }
   const body = await resp.text();
   if (!authed && isPrivateHtml(body)) { return notFound(); }
   const filtered = filterAudienceBlocks(body, authed);
   const out = new Response(filtered, resp);
-  // This HTML was filtered for a specific viewer; never let a shared cache
-  // reuse one audience's copy for another.
-  out.headers.set('cache-control', 'private, no-store');
-  out.headers.delete('age');
+  // Filtered per viewer: anonymous gets the public view (short shared TTL),
+  // authenticated stays no-store. The cookie-keyed cache keeps them separate.
+  setContentCacheControl(out, authed);
   return out;
 };
 
@@ -199,6 +229,9 @@ const processHtmlResponse = async (resp, authed) => {
 // shape it can't recognize is a 404 for anonymous callers rather than an
 // unfiltered index. Authenticated callers see the raw body.
 const transformQueryIndex = async (resp, { removePrivate, compact }) => {
+  // A 304 (revalidation) has no body to transform; pass it through so CloudFront
+  // serves its cached filtered copy. The caller sets Cache-Control.
+  if (resp.status === 304) { return resp; }
   if (resp.status !== 200) { return removePrivate ? notFound() : resp; }
   let json;
   try {
@@ -306,21 +339,28 @@ const route = async (req) => {
   // The query-index JSON is the one 'filter' path: strip audience:private rows
   // (and the audience column) for anonymous visitors and honour ?compact=true
   // for either audience. Authed + non-compact is served untouched (the full
-  // index). Either way the full index carries private rows, so mark it
-  // uncacheable so a shared cache can't hand it to the wrong audience.
+  // index). The anonymous (filtered) response is cacheable with a short shared
+  // TTL; the authenticated full index carries private rows and stays no-store.
   if (PUBLIC_FILTER_PATHS.includes(url.pathname)) {
     const out = (!authed || compact)
       ? await transformQueryIndex(resp, { removePrivate: !authed, compact })
       : resp;
-    out.headers.set('cache-control', 'private, no-store');
-    out.headers.delete('age');
+    if (out.status === 200 || out.status === 304) {
+      setContentCacheControl(out, authed);
+    } else {
+      // Fail-closed 404 / upstream error: never cache.
+      out.headers.set('cache-control', 'no-store');
+      out.headers.delete('age');
+    }
     return out;
   }
 
   // Every other proxied HTML page is processed - not just 'gate' pages - so
   // allow-listed content (e.g. the homepage, which carries audience blocks) is
-  // filtered too. processHtmlResponse no-ops on non-HTML responses.
-  return processHtmlResponse(resp, authed);
+  // filtered too. processHtmlResponse no-ops on non-HTML responses. `pageLike`
+  // (anonymous 'gate' verdict) tells it a bodiless 304 is a page revalidation
+  // that still needs the short anon TTL, vs an asset 304 (leave AEM's TTL).
+  return processHtmlResponse(resp, authed, verdict === 'gate');
 };
 
 /*
