@@ -440,6 +440,7 @@
     mask-size: contain;
     background-color: currentcolor;
     opacity: 0.5;
+    flex-shrink: 0;
   }
 
   .status-table-sort-header:hover .status-table-sort-icon,
