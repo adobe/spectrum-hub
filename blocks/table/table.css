@@ -5,6 +5,8 @@
   --table-head-row-padding-block: 7px;
   --table-body-row-padding-block: 11px;
 
+  container-type: inline-size;
+  container-name: table-wrapper;
   margin-block: var(--s2-spacing-500) var(--s2-spacing-800);
 
   .section > .block-content:last-child & {
@@ -71,7 +73,7 @@
     position: relative;
   }
 
-  @media (width >= 900px) {
+  @container table-wrapper (width >= 650px) {
     overflow-x: auto;
 
     table {
@@ -133,29 +135,6 @@
       border-end-end-radius: var(--s2-corner-radius-300);
     }
   }
-
-  /* TODO: for designer/developer toggles */
-
-  /* .heading-toggle {
-    display: flex;
-    place-content: center;
-    justify-content: space-between;
-    margin-block: var(--s2-spacing-400);
-
-    .table-tabs {
-      display: flex;
-      align-items: center;
-      gap: var(--s2-spacing-100);
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .action-button:hover {
-      background-color: var(--s2-gray-800);
-      color: var(--sh-content-color-white);
-    }
-  } */
 
   thead tr {
     background-color: var(--s2-gray-75);
