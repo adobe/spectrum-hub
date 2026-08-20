@@ -43,6 +43,15 @@ export const sitenavIndex = JSON.stringify({
   ],
 });
 
+// Pairs with navAreasFragmentWithLevel3 — filterNavByIndex drops any leaf link whose path
+// isn't listed here, so the level-3 fixture's leaf ("Scale") needs its own entry.
+export const sitenavIndexWithLevel3 = JSON.stringify({
+  data: [
+    { path: '/getting-started', title: 'Getting started' },
+    { path: '/foundations/spacing/scale', title: 'Scale' },
+  ],
+});
+
 // start/end bracket all dates so the current event is always "found"
 export const scheduleJson = JSON.stringify({
   data: [
@@ -99,6 +108,24 @@ export const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" id="icon" viewBo
 export const navAreasFragment = `<body><header></header><main><div><ul>
   <li><p>Getting started</p><ul><li><a href="/getting-started">Getting started</a></li></ul></li>
   <li><p>Foundations</p><ul><li><a href="/foundations">Foundations</a></li></ul></li>
+</ul></div></main></body>`;
+
+// A four-level-deep variant of navAreasFragment, used only by sitenav.spec.js's level-3
+// expand-behavior coverage — kept separate so search.spec.js's snapshot (which expects
+// exactly the two flat navAreasFragment entries) is unaffected.
+export const navAreasFragmentWithLevel3 = `<body><header></header><main><div><ul>
+  <li><p>Getting started</p><ul><li><a href="/getting-started">Getting started</a></li></ul></li>
+  <li><p>Foundations</p>
+    <ul>
+      <li><p>Layout and structure</p>
+        <ul>
+          <li><p>Spacing</p>
+            <ul><li><a href="/foundations/spacing/scale">Scale</a></li></ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
 </ul></div></main></body>`;
 
 // A no-op stand-in for Adobe's real IMS script — sets window.adobeIMS with no access

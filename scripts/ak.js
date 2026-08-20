@@ -181,7 +181,7 @@ export const makePicture = (path, opts = {}) => {
 
   // Smallest rendition is served at reduced quality
   // doubles as mobile <source> and the <img> fallback.
-  const mobile = opts.dnf ? base : makeUrl({ width: 750, format, quality: 100 });
+  const mobile = opts.dnf ? base : makeUrl({ width: 750, format, quality: 80 });
 
   const picture = document.createElement('picture');
   if (opts.class) { picture.className = opts.class; }
@@ -197,7 +197,7 @@ export const makePicture = (path, opts = {}) => {
     img.sizes = 'auto';
     img.srcset = [
       `${mobile} 750w`,
-      ...sizes.map((size) => `${makeUrl({ width: size, format, quality: 100 })} ${size}w`),
+      ...sizes.map((size) => `${makeUrl({ width: size, format, quality: 80 })} ${size}w`),
     ].join(',');
 
     const source = document.createElement('source');
@@ -440,7 +440,7 @@ function decorateHeader() {
   header.className = meta;
 }
 
-async function loadNav() {
+export async function loadNav() {
   const template = getMetadata('template');
   const sitenav = getMetadata('sitenav');
   const pagenav = getMetadata('pagenav');
@@ -463,11 +463,6 @@ async function loadNav() {
 }
 
 function decorateDoc() {
-  const template = getMetadata('template');
-  if (template !== 'marketing') {
-    document.documentElement.toggleAttribute('expand-sitenav');
-  }
-
   decorateHeader();
 
   const pageId = window.location.hash?.replace('#', '');
@@ -479,7 +474,9 @@ async function loadSession() {
   document.body.classList.add('session');
   const header = document.querySelector('header');
   if (header) { loadBlock(header); }
-  loadNav();
+  if (!document.body.classList.contains('is-returning')) {
+    loadNav();
+  }
 }
 
 export async function loadArea({ area } = { area: document }) {

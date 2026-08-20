@@ -5,6 +5,7 @@ import {
   setScheme,
   makePicture,
   checkIms,
+  loadNav,
 } from './ak.js';
 
 const hostnames = ['spectrum.adobe.com'];
@@ -38,10 +39,13 @@ const env = (() => {
 
 // Setup basic state of the doc
 document.documentElement.classList.add('spectrum-edge');
-const isSession = sessionStorage.getItem('session');
-if (isSession) { document.body.classList.add('is-returning'); }
+const isReturning = sessionStorage.getItem('session');
+if (isReturning) { document.body.classList.add('is-returning'); }
 const scheme = setScheme(document.body);
 const template = getMetadata('template');
+if (template !== 'marketing') {
+  document.documentElement.toggleAttribute('expand-sitenav', true);
+}
 const breadcrumbMeta = getMetadata('breadcrumbs');
 const heroMeta = getMetadata('hero');
 
@@ -129,6 +133,10 @@ export async function loadPage() {
 
   // Preload IMS if returning visitor
   await checkIms();
+
+  if (isReturning) {
+    await loadNav();
+  }
 
   decorateBackground();
 

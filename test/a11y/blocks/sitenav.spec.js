@@ -1,7 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
 import { gotoBlock, formatViolations } from '../block-a11y.js';
-import { navAreasFragment, sitenavIndex } from '../mocks.js';
+import {
+  navAreasFragment, sitenavIndex, navAreasFragmentWithLevel3, sitenavIndexWithLevel3,
+} from '../mocks.js';
 
 const block = {
   name: 'sitenav',
@@ -15,9 +17,35 @@ const block = {
       body: navAreasFragment,
     },
     {
-      url: '**/query-index.json',
+      // sitenav.js requests '/query-index.json?compact=true' — the trailing '*' is required
+      // for Playwright's glob route matching to include the query string, otherwise this
+      // mock silently never intercepts and the real network response is used instead.
+      url: '**/query-index.json*',
       contentType: 'application/json',
       body: sitenavIndex,
+    },
+  ],
+};
+
+// Four levels deep (Foundations > Layout and structure > Spacing > Scale) so a
+// level-3-button (with its own chevron, per decorateLevel's depth === 2 || depth === 3
+// rule) actually exists to expand — see mocks.js for why this needs its own fragment/index
+// pair rather than reusing navAreasFragment/sitenavIndex.
+const levelThreeBlock = {
+  ...block,
+  routes: [
+    {
+      url: '**/fragments/nav/site-nav',
+      contentType: 'text/html',
+      body: navAreasFragmentWithLevel3,
+    },
+    {
+      // sitenav.js requests '/query-index.json?compact=true' — the trailing '*' is required
+      // for Playwright's glob route matching to include the query string, otherwise this
+      // mock silently never intercepts and the real network response is used instead.
+      url: '**/query-index.json*',
+      contentType: 'application/json',
+      body: sitenavIndexWithLevel3,
     },
   ],
 };
@@ -34,6 +62,13 @@ async function waitForNavReady(page, isMobile) {
   // getSiteNav() builds <div id="sitenav">, not .sitenav; decorateLevel adds
   // level-<depth>-list, not sitenav-list.
   await page.waitForSelector('#sitenav .level-1-list');
+}
+
+// Drills down to reveal the level-3 button without expanding it, so callers can assert
+// its own collapsed -> expanded transition independently.
+async function revealLevelThreeButton(page) {
+  await page.getByRole('button', { name: 'Foundations', exact: true }).click();
+  await page.getByRole('button', { name: 'Layout and structure', exact: true }).click();
 }
 
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
@@ -62,8 +97,54 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
           - button "Getting started"
         - listitem:
           - button "Foundations"
-      - button "Expand navigation":
+      - button "Collapse navigation" [expanded]:
         - img
+  `);
+});
+
+test(`${block.name} block with a level-3 item expanded has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
+  await gotoBlock(page, levelThreeBlock);
+  await waitForNavReady(page, isMobile);
+  await revealLevelThreeButton(page);
+  await page.getByRole('button', { name: 'Spacing', exact: true }).click();
+
+  const results = await makeAxeBuilder()
+    .disableRules(block.disableRules ?? [])
+    .analyze();
+
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} block toggles the level-3 button's own aria-expanded state and reveals its level-4 link`, async ({ page, isMobile }) => {
+  await gotoBlock(page, levelThreeBlock);
+  await waitForNavReady(page, isMobile);
+  await revealLevelThreeButton(page);
+
+  const level3Btn = page.getByRole('button', { name: 'Spacing', exact: true });
+  const level4Link = page.getByRole('link', { name: 'Scale', exact: true });
+
+  await expect(level3Btn).toHaveAttribute('aria-expanded', 'false');
+  await expect(level4Link).not.toBeVisible();
+
+  await level3Btn.click();
+
+  await expect(level3Btn).toHaveAttribute('aria-expanded', 'true');
+  await expect(level4Link).toBeVisible();
+});
+
+test(`${block.name} block matches its expected accessibility tree with a level-3 item expanded`, async ({ page, isMobile }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, levelThreeBlock);
+  await waitForNavReady(page, isMobile);
+  await revealLevelThreeButton(page);
+  await page.getByRole('button', { name: 'Spacing', exact: true }).click();
+
+  await expect(page.locator('#sitenav .level-3-button')).toMatchAriaSnapshot(`
+    - button "Spacing" [expanded]:
+      - img
   `);
 });
 

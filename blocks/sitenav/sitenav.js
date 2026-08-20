@@ -66,8 +66,8 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       btn.append(label);
     }
 
-    // Depth 2 gets a chevron for expanding
-    if (depth === 2) {
+    // Depths 2 and 3 get a chevron for expanding
+    if (depth === 2 || depth === 3) {
       const chevron = getSvgRef('chevronleft', 'icon', 10, '0 0 10 10');
       btn.append(chevron);
     }
@@ -204,6 +204,7 @@ const fetchRes = async (path) => {
 export const getSiteNav = () => {
   const sitenav = document.createElement('div');
   sitenav.id = 'sitenav';
+  sitenav.setAttribute('is-expanded', '');
 
   const nav = document.createElement('nav');
   nav.setAttribute('aria-label', DEF_SITE_NAME);
@@ -213,14 +214,14 @@ export const getSiteNav = () => {
   return { sitenav, nav };
 };
 
-const findCurrentPageInNav = (navList) => {
+export const findCurrentPageInNav = (navList) => {
   const { pathname } = window.location;
   const currentLink = [...navList.querySelectorAll('a')]
     .find((a) => a.pathname === pathname);
   if (!currentLink) { return null; }
   currentLink.classList.add('is-current-page');
 
-  [1, 2].forEach((level) => {
+  [1, 2, 3].forEach((level) => {
     const li = currentLink.closest(`.level-${level}`);
     if (!li) { return; }
     const button = li.querySelector(`.level-${level}-button`);
@@ -283,7 +284,7 @@ export const getExpandButton = async (sitenav) => {
   const btn = document.createElement('button');
   btn.id = 'sitenav-expand-btn';
   btn.classList.add('sitenav-expand-btn');
-  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-expanded', String(sitenav.hasAttribute('is-expanded')));
   btn.setAttribute('aria-controls', sitenav.id);
 
   const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');

@@ -10,6 +10,7 @@ const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
   syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
+  findCurrentPageInNav,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -54,6 +55,7 @@ describe('sitenav block', () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     document.body.innerHTML = '';
+    sessionStorage.clear();
   });
 
   afterEach(async () => {
@@ -73,6 +75,11 @@ describe('sitenav block', () => {
       expect(nav.tagName).to.equal('NAV');
       expect(nav.getAttribute('aria-label')).to.equal('Spectrum Hub');
       expect(nav.parentElement).to.equal(sitenav);
+    });
+
+    it('starts expanded by default', () => {
+      const { sitenav } = getSiteNav();
+      expect(sitenav.hasAttribute('is-expanded')).to.be.true;
     });
   });
 
@@ -175,6 +182,72 @@ describe('sitenav block', () => {
       expect(secondMenu.id).to.equal('overview-2');
       expect(firstBtn.getAttribute('aria-controls')).to.equal(firstMenu.id);
       expect(secondBtn.getAttribute('aria-controls')).to.equal(secondMenu.id);
+    });
+  });
+
+  describe('decorateLevel — depth-3 toggle buttons match depth-2 treatment', () => {
+    function buildFourLevelList() {
+      return buildNavList(`
+        <ul>
+          <li>
+            <p>Foundations</p>
+            <ul>
+              <li>
+                <p>Layout and structure</p>
+                <ul>
+                  <li>
+                    <p>Spacing</p>
+                    <ul>
+                      <li>
+                        <p>Overview</p>
+                        <ul><li><a href="/x">Intro</a></li></ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+    }
+
+    it('gives a depth-3 button the same expanding chevron icon as depth-2, but stops there', () => {
+      const ul = buildFourLevelList();
+      decorateLevel(ul, 1);
+
+      const level1Btn = ul.querySelector('.level-1-button');
+      const level2Btn = ul.querySelector('.level-2-button');
+      const level3Btn = ul.querySelector('.level-3-button');
+      const level4Btn = ul.querySelector('.level-4-button');
+
+      expect(level1Btn.querySelector('.icon')).to.be.null;
+      expect(level2Btn.querySelector('.icon')).to.not.be.null;
+      expect(level3Btn.querySelector('.icon')).to.not.be.null;
+      expect(level4Btn.querySelector('.icon')).to.be.null;
+    });
+
+    it('toggles aria-expanded on the depth-3 button independently, same as depth-2', () => {
+      const ul = buildFourLevelList();
+      decorateLevel(ul, 1);
+      const level3Btn = ul.querySelector('.level-3-button');
+
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('false');
+      level3Btn.click();
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('true');
+      level3Btn.click();
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('keeps the depth-3 button immediately followed by its level-4-menu wrapper', () => {
+      const ul = buildFourLevelList();
+      decorateLevel(ul, 1);
+      const level3Btn = ul.querySelector('.level-3-button');
+      const level4Menu = ul.querySelector('.level-4-menu');
+
+      expect(level3Btn.nextElementSibling).to.equal(level4Menu);
+      expect(level4Menu.classList.contains('can-expand')).to.be.true;
+      expect(level3Btn.getAttribute('aria-controls')).to.equal(level4Menu.id);
     });
   });
 
@@ -517,6 +590,75 @@ describe('sitenav block', () => {
     });
   });
 
+  describe('findCurrentPageInNav', () => {
+    const originalUrl = window.location.pathname + window.location.search + window.location.hash;
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    function buildFourLevelNavList() {
+      return buildNavList(`
+        <ul>
+          <li>
+            <p>Foundations</p>
+            <ul>
+              <li>
+                <p>Layout and structure</p>
+                <ul>
+                  <li>
+                    <p>Spacing</p>
+                    <ul>
+                      <li><a href="/foundations/layout-and-structure/spacing/overview">Overview</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+    }
+
+    it('marks the link matching the current path as the current page', () => {
+      window.history.pushState({}, '', '/foundations/layout-and-structure/spacing/overview');
+      const navList = buildFourLevelNavList();
+      decorateLevel(navList, 1);
+
+      const currentLink = findCurrentPageInNav(navList);
+
+      expect(currentLink.classList.contains('is-current-page')).to.be.true;
+      expect(currentLink.textContent.trim()).to.equal('Overview');
+    });
+
+    it('expands the level-1, level-2, and level-3 ancestor buttons so a level-4 current page is visible', () => {
+      window.history.pushState({}, '', '/foundations/layout-and-structure/spacing/overview');
+      const navList = buildFourLevelNavList();
+      decorateLevel(navList, 1);
+
+      findCurrentPageInNav(navList);
+
+      const level1Btn = navList.querySelector('.level-1-button');
+      const level2Btn = navList.querySelector('.level-2-button');
+      const level3Btn = navList.querySelector('.level-3-button');
+
+      expect(level1Btn.getAttribute('aria-expanded')).to.equal('true');
+      expect(level2Btn.getAttribute('aria-expanded')).to.equal('true');
+      expect(level3Btn.getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('returns null and marks nothing when no link matches the current path', () => {
+      window.history.pushState({}, '', '/nonexistent');
+      const navList = buildFourLevelNavList();
+      decorateLevel(navList, 1);
+
+      const currentLink = findCurrentPageInNav(navList);
+
+      expect(currentLink).to.be.null;
+      expect(navList.querySelector('.is-current-page')).to.be.null;
+    });
+  });
+
   describe('getExpandButton — accessible name and state', () => {
     it('has an accessible label, aria-controls, and starts collapsed', async () => {
       stubMatchMedia(sandbox, false);
@@ -544,6 +686,20 @@ describe('sitenav block', () => {
       const tooltip = sitenav.querySelector('swc-tooltip');
       expect(tooltip.getAttribute('for')).to.equal(btn.id);
       expect(tooltip.textContent).to.equal('Expand navigation');
+    });
+
+    it('starts expanded when the sitenav already carries is-expanded', async () => {
+      stubMatchMedia(sandbox, false);
+      stubIconFetch(sandbox);
+      const sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      sitenav.setAttribute('is-expanded', '');
+      document.body.append(sitenav);
+
+      const btn = await getExpandButton(sitenav);
+
+      expect(btn.getAttribute('aria-label')).to.equal('Collapse navigation');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
     });
   });
 

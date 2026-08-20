@@ -1,6 +1,6 @@
 #sitenav {
   --sitenav-blur: 32px;
-  --sitenav-corner-radius: var(--s2-corner-radius-850);
+  --sitenav-corner-radius: var(--s2-corner-radius-950);
   --sitenav-children-transition-duration: 160ms;
   --sitenav-children-transition-ease: cubic-bezier(0.23, 1, 0.32, 1);
 
@@ -20,8 +20,12 @@
   top: var(--sh-header-height);
   font-size: var(--s2-component-m-regular-font-size);
   white-space: nowrap;
-  color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
+  color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
   z-index: 100;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 
   nav {
     position: relative;
@@ -40,6 +44,7 @@
       inset: 0;
       z-index: -1;
       backdrop-filter: blur(var(--sitenav-blur));
+      border-radius: var(--sitenav-corner-radius);
       pointer-events: none;
       transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
     }
@@ -55,7 +60,7 @@
   }
 
   a {
-    color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
+    color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
     text-decoration: none;
     outline: none;
 
@@ -102,7 +107,7 @@
     font-size: inherit;
 
     &:hover,
-    &[aria-expanded="true"] {
+    &:not(.sitenav-expand-btn)[aria-expanded="true"] {
       color: var(--s2-gray-800);
 
       svg {
@@ -144,9 +149,10 @@
       opacity: 1;
     }
 
-    /* Only let a level-3 sub-list re-assert visibility:visible (see
-    .level-3-menu) while its own level-2-menu is the active/visible one. */
-    button[aria-expanded="true"] + .level-3-menu {
+    /* Only let a level-3 or level-4 sub-list re-assert visibility:visible
+    (see .level-3-menu/.level-4-menu) while its own level-2-menu is the
+    active/visible one. */
+    button[aria-expanded="true"] + :is(.level-3-menu, .level-4-menu) {
       visibility: visible;
     }
   }
@@ -215,7 +221,6 @@
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
-    scroll-behavior: smooth;
 
     /* Anything taller scrolls internally instead of running past the edge of the screen. */
     @media (width < 900px) {
@@ -282,35 +287,43 @@
       }
 
       button {
-        color: color-mix(in srgb, var(--s2-gray-700) 70%, transparent);
+        color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
 
         &:hover {
           color: var(--s2-gray-800);
         }
       }
 
-      .level-2-button {
+      :is(.level-2-button, .level-3-button) {
         position: relative;
       }
 
-      .level-2-button[aria-expanded="true"] {
+      :is(.level-2-button, .level-3-button)[aria-expanded="true"] {
         font-weight: 700;
       }
-      
-    /* TODO: add the selection indicator when a child page is selected but the parent is collapsed. 
-      .level-2-button[aria-expanded="false"]::before + .level-3-menu .level-3-list:has(a.is-current-page) {
-        content: '';
-        position: absolute;
-        inset-inline-start: -6px;
-        inset-block: 0;
-        inline-size: 2px;
-        block-size: 18px;
-        margin-block: auto;
-        background-color: var(--s2-gray-800);
-      } */
+
+      /* a child page is selected but the parent is collapsed. */
+      :is(.level-2-button, .level-3-button)[aria-expanded="false"]:has(
+        + :is(.level-3-menu, .level-4-menu) .is-current-page
+      ) {
+        font-weight: 700;
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset-inline-start: -6px;
+          inset-block: 0;
+          inline-size: 2px;
+          block-size: 18px;
+          margin-block: auto;
+          background-color: var(--s2-gray-800);
+          border-radius: 2px;
+        }
+      }
     }
 
-    .level-3-menu {
+    .level-3-menu,
+    .level-4-menu {
       display: grid;
       grid-template-rows: 0fr;
 
@@ -329,8 +342,9 @@
     }
 
     .level-4-list {
-      margin-inline-start: var(--s2-spacing-300);
-      padding: 0;
+      padding-inline-start: var(--s2-spacing-300);
+      list-style: none;
+      overflow: hidden;
     }
 
     button {
@@ -359,7 +373,7 @@
           transform: rotate(90deg);
         }
 
-        & + .level-3-menu {
+        & + :is(.level-3-menu, .level-4-menu) {
           grid-template-rows: 1fr;
         }
       }
@@ -395,12 +409,6 @@
   sitenav-expand-btn inside it to reveal labels, same as desktop. */
   .sitenav-trigger-btn {
     display: none;
-    justify-content: center;
-    align-items: center;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    background-color: var(--s2-gray-1000);
 
     > svg,
     &[aria-expanded="true"] svg {
@@ -419,6 +427,12 @@
       inset-block-end: var(--s2-spacing-400);
       z-index: 1;
       border-radius: var(--s2-corner-radius-600);
+      justify-content: center;
+      align-items: center;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      background-color: var(--s2-gray-1000);
 
       &::before {
         content: "";
@@ -432,9 +446,14 @@
     }
   }
 
-  &[is-expanded] {
-    --sitenav-corner-radius: var(--s2-corner-radius-950);
+  &:not([is-expanded]) {
+    --sitenav-corner-radius: var(--s2-corner-radius-850);
     --expand-panel-width: 5px;
+
+    /* Only the top level gets the 20px corner radius, second-level menu remains 32px */
+    .level-2-menu {
+      --sitenav-corner-radius: var(--s2-corner-radius-950);
+    }
 
     .sitenav-expand-btn:hover {
       --expand-panel-width: 1.5px;
@@ -449,6 +468,9 @@
     }
 
     &[is-open] {
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
       position: fixed;
       z-index: 300;
       top: auto;
@@ -478,10 +500,15 @@ html:has(meta[name="template"][content="marketing"]) {
 
 /* Lifted direct from prototype */
 .light-scheme {
-  nav::before, .level-2-menu, .sitenav-expand-btn::before {
+  .level-2-menu, .sitenav-expand-btn::before {
     box-shadow: inset 0 0 3px #fff, 0 0 .5px #0000001a, 0 9px 94.8px #0000000d;
     background-color: #ffffff80;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+  }
+  
+  nav::before {
+    background-color: #fff;
+    box-shadow: inset 0 0 3px #fff, 0 0 .5px #0000001a, 0 9px 94.8px #0000000d;
   }
 }
 
