@@ -403,12 +403,16 @@ div[data-status],
 
   > .default-content {
     max-width: var(--se-grid-container-width);
-    margin: 0 auto;
+    margin: 0;
 
     > .btn-group {
       display: flex;
       justify-content: var(--section-justify-align);
       gap: var(--s2-spacing-200);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin-block-start: 0;
     }
   }
 
@@ -528,7 +532,7 @@ div[data-status],
 
     main > .section {
       &:not(:has(.page-hero)) {
-        padding-block: 120px;
+        padding-block: 80px;
         border-block-end: 1px solid rgb(from var(--s2-gray-1000) r g b / 8%);
       }
     }
