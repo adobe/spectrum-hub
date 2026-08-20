@@ -66,6 +66,10 @@
         "context": "Stable",
         "page": "color-handle-and-loupe",
         "originalName": "ColorHandle"
+      },
+      "figma": {
+        "status": "available",
+        "note": "See color handle."
       }
     }
   },
