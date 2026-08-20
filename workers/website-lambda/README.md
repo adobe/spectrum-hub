@@ -107,3 +107,55 @@ Deliberate choices: **no** origin-request policy on the media behavior (so
 push invalidation (immutable media never needs it). If the site ever enables
 token-based origin auth, set `ORIGIN_AUTHENTICATION` (Lambda path) and add an
 `Authorization: token hlx_…` header to the media origin.
+
+## Content caching (the default/Lambda behavior)
+
+The default behavior (HTML, `/query-index.json`, static assets) proxies the
+Lambda. It uses a custom **`spectrum-content`** cache policy (created by
+[`set-content-caching.sh`](./set-content-caching.sh) / baked into
+`setup-preview-distribution.sh`) instead of `CachingDisabled`. The policy honours
+AEM's `Cache-Control` (`DefaultTTL 0` ⇒ nothing caches unless AEM says so) and
+**keys the cache on the `spectrum_session` cookie** (+ all query strings). Run
+`set-content-caching.sh` on a distribution to enable it; `REVERT=1` puts the
+behavior back on `CachingDisabled`.
+
+**What actually caches: public static assets only.** Responses vary by viewer, but
+the Lambda already sends `no-store` on every viewer-varying response — filtered
+HTML, the query index, and gate 404s are all `private, no-store` (see
+[index.js](./index.js) `processHtmlResponse`, the query-index transform, and
+`notFound()`). So with this policy in place:
+
+- **Assets** (js/css/svg/fragments — public, path-determined) carry AEM's
+  `max-age … must-revalidate` and cache at the edge, shared across anonymous
+  visitors. An authenticated `/drafts/` asset (which anon gets as a `no-store` 404)
+  caches under the **cookie** key, so it can never be served to anon.
+- **HTML and `/query-index.json` still do not cache** — they stay `no-store` for
+  every viewer. Keying on `spectrum_session` is what makes the asset caching safe
+  regardless (anon and authenticated entries never collide).
+
+> ⚠️ **Leak-test after enabling.** Verify: an asset (e.g. `/scripts/scripts.js`)
+> caches (repeat = `X-Cache: Hit`); an anonymous `/` and `/query-index.json` stay
+> `Miss` + `no-store`; and an authenticated request (send a valid
+> `spectrum_session` cookie) never returns a cache `Hit` for a path an anonymous
+> visitor could also request.
+
+### Deferred: caching anonymous HTML
+
+Caching anonymous HTML/query-index too (a bigger win) is possible — make
+`processHtmlResponse` and the query-index transform emit a cacheable
+`Cache-Control` when `!authed` (the cookie-keyed policy already isolates anon from
+authenticated, and `isPrivateHtml` 404s private pages before that point). It is
+**deferred** because cached HTML goes stale on publish and needs **push
+invalidation** to purge — an IAM user with `cloudfront:CreateInvalidation` + a
+config-service `POST …/cdn/prod.json`
+([guide](https://www.aem.live/docs/setup-byo-cdn-push-invalidation-for-cloudfront)).
+This account is klam-federated and does **not** permit the long-lived IAM keys
+that AEM's automated push invalidation requires, so anonymous HTML stays
+`no-store` for now. Revisit if a scoped `CreateInvalidation` service credential
+becomes available.
+
+Note: assets also go stale on deploy, bounded by AEM's `must-revalidate` TTL
+(~60s on the `aem.page`/stage tier, ~2h on `aem.live`/prod) — CloudFront
+revalidates against the origin after that. To purge sooner after a deploy, run a
+one-off `aws cloudfront create-invalidation` yourself (this needs the permission
+on your role, not a standing IAM user).
