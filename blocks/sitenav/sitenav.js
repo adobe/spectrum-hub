@@ -1,4 +1,4 @@
-import { loadStyle, loadArea, toClassName, getConfig } from '../../scripts/ak.js';
+import { loadStyle, loadArea, toClassName, getConfig, getMetadata } from '../../scripts/ak.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
@@ -202,9 +202,14 @@ const fetchRes = async (path) => {
 };
 
 export const getSiteNav = () => {
+  const template = getMetadata('template');
+
   const sitenav = document.createElement('div');
   sitenav.id = 'sitenav';
-  sitenav.setAttribute('is-expanded', '');
+
+  if (template === 'marketing') {
+    sitenav.toggleAttribute('is-expanded', true);
+  }
 
   const nav = document.createElement('nav');
   nav.setAttribute('aria-label', DEF_SITE_NAME);
