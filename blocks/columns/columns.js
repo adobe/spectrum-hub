@@ -5,6 +5,13 @@ function isEmptyCol(col) {
   return !col.textContent.trim() && !col.querySelector('picture, img');
 }
 
+/* Marks the img so .col-image's fallback background (see columns.css) only
+ * shows once the browser confirms it can't render the image */
+function watchImageError(media) {
+  const img = media.matches('img') ? media : media.querySelector('img');
+  img?.addEventListener('error', () => img.classList.add('img-error'), { once: true });
+}
+
 /* The fixed-size image crop box lives on this wrapper (not .col directly) so a
  * caption can sit below it without being clipped by the box's own overflow. */
 function wrapColumnImage(col) {
@@ -14,6 +21,7 @@ function wrapColumnImage(col) {
   figure.className = 'col-image';
   media.replaceWith(figure);
   figure.append(media);
+  watchImageError(media);
   return figure;
 }
 

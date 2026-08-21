@@ -107,8 +107,13 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; /* image fallback */
     box-sizing: border-box;
+
+    /* Only shows once the img itself reports it can't render (see
+    watchImageError in columns.js) */
+    &:has(img.img-error) {
+      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
+    }
 
     picture {
       display: flex;
@@ -126,6 +131,11 @@
       block-size: auto;
       object-fit: cover;
       aspect-ratio: auto;
+
+      /* Hides the browser's native broken-image glyph/alt text */
+      &.img-error {
+        opacity: 0;
+      }
     }
   }
 
