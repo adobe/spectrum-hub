@@ -19,12 +19,20 @@ function findIndicatorType(cell) {
   return match ? INDICATOR_TYPES[match[1]] : undefined;
 }
 
+/* Marks the img so the panel's fallback background (see usage.css) only
+ * shows once the browser confirms it can't render the image */
+function watchImageError(figure) {
+  const img = figure.querySelector('img');
+  img?.addEventListener('error', () => img.classList.add('img-error'), { once: true });
+}
+
 function buildPanel(mediaCell, captionCell, indicatorCell) {
   const type = findIndicatorType(indicatorCell) ?? 'do';
 
   const figure = document.createElement('figure');
   figure.className = `usage-panel usage-panel-${type}`;
   if (mediaCell) { figure.append(...mediaCell.childNodes); }
+  watchImageError(figure);
 
   const badge = document.createElement('span');
   badge.className = 'usage-indicator';
