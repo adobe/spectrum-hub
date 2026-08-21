@@ -6,6 +6,10 @@ describe('scripts.js', () => {
     it('adds spectrum-edge class to document.documentElement', () => {
       expect(document.documentElement.classList.contains('spectrum-edge')).to.be.true;
     });
+
+    it('sets lang="en" on document.documentElement for the root (non-localized) site', () => {
+      expect(document.documentElement.lang).to.equal('en');
+    });
   });
 
   describe('decorateArea — eager image loading', () => {
