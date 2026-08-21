@@ -84,13 +84,9 @@ from the DOM and the accessibility tree (see page-nav.js). */
 }
 
 /* Headings opted-in by the block (see init() in page-nav.js) get scroll-margin so anchor scrolls
-clear the sticky chrome. Applied at every width because direct hash links still resolve even where the
-page-nav itself is absent: below 900px only the site header (and any collapsed sitenav summary) needs
-clearing; at >=900px the page-nav lives in the side rail, so only the site header matters. */
-.page-nav-target {
-  scroll-margin-block-start: calc(var(--sh-header-height, 56px) + var(--sitenav-summary-height, 0px)); /* TODO: account for height of the collapsed sitenav */
-
-  @media (width >= 900px) {
+clear the sticky chrome. At width >=900px the page-nav lives in the side rail, so only the site header matters. */
+@media (width >= 900px) {
+  .page-nav-target {
     scroll-margin-block-start: var(--sh-header-height, 56px);
   }
 }
