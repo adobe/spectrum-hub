@@ -266,12 +266,23 @@ const formatRequest = async (request, url) => {
   }
 
   const req = new Request(aemUrl, request);
-  // x-forwarded-host tells aem.live the public hostname (for absolute URLs,
-  // redirects, sitemaps). Behind CloudFront the request's own Host is the
-  // Lambda Function URL, not the public domain - url.host already resolves to
-  // the CloudFront-sent X-Forwarded-Host when that origin custom header is
-  // configured, falling back to the Function URL host otherwise.
-  req.headers.set('x-forwarded-host', url.host);
+  // x-forwarded-host tells AEM the public hostname it stamps into absolute URLs
+  // (canonical, og:url, redirects, sitemaps). It MUST be a trusted value and
+  // never the viewer's own Host / X-Forwarded-Host: AEM reflects it into the
+  // served HTML, and CloudFront caches the anonymous result WITHOUT keying on
+  // it, so honouring the request header lets an attacker poison the shared edge
+  // cache (canonical/redirects pointing at their domain). Use the configured
+  // PUBLIC_HOST; for a local dev origin (no shared cache) the request host is
+  // fine. Otherwise drop the header so AEM falls back to the origin Host (its
+  // own aem.live hostname) rather than a client-controlled value. NB: `request`
+  // may already carry a viewer-supplied x-forwarded-host, so this always
+  // overwrites or deletes it - never leaves the client's value in place.
+  const forwardedHost = env.PUBLIC_HOST || (origin ? url.host : '');
+  if (forwardedHost) {
+    req.headers.set('x-forwarded-host', forwardedHost);
+  } else {
+    req.headers.delete('x-forwarded-host');
+  }
 
   // The session cookie is the worker's own credential; no upstream (aem.live
   // or a local `aem up`) needs any browser cookie, so drop the whole header

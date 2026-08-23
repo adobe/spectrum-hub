@@ -22,6 +22,14 @@ Set these on the Lambda (they are read from `process.env`):
 - `AEM_HOST_SUFFIX` — the AEM tier to proxy: `aem.live` (published, the default) or `aem.page`
   (preview). The stage Lambda (`spectrum-stage-lambda-proxy`) sets this to `aem.page`; prod leaves it
   unset.
+- `PUBLIC_HOST` — the site's public hostname (e.g. `d2fh4e6818mjc6.cloudfront.net`). Forwarded to AEM
+  as `X-Forwarded-Host`, which AEM stamps into absolute URLs (canonical, `og:url`, redirects). **This
+  MUST be a trusted, configured value** — the Lambda never forwards the viewer's own
+  `Host`/`X-Forwarded-Host`, because AEM reflects it into the HTML and CloudFront caches the anonymous
+  result without keying on it, so trusting the request header would let an attacker poison the shared
+  edge cache. Unset ⇒ the header is dropped and AEM falls back to its own origin host (still not
+  client-controlled, just a less-correct canonical). Set it to the real public domain once one fronts
+  the distribution.
 - `ANON_CACHE_MAX_AGE` — TTL (seconds, default 300) for edge-cached anonymous HTML / query-index.
   Bounds how long a publish takes to show up when edge caching is on (see "Content caching").
 - Optional: `ORIGIN` (dev origin override), `ORIGIN_AUTHENTICATION`, `IMS_ENV`, `SESSION_MAX_AGE_MS`,
