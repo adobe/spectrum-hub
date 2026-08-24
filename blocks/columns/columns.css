@@ -101,7 +101,7 @@
     display: flex;
     margin: 0;
     border-radius: var(--image-corner-radius);
-    min-inline-size: var(--image-size);
+    min-inline-size: minmax(100%, var(--image-size));
     block-size: auto;
     max-inline-size: var(--image-size);
     align-items: center;
@@ -255,12 +255,8 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
   
   &.grid-layout-2 {
-    --image-size: var(--s-image-size);
-
     @container columns (width >= 800px) {
       .grid-container {
-        --image-size: var(--m-image-size);
-
         grid-template-columns: repeat(2, 1fr);
       }
 
@@ -271,8 +267,6 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
 
   &.grid-layout-3 {
-    --image-size: var(--s-image-size);
-
     @container columns (width >= 1000px) {
       .grid-container {
         grid-template-columns: repeat(3, 1fr);
