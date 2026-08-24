@@ -208,6 +208,10 @@
     text-align: center;
   }
 
+  &.centered .col {
+    align-items: center;
+  }
+
   &.image-right {
     @media (width >= 600px) {
       /* image-right flips the column sizing */
