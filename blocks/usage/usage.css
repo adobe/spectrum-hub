@@ -86,16 +86,26 @@
     gap: var(--s2-spacing-100);
 
     picture {
-      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
       display: block;
       overflow: hidden;
       border-radius: 32px;
+
+      /* Only shows once the img itself reports it can't render (see
+      watchImageError in usage.js) */
+      &:has(img.img-error) {
+        background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
+      }
     }
 
     img {
       display: block;
       inline-size: 100%;
       block-size: auto;
+
+      /* Hides the browser's native broken-image glyph/alt text */
+      &.img-error {
+        opacity: 0;
+      }
     }
 
     @container usage (width >= 800px) {

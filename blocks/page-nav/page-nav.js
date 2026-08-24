@@ -198,15 +198,15 @@ function watchScrollSpy(headings, linkById) {
     linkById.set(h.id, a);
   });
 
-  // Append the back-to-top item after the section links.
-  if (h1) {
-    const topLi = document.createElement('li');
-    const topLink = document.createElement('a');
-    topLink.href = `#${h1.id}`;
-    topLink.textContent = 'Back to top';
-    topLi.append(topLink);
-    list.append(topLi);
-  }
+  // TODO: Revisit the back-to-top items after the section links.
+  // if (h1) {
+  //   const topLi = document.createElement('li');
+  //   const topLink = document.createElement('a');
+  //   topLink.href = `#${h1.id}`;
+  //   topLink.textContent = 'Back to top';
+  //   topLi.append(topLink);
+  //   list.append(topLi);
+  // }
 
   pageNav.append(list);
 

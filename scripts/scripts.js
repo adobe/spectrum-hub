@@ -129,6 +129,7 @@ export async function loadPage() {
     decorateArea,
     cdnEnv,
     env,
+    locales: { '': { lang: 'en' } },
   });
 
   // Preload IMS if returning visitor

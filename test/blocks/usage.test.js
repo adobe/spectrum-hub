@@ -189,6 +189,20 @@ describe('usage block', () => {
       expect(panel.querySelector('.usage-indicator')).to.exist;
     });
 
+    it('marks the img as errored (revealing the fallback background) once it fails to load', () => {
+      const img = el.querySelector('.usage-panel img');
+      expect(img.classList.contains('img-error')).to.be.false;
+
+      img.dispatchEvent(new Event('error'));
+
+      expect(img.classList.contains('img-error')).to.be.true;
+    });
+
+    it('does not mark the img as errored while it is merely loading', () => {
+      const img = el.querySelector('.usage-panel img');
+      expect(img.classList.contains('img-error')).to.be.false;
+    });
+
     it('gives the indicator badge an accessible name', () => {
       const badge = el.querySelector('.usage-indicator');
       const label = badge.querySelector('.visually-hidden');

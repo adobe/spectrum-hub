@@ -403,12 +403,16 @@ div[data-status],
 
   > .default-content {
     max-width: var(--se-grid-container-width);
-    margin: 0 auto;
+    margin: 0;
 
     > .btn-group {
       display: flex;
       justify-content: var(--section-justify-align);
       gap: var(--s2-spacing-200);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin-block-start: 0;
     }
   }
 
@@ -441,7 +445,7 @@ div[data-status],
     --sitenav-inline-end-margin: 56px;
     --sitenav-nav-collapsed-width: 56px;
     --sitenav-nav-expanded-width: 180px;
-    --sitenav-nav-width: var(--sitenav-nav-expanded-width);
+    --sitenav-nav-width: var(--sitenav-nav-collapsed-width);
     --sitenav-gap: 6px;
     --sitenav-level-2-width: 0;
     --sitenav-level-2-expanded-width: 264px;
@@ -494,6 +498,7 @@ div[data-status],
     &:has(meta[name="template"][content="marketing"]) {
       --sitenav-track-width: auto;
       --pagenav-track-width: auto;
+      --sitenav-nav-width: var(--sitenav-nav-expanded-width);
       --se-heading-color: var(--s2-gray-1000);
 
       .section h1 {
@@ -528,7 +533,7 @@ div[data-status],
 
     main > .section {
       &:not(:has(.page-hero)) {
-        padding-block: 120px;
+        padding-block: 80px;
         border-block-end: 1px solid rgb(from var(--s2-gray-1000) r g b / 8%);
       }
     }
@@ -552,6 +557,7 @@ div[data-status],
     /* keeps the space between sections but hides the divider line */
     main > .section.no-divider {
       border-block-end: none;
+      padding-block: 40px;
     }
 
     &[expand-sitenav],
@@ -561,6 +567,10 @@ div[data-status],
       &:has(#sitenav):not(:has(#sitenav .level-1-button[aria-expanded="true"])) {
         --sitenav-level-2-width: 0;
       }
+    }
+
+    &:has(#sitenav[is-expanded]) {
+      --sitenav-nav-width: var(--sitenav-nav-expanded-width);
     }
 
     &:has(#sitenav):not(:has(#sitenav[is-expanded])) {

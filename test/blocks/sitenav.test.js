@@ -49,6 +49,15 @@ function stubIconFetch(sandbox) {
   }));
 }
 
+function setMeta(name, content) {
+  document.head.querySelector(`meta[name="${name}"]`)?.remove();
+  if (content === undefined) { return; }
+  const meta = document.createElement('meta');
+  meta.name = name;
+  meta.content = content;
+  document.head.append(meta);
+}
+
 describe('sitenav block', () => {
   let sandbox;
 
@@ -65,6 +74,7 @@ describe('sitenav block', () => {
     await Promise.all(
       [...document.querySelectorAll('swc-tooltip')].map((tooltip) => tooltip.updateComplete),
     );
+    setMeta('template', undefined);
     sandbox.restore();
   });
 
@@ -77,7 +87,19 @@ describe('sitenav block', () => {
       expect(nav.parentElement).to.equal(sitenav);
     });
 
-    it('starts expanded by default', () => {
+    it('starts collapsed when the page has no marketing template', () => {
+      const { sitenav } = getSiteNav();
+      expect(sitenav.hasAttribute('is-expanded')).to.be.false;
+    });
+
+    it('starts collapsed for a non-marketing template (e.g. component pages)', () => {
+      setMeta('template', 'component');
+      const { sitenav } = getSiteNav();
+      expect(sitenav.hasAttribute('is-expanded')).to.be.false;
+    });
+
+    it('starts expanded when the page has the marketing template', () => {
+      setMeta('template', 'marketing');
       const { sitenav } = getSiteNav();
       expect(sitenav.hasAttribute('is-expanded')).to.be.true;
     });

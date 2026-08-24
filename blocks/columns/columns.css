@@ -2,11 +2,10 @@
 .columns {
   --columns-gap: 56px;
   --image-corner-radius: 24px;
-  --xs-image-size: 120px;
+  --xs-image-size: 80px;
   --s-image-size: 316px;
   --m-image-size: 502px;
 
-  max-inline-size: var(--se-grid-container-width);
   inline-size: 100%;
   margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
   container-type: inline-size;
@@ -101,14 +100,19 @@
     display: flex;
     margin: 0;
     border-radius: var(--image-corner-radius);
-    min-inline-size: var(--image-size);
+    min-inline-size: minmax(100%, var(--image-size));
     block-size: auto;
     max-inline-size: var(--image-size);
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain; /* image fallback */
     box-sizing: border-box;
+
+    /* Only shows once the img itself reports it can't render (see
+    watchImageError in columns.js) */
+    &:has(img.img-error) {
+      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
+    }
 
     picture {
       display: flex;
@@ -126,6 +130,11 @@
       block-size: auto;
       object-fit: cover;
       aspect-ratio: auto;
+
+      /* Hides the browser's native broken-image glyph/alt text */
+      &.img-error {
+        opacity: 0;
+      }
     }
   }
 
@@ -199,6 +208,10 @@
     text-align: center;
   }
 
+  &.centered .col {
+    align-items: center;
+  }
+
   &.image-right {
     @media (width >= 600px) {
       /* image-right flips the column sizing */
@@ -245,12 +258,8 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
   
   &.grid-layout-2 {
-    --image-size: var(--s-image-size);
-
     @container columns (width >= 800px) {
       .grid-container {
-        --image-size: var(--m-image-size);
-
         grid-template-columns: repeat(2, 1fr);
       }
 
@@ -261,8 +270,6 @@ Large screens: N-column grid driven by container queries on the inner grid wrapp
   }
 
   &.grid-layout-3 {
-    --image-size: var(--s-image-size);
-
     @container columns (width >= 1000px) {
       .grid-container {
         grid-template-columns: repeat(3, 1fr);

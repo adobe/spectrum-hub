@@ -4,6 +4,8 @@
   --status-table-cell-padding-block: 18px;
   --status-table-cell-padding-inline: 20px;
 
+  container-type: inline-size;
+  container-name: status-table-wrapper;
   margin-block: var(--s2-spacing-500) var(--s2-spacing-1000);
 
   .status-table-table {
@@ -156,7 +158,10 @@
     overflow: auto;
     padding: var(--s2-spacing-100);
     margin: calc(var(--s2-spacing-100) * -1);
+    min-inline-size: 150px; /* ✨ magic number */
+  }
 
+  @container status-table-wrapper (width >= 650px) {
     .status-table-table {
       border-collapse: separate;
       border-spacing: 0;
@@ -266,7 +271,7 @@
     gap: var(--s2-spacing-300);
     margin-block-end: var(--s2-spacing-200);
 
-    @media (width >= 900px) {
+    @container status-table-wrapper (width >= 500px) {
       flex-direction: row;
       justify-content: space-between;
     }
@@ -277,7 +282,7 @@
     flex-direction: column;
     gap: var(--s2-spacing-300);
 
-    @media (width >= 900px) {
+    @container status-table-wrapper (width >= 500px) {
       flex-direction: row;
       align-items: center;
     }
@@ -440,6 +445,7 @@
     mask-size: contain;
     background-color: currentcolor;
     opacity: 0.5;
+    flex-shrink: 0;
   }
 
   .status-table-sort-header:hover .status-table-sort-icon,

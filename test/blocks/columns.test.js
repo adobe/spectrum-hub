@@ -324,6 +324,24 @@ describe('columns block', () => {
       expect(el.querySelector('figcaption')).to.not.exist;
     });
 
+    it('marks the img as errored (revealing the fallback background) once it fails to load', () => {
+      el = makeEl(SINGLE_IMAGE_NO_CAPTION_ROW);
+      init(el);
+      const img = el.querySelector('.col-image img');
+      expect(img.classList.contains('img-error')).to.be.false;
+
+      img.dispatchEvent(new Event('error'));
+
+      expect(img.classList.contains('img-error')).to.be.true;
+    });
+
+    it('does not mark the img as errored while it is merely loading', () => {
+      el = makeEl(SINGLE_IMAGE_NO_CAPTION_ROW);
+      init(el);
+      const img = el.querySelector('.col-image img');
+      expect(img.classList.contains('img-error')).to.be.false;
+    });
+
     it('extracts a trailing caption row into a figcaption next to the image', () => {
       el = makeEl(DEFAULT_WITH_CAPTION);
       init(el);
