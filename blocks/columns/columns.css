@@ -2,7 +2,7 @@
 .columns {
   --columns-gap: 56px;
   --image-corner-radius: 24px;
-  --xs-image-size: 120px;
+  --xs-image-size: 80px;
   --s-image-size: 316px;
   --m-image-size: 502px;
 
