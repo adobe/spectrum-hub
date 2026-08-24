@@ -25,37 +25,64 @@ function wrapColumnImage(col) {
   return figure;
 }
 
-/*
- * Captions are authored as a trailing row: same column count as the image row
- * it describes, with the caption text in the same column index as the image
- */
+/* A caption row mirrors the image row's shape. If the image row is "singleCol" (no other populated
+ * column), that shape is ambiguous with plain content, so we check for a second row before
+ * we know the first one was just content and apply the caption. */
 function extractCaptions(el) {
   let lastImageRow = null;
+  let pendingCaptionRow = null;
+  let foundSecondRow = false;
+
+  const applyCaption = (imageRow, imgIndex, captionRow) => {
+    const figure = wrapColumnImage(imageRow.children[imgIndex]);
+    if (figure) {
+      const figcaption = document.createElement('figcaption');
+      figcaption.className = 'col-caption';
+      figcaption.textContent = captionRow.children[imgIndex].textContent.trim();
+      figure.after(figcaption);
+    }
+    captionRow.remove();
+  };
+
+  const flushPending = (imageRow, imgIndex) => {
+    if (foundSecondRow) {
+      applyCaption(imageRow, imgIndex, pendingCaptionRow);
+    }
+    pendingCaptionRow = null;
+    foundSecondRow = false;
+  };
 
   for (const row of [...el.children]) {
     const cols = [...row.children];
-    const { row: imageRow, imgIndex } = lastImageRow ?? {};
+    const { row: imageRow, imgIndex, singleCol } = lastImageRow ?? {};
     const captionCol = imageRow && cols.length === imageRow.children.length ? cols[imgIndex] : null;
     const isCaptionRow = captionCol
       && captionCol.textContent.trim()
       && !captionCol.querySelector('picture, img')
       && cols.every((c, i) => i === imgIndex || isEmptyCol(c));
 
-    if (isCaptionRow) {
-      const figure = wrapColumnImage(imageRow.children[imgIndex]);
-      if (figure) {
-        const figcaption = document.createElement('figcaption');
-        figcaption.className = 'col-caption';
-        figcaption.textContent = captionCol.textContent.trim();
-        figure.after(figcaption);
-      }
-      row.remove();
+    if (isCaptionRow && singleCol) {
+      if (pendingCaptionRow) { foundSecondRow = true; }
+      pendingCaptionRow = row;
+    } else if (isCaptionRow) {
+      applyCaption(imageRow, imgIndex, row);
       lastImageRow = null;
     } else {
+      flushPending(imageRow, imgIndex);
       const imageCols = cols.filter((c) => c.querySelector('picture, img'));
-      lastImageRow = imageCols.length === 1 ? { row, imgIndex: cols.indexOf(imageCols[0]) } : null;
+      if (imageCols.length === 1) {
+        const newImgIndex = cols.indexOf(imageCols[0]);
+        lastImageRow = {
+          row,
+          imgIndex: newImgIndex,
+          singleCol: cols.every((c, i) => i === newImgIndex || isEmptyCol(c)),
+        };
+      } else {
+        lastImageRow = null;
+      }
     }
   }
+  flushPending(lastImageRow?.row, lastImageRow?.imgIndex);
 }
 
 function decorateCols(cols) {
