@@ -557,6 +557,7 @@ div[data-status],
     /* keeps the space between sections but hides the divider line */
     main > .section.no-divider {
       border-block-end: none;
+      padding-block: 40px;
     }
 
     &[expand-sitenav],
