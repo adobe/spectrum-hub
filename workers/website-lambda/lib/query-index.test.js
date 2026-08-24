@@ -65,6 +65,17 @@ describe('filterPrivateEntries', () => {
     expect(out.pages.columns).not.toContain('audience');
   });
 
+  it('fails closed if ANY sheet of a multi-sheet payload is not filterable', () => {
+    // The good sheet must not be served alongside an unfilterable one whose
+    // private rows we could not strip - the whole index is refused instead.
+    const out = filterPrivateEntries({
+      ':names': ['pages', 'raw'],
+      pages: index(row('/a'), row('/secret', 'private')),
+      raw: { note: 'no data array' },
+    });
+    expect(out).toBe(null);
+  });
+
   it('fails closed (returns null) for shapes that are not a recognizable index', () => {
     expect(filterPrivateEntries({ foo: 1 })).toBe(null);
     expect(filterPrivateEntries(null)).toBe(null);

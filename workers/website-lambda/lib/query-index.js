@@ -37,14 +37,17 @@ export const filterPrivateEntries = (json) => {
   if (Array.isArray(json.data)) { return filterSheet(json); }
 
   // Multi-sheet index: { ':names': [...], <name>: { data }, ... }
-  if (Array.isArray(json[':names'])) {
+  // Fail closed: EVERY sheet named in ':names' must be a filterable data sheet.
+  // If any one isn't, we can't be sure it's free of private rows, so refuse the
+  // whole index (404 for anon) rather than pass that sheet through unfiltered.
+  if (Array.isArray(json[':names']) && json[':names'].length > 0) {
     const out = { ...json };
-    let filteredAny = false;
     for (const name of json[':names']) {
       const filtered = filterSheet(out[name]);
-      if (filtered) { out[name] = filtered; filteredAny = true; }
+      if (!filtered) { return null; }
+      out[name] = filtered;
     }
-    return filteredAny ? out : null;
+    return out;
   }
 
   return null;
