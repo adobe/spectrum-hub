@@ -389,6 +389,22 @@
   }
 }
 
+/* --- View transitions --- */
+
+/* Opt in to native cross-document view transitions for same-origin
+navigation. No-op in browsers without support (progressive enhancement). */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 /* --- Spectrum Edge specific decoration hiding --- */
 main > div,
 div[data-status],
