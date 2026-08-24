@@ -37,6 +37,7 @@ const makeToken = (payloadOverrides = {}) => {
     expires_in: '86400000',
     created_at: String(Date.now()),
     scope: 'AdobeID,openid',
+    client_id: 'spectrumhub',
     ...payloadOverrides,
   };
   return `${base64urlJson({ alg: 'RS256', kid: 'test-key' })}.${base64urlJson(payload)}.fake-signature`;
@@ -299,6 +300,13 @@ describe('createSession IMS verification', () => {
   it('returns 502 when access_token is accepted by IMS but is not itself a JWT', async () => {
     const resp = await call(post({ access_token: 'not-a-jwt' }));
     expect(resp.status).toBe(502);
+  });
+
+  it('rejects a token issued for a different IMS client with 401', async () => {
+    // IMS accepts the token (it is a genuine Adobe token), but its client_id
+    // claim shows it was minted for another application, not this one.
+    const resp = await call(post(imsBody({ client_id: 'some-other-app' })));
+    expect(resp.status).toBe(401);
   });
 
   it('marks the 401 no-store', async () => {

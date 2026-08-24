@@ -212,6 +212,15 @@ export const createSession = async ({ url, env, request }) => {
     return problem(502, 'IMS returned a token or profile this worker could not use');
   }
 
+  // Audience binding: the token IMS just vouched for must have been issued for
+  // THIS application, not merely be some valid Adobe token. IMS signs client_id
+  // into the (now-trusted) access token, so reject anything minted for another
+  // client - otherwise a token from any Adobe app the user authorized could mint
+  // a session here, gated only by the email allowlist.
+  if (decoded.payload?.client_id !== IMS_CLIENT_ID) {
+    return problem(401, 'access_token was not issued for this application');
+  }
+
   // Authorization, distinct from the authentication above: IMS proved who
   // this is, DA decides whether they may in. Only reached once the token is
   // known good. Fail closed - a cookie is only ever minted for an email (or
