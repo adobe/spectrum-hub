@@ -133,6 +133,25 @@ export const navAreasFragmentWithLevel3 = `<body><header></header><main><div><ul
 export const imsScript = `window.adobeIMS = { getAccessToken: () => null, signIn() {}, signOut() {} };
   window.adobeid?.onReady?.();`;
 
+// Signed-in counterpart to imsScript — getAccessToken() returns a token and
+// getProfile() resolves profile details, so ims.js's loadIms() resolves with a
+// full (non-anonymous) details object instead of { anonymous: true }. Pair with
+// ioProfile below (profile.js's init() calls details.getIo(), which fetches the
+// IO_ENV[env] host this token is handed to).
+export const imsScriptSignedIn = `window.adobeIMS = {
+    getAccessToken: () => ({ token: 'fake-access-token' }),
+    getProfile: async () => ({ displayName: 'Jane Doe', email: 'jane@example.com' }),
+    signIn() {},
+    signOut() {},
+  };
+  window.adobeid?.onReady?.();`;
+
+// Response for the IO profile fetch ims.js's getIoFactory() makes once signed in —
+// profile.js reads io.user.avatar to populate the avatar image.
+export const ioProfile = JSON.stringify({
+  user: { avatar: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7' },
+});
+
 // Minimal playground data-source responses (see playground-data.js and playground.test.js's
 // stubPlaygroundFetch for the shapes these mirror).
 export const playgroundComponentsSheet = JSON.stringify({ data: [{ Component: 'Button', Properties: 'isDisabled' }] });

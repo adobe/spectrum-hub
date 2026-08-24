@@ -20,7 +20,12 @@ class SEProfile extends LitElement {
 
   renderProfile() {
     return html`
-      <button id="avatar-button" popovertarget="se-profile-popover"><img src=${this.avatar}/></button>
+      <button
+        id="avatar-button"
+        popovertarget="se-profile-popover"
+        aria-label="Account menu, ${this.displayName}"
+        aria-haspopup="dialog"
+      ><img src=${this.avatar} alt="" /></button>
       <div id="se-profile-popover" popover>
         <div class="se-profile-details-wrapper">
           <button class="se-profile-btn se-profile-btn-details">
