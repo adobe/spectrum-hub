@@ -225,7 +225,7 @@
       }
     }
 
-    @media (width >= 900px) {
+    @container columns (width >= 900px) {
       &.medium:not(.centered) .row {
         display: grid;
         grid-template-columns: auto var(--image-size);
