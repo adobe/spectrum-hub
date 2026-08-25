@@ -361,6 +361,7 @@
       }
 
       .icon {
+        color: inherit;
         width: 10px;
         height: 10px;
         transition:
@@ -374,6 +375,7 @@
 
         .icon {
           transform: rotate(90deg);
+          color: inherit;
         }
 
         & + :is(.level-3-menu, .level-4-menu) {
