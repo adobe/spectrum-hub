@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile block (signed in) fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <!-- profile.js imports deps/se/se.js, which imports the bare "lit" specifier -->
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="profile"></div>
+    </div>
+  </main>
+  <script type="module">
+    // ims.js reads getConfig().env into a module-top-level const, so this must
+    // finish evaluating in its own script tag before profile.js (and its static
+    // import of ims.js) is even fetched — imports inside ONE module tag are
+    // hoisted and evaluated before that tag's own statements, so setConfig()
+    // and the profile.js import can't share a single <script type="module">.
+    import { setConfig } from '/scripts/ak.js';
+    // ims.js's getIoFactory() builds its fetch URL from IO_ENV[env] — pin env so
+    // the signed-in mock route (test/a11y/mocks.js's ioProfile) matches a real
+    // environment host instead of the accidental "https://undefined/profile"
+    // that falls out of an unset env.
+    setConfig({ env: 'dev' });
+  </script>
+  <script type="module">
+    import init from '/blocks/profile/profile.js';
+    document.querySelectorAll('.profile').forEach(init);
+  </script>
+</body>
+</html>

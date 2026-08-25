@@ -164,6 +164,79 @@ const MULTI_IMAGE_ROW_WITH_TRAILING_ROW = `
   </div>
 `;
 
+const CENTERED_IMAGE_WITH_CONTENT_ONLY = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+  <div>
+    <div><p>Some content</p></div>
+  </div>
+`;
+
+const CENTERED_IMAGE_CONTENT_AND_CAPTION = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+  </div>
+  <div>
+    <div><p>Some content</p></div>
+  </div>
+  <div>
+    <div>A trailing caption</div>
+  </div>
+`;
+
+const CENTERED_TWO_IMAGE_GROUPS_WITH_CAPTIONS = `
+  <div>
+    <div><picture><img src="a.jpg" alt=""></picture></div>
+  </div>
+  <div>
+    <div><p>Content A</p></div>
+  </div>
+  <div>
+    <div>Caption A</div>
+  </div>
+  <div>
+    <div><picture><img src="b.jpg" alt=""></picture></div>
+  </div>
+  <div>
+    <div><p>Content B</p></div>
+  </div>
+  <div>
+    <div>Caption B</div>
+  </div>
+`;
+
+const GRID_SOLO_IMAGE_WITH_CONTENT_ONLY = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div>
+    <div><h3>Small</h3><p>Adds the small modifier class.</p></div>
+    <div></div>
+    <div></div>
+  </div>
+`;
+
+const GRID_SOLO_IMAGE_WITH_CONTENT_AND_CAPTION = `
+  <div>
+    <div><picture><img src="hero.jpg" alt="" loading="lazy"></picture></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div>
+    <div><h3>Small</h3><p>Adds the small modifier class.</p></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div>
+    <div>A trailing caption</div>
+    <div></div>
+    <div></div>
+  </div>
+`;
+
 describe('columns block', () => {
   let el;
 
@@ -412,6 +485,71 @@ describe('columns block', () => {
       expect(el.querySelectorAll('figcaption').length).to.equal(1);
       expect(el.querySelectorAll('.col-image').length).to.equal(1);
       expect(el.querySelectorAll('.row').length).to.equal(1);
+    });
+
+    describe('centered (single-column) image groups', () => {
+      it('treats a lone single-column text row after an image as content, not a caption', () => {
+        el = makeEl(CENTERED_IMAGE_WITH_CONTENT_ONLY);
+        init(el);
+        expect(el.querySelectorAll('.row').length).to.equal(2);
+        expect(el.querySelector('figcaption')).to.not.exist;
+        const [, contentRow] = el.querySelectorAll('.row');
+        expect(contentRow.textContent.trim()).to.equal('Some content');
+      });
+
+      it('treats the last of two single-column text rows as the caption, keeping the earlier one as content', () => {
+        el = makeEl(CENTERED_IMAGE_CONTENT_AND_CAPTION);
+        init(el);
+        expect(el.querySelectorAll('.row').length).to.equal(2);
+        const [imageRow, contentRow] = el.querySelectorAll('.row');
+        const figcaption = imageRow.querySelector('figcaption');
+        expect(figcaption).to.exist;
+        expect(figcaption.textContent).to.equal('A trailing caption');
+        expect(figcaption.classList.contains('col-caption')).to.be.true;
+        expect(contentRow.querySelector('figcaption')).to.not.exist;
+        expect(contentRow.textContent.trim()).to.equal('Some content');
+      });
+
+      it('attaches the caption directly to the image, ahead of the content row', () => {
+        el = makeEl(CENTERED_IMAGE_CONTENT_AND_CAPTION);
+        init(el);
+        const [imageRow, contentRow] = el.querySelectorAll('.row');
+        expect(imageRow.querySelector('.col-image')).to.exist;
+        expect(imageRow.compareDocumentPosition(contentRow)).to.be.above(0);
+        expect(Node.DOCUMENT_POSITION_FOLLOWING).to.be.above(0);
+      });
+
+      it('resolves each image group independently when multiple centered image+content+caption groups repeat', () => {
+        el = makeEl(CENTERED_TWO_IMAGE_GROUPS_WITH_CAPTIONS);
+        init(el);
+        expect(el.querySelectorAll('.row').length).to.equal(4);
+        const figcaptions = [...el.querySelectorAll('figcaption')];
+        expect(figcaptions.map((f) => f.textContent)).to.deep.equal(['Caption A', 'Caption B']);
+      });
+    });
+
+    describe('grid-layout image groups (image alone in its row, other columns empty placeholders)', () => {
+      it('keeps a solo-column content row as content when no caption row follows, preserving its markup', () => {
+        el = makeEl(GRID_SOLO_IMAGE_WITH_CONTENT_ONLY);
+        init(el);
+        expect(el.querySelectorAll('.row').length).to.equal(2);
+        expect(el.querySelector('figcaption')).to.not.exist;
+        const [, contentRow] = el.querySelectorAll('.row');
+        expect(contentRow.querySelector('h3').textContent).to.equal('Small');
+        expect(contentRow.querySelector('p')).to.exist;
+      });
+
+      it('treats the last of two single-column rows as the caption, keeping the earlier content row intact', () => {
+        el = makeEl(GRID_SOLO_IMAGE_WITH_CONTENT_AND_CAPTION);
+        init(el);
+        expect(el.querySelectorAll('.row').length).to.equal(2);
+        const [imageRow, contentRow] = el.querySelectorAll('.row');
+        const figcaption = imageRow.children[0].querySelector('figcaption');
+        expect(figcaption).to.exist;
+        expect(figcaption.textContent).to.equal('A trailing caption');
+        expect(contentRow.querySelector('h3').textContent).to.equal('Small');
+        expect(contentRow.querySelector('figcaption')).to.not.exist;
+      });
     });
   });
 
