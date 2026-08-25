@@ -422,7 +422,7 @@
 
     &:hover svg,
     &[aria-expanded="true"] svg {
-      color: var(--s2-gray-100);
+      color: var(--s2-gray-100) !important; /* !important needed to override the not selector at line 111 */
     }
 
     @media (width < 900px) {
