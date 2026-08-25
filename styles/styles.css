@@ -460,7 +460,7 @@ div[data-status],
     --sitenav-inline-start-margin: 24px;
     --sitenav-inline-end-margin: 56px;
     --sitenav-nav-collapsed-width: 56px;
-    --sitenav-nav-expanded-width: 180px;
+    --sitenav-nav-expanded-width: 220px;
     --sitenav-nav-width: var(--sitenav-nav-collapsed-width);
     --sitenav-gap: 6px;
     --sitenav-level-2-width: 0;
@@ -543,6 +543,14 @@ div[data-status],
         border-block-end: none;
       }
     }
+
+    /* pages that are not component pages */
+    &:not(:has(meta[name="template"][content="component"])) {
+      .section {
+        padding-inline: 0;
+      }
+    }
+
 
     /* all other pages */
     scrollbar-gutter: stable;
