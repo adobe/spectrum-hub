@@ -91,14 +91,8 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   await waitForNavReady(page, isMobile);
 
   await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
-    - navigation "Spectrum Hub":
-      - list:
-        - listitem:
-          - button "Getting started"
-        - listitem:
-          - button "Foundations"
-      - button "Collapse navigation" [expanded]:
-        - img
+    - button "Toggle site navigation"
+      - img
   `);
 });
 
