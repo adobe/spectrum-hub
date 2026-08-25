@@ -1,13 +1,13 @@
 /* These columns represent the "Core layout blocks" */
 .columns {
   --columns-gap: 56px;
-  --image-corner-radius: 24px;
+  --image-corner-radius: 32px;
   --xs-image-size: 80px;
   --s-image-size: 316px;
   --m-image-size: 502px;
 
   inline-size: 100%;
-  margin-block: var(--s2-spacing-600) var(--s2-spacing-1000);
+  margin-block: var(--s2-spacing-600) var(--s2-spacing-500);
   container-type: inline-size;
   container-name: columns;
 
@@ -17,7 +17,11 @@
 
   .section > .block-content > &:last-child {
     margin-block-end: 0;
-  } 
+  }
+
+  .section > .block-content > &:first-child {
+    margin-block-start: 0;
+  }
 
   /* extra-small */
   &:not(.small, .medium, .large) {
