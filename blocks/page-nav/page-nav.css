@@ -12,12 +12,13 @@ from the DOM and the accessibility tree (see page-nav.js). */
     position: sticky;
     inset-block-start: var(--sh-header-height); /* match the header so the page nav sticks in place */
     max-block-size: calc(100vh - var(--sh-header-height, 0px));
+    max-inline-size: var(--pagenav-track-width);
     font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
     margin-inline: 
-      clamp(var(--pagenav-inline-start-margin), var(--pagenav-clamp-preferred-width), 100%)
+      clamp(var(--pagenav-inline-start-margin), var(--pagenav-clamp-preferred-width), var(--pagenav-clamp-preferred-width))
       24px;
     
     & ul {
