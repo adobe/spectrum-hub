@@ -83,15 +83,41 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
 });
 
 test(`${block.name} block matches its expected accessibility tree`, async ({ page, isMobile }, testInfo) => {
-  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
-  // single run — check the project by name to actually run this once, not twice.
-  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
-
+  // Unlike most blocks, sitenav's tree isn't viewport-agnostic: below 900px the rail
+  // (nav, list items, expand button) is CSS-hidden (display: none) and only the
+  // sitenav-trigger-btn is present, so desktop and mobile need their own snapshots
+  // and both projects have to actually run instead of one standing in for the other.
+  test.skip(testInfo.project.name !== 'chromium', 'covered separately by the mobile accessibility tree test below');
   await gotoBlock(page, block);
   await waitForNavReady(page, isMobile);
 
   await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
-    - button "Toggle site navigation"
+    - navigation "Spectrum Hub":
+      - list:
+        - listitem:
+          - button "Getting started"
+        - listitem:
+          - button "Foundations"
+      - button "Expand navigation":
+        - img
+  `);
+});
+
+test(`${block.name} block matches its expected accessibility tree on mobile`, async ({ page, isMobile }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Mobile Chrome', 'only Mobile Chrome renders the sitenav-trigger-btn tree being asserted here');
+  await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
+
+  await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
+    - navigation "Spectrum Hub":
+      - list:
+        - listitem:
+          - button "Getting started"
+        - listitem:
+          - button "Foundations"
+      - button "Expand navigation":
+        - img
+    - button "Toggle site navigation" [expanded]:
       - img
   `);
 });
