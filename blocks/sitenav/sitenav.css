@@ -163,9 +163,11 @@
     padding: 0;
     list-style-type: none;
     display: grid;
+    max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
 
     /* Without an explicit track, .level-1-button's real box (and its focus ring)
     extends far past the 32px closed rail, with only its left edge visible. */
+    overflow-y: auto;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s2-spacing-100);
     transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
@@ -392,7 +394,6 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    margin-block-start: var(--expand-toggle-top-margin);
 
     &:hover {
       --expand-panel-width: 5px;
@@ -407,13 +408,38 @@
         transition: none;
       }
     }
+
+    @media (width >= 900px) {
+      margin-block-start: var(--expand-toggle-top-margin);
+    }
   }
 
   /* Below 900px this fixed, viewport-pinned trigger opens the sitenav overlay,
   which shows the same rail (icons only) as desktop by default — tap
   sitenav-expand-btn inside it to reveal labels, same as desktop. */
   .sitenav-trigger-btn {
-    display: none;
+    display: flex;
+    position: fixed;
+    inset-inline-start: 36px; /* margin from edge of viewport to sitenav + padding of sitenav */
+    inset-block-end: var(--s2-spacing-400);
+    z-index: 1;
+    border-radius: var(--s2-corner-radius-600);
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background-color: var(--s2-gray-1000);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      backdrop-filter: blur(var(--sitenav-blur));
+      pointer-events: none;
+    }
 
     > svg,
     &[aria-expanded="true"] svg {
@@ -425,29 +451,8 @@
       color: var(--s2-gray-100) !important; /* !important needed to override the not selector at line 111 */
     }
 
-    @media (width < 900px) {
-      display: flex;
-      position: fixed;
-      inset-inline-start: 36px; /* margin from edge of viewport to sitenav + padding of sitenav */
-      inset-block-end: var(--s2-spacing-400);
-      z-index: 1;
-      border-radius: var(--s2-corner-radius-600);
-      justify-content: center;
-      align-items: center;
-      width: 32px;
-      height: 32px;
-      flex-shrink: 0;
-      background-color: var(--s2-gray-1000);
-
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        border-radius: inherit;
-        backdrop-filter: blur(var(--sitenav-blur));
-        pointer-events: none;
-      }
+    @media (width >= 900px) {
+      display: none;
     }
   }
 
