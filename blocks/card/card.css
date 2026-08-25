@@ -4,7 +4,6 @@
   --card-border-radius: var(--s2-corner-radius-800);
 
   overflow-wrap: break-word;
-  box-shadow: 0 1px 6px 0 rgb(from var(--s2-gray-1000) r g b / 12%);
   background-color: var(--s2-gray-25);
   inline-size: 100%;
   overflow: hidden;
@@ -14,6 +13,11 @@
   transition: all 0.25s ease-in-out;
   container-name: card-container;
   container-type: inline-size;
+
+  /* light-scheme gets a shadow, dark-scheme doesn't */
+  .light-scheme & {
+    box-shadow: 0 1px 6px 0 rgb(from var(--s2-gray-1000) r g b / 12%);
+  }
 
   &:has(.card-link:hover) {
     transform: scale(1.005);

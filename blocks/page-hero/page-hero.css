@@ -6,7 +6,11 @@
   background-color: var(--s2-gray-25);
   padding: var(--s2-spacing-800);
   margin-block-end: var(--s2-spacing-300);
-  box-shadow: 40px 40px 100px rgb(0 0 0 / 12%);
+
+  /* light-scheme gets a shadow, dark-scheme doesn't */
+  .light-scheme & {
+    box-shadow: 40px 40px 100px rgb(0 0 0 / 12%);
+  }
 
   h1 {
     margin: 0;

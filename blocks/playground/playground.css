@@ -11,7 +11,11 @@
   background-color: var(--s2-gray-25);
   border-radius: var(--playground-border-radius);
   container-type: inline-size;
-  box-shadow: 40px 40px 100px rgb(0 0 0 / 12%);
+
+  /* light-scheme gets a shadow, dark-scheme doesn't */
+  .light-scheme & {
+    box-shadow: 40px 40px 100px rgb(0 0 0 / 12%);
+  }
 }
 
 /*
@@ -232,3 +236,4 @@
     }
   }
 }
+
