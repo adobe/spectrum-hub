@@ -19,7 +19,8 @@
     margin-block-end: 0;
   }
 
-  .section > .block-content > &:first-child {
+  /* for columns that are the first child of a section, but not a sibling to default-content */
+  .section > :not(.default-content ~ .block-content) > &:first-child {
     margin-block-start: 0;
   }
 
