@@ -462,25 +462,32 @@ function sharedPageSlug(component) {
  * @param {{ name: string, platforms: object }[]} components - buildIndex's output components
  *   (same canonical names as roster, resolved cells already applied).
  * @param {{ name: string, figmaPageId: string }[]} figmaRoster
- * @returns {{ slug: string, data: { web: object, figmaPageId?: string }, shared: boolean }[]}
+ * @returns {{ slices: { slug: string, data: { web: object, figmaPageId?: string }, shared: boolean }[], warnings: string[] }}
  */
 export function buildComponentSlices(roster, components, figmaRoster) {
   const figmaPageIdByName = new Map(figmaRoster.map((entry) => [entry.name, entry.figmaPageId]));
   const componentByName = new Map(components.map((component) => [component.name, component]));
+  const warnings = [];
 
-  return roster.map(({ name, sources }) => {
+  const slices = roster.map(({ name, sources }) => {
     const component = componentByName.get(name);
     // A `web.figma.originalName` override (see applyOverrides) redirects the Figma link to a
     // different design's node id — e.g. Calendar borrowing Date and time field's page, or
     // Cards pinning one of its six variant pages as the canonical link — without changing
     // which Figma roster name/status this component's own roster membership came from.
-    const figmaSourceName = component.platforms[PLATFORM]?.figma?.originalName ?? sources.figma;
+    const originalName = component.platforms[PLATFORM]?.figma?.originalName;
+    const figmaSourceName = originalName ?? sources.figma;
     const figmaPageId = figmaSourceName ? figmaPageIdByName.get(figmaSourceName) : undefined;
+    if (originalName && !figmaPageId) {
+      warnings.push(`figma originalName override for "${name}" targets unmatched Figma roster entry "${originalName}"`);
+    }
     const data = { web: component.platforms[PLATFORM] };
     if (figmaPageId) { data.figmaPageId = figmaPageId; }
     const sharedSlug = sharedPageSlug(component);
     return { slug: sharedSlug ?? toSlug(name), data, shared: Boolean(sharedSlug) };
   });
+
+  return { slices, warnings };
 }
 
 /**
@@ -601,10 +608,10 @@ function main() {
     roster, readData: readExtraction, overrides, secondaries,
   });
 
-  const slices = buildComponentSlices(roster, index.components, figmaRoster);
+  const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
   const sliceWarnings = writeComponentSlices(slices);
 
-  for (const warning of [...warnings, ...sliceWarnings]) {
+  for (const warning of [...warnings, ...sliceOverrideWarnings, ...sliceWarnings]) {
     console.warn(`warning: ${warning}`);
   }
 
