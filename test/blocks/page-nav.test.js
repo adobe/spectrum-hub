@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
+import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
   const main = document.createElement('main');
@@ -462,6 +463,7 @@ describe('page-nav block', () => {
         ok: true,
         json: async () => ({ web: {}, figmaPageId: '9230:3620' }),
       });
+      resetComponentSliceCacheForTests();
       makeDOM();
     });
 

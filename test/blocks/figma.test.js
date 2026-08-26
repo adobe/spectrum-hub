@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { figmaNodeUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
+import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 
 function makeAnchor(text = 'See in Figma') {
   const a = document.createElement('a');
@@ -32,6 +33,7 @@ describe('figma block', () => {
     beforeEach(() => {
       originalUrl = window.location.pathname + window.location.search + window.location.hash;
       fetchStub = sinon.stub(window, 'fetch');
+      resetComponentSliceCacheForTests();
     });
 
     afterEach(() => {
