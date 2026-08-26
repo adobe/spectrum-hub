@@ -74,3 +74,8 @@ Spectrum Hub supports the `prefers-reduced-motion` media query. All animations a
 
 Automated accessibility testing (axe-core WCAG 2.2 AA scans and accessibility-tree checks) is covered in [`test/a11y/README.md`](./test/a11y/README.md). `prefers-reduced-motion` behavior itself should be verified manually by enabling the setting at the OS level.
 
+To run Playwright/Axe automated accessibility tests:
+
+```bash
+npm run test:a11y
+```
