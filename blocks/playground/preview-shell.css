@@ -21,8 +21,14 @@ body {
   min-height: 100vh;
 }
 
-/* staticColor previews need a contrasting backdrop, independent of theme */
+/* staticColor previews need a contrasting backdrop, independent of theme.
+   "auto" defaults its icon/text to black regardless of the surrounding theme
+   (it has no ambient container to auto-detect against in this bare preview
+   shell), so it needs the same light backdrop "black" does, not "white"'s. */
 body:has([static-color="black"]) { background: rgb(255 255 255); }
+
+/* TODO: revisit the auto static-color once icons are implemented.
+body:has([static-color="auto"]) { background: rgb(255 255 255); } */
 body:has([static-color="white"]) { background: rgb(17 17 17); }
 
 #mount[static-color] > * {

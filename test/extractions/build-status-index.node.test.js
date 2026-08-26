@@ -553,7 +553,7 @@ describe('buildComponentSlices', () => {
   ];
 
   it('slugs a normal component by its own name, not flagged shared', () => {
-    const slices = buildComponentSlices(roster, components, []);
+    const { slices } = buildComponentSlices(roster, components, []);
     const actionButton = slices.find((s) => s.slug === 'action-button');
     assert.ok(actionButton);
     assert.equal(actionButton.shared, false);
@@ -564,7 +564,7 @@ describe('buildComponentSlices', () => {
       { name: 'ActionButton', platforms: { web: { swc: { status: 'available', page: 'action-button-and-group' } } } },
       { name: 'ActionGroup', platforms: { web: { swc: { status: 'available', page: 'action-button-and-group' } } } },
     ];
-    const slices = buildComponentSlices(roster, overridden, []);
+    const { slices } = buildComponentSlices(roster, overridden, []);
     assert.deepEqual(slices.map((s) => s.slug), ['action-button-and-group', 'action-button-and-group']);
     assert.ok(slices[0].shared);
     assert.ok(slices[1].shared);
@@ -575,18 +575,74 @@ describe('buildComponentSlices', () => {
       { name: 'ActionButton', platforms: { web: { rsp: { status: 'available', originalName: 'ActionBtn' } } } },
     ];
     const rosterWithRsp = [{ name: 'ActionButton', sources: { rsp: 'ActionButton' } }];
-    const slices = buildComponentSlices(rosterWithRsp, withOriginalName, []);
+    const { slices } = buildComponentSlices(rosterWithRsp, withOriginalName, []);
     assert.equal(slices[0].data.web.rsp.originalName, 'ActionBtn');
   });
 
   it('attaches the figma page id by source name, unaffected by a page override', () => {
     const rosterWithFigma = [{ name: 'ActionButton', sources: { figma: 'Action Button' } }];
-    const slices = buildComponentSlices(
+    const { slices, warnings } = buildComponentSlices(
       rosterWithFigma,
       [{ name: 'ActionButton', platforms: { web: {} } }],
       [{ name: 'Action Button', figmaPageId: '1:1' }],
     );
     assert.equal(slices[0].data.figmaPageId, '1:1');
+    assert.deepEqual(warnings, []);
+  });
+
+  it('prefers a `web.figma.originalName` override over the roster source name', () => {
+    // Calendar has no Figma page of its own; a status-overrides.json entry redirects its
+    // Design link to the Date and time field design without touching Calendar's own roster
+    // membership (sources.figma is absent — this is a code-only component in Figma terms).
+    const rosterNoFigmaSource = [{ name: 'Calendar', sources: { rsp: 'Calendar' } }];
+    const { slices, warnings } = buildComponentSlices(
+      rosterNoFigmaSource,
+      [{
+        name: 'Calendar',
+        platforms: { web: { figma: { status: 'available', originalName: 'Date and time field' } } },
+      }],
+      [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
+    );
+    assert.equal(slices[0].data.figmaPageId, '10196:3411');
+    assert.deepEqual(warnings, []);
+  });
+
+  it('pins one Figma variant via originalName when several sources could match the canonical name', () => {
+    // Cards has six Figma variant pages all aliased to the canonical "Cards" name; without an
+    // override the last-processed source wins by accident. An originalName override pins one
+    // deliberately.
+    const rosterCards = [{ name: 'Cards', sources: { figma: 'Cards (User)' } }];
+    const { slices, warnings } = buildComponentSlices(
+      rosterCards,
+      [{
+        name: 'Cards',
+        platforms: { web: { figma: { status: 'available', originalName: 'Cards (Asset)' } } },
+      }],
+      [
+        { name: 'Cards (Asset)', figmaPageId: '10182:4354' },
+        { name: 'Cards (User)', figmaPageId: '10182:123493' },
+      ],
+    );
+    assert.equal(slices[0].data.figmaPageId, '10182:4354');
+    assert.deepEqual(warnings, []);
+  });
+
+  it('warns when a `web.figma.originalName` override matches nothing in the Figma roster', () => {
+    // A typo'd or stale name (roster entry renamed/removed upstream) must not fail silently —
+    // the component's Figma link just vanishes otherwise, with no build signal.
+    const rosterNoFigmaSource = [{ name: 'Calendar', sources: { rsp: 'Calendar' } }];
+    const { slices, warnings } = buildComponentSlices(
+      rosterNoFigmaSource,
+      [{
+        name: 'Calendar',
+        platforms: { web: { figma: { status: 'available', originalName: 'Date and Time Field' } } },
+      }],
+      [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
+    );
+    assert.equal(slices[0].data.figmaPageId, undefined);
+    assert.deepEqual(warnings, [
+      'figma originalName override for "Calendar" targets unmatched Figma roster entry "Date and Time Field"',
+    ]);
   });
 });
 
@@ -623,5 +679,18 @@ describe('buildImplAliases', () => {
 
   it('returns an empty object for no slices', () => {
     assert.deepEqual(buildImplAliases([]), {});
+  });
+
+  it('excludes a figma cell\'s originalName — it redirects the Figma link, not a code implementation', () => {
+    const slices = [{
+      slug: 'calendar',
+      data: {
+        web: {
+          figma: { status: 'available', originalName: 'Date and time field' },
+          rsp: { status: 'available' },
+        },
+      },
+    }];
+    assert.deepEqual(buildImplAliases(slices), {});
   });
 });

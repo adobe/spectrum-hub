@@ -15,8 +15,12 @@
      — this fragment is parsed as strict XML (see fetchCompositeRoot in
      deps/rsp/playground/index.html), which has no concept of a valueless attribute;
      an empty string round-trips to `true` the same way (see
-     buildCompositeElement/buildRspSnippet's `value === '' ? true : value`). -->
-<TableView aria-label="Files">
+     buildCompositeElement/buildRspSnippet's `value === '' ? true : value`).
+
+     selectionMode="multiple" is hardcoded (not in the extracted TableView
+     prop data), same as tree-view.jsx — without it selectionStyle has no
+     visible effect. -->
+<TableView aria-label="Files" selectionMode="multiple">
   <TableHeader>
     <Column isRowHeader="">Name</Column>
     <Column>Type</Column>

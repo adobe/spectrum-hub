@@ -310,7 +310,9 @@
         "web": {
           "figma": {
             "status": "available",
-            "secondary": "Use date and time component"
+            "secondary": "Use date and time component",
+            "originalName": "Date and time field",
+            "note": "No standalone Figma design; the Date and time field design covers it."
           },
           "rsp": {
             "status": "available",
@@ -328,11 +330,14 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "available"
+            "status": "available",
+            "originalName": "Cards (Asset)",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
           },
           "rsp": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "originalName": "Card"
           },
           "swc": {
             "status": "not-available",
@@ -389,6 +394,7 @@
           },
           "rsp": {
             "status": "available",
+            "originalName": "Button",
             "secondary": "In package, not RSP docs"
           },
           "swc": {
@@ -487,7 +493,7 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorHandle",
+            "originalName": "ColorSlider",
             "note": "Built into color components instead."
           },
           "swc": {
@@ -513,7 +519,7 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorHandle",
+            "originalName": "ColorSlider",
             "note": "Built into color components instead."
           },
           "swc": {
@@ -1337,7 +1343,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "available"
+            "status": "available",
+            "originalName": "TagGroup"
           },
           "swc": {
             "status": "not-available",

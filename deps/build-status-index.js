@@ -462,20 +462,32 @@ function sharedPageSlug(component) {
  * @param {{ name: string, platforms: object }[]} components - buildIndex's output components
  *   (same canonical names as roster, resolved cells already applied).
  * @param {{ name: string, figmaPageId: string }[]} figmaRoster
- * @returns {{ slug: string, data: { web: object, figmaPageId?: string }, shared: boolean }[]}
+ * @returns {{ slices: { slug: string, data: { web: object, figmaPageId?: string }, shared: boolean }[], warnings: string[] }}
  */
 export function buildComponentSlices(roster, components, figmaRoster) {
   const figmaPageIdByName = new Map(figmaRoster.map((entry) => [entry.name, entry.figmaPageId]));
   const componentByName = new Map(components.map((component) => [component.name, component]));
+  const warnings = [];
 
-  return roster.map(({ name, sources }) => {
+  const slices = roster.map(({ name, sources }) => {
     const component = componentByName.get(name);
-    const figmaPageId = sources.figma ? figmaPageIdByName.get(sources.figma) : undefined;
+    // A `web.figma.originalName` override (see applyOverrides) redirects the Figma link to a
+    // different design's node id — e.g. Calendar borrowing Date and time field's page, or
+    // Cards pinning one of its six variant pages as the canonical link — without changing
+    // which Figma roster name/status this component's own roster membership came from.
+    const originalName = component.platforms[PLATFORM]?.figma?.originalName;
+    const figmaSourceName = originalName ?? sources.figma;
+    const figmaPageId = figmaSourceName ? figmaPageIdByName.get(figmaSourceName) : undefined;
+    if (originalName && !figmaPageId) {
+      warnings.push(`figma originalName override for "${name}" targets unmatched Figma roster entry "${originalName}"`);
+    }
     const data = { web: component.platforms[PLATFORM] };
     if (figmaPageId) { data.figmaPageId = figmaPageId; }
     const sharedSlug = sharedPageSlug(component);
     return { slug: sharedSlug ?? toSlug(name), data, shared: Boolean(sharedSlug) };
   });
+
+  return { slices, warnings };
 }
 
 /**
@@ -493,6 +505,11 @@ export function buildComponentSlices(roster, components, figmaRoster) {
  * it as a module avoids a per-page-load network round trip for data that's almost always
  * empty for the current page anyway.
  *
+ * Figma is excluded — it's a design source with its own originalName use (redirecting
+ * buildComponentSlices' figmaPageId lookup, see there), not a code implementation go-to-impl.js
+ * ever looks up by, and go-to-impl.js only ever reads `IMPL_ALIASES[impl]` for a registered
+ * implementation id.
+ *
  * @param {{ slug: string, data: { web: object } }[]} slices
  * @returns {Record<string, Record<string, string>>}
  */
@@ -500,7 +517,7 @@ export function buildImplAliases(slices) {
   const aliases = {};
   for (const { slug, data } of slices) {
     for (const [impl, cell] of Object.entries(data.web ?? {})) {
-      if (!cell?.originalName) { continue; }
+      if (!cell?.originalName || !getImplementationById(impl)) { continue; }
       aliases[impl] = aliases[impl] ?? {};
       aliases[impl][slug] = cell.originalName;
     }
@@ -591,10 +608,10 @@ function main() {
     roster, readData: readExtraction, overrides, secondaries,
   });
 
-  const slices = buildComponentSlices(roster, index.components, figmaRoster);
+  const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
   const sliceWarnings = writeComponentSlices(slices);
 
-  for (const warning of [...warnings, ...sliceWarnings]) {
+  for (const warning of [...warnings, ...sliceOverrideWarnings, ...sliceWarnings]) {
     console.warn(`warning: ${warning}`);
   }
 

@@ -8,7 +8,7 @@
       "context": "Stable",
       "secondary": "Use color components",
       "page": "color-handle-and-loupe",
-      "originalName": "ColorHandle",
+      "originalName": "ColorSlider",
       "note": "Built into color components instead."
     },
     "swc": {

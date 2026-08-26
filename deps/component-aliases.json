@@ -14,7 +14,18 @@
     "CardsProduct": "Cards",
     "CardsUser": "Cards",
     "CardView": "Cards",
-    "Card": "Cards",
+    "Card": {
+      "canonical": "Cards",
+      "externalName": "Card"
+    },
+    "CloseButton": {
+      "canonical": "CloseButton",
+      "externalName": "Button"
+    },
+    "ColorHandle": {
+      "canonical": "ColorHandle",
+      "externalName": "ColorSlider"
+    },
     "ColorSwatchPicker": {
       "canonical": "SwatchGroup",
       "externalName": "ColorSwatchPicker"
@@ -58,6 +69,10 @@
     "SideNav": {
       "canonical": "SideNavigation",
       "externalName": "SideNav"
+    },
+    "Tag": {
+      "canonical": "Tag",
+      "externalName": "TagGroup"
     }
   },
   "figma": {

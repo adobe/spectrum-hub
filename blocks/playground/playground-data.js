@@ -95,9 +95,17 @@ export function buildControlsMap(controlsSheet) {
 // Empty for non-union types like "boolean"/"ReactNode".
 export function parsePickerOptions(typeString) {
   if (!typeString) { return []; }
-  const matches = typeString.match(/'([^']+)'/g);
-  if (!matches) { return []; }
-  return matches.map((m) => m.replace(/'/g, ''));
+  const stringMatches = typeString.match(/'([^']+)'/g);
+  if (stringMatches) { return stringMatches.map((m) => m.replace(/'/g, '')); }
+
+  // A handful of size-like props (e.g. AvatarGroup.size) are a union of bare numeric
+  // literals with an open-ended `(number & {})` tail — a TS trick that keeps autocomplete
+  // while still allowing an arbitrary number. Pull out just the literal numbers; the
+  // open-ended tail has no fixed value to offer a picker, so it's dropped, not matched.
+  return typeString
+    .split('|')
+    .map((part) => part.trim())
+    .filter((part) => /^-?\d+(\.\d+)?$/.test(part));
 }
 
 // Strips a leading is/has prefix and lowercases the next char, e.g.

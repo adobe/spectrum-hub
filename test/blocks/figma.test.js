@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { resolveFigmaUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
+import { figmaNodeUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
+import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 
 function makeAnchor(text = 'See in Figma') {
   const a = document.createElement('a');
@@ -12,31 +13,16 @@ function makeAnchor(text = 'See in Figma') {
 }
 
 describe('figma block', () => {
-  describe('resolveFigmaUrl — component slug → Figma dev-mode URL', () => {
-    const data = [
-      { name: 'Accordion', figmaPageId: '10093:987' },
-      { name: 'Action bar', figmaPageId: '9892:747' },
-      { name: 'Action button', figmaPageId: '9230:3620' },
-    ];
-
+  describe('figmaNodeUrl — Figma page id → dev-mode URL', () => {
     it('builds a dev-mode URL with the node id hyphenated', () => {
-      expect(resolveFigmaUrl('action-button', data)).to.equal(
+      expect(figmaNodeUrl('9230:3620')).to.equal(
         'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
       );
     });
 
-    it('matches the URL slug against the slugified component name', () => {
-      expect(resolveFigmaUrl('action-bar', data)).to.equal(
-        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9892-747&m=dev',
-      );
-    });
-
-    it('returns null when the component is absent from the data', () => {
-      expect(resolveFigmaUrl('nonexistent', data)).to.equal(null);
-    });
-
-    it('returns null for an empty component slug', () => {
-      expect(resolveFigmaUrl('', data)).to.equal(null);
+    it('returns null for a falsy page id', () => {
+      expect(figmaNodeUrl(undefined)).to.equal(null);
+      expect(figmaNodeUrl('')).to.equal(null);
     });
   });
 
@@ -47,6 +33,7 @@ describe('figma block', () => {
     beforeEach(() => {
       originalUrl = window.location.pathname + window.location.search + window.location.hash;
       fetchStub = sinon.stub(window, 'fetch');
+      resetComponentSliceCacheForTests();
     });
 
     afterEach(() => {
@@ -55,15 +42,16 @@ describe('figma block', () => {
       document.body.innerHTML = '';
     });
 
-    function stubFigmaData(rows) {
-      fetchStub.resolves({ ok: true, json: async () => rows });
+    function stubComponentSlice(data) {
+      fetchStub.resolves({ ok: true, json: async () => data });
     }
 
     it('deep-links to the component Figma node in dev mode, in a new tab', async () => {
-      stubFigmaData([{ name: 'Action button', figmaPageId: '9230:3620' }]);
+      stubComponentSlice({ web: {}, figmaPageId: '9230:3620' });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const a = makeAnchor();
       await decorateSeeInFigma(a, a.querySelector('span'));
+      expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/action-button.json');
       expect(a.getAttribute('href')).to.equal(
         'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
       );
@@ -72,15 +60,30 @@ describe('figma block', () => {
       expect(a.querySelector('span').textContent).to.equal('See in Figma');
     });
 
-    it('removes itself when the component has no Figma entry', async () => {
-      stubFigmaData([{ name: 'Accordion', figmaPageId: '10093:987' }]);
+    it('deep-links to a `web.figma.originalName` override\'s redirected Figma node', async () => {
+      // deps/build-status-index.js resolves the override into the slice's figmaPageId
+      // build-time — the widget just trusts whatever node id the slice carries.
+      stubComponentSlice({
+        web: { figma: { status: 'available', originalName: 'Date and time field' } },
+        figmaPageId: '10196:3411',
+      });
+      window.history.pushState({}, '', '/web/rsp/components/calendar');
+      const a = makeAnchor();
+      await decorateSeeInFigma(a, a.querySelector('span'));
+      expect(a.getAttribute('href')).to.equal(
+        'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=10196-3411&m=dev',
+      );
+    });
+
+    it('removes itself when the slice has no figmaPageId', async () => {
+      stubComponentSlice({ web: {} });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const a = makeAnchor();
       await decorateSeeInFigma(a, a.querySelector('span'));
       expect(a.isConnected).to.be.false;
     });
 
-    it('removes itself when the data file cannot be fetched', async () => {
+    it('removes itself when the slice cannot be fetched', async () => {
       fetchStub.resolves({ ok: false, status: 404 });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const a = makeAnchor();

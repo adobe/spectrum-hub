@@ -8,8 +8,15 @@
      aria-label is required here: like Tabs, react-aria's underlying TagGroup
      throws an accessible-name error at render time without an aria-label or
      aria-labelledby (the `description` prop is a visible caption, not an
-     accessible name substitute). -->
-<TagGroup aria-label="Categories">
+     accessible name substitute).
+
+     selectionMode="single" is hardcoded (not in the extracted TagGroup prop
+     data) — without it, tags are focusable but clicking does nothing.
+
+     NOTE: isEmphasized produces no visible style difference even on a
+     selected tag in the current esm.sh @react-spectrum/s2 build — looks like
+     an upstream gap, not a snippet bug. -->
+<TagGroup aria-label="Categories" selectionMode="single">
   <Tag>Design</Tag>
   <Tag>Engineering</Tag>
   <Tag>Marketing</Tag>

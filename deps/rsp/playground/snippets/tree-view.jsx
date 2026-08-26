@@ -9,8 +9,12 @@
      throws an accessible-name error at render time without an aria-label or
      aria-labelledby. Each TreeViewItem's `textValue` and `children` are
      marked required in its extracted prop data; TreeViewItemContent wraps
-     the row's own label, distinct from any nested child TreeViewItems. -->
-<TreeView aria-label="File browser">
+     the row's own label, distinct from any nested child TreeViewItems.
+
+     selectionMode="multiple" is hardcoded (not in the extracted TreeView prop
+     data) because without it the playground's selectionStyle control
+     (highlight/checkbox) has no visible effect — Tree defaults to 'none'. -->
+<TreeView aria-label="File browser" selectionMode="multiple">
   <TreeViewItem id="assets" textValue="Assets">
     <TreeViewItemContent>Assets</TreeViewItemContent>
     <TreeViewItem id="logo" textValue="logo.svg">

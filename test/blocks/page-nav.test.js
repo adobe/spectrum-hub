@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
+import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
   const main = document.createElement('main');
@@ -460,8 +461,9 @@ describe('page-nav block', () => {
       stubMatchMedia(sandbox, true);
       fetchStub = sandbox.stub(window, 'fetch').resolves({
         ok: true,
-        json: async () => [{ name: 'Action button', figmaPageId: '9230:3620' }],
+        json: async () => ({ web: {}, figmaPageId: '9230:3620' }),
       });
+      resetComponentSliceCacheForTests();
       makeDOM();
     });
 
@@ -502,7 +504,7 @@ describe('page-nav block', () => {
     });
 
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
-      fetchStub.resolves({ ok: true, json: async () => [] });
+      fetchStub.resolves({ ok: true, json: async () => ({ web: {} }) });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
       const group = await waitForEl(el, '.page-nav-widgets');

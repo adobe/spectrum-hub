@@ -3,7 +3,9 @@ export default {
   "rsp": {
     "action-group": "ActionButtonGroup",
     "alert-dialog": "Dialog",
-    "color-handle-and-loupe": "ColorHandle",
+    "cards": "Card",
+    "close-button": "Button",
+    "color-handle-and-loupe": "ColorSlider",
     "in-line-alert": "InlineAlert",
     "radio-button": "RadioGroup",
     "select-box": "SelectBoxGroup",
@@ -12,6 +14,7 @@ export default {
     "swatch": "ColorSwatch",
     "swatch-group": "ColorSwatchPicker",
     "table": "TableView",
+    "tag": "TagGroup",
     "takeover-dialog": "Dialog",
     "thumbnail": "Image"
   },
