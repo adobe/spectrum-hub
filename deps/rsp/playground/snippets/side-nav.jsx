@@ -4,13 +4,8 @@
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component, so there's no SWC shape to mirror.
 
-     SideNav is Tree-based (same react-aria-components Tree primitive as TreeView —
-     confirmed via SideNav.d.ts fetched from unpkg, which extends RACTreeProps) —
-     aria-label is required for the same reason tree-view.jsx/radio-group.jsx need
-     one: react-aria throws an accessible-name error at render time without it.
-     Each SideNavItem's `textValue` is required; SideNavItemContent wraps the row's
-     own label, same role as TreeViewItemContent, distinct from any nested child
-     SideNavItems. -->
+     SideNav is Tree-based (extends RACTreeProps), so it needs the same
+     required aria-label and per-item `textValue` as tree-view.jsx. -->
 <SideNav aria-label="Site sections">
   <SideNavItem id="get-started" textValue="Get started">
     <SideNavItemContent>Get started</SideNavItemContent>

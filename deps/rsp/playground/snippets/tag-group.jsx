@@ -10,27 +10,12 @@
      aria-labelledby (the `description` prop is a visible caption, not an
      accessible name substitute).
 
-     selectionMode="single" is required for individual tags to be clickable at
-     all — RAC's underlying TagList defaults selectionMode to 'none', in which
-     case tags are focusable but nothing happens on click/press (confirmed via
-     a live reproduction: with no selectionMode, clicking never sets
-     aria-selected on any tag; adding selectionMode="single" makes clicking a
-     tag toggle aria-selected="true" immediately, no `id` needed on the child
-     `Tag`s — RAC auto-derives keys). Same mechanism as tree-view.jsx's
-     selectionMode fix. selectionMode isn't a playground control (not in this
-     repo's extracted TagGroup prop data, same one-hop extends limitation as
-     the LabelableProps gap), so it's hardcoded here.
+     selectionMode="single" is hardcoded (not in the extracted TagGroup prop
+     data) — without it, tags are focusable but clicking does nothing.
 
-     NOTE: this makes tags selectable, which is the prerequisite for
-     `isEmphasized` to matter at all (it's documented as an emphasized style
-     for the *selected* look) — but even with a tag genuinely selected
-     (confirmed via aria-selected="true") and isEmphasized sent as a real
-     boolean all the way through to createElement, no computed style
-     (background/color/border/box-shadow/outline/padding, on the row or any
-     descendant) differs at all between isEmphasized true/false in the current
-     esm.sh-published @react-spectrum/s2 build. That looks like a real gap in
-     the published build, not something fixable from this snippet — flagged
-     for upstream confirmation, not chased further here. -->
+     NOTE: isEmphasized produces no visible style difference even on a
+     selected tag in the current esm.sh @react-spectrum/s2 build — looks like
+     an upstream gap, not a snippet bug. -->
 <TagGroup aria-label="Categories" selectionMode="single">
   <Tag>Design</Tag>
   <Tag>Engineering</Tag>
