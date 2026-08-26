@@ -2,7 +2,9 @@
   "web": {
     "figma": {
       "status": "available",
-      "secondary": "Use date and time component"
+      "secondary": "Use date and time component",
+      "originalName": "Date and time field",
+      "note": "No standalone Figma design; the Date and time field design covers it."
     },
     "rsp": {
       "status": "available",
@@ -11,5 +13,6 @@
     "swc": {
       "status": "not-available"
     }
-  }
+  },
+  "figmaPageId": "10196:3411"
 }

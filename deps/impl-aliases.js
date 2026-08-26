@@ -3,6 +3,7 @@ export default {
   "rsp": {
     "action-group": "ActionButtonGroup",
     "alert-dialog": "Dialog",
+    "cards": "Card",
     "close-button": "Button",
     "color-handle-and-loupe": "ColorSlider",
     "in-line-alert": "InlineAlert",

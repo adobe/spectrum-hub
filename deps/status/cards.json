@@ -1,16 +1,19 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "originalName": "Cards (Asset)",
+      "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
     },
     "rsp": {
       "status": "available",
-      "context": "Stable"
+      "context": "Stable",
+      "originalName": "Card"
     },
     "swc": {
       "status": "not-available",
       "secondary": "Use Gen1"
     }
   },
-  "figmaPageId": "10182:123493"
+  "figmaPageId": "10182:4354"
 }
