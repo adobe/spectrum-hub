@@ -389,6 +389,7 @@
           },
           "rsp": {
             "status": "available",
+            "originalName": "Button",
             "secondary": "In package, not RSP docs"
           },
           "swc": {
@@ -487,7 +488,7 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorHandle",
+            "originalName": "ColorSlider",
             "note": "Built into color components instead."
           },
           "swc": {
@@ -513,7 +514,7 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorHandle",
+            "originalName": "ColorSlider",
             "note": "Built into color components instead."
           },
           "swc": {

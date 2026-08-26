@@ -3,7 +3,8 @@ export default {
   "rsp": {
     "action-group": "ActionButtonGroup",
     "alert-dialog": "Dialog",
-    "color-handle-and-loupe": "ColorHandle",
+    "close-button": "Button",
+    "color-handle-and-loupe": "ColorSlider",
     "in-line-alert": "InlineAlert",
     "radio-button": "RadioGroup",
     "select-box": "SelectBoxGroup",

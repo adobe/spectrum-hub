@@ -15,6 +15,14 @@
     "CardsUser": "Cards",
     "CardView": "Cards",
     "Card": "Cards",
+    "CloseButton": {
+      "canonical": "CloseButton",
+      "externalName": "Button"
+    },
+    "ColorHandle": {
+      "canonical": "ColorHandle",
+      "externalName": "ColorSlider"
+    },
     "ColorSwatchPicker": {
       "canonical": "SwatchGroup",
       "externalName": "ColorSwatchPicker"
