@@ -460,7 +460,7 @@ describe('page-nav block', () => {
       stubMatchMedia(sandbox, true);
       fetchStub = sandbox.stub(window, 'fetch').resolves({
         ok: true,
-        json: async () => [{ name: 'Action button', figmaPageId: '9230:3620' }],
+        json: async () => ({ web: {}, figmaPageId: '9230:3620' }),
       });
       makeDOM();
     });
@@ -502,7 +502,7 @@ describe('page-nav block', () => {
     });
 
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
-      fetchStub.resolves({ ok: true, json: async () => [] });
+      fetchStub.resolves({ ok: true, json: async () => ({ web: {} }) });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
       const group = await waitForEl(el, '.page-nav-widgets');

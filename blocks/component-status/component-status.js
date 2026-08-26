@@ -16,10 +16,10 @@
 import { STATUSES } from '../../scripts/utils/status-model.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { getSvgRef } from '../../scripts/utils/svg.js';
-import { getConfig } from '../../scripts/ak.js';
 import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
 import { figmaNodeUrl } from '../../scripts/utils/figma.js';
 import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
+import { fetchComponentSlice } from '../../scripts/utils/component-slice.js';
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -84,17 +84,6 @@ function buildPill({ kind, label: prefix }, cell, link) {
 
   pill.append(glyph, label);
   return pill;
-}
-
-/** Fetches one component's status slice (deps/status/<slug>.json), or null when absent. */
-export async function fetchComponentSlice(slug) {
-  const { codeBase = '' } = getConfig();
-  try {
-    const resp = await fetch(`${codeBase}/deps/status/${slug}.json`);
-    return resp.ok ? resp.json() : null;
-  } catch {
-    return null;
-  }
 }
 
 /**
