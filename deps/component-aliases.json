@@ -14,7 +14,10 @@
     "CardsProduct": "Cards",
     "CardsUser": "Cards",
     "CardView": "Cards",
-    "Card": "Cards",
+    "Card": {
+      "canonical": "Cards",
+      "externalName": "Card"
+    },
     "CloseButton": {
       "canonical": "CloseButton",
       "externalName": "Button"
