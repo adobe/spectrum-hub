@@ -588,6 +588,41 @@ describe('buildComponentSlices', () => {
     );
     assert.equal(slices[0].data.figmaPageId, '1:1');
   });
+
+  it('prefers a `web.figma.originalName` override over the roster source name', () => {
+    // Calendar has no Figma page of its own; a status-overrides.json entry redirects its
+    // Design link to the Date and time field design without touching Calendar's own roster
+    // membership (sources.figma is absent — this is a code-only component in Figma terms).
+    const rosterNoFigmaSource = [{ name: 'Calendar', sources: { rsp: 'Calendar' } }];
+    const slices = buildComponentSlices(
+      rosterNoFigmaSource,
+      [{
+        name: 'Calendar',
+        platforms: { web: { figma: { status: 'available', originalName: 'Date and time field' } } },
+      }],
+      [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
+    );
+    assert.equal(slices[0].data.figmaPageId, '10196:3411');
+  });
+
+  it('pins one Figma variant via originalName when several sources could match the canonical name', () => {
+    // Cards has six Figma variant pages all aliased to the canonical "Cards" name; without an
+    // override the last-processed source wins by accident. An originalName override pins one
+    // deliberately.
+    const rosterCards = [{ name: 'Cards', sources: { figma: 'Cards (User)' } }];
+    const slices = buildComponentSlices(
+      rosterCards,
+      [{
+        name: 'Cards',
+        platforms: { web: { figma: { status: 'available', originalName: 'Cards (Asset)' } } },
+      }],
+      [
+        { name: 'Cards (Asset)', figmaPageId: '10182:4354' },
+        { name: 'Cards (User)', figmaPageId: '10182:123493' },
+      ],
+    );
+    assert.equal(slices[0].data.figmaPageId, '10182:4354');
+  });
 });
 
 describe('buildImplAliases', () => {
@@ -623,5 +658,18 @@ describe('buildImplAliases', () => {
 
   it('returns an empty object for no slices', () => {
     assert.deepEqual(buildImplAliases([]), {});
+  });
+
+  it('excludes a figma cell\'s originalName — it redirects the Figma link, not a code implementation', () => {
+    const slices = [{
+      slug: 'calendar',
+      data: {
+        web: {
+          figma: { status: 'available', originalName: 'Date and time field' },
+          rsp: { status: 'available' },
+        },
+      },
+    }];
+    assert.deepEqual(buildImplAliases(slices), {});
   });
 });

@@ -470,7 +470,12 @@ export function buildComponentSlices(roster, components, figmaRoster) {
 
   return roster.map(({ name, sources }) => {
     const component = componentByName.get(name);
-    const figmaPageId = sources.figma ? figmaPageIdByName.get(sources.figma) : undefined;
+    // A `web.figma.originalName` override (see applyOverrides) redirects the Figma link to a
+    // different design's node id — e.g. Calendar borrowing Date and time field's page, or
+    // Cards pinning one of its six variant pages as the canonical link — without changing
+    // which Figma roster name/status this component's own roster membership came from.
+    const figmaSourceName = component.platforms[PLATFORM]?.figma?.originalName ?? sources.figma;
+    const figmaPageId = figmaSourceName ? figmaPageIdByName.get(figmaSourceName) : undefined;
     const data = { web: component.platforms[PLATFORM] };
     if (figmaPageId) { data.figmaPageId = figmaPageId; }
     const sharedSlug = sharedPageSlug(component);
@@ -493,6 +498,11 @@ export function buildComponentSlices(roster, components, figmaRoster) {
  * it as a module avoids a per-page-load network round trip for data that's almost always
  * empty for the current page anyway.
  *
+ * Figma is excluded — it's a design source with its own originalName use (redirecting
+ * buildComponentSlices' figmaPageId lookup, see there), not a code implementation go-to-impl.js
+ * ever looks up by, and go-to-impl.js only ever reads `IMPL_ALIASES[impl]` for a registered
+ * implementation id.
+ *
  * @param {{ slug: string, data: { web: object } }[]} slices
  * @returns {Record<string, Record<string, string>>}
  */
@@ -500,7 +510,7 @@ export function buildImplAliases(slices) {
   const aliases = {};
   for (const { slug, data } of slices) {
     for (const [impl, cell] of Object.entries(data.web ?? {})) {
-      if (!cell?.originalName) { continue; }
+      if (!cell?.originalName || !getImplementationById(impl)) { continue; }
       aliases[impl] = aliases[impl] ?? {};
       aliases[impl][slug] = cell.originalName;
     }

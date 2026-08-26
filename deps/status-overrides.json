@@ -86,5 +86,23 @@
         "note": "Docs page not yet written."
       }
     }
+  },
+  "Calendar": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "originalName": "Date and time field",
+        "note": "No standalone Figma design; the Date and time field design covers it."
+      }
+    }
+  },
+  "Cards": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "originalName": "Cards (Asset)",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
   }
 }
