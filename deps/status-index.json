@@ -1338,7 +1338,8 @@
             "status": "available"
           },
           "rsp": {
-            "status": "available"
+            "status": "available",
+            "originalName": "TagGroup"
           },
           "swc": {
             "status": "not-available",

@@ -13,6 +13,7 @@ export default {
     "swatch": "ColorSwatch",
     "swatch-group": "ColorSwatchPicker",
     "table": "TableView",
+    "tag": "TagGroup",
     "takeover-dialog": "Dialog",
     "thumbnail": "Image"
   },

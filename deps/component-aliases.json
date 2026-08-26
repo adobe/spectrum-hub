@@ -66,6 +66,10 @@
     "SideNav": {
       "canonical": "SideNavigation",
       "externalName": "SideNav"
+    },
+    "Tag": {
+      "canonical": "Tag",
+      "externalName": "TagGroup"
     }
   },
   "figma": {
