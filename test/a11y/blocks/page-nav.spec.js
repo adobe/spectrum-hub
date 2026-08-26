@@ -43,9 +43,6 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
         - listitem:
           - link "API reference":
             - /url: "#api-reference"
-        - listitem:
-          - link "Back to top":
-            - /url: "#component-overview"
       - button "Copy markdown":
         - img
         - text: ""

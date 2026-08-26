@@ -10,7 +10,7 @@
   margin-block: var(--s2-spacing-500) var(--s2-spacing-800);
 
   .section > .block-content:last-child & {
-      padding-block-end: var(--s2-spacing-800);
+      margin-block: var(--s2-spacing-500) 0;
   }
 
   /* stacked layout for small screens */
@@ -79,7 +79,6 @@
     table {
       border-collapse: separate;
       border-spacing: 0;
-      table-layout: fixed;
     }
 
     thead {

@@ -57,6 +57,7 @@
   p:has(strong) {
     margin-block-start: var(--s2-spacing-400);
     color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
+    font-size: var(--s2-component-s-regular-font-size);
   }
 
   a {
@@ -162,9 +163,11 @@
     padding: 0;
     list-style-type: none;
     display: grid;
+    max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
 
     /* Without an explicit track, .level-1-button's real box (and its focus ring)
     extends far past the 32px closed rail, with only its left edge visible. */
+    overflow-y: auto;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s2-spacing-100);
     transition: width var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
@@ -237,6 +240,7 @@
       color: var(--s2-blue-900);
       font-weight: 700;
       line-height: var(--s2-component-m-height);
+      font-size: var(--s2-component-s-regular-font-size);
     }
 
     ul.level-2-list {
@@ -274,12 +278,13 @@
       }
 
       .count-badge {
+        padding-inline: 2px;
         display: flex;
         justify-content: center;
         align-items: center;
         width: 20px;
         height: 20px;
-        border-radius: 10px;
+        border-radius: 6px;
         font-size: 12px;
         font-weight: 500;
         color: var(--s2-gray-700);
@@ -358,6 +363,7 @@
       }
 
       .icon {
+        color: inherit;
         width: 10px;
         height: 10px;
         transition:
@@ -371,6 +377,7 @@
 
         .icon {
           transform: rotate(90deg);
+          color: inherit;
         }
 
         & + :is(.level-3-menu, .level-4-menu) {
@@ -387,7 +394,6 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    margin-block-start: var(--expand-toggle-top-margin);
 
     &:hover {
       --expand-panel-width: 5px;
@@ -402,13 +408,38 @@
         transition: none;
       }
     }
+
+    @media (width >= 900px) {
+      margin-block-start: var(--expand-toggle-top-margin);
+    }
   }
 
   /* Below 900px this fixed, viewport-pinned trigger opens the sitenav overlay,
   which shows the same rail (icons only) as desktop by default — tap
   sitenav-expand-btn inside it to reveal labels, same as desktop. */
   .sitenav-trigger-btn {
-    display: none;
+    display: flex;
+    position: fixed;
+    inset-inline-start: 36px; /* margin from edge of viewport to sitenav + padding of sitenav */
+    inset-block-end: var(--s2-spacing-400);
+    z-index: 1;
+    border-radius: var(--s2-corner-radius-600);
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background-color: var(--s2-gray-1000);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      backdrop-filter: blur(var(--sitenav-blur));
+      pointer-events: none;
+    }
 
     > svg,
     &[aria-expanded="true"] svg {
@@ -417,32 +448,11 @@
 
     &:hover svg,
     &[aria-expanded="true"] svg {
-      color: var(--s2-gray-100);
+      color: var(--s2-gray-100) !important; /* !important needed to override the not selector at line 111 */
     }
 
-    @media (width < 900px) {
-      display: flex;
-      position: fixed;
-      inset-inline-start: 36px; /* margin from edge of viewport to sitenav + padding of sitenav */
-      inset-block-end: var(--s2-spacing-400);
-      z-index: 1;
-      border-radius: var(--s2-corner-radius-600);
-      justify-content: center;
-      align-items: center;
-      width: 32px;
-      height: 32px;
-      flex-shrink: 0;
-      background-color: var(--s2-gray-1000);
-
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        border-radius: inherit;
-        backdrop-filter: blur(var(--sitenav-blur));
-        pointer-events: none;
-      }
+    @media (width >= 900px) {
+      display: none;
     }
   }
 
@@ -500,15 +510,10 @@ html:has(meta[name="template"][content="marketing"]) {
 
 /* Lifted direct from prototype */
 .light-scheme {
-  .level-2-menu, .sitenav-expand-btn::before {
+  nav::before, .level-2-menu, .sitenav-expand-btn::before {
     box-shadow: inset 0 0 3px #fff, 0 0 .5px #0000001a, 0 9px 94.8px #0000000d;
     background-color: #ffffff80;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
-  }
-  
-  nav::before {
-    background-color: #fff;
-    box-shadow: inset 0 0 3px #fff, 0 0 .5px #0000001a, 0 9px 94.8px #0000000d;
   }
 }
 
