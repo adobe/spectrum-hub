@@ -18,6 +18,7 @@ import {
   buildIndex,
   buildComponentSlices,
   buildImplAliases,
+  buildRspExportNames,
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
@@ -692,5 +693,43 @@ describe('buildImplAliases', () => {
       },
     }];
     assert.deepEqual(buildImplAliases(slices), {});
+  });
+});
+
+describe('buildRspExportNames', () => {
+  it('maps a canonical slug to the real RSP export name that differs from it', () => {
+    const roster = [{ name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup', figma: 'Action group' } }];
+    assert.deepEqual(buildRspExportNames(roster), { 'action-group': 'ActionButtonGroup' });
+  });
+
+  // AlertDialog is its own real, distinct RSP component (deps/rsp/data/AlertDialog.json) even
+  // though react-spectrum.adobe.com only documents it on the Dialog page — the doc-link
+  // redirect (deps/impl-aliases.js' originalName) must not leak into what actually renders.
+  it('omits a component whose real RSP export name matches its own canonical name', () => {
+    const roster = [{ name: 'AlertDialog', sources: { rsp: 'AlertDialog', figma: 'Alert dialog' } }];
+    assert.deepEqual(buildRspExportNames(roster), {});
+  });
+
+  it('omits a component with no RSP source at all', () => {
+    const roster = [{ name: 'SomeFigmaOnlyThing', sources: { figma: 'Some figma only thing' } }];
+    assert.deepEqual(buildRspExportNames(roster), {});
+  });
+
+  it('returns an empty object for an empty roster', () => {
+    assert.deepEqual(buildRspExportNames([]), {});
+  });
+
+  it('builds one entry per component that needs an override, ignoring the rest', () => {
+    const roster = [
+      { name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' } },
+      { name: 'TakeoverDialog', sources: { rsp: 'FullscreenDialog' } },
+      { name: 'StandardDialog', sources: { rsp: 'Dialog' } },
+      { name: 'Divider', sources: { rsp: 'Divider' } },
+    ];
+    assert.deepEqual(buildRspExportNames(roster), {
+      'action-group': 'ActionButtonGroup',
+      'takeover-dialog': 'FullscreenDialog',
+      'standard-dialog': 'Dialog',
+    });
   });
 });
