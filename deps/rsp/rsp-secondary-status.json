@@ -1,10 +1,10 @@
 [
-  { "name": "Alert Dialog",    "context": "Use Dialog component" },
+  { "name": "Alert Dialog",    "context": "Use dialog component" },
   { "name": "Close Button",    "context": "In package, not RSP docs" },
   { "name": "Color Handle",    "context": "Use color components" },
   { "name": "Color Loupe",     "context": "Use color components" },
-  { "name": "Field Label",     "context": "Use Form component" },
-  { "name": "Help Text",       "context": "Use Form component" },
-  { "name": "Standard Dialog", "context": "Use Dialog component" },
+  { "name": "Field Label",     "context": "Use form component" },
+  { "name": "Help Text",       "context": "Use form component" },
+  { "name": "Standard Dialog", "context": "Use dialog component" },
   { "name": "Thumbnail",       "context": "Use image" }
 ]
