@@ -92,11 +92,13 @@ export function buildControlsMap(controlsSheet) {
 }
 
 // Parses a TS union type string into its values, e.g. "'a' | 'b'" -> ['a', 'b'].
-// Empty for non-union types like "boolean"/"ReactNode".
+// Empty for non-union types like "boolean"/"ReactNode". Matches both quote styles:
+// hand-authored .d.ts text uses single quotes, but the TS checker's own renderer
+// (checker.typeToString(), used by the compiler-based extractor) emits double quotes.
 export function parsePickerOptions(typeString) {
   if (!typeString) { return []; }
-  const stringMatches = typeString.match(/'([^']+)'/g);
-  if (stringMatches) { return stringMatches.map((m) => m.replace(/'/g, '')); }
+  const stringMatches = typeString.match(/'([^']+)'|"([^"]+)"/g);
+  if (stringMatches) { return stringMatches.map((m) => m.slice(1, -1)); }
 
   // A handful of size-like props (e.g. AvatarGroup.size) are a union of bare numeric
   // literals with an open-ended `(number & {})` tail — a TS trick that keeps autocomplete

@@ -245,6 +245,13 @@ describe('parsePickerOptions', () => {
     );
   });
 
+  it('extracts values from a double-quoted union type string (TS checker output)', () => {
+    assert.deepEqual(
+      parsePickerOptions('"XS" | "S" | "M" | "L" | "XL"'),
+      ['XS', 'S', 'M', 'L', 'XL'],
+    );
+  });
+
   it('returns an empty array for a non-union type like boolean', () => {
     assert.deepEqual(parsePickerOptions('boolean'), []);
   });
