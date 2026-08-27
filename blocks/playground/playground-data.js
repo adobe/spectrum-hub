@@ -211,7 +211,11 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   } else if (isStaticColor) {
     options = [NO_STATIC_COLOR, ...resolvePickerOptions(property, rspProps, swcProps)];
   } else {
-    options = resolvePickerOptions(property, rspProps, swcProps);
+    // A named type alias (e.g. SWC's "AccordionHeadingLevel") has no inline union for
+    // resolvePickerOptions to parse — the controls sheet's own curated options are the
+    // only source for those, same fallback role they play for "icon" above.
+    const derived = resolvePickerOptions(property, rspProps, swcProps);
+    options = derived.length ? derived : (controlEntry?.options ?? []);
   }
   const attribute = isIcon ? null : (swcRow?.attribute ?? null);
 
