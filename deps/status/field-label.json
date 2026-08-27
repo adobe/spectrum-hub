@@ -6,12 +6,11 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
-      "secondary": "Use Form component",
+      "secondary": "Use form component",
       "note": "Built into Form components instead."
     },
     "swc": {
-      "status": "not-available",
-      "secondary": "Use Gen1"
+      "status": "not-available"
     }
   },
   "figmaPageId": "9244:6297"

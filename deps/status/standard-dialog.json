@@ -7,11 +7,11 @@
       "status": "available",
       "context": "Stable",
       "originalName": "Dialog",
-      "secondary": "Use Dialog component"
+      "secondary": "Use dialog component"
     },
     "swc": {
       "status": "not-available",
-      "secondary": "Use Dialog"
+      "secondary": "Use dialog"
     }
   },
   "figmaPageId": "10034:52090"

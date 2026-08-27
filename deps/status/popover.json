@@ -9,8 +9,7 @@
     },
     "swc": {
       "status": "available",
-      "context": "Stable",
-      "secondary": "Use Gen1"
+      "context": "Stable"
     }
   },
   "figmaPageId": "9385:13924"
