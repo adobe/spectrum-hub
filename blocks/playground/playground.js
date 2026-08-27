@@ -13,6 +13,8 @@ import {
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
 import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
+import RSP_EXPORT_NAMES from '../../deps/rsp-export-names.js';
+import { toSlug } from '../../scripts/utils/component-path.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -377,10 +379,19 @@ function fetchText(url) {
 // (drives both the live preview and, for composites, subcomponent structure),
 // and which preview shell renders the live iframe.
 function resolveComponentMeta(component, implementation, base) {
-  const componentTitle = pascalCase(component);
+  // Some components ship under a different real RSP export name than their canonical
+  // Spectrum Hub name (e.g. canonical "action-group" is RSP's `ActionButtonGroup`) —
+  // deps/rsp-export-names.js (built by deps/build-status-index.js from the roster's actual
+  // RSP membership) resolves that. This is NOT the same table go-to-impl.js uses for doc
+  // links (deps/impl-aliases.js): several distinct real RSP components can share one doc
+  // page (AlertDialog/Dialog/FullscreenDialog all link to Dialog.html) without being the
+  // same component to render — reusing the doc-link table here would silently swap a real
+  // component for the generic one its docs happen to redirect to.
+  const realExportName = implementation === 'rsp' ? RSP_EXPORT_NAMES[component] : null;
+  const componentTitle = realExportName ?? pascalCase(component);
   const previewName = implementation === 'rsp' ? componentTitle : `swc-${component}`;
   const markupUrl = implementation === 'rsp'
-    ? `${base}/deps/rsp/playground/snippets/${component}.jsx`
+    ? `${base}/deps/rsp/playground/snippets/${toSlug(componentTitle)}.jsx`
     : `${base}/deps/swc/playground/snippets/${component}.html`;
   // RSP and SWC each have their own preview shell; anything else (ios/android,
   // unrecognized) falls back to this block's own generic shell.

@@ -23,9 +23,20 @@
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
+    import RSP_EXPORT_NAMES from '../../rsp-export-names.js';
 
     const mount = document.getElementById('mount');
     const { component, implementation } = resolvePreviewParams();
+    // Some components ship under a different real RSP export name than their canonical
+    // Spectrum Hub name (e.g. canonical "action-group" is RSP's `ActionButtonGroup`) —
+    // deps/rsp-export-names.js (built by deps/build-status-index.js from the roster's actual
+    // RSP membership) resolves that. This is deliberately NOT deps/impl-aliases.js (the table
+    // go-to-impl.js uses for doc links): several distinct real RSP components can share one
+    // doc page (AlertDialog/Dialog/FullscreenDialog all link to Dialog.html) without being
+    // the same component to render — reusing the doc-link table here would silently swap a
+    // real component (AlertDialog, FullscreenDialog, CloseButton) for the generic one its
+    // docs happen to redirect to.
+    const exportName = RSP_EXPORT_NAMES[component] ?? pascalCase(component);
 
     // React version pinned via esm.sh's `?deps=` param so the app's React and
     // RSP's internal React are the same module instance.
@@ -85,7 +96,6 @@
 
     async function initRsp() {
       const PKG = '@react-spectrum/s2';
-      const exportName = pascalCase(component);
       const overlayTrigger = OVERLAY_TRIGGERS[component];
       const shape = overlayShape(component);
 
