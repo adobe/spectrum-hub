@@ -410,13 +410,25 @@ function resolveComponentMeta(component, implementation, base) {
 
 // Only the spreadsheet fetch is allowed to reject and abort init(); a missing
 // prop-data file or markup fragment (leaf component) degrades to empty instead.
-async function fetchPlaygroundInputs(base, componentTitle, component, spreadsheetUrl, markupUrl) {
+// SWC data is only fetched for swc pages — an rsp page's component has no
+// swc-<name>.json to find (most RSP components have no SWC counterpart at
+// all), so fetching it there would just be a guaranteed, noisy 404.
+async function fetchPlaygroundInputs(
+  base,
+  componentTitle,
+  component,
+  implementation,
+  spreadsheetUrl,
+  markupUrl,
+) {
   const [
     { componentsSheet, controlsSheet }, rspProps, swcProps, snippetMarkup,
   ] = await Promise.all([
     fetchPlaygroundSheets(spreadsheetUrl),
     fetchJson(`${base}/deps/rsp/data/${componentTitle}.json`).then((d) => d.props ?? d).catch(() => []),
-    fetchJson(`${base}/deps/swc/data/swc-${component}.json`).catch(() => []),
+    implementation === 'swc'
+      ? fetchJson(`${base}/deps/swc/data/swc-${component}.json`).catch(() => [])
+      : Promise.resolve([]),
     fetchText(markupUrl).catch(() => ''),
   ]);
   return {
@@ -608,7 +620,14 @@ export default async function init(el) {
   try {
     ({
       componentsSheet, controlsSheet, rspProps, swcProps, snippetMarkup,
-    } = await fetchPlaygroundInputs(base, componentTitle, component, spreadsheetUrl, markupUrl));
+    } = await fetchPlaygroundInputs(
+      base,
+      componentTitle,
+      component,
+      implementation,
+      spreadsheetUrl,
+      markupUrl,
+    ));
   } catch (err) {
     config.log('sandbox block: data fetch failed', err);
     el.remove();
