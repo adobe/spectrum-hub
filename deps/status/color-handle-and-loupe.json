@@ -14,7 +14,6 @@
     "swc": {
       "status": "available",
       "context": "Stable",
-      "secondary": "Use Gen1",
       "page": "color-handle-and-loupe",
       "originalName": "ColorHandle"
     }

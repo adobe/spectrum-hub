@@ -6,11 +6,10 @@
     "rsp": {
       "status": "available",
       "originalName": "Dialog",
-      "secondary": "Use Dialog component"
+      "secondary": "Use dialog component"
     },
     "swc": {
-      "status": "not-available",
-      "secondary": "Use Gen1"
+      "status": "not-available"
     }
   },
   "figmaPageId": "9894:25578"
