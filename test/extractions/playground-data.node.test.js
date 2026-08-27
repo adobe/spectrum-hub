@@ -397,6 +397,32 @@ describe('resolveControl', () => {
     assert.equal(resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS), null);
   });
 
+  // labelAlign's type ("LabelAlign") is a named alias, not an inline union, so
+  // resolvePickerOptions can't derive anything from it — the controls sheet's own
+  // curated options are the only way to populate a picker/segmentedControl for it.
+  it("falls back to the controls sheet's curated options when the type can't be introspected", () => {
+    const curatedMap = buildControlsMap([{ property: 'labelAlign', control: 'segmentedControl', options: 'start, end' }]);
+    const result = resolveControl('labelAlign', 'swc', curatedMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result, {
+      controlType: 'segmentedControl',
+      options: ['start', 'end'],
+      attribute: 'label-align',
+    });
+  });
+
+  it('does not warn when curated options cover a type that cannot be introspected', () => {
+    const curatedMap = buildControlsMap([{ property: 'labelAlign', control: 'segmentedControl', options: 'start, end' }]);
+    const onSkip = mock.fn();
+    resolveControl('labelAlign', 'swc', curatedMap, RSP_PROPS, SWC_PROPS, onSkip);
+    assert.equal(onSkip.mock.callCount(), 0);
+  });
+
+  it('prefers options derived from real type data over curated ones when both are available', () => {
+    const curatedMap = buildControlsMap([{ property: 'variant', control: 'picker', options: 'ignored, alsoIgnored' }]);
+    const result = resolveControl('variant', 'rsp', curatedMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result.options, ['primary', 'secondary', 'accent', 'negative']);
+  });
+
   it('returns a descriptor for a swc-only property when implementation is swc', () => {
     const result = resolveControl('truncate', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
     assert.deepEqual(result, {
