@@ -2,7 +2,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\"",
     "description": "The size of the divider.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
@@ -19,7 +19,7 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "DividerStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
     "description": "The static color variant to use for the divider.",
     "inheritedFrom": "DividerBase",
     "since": "2.0.0-beta.1"

@@ -14,6 +14,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { fetchManifest, findCorePackageName } from './cdn-resolve.js';
+import { collectResolutionTargets, resolveTargets } from './resolve-attribute-types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
@@ -82,20 +84,23 @@ function formatAttr(a, componentStatus, componentSince) {
   return entry;
 }
 
-export function collectComponentData(cem, tag) {
-  // Find the component declaration
-  let componentDecl = null;
-  findDeclaration:
+/** Finds a component's declaration AND the module that declares it (`mod.path`,
+ * e.g. "components/button/Button.ts") — the module path is needed to resolve the
+ * component's own attribute types (see resolve-attribute-types.js) but isn't part
+ * of collectComponentData's own formatted-row output, so it's a separate lookup. */
+export function findDeclarationAndModule(cem, tag) {
   for (const mod of cem.modules) {
     for (const decl of mod.declarations || []) {
-      if (decl.tagName === tag) {
-        componentDecl = decl;
-        break findDeclaration;
-      }
+      if (decl.tagName === tag) return { decl, modPath: mod.path };
     }
   }
+  return null;
+}
 
-  if (!componentDecl) return null;
+export function collectComponentData(cem, tag) {
+  const found = findDeclarationAndModule(cem, tag);
+  if (!found) return null;
+  const { decl: componentDecl } = found;
 
   const attrs = (componentDecl.attributes || [])
     .map((attr) => formatAttr(attr, componentDecl.status, componentDecl.since));
@@ -107,6 +112,44 @@ export function collectComponentData(cem, tag) {
     seen.add(a.attribute);
     return true;
   });
+}
+
+// Resolves named-alias attribute types (e.g. "ButtonVariant") to their real literal
+// union across every component in ONE shared crawl + compile pass, via the real
+// TypeScript compiler (see resolve-attribute-types.js) — most declaring files
+// (mixins, the shared `element` base, lit itself) are reused across many
+// components, so batching the whole run avoids re-fetching/re-compiling them once
+// per component. Returns Map<"tag::attributeName", resolvedTypeString>; a lookup
+// miss means "couldn't resolve — keep the original bare alias name", not an error.
+async function resolveAllAttributeTypes(cem, wcVersion) {
+  const wcManifest = await fetchManifest(PACKAGE_NAME, wcVersion);
+  const corePkgName = findCorePackageName(wcManifest);
+  if (!corePkgName) {
+    console.warn(`  Warning: couldn't find ${PACKAGE_NAME}'s core peer dependency in its own package.json — named-alias types will be left unresolved this run.`);
+    return new Map();
+  }
+  const coreManifest = await fetchManifest(corePkgName, wcManifest.dependencies[corePkgName]);
+  const coreVersion = coreManifest.version;
+
+  const onSkip = (message) => console.warn(`  Warning: ${message}`);
+  const allTargets = [];
+  for (const name of ALLOW_LIST) {
+    const tag = `swc-${name}`;
+    const found = findDeclarationAndModule(cem, tag);
+    if (!found) continue;
+    allTargets.push(...collectResolutionTargets(found.decl.attributes || [], {
+      modPath: found.modPath,
+      wcVersion,
+      corePkgName,
+      coreVersion,
+      superclassName: found.decl.superclass?.name,
+      keyPrefix: `${tag}::`,
+      onSkip,
+    }));
+  }
+
+  console.log(`Resolving ${allTargets.length} named-alias attribute type(s) against @adobe/spectrum-wc@${wcVersion} / ${corePkgName}@${coreVersion}...`);
+  return resolveTargets(allTargets, { fileCache: new Map(), resolutionCache: new Map(), onSkip });
 }
 
 async function main() {
@@ -128,6 +171,20 @@ async function main() {
     console.log(`Wrote resolved version ${version} to ${VERSION_FILE}`);
   }
 
+  // Only runs against the daily/CI path (a concrete resolved `version` to pin the
+  // crawl to) — the manual `<cem-path>` workflow has no reliable version for that,
+  // so it writes bare (unresolved) alias names, same as before this rewrite. A
+  // failure here degrades to "no resolution this run" rather than aborting the
+  // whole extraction — every attribute still gets written with its original type.
+  let resolvedTypes = new Map();
+  if (version) {
+    try {
+      resolvedTypes = await resolveAllAttributeTypes(cem, version);
+    } catch (err) {
+      console.warn(`  Warning: named-alias type resolution failed, writing unresolved alias names this run: ${err.message}`);
+    }
+  }
+
   let count = 0;
   for (const name of ALLOW_LIST) {
     const tag = `swc-${name}`;
@@ -136,6 +193,11 @@ async function main() {
     if (!attrs) {
       console.warn(`  Warning: ${tag} not found in CEM`);
       continue;
+    }
+
+    for (const row of attrs) {
+      const resolvedType = resolvedTypes.get(`${tag}::${row.attribute}`);
+      if (resolvedType) row.type = resolvedType;
     }
 
     const file = join(OUTPUT_DIR, `${tag}.json`);

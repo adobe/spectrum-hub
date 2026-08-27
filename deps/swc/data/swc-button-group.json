@@ -2,7 +2,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
     "description": "The size of the button group and its children.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
@@ -10,7 +10,7 @@
   {
     "attribute": "orientation",
     "property": "orientation",
-    "type": "ButtonGroupOrientation",
+    "type": "\"horizontal\" | \"vertical\"",
     "default": "'horizontal'",
     "description": "The layout direction of the button group.\n\nNote: this property does NOT set `aria-orientation` on the host because\n`aria-orientation` is only meaningful for roles that manage arrow-key\nnavigation (e.g. `toolbar`, `listbox`). Since button-group uses\nsequential Tab navigation (not roving tabindex), the attribute would\nbe invalid.",
     "inheritedFrom": "ButtonGroupBase",
@@ -28,7 +28,7 @@
   {
     "attribute": "align",
     "property": "align",
-    "type": "ButtonGroupAlignment",
+    "type": "\"start\" | \"center\" | \"end\"",
     "default": "'start'",
     "description": "The alignment of buttons within the group along the main axis.",
     "inheritedFrom": "ButtonGroupBase",

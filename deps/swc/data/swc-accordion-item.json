@@ -19,7 +19,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "AccordionSize | undefined",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
     "description": "The size of the item. Inherited from the parent accordion; controls which\nchevron icon is displayed. Has no effect when the item is used standalone.",
     "inheritedFrom": "AccordionItemBase",
     "since": "2.0.0-beta.1"

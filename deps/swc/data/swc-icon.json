@@ -2,7 +2,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\"",
     "description": "T-shirt icon size.",
     "inheritedFrom": "SizedMixin",
     "status": "internal",

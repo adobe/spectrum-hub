@@ -33,8 +33,12 @@ const CONTROLS_SHEET = [
   { property: 'isDisabled', control: 'switch' },
 ];
 
+// RSP's Button additionally supports "premium"/"genai" — values SWC's real
+// ButtonVariant doesn't have (see .ai/docs/specs/2026-08-27-swc-type-resolution-
+// design.md). Kept in this fixture deliberately: it's the exact regression
+// resolvePickerOptions's implementation gate exists to prevent.
 const RSP_PROPS = [
-  { property: 'variant', type: "'primary' | 'secondary' | 'accent' | 'negative'" },
+  { property: 'variant', type: "'primary' | 'secondary' | 'accent' | 'negative' | 'premium' | 'genai'" },
   { property: 'fillStyle', type: "'fill' | 'outline'" },
   { property: 'size', type: "'S' | 'M' | 'L' | 'XL'" },
   { property: 'staticColor', type: "'white' | 'black' | 'auto'" },
@@ -43,15 +47,24 @@ const RSP_PROPS = [
   { property: 'children', type: 'ReactNode' },
 ];
 
+// SWC types here are already-resolved literal unions, matching what
+// deps/swc/extract-cem-components.js now writes (it resolves named aliases like
+// "ButtonVariant" via the real TypeScript compiler — see resolve-attribute-types.js
+// — rather than leaving them as bare, unusable alias names).
 const SWC_PROPS = [
-  { property: 'variant', attribute: 'variant', type: 'ButtonVariant' },
-  { property: 'fillStyle', attribute: 'fill-style', type: 'ButtonFillStyle' },
-  { property: 'size', attribute: 'size', type: 'ElementSize' },
+  { property: 'variant', attribute: 'variant', type: '"primary" | "secondary" | "accent" | "negative"' },
+  { property: 'fillStyle', attribute: 'fill-style', type: '"fill" | "outline"' },
+  // size's real SWC type is wider than RSP's (SizedMixin's generic ElementSize,
+  // not Button's own narrower override) — this fixture matches that documented,
+  // accepted limitation, not a mistake.
+  { property: 'size', attribute: 'size', type: '"xxs" | "xs" | "s" | "m" | "l" | "xl" | "xxl"' },
   { property: 'disabled', attribute: 'disabled', type: 'boolean' },
   { property: 'pending', attribute: 'pending', type: 'boolean' },
   { property: 'quiet', attribute: 'quiet', type: 'boolean' },
   { property: 'truncate', attribute: 'truncate', type: 'boolean' },
-  // SWC-only property whose type is a named (non-boolean) type with no RSP entry.
+  // SWC-only property whose type genuinely couldn't be resolved (e.g. a generic or
+  // interface shape resolve-attribute-types.js can't turn into a union) — still a
+  // bare alias name, exercising the controls-sheet curated-options fallback.
   { property: 'labelAlign', attribute: 'label-align', type: 'LabelAlign' },
 ];
 
@@ -286,34 +299,56 @@ describe('parsePickerOptions', () => {
 });
 
 describe('resolvePickerOptions', () => {
-  it('returns parsed options from RSP data', () => {
+  it('returns parsed options from RSP data for an rsp implementation', () => {
     assert.deepEqual(
-      resolvePickerOptions('variant', RSP_PROPS, SWC_PROPS),
-      ['primary', 'secondary', 'accent', 'negative'],
+      resolvePickerOptions('variant', 'rsp', RSP_PROPS, SWC_PROPS),
+      ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
     );
   });
 
   it('returns [no, yes] for a boolean property in RSP', () => {
-    assert.deepEqual(resolvePickerOptions('isPending', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
-    assert.deepEqual(resolvePickerOptions('isQuiet', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('isPending', 'rsp', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('isQuiet', 'rsp', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
   });
 
   it('returns [no, yes] for a boolean property in SWC (exact match)', () => {
-    assert.deepEqual(resolvePickerOptions('disabled', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('disabled', 'swc', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
   });
 
   it('returns [no, yes] for a boolean SWC property reached via name normalization', () => {
-    assert.deepEqual(resolvePickerOptions('isDisabled', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('isDisabled', 'swc', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
   });
 
-  it('returns an empty array for an SWC-only property with a named (non-boolean) type', () => {
-    // labelAlign exists only in SWC and its type is a named type, so no options
-    // can be resolved — RSP has nothing to fall back to.
-    assert.deepEqual(resolvePickerOptions('labelAlign', RSP_PROPS, SWC_PROPS), []);
+  it('returns an empty array for an SWC-only property with a named (unresolved) type', () => {
+    // labelAlign exists only in SWC and its type genuinely couldn't be resolved to a
+    // union — RSP has nothing to fall back to either.
+    assert.deepEqual(resolvePickerOptions('labelAlign', 'swc', RSP_PROPS, SWC_PROPS), []);
   });
 
   it('returns an empty array for a property not in either dataset', () => {
-    assert.deepEqual(resolvePickerOptions('unknown', RSP_PROPS, SWC_PROPS), []);
+    assert.deepEqual(resolvePickerOptions('unknown', 'rsp', RSP_PROPS, SWC_PROPS), []);
+    assert.deepEqual(resolvePickerOptions('unknown', 'swc', RSP_PROPS, SWC_PROPS), []);
+  });
+
+  // The regression this implementation-gate exists to prevent: RSP's Button
+  // supports "premium"/"genai" variants SWC's real ButtonVariant doesn't. An SWC
+  // page must use SWC's own (already-resolved) union, never borrow RSP's wider one.
+  it('resolves an swc implementation from SWC\'s own data, not RSP\'s wider union', () => {
+    assert.deepEqual(
+      resolvePickerOptions('variant', 'swc', RSP_PROPS, SWC_PROPS),
+      ['primary', 'secondary', 'accent', 'negative'],
+    );
+  });
+
+  it('still resolves RSP\'s own (wider) union for an rsp implementation', () => {
+    assert.deepEqual(
+      resolvePickerOptions('variant', 'rsp', RSP_PROPS, SWC_PROPS),
+      ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
+    );
+  });
+
+  it('resolves fillStyle from SWC\'s own resolved union for an swc implementation', () => {
+    assert.deepEqual(resolvePickerOptions('fillStyle', 'swc', RSP_PROPS, SWC_PROPS), ['fill', 'outline']);
   });
 });
 
@@ -387,6 +422,17 @@ describe('resolveControl', () => {
     const result = resolveControl('variant', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
     assert.deepEqual(result, {
       controlType: 'picker',
+      options: ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
+      attribute: 'variant',
+    });
+  });
+
+  // Regression: an SWC page must never offer RSP-only variants (premium/genai)
+  // just because RSP's union happened to resolve — see resolvePickerOptions tests.
+  it('returns a control descriptor for the same property scoped to swc data instead', () => {
+    const result = resolveControl('variant', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result, {
+      controlType: 'picker',
       options: ['primary', 'secondary', 'accent', 'negative'],
       attribute: 'variant',
     });
@@ -427,7 +473,7 @@ describe('resolveControl', () => {
   it('prefers options derived from real type data over curated ones when both are available', () => {
     const curatedMap = buildControlsMap([{ property: 'variant', control: 'picker', options: 'ignored, alsoIgnored' }]);
     const result = resolveControl('variant', 'rsp', curatedMap, RSP_PROPS, SWC_PROPS);
-    assert.deepEqual(result.options, ['primary', 'secondary', 'accent', 'negative']);
+    assert.deepEqual(result.options, ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai']);
   });
 
   it('returns a descriptor for a swc-only property when implementation is swc', () => {

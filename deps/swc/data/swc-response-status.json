@@ -2,7 +2,7 @@
   {
     "attribute": "status",
     "property": "status",
-    "type": "ResponseStatusStatus",
+    "type": "\"active\" | \"complete\" | \"stopped\"",
     "default": "'active'",
     "description": "Whole response lifecycle status."
   },

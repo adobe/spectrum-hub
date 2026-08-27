@@ -2,7 +2,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "IllustratedMessageSize",
+    "type": "\"s\" | \"m\" | \"l\"",
     "default": "'m'",
     "description": "The size of the message",
     "inheritedFrom": "IllustratedMessageBase",
@@ -11,7 +11,7 @@
   {
     "attribute": "orientation",
     "property": "orientation",
-    "type": "IllustratedMessageOrientation",
+    "type": "\"horizontal\" | \"vertical\"",
     "default": "'vertical'",
     "description": "The layout orientation",
     "inheritedFrom": "IllustratedMessageBase",

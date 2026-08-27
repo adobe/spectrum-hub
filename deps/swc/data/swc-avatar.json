@@ -11,7 +11,7 @@
   {
     "attribute": "alt",
     "property": "alt",
-    "type": "string | undefined",
+    "type": "string",
     "description": "Text description of the avatar image.",
     "inheritedFrom": "AvatarBase",
     "since": "2.0.0-beta.1"
@@ -19,7 +19,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "AvatarSize",
+    "type": "50 | 75 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 1000 | 1100 | 1200 | 1300 | 1400 | 1500",
     "default": "500",
     "description": "The size of the avatar. Invalid values fall back to the default (500).",
     "inheritedFrom": "AvatarBase",

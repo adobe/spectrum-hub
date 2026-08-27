@@ -2,7 +2,7 @@
   {
     "attribute": "mode",
     "property": "mode",
-    "type": "PromptFieldMode",
+    "type": "\"default\" | \"loading\" | \"disabled\"",
     "default": "'default'",
     "description": "Visual mode for the prompt field action/interaction state."
   },

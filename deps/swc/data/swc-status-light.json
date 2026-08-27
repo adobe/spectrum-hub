@@ -10,7 +10,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
     "description": "The size of the status light.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"

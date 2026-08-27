@@ -29,7 +29,7 @@
   {
     "attribute": "placement",
     "property": "placement",
-    "type": "Placement",
+    "type": "\"start\" | \"end\" | \"top\" | \"bottom\" | \"bottom-left\" | \"bottom-right\" | \"bottom-start\" | \"bottom-end\" | \"top-left\" | \"top-right\" | \"top-start\" | \"top-end\" | \"left\" | \"left-top\" | \"left-bottom\" | \"start-top\" | \"start-bottom\" | \"right\" | \"right-top\" | \"right-bottom\" | \"end-top\" | \"end-bottom\"",
     "default": "'bottom'",
     "description": "The placement of the popover relative to its trigger.",
     "inheritedFrom": "PopoverBase",
@@ -38,7 +38,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "PopoverSize | undefined",
+    "type": "\"s\" | \"m\" | \"l\"",
     "description": "Optional fixed size. When set, the popover uses a fixed inline size\n(`s` → 336px, `m` → 416px, `l` → 576px); when unset, it fits its contents.",
     "inheritedFrom": "PopoverBase",
     "since": "2.0.0-beta.1"
@@ -82,7 +82,7 @@
   {
     "attribute": "for",
     "property": "for",
-    "type": "string | undefined",
+    "type": "string",
     "description": "ID of the trigger element in the same document tree root.",
     "inheritedFrom": "PopoverBase",
     "since": "2.0.0-beta.1"

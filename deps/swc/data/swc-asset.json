@@ -2,7 +2,7 @@
   {
     "attribute": "variant",
     "property": "variant",
-    "type": "AssetVariant | undefined",
+    "type": "\"file\" | \"folder\"",
     "description": "The variant of the asset. When not provided, slot content is rendered (e.g., an image).",
     "inheritedFrom": "AssetBase",
     "status": "internal",

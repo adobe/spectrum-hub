@@ -2,7 +2,7 @@
   {
     "attribute": "variant",
     "property": "variant",
-    "type": "TooltipVariant",
+    "type": "\"informative\" | \"neutral\" | \"negative\"",
     "default": "'neutral'",
     "description": "The semantic variant of the tooltip.",
     "inheritedFrom": "TooltipBase",
@@ -11,7 +11,7 @@
   {
     "attribute": "placement",
     "property": "placement",
-    "type": "TooltipPlacement",
+    "type": "\"start\" | \"end\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
     "default": "'top'",
     "description": "Preferred placement of the tooltip relative to its trigger. This is always\nthe consumer's requested side; the resolved physical side (after any\nviewport-driven flip) is reflected as `actual-placement`.",
     "inheritedFrom": "TooltipBase",
@@ -29,7 +29,7 @@
   {
     "attribute": "for",
     "property": "for",
-    "type": "string | undefined",
+    "type": "string",
     "description": "The `id` of the trigger element in the same document tree root.",
     "inheritedFrom": "TooltipBase",
     "since": "2.0.0-beta.1"

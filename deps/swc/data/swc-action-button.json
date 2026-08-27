@@ -18,7 +18,7 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "ActionButtonStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
     "description": "Static color treatment for display over colored or image backgrounds.",
     "since": "2.0.0-beta.1"
   },
@@ -34,7 +34,7 @@
   {
     "attribute": "pending-label",
     "property": "pendingLabel",
-    "type": "string | undefined",
+    "type": "string",
     "description": "Custom accessible label used during the pending state. When omitted, the\npending label is derived from the resolved non-busy accessible name plus\na busy suffix (e.g. \"Save, busy\").",
     "inheritedFrom": "PendingMixin",
     "since": "2.0.0-beta.1"
@@ -42,7 +42,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
     "description": "The size of the button.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
@@ -59,7 +59,7 @@
   {
     "attribute": "accessible-label",
     "property": "accessibleLabel",
-    "type": "string | undefined",
+    "type": "string",
     "description": "Accessible label forwarded to the internal `<button>` element as\n`aria-label`. Required for icon-only buttons, which have no visible text.",
     "inheritedFrom": "ButtonBase",
     "since": "2.0.0-beta.1"

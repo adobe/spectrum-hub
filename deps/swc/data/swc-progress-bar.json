@@ -38,7 +38,7 @@
   {
     "attribute": "value-label",
     "property": "valueLabel",
-    "type": "string | undefined",
+    "type": "string",
     "description": "Custom value text (e.g. `\"1 of 4\"`). Overrides the auto-formatted\nvalue in both rendered text and `aria-valuetext`.",
     "inheritedFrom": "LinearProgressMixin",
     "since": "2.0.0"
@@ -46,7 +46,7 @@
   {
     "attribute": "label-position",
     "property": "labelPosition",
-    "type": "LinearProgressLabelPosition",
+    "type": "\"top\" | \"side\"",
     "default": "'top'",
     "description": "Position of the label relative to the bar.",
     "inheritedFrom": "LinearProgressMixin",
@@ -55,7 +55,7 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "LinearProgressStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
     "description": "Static color override for use on images or colored backgrounds.",
     "inheritedFrom": "LinearProgressMixin",
     "since": "2.0.0"
@@ -63,7 +63,7 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
     "description": "The size of the progress bar.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0"

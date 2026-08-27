@@ -2,14 +2,14 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "ProgressCircleStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
     "description": "Static color variant for use on different backgrounds.\n\nWhen set to 'white', the component uses white styling for images with a dark tinted background.\n\nWhen set to 'black', the component uses black styling for images with a light tinted background.",
     "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\"",
     "description": "The size of the progress circle.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
