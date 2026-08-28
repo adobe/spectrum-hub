@@ -198,7 +198,8 @@ function watchScrollSpy(headings, linkById) {
     linkById.set(h.id, a);
   });
 
-  // TODO: Revisit the back-to-top items after the section links.
+  // TODO: Revisit the back-to-top items after the section links. if we have a back-to-top,
+  // it'll be treated differently.
   // if (h1) {
   //   const topLi = document.createElement('li');
   //   const topLink = document.createElement('a');
