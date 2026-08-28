@@ -544,6 +544,12 @@ div[data-status],
       }
     }
 
+    /* status-table page doesn't have a page nav */
+    &:has(meta[name="template"][content="status-table"]) {
+      --pagenav-track-width: 0;
+      --pagenav-min-inline-size: 0;
+    }
+
     /* pages that are not component pages */
     &:not(:has(meta[name="template"][content="component"])) {
       .section {
