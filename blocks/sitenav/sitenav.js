@@ -91,8 +91,11 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       menuId = `${toClassName(labelText)}-${n}`;
     }
     seenMenuIds.add(menuId);
+    // Prefixed so a category name (e.g. "Typography") can't collide with an
+    // unrelated id elsewhere on the page (e.g. a heading slugified the same way).
+    const menuDomId = `sitenav-menu-${menuId}`;
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-controls', menuId);
+    btn.setAttribute('aria-controls', menuDomId);
 
     // Only the first level gets a labeled menu wrapper;
     // deeper lists stay inline and the button controls the list itself.
@@ -102,7 +105,7 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       menuWrapper.append(label.cloneNode(true));
     }
     menuWrapper.append(childList);
-    menuWrapper.id = menuId;
+    menuWrapper.id = menuDomId;
     li.append(menuWrapper);
 
     decorateLevel(childList, depth + 1, seenMenuIds);
@@ -362,7 +365,7 @@ export const setupOutsideClose = (sitenav) => {
 export const setupSearchIntegration = (navList) => {
   document.addEventListener(SEARCH_EXPAND_EVENT, (e) => {
     const menuId = toClassName(e.detail.label);
-    navList.querySelector(`.level-1-button[aria-controls="${menuId}"]`)?.click();
+    navList.querySelector(`.level-1-button[aria-controls="sitenav-menu-${menuId}"]`)?.click();
   });
 };
 
