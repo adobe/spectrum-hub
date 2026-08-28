@@ -5,7 +5,7 @@ export default {
     "alert-dialog": "Dialog",
     "cards": "Card",
     "close-button": "Button",
-    "color-handle-and-loupe": "ColorSlider",
+    "color-handle-and-loupe": "ColorArea",
     "in-line-alert": "InlineAlert",
     "radio-button": "RadioGroup",
     "select-box": "SelectBoxGroup",

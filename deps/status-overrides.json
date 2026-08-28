@@ -42,7 +42,7 @@
         "context": "Stable",
         "note": "Built into color components instead.",
         "page": "color-handle-and-loupe",
-        "originalName": "ColorSlider"
+        "originalName": "ColorArea"
       },
       "swc": {
         "status": "available",
@@ -59,7 +59,7 @@
         "context": "Stable",
         "note": "Built into color components instead.",
         "page": "color-handle-and-loupe",
-        "originalName": "ColorSlider"
+        "originalName": "ColorArea"
       },
       "swc": {
         "status": "available",

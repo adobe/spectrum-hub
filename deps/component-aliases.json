@@ -24,7 +24,7 @@
     },
     "ColorHandle": {
       "canonical": "ColorHandle",
-      "externalName": "ColorSlider"
+      "externalName": "ColorArea"
     },
     "ColorSwatchPicker": {
       "canonical": "SwatchGroup",

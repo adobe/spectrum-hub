@@ -497,7 +497,7 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorSlider",
+            "originalName": "ColorArea",
             "note": "Built into color components instead."
           },
           "swc": {
@@ -522,7 +522,7 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorSlider",
+            "originalName": "ColorArea",
             "note": "Built into color components instead."
           },
           "swc": {
