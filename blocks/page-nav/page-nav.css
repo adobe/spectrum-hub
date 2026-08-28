@@ -15,12 +15,13 @@ from the DOM and the accessibility tree (see page-nav.js). */
     grid-template-rows: min-content auto;
     position: sticky;
     inset-block-start: var(--sh-header-height); /* match the header so the page nav sticks in place */
-    max-block-size: calc(100vh - var(--sh-header-height, 0px));
+    max-block-size: calc(100dvh - var(--sh-header-height, 0px));
     margin-inline-end: var(--pagenav-inline-end-margin);
     font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
+    overflow-y: scroll;
 
     & ul {
       grid-column: 2;
