@@ -13,7 +13,7 @@
     "CardsHorizontal": "Cards",
     "CardsProduct": "Cards",
     "CardsUser": "Cards",
-    "CardView": "Cards",
+    "CardView": "Card",
     "Card": {
       "canonical": "Cards",
       "externalName": "Card"

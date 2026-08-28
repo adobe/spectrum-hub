@@ -319,6 +319,24 @@
       }
     },
     {
+      "name": "Card",
+      "label": "Card",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Cards",
       "label": "Cards",
       "platforms": {
@@ -330,7 +348,6 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable",
             "originalName": "Card"
           },
           "swc": {
