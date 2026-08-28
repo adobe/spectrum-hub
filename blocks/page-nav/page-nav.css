@@ -70,7 +70,12 @@ from the DOM and the accessibility tree (see page-nav.js). */
     }
   }
 
-  .page-nav ul a[aria-current="location"] {
+  /* [aria-current] is the scroll-spy state; .is-current is a visual-only
+  stand-in forced on the last link once the visitor hits the true bottom of the
+  page, for a heading too close to the end to ever scroll flush under the
+  header (see watchEndOfPage in page-nav.js).  */
+  .page-nav ul a[aria-current="location"],
+  .page-nav ul a.is-current {
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--s2-gray-1000);
 
