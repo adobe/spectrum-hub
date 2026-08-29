@@ -1,12 +1,14 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
+import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
 import init, {
   parseBlockMetadata,
   parseDefault,
   buildSwcSnippet,
   buildRspSnippet,
   debounce,
+  resolveComponentMeta,
 } from '../../blocks/playground/playground.js';
 import { clearFetchCache } from '../../blocks/playground/playground-data.js';
 import { setConfig } from '../../scripts/ak.js';
@@ -1511,5 +1513,64 @@ describe('a fragment\'s own text survives when there is no text control', () => 
   it('still falls back to the placeholder with no fragment at all', () => {
     const snippet = buildRspSnippet('Button', {}, '', false, null);
     expect(snippet.includes('Label')).to.be.true;
+  });
+});
+
+// resolveComponentMeta was neither exported nor tested before Layer 2; it is now the
+// single place per-implementation routing happens, so it earns direct coverage.
+describe('resolveComponentMeta', () => {
+  const BASE = 'https://example.test';
+
+  it('routes an rsp component through the rsp shell and jsx snippet', () => {
+    const meta = resolveComponentMeta('action-button', 'rsp', BASE);
+    expect(meta.componentTitle).to.equal('ActionButton');
+    expect(meta.previewName).to.equal('ActionButton');
+    expect(meta.previewShellPath).to.equal('deps/rsp/playground/index.html');
+    expect(meta.markupUrl).to.equal(`${BASE}/deps/rsp/playground/snippets/action-button.jsx`);
+  });
+
+  it('routes an swc component through the swc shell and html snippet', () => {
+    const meta = resolveComponentMeta('action-button', 'swc', BASE);
+    expect(meta.previewName).to.equal('swc-action-button');
+    expect(meta.previewShellPath).to.equal('deps/swc/playground/index.html');
+    expect(meta.markupUrl).to.equal(`${BASE}/deps/swc/playground/snippets/action-button.html`);
+  });
+
+  // ios/android have no registry entry, no catalog and no snippets — the generic
+  // image-viewer shell needs none of them, so markupUrl is null rather than a bogus URL.
+  it('falls back to the generic shell for an implementation with no playground', () => {
+    for (const impl of ['ios', 'android', 'nonsense']) {
+      const meta = resolveComponentMeta('button', impl, BASE);
+      expect(meta.previewShellPath, impl).to.equal('blocks/playground/index.html');
+      expect(meta.markupUrl, impl).to.equal(null);
+      expect(meta.componentTitle, impl).to.equal('Button');
+    }
+  });
+});
+
+// The "unset" sentinel is a control-layer label, never real markup. The apply path
+// already removed it from the live preview; the snippet builders were still printing
+// it (staticColor="None" predates the optional work — badge's `fixed` made it visible).
+describe('the unset sentinel never reaches a snippet', () => {
+  const props = (value) => ({
+    variant: { value: 'primary', attribute: 'variant' },
+    staticColor: { value, attribute: 'static-color' },
+  });
+
+  it('omits the attribute from an swc snippet', () => {
+    const out = buildSwcSnippet('swc-button', props(NONE_OPTION), '');
+    expect(out).to.not.include('None');
+    expect(out).to.not.include('static-color');
+    expect(out).to.include('variant="primary"');
+  });
+
+  it('still prints a real value', () => {
+    expect(buildSwcSnippet('swc-button', props('white'), '')).to.include('static-color="white"');
+  });
+
+  it('omits the prop from an rsp snippet', () => {
+    const out = buildRspSnippet('Button', props(NONE_OPTION), '', false, 'button');
+    expect(out).to.not.include('None');
+    expect(out).to.include('variant="primary"');
   });
 });
