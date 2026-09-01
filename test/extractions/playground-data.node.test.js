@@ -553,6 +553,26 @@ describe('resolveControl', () => {
   });
 
   // staticColor has no documented default (unlike variant/fillStyle/size), so
+  // `optional` is the extractor's own signal that an attribute may be absent
+  // entirely, so its control needs a real "unset" choice rather than being forced
+  // to one of the values. staticColor stays named below only because RSP's
+  // extractor does not emit `optional` yet.
+  it('leads an optional attribute\'s options with NONE_OPTION', () => {
+    const optionalSwc = [
+      { property: 'fixed', attribute: 'fixed', type: '"top" | "bottom"', optional: true },
+    ];
+    const result = resolveControl('fixed', 'swc', controlsMap, [], optionalSwc);
+    assert.deepEqual(result.options, [NONE_OPTION, 'top', 'bottom']);
+  });
+
+  it('gives a required attribute no NONE_OPTION', () => {
+    const requiredSwc = [
+      { property: 'fixed', attribute: 'fixed', type: '"top" | "bottom"', optional: false },
+    ];
+    const result = resolveControl('fixed', 'swc', controlsMap, [], requiredSwc);
+    assert.deepEqual(result.options, ['top', 'bottom']);
+  });
+
   // NONE_OPTION leads its options the same way NO_ICON leads icon's.
   it('leads staticColor\'s options with NONE_OPTION', () => {
     const result = resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);

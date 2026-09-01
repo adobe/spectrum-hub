@@ -230,9 +230,10 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   // "icon" is a slot property (like TEXT_KEYS), not a real attribute.
   const isIcon = property === 'icon';
   const isSlotProperty = TEXT_KEYS.has(property) || isIcon;
-  // A property that can be absent entirely needs an explicit "unset" choice in
-  // its control. staticColor is the only one named today.
-  const needsNoneOption = property === 'staticColor';
+  // An optional attribute can be absent, so its control needs an explicit "unset"
+  // choice. `optional` comes from the extractor; staticColor is named here only
+  // because RSP's extractor does not emit it yet.
+  const needsNoneOption = swcRow?.optional || property === 'staticColor';
 
   // Any other implementation (e.g. ios/android) skips this gate entirely.
   const existsByImplementation = { rsp: existsInRsp, swc: existsInSwc };
