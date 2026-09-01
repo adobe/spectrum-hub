@@ -186,19 +186,30 @@ export function findRspProp(property, rspProps) {
   return findPropByCandidates(property, rspProps);
 }
 
-// Resolves picker options for a property from RSP and SWC component data. RSP
-// data has inline union types; SWC data has named types that aren't
-// resolvable, so RSP is always tried first.
-export function resolvePickerOptions(property, rspProps, swcProps) {
-  const rspRow = findRspProp(property, rspProps);
-  if (rspRow?.type) {
-    const options = parsePickerOptions(rspRow.type);
-    if (options.length) { return options; }
-    if (rspRow.type === 'boolean') { return ['no', 'yes']; }
+// Resolves picker options for a property from RSP and SWC component data. An RSP
+// page tries RSP's inline union first; an SWC page never borrows it — RSP can
+// define variants SWC doesn't support yet (e.g. Button's "premium"/"genai" — see
+// .ai/docs/specs/2026-08-27-swc-type-resolution-design.md), so offering them as SWC
+// options would be wrong, not just imprecise. SWC's own data now carries real
+// resolved unions too (deps/swc/extract-cem-components.js resolves named-alias
+// types like "ButtonVariant" via the real TypeScript compiler, the same way RSP's
+// extractor already did) — an SWC page tries that first instead.
+export function resolvePickerOptions(property, implementation, rspProps, swcProps) {
+  if (implementation !== 'swc') {
+    const rspRow = findRspProp(property, rspProps);
+    if (rspRow?.type) {
+      const options = parsePickerOptions(rspRow.type);
+      if (options.length) { return options; }
+      if (rspRow.type === 'boolean') { return ['no', 'yes']; }
+    }
   }
 
   const swcRow = findSwcProp(property, swcProps);
   if (swcRow?.type === 'boolean') { return ['no', 'yes']; }
+  if (implementation === 'swc' && swcRow?.type) {
+    const options = parsePickerOptions(swcRow.type);
+    if (options.length) { return options; }
+  }
 
   return [];
 }
@@ -238,9 +249,9 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   if (isIcon) {
     options = [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)];
   } else if (needsNoneOption) {
-    options = [NONE_OPTION, ...resolvePickerOptions(property, rspProps, swcProps)];
+    options = [NONE_OPTION, ...resolvePickerOptions(property, implementation, rspProps, swcProps)];
   } else {
-    options = resolvePickerOptions(property, rspProps, swcProps);
+    options = resolvePickerOptions(property, implementation, rspProps, swcProps);
   }
   const attribute = isIcon ? null : (swcRow?.attribute ?? null);
 
@@ -248,7 +259,7 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
     if (isIcon) {
       onSkip?.(`No control shown for "${property}": no icon options are configured (empty ICON_OPTIONS catalog and no options in the controls sheet).`);
     } else {
-      const type = rspRow?.type ?? swcRow?.type ?? 'unknown';
+      const type = (implementation === 'swc' ? swcRow?.type ?? rspRow?.type : rspRow?.type ?? swcRow?.type) ?? 'unknown';
       onSkip?.(`No control shown for "${property}": its type ("${type}") isn't a boolean or a list of options, so there's nothing to build a picker from.`);
     }
   }
