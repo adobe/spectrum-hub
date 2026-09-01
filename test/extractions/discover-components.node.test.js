@@ -3,9 +3,8 @@ import { describe, it } from 'node:test';
 
 import {
   buildEntry,
-  buildIncludeFiles,
+  findComponentInterface,
   findExportedNames,
-  findIncludeImportPath,
 } from '../../deps/rsp/discover-components.js';
 
 describe('findExportedNames', () => {
@@ -33,74 +32,48 @@ describe('findExportedNames', () => {
   });
 });
 
-describe('findIncludeImportPath', () => {
-  it('returns the sibling .d.ts basename for a relative import', () => {
-    const source = `
-      import { ActionButtonStyleProps } from './ActionButton';
-      export interface ToggleButtonProps extends ActionButtonStyleProps {}
-    `;
+describe('findComponentInterface', () => {
+  it('finds the type argument of a ForwardRefExoticComponent declaration', () => {
+    const source = 'export declare const ToggleButton: ForwardRefExoticComponent<ToggleButtonProps>;';
 
-    assert.equal(findIncludeImportPath(source, 'ActionButtonStyleProps'), 'ActionButton');
+    assert.equal(findComponentInterface(source, 'ToggleButton'), 'ToggleButtonProps');
   });
 
-  it('returns null when the include is not imported from a sibling path', () => {
+  it('falls back to a "<Component>Props" interface when there is no ForwardRefExoticComponent', () => {
     const source = `
-      interface ButtonStyleProps { variant?: string; }
-      export interface ButtonProps extends ButtonStyleProps {}
+      export interface ToastContainerProps { placement?: string; }
+      export declare function ToastContainer(props: ToastContainerProps): ReactNode;
     `;
 
-    assert.equal(findIncludeImportPath(source, 'ButtonStyleProps'), null);
-  });
-});
-
-describe('buildIncludeFiles', () => {
-  it('omits includes that are declared in the same source file', () => {
-    const source = `
-      interface ButtonStyleProps { variant?: string; }
-      export interface ButtonProps extends ButtonStyleProps {}
-    `;
-
-    assert.equal(
-      buildIncludeFiles(source, ['ButtonStyleProps']),
-      undefined,
-    );
+    assert.equal(findComponentInterface(source, 'ToastContainer'), 'ToastContainerProps');
   });
 
-  it('maps cross-file includes to their types file basename', () => {
-    const source = `
-      import { ActionButtonStyleProps } from './ActionButton';
-      export interface ToggleButtonProps extends ActionButtonStyleProps {}
-    `;
+  it('falls back to a legacy "S2Spectrum<Component>Props" interface as a last resort', () => {
+    const source = 'export interface S2SpectrumLegacyProps { foo?: string; }';
 
-    assert.deepEqual(
-      buildIncludeFiles(source, ['ActionButtonStyleProps']),
-      { ActionButtonStyleProps: 'ActionButton' },
-    );
+    assert.equal(findComponentInterface(source, 'Legacy'), 'S2SpectrumLegacyProps');
+  });
+
+  it('returns null when no matching interface name pattern is found', () => {
+    assert.equal(findComponentInterface('export interface Unrelated {}', 'Missing'), null);
   });
 });
 
 describe('buildEntry', () => {
-  it('adds includeFiles for cross-file style props', () => {
+  it('records the interface name and omits `file` when it matches the component name', () => {
     const source = `
-      import type { ToggleButtonProps as RACToggleButtonProps } from 'react-aria-components';
-      import { ActionButtonStyleProps } from './ActionButton';
-
       export declare const ToggleButton: ForwardRefExoticComponent<ToggleButtonProps>;
-
-      export interface ToggleButtonProps extends RACToggleButtonProps, ActionButtonStyleProps, StyleProps {
+      export interface ToggleButtonProps extends StyleProps {
         isEmphasized?: boolean;
       }
     `;
 
     const entry = buildEntry('ToggleButton', 'ToggleButton', source);
 
-    assert.equal(entry.interface, 'ToggleButtonProps');
-    assert.deepEqual(entry.includes, ['ActionButtonStyleProps']);
-    assert.deepEqual(entry.includeFiles, { ActionButtonStyleProps: 'ActionButton' });
-    assert.ok(entry.extends?.includes('StyleProps'));
+    assert.deepEqual(entry, { interface: 'ToggleButtonProps' });
   });
 
-  it('resolves the interface for a plain function-declaration component', () => {
+  it('records `file` when the component is declared in a differently-named source file', () => {
     const source = `
       export interface ToastContainerProps {
         placement?: ToastPlacement;
@@ -111,7 +84,10 @@ describe('buildEntry', () => {
 
     const entry = buildEntry('ToastContainer', 'Toast', source);
 
-    assert.equal(entry.interface, 'ToastContainerProps');
-    assert.equal(entry.file, 'Toast');
+    assert.deepEqual(entry, { interface: 'ToastContainerProps', file: 'Toast' });
+  });
+
+  it('returns null when no props interface can be identified for the component', () => {
+    assert.equal(buildEntry('Missing', 'Missing', 'export interface Unrelated {}'), null);
   });
 });

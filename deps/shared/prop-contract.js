@@ -25,6 +25,11 @@ const isNullish = (t) => Boolean(t.flags & (ts.TypeFlags.Undefined | ts.TypeFlag
  */
 export function typeToDisplayString(checker, type) {
   const format = ts.TypeFormatFlags.NoTruncation;
+  // `boolean` is itself the union `false | true`; expanding it member-wise would
+  // render that instead of the primitive, and propKind would then see no kind it
+  // recognises. Only RSP hits this — SWC's booleans reach it as text from the CEM.
+  // eslint-disable-next-line no-bitwise
+  if (type.flags & ts.TypeFlags.Boolean) return 'boolean';
   if (type.isUnion?.()) {
     return type.types.map((member) => checker.typeToString(member, undefined, format)).join(' | ');
   }

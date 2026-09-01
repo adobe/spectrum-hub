@@ -1,6 +1,11 @@
 /**
  * Discovers published @react-spectrum/s2 components from unpkg and writes components.json.
  *
+ * Only records which primary props interface (and, when it differs, which source file)
+ * each component's props live in — extract-props.js resolves the interface's full,
+ * transitively-inherited shape itself via the real TypeScript compiler (ts-cdn-host.js),
+ * so this file no longer needs to guess at `extends`/`includes` from header text.
+ *
  * Usage: node deps/rsp/discover-components.js
  */
 
@@ -22,19 +27,6 @@ const TYPES_BASE_URLS = [
 
 const SKIP_FILES = /^(bar-utils|style-utils|useDOMRef|intl|CenterBaseline|pressScale|Content|Field|Provider|Tree|Collection|Fonts|ImageCoordinator)$/;
 
-// Manually maintained: tokens to skip when resolving `extends` from interface headers.
-// Not derived from TypeScript — if S2 adds new utility or shared type names in headers,
-// update this set or discovery may omit/warn incorrectly. Keep in sync with the smaller
-// `ignored` set in extract-props.js (`extractExtends`) when both change.
-const IGNORE_EXTENDS = new Set([
-  'DOMProps', 'UnsafeStyles', 'SlotProps', 'AriaLabelingProps', 'HoverEvents',
-  'Focusable', 'FocusableRef', 'DOMRefValue', 'ReactNode', 'CSSProperties',
-  'StylesProp', 'StylesPropWithHeight', 'StylesPropWithoutHeight',
-  'Partial', 'Omit', 'Pick', 'Record', 'Readonly', 'Required', 'keyof', 'extends',
-  'GlobalDOMAttributes', 'ClassNameOrFunction', 'ContextValue', 'RenderProps',
-  'SlotProps', 'Labelable', 'FocusableRefValue',
-]);
-
 async function fetchText(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
@@ -50,22 +42,14 @@ async function fetchFirst(urls) {
   throw new Error(`Failed to fetch from all CDNs: ${urls[0]}`);
 }
 
-function parseRacImports(source) {
-  const map = {};
-  for (const m of source.matchAll(
-    /import\s+\{([^}]+)\}\s+from\s+['"]react-aria-components\/([^'"]+)['"]/g,
-  )) {
-    for (const part of m[1].split(',')) {
-      const bit = part.trim();
-      const alias = bit.match(/(\w+)\s+as\s+(\w+)/);
-      if (alias) map[alias[2]] = alias[1];
-      else if (/^\w+$/.test(bit)) map[bit] = bit;
-    }
-  }
-  return map;
-}
-
-function findComponentInterface(source, componentName) {
+/**
+ * Finds the name of a component's props interface from its `.d.ts` source. Tries, in order:
+ * the type argument of its `ForwardRefExoticComponent<...>` declaration (the common case),
+ * an interface named `<Component>Props`, then `S2Spectrum<Component>Props` (a few legacy
+ * names). Only identifies *which* interface to inspect — extract-props.js resolves what's
+ * actually on it.
+ */
+export function findComponentInterface(source, componentName) {
   const decl = source.match(
     new RegExp(
       `export declare const ${componentName}:[^;]*?ForwardRefExoticComponent<([^&>]+)`,
@@ -86,71 +70,8 @@ function findComponentInterface(source, componentName) {
   return null;
 }
 
-/** Returns the sibling `.d.ts` basename when an include is imported via `./…`. */
-export function findIncludeImportPath(source, includeName) {
-  const includeImportPattern = new RegExp(
-    `import\\s+\\{[^}]*\\b${includeName}\\b[^}]*\\}\\s+from\\s+['"]\\./([^'"]+)['"]`,
-  );
-  return includeImportPattern.exec(source)?.[1] ?? null;
-}
-
-function interfaceDeclaredInSource(source, interfaceName) {
-  return new RegExp(`(?:export\\s+)?interface\\s+${interfaceName}\\b`).test(source);
-}
-
 /**
- * Maps include names to types file basenames when the interface lives in another file.
- * Same-file includes are omitted so extract-props can use the component source only.
- */
-export function buildIncludeFiles(source, includes) {
-  const includeFiles = {};
-  for (const includeName of includes) {
-    if (interfaceDeclaredInSource(source, includeName)) continue;
-    const typesFile = findIncludeImportPath(source, includeName);
-    if (typesFile) includeFiles[includeName] = typesFile;
-  }
-  return Object.keys(includeFiles).length ? includeFiles : undefined;
-}
-
-function headerIncludes(source, interfaceName, racImports) {
-  const match = source.match(
-    new RegExp(`(?:export\\s+)?interface\\s+${interfaceName}([^{]*)\\{`),
-  );
-  if (!match) return [];
-  const header = match[1];
-  const styleTokens = header.match(/\b\w+(?:Style|Spectrum)Props\b/g) ?? [];
-  const siblingProps = (header.match(/\b\w+Props\b/g) ?? []).filter(
-    (name) =>
-      name !== interfaceName &&
-      !IGNORE_EXTENDS.has(name) &&
-      !Object.hasOwn(racImports, name) &&
-      new RegExp(`(?:export\\s+)?interface\\s+${name}\\b`).test(source),
-  );
-  return [...new Set([...styleTokens, ...siblingProps])];
-}
-
-function resolveExtends(header, racImports) {
-  const names = header.match(/\b\w+\b/g) ?? [];
-  const out = [];
-  for (const name of names) {
-    if (IGNORE_EXTENDS.has(name)) continue;
-    if (/\w(?:Style|Spectrum)Props$/.test(name)) continue;
-
-    if (name === 'StyleProps') {
-      if (!out.includes('StyleProps')) out.push('StyleProps');
-      continue;
-    }
-    // Only merge react-aria-components bases (not S2-local *Props types).
-    if (Object.hasOwn(racImports, name)) {
-      const resolved = racImports[name];
-      if (/Props$/.test(resolved) && !out.includes(resolved)) out.push(resolved);
-    }
-  }
-  return out;
-}
-
-/**
- * Finds component export names in a `.d.ts` source as `export declare const X:` 
+ * Finds component export names in a `.d.ts` source as `export declare const X:`
  * `ForwardRefExoticComponent<...>` or as a plain `export declare function X(...)`
  */
 export function findExportedNames(source) {
@@ -163,20 +84,8 @@ export function buildEntry(componentName, fileName, source) {
   const iface = findComponentInterface(source, componentName);
   if (!iface) return null;
 
-  const headerMatch = source.match(
-    new RegExp(`(?:export\\s+)?interface\\s+${iface}([^{]*)\\{`),
-  );
-  const header = headerMatch?.[1] ?? '';
-  const racImports = parseRacImports(source);
-  const includes = headerIncludes(source, iface, racImports);
-  const extendsList = resolveExtends(header, racImports);
-  const includeFiles = buildIncludeFiles(source, includes);
-
   const entry = { interface: iface };
   if (fileName !== componentName) entry.file = fileName;
-  if (includes.length) entry.includes = includes;
-  if (includeFiles) entry.includeFiles = includeFiles;
-  if (extendsList.length) entry.extends = extendsList;
   return entry;
 }
 
