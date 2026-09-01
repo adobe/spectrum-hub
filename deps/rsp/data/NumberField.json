@@ -76,8 +76,8 @@
       "type": "\"validate\" | \"snap\"",
       "kind": "enum",
       "values": [
-        "validate",
-        "snap"
+        "snap",
+        "validate"
       ],
       "default": "'snap'",
       "description": "Controls the behavior of the number field when the user blurs the field after editing. 'snap'\nwill clamp the value to the min/max values, and snap to the nearest step value. 'validate' will\nnot clamp the value, and will validate that the value is within the min/max range and on a\nvalid step."
@@ -391,8 +391,8 @@
       "type": "\"label\" | \"icon\"",
       "kind": "enum",
       "values": [
-        "label",
-        "icon"
+        "icon",
+        "label"
       ],
       "default": "'icon'",
       "description": "Whether the required state should be shown as an icon or text.",

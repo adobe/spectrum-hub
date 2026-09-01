@@ -5,10 +5,10 @@
     "type": "\"accent\" | \"negative\" | \"primary\" | \"secondary\"",
     "kind": "enum",
     "values": [
-      "accent",
-      "negative",
       "primary",
-      "secondary"
+      "secondary",
+      "accent",
+      "negative"
     ],
     "optional": false,
     "default": "'primary'",

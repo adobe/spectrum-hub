@@ -40,9 +40,9 @@
       "type": "\"auto\" | \"high\" | \"low\"",
       "kind": "enum",
       "values": [
-        "auto",
         "high",
-        "low"
+        "low",
+        "auto"
       ],
       "description": "Provides a hint of the relative priority to use when fetching the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#fetchpriority)."
     },

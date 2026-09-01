@@ -66,8 +66,8 @@
       "type": "\"label\" | \"icon\"",
       "kind": "enum",
       "values": [
-        "label",
-        "icon"
+        "icon",
+        "label"
       ],
       "default": "'icon'",
       "description": "Whether the required state should be shown as an icon or text.",
@@ -177,8 +177,8 @@
       "kind": "enum",
       "values": [
         "off",
-        "on",
         "none",
+        "on",
         "sentences",
         "words",
         "characters"
