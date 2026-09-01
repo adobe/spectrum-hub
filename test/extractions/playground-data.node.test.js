@@ -838,3 +838,65 @@ describe('resolvePickerOptions reads the row, not its type string', () => {
     assert.deepEqual(resolvePickerOptions('isDisabled', SWC_ROWS), ['no', 'yes']);
   });
 });
+
+// --- The contract's central rule ------------------------------------------------
+//
+// `type` is display-only and nothing may branch on it (deps/shared/prop-contract.js).
+// That rule is only worth stating if something enforces it, so these rows are shaped so
+// that reading `type` and reading `values` give DIFFERENT answers. All three fail if a
+// consumer ever goes back to parsing the type string.
+describe('options come from `values`, never from `type`', () => {
+  it('prefers values even when the type string would parse to something else', () => {
+    const rows = [{
+      property: 'variant',
+      // What the old regex consumer would have returned.
+      type: "'legacy' | 'stale'",
+      kind: 'enum',
+      values: ['primary', 'accent'],
+    }];
+    assert.deepEqual(resolvePickerOptions('variant', rows), ['primary', 'accent']);
+  });
+
+  // ActionButton.aria-haspopup's real shape: string literals mixed with boolean
+  // primitives, so there is no fixed option set. 72 rows across the two catalogs look
+  // like this; DisclosurePanel.labelElementType carries 178 quoted literals, which the
+  // regex would have offered as a picker of HTML tag names.
+  it('offers nothing for a mixed union, however many literals the type contains', () => {
+    const rows = [{
+      property: 'ariaHaspopup',
+      type: 'false | true | "true" | "false" | "menu" | "listbox" | "tree"',
+      kind: 'unknown',
+      values: [],
+    }];
+    assert.deepEqual(resolvePickerOptions('ariaHaspopup', rows), []);
+  });
+
+  it('lets `kind` decide a boolean even when the type is an opaque alias', () => {
+    const rows = [{
+      property: 'isQuiet', type: 'SomeInternalAlias', kind: 'boolean', values: [],
+    }];
+    assert.deepEqual(resolvePickerOptions('isQuiet', rows), ['no', 'yes']);
+  });
+});
+
+// Characterisation of CATALOG_IMPLEMENTATIONS: the existence gate only applies to an
+// implementation that ships a catalog. ios/android are authored entirely from the
+// workbook, so a missing row there is normal, not a resolution failure.
+describe('the existence gate applies only to implementations with a catalog', () => {
+  const controlsMap = buildControlsMap(CONTROLS_SHEET);
+
+  it('skips the gate for an implementation with no catalog', () => {
+    const onSkip = [];
+    for (const impl of ['ios', 'android']) {
+      const result = resolveControl('variant', impl, controlsMap, [], (m) => onSkip.push(m));
+      assert.notEqual(result, null, `${impl} should still get a descriptor`);
+    }
+    assert.deepEqual(onSkip.filter((m) => m.includes("isn't defined in the")), []);
+  });
+
+  it('still gates rsp and swc, whose catalogs are authoritative', () => {
+    for (const impl of ['rsp', 'swc']) {
+      assert.equal(resolveControl('variant', impl, controlsMap, []), null, impl);
+    }
+  });
+});
