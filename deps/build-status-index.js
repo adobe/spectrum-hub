@@ -20,7 +20,7 @@
  *   source is a legitimate single-source row (e.g. a Figma-only design surfaces as
  *   Figma = Available, RSP/SWC = Not available).
  * - Raw implementation vocabulary never reaches the output; it is unified in the adapter
- *   (scripts/utils/status-model.js) via the data-shape bridge (component-status.js).
+ *   (scripts/utils/status-model.js) via the data-shape bridge (extraction-status.js).
  * - The output is self-describing: a top-level `statuses` legend embeds the full status
  *   vocabulary (id → label + definition) so a single fetch of status-index.json is
  *   interpretable by downstream / AI-assisted consumers without also reading the adapter.
@@ -37,7 +37,7 @@ import {
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-import { getComponentStatus } from '../scripts/utils/component-status.js';
+import { getComponentStatus } from '../scripts/utils/extraction-status.js';
 import { STATUSES, getUnifiedStatus } from '../scripts/utils/status-model.js';
 import { getImplementationById } from '../scripts/utils/implementations.js';
 import { toSlug } from '../scripts/utils/component-path.js';

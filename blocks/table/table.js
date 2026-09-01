@@ -1,5 +1,5 @@
 import { getConfig } from '../../scripts/ak.js';
-import { getComponentProps } from '../../scripts/utils/component-status.js';
+import { getComponentProps } from '../../scripts/utils/extraction-status.js';
 
 const config = getConfig();
 

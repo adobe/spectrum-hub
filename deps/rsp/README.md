@@ -39,7 +39,7 @@ Prerelease labels come from the **S2 documentation site**, not from `@react-spec
 
 `extract-props.js` calls `fetchComponentDocStatus` once per component while extracting. To debug a single name: `node deps/rsp/extract-doc-status.js Button`.
 
-**In Spectrum Hub UI**, use `scripts/utils/component-status.js`: `getComponentStatus(data)` reads RSP `status` from the extraction object; SWC flat arrays still use `since` / per-prop `internal` when CEM provides them. `getComponentProps(data)` returns prop rows for either shape (used by the table block).
+**In Spectrum Hub UI**, use `scripts/utils/extraction-status.js`: `getComponentStatus(data)` reads RSP `status` from the extraction object; SWC flat arrays still use `since` / per-prop `internal` when CEM provides them. `getComponentProps(data)` returns prop rows for either shape (used by the table block).
 
 ### What gets merged into each component
 

@@ -2,7 +2,7 @@
 
 Originally a spike deliverable for SPDOCS-351; now the living reference for the data contract the status model and combined index are built against, including which deprecation/preview signals are available upstream. Keep this current as the mapping, sources, or upstream signal availability change.
 
-It complements the per-implementation pipeline docs — see [deps/rsp/README.md](../rsp/README.md) and [deps/swc/README.md](../swc/README.md) — rather than repeating them. Runtime normalization lives in [scripts/utils/component-status.js](../../scripts/utils/component-status.js).
+It complements the per-implementation pipeline docs — see [deps/rsp/README.md](../rsp/README.md) and [deps/swc/README.md](../swc/README.md) — rather than repeating them. Runtime normalization lives in [scripts/utils/extraction-status.js](../../scripts/utils/extraction-status.js).
 
 **Sources:**
 
@@ -39,7 +39,7 @@ Per-component file `deps/swc/data/swc-<tag>.json` is a flat array of prop rows. 
 | `since` (per row) | CEM declaration `since` | e.g. `0.0.1`, `2.0.0` | Present on 23 of 35 declarations. |
 | rows | CEM declaration `attributes` | attribute rows | Structured — no TS parsing. |
 
-`getSwcComponentStatus` in [component-status.js](../../scripts/utils/component-status.js) returns the component's `status` as-is when every `since`-tagged prop shares one non-absent value (`internal`, `preview`, or `deprecated`), else `stable` (public or mixed), else `null` (no `since`-bearing prop at all — no maturity signal, floored by the index build).
+`getSwcComponentStatus` in [extraction-status.js](../../scripts/utils/extraction-status.js) returns the component's `status` as-is when every `since`-tagged prop shares one non-absent value (`internal`, `preview`, or `deprecated`), else `stable` (public or mixed), else `null` (no `since`-bearing prop at all — no maturity signal, floored by the index build).
 
 **Finding — the per-prop `status`/`since` are an artifact.** In the CEM, `status` and `since` are **declaration-level** (component) fields. `extract-cem-components.js` copies them onto every attribute row, so the runtime "per-prop" derivation actually reduces to reading the component declaration. Still true today: the adapter reads the copied-down row value rather than the declaration directly. Reading the declaration level directly and skipping the round-trip remains an open simplification, not yet done.
 
@@ -141,7 +141,7 @@ Capturing `@deprecated` from `.d.ts` would be a small parser change, but it woul
 
 - The CEM supports a `deprecated` field (CEM spec allows it on declarations and members), but the current published manifest contains **zero `deprecated` fields**.
 - The only lifecycle metadata present is declaration-level `status` (only `internal`, on 2 of 35 declarations) and `since`.
-- **Wired, unfed:** [deps/swc/README.md](../swc/README.md) documents `status` as supporting `preview` / `deprecated` / `internal`. Only `internal` is observed in the current CEM; `deprecated` and `preview` are not emitted by the source. Unlike when this doc was written, the runtime **can** now resolve `preview` and `deprecated` if the CEM starts emitting them — `getSwcComponentStatus` in `component-status.js` surfaces any uniform component-level `status`, and `SOURCE_MAPPINGS.swc` maps all three to their unified status. The gap today is upstream data, not code.
+- **Wired, unfed:** [deps/swc/README.md](../swc/README.md) documents `status` as supporting `preview` / `deprecated` / `internal`. Only `internal` is observed in the current CEM; `deprecated` and `preview` are not emitted by the source. Unlike when this doc was written, the runtime **can** now resolve `preview` and `deprecated` if the CEM starts emitting them — `getSwcComponentStatus` in `extraction-status.js` surfaces any uniform component-level `status`, and `SOURCE_MAPPINGS.swc` maps all three to their unified status. The gap today is upstream data, not code.
 
 Capturing the CEM `deprecated` field required no change to `formatAttr` — the field was already copied onto every row. The resolver-side work (recognizing `deprecated`/`preview`, not just `internal`) has been done; there is simply no data to exercise it yet.
 

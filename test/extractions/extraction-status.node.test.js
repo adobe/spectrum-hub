@@ -7,7 +7,7 @@ import {
   getSwcComponentStatus,
   isPrereleaseStatus,
   normalizeComponentExtraction,
-} from '../../scripts/utils/component-status.js';
+} from '../../scripts/utils/extraction-status.js';
 
 describe('normalizeComponentExtraction', () => {
   it('wraps SWC flat arrays as props with no doc status', () => {
