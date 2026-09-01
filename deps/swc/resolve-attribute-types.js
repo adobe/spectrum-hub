@@ -18,6 +18,7 @@
 import ts from 'typescript';
 import { componentEntryPath, rebaseInheritedModule } from './locate-published-files.js';
 import { crawl, buildProgram } from './build-ts-checker.js';
+import { typeToDisplayString, typeToValues } from '../shared/prop-contract.js';
 
 // A bare alias this pipeline can expand, optionally unioned with undefined.
 const BARE_ALIAS_RE = /^[A-Za-z_$][A-Za-z0-9_$]*(\s*\|\s*undefined)?$/;
@@ -85,33 +86,6 @@ export function collectResolutionTargets(rawAttrs, {
   }
 
   return targets;
-}
-
-// Members are stringified individually: typeToString() prefers a type's own alias
-// name over expanding it.
-function typeToDisplayString(checker, type) {
-  const format = ts.TypeFormatFlags.NoTruncation;
-  if (type.isUnion?.()) {
-    return type.types.map((member) => checker.typeToString(member, undefined, format)).join(' | ');
-  }
-  return checker.typeToString(type, undefined, format);
-}
-
-// eslint-disable-next-line no-bitwise
-const isNullish = (t) => Boolean(t.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null | ts.TypeFlags.Void));
-
-/**
- * A union's selectable values as real JSON. Empty unless every non-nullish member is
- * a literal — one mixing literals with an open type has no fixed option set. Nullish
- * is dropped, never offered; "none" is a control-layer sentinel.
- *
- * Order is the checker's (unions interned by type ID), not source order.
- */
-function typeToValues(type) {
-  if (!type.isUnion?.()) return [];
-  const members = type.types.filter((member) => !isNullish(member));
-  if (!members.length || !members.every((member) => member.isLiteral?.())) return [];
-  return members.map((member) => member.value);
 }
 
 // `fixed?: FixedValues` can be absent, so its control needs a "none" option; a

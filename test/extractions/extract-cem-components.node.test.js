@@ -3,13 +3,13 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 
 import {
   applyResolvedTypes,
-  attributeKind,
   collectComponentData,
   findDeclarationAndModule,
   fetchCEM,
   fetchResolvedVersion,
   resolveAllAttributeTypes,
 } from '../../deps/swc/extract-cem-components.js';
+import { propKind } from '../../deps/shared/prop-contract.js';
 import { cdnUrlsForCanonicalPath, clearManifestCache } from '../../deps/swc/locate-published-files.js';
 
 // fetchCEM/fetchResolvedVersion share the same unpkg-then-jsdelivr CDN fallback
@@ -61,36 +61,36 @@ describe('CDN fallback (fetchCEM, fetchResolvedVersion)', () => {
 });
 
 // Layer 1: every row carries `kind` + `values` so no consumer re-parses `type`.
-describe('attributeKind', () => {
+describe('propKind', () => {
   it('classifies the four kinds SWC actually uses', () => {
-    assert.equal(attributeKind('boolean', []), 'boolean');
-    assert.equal(attributeKind('string', []), 'text');
-    assert.equal(attributeKind('number', []), 'number');
-    assert.equal(attributeKind('"s" | "m"', ['s', 'm']), 'enum');
-    assert.equal(attributeKind('50 | 75', [50, 75]), 'enum');
+    assert.equal(propKind('boolean', []), 'boolean');
+    assert.equal(propKind('string', []), 'text');
+    assert.equal(propKind('number', []), 'number');
+    assert.equal(propKind('"s" | "m"', ['s', 'm']), 'enum');
+    assert.equal(propKind('50 | 75', [50, 75]), 'enum');
   });
 
   it('classifies anything with values as an enum regardless of its type text', () => {
-    assert.equal(attributeKind('StatusLightVariant', ['neutral', 'info']), 'enum');
+    assert.equal(propKind('StatusLightVariant', ['neutral', 'info']), 'enum');
   });
 
   // aria-haspopup / aria-expanded reach the CEM with no type at all. Guessing a kind
   // would build a control from nothing; the skip warning is the correct outcome.
   it('is "unknown" for a type the CEM never recorded', () => {
-    assert.equal(attributeKind('', []), 'unknown');
-    assert.equal(attributeKind(undefined, []), 'unknown');
+    assert.equal(propKind('', []), 'unknown');
+    assert.equal(propKind(undefined, []), 'unknown');
   });
 
   it('is "unknown" for a type it cannot turn into a control', () => {
-    assert.equal(attributeKind('(e: Event) => void', []), 'unknown');
-    assert.equal(attributeKind('ReactNode', []), 'unknown');
+    assert.equal(propKind('(e: Event) => void', []), 'unknown');
+    assert.equal(propKind('ReactNode', []), 'unknown');
   });
 
   // Nullish is stripped, never offered — "none" is a control-layer sentinel, so a
   // nullable primitive is just that primitive (swc-progress-circle.progress).
   it('sees through a nullable primitive', () => {
-    assert.equal(attributeKind('number | null', []), 'number');
-    assert.equal(attributeKind('string | undefined', []), 'text');
+    assert.equal(propKind('number | null', []), 'number');
+    assert.equal(propKind('string | undefined', []), 'text');
   });
 });
 
