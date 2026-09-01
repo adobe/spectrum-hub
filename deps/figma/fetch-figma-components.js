@@ -1,5 +1,5 @@
 /**
- * Regenerates the Figma component roster (deps/figma/component-status.json).
+ * Regenerates the Figma component roster (deps/figma/components.json).
  *
  * The Design column of the combined status table is driven by presence: every Figma
  * component set becomes an `Available` cell (see deps/build-status-index.js). This file
