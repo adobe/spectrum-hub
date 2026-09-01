@@ -495,9 +495,20 @@ svg.icon {
 }
 
 .se-segmentedcontrol {
+  /* Wraps rather than forcing its container wider. A 17-segment group (swc-avatar's
+     `size`) is 850px of min-content, which pushed the playground's fixed 300px control
+     column out to 921px and, at narrower viewports, escaped the block entirely and
+     scrolled the whole page sideways. */
   fieldset {
     all: unset;
     display: flex;
+    flex-wrap: wrap;
+
+    /* Rounds the group as a whole. Per-segment first/last radii can't do it once the
+       track wraps: only the very first and very last segment carry one, so every row
+       between them ends square and the rows read as one solid block. */
+    border-radius: var(--s2-corner-radius-400);
+    overflow: hidden;
   }
 
   input {
@@ -511,6 +522,11 @@ svg.icon {
     cursor: pointer;
     background: var(--s2-gray-200);
     margin-bottom: 0;
+
+    /* Grows so each wrapped row fills the width and the group clips to a clean
+       rectangle. Never shrinks — that would truncate a segment's own label. A single
+       row has no free space to distribute, so it is unaffected. */
+    flex: 1 0 auto;
 
     span {
       display: block;
@@ -529,16 +545,6 @@ svg.icon {
 
     &:has(input:focus-visible) {
       anchor-name: --active-segment;
-    }
-
-    &:first-of-type {
-      border-top-left-radius: var(--s2-corner-radius-400);
-      border-bottom-left-radius: var(--s2-corner-radius-400);
-    }
-
-    &:last-of-type {
-      border-top-right-radius: var(--s2-corner-radius-400);
-      border-bottom-right-radius: var(--s2-corner-radius-400);
     }
   }
 
