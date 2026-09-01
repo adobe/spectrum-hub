@@ -2,7 +2,14 @@
   {
     "attribute": "type",
     "property": "type",
-    "type": "UserMessageType",
+    "type": "\"card\" | \"media\" | \"copy\"",
+    "kind": "enum",
+    "values": [
+      "card",
+      "media",
+      "copy"
+    ],
+    "optional": false,
     "default": "'copy'",
     "description": "Visual content type for the user message bubble."
   }

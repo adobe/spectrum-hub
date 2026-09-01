@@ -3,6 +3,9 @@
     "attribute": "open",
     "property": "open",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Whether the sources list is open."
   },
@@ -10,6 +13,9 @@
     "attribute": "label",
     "property": "label",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "'Sources'",
     "description": "Label shown in the disclosure button and applied to list ARIA labelling."
   },
@@ -17,6 +23,9 @@
     "attribute": "accessible-label",
     "property": "accessibleLabel",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "''",
     "description": "Optional accessible label override for assistive technologies."
   }

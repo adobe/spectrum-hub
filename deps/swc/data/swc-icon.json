@@ -2,7 +2,16 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl",
+      "xs"
+    ],
+    "optional": false,
     "description": "T-shirt icon size.",
     "inheritedFrom": "SizedMixin",
     "status": "internal",
@@ -12,6 +21,9 @@
     "attribute": "label",
     "property": "label",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "''",
     "description": "Accessible label for the icon.",
     "inheritedFrom": "IconBase",

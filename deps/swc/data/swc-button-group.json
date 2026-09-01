@@ -2,7 +2,15 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": false,
     "description": "The size of the button group and its children.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
@@ -10,7 +18,13 @@
   {
     "attribute": "orientation",
     "property": "orientation",
-    "type": "ButtonGroupOrientation",
+    "type": "\"horizontal\" | \"vertical\"",
+    "kind": "enum",
+    "values": [
+      "horizontal",
+      "vertical"
+    ],
+    "optional": false,
     "default": "'horizontal'",
     "description": "The layout direction of the button group.\n\nNote: this property does NOT set `aria-orientation` on the host because\n`aria-orientation` is only meaningful for roles that manage arrow-key\nnavigation (e.g. `toolbar`, `listbox`). Since button-group uses\nsequential Tab navigation (not roving tabindex), the attribute would\nbe invalid.",
     "inheritedFrom": "ButtonGroupBase",
@@ -20,6 +34,9 @@
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Whether all buttons in the group are disabled. When `true`, forces\nevery slotted button child to `disabled`. When `false`, children\nretain their individual disabled state — a button slotted with\n`disabled` remains disabled even when the group is enabled.",
     "inheritedFrom": "ButtonGroupBase",
@@ -28,7 +45,14 @@
   {
     "attribute": "align",
     "property": "align",
-    "type": "ButtonGroupAlignment",
+    "type": "\"start\" | \"center\" | \"end\"",
+    "kind": "enum",
+    "values": [
+      "start",
+      "center",
+      "end"
+    ],
+    "optional": false,
     "default": "'start'",
     "description": "The alignment of buttons within the group along the main axis.",
     "inheritedFrom": "ButtonGroupBase",

@@ -2,7 +2,15 @@
   {
     "attribute": "variant",
     "property": "variant",
-    "type": "ButtonVariant",
+    "type": "\"accent\" | \"negative\" | \"primary\" | \"secondary\"",
+    "kind": "enum",
+    "values": [
+      "accent",
+      "negative",
+      "primary",
+      "secondary"
+    ],
+    "optional": false,
     "default": "'primary'",
     "description": "The visual variant of the button.\n\n`outline` fill-style is only supported with `primary` and `secondary`.\n`static-color` is only supported with `primary` and `secondary`.",
     "since": "2.0.0-beta.1"
@@ -10,7 +18,13 @@
   {
     "attribute": "fill-style",
     "property": "fillStyle",
-    "type": "ButtonFillStyle",
+    "type": "\"fill\" | \"outline\"",
+    "kind": "enum",
+    "values": [
+      "fill",
+      "outline"
+    ],
+    "optional": false,
     "default": "'fill'",
     "description": "The fill style of the button.\n\n`outline` is only supported with `primary` and `secondary` variants.",
     "since": "2.0.0-beta.1"
@@ -18,7 +32,13 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "ButtonStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
+    "kind": "enum",
+    "values": [
+      "white",
+      "black"
+    ],
+    "optional": true,
     "description": "Static color treatment for display over colored or image backgrounds.\nOnly supported with `primary` and `secondary` variants.",
     "since": "2.0.0-beta.1"
   },
@@ -26,6 +46,9 @@
     "attribute": "truncate",
     "property": "truncate",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Whether overflowing text is truncated with an ellipsis rather than\nwrapping. Replaces the legacy `no-wrap` attribute from 1st-gen.",
     "since": "2.0.0-beta.1"
@@ -34,6 +57,9 @@
     "attribute": "justified",
     "property": "justified",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Enables the button to become full-width, if the container\nallows it.",
     "since": "2.0.0-beta.1"
@@ -42,6 +68,9 @@
     "attribute": "pending",
     "property": "pending",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Whether the element is in a pending (busy) state. The element remains\nfocusable but activation is suppressed.",
     "inheritedFrom": "PendingMixin",
@@ -50,7 +79,10 @@
   {
     "attribute": "pending-label",
     "property": "pendingLabel",
-    "type": "string | undefined",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": true,
     "description": "Custom accessible label used during the pending state. When omitted, the\npending label is derived from the resolved non-busy accessible name plus\na busy suffix (e.g. \"Save, busy\").",
     "inheritedFrom": "PendingMixin",
     "since": "2.0.0-beta.1"
@@ -58,7 +90,15 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": false,
     "description": "The size of the button.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
@@ -67,6 +107,9 @@
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Whether the button is disabled. Removes focusability and prevents\ninteraction.",
     "inheritedFrom": "ButtonBase",
@@ -75,7 +118,10 @@
   {
     "attribute": "accessible-label",
     "property": "accessibleLabel",
-    "type": "string | undefined",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": true,
     "description": "Accessible label forwarded to the internal `<button>` element as\n`aria-label`. Required for icon-only buttons, which have no visible text.",
     "inheritedFrom": "ButtonBase",
     "since": "2.0.0-beta.1"

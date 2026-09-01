@@ -2,7 +2,14 @@
   {
     "attribute": "status",
     "property": "status",
-    "type": "'active' | 'complete' | 'stopped'",
+    "type": "\"active\" | \"complete\" | \"stopped\"",
+    "kind": "enum",
+    "values": [
+      "active",
+      "complete",
+      "stopped"
+    ],
+    "optional": false,
     "default": "'active'",
     "description": "Timeline state for connector icons."
   }
