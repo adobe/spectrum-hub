@@ -37,8 +37,8 @@
       "kind": "unknown",
       "values": [],
       "required": true,
-      "description": "The content of the tree item along with any nested children. Supports static nested tree items\nor use of a Collection to dynamically render nested tree items.",
-      "inheritedFrom": "TreeItemProps"
+      "description": "The content of the side nav item along with any nested children. Supports static nested side\nnav items or use of a Collection to dynamically render nested side nav items.",
+      "inheritedFrom": "NavigationTreeItemProps"
     },
     {
       "property": "isDisabled",
