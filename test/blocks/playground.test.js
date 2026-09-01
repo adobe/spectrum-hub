@@ -780,8 +780,8 @@ describe('playground block — init()', () => {
   });
 
   // IMPL_COMPONENT_NAMES's `export` field (deps/impl-component-names.js) resolves a
-  // component whose real RSP
-  // export differs from its canonical Spectrum Hub name — e.g. "action-group" ships as
+  // component whose real RSP export differs from its canonical Spectrum Hub name — e.g.
+  // "action-group" ships as
   // RSP's ActionButtonGroup, not a naive pascalCase("action-group") -> "ActionGroup".
   // Regression: before this resolution existed, such components 404'd on their prop
   // data and snippet markup, and threw "No RSP export named ..." in the live preview.

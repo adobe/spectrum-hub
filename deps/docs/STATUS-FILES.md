@@ -21,11 +21,8 @@ roster-excludes.json     ├──►  deps/build-status-index.js
 <impl>-secondary-        │     (reads scripts/utils/                       deps/status/<slug>.json
   status.json             │      extraction-status.js +                     (one file per component)
 raw extraction data      ─┘      status-model.js)
-  (rsp/data, swc/data,                                                     deps/impl-aliases.js
-   figma/components.json)                                                    (doc-link redirects)
-
-                                                                            deps/rsp-export-names.js
-                                                                              (real RSP import names)
+  (rsp/data, swc/data,                                                deps/impl-component-names.js
+   figma/components.json)                                              (doc-link + import names)
 ```
 
 ## Where do I put a change?
@@ -71,30 +68,34 @@ JSON-comment equivalent). Run `node deps/build-status-index.js` to regenerate th
 | --- | --- | --- |
 | [`deps/status-index.json`](../status-index.json) | `blocks/status-table/status-table.js` | The full combined table — every component, every platform/impl cell, plus a self-describing status legend. |
 | `deps/status/<slug>.json` (one per component) | `blocks/component-status/component-status.js`, `scripts/utils/figma.js` (via [`scripts/utils/component-slice.js`](../../scripts/utils/component-slice.js)) | One component's cells + Figma node id — a single small fetch instead of downloading and searching the whole index on every component doc page. |
-| [`deps/impl-aliases.js`](../impl-aliases.js) | `scripts/utils/go-to-impl.js` | Slug → the name a source's *external docs site* actually uses, for building working doc links (e.g. `AlertDialog` → `Dialog.html`). |
-| [`deps/rsp-export-names.js`](../rsp-export-names.js) | `blocks/playground/playground.js` | Slug → the real RSP export name to `import`/render, when it differs from the canonical name (e.g. canonical `ActionGroup` → RSP's real `ActionButtonGroup`). |
+| [`deps/impl-component-names.js`](../impl-component-names.js) | `scripts/utils/go-to-impl.js` (`docs`), `blocks/playground/playground.js` via `deps/rsp/playground/pascal-case.js` (`export`) | Per implementation, slug → `{ docs, export }`. `docs` is the name that source's *external docs site* uses, for building working links (`AlertDialog` → `Dialog.html`); `export` is the real name to `import`/render when it differs from the canonical one (`ActionGroup` → `ActionButtonGroup`). |
 
-## Two alias tables that look redundant but aren't
+## Two names that look redundant but aren't
 
-`impl-aliases.js` and `rsp-export-names.js` are both `slug → some other name` lookups, and
-it's tempting to merge them. Don't — they answer genuinely different questions:
+`impl-component-names.js` gives each slug **two** fields, `docs` and `export`, and it's
+tempting to collapse them to one value. Don't — they answer genuinely different questions:
 
-- **`impl-aliases.js`**: "what does the source's *own public docs site* call this?" Several
-  distinct real RSP components can share one doc page (`AlertDialog`, `Dialog`, and
-  `FullscreenDialog` all link to `Dialog.html`) — this table is for building a link that
-  actually resolves.
-- **`rsp-export-names.js`**: "what do I actually `import` and render?" `AlertDialog` is
+- **`docs`**: "what does the source's *own public docs site* call this?" Several distinct
+  real RSP components can share one doc page (`AlertDialog`, `Dialog`, and
+  `FullscreenDialog` all link to `Dialog.html`), so this is many-to-one — it exists to
+  build a link that actually resolves.
+- **`export`**: "what do I actually `import` and render?" One-to-one. `AlertDialog` is
   still its own real, separate component even though its docs redirect to `Dialog.html`.
 
-They are also built from different inputs: `impl-aliases.js` from every cell carrying an
+They are also built from different inputs: `docs` from every cell carrying an
 `upstreamName` (so both `component-aliases.json` and `status-overrides.json` feed it),
-`rsp-export-names.js` from the roster itself — an entry exists only where a component's
-real RSP name differs from its canonical name.
+`export` from the roster itself — an entry exists only where a component's real RSP name
+differs from its canonical name. Today they disagree on `cards` (`Card` vs `CardView`),
+`radio-button` (`RadioGroup` vs `Radio`) and `takeover-dialog` (`Dialog` vs
+`FullscreenDialog`).
 
-Reusing the doc-link table to decide what to render was a real, shipped bug: the
-playground 404'd trying to render components whose docs merely redirected elsewhere,
-because it was using `impl-aliases.js` (a link-building answer) to answer a
-rendering question. Keep them separate.
+Reusing the doc-link answer to decide what to render was a real, shipped bug: the
+playground 404'd trying to render components whose docs merely redirected elsewhere.
+One file is fine; one *value* is not. Read the field that answers your question.
+
+Only RSP populates `export` — SWC renders by tag name, which `deps/swc/components.json`
+already maps — but the shape is per-implementation, so a future source that needs one has
+somewhere to put it.
 
 ## `upstreamName` and `figmaPageSource`
 
@@ -103,8 +104,8 @@ These are the two redirect fields, and they are unrelated mechanisms despite bot
 
 ### `upstreamName` — what that source's docs site calls it
 
-One field, used to build a link that resolves. `buildImplAliases` collects every cell
-carrying one into `impl-aliases.js`, which
+One field, used to build a link that resolves. `buildImplComponentNames` collects every
+cell carrying one into the `docs` field of `impl-component-names.js`, which
 [`scripts/utils/go-to-impl.js`](../../scripts/utils/go-to-impl.js) reads. Without one the
 link builder falls back to the page's own slug, so `field-label` would become
 `react-spectrum.adobe.com/FieldLabel.html` — a 404.
@@ -128,7 +129,7 @@ authoring home differs.
 A figma-cell-only override naming which Figma roster entry provides this component's
 `figmaPageId`: Calendar borrows Date and time field's page, Cards pins one of its six
 variant pages. It selects a page, it does not rename anything, and it never reaches
-`impl-aliases.js` — `buildImplAliases` skips figma for exactly this reason. An override
+`impl-component-names.js` — `buildImplComponentNames` skips figma for exactly this reason. An override
 targeting a Figma entry that doesn't exist warns rather than silently producing no link.
 
 ## Naming note
