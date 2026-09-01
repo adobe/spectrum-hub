@@ -52,6 +52,13 @@ const RSP_PROPS = [
     property: 'staticColor', type: "'white' | 'black' | 'auto'", kind: 'enum', values: ['white', 'black', 'auto'],
   },
   {
+    property: 'channel',
+    type: "'hue' | 'saturation' | 'red' | 'alpha'",
+    kind: 'enum',
+    values: ['hue', 'saturation', 'red', 'alpha'],
+    required: true,
+  },
+  {
     property: 'xChannel', type: "'hue' | 'red' | 'green'", kind: 'enum', values: ['hue', 'red', 'green'],
   },
   {
@@ -653,6 +660,33 @@ describe('resolveControl', () => {
 
   it('gives a property with no unset choice no sentinel at all', () => {
     assert.equal(resolveControl('variant', 'rsp', controlsMap, RSP_PROPS).options[0], 'primary');
+  });
+
+  // ColorSlider's `channel` is required and, unlike ColorArea's, is not inferred —
+  // omitting it renders nothing, so it gets no unset choice. Its catalog lists all
+  // eight channels across all three color spaces with `hue` leading, but `hue` is
+  // invalid in `rgb`, which is colorSpace's own default. Measured live: rgb accepts
+  // red/green/blue/alpha, hsl hue/saturation/lightness/alpha, hsb
+  // hue/saturation/brightness/alpha — `alpha` is the only channel valid in all three.
+  it('overrides the default for channel to the one valid in every color space', () => {
+    const result = resolveControl('channel', 'rsp', controlsMap, RSP_PROPS);
+    assert.equal(result.defaultOverride, 'alpha');
+  });
+
+  it('leaves the channel option list in its declared order', () => {
+    const result = resolveControl('channel', 'rsp', controlsMap, RSP_PROPS);
+    assert.deepEqual(result.options, ['hue', 'saturation', 'red', 'alpha']);
+  });
+
+  it('gives channel no unset choice, since omitting a required prop renders nothing', () => {
+    const result = resolveControl('channel', 'rsp', controlsMap, RSP_PROPS);
+    assert.equal(isUnsetOption(result.options[0]), false);
+  });
+
+  it('leaves every other property without a default override', () => {
+    ['variant', 'size', 'staticColor', 'xChannel'].forEach((property) => {
+      assert.equal(resolveControl(property, 'rsp', controlsMap, RSP_PROPS).defaultOverride, undefined, property);
+    });
   });
 
   it('returns null attribute when property has no swc equivalent even after normalization', () => {

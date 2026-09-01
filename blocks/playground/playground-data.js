@@ -199,6 +199,24 @@ function resolveUnsetOption(property, isOptional) {
   return isOptional || NONE_PROPERTIES.has(property) ? NONE_OPTION : null;
 }
 
+/**
+ * A property whose first catalog value is not a safe starting one, because it is only
+ * valid in combination with another property's own default.
+ *
+ * ColorSlider's `channel` is the case: required, and — unlike ColorArea's xChannel /
+ * yChannel — not inferred, so it gets no unset choice; omitting it renders nothing.
+ * Its catalog lists all eight channels across all three color spaces, `hue` first, but
+ * `hue` is invalid in `rgb`, which is what colorSpace itself defaults to, so the
+ * preview loaded blank. Measured live: rgb takes red/green/blue/alpha, hsl
+ * hue/saturation/lightness/alpha, hsb hue/saturation/brightness/alpha — `alpha` is the
+ * only channel valid in all three, so it stays valid however colorSpace is changed.
+ *
+ * This is a cross-property constraint, which is exactly what a per-prop catalog
+ * `default` cannot express — so it wins over one. It does not stop a reader choosing
+ * an invalid pair deliberately; only the colorSpace-aware option filtering would.
+ */
+const DEFAULT_OVERRIDES = { channel: 'alpha' };
+
 export function resolveControl(property, implementation, controlsMap, propRows, onSkip) {
   const row = findProp(property, propRows);
   const controlEntry = controlsMap.get(property);
@@ -251,5 +269,10 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
     }
   }
 
-  return { controlType, options, attribute };
+  // Spread rather than always set, so a property with no override keeps the descriptor
+  // shape it has always had instead of gaining an undefined key.
+  const defaultOverride = DEFAULT_OVERRIDES[property];
+  return {
+    controlType, options, attribute, ...(defaultOverride && { defaultOverride }),
+  };
 }

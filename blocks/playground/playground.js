@@ -490,7 +490,12 @@ function buildControlDescriptors(
       (message) => console.warn(`Playground (${component}): ${message}`),
     );
     if (!descriptor) { return acc; }
-    let rawDefault = parseDefault(findProp(property, propRows)?.default) ?? descriptor.options[0];
+    // defaultOverride leads because it encodes a constraint between two properties
+    // (ColorSlider's channel must suit colorSpace), which a per-prop catalog default
+    // cannot express — see DEFAULT_OVERRIDES in playground-data.js.
+    let rawDefault = descriptor.defaultOverride
+      ?? parseDefault(findProp(property, propRows)?.default)
+      ?? descriptor.options[0];
     // A textfield with no authored default would otherwise start empty —
     // populate it with a placeholder label instead.
     if (descriptor.controlType === 'textfield' && rawDefault === undefined) {

@@ -8,22 +8,19 @@
      shape to mirror.
 
      ColorSlider.json documents `label` directly, so that's a real authored
-     prop here (status: alpha). `channel` isn't documented anywhere in
-     ColorSlider.json or ColorSliderProps in rsp-base-props.json, but a
-     ColorSlider edits exactly one channel of a color at a time and has no
-     sensible default channel to fall back to — same
-     undocumented-but-required situation as ColorSwatch's `color` (see
-     swatch-group.jsx).
+     prop here (status: alpha). `channel` is documented too, and is required —
+     unlike ColorArea's xChannel/yChannel it is not inferred, so omitting it
+     renders an empty node.
 
-     `channel="hue"` was tried first (hue being the most visually obvious
-     single-channel slider) but confirmed broken via a live, harness-free
-     repro: `createElement(ColorSlider, {channel: 'hue', defaultValue:
-     '#7B61FF'})` renders a real DOM node with zero children — no error, no
-     visible slider — while the exact same call with `channel="alpha"`
-     renders correctly (matching the real @react-spectrum/s2 story example
-     at stories/ColorSlider.stories.tsx, which also uses `channel: 'alpha'`
-     with a hex `defaultValue`). Likely a channel/color-space mismatch: hex
-     strings parse to an RGB color, and `hue` isn't a channel RGB has
-     directly (needs HSL/HSB conversion first), whereas `alpha` exists on
-     any color space. Using the confirmed-working `alpha` channel instead. -->
+     A channel is only valid in some color spaces, which is why `alpha` is
+     used. Measured across the full cross-product on the live preview:
+
+       rgb  red, green, blue, alpha
+       hsl  hue, saturation, lightness, alpha
+       hsb  hue, saturation, brightness, alpha
+
+     `alpha` is the only one valid in all three, so it stays working whatever
+     colorSpace is set to — hence it is also the control's default
+     (DEFAULT_OVERRIDES in blocks/playground/playground-data.js). Every other
+     pairing outside that table renders nothing, with no error. -->
 <ColorSlider label="Red opacity" channel="alpha" defaultValue="#f00" />
