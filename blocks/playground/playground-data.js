@@ -206,11 +206,6 @@ export function resolvePickerOptions(property, rspProps, swcProps) {
 // resolve anything before they can render.
 export const FREEFORM_CONTROLS = new Set(['textfield', 'slider']);
 
-// Control types named in the "control" column that don't have a component
-// built yet. Properties assigned one of these are skipped with a warning
-// rather than silently falling back to a different control.
-const UNIMPLEMENTED_CONTROLS = new Set([]);
-
 export function resolveControl(property, implementation, controlsMap, rspProps, swcProps, onSkip) {
   const rspRow = findRspProp(property, rspProps);
   const existsInRsp = Boolean(rspRow);
@@ -231,11 +226,6 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   const exists = existsByImplementation[implementation];
   if (implementation in existsByImplementation && !exists && !isSlotProperty) {
     onSkip?.(`No control shown for "${property}": it isn't defined in the ${implementation.toUpperCase()} data for this component.`);
-    return null;
-  }
-
-  if (UNIMPLEMENTED_CONTROLS.has(controlType)) {
-    onSkip?.(`No control shown for "${property}": the "${controlType}" control isn't built yet.`);
     return null;
   }
 
