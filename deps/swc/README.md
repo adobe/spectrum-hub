@@ -11,7 +11,6 @@ The CEM is published with `@adobe/spectrum-wc` at `dist/custom-elements.json`, s
 | Script | Role |
 | ------ | ---- |
 | **`extract-cem-components.js`** | Reads a local CEM path when provided, otherwise fetches `@adobe/spectrum-wc` `custom-elements.json` (with CDN fallbacks). Formats each declaration's `attributes` array, including inherited attributes already present on the component in the CEM. |
-| **`extract-cem-mixins.js`** | Legacy helper that builds `data/swc-mixins.json` from mixin/base class declarations. Normal extraction does not use this file — inherited attributes are already on each component declaration in 2nd-gen CEM. |
 | **`discover-components.js`** | Regenerates `components.json` from the CEM: maps every `tagName` (bare name, no `swc-` prefix) to the module subpath it ships from, derived from the declaration's module `path` (dedupe + sort, no status filter). `components.json` is a generated artifact — do not hand-edit it. |
 
 Unlike RSP, SWC has a structured CEM. There is no TypeScript parser in the component path — output comes directly from manifest `attributes` entries.
@@ -97,25 +96,6 @@ Spot-check JSON against [2nd-gen Storybook](https://github.com/adobe/spectrum-we
 
 **Missing from a release:** If a `swc-*` tag in `components.json` is not yet in the published package, the CDN CEM will not contain it. Validate it with a local `yarn analyze` build until it ships.
 
-## Updating mixins (legacy)
-
-**This is a manual engineering maintenance task.** Unlike `extract-cem-components.js`, mixin extraction cannot be automated — the mixin class declarations live inside the SWC monorepo and are never published to npm or any CDN. There is no automated signal when they go out of date.
-
-`data/swc-mixins.json` should be refreshed when:
-
-- A SWC release notes changes to shared base classes or mixins (`Focusable`, `LikeAnchor`, `SizedMixin`, etc.)
-- A newly added component is missing expected inherited properties in its output JSON
-- SWC bumps a major version
-
-```sh
-cd ../spectrum-web-components/2nd-gen/packages/swc
-yarn analyze
-cd ../../../../spectrum-hub
-node deps/swc/extract-cem-mixins.js ../spectrum-web-components/2nd-gen/packages/swc/.storybook/custom-elements.json
-```
-
-This overwrites `data/swc-mixins.json`. Commit the result and re-run `extract-cem-components.js` locally to verify the component output files look correct before pushing.
-
 ## Published CEM location
 
 `extract-cem-components.js` tries these URLs until one succeeds:
@@ -140,4 +120,4 @@ The package ships `dist/custom-elements.json` (`files: ["dist/"]`, `customElemen
 
 **Duplicate tag names** — If multiple declarations share a `tagName`, the extractor uses the first match in module order.
 
-**Tests** — `test/extractions/extract-cem-components.node.test.js` and `extract-cem-mixins.node.test.js` cover formatting and mixin collection helpers; they do not fetch live CDNs.
+**Tests** — `test/extractions/extract-cem-components.node.test.js` covers the formatting helpers; it does not fetch live CDNs.
