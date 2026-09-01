@@ -29,6 +29,8 @@ The division matters: **the workbook is the allow-list, the catalog is the vocab
 
 **A "None" choice is derived from `optional`, which only SWC emits.** SWC declares attributes required by default, so `optional` is its rare, informative signal. TypeScript props are optional by default, so the same rule on RSP would put a spurious *None* on 97% of controls. RSP's `staticColor` therefore names itself explicitly in `playground-data.js` — a deliberate exception, not an oversight. See [deps/rsp/README.md](../rsp/README.md#required-not-optional).
 
+**A component with no controls gets no controls panel.** Some components legitimately have none: SWC's `link` is utility CSS classes rather than a component API and is absent from `components.json` entirely, so the existence gate rejects every authored property; RSP's `SideNav` has 16 catalog props, but every one is `unknown` or `text` with no options, so every control is skipped. `buildControlsPanel` returns `null` when nothing rendered, and the layout appends only what exists — otherwise an empty panel keeps its fixed column and labels a region containing nothing. No CSS is involved: `.playground-controls` is `flex: 0 0 <fixed>` and `.playground-preview` is `flex: 1 1 auto`, so with the panel gone the preview is the sole flex child and fills the row.
+
 ## Naming: the authored name is the thread
 
 **Every lookup is keyed by the authored slug** — the snippet file, `OVERLAY_TRIGGERS`, the preview shell's sizing sets, and the workbook's `components` sheet. An implementation's own export name is resolved only where the export itself is needed:
@@ -63,7 +65,7 @@ That bridge is a **runtime walk only until SWC's extractor writes a canonical na
 | Row contract over both committed catalogs, plus each pipeline's own canary | `test/extractions/data-contract.node.test.js` |
 | `values` in declared order, membership never changing when reordered | `test/extractions/prop-contract.node.test.js` |
 | Options from `values` and never from `type`; the existence gate; the name bridge | `test/extractions/playground-data.node.test.js` |
-| One catalog fetched; authored-slug snippet and shell routing | `test/blocks/playground.test.js` |
+| One catalog fetched; authored-slug snippet and shell routing; no panel when there are no controls | `test/blocks/playground.test.js` |
 | Overlay routes keyed by authored slug | `test/extractions/overlay-triggers.node.test.js` |
 
 The catalog guards are deliberately written so they have been *seen* to fail: the zero-props canary was checked against a planted empty component, the ordering guard is the same check that surfaced the original four out-of-order enums, and the `values`-over-`type` tests were run against the old type-parsing consumer to confirm all three go red.
