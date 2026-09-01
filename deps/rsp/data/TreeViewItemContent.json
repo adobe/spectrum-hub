@@ -2,7 +2,9 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "Rendered contents of the tree item or child items."
     }

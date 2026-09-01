@@ -2,41 +2,51 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The content of the tooltip."
     },
     {
-      "property": "triggerRef",
-      "type": "RefObject<Element | null>",
-      "description": "The ref for the element which the tooltip positions itself with respect to. When used within a TooltipTrigger this is set automatically. It is only required when used standalone.",
-      "inheritedFrom": "TooltipProps"
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
-      "property": "isEntering",
-      "type": "boolean",
-      "description": "Whether the tooltip is currently performing an entry animation.",
-      "inheritedFrom": "TooltipProps"
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
-      "property": "isExiting",
-      "type": "boolean",
-      "description": "Whether the tooltip is currently performing an exit animation.",
-      "inheritedFrom": "TooltipProps"
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
-      "property": "UNSTABLE_portalContainer",
-      "type": "Element",
-      "default": "document.body",
-      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
-      "inheritedFrom": "TooltipProps"
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
-      "property": "placement",
-      "type": "Placement",
-      "default": "'top'",
-      "description": "The placement of the tooltip with respect to the trigger.",
-      "inheritedFrom": "TooltipProps"
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ],
   "status": "stable"

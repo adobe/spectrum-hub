@@ -1,39 +1,154 @@
 {
   "props": [
     {
+      "property": "label",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the label."
+    },
+    {
+      "property": "isIndeterminate",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether presentation is indeterminate when progress isn't known."
+    },
+    {
+      "property": "value",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "0",
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "minValue",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "0",
+      "description": "The smallest value allowed for the input.",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "maxValue",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "100",
+      "description": "The largest value allowed for the input.",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "formatOptions",
+      "type": "NumberFormatOptions",
+      "kind": "unknown",
+      "values": [],
+      "default": "{ style: 'percent' }",
+      "description": "The display format of the value label.",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "valueLabel",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the value's label (e.g. 1 of 4).",
+      "inheritedFrom": "ProgressBarBaseProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the ProgressBar.",
       "inheritedFrom": "ProgressBarStyleProps"
     },
     {
-      "property": "isIndeterminate",
-      "type": "boolean",
-      "description": "Whether presentation is indeterminate when progress isn't known.",
-      "inheritedFrom": "ProgressBarStyleProps"
-    },
-    {
       "property": "staticColor",
-      "type": "'white' | 'black' | 'auto'",
+      "type": "\"white\" | \"black\" | \"auto\"",
+      "kind": "enum",
+      "values": [
+        "white",
+        "black",
+        "auto"
+      ],
       "description": "The static color style to apply. Useful when the button appears over a color background.",
       "inheritedFrom": "ProgressBarStyleProps"
     },
     {
       "property": "labelPosition",
-      "type": "LabelPosition",
+      "type": "\"top\" | \"side\"",
+      "kind": "enum",
+      "values": [
+        "top",
+        "side"
+      ],
       "default": "'top'",
       "description": "The label's overall position relative to the element it is labeling.",
       "inheritedFrom": "ProgressBarStyleProps"
     },
     {
-      "property": "label",
-      "type": "ReactNode",
-      "description": "The content to display as the label."
-    },
-    {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

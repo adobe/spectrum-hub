@@ -2,40 +2,94 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The content to display in the segmented control."
     },
     {
       "property": "isDisabled",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the segmented control is disabled."
     },
     {
       "property": "isJustified",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the items should divide the container width equally."
     },
     {
       "property": "selectedKey",
-      "type": "Key | null",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
       "description": "The id of the currently selected item (controlled)."
     },
     {
       "property": "defaultSelectedKey",
-      "type": "Key",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
       "description": "The id of the initial selected item (uncontrolled)."
     },
     {
       "property": "onSelectionChange",
       "type": "(id: Key) => void",
+      "kind": "unknown",
+      "values": [],
       "description": "Handler that is called when the selection changes."
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

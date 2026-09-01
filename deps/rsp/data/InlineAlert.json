@@ -1,35 +1,71 @@
 {
   "props": [
     {
-      "property": "variant",
-      "type": "'informative' | 'positive' | 'notice' | 'negative' | 'neutral'",
-      "default": "neutral",
-      "description": "The semantic tone of a Inline Alert.",
-      "inheritedFrom": "InlineStylesProps"
-    },
-    {
-      "property": "fillStyle",
-      "type": "'border' | 'subtleFill' | 'boldFill'",
-      "default": "border",
-      "description": "The visual style of the Inline Alert.",
-      "inheritedFrom": "InlineStylesProps"
-    },
-    {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The contents of the Inline Alert."
     },
     {
       "property": "autoFocus",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether to automatically focus the Inline Alert when it first renders."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "variant",
+      "type": "\"informative\" | \"positive\" | \"notice\" | \"negative\" | \"neutral\"",
+      "kind": "enum",
+      "values": [
+        "informative",
+        "positive",
+        "notice",
+        "negative",
+        "neutral"
+      ],
+      "default": "neutral",
+      "description": "The semantic tone of a Inline Alert.",
+      "inheritedFrom": "InlineStylesProps"
+    },
+    {
+      "property": "fillStyle",
+      "type": "\"border\" | \"subtleFill\" | \"boldFill\"",
+      "kind": "enum",
+      "values": [
+        "border",
+        "subtleFill",
+        "boldFill"
+      ],
+      "default": "border",
+      "description": "The visual style of the Inline Alert.",
+      "inheritedFrom": "InlineStylesProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

@@ -1,42 +1,82 @@
 {
   "props": [
     {
-      "property": "orientation",
-      "type": "'horizontal' | 'vertical'",
-      "default": "'horizontal'",
-      "description": "The axis the ButtonGroup should align with. Setting this to 'vertical' will prevent any switching behaviors between 'vertical' and 'horizontal'.",
-      "inheritedFrom": "ButtonGroupStyleProps"
-    },
-    {
-      "property": "align",
-      "type": "'start' | 'end' | 'center'",
-      "default": "'start'",
-      "description": "The alignment of the Buttons within the ButtonGroup.",
-      "inheritedFrom": "ButtonGroupStyleProps"
-    },
-    {
-      "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
-      "default": "'M'",
-      "description": "The size of the Buttons within the ButtonGroup.",
-      "inheritedFrom": "ButtonGroupStyleProps"
-    },
-    {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The Buttons contained within the ButtonGroup."
     },
     {
       "property": "isDisabled",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the Buttons in the ButtonGroup are all disabled."
+    },
+    {
+      "property": "orientation",
+      "type": "\"horizontal\" | \"vertical\"",
+      "kind": "enum",
+      "values": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "'horizontal'",
+      "description": "The axis the ButtonGroup should align with. Setting this to 'vertical' will prevent\nany switching behaviors between 'vertical' and 'horizontal'.",
+      "inheritedFrom": "ButtonGroupStyleProps"
+    },
+    {
+      "property": "align",
+      "type": "\"start\" | \"end\" | \"center\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "end",
+        "center"
+      ],
+      "default": "'start'",
+      "description": "The alignment of the Buttons within the ButtonGroup.",
+      "inheritedFrom": "ButtonGroupStyleProps"
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "default": "'M'",
+      "description": "The size of the Buttons within the ButtonGroup.",
+      "inheritedFrom": "ButtonGroupStyleProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ],
   "status": "stable"

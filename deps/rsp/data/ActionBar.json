@@ -2,35 +2,63 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "A list of ActionButtons to display."
     },
     {
       "property": "isEmphasized",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the ActionBar should be displayed with a emphasized style."
     },
     {
       "property": "selectedItemCount",
-      "type": "number | 'all'",
-      "description": "The number of selected items that the ActionBar is currently linked to. If 0, the ActionBar is hidden."
+      "type": "number | \"all\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "The number of selected items that the ActionBar is currently linked to. If 0, the ActionBar is\nhidden."
     },
     {
       "property": "onClearSelection",
       "type": "() => void",
+      "kind": "unknown",
+      "values": [],
       "description": "Handler that is called when the ActionBar clear button is pressed."
     },
     {
       "property": "scrollRef",
-      "type": "RefObject<HTMLElement | null>",
+      "type": "RefObject<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
       "description": "A ref to the scrollable element the ActionBar appears above."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ],
   "status": "stable"

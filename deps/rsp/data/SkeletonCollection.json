@@ -3,6 +3,8 @@
     {
       "property": "children",
       "type": "() => ReactNode",
+      "kind": "unknown",
+      "values": [],
       "required": true
     }
   ]

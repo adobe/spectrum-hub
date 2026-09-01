@@ -3,67 +3,125 @@
     {
       "property": "src",
       "type": "string | ImageSource[]",
+      "kind": "unknown",
+      "values": [],
       "description": "The URL of the image or a list of conditional sources."
     },
     {
       "property": "alt",
       "type": "string",
+      "kind": "text",
+      "values": [],
       "description": "Accessible alt text for the image."
     },
     {
       "property": "crossOrigin",
-      "type": "'anonymous' | 'use-credentials'",
-      "description": "Indicates if the fetching of the image must be done using a CORS request. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)."
+      "type": "\"anonymous\" | \"use-credentials\"",
+      "kind": "enum",
+      "values": [
+        "anonymous",
+        "use-credentials"
+      ],
+      "description": "Indicates if the fetching of the image must be done using a CORS request.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin)."
     },
     {
       "property": "decoding",
-      "type": "'async' | 'auto' | 'sync'",
-      "description": "Whether the browser should decode images synchronously or asynchronously. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#decoding)."
+      "type": "\"async\" | \"auto\" | \"sync\"",
+      "kind": "enum",
+      "values": [
+        "async",
+        "auto",
+        "sync"
+      ],
+      "description": "Whether the browser should decode images synchronously or asynchronously.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#decoding)."
     },
     {
       "property": "fetchPriority",
-      "type": "'high' | 'low' | 'auto'",
-      "description": "Provides a hint of the relative priority to use when fetching the image. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#fetchpriority)."
+      "type": "\"auto\" | \"high\" | \"low\"",
+      "kind": "enum",
+      "values": [
+        "auto",
+        "high",
+        "low"
+      ],
+      "description": "Provides a hint of the relative priority to use when fetching the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#fetchpriority)."
     },
     {
       "property": "loading",
-      "type": "'eager' | 'lazy'",
-      "description": "Whether the image should be loaded immediately or lazily when scrolled into view. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#loading)."
+      "type": "\"eager\" | \"lazy\"",
+      "kind": "enum",
+      "values": [
+        "eager",
+        "lazy"
+      ],
+      "description": "Whether the image should be loaded immediately or lazily when scrolled into view.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#loading)."
     },
     {
       "property": "referrerPolicy",
-      "type": "HTMLAttributeReferrerPolicy",
-      "description": "A string indicating which referrer to use when fetching the resource. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#referrerpolicy)."
+      "type": "\"\" | \"no-referrer\" | \"no-referrer-when-downgrade\" | \"origin\" | \"origin-when-cross-origin\" | \"same-origin\" | \"strict-origin\" | \"strict-origin-when-cross-origin\" | \"unsafe-url\"",
+      "kind": "enum",
+      "values": [
+        "",
+        "no-referrer",
+        "no-referrer-when-downgrade",
+        "origin",
+        "origin-when-cross-origin",
+        "same-origin",
+        "strict-origin",
+        "strict-origin-when-cross-origin",
+        "unsafe-url"
+      ],
+      "description": "A string indicating which referrer to use when fetching the resource.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#referrerpolicy)."
     },
     {
       "property": "width",
       "type": "number",
-      "description": "The intrinsic width of the image. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#width)."
+      "kind": "number",
+      "values": [],
+      "description": "The intrinsic width of the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#width)."
     },
     {
       "property": "height",
       "type": "number",
-      "description": "The intrinsic height of the image. [See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#height)."
+      "kind": "number",
+      "values": [],
+      "description": "The intrinsic height of the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#height)."
     },
     {
       "property": "styles",
       "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro."
     },
     {
       "property": "renderError",
       "type": "() => ReactNode",
+      "kind": "unknown",
+      "values": [],
       "description": "A function that is called to render a fallback when the image fails to load."
     },
     {
       "property": "group",
       "type": "ImageGroup",
-      "description": "A group of images to coordinate between, matching the group passed to the `<ImageCoordinator>` component. If not provided, the default image group is used."
+      "kind": "unknown",
+      "values": [],
+      "description": "A group of images to coordinate between, matching the group passed to the `<ImageCoordinator>`\ncomponent. If not provided, the default image group is used."
     },
     {
       "property": "itemProp",
       "type": "string",
-      "description": "Associates the image with a microdata object. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/itemprop)."
+      "kind": "text",
+      "values": [],
+      "description": "Associates the image with a microdata object. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/itemprop)."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"
