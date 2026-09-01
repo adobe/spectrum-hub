@@ -12,7 +12,9 @@ export const OVERLAY_TRIGGERS = {
   'custom-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
   'takeover-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
   popover: { trigger: 'DialogTrigger', triggerLabel: 'Open popover' },
-  tooltip: { trigger: 'TooltipTrigger', triggerLabel: 'Hover me' },
+  // propsOnTrigger: RSP declares every controllable Tooltip prop on TooltipTrigger,
+  // not on Tooltip — see propsOwner() below.
+  tooltip: { trigger: 'TooltipTrigger', triggerLabel: 'Hover me', propsOnTrigger: true },
   toast: { triggerLabel: 'Show Toast', queueExport: 'ToastQueue', toastMessage: 'Toasting…' },
 };
 
@@ -33,4 +35,26 @@ export function overlayShape(routeName) {
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
   if (!overlayTrigger) { return 'none'; }
   return overlayTrigger.trigger ? 'wrap' : 'sibling';
+}
+
+/**
+ * The RSP export whose catalog holds a route's controllable props, or null when that is
+ * the route's own component — true for every route but `tooltip`.
+ *
+ * RSP splits Tooltip's API across two exports: `Tooltip` renders the bubble, while
+ * `placement`, `trigger`, `delay`, `isDisabled` and the rest are declared on
+ * `TooltipTrigger`. Reading the route's own catalog there yields six props, none of them
+ * a control, so every authored property is rejected as undefined.
+ *
+ * When this is set, the props are also APPLIED to the trigger rather than the route's
+ * element — in the live preview (initRsp() in index.html) and in the code disclosure
+ * (buildRspSnippet() in ../../../blocks/playground/playground.js) alike. Reading the
+ * right catalog without moving the apply target would show controls that do nothing.
+ *
+ * @param {string} routeName
+ * @returns {string | null}
+ */
+export function propsOwner(routeName) {
+  const overlayTrigger = OVERLAY_TRIGGERS[routeName];
+  return overlayTrigger?.propsOnTrigger ? overlayTrigger.trigger : null;
 }
