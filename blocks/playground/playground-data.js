@@ -252,7 +252,12 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   } else if (needsNoneOption) {
     options = [NONE_OPTION, ...resolvePickerOptions(property, implementation, rspProps, swcProps)];
   } else {
-    options = resolvePickerOptions(property, implementation, rspProps, swcProps);
+    // A type that still fails to resolve to a real union (rare — e.g. a generic or
+    // interface type resolvePickerOptions genuinely can't turn into options) falls
+    // back to the controls sheet's own curated options, same fallback role they
+    // play for "icon" above.
+    const derived = resolvePickerOptions(property, implementation, rspProps, swcProps);
+    options = derived.length ? derived : (controlEntry?.options ?? []);
   }
   const attribute = isIcon ? null : (swcRow?.attribute ?? null);
 
