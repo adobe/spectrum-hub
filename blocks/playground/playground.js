@@ -615,7 +615,13 @@ export default async function init(el) {
     : (name, props) => buildSwcSnippet(name, props, snippetMarkup);
 
   const controlsMap = buildControlsMap(controlsSheet);
-  const authoredProps = getComponentProperties(component, componentsSheet);
+  const authoredProps = getComponentProperties(
+    component,
+    implementation,
+    componentsSheet,
+    // eslint-disable-next-line no-console
+    (message) => console.warn(`Playground (${component}): ${message}`),
+  );
 
   const currentProps = {};
   const descriptors = buildControlDescriptors(
