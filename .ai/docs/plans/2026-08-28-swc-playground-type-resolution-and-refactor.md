@@ -416,7 +416,7 @@ Write down: canonical names use the `is`/`has` boolean prefix; each implementati
 Every SWC row now carries `kind` and `values` — structured data straight from the TypeScript checker — so no consumer re-parses a type string. This is root cause 1's actual fix; the Task 13 quote widening was the symptom patch.
 
 - `resolveTargets()` returns `{ type, values }` instead of a display string. `values` are real JSON (strings stay strings, numbers stay numbers), taken from the checker's union members, empty unless **every** non-nullish member is a literal — a union mixing literals with an open type has no fixed option set to offer.
-- Nullish members are dropped, never offered. "None" stays a control-layer sentinel (`NO_ICON` / `NO_STATIC_COLOR`), matching the established pattern.
+- Nullish members are dropped, never offered. "None" stays a control-layer sentinel (`NO_ICON` / `NONE_OPTION`), matching the established pattern.
 - `needsResolution()` now also accepts an already-inline literal union. Those needed no *expansion*, but their `values` must come from the checker like everything else rather than from a second, string-parsing code path.
 - `attributeKind()` classifies `enum` / `boolean` / `text` / `number`, falling through to `unknown` — which draws no control and keeps the existing skip warning. It sees through a nullable primitive, so `number | null` is `number`.
 
