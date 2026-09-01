@@ -2,7 +2,7 @@ import { applyAttribute } from '../../shared/playground/apply-attribute.js';
 import { applyLabelProp } from './apply-label-prop.js';
 import { buildIconSvg, buildIconUse } from '../../shared/playground/build-icon-svg.js';
 import { NO_ICON } from '../../shared/playground/icon-options.js';
-import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
+import { NONE_OPTION } from '../../shared/playground/none-option.js';
 
 // Applies one prop-update message from the block to a live SWC custom element.
 export function applySwcProp(el, { property, attribute, value }) {
@@ -47,8 +47,8 @@ export function applySwcProp(el, { property, attribute, value }) {
     return;
   }
 
-  // staticColor has no real "unset" value of its own — remove the attribute entirely 
-  if (property === 'staticColor' && value === NO_STATIC_COLOR) {
+  // An unset sentinel is the control's label for an absent value, not a real one.
+  if (value === NONE_OPTION) {
     applyAttribute(el, attribute, null);
     return;
   }

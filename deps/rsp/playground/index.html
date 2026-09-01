@@ -19,7 +19,7 @@
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
     import { OVERLAY_TRIGGERS, overlayShape } from './overlay-triggers.js';
-    import { NO_STATIC_COLOR } from '../../shared/playground/static-color-options.js';
+    import { NONE_OPTION } from '../../shared/playground/none-option.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, pascalCase } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
@@ -226,7 +226,7 @@
               // separate from any icon so the two compose rather than overwrite.
               textChild = value;
               currentProps.children = composeLabeledChildren();
-            } else if (property === 'staticColor' && value === NO_STATIC_COLOR) {
+            } else if (value === NONE_OPTION) {
               // staticColor has no real "unset" value of its own — omit the prop entirely
               delete currentProps[key];
             } else {
@@ -236,7 +236,7 @@
           if (property === 'orientation') { applyMountSizing(value); }
           // RSP doesn't reflect most props as real DOM attributes, so mirror
           // onto #mount for CSS that keys off one (e.g. static-color backdrop).
-          applyAttribute(mount, attribute, property === 'staticColor' && value === NO_STATIC_COLOR ? null : value);
+          applyAttribute(mount, attribute, value === NONE_OPTION ? null : value);
           render();
         });
         notifyPreviewReady();
