@@ -1,3 +1,5 @@
+import { TEXT_KEYS } from '../../shared/playground/text-keys.js';
+
 // Route -> which Trigger wraps it + the trigger Button's label. These
 // components render nothing standalone without one.
 // An entry with no `trigger` (toast) has no wrapping Trigger
@@ -57,4 +59,26 @@ export function overlayShape(routeName) {
 export function propsOwner(routeName) {
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
   return overlayTrigger?.propsOnTrigger ? overlayTrigger.trigger : null;
+}
+
+/**
+ * Splits a prop bag for a route whose props live on its trigger (see propsOwner) into
+ * what belongs to the route's own element and what belongs to the trigger.
+ *
+ * Text and children are the route's CONTENT, not the trigger's configuration:
+ * `children` is populated from the fragment's own text, so handing the whole bag to the
+ * trigger leaves the route's element with nothing to render — a tooltip bubble with no
+ * text in it. React's createElement takes children as varargs that override
+ * `props.children`, so the string is dropped silently rather than erroring.
+ *
+ * @param {Record<string, {value: unknown}>} currentProps
+ * @returns {{ own: object, trigger: object }}
+ */
+export function splitTriggerProps(currentProps) {
+  const own = {};
+  const trigger = {};
+  Object.entries(currentProps).forEach(([prop, entry]) => {
+    if (TEXT_KEYS.has(prop)) { own[prop] = entry; } else { trigger[prop] = entry; }
+  });
+  return { own, trigger };
 }

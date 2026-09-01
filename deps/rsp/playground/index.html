@@ -18,7 +18,9 @@
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
-    import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from './overlay-triggers.js';
+    import {
+      OVERLAY_TRIGGERS, overlayShape, propsOwner, splitTriggerProps,
+    } from './overlay-triggers.js';
     import { NONE_OPTION } from '../../shared/playground/none-option.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, resolveRspComponentName } from './pascal-case.js';
@@ -170,7 +172,12 @@
 
         function render() {
           const scheme = resolveColorScheme(currentScheme, matchMedia('(prefers-color-scheme: dark)').matches);
-          const ownProps = propsOnTrigger ? {} : currentProps;
+          // Split live, not once: currentProps is mutated in place by the control
+          // listener. Text and children stay with the route's own element even when its
+          // configuration belongs to the trigger (splitTriggerProps).
+          const { own: ownProps, trigger: triggerProps } = propsOnTrigger
+            ? splitTriggerProps(currentProps)
+            : { own: currentProps, trigger: {} };
           const innerElement = compositeChildren.length
             ? createElement(Component, ownProps, ...rootChildArgs)
             : createElement(Component, ownProps);
@@ -181,7 +188,7 @@
           if (shape === 'wrap') {
             rootElement = createElement(
               RSP[overlayTrigger.trigger],
-              propsOnTrigger ? currentProps : {},
+              triggerProps,
               createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
               innerElement,
             );
