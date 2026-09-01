@@ -60,11 +60,11 @@ describe('figma block', () => {
       expect(a.querySelector('span').textContent).to.equal('See in Figma');
     });
 
-    it('deep-links to a `web.figma.originalName` override\'s redirected Figma node', async () => {
+    it('deep-links to a `web.figma.figmaPageSource` override\'s redirected Figma node', async () => {
       // deps/build-status-index.js resolves the override into the slice's figmaPageId
       // build-time — the widget just trusts whatever node id the slice carries.
       stubComponentSlice({
-        web: { figma: { status: 'available', originalName: 'Date and time field' } },
+        web: { figma: { status: 'available', figmaPageSource: 'Date and time field' } },
         figmaPageId: '10196:3411',
       });
       window.history.pushState({}, '', '/web/rsp/components/calendar');

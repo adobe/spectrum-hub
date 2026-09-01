@@ -19,7 +19,7 @@ export function figmaNodeUrl(figmaPageId) {
 
 // the widget removes itself when the component has no slice (or no resolved Figma node).
 // Reads the same build-time status slice as blocks/component-status.js, so a
-// `web.figma.originalName` override (deps/status-overrides.json) that redirects a
+// `web.figma.figmaPageSource` override (deps/status-overrides.json) that redirects a
 // component's Figma link — e.g. Calendar borrowing Date and time field's page — applies
 // here too, instead of this widget re-deriving its own answer from the raw Figma roster.
 export async function decorateSeeInFigma(a, span) {

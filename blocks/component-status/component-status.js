@@ -101,9 +101,9 @@ export function buildPills(pathname, componentData) {
 
   // Development reuses the page-nav widgets' URL logic exactly; Design links straight to
   // the node id the build already resolved (no client-side Figma roster search needed).
-  // The current impl's own cell may carry `originalName` (an aliased/shared page's real
+  // The current impl's own cell may carry `upstreamName` (an aliased/shared page's real
   // upstream name) — see resolveImplementation.
-  const impl = resolveImplementation(pathname, web[context.impl]?.originalName);
+  const impl = resolveImplementation(pathname, web[context.impl]?.upstreamName);
   const figmaHref = figmaNodeUrl(componentData.figmaPageId);
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,
