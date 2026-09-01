@@ -1353,3 +1353,61 @@ describe('resolveRspComponentName', () => {
     expect(resolveRspComponentName('  Action-Group ')).to.equal('ActionButtonGroup');
   });
 });
+
+// A component can legitimately have no controls — swc's link is utility CSS classes
+// rather than a component API. An empty controls column stole 300px from the preview
+// and left a labelled region with nothing in it.
+describe('playground block — a component with no controls', () => {
+  let sandbox;
+
+  const noControls = {
+    components: [{ Component: 'Link', Properties: 'variant, isQuiet' }],
+    // Neither property exists in this implementation's data, so both are skipped.
+    swc: [],
+    rsp: { props: [] },
+  };
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(console, 'warn');
+    document.body.innerHTML = '';
+    clearFetchCache();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('omits the controls panel entirely', async () => {
+    stubPlaygroundFetch(sandbox, noControls);
+    const el = makeMetaEl({ implementation: 'swc', component: 'link' });
+    document.body.append(el);
+    await init(el);
+
+    // Boolean, not .to.equal(null) — chai diffing a live DOM element hangs wtr.
+    expect(el.querySelector('.playground-controls') === null).to.be.true;
+    const layout = el.querySelector('.playground-layout');
+    expect([...layout.children].map((c) => c.className)).to.deep.equal(['playground-preview']);
+  });
+
+  it('still renders the preview and the code disclosure', async () => {
+    stubPlaygroundFetch(sandbox, noControls);
+    const el = makeMetaEl({ implementation: 'swc', component: 'link' });
+    document.body.append(el);
+    await init(el);
+
+    expect(el.querySelector('.playground-preview iframe') !== null).to.be.true;
+    expect(el.querySelector('.playground-disclosure') !== null).to.be.true;
+  });
+
+  it('keeps the controls panel when at least one control renders', async () => {
+    stubPlaygroundFetch(sandbox);
+    const el = makeMetaEl({ implementation: 'swc', component: 'button' });
+    document.body.append(el);
+    await init(el);
+
+    const panel = el.querySelector('.playground-controls');
+    expect(panel !== null).to.be.true;
+    expect(panel.children.length).to.be.greaterThan(0);
+  });
+});
