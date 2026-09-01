@@ -23,6 +23,9 @@ roster-excludes.json     ├──►  deps/build-status-index.js
 raw extraction data      ─┘      status-model.js)
   (rsp/data, swc/data,                                                     deps/impl-aliases.js
    figma/components.json)                                                    (doc-link redirects)
+
+                                                                            deps/rsp-export-names.js
+                                                                              (real RSP import names)
 ```
 
 ## Where do I put a change?
@@ -31,6 +34,8 @@ raw extraction data      ─┘      status-model.js)
 | --- | --- |
 | Mark a component available/deprecated/experimental by hand, overriding what auto-detection produced | [`deps/status-overrides.json`](../status-overrides.json) |
 | Fix a name that doesn't match cleanly across RSP/SWC/Figma (e.g. `swc-asset` isn't RSP's `AssetCard`) | [`deps/component-aliases.json`](../component-aliases.json) |
+| Point a component's "Go to RSP/SWC" link at a different upstream page | `upstreamName` — in [`deps/component-aliases.json`](../component-aliases.json) if that source ships the component, in [`deps/status-overrides.json`](../status-overrides.json) if it doesn't (Field Label → RSP's `Form.html`) |
+| Point a component's Figma link at a different design's page | `figmaPageSource` on the figma cell in [`deps/status-overrides.json`](../status-overrides.json) |
 | Remove a sub-component from the table entirely (it's a composition part, not a standalone component) | [`deps/roster-excludes.json`](../roster-excludes.json) |
 | Add a "use Gen1 instead" style note under a status badge | `deps/<impl>/<impl>-secondary-status.json` (or `deps/figma/figma-secondary-status.json`) |
 | Change what a raw status value (`stable`, `internal`, `preview`, ...) means in the unified table | [`scripts/utils/status-model.js`](../../scripts/utils/status-model.js) |
@@ -46,7 +51,7 @@ JSON-comment equivalent). Run `node deps/build-status-index.js` to regenerate th
 
 | File | Keyed by | Purpose |
 | --- | --- | --- |
-| [`deps/component-aliases.json`](../component-aliases.json) | source (`rsp`/`swc`/`figma`) → that source's own name | Canonical-name resolution for the roster join. Can also carry `externalName` — the name the *source's own public docs* use, when it differs from both the canonical name and the source's own export name (see "Two alias tables" below). |
+| [`deps/component-aliases.json`](../component-aliases.json) | source (`rsp`/`swc`/`figma`) → that source's own name | Canonical-name resolution for the roster join. Can also carry `upstreamName` — the name the *source's own public docs* use, when it differs from the canonical name (see [`upstreamName`](#upstreamname-and-figmapagesource) below). |
 | [`deps/status-overrides.json`](../status-overrides.json) | canonical name → platform → impl | Manual status override, applied last — wins over anything auto-detected. |
 | [`deps/roster-excludes.json`](../roster-excludes.json) | — (flat list) | Canonical names to drop from the joined roster entirely (composition sub-parts). |
 | `deps/rsp/rsp-secondary-status.json`, `deps/swc/swc-secondary-status.json`, `deps/figma/figma-secondary-status.json` | canonical name | Per-implementation secondary guidance text shown under the primary status badge. |
@@ -67,6 +72,64 @@ JSON-comment equivalent). Run `node deps/build-status-index.js` to regenerate th
 | [`deps/status-index.json`](../status-index.json) | `blocks/status-table/status-table.js` | The full combined table — every component, every platform/impl cell, plus a self-describing status legend. |
 | `deps/status/<slug>.json` (one per component) | `blocks/component-status/component-status.js`, `scripts/utils/figma.js` (via [`scripts/utils/component-slice.js`](../../scripts/utils/component-slice.js)) | One component's cells + Figma node id — a single small fetch instead of downloading and searching the whole index on every component doc page. |
 | [`deps/impl-aliases.js`](../impl-aliases.js) | `scripts/utils/go-to-impl.js` | Slug → the name a source's *external docs site* actually uses, for building working doc links (e.g. `AlertDialog` → `Dialog.html`). |
+| [`deps/rsp-export-names.js`](../rsp-export-names.js) | `blocks/playground/playground.js` | Slug → the real RSP export name to `import`/render, when it differs from the canonical name (e.g. canonical `ActionGroup` → RSP's real `ActionButtonGroup`). |
+
+## Two alias tables that look redundant but aren't
+
+`impl-aliases.js` and `rsp-export-names.js` are both `slug → some other name` lookups, and
+it's tempting to merge them. Don't — they answer genuinely different questions:
+
+- **`impl-aliases.js`**: "what does the source's *own public docs site* call this?" Several
+  distinct real RSP components can share one doc page (`AlertDialog`, `Dialog`, and
+  `FullscreenDialog` all link to `Dialog.html`) — this table is for building a link that
+  actually resolves.
+- **`rsp-export-names.js`**: "what do I actually `import` and render?" `AlertDialog` is
+  still its own real, separate component even though its docs redirect to `Dialog.html`.
+
+They are also built from different inputs: `impl-aliases.js` from every cell carrying an
+`upstreamName` (so both `component-aliases.json` and `status-overrides.json` feed it),
+`rsp-export-names.js` from the roster itself — an entry exists only where a component's
+real RSP name differs from its canonical name.
+
+Reusing the doc-link table to decide what to render was a real, shipped bug: the
+playground 404'd trying to render components whose docs merely redirected elsewhere,
+because it was using `impl-aliases.js` (a link-building answer) to answer a
+rendering question. Keep them separate.
+
+## `upstreamName` and `figmaPageSource`
+
+These are the two redirect fields, and they are unrelated mechanisms despite both being
+"point somewhere else".
+
+### `upstreamName` — what that source's docs site calls it
+
+One field, used to build a link that resolves. `buildImplAliases` collects every cell
+carrying one into `impl-aliases.js`, which
+[`scripts/utils/go-to-impl.js`](../../scripts/utils/go-to-impl.js) reads. Without one the
+link builder falls back to the page's own slug, so `field-label` would become
+`react-spectrum.adobe.com/FieldLabel.html` — a 404.
+
+It is authored in **one of two files**, decided by whether that source ships the component
+at all:
+
+| Situation | Author it in |
+| --- | --- |
+| The source ships it under a different name (RSP's real `ActionButtonGroup` on the canonical `ActionGroup` row) | `component-aliases.json`, on the alias entry |
+| The source doesn't ship it; an override is what claims coverage (Field Label and Help Text are not RSP exports) | `status-overrides.json`, on the cell |
+
+The split exists because `component-aliases.json`'s value is read inside `joinRosters`,
+which only iterates each source's actual roster — a component absent from
+`deps/rsp/components.json` never enters that loop, so there is no join for the alias to
+attach to. Both routes land on the same `upstreamName` field of the same cell; only the
+authoring home differs.
+
+### `figmaPageSource` — which design supplies the node id
+
+A figma-cell-only override naming which Figma roster entry provides this component's
+`figmaPageId`: Calendar borrows Date and time field's page, Cards pins one of its six
+variant pages. It selects a page, it does not rename anything, and it never reaches
+`impl-aliases.js` — `buildImplAliases` skips figma for exactly this reason. An override
+targeting a Figma entry that doesn't exist warns rather than silently producing no link.
 
 ## Naming note
 
