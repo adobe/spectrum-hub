@@ -4,8 +4,7 @@ import {
   getComponentProperties,
   buildControlsMap,
   resolveControl,
-  findSwcProp,
-  findRspProp,
+  findProp,
   cachedFetch,
   FREEFORM_CONTROLS,
   TEXT_KEYS,
@@ -404,23 +403,23 @@ function resolveComponentMeta(component, implementation, base) {
 // prop-data file or markup fragment (leaf component) degrades to empty instead.
 async function fetchPlaygroundInputs(base, componentMeta, component, impl, spreadsheetUrl) {
   const { componentTitle, markupUrl } = componentMeta;
-  // Only the page's own catalog is fetched. Most RSP components have no SWC
-  // counterpart, so fetching both guaranteed a 404 on every RSP page — and it was
-  // what let one implementation's options leak onto the other's controls.
-  const [
-    { componentsSheet, controlsSheet }, rspProps, swcProps, snippetMarkup,
-  ] = await Promise.all([
+  // Exactly one catalog: the page's own. Fetching both guaranteed a 404 on every RSP
+  // page (most RSP components have no SWC counterpart) and was what let one
+  // implementation's option lists leak onto the other's controls.
+  const catalogUrl = {
+    rsp: `${base}/deps/rsp/data/${componentTitle}.json`,
+    swc: `${base}/deps/swc/data/swc-${component}.json`,
+  }[impl];
+  const [{ componentsSheet, controlsSheet }, propRows, snippetMarkup] = await Promise.all([
     fetchPlaygroundSheets(spreadsheetUrl),
-    impl === 'rsp'
-      ? fetchJson(`${base}/deps/rsp/data/${componentTitle}.json`).then((d) => d.props ?? d).catch(() => [])
-      : [],
-    impl === 'swc'
-      ? fetchJson(`${base}/deps/swc/data/swc-${component}.json`).catch(() => [])
-      : [],
+    // No catalog is a normal state, not a failure: ios/android ship none, and a leaf
+    // component may have no data file. `d.props ?? d` absorbs the one remaining shape
+    // difference between the catalogs — rsp wraps its rows, swc is a bare array.
+    catalogUrl ? fetchJson(catalogUrl).then((d) => d.props ?? d).catch(() => []) : [],
     fetchText(markupUrl).catch(() => ''),
   ]);
   return {
-    componentsSheet, controlsSheet, rspProps, swcProps, snippetMarkup,
+    componentsSheet, controlsSheet, propRows, snippetMarkup,
   };
 }
 
@@ -431,8 +430,7 @@ function buildControlDescriptors(
   implementation,
   authoredProps,
   controlsMap,
-  rspProps,
-  swcProps,
+  propRows,
   currentProps,
 ) {
   return authoredProps.reduce((acc, property) => {
@@ -440,15 +438,12 @@ function buildControlDescriptors(
       property,
       implementation,
       controlsMap,
-      rspProps,
-      swcProps,
+      propRows,
       // eslint-disable-next-line no-console
       (message) => console.warn(`Playground (${component}): ${message}`),
     );
     if (!descriptor) { return acc; }
-    const swcRow = findSwcProp(property, swcProps);
-    const rspRow = findRspProp(property, rspProps);
-    let rawDefault = parseDefault(swcRow?.default ?? rspRow?.default) ?? descriptor.options[0];
+    let rawDefault = parseDefault(findProp(property, propRows)?.default) ?? descriptor.options[0];
     // A textfield with no authored default would otherwise start empty —
     // populate it with a placeholder label instead.
     if (descriptor.controlType === 'textfield' && rawDefault === undefined) {
@@ -600,13 +595,12 @@ export default async function init(el) {
 
   let componentsSheet;
   let controlsSheet;
-  let rspProps;
-  let swcProps;
+  let propRows;
   let snippetMarkup;
 
   try {
     ({
-      componentsSheet, controlsSheet, rspProps, swcProps, snippetMarkup,
+      componentsSheet, controlsSheet, propRows, snippetMarkup,
     } = await fetchPlaygroundInputs(base, componentMeta, component, implementation, sheetUrl));
   } catch (err) {
     config.log('sandbox block: data fetch failed', err);
@@ -618,7 +612,7 @@ export default async function init(el) {
   // (e.g. Meter, AvatarGroup) — see buildRspSnippet's hasRealLabelProp param
   // and apply-rsp-prop.js's matching resolveRspPropKey for the live-preview
   // side of this same decision.
-  const hasRealLabelProp = hasLabelProp(rspProps);
+  const hasRealLabelProp = implementation === 'rsp' && hasLabelProp(propRows);
 
   const buildSnippet = implementation === 'rsp'
     ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, component)
@@ -639,8 +633,7 @@ export default async function init(el) {
     implementation,
     authoredProps,
     controlsMap,
-    rspProps,
-    swcProps,
+    propRows,
     currentProps,
   );
 

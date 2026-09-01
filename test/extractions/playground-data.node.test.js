@@ -5,13 +5,11 @@ import {
   fetchPlaygroundSheets,
   getComponentProperties,
   buildControlsMap,
-  parsePickerOptions,
   resolvePickerOptions,
   resolveControl,
   normalizePropertyName,
   propertyNameCandidates,
-  findSwcProp,
-  findRspProp,
+  findProp,
   cachedFetch,
   clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
@@ -38,13 +36,30 @@ const CONTROLS_SHEET = [
 // design.md). Kept in this fixture deliberately: it's the exact regression
 // resolvePickerOptions's implementation gate exists to prevent.
 const RSP_PROPS = [
-  { property: 'variant', type: "'primary' | 'secondary' | 'accent' | 'negative' | 'premium' | 'genai'" },
-  { property: 'fillStyle', type: "'fill' | 'outline'" },
-  { property: 'size', type: "'S' | 'M' | 'L' | 'XL'" },
-  { property: 'staticColor', type: "'white' | 'black' | 'auto'" },
-  { property: 'isPending', type: 'boolean' },
-  { property: 'isQuiet', type: 'boolean' },
-  { property: 'children', type: 'ReactNode' },
+  {
+    property: 'variant',
+    type: "'primary' | 'secondary' | 'accent' | 'negative' | 'premium' | 'genai'",
+    kind: 'enum',
+    values: ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
+  },
+  {
+    property: 'fillStyle', type: "'fill' | 'outline'", kind: 'enum', values: ['fill', 'outline'],
+  },
+  {
+    property: 'size', type: "'S' | 'M' | 'L' | 'XL'", kind: 'enum', values: ['S', 'M', 'L', 'XL'],
+  },
+  {
+    property: 'staticColor', type: "'white' | 'black' | 'auto'", kind: 'enum', values: ['white', 'black', 'auto'],
+  },
+  {
+    property: 'isPending', type: 'boolean', kind: 'boolean', values: [],
+  },
+  {
+    property: 'isQuiet', type: 'boolean', kind: 'boolean', values: [],
+  },
+  {
+    property: 'children', type: 'ReactNode', kind: 'unknown', values: [],
+  },
 ];
 
 // SWC types here are already-resolved literal unions, matching what
@@ -52,20 +67,44 @@ const RSP_PROPS = [
 // "ButtonVariant" via the real TypeScript compiler — see resolve-attribute-types.js
 // — rather than leaving them as bare, unusable alias names).
 const SWC_PROPS = [
-  { property: 'variant', attribute: 'variant', type: '"primary" | "secondary" | "accent" | "negative"' },
-  { property: 'fillStyle', attribute: 'fill-style', type: '"fill" | "outline"' },
+  {
+    property: 'variant',
+    attribute: 'variant',
+    type: '"primary" | "secondary" | "accent" | "negative"',
+    kind: 'enum',
+    values: ['primary', 'secondary', 'accent', 'negative'],
+  },
+  {
+    property: 'fillStyle', attribute: 'fill-style', type: '"fill" | "outline"', kind: 'enum', values: ['fill', 'outline'],
+  },
   // size's real SWC type is wider than RSP's (SizedMixin's generic ElementSize,
   // not Button's own narrower override) — this fixture matches that documented,
   // accepted limitation, not a mistake.
-  { property: 'size', attribute: 'size', type: '"xxs" | "xs" | "s" | "m" | "l" | "xl" | "xxl"' },
-  { property: 'disabled', attribute: 'disabled', type: 'boolean' },
-  { property: 'pending', attribute: 'pending', type: 'boolean' },
-  { property: 'quiet', attribute: 'quiet', type: 'boolean' },
-  { property: 'truncate', attribute: 'truncate', type: 'boolean' },
+  {
+    property: 'size',
+    attribute: 'size',
+    type: '"xxs" | "xs" | "s" | "m" | "l" | "xl" | "xxl"',
+    kind: 'enum',
+    values: ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl'],
+  },
+  {
+    property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [],
+  },
+  {
+    property: 'pending', attribute: 'pending', type: 'boolean', kind: 'boolean', values: [],
+  },
+  {
+    property: 'quiet', attribute: 'quiet', type: 'boolean', kind: 'boolean', values: [],
+  },
+  {
+    property: 'truncate', attribute: 'truncate', type: 'boolean', kind: 'boolean', values: [],
+  },
   // SWC-only property whose type genuinely couldn't be resolved (e.g. a generic or
   // interface shape resolve-attribute-types.js can't turn into a union) — still a
   // bare alias name, exercising the controls-sheet curated-options fallback.
-  { property: 'labelAlign', attribute: 'label-align', type: 'LabelAlign' },
+  {
+    property: 'labelAlign', attribute: 'label-align', type: 'LabelAlign', kind: 'unknown', values: [],
+  },
 ];
 
 describe('fetchPlaygroundSheets', () => {
@@ -312,95 +351,36 @@ describe('buildControlsMap', () => {
   });
 });
 
-describe('parsePickerOptions', () => {
-  it('extracts values from a union type string', () => {
-    assert.deepEqual(
-      parsePickerOptions("'primary' | 'secondary' | 'accent'"),
-      ['primary', 'secondary', 'accent'],
-    );
-  });
-
-  // The TS checker's own renderer (checker.typeToString(), used by the compiler-based
-  // extractors) emits double-quoted literals, while hand-authored .d.ts source text uses
-  // single quotes. Both reach this function, so both must parse — a single-quote-only
-  // regex silently drops every compiler-resolved union (e.g. swc-badge's variant).
-  it('extracts values from a double-quoted union type string', () => {
-    assert.deepEqual(
-      parsePickerOptions('"s" | "m" | "l" | "xl"'),
-      ['s', 'm', 'l', 'xl'],
-    );
-  });
-
-  it('extracts a long double-quoted union without dropping members', () => {
-    assert.deepEqual(
-      parsePickerOptions('"accent" | "informative" | "neutral" | "positive" | "notice"'),
-      ['accent', 'informative', 'neutral', 'positive', 'notice'],
-    );
-  });
-
-  it('returns an empty array for a non-union type like boolean', () => {
-    assert.deepEqual(parsePickerOptions('boolean'), []);
-  });
-
-  it('returns an empty array for complex types like ReactNode', () => {
-    assert.deepEqual(parsePickerOptions('ReactNode'), []);
-  });
-
-  it('returns an empty array for an empty string', () => {
-    assert.deepEqual(parsePickerOptions(''), []);
-  });
-
-  it('returns an empty array for a null/undefined input', () => {
-    assert.deepEqual(parsePickerOptions(null), []);
-    assert.deepEqual(parsePickerOptions(undefined), []);
-  });
-
-  it('extracts bare numeric literals from a union with no quotes (AvatarGroup.size)', () => {
-    assert.deepEqual(
-      parsePickerOptions('16 | 20 | 24 | 28 | 32 | 36 | 40 | 44 | 48 | 56 | 64 | 80 | 96 | 112 | (number & {})'),
-      ['16', '20', '24', '28', '32', '36', '40', '44', '48', '56', '64', '80', '96', '112'],
-    );
-  });
-
-  it('returns an empty array for an open-ended numeric type with no literal options', () => {
-    assert.deepEqual(parsePickerOptions('number'), []);
-  });
-
-  it('prefers quoted string options over numeric ones when a type has both', () => {
-    assert.deepEqual(parsePickerOptions("'auto' | 16 | 24"), ['auto']);
-  });
-});
-
 describe('resolvePickerOptions', () => {
   it('returns parsed options from RSP data for an rsp implementation', () => {
     assert.deepEqual(
-      resolvePickerOptions('variant', 'rsp', RSP_PROPS, SWC_PROPS),
+      resolvePickerOptions('variant', RSP_PROPS),
       ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
     );
   });
 
   it('returns [no, yes] for a boolean property in RSP', () => {
-    assert.deepEqual(resolvePickerOptions('isPending', 'rsp', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
-    assert.deepEqual(resolvePickerOptions('isQuiet', 'rsp', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('isPending', RSP_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('isQuiet', RSP_PROPS), ['no', 'yes']);
   });
 
   it('returns [no, yes] for a boolean property in SWC (exact match)', () => {
-    assert.deepEqual(resolvePickerOptions('disabled', 'swc', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('disabled', SWC_PROPS), ['no', 'yes']);
   });
 
   it('returns [no, yes] for a boolean SWC property reached via name normalization', () => {
-    assert.deepEqual(resolvePickerOptions('isDisabled', 'swc', RSP_PROPS, SWC_PROPS), ['no', 'yes']);
+    assert.deepEqual(resolvePickerOptions('isDisabled', SWC_PROPS), ['no', 'yes']);
   });
 
   it('returns an empty array for an SWC-only property with a named (unresolved) type', () => {
     // labelAlign exists only in SWC and its type genuinely couldn't be resolved to a
     // union — RSP has nothing to fall back to either.
-    assert.deepEqual(resolvePickerOptions('labelAlign', 'swc', RSP_PROPS, SWC_PROPS), []);
+    assert.deepEqual(resolvePickerOptions('labelAlign', SWC_PROPS), []);
   });
 
   it('returns an empty array for a property not in either dataset', () => {
-    assert.deepEqual(resolvePickerOptions('unknown', 'rsp', RSP_PROPS, SWC_PROPS), []);
-    assert.deepEqual(resolvePickerOptions('unknown', 'swc', RSP_PROPS, SWC_PROPS), []);
+    assert.deepEqual(resolvePickerOptions('unknown', RSP_PROPS), []);
+    assert.deepEqual(resolvePickerOptions('unknown', SWC_PROPS), []);
   });
 
   // The regression this implementation-gate exists to prevent: RSP's Button
@@ -408,20 +388,20 @@ describe('resolvePickerOptions', () => {
   // page must use SWC's own (already-resolved) union, never borrow RSP's wider one.
   it('resolves an swc implementation from SWC\'s own data, not RSP\'s wider union', () => {
     assert.deepEqual(
-      resolvePickerOptions('variant', 'swc', RSP_PROPS, SWC_PROPS),
+      resolvePickerOptions('variant', SWC_PROPS),
       ['primary', 'secondary', 'accent', 'negative'],
     );
   });
 
   it('still resolves RSP\'s own (wider) union for an rsp implementation', () => {
     assert.deepEqual(
-      resolvePickerOptions('variant', 'rsp', RSP_PROPS, SWC_PROPS),
+      resolvePickerOptions('variant', RSP_PROPS),
       ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
     );
   });
 
   it('resolves fillStyle from SWC\'s own resolved union for an swc implementation', () => {
-    assert.deepEqual(resolvePickerOptions('fillStyle', 'swc', RSP_PROPS, SWC_PROPS), ['fill', 'outline']);
+    assert.deepEqual(resolvePickerOptions('fillStyle', SWC_PROPS), ['fill', 'outline']);
   });
 });
 
@@ -459,32 +439,26 @@ describe('propertyNameCandidates', () => {
   });
 });
 
-describe('findRspProp', () => {
+// One lookup for both catalogs now that only the page's own is fetched. The
+// candidate walk is the workbook's RSP spelling reaching an SWC row.
+describe('findProp', () => {
   it('finds a row by exact property name', () => {
-    assert.deepEqual(findRspProp('isQuiet', RSP_PROPS), RSP_PROPS.find((p) => p.property === 'isQuiet'));
+    assert.deepEqual(findProp('isQuiet', RSP_PROPS), RSP_PROPS.find((p) => p.property === 'isQuiet'));
+    assert.deepEqual(findProp('disabled', SWC_PROPS), SWC_PROPS.find((p) => p.property === 'disabled'));
   });
 
-  it('finds an is/has-prefixed rsp row from a bare swc-style name', () => {
-    assert.deepEqual(findRspProp('quiet', RSP_PROPS), RSP_PROPS.find((p) => p.property === 'isQuiet'));
-    assert.deepEqual(findRspProp('pending', RSP_PROPS), RSP_PROPS.find((p) => p.property === 'isPending'));
+  it('bridges the workbook\'s is/has spelling to an SWC row', () => {
+    assert.deepEqual(findProp('isDisabled', SWC_PROPS), SWC_PROPS.find((p) => p.property === 'disabled'));
+  });
+
+  it('bridges a bare name to an is/has-prefixed RSP row', () => {
+    assert.deepEqual(findProp('quiet', RSP_PROPS), RSP_PROPS.find((p) => p.property === 'isQuiet'));
+    assert.deepEqual(findProp('pending', RSP_PROPS), RSP_PROPS.find((p) => p.property === 'isPending'));
   });
 
   it('returns undefined when no candidate matches', () => {
-    assert.equal(findRspProp('nonexistent', RSP_PROPS), undefined);
-  });
-});
-
-describe('findSwcProp', () => {
-  it('finds a row by exact property name', () => {
-    assert.deepEqual(findSwcProp('disabled', SWC_PROPS), SWC_PROPS.find((p) => p.property === 'disabled'));
-  });
-
-  it('falls back to the normalized name when there is no exact match', () => {
-    assert.deepEqual(findSwcProp('isDisabled', SWC_PROPS), SWC_PROPS.find((p) => p.property === 'disabled'));
-  });
-
-  it('returns undefined when neither the exact nor normalized name matches', () => {
-    assert.equal(findSwcProp('unknown', SWC_PROPS), undefined);
+    assert.equal(findProp('nonexistent', RSP_PROPS), undefined);
+    assert.equal(findProp('unknown', SWC_PROPS), undefined);
   });
 });
 
@@ -492,18 +466,19 @@ describe('resolveControl', () => {
   const controlsMap = buildControlsMap(CONTROLS_SHEET);
 
   it('returns a control descriptor for a property that exists in rsp', () => {
-    const result = resolveControl('variant', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('variant', 'rsp', controlsMap, RSP_PROPS);
     assert.deepEqual(result, {
       controlType: 'picker',
       options: ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai'],
-      attribute: 'variant',
+      // null, not SWC's 'variant': rsp rows carry no DOM attribute of their own.
+      attribute: null,
     });
   });
 
   // Regression: an SWC page must never offer RSP-only variants (premium/genai)
   // just because RSP's union happened to resolve — see resolvePickerOptions tests.
   it('returns a control descriptor for the same property scoped to swc data instead', () => {
-    const result = resolveControl('variant', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('variant', 'swc', controlsMap, SWC_PROPS);
     assert.deepEqual(result, {
       controlType: 'picker',
       options: ['primary', 'secondary', 'accent', 'negative'],
@@ -512,7 +487,7 @@ describe('resolveControl', () => {
   });
 
   it('returns a control descriptor for a property that exists in swc', () => {
-    const result = resolveControl('fillStyle', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('fillStyle', 'swc', controlsMap, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.attribute, 'fill-style');
     // CONTROLS_SHEET authors fillStyle as a segmentedControl, not the picker default.
@@ -520,11 +495,11 @@ describe('resolveControl', () => {
   });
 
   it('returns null for a swc-only property when implementation is rsp', () => {
-    assert.equal(resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS), null);
+    assert.equal(resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS), null);
   });
 
   it('returns a descriptor for a swc-only property when implementation is swc', () => {
-    const result = resolveControl('truncate', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('truncate', 'swc', controlsMap, SWC_PROPS);
     assert.deepEqual(result, {
       controlType: 'picker',
       options: ['no', 'yes'],
@@ -559,17 +534,31 @@ describe('resolveControl', () => {
   // extractor does not emit `optional` yet.
   it('leads an optional attribute\'s options with NONE_OPTION', () => {
     const optionalSwc = [
-      { property: 'fixed', attribute: 'fixed', type: '"top" | "bottom"', optional: true },
+      {
+        property: 'fixed',
+        attribute: 'fixed',
+        type: '"top" | "bottom"',
+        kind: 'enum',
+        values: ['top', 'bottom'],
+        optional: true,
+      },
     ];
-    const result = resolveControl('fixed', 'swc', controlsMap, [], optionalSwc);
+    const result = resolveControl('fixed', 'swc', controlsMap, optionalSwc);
     assert.deepEqual(result.options, [NONE_OPTION, 'top', 'bottom']);
   });
 
   it('gives a required attribute no NONE_OPTION', () => {
     const requiredSwc = [
-      { property: 'fixed', attribute: 'fixed', type: '"top" | "bottom"', optional: false },
+      {
+        property: 'fixed',
+        attribute: 'fixed',
+        type: '"top" | "bottom"',
+        kind: 'enum',
+        values: ['top', 'bottom'],
+        optional: false,
+      },
     ];
-    const result = resolveControl('fixed', 'swc', controlsMap, [], requiredSwc);
+    const result = resolveControl('fixed', 'swc', controlsMap, requiredSwc);
     assert.deepEqual(result.options, ['top', 'bottom']);
   });
 
@@ -582,7 +571,7 @@ describe('resolveControl', () => {
   // curated options are the only way to populate a picker/segmentedControl for it.
   it("falls back to the controls sheet's curated options when the type can't be introspected", () => {
     const curatedMap = buildControlsMap([{ property: 'labelAlign', control: 'segmentedControl', options: 'start, end' }]);
-    const result = resolveControl('labelAlign', 'swc', curatedMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('labelAlign', 'swc', curatedMap, SWC_PROPS);
     assert.deepEqual(result, {
       controlType: 'segmentedControl',
       options: ['start', 'end'],
@@ -593,18 +582,18 @@ describe('resolveControl', () => {
   it('does not warn when curated options cover a type that cannot be introspected', () => {
     const curatedMap = buildControlsMap([{ property: 'labelAlign', control: 'segmentedControl', options: 'start, end' }]);
     const onSkip = mock.fn();
-    resolveControl('labelAlign', 'swc', curatedMap, RSP_PROPS, SWC_PROPS, onSkip);
+    resolveControl('labelAlign', 'swc', curatedMap, SWC_PROPS, onSkip);
     assert.equal(onSkip.mock.callCount(), 0);
   });
 
   it('prefers options derived from real type data over curated ones when both are available', () => {
     const curatedMap = buildControlsMap([{ property: 'variant', control: 'picker', options: 'ignored, alsoIgnored' }]);
-    const result = resolveControl('variant', 'rsp', curatedMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('variant', 'rsp', curatedMap, RSP_PROPS);
     assert.deepEqual(result.options, ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai']);
   });
 
   it('returns a descriptor for a swc-only property when implementation is swc', () => {
-    const result = resolveControl('truncate', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('truncate', 'swc', controlsMap, SWC_PROPS);
     assert.deepEqual(result, {
       controlType: 'picker',
       options: ['no', 'yes'],
@@ -620,7 +609,7 @@ describe('resolveControl', () => {
   // options fall back to the shared ICON_OPTIONS catalog (see the "icon"
   // control describe block below for the case where a row IS authored).
   it('resolves a property literally named "icon" even with no authored control row', () => {
-    const result = resolveControl('icon', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('icon', 'swc', controlsMap, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.controlType, 'picker');
     assert.equal(result.attribute, null);
@@ -628,72 +617,76 @@ describe('resolveControl', () => {
   });
 
   it('defaults controlType to picker when property is not in the controls sheet', () => {
-    const result = resolveControl('variant', 'rsp', new Map(), RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('variant', 'rsp', new Map(), RSP_PROPS);
     assert.equal(result.controlType, 'picker');
   });
 
   // staticColor has no documented default (unlike variant/fillStyle/size), so
   // NONE_OPTION leads its options the same way NO_ICON leads icon's.
   it('leads staticColor\'s options with NONE_OPTION', () => {
-    const result = resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS);
     assert.deepEqual(result.options, [NONE_OPTION, 'white', 'black', 'auto']);
   });
 
   it('returns null attribute when property has no swc equivalent even after normalization', () => {
-    const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS);
     assert.equal(result.attribute, null);
   });
 
   it('normalizes isDisabled to disabled for swc matching', () => {
-    const result = resolveControl('isDisabled', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('isDisabled', 'swc', controlsMap, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.attribute, 'disabled');
   });
 
   it('normalizes isPending to pending for swc matching', () => {
-    const result = resolveControl('isPending', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('isPending', 'swc', controlsMap, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.attribute, 'pending');
   });
 
   it('normalizes isQuiet to quiet for swc matching', () => {
-    const result = resolveControl('isQuiet', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('isQuiet', 'swc', controlsMap, SWC_PROPS);
     assert.notEqual(result, null);
     assert.equal(result.attribute, 'quiet');
   });
 
-  it('returns the normalized swc attribute when looking up isPending for rsp', () => {
-    const result = resolveControl('isPending', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+  // Regression: an rsp page used to reach into SWC's catalog for `attribute` (root
+  // cause 3 — the borrow that also leaked SWC's option lists). RSP props are not DOM
+  // attributes, so the honest answer is null, and the rsp apply path uses the property
+  // name directly.
+  it('never borrows an swc attribute for an rsp control', () => {
+    const result = resolveControl('isPending', 'rsp', controlsMap, RSP_PROPS);
     assert.notEqual(result, null);
-    assert.equal(result.attribute, 'pending');
+    assert.equal(result.attribute, null);
   });
 
   it('resolves an rsp control from a swc-style boolean name via an added prefix (quiet -> isQuiet)', () => {
-    const result = resolveControl('quiet', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('quiet', 'rsp', controlsMap, RSP_PROPS);
     assert.notEqual(result, null);
     assert.deepEqual(result.options, ['no', 'yes']);
   });
 
   it('resolves an rsp control from a swc-style boolean name (pending -> isPending)', () => {
-    const result = resolveControl('pending', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    const result = resolveControl('pending', 'rsp', controlsMap, RSP_PROPS);
     assert.notEqual(result, null);
     assert.deepEqual(result.options, ['no', 'yes']);
   });
 
   it('still returns null for a swc-only property with no rsp equivalent under any prefix', () => {
-    assert.equal(resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS), null);
+    assert.equal(resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS), null);
   });
 
   describe('onSkip callback', () => {
     it('is not called when a control resolves successfully', () => {
       const onSkip = mock.fn();
-      resolveControl('variant', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      resolveControl('variant', 'rsp', controlsMap, RSP_PROPS, onSkip);
       assert.equal(onSkip.mock.callCount(), 0);
     });
 
     it('is called with a plain-English reason when the property is absent from the implementation data', () => {
       const onSkip = mock.fn();
-      resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, onSkip);
       assert.equal(onSkip.mock.callCount(), 1);
       const [message] = onSkip.mock.calls[0].arguments;
       assert.match(message, /"truncate"/);
@@ -702,7 +695,7 @@ describe('resolveControl', () => {
 
     it('is called with a plain-English reason when the property type cannot be resolved to options', () => {
       const onSkip = mock.fn();
-      const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS, onSkip);
       assert.deepEqual(result.options, []);
       assert.equal(onSkip.mock.callCount(), 1);
       const [message] = onSkip.mock.calls[0].arguments;
@@ -711,7 +704,7 @@ describe('resolveControl', () => {
     });
 
     it('does not throw when onSkip is omitted', () => {
-      assert.doesNotThrow(() => resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS));
+      assert.doesNotThrow(() => resolveControl('truncate', 'rsp', controlsMap, RSP_PROPS));
     });
   });
 
@@ -726,30 +719,30 @@ describe('resolveControl', () => {
     const textControlsMap = buildControlsMap([{ property: 'text', control: 'textfield' }]);
 
     it('resolves a "text" control for rsp even when absent from the RSP prop data', () => {
-      const result = resolveControl('text', 'rsp', textControlsMap, RSP_PROPS, SWC_PROPS);
+      const result = resolveControl('text', 'rsp', textControlsMap, RSP_PROPS);
       assert.notEqual(result, null);
       assert.equal(result.controlType, 'textfield');
     });
 
     it('resolves a "text" control for swc even when absent from the SWC prop data', () => {
-      const result = resolveControl('text', 'swc', textControlsMap, RSP_PROPS, SWC_PROPS);
+      const result = resolveControl('text', 'swc', textControlsMap, SWC_PROPS);
       assert.notEqual(result, null);
       assert.equal(result.controlType, 'textfield');
     });
 
     it('does not warn that "text" is missing from the implementation data', () => {
       const onSkip = mock.fn();
-      resolveControl('text', 'rsp', textControlsMap, RSP_PROPS, SWC_PROPS, onSkip);
+      resolveControl('text', 'rsp', textControlsMap, RSP_PROPS, onSkip);
       const messages = onSkip.mock.calls.map((c) => c.arguments[0]);
       assert.ok(!messages.some((m) => m.includes('RSP data')));
     });
 
     it('also bypasses the existence check for "label" and "children"', () => {
       const labelMap = buildControlsMap([{ property: 'label', control: 'textfield' }]);
-      assert.notEqual(resolveControl('label', 'swc', labelMap, RSP_PROPS, SWC_PROPS), null);
+      assert.notEqual(resolveControl('label', 'swc', labelMap, SWC_PROPS), null);
 
       const childrenMap = buildControlsMap([{ property: 'children', control: 'textfield' }]);
-      assert.notEqual(resolveControl('children', 'swc', childrenMap, RSP_PROPS, SWC_PROPS), null);
+      assert.notEqual(resolveControl('children', 'swc', childrenMap, SWC_PROPS), null);
     });
   });
 
@@ -762,7 +755,7 @@ describe('resolveControl', () => {
     const iconMap = buildControlsMap([{ property: 'icon', control: 'icon', options: 'search, copy, checkmarkcircle' }]);
 
     it('resolves options from the controls sheet, not RSP/SWC data', () => {
-      const result = resolveControl('icon', 'swc', iconMap, RSP_PROPS, SWC_PROPS);
+      const result = resolveControl('icon', 'swc', iconMap, SWC_PROPS);
       // NO_ICON always leads the list, ahead of the sheet's curated options —
       // it's the default value, see resolveControl's own comment on this.
       assert.deepEqual(result, {
@@ -773,12 +766,12 @@ describe('resolveControl', () => {
     });
 
     it('bypasses the existence check for both implementations', () => {
-      assert.notEqual(resolveControl('icon', 'swc', iconMap, RSP_PROPS, SWC_PROPS), null);
-      assert.notEqual(resolveControl('icon', 'rsp', iconMap, RSP_PROPS, SWC_PROPS), null);
+      assert.notEqual(resolveControl('icon', 'swc', iconMap, SWC_PROPS), null);
+      assert.notEqual(resolveControl('icon', 'rsp', iconMap, RSP_PROPS), null);
     });
 
     it('always returns a null attribute, since the value flows to a slot, not a real attribute', () => {
-      const result = resolveControl('icon', 'rsp', iconMap, RSP_PROPS, SWC_PROPS);
+      const result = resolveControl('icon', 'rsp', iconMap, RSP_PROPS);
       assert.equal(result.attribute, null);
     });
 
@@ -791,9 +784,57 @@ describe('resolveControl', () => {
     it('falls back to the shared ICON_OPTIONS catalog when the sheet configures no icon options', () => {
       const emptyIconMap = buildControlsMap([{ property: 'icon', control: 'icon' }]);
       const onSkip = mock.fn();
-      const result = resolveControl('icon', 'swc', emptyIconMap, RSP_PROPS, SWC_PROPS, onSkip);
+      const result = resolveControl('icon', 'swc', emptyIconMap, SWC_PROPS, onSkip);
       assert.deepEqual(result.options, [NO_ICON, ...ICON_OPTIONS]);
       assert.equal(onSkip.mock.callCount(), 0);
     });
+  });
+});
+
+// --- Layer 1: one catalog, structured values -------------------------------
+
+// Rows as the extractors actually write them now: `kind` and `values` are resolved
+// at extraction (deps/shared/prop-contract.js), so nothing here re-parses `type`.
+const RSP_ROWS = [
+  {
+    property: 'variant', type: "'primary' | 'accent' | 'premium'", kind: 'enum', values: ['primary', 'accent', 'premium'],
+  },
+  { property: 'isPending', type: 'boolean', kind: 'boolean', values: [] },
+  { property: 'children', type: 'ReactNode', kind: 'unknown', values: [] },
+  { property: 'styles', type: 'StylesProp', kind: 'unknown', values: [] },
+];
+
+const SWC_ROWS = [
+  {
+    property: 'variant', attribute: 'variant', type: '"primary" | "accent"', kind: 'enum', values: ['primary', 'accent'],
+  },
+  {
+    property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [],
+  },
+];
+
+describe('resolvePickerOptions reads the row, not its type string', () => {
+  it('returns an enum row\'s resolved values verbatim', () => {
+    assert.deepEqual(resolvePickerOptions('variant', RSP_ROWS), ['primary', 'accent', 'premium']);
+    assert.deepEqual(resolvePickerOptions('variant', SWC_ROWS), ['primary', 'accent']);
+  });
+
+  it('offers no/yes for a boolean row', () => {
+    assert.deepEqual(resolvePickerOptions('isPending', RSP_ROWS), ['no', 'yes']);
+  });
+
+  it('offers nothing for a row with no fixed option set', () => {
+    assert.deepEqual(resolvePickerOptions('children', RSP_ROWS), []);
+    assert.deepEqual(resolvePickerOptions('styles', RSP_ROWS), []);
+  });
+
+  it('offers nothing for a property absent from the catalog', () => {
+    assert.deepEqual(resolvePickerOptions('nope', RSP_ROWS), []);
+  });
+
+  // The bridge survives because the workbook is RSP-keyed while SWC's catalog carries
+  // its own spelling. It is why this cannot yet be a plain lookup by name.
+  it('still bridges the workbook\'s RSP spelling to an SWC row', () => {
+    assert.deepEqual(resolvePickerOptions('isDisabled', SWC_ROWS), ['no', 'yes']);
   });
 });

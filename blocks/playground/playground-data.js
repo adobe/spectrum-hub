@@ -126,28 +126,6 @@ export function buildControlsMap(controlsSheet) {
   );
 }
 
-// Parses a TS union type string into its values, e.g. `"a" | "b"` -> ['a', 'b'].
-// Empty for non-union types like "boolean"/"ReactNode". Both extractors render types
-// through the TypeScript checker, which double-quotes literals; single quotes are
-// accepted too so a hand-written type string still parses.
-//
-// Each catalog row also carries a structured `values` array (deps/shared/prop-contract.js),
-// which this function exists to stand in for until the control layer reads it directly.
-export function parsePickerOptions(typeString) {
-  if (!typeString) { return []; }
-  const stringMatches = typeString.match(/'([^']+)'|"([^"]+)"/g);
-  if (stringMatches) { return stringMatches.map((m) => m.slice(1, -1)); }
-
-  // A handful of size-like props (e.g. AvatarGroup.size) are a union of bare numeric
-  // literals with an open-ended `(number & {})` tail — a TS trick that keeps autocomplete
-  // while still allowing an arbitrary number. Pull out just the literal numbers; the
-  // open-ended tail has no fixed value to offer a picker, so it's dropped, not matched.
-  return typeString
-    .split('|')
-    .map((part) => part.trim())
-    .filter((part) => /^-?\d+(\.\d+)?$/.test(part));
-}
-
 // Strips a leading is/has prefix and lowercases the next char, e.g.
 // "isDisabled" -> "disabled". Unchanged when no prefix matches.
 export function normalizePropertyName(name) {
@@ -158,8 +136,8 @@ export function normalizePropertyName(name) {
   return name;
 }
 
-// Candidates in both directions of the is/has prefix convention (RSP <-> SWC),
-// as-authored name first so exact matches win.
+// Candidates in both directions of the is/has prefix convention, as-authored first
+// so an exact match wins.
 export function propertyNameCandidates(name) {
   const stripped = normalizePropertyName(name);
   if (stripped !== name) {
@@ -169,103 +147,90 @@ export function propertyNameCandidates(name) {
   return [name, `is${capitalized}`, `has${capitalized}`];
 }
 
-// Finds a prop row matching any cross-implementation candidate for `property`,
-// preferring earlier candidates (exact match first).
-function findPropByCandidates(property, props) {
+/**
+ * The catalog row for a workbook property name, from the page's own catalog — the
+ * only one fetched (see fetchPlaygroundInputs).
+ *
+ * The candidate walk is the name bridge: the workbook is RSP-keyed ("isDisabled")
+ * while SWC's catalog carries SWC's own spelling ("disabled"). It stays a runtime
+ * walk only until SWC's extractor writes a canonical name onto each row; then this
+ * becomes a plain lookup.
+ */
+export function findProp(property, propRows) {
   return propertyNameCandidates(property)
-    .map((candidate) => props.find((p) => p.property === candidate))
+    .map((candidate) => propRows.find((row) => row.property === candidate))
     .find(Boolean);
 }
 
-// Finds a component's SWC prop row via cross-implementation name candidates
-// (e.g. "isDisabled" -> "disabled").
-export function findSwcProp(property, swcProps) {
-  return findPropByCandidates(property, swcProps);
+/**
+ * The options a control can offer, taken from the row's resolved `values` — real JSON
+ * written at extraction by deps/shared/prop-contract.js. Nothing here parses a type
+ * string: `values` is non-empty if and only if the row is an enum, so a row with no
+ * fixed option set correctly yields none.
+ *
+ * A boolean is the one kind whose options are a convention rather than data — the
+ * controls render yes/no, not true/false.
+ */
+export function resolvePickerOptions(property, propRows) {
+  const row = findProp(property, propRows);
+  if (!row) { return []; }
+  if (row.kind === 'boolean') { return ['no', 'yes']; }
+  return row.values ?? [];
 }
 
-// Finds a component's RSP prop row via cross-implementation name candidates
-// (e.g. the SWC-style "disabled" -> RSP "isDisabled").
-export function findRspProp(property, rspProps) {
-  return findPropByCandidates(property, rspProps);
-}
-
-// Picker options come from the page's own implementation, never the other one. The
-// two genuinely disagree — RSP's Button offers "premium"/"genai" where SWC's does
-// not — so borrowing would offer values the previewed component rejects. Both
-// extractors resolve real unions into their own catalogs, so neither side needs to.
-export function resolvePickerOptions(property, implementation, rspProps, swcProps) {
-  if (implementation !== 'swc') {
-    const rspRow = findRspProp(property, rspProps);
-    if (rspRow?.type) {
-      const options = parsePickerOptions(rspRow.type);
-      if (options.length) { return options; }
-      if (rspRow.type === 'boolean') { return ['no', 'yes']; }
-    }
-  }
-
-  const swcRow = findSwcProp(property, swcProps);
-  if (swcRow?.type === 'boolean') { return ['no', 'yes']; }
-  if (implementation === 'swc' && swcRow?.type) {
-    const options = parsePickerOptions(swcRow.type);
-    if (options.length) { return options; }
-  }
-
-  return [];
-}
+// Implementations that ship a deps/<impl>/data catalog. ios/android are authored
+// entirely from the workbook (images, no prop data), so a missing row there is
+// normal rather than a resolution failure worth warning about.
+export const CATALOG_IMPLEMENTATIONS = new Set(['rsp', 'swc']);
 
 // Control types that take a freeform value instead of a fixed option list
 // (rendered as `se-input`), so they don't need resolvePickerOptions to
 // resolve anything before they can render.
 export const FREEFORM_CONTROLS = new Set(['textfield', 'slider']);
 
-export function resolveControl(property, implementation, controlsMap, rspProps, swcProps, onSkip) {
-  const rspRow = findRspProp(property, rspProps);
-  const existsInRsp = Boolean(rspRow);
-  const swcRow = findSwcProp(property, swcProps);
-  const existsInSwc = Boolean(swcRow);
-
+export function resolveControl(property, implementation, controlsMap, propRows, onSkip) {
+  const row = findProp(property, propRows);
   const controlEntry = controlsMap.get(property);
   const controlType = controlEntry?.control ?? 'picker';
   // "icon" is a slot property (like TEXT_KEYS), not a real attribute.
   const isIcon = property === 'icon';
   const isSlotProperty = TEXT_KEYS.has(property) || isIcon;
   // An optional attribute can be absent, so its control needs an explicit "unset"
-  // choice. `optional` comes from the extractor; staticColor is named here only
-  // because RSP's extractor does not emit it yet.
-  const needsNoneOption = swcRow?.optional || property === 'staticColor';
+  // choice. Only SWC's extractor emits `optional`: RSP's props are optional by
+  // default (97% of them), so the flag carries no signal there and would put a
+  // spurious "None" on nearly every control. staticColor is named explicitly for
+  // that reason — it is RSP's one genuine case, not an oversight.
+  const needsNoneOption = row?.optional || property === 'staticColor';
 
-  // Any other implementation (e.g. ios/android) skips this gate entirely.
-  const existsByImplementation = { rsp: existsInRsp, swc: existsInSwc };
-  const exists = existsByImplementation[implementation];
-  if (implementation in existsByImplementation && !exists && !isSlotProperty) {
+  // Only an implementation with a catalog can be checked for a missing row.
+  // ios/android have none, so they skip the gate rather than failing it.
+  if (CATALOG_IMPLEMENTATIONS.has(implementation) && !row && !isSlotProperty) {
     onSkip?.(`No control shown for "${property}": it isn't defined in the ${implementation.toUpperCase()} data for this component.`);
     return null;
   }
 
-  // NO_ICON leads the list (so it's the default). A controls-sheet row may
-  // curate its own icon subset; otherwise falls back to ICON_OPTIONS.
-  // NONE_OPTION leads the same way
+  // NO_ICON and NONE_OPTION both lead their list, so they land as the default.
   let options;
   if (isIcon) {
+    // A controls-sheet row may curate its own icon subset; otherwise ICON_OPTIONS.
     options = [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)];
   } else if (needsNoneOption) {
-    options = [NONE_OPTION, ...resolvePickerOptions(property, implementation, rspProps, swcProps)];
+    options = [NONE_OPTION, ...resolvePickerOptions(property, propRows)];
   } else {
-    // A type that still fails to resolve to a real union (rare — e.g. a generic or
-    // interface type resolvePickerOptions genuinely can't turn into options) falls
-    // back to the controls sheet's own curated options, same fallback role they
-    // play for "icon" above.
-    const derived = resolvePickerOptions(property, implementation, rspProps, swcProps);
+    // A row with no fixed option set (a generic, an interface, RSP's StylesProp)
+    // falls back to the controls sheet's curated options — the same role the sheet
+    // plays for "icon" above.
+    const derived = resolvePickerOptions(property, propRows);
     options = derived.length ? derived : (controlEntry?.options ?? []);
   }
-  const attribute = isIcon ? null : (swcRow?.attribute ?? null);
+  // RSP props are not DOM attributes, so only SWC rows carry one.
+  const attribute = isIcon ? null : (row?.attribute ?? null);
 
   if (!options.length && !FREEFORM_CONTROLS.has(controlType)) {
     if (isIcon) {
       onSkip?.(`No control shown for "${property}": no icon options are configured (empty ICON_OPTIONS catalog and no options in the controls sheet).`);
     } else {
-      const type = (implementation === 'swc' ? swcRow?.type ?? rspRow?.type : rspRow?.type ?? swcRow?.type) ?? 'unknown';
-      onSkip?.(`No control shown for "${property}": its type ("${type}") isn't a boolean or a list of options, so there's nothing to build a picker from.`);
+      onSkip?.(`No control shown for "${property}": its type ("${row?.type ?? 'unknown'}") isn't a boolean or a list of options, so there's nothing to build a picker from.`);
     }
   }
 
