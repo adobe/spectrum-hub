@@ -5,9 +5,8 @@
  * "@react-spectrum/s2/dist/types/src/Button.d.ts" — this doubles as the exact unpkg
  * URL suffix, so resolving a specifier and building a fetch URL are the same string.
  *
- * Generalizes the URL-building logic previously duplicated across discover-components.js,
- * extract-props.js, and extract-base-props.js into one place, shared by build-ts-checker.js's
- * import-graph crawl.
+ * The single place module specifiers become CDN URLs, shared by discover-components.js,
+ * extract-props.js, and build-ts-checker.js's import-graph crawl.
  */
 
 // Where each known package's public .d.ts tree actually lives, for resolving a BARE

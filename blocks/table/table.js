@@ -16,9 +16,9 @@ const PROPS_TO_LABELS = {
 const PROP_ORDER = Object.keys(PROPS_TO_LABELS);
 
 // Base interfaces whose props are DOM/ARIA/event plumbing rather than component API.
-// The compiler-based RSP extractor resolves the full inherited surface — Button carries
-// 42 props, only 8 of them Spectrum's — so these are filtered for display. The catalog
-// stays complete; this is a rendering choice.
+// The extractors write every resolved prop, since each consumer needs a different
+// subset; filtering is this table's own choice. Button resolves 42 props, 8 of which
+// are Spectrum's.
 const EXCLUDED_SOURCES = new Set([
   'StyleProps',
   'DOMProps',

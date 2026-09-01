@@ -191,11 +191,10 @@ async function main() {
     console.log(`Wrote resolved version ${version} to ${VERSION_FILE}`);
   }
 
-  // Only runs against the daily/CI path (a concrete resolved `version` to pin the
-  // crawl to) — the manual `<cem-path>` workflow has no reliable version for that,
-  // so it writes bare (unresolved) alias names, same as before this rewrite. A
-  // failure here degrades to "no resolution this run" rather than aborting the
-  // whole extraction — every attribute still gets written with its original type.
+  // Resolution needs a concrete version to pin the crawl to, which only the daily/CI
+  // path has; the manual `<cem-path>` workflow writes bare alias names instead. A
+  // failure degrades to "no resolution this run" rather than aborting — every
+  // attribute is still written, with its original type.
   let resolvedTypes = new Map();
   if (version) {
     try {

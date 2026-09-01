@@ -126,10 +126,13 @@ export function buildControlsMap(controlsSheet) {
   );
 }
 
-// Parses a TS union type string into its values, e.g. "'a' | 'b'" -> ['a', 'b'].
-// Empty for non-union types like "boolean"/"ReactNode". Matches both quote styles:
-// hand-authored .d.ts text uses single quotes, but the TS checker's own renderer
-// (checker.typeToString(), used by the compiler-based extractors) emits double quotes.
+// Parses a TS union type string into its values, e.g. `"a" | "b"` -> ['a', 'b'].
+// Empty for non-union types like "boolean"/"ReactNode". Both extractors render types
+// through the TypeScript checker, which double-quotes literals; single quotes are
+// accepted too so a hand-written type string still parses.
+//
+// Each catalog row also carries a structured `values` array (deps/shared/prop-contract.js),
+// which this function exists to stand in for until the control layer reads it directly.
 export function parsePickerOptions(typeString) {
   if (!typeString) { return []; }
   const stringMatches = typeString.match(/'([^']+)'|"([^"]+)"/g);
@@ -186,14 +189,10 @@ export function findRspProp(property, rspProps) {
   return findPropByCandidates(property, rspProps);
 }
 
-// Resolves picker options for a property from RSP and SWC component data. An RSP
-// page tries RSP's inline union first; an SWC page never borrows it — RSP can
-// define variants SWC doesn't support yet (e.g. Button's "premium"/"genai" — see
-// .ai/docs/specs/2026-08-27-swc-type-resolution-design.md), so offering them as SWC
-// options would be wrong, not just imprecise. SWC's own data now carries real
-// resolved unions too (deps/swc/extract-cem-components.js resolves named-alias
-// types like "ButtonVariant" via the real TypeScript compiler, the same way RSP's
-// extractor already did) — an SWC page tries that first instead.
+// Picker options come from the page's own implementation, never the other one. The
+// two genuinely disagree — RSP's Button offers "premium"/"genai" where SWC's does
+// not — so borrowing would offer values the previewed component rejects. Both
+// extractors resolve real unions into their own catalogs, so neither side needs to.
 export function resolvePickerOptions(property, implementation, rspProps, swcProps) {
   if (implementation !== 'swc') {
     const rspRow = findRspProp(property, rspProps);
