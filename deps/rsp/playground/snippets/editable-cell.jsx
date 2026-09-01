@@ -3,7 +3,7 @@
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component, so there's no SWC shape to
-     mirror; text reuses table-view.jsx's first cell value for consistency
+     mirror; text reuses table.jsx's first cell value for consistency
      with cell.jsx.
 
      Gotcha: EditableCell's own prop data marks `renderEditing` required —

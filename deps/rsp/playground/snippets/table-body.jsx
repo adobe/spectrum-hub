@@ -3,7 +3,7 @@
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component, so there's no SWC shape to
-     mirror; this reuses table-view.jsx's own two-row/three-cell shape (same
+     mirror; this reuses table.jsx's own two-row/three-cell shape (same
      row ids and cell text) so the two files read as the same table's body.
 
      TableBody's own prop data documents only an optional `renderEmptyState`

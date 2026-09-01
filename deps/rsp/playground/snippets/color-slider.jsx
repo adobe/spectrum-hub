@@ -13,7 +13,7 @@
      ColorSlider edits exactly one channel of a color at a time and has no
      sensible default channel to fall back to — same
      undocumented-but-required situation as ColorSwatch's `color` (see
-     color-swatch-picker.jsx).
+     swatch-group.jsx).
 
      `channel="hue"` was tried first (hue being the most visually obvious
      single-channel slider) but confirmed broken via a live, harness-free

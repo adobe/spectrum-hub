@@ -6,7 +6,7 @@
      mirror. CardPreview.json only documents `children` (required).
 
      STANDALONE CAVEAT: CardPreview is a collection sub-item — normally only
-     used nested inside a Card (see card-view.jsx and card.jsx), which
+     used nested inside a Card (see cards.jsx and card.jsx), which
      supplies the actual card chrome/layout it previews within. Loaded
      directly via ?component=card-preview&implementation=rsp with no Card
      wrapper, it's expected to degrade gracefully the same way AccordionItem

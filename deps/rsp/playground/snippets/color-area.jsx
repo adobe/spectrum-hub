@@ -11,7 +11,7 @@
      ColorAreaProps in rsp-base-props.json only adds `className` — no
      `defaultValue` shows up anywhere in this repo's extracted data. Same as
      ColorSwatch's undocumented-but-required `color` (see
-     color-swatch-picker.jsx), ColorArea is a 2D color picker with no sensible
+     swatch-group.jsx), ColorArea is a 2D color picker with no sensible
      built-in default color, so a `defaultValue` is required at render time —
      a hex string is accepted directly. `xChannel`/`yChannel` are left
      unset rather than guessed: neither is documented here, and ColorArea is

@@ -4,11 +4,11 @@
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component yet, so there's no SWC shape to
      mirror. Reuses the same Card+CardPreview shape documented in
-     card-view.jsx (a bare text child of CardPreview, not a sibling of it —
+     cards.jsx (a bare text child of CardPreview, not a sibling of it —
      see that file for the mixed text/element gotcha this avoids).
 
      STANDALONE CAVEAT: Card is a collection sub-item — normally only used
-     nested inside a CardView (a GridList; see card-view.jsx), which supplies
+     nested inside a CardView (a GridList; see cards.jsx), which supplies
      the actual grid layout, selection, and list semantics. Loaded directly
      via ?component=card&implementation=rsp with no CardView wrapper, it's
      expected to degrade gracefully the same way AccordionItem does standalone
