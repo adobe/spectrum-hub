@@ -13,7 +13,7 @@ The CEM is published with `@adobe/spectrum-wc` at `dist/custom-elements.json`, s
 | **`extract-cem-components.js`** | Reads a local CEM path when provided, otherwise fetches `@adobe/spectrum-wc` `custom-elements.json` (with CDN fallbacks). Formats each declaration's `attributes` array, including inherited attributes already present on the component in the CEM. |
 | **`discover-components.js`** | Regenerates `components.json` from the CEM: maps every `tagName` (bare name, no `swc-` prefix) to the module subpath it ships from, derived from the declaration's module `path` (dedupe + sort, no status filter). `components.json` is a generated artifact — do not hand-edit it. |
 
-Unlike RSP, SWC has a structured CEM. There is no TypeScript parser in the component path — output comes directly from manifest `attributes` entries.
+Unlike RSP, SWC has a structured CEM. Attribute *names* come directly from manifest `attributes` entries, but their **types do not** — the CEM records unexpanded alias names and misdescribes types in three known ways, so `resolve-attribute-types.js` re-resolves each one through the real TypeScript compiler over CDN-fetched `.d.ts` files. See [Attribute type resolution](#attribute-type-resolution).
 
 ### Parallel with RSP extraction
 
@@ -23,9 +23,32 @@ Each package builds one JSON array per component. The per-component step in `ext
 
 Each row in `data/swc-{tag}.json` maps a CEM attribute to:
 
-- `attribute`, `property`, `type`, optional `default`, `description`
+- `attribute`, `property`, optional `default`, `description`
+- `type` — the resolved type as a display string. Human-readable only; **nothing may branch on it.** `blocks/table/table.js` renders it.
+- `kind` — one of `enum`, `boolean`, `text`, `number`, `unknown`. Says what control the row can back.
+- `values` — the selectable options as real JSON (numbers stay numbers), empty unless `kind` is `enum`. The playground builds pickers from this rather than parsing `type`.
 - `inheritedFrom` when the CEM marks the attribute as inherited from a base class or mixin (for example `SizedMixin`, `ButtonBase`)
 - `status` and `since` from the component declaration (`@status`, `@since` in source)
+
+`kind` is `enum` if and only if `values` is non-empty; `test/extractions/swc-data-contract.node.test.js` enforces that over the committed catalog. `kind: "unknown"` draws no control and warns — today only `swc-action-button`'s `aria-haspopup`/`aria-expanded`, which reach the CEM with no type at all.
+
+### Attribute type resolution
+
+`resolve-attribute-types.js` resolves each attribute's real type, trying three sources in order, most authoritative first:
+
+1. the component's own `static readonly VALID_<MEMBER>S`
+2. the direct superclass's declared member
+3. the CEM-attributed declaring file (a mixin, or the component's own)
+
+Rungs 1 and 2 exist because **the CEM misdescribes attribute types in three ways**, all confirmed against the published `2.0.0-beta.2` artifacts:
+
+| | What the CEM says | Reality |
+| --- | --- | --- |
+| Unexpanded aliases | `"ButtonVariant"` | 45 of 158 attributes; needs a compiler to expand |
+| Mixin-widened `size` | `ElementSize` (7 values) for 12 of 16 size-bearing components | None accepts all 7 — `SizedMixin` takes the real range as a runtime argument |
+| JSDoc over declaration | `swc-status-light`'s `variant` as `string` | A 19-value union; a lazy `@property {string}` wins over the real declaration |
+
+These rungs are compensation, not the fix — the manifest is wrong, and correcting it belongs upstream in Spectrum Web Components. Each rung becomes a no-op once that lands, so check the table above against a new release before assuming a rung is still earning its place.
 
 ### Component metadata (`status`, `since`)
 
@@ -120,4 +143,4 @@ The package ships `dist/custom-elements.json` (`files: ["dist/"]`, `customElemen
 
 **Duplicate tag names** — If multiple declarations share a `tagName`, the extractor uses the first match in module order.
 
-**Tests** — `test/extractions/extract-cem-components.node.test.js` covers the formatting helpers; it does not fetch live CDNs.
+**Tests** — `extract-cem-components`, `resolve-attribute-types`, `swc-cdn-resolve`, and `swc-ts-cdn-host` cover the pipeline with mocked fetches (no live CDN); `swc-data-contract` validates the committed catalog.
