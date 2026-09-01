@@ -6,7 +6,7 @@ import {
   collectResolutionTargets,
   resolveTargets,
 } from '../../deps/swc/resolve-attribute-types.js';
-import { cdnUrlsForCanonicalPath, makeCanonicalPath } from '../../deps/swc/cdn-resolve.js';
+import { cdnUrlsForCanonicalPath, makeCanonicalPath } from '../../deps/swc/locate-published-files.js';
 
 function makeMockFetch(sourcesByCanonicalPath) {
   const urlToText = new Map();

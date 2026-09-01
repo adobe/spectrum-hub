@@ -8,17 +8,17 @@ import {
   buildProgram,
   crawl,
 } from '../../deps/swc/ts-cdn-host.js';
-import { cdnUrlsForCanonicalPath } from '../../deps/swc/cdn-resolve.js';
+import { cdnUrlsForCanonicalPath } from '../../deps/swc/locate-published-files.js';
 
 // A fetchImpl stand-in that serves fixed content for known canonical paths (in the
-// "pkgName::version/filePath" form ts-cdn-host.js/cdn-resolve.js use everywhere) and
+// "pkgName::version/filePath" form ts-cdn-host.js/locate-published-files.js use everywhere) and
 // 404s otherwise. Keyed by canonical path rather than URL, so fixtures read the same
 // as the fileCache/resolutionCache keys they end up producing; cdnUrlsForCanonicalPath
 // (the same function the real code uses) maps each key to its real unpkg/jsdelivr
 // URLs. Since deps/swc's resolveSpecifier is async and bare-specifier resolution
 // needs each package's own manifest, fixtures below only exercise relative imports
 // (no manifest fetch involved) — bare-specifier resolution itself is covered in
-// swc-cdn-resolve.node.test.js.
+// swc-locate-published-files.node.test.js.
 function makeMockFetch(sourcesByCanonicalPath) {
   const calls = [];
   const urlToText = new Map();
@@ -162,7 +162,7 @@ describe('buildProgram + createCdnCompilerHost — cross-file resolution via res
     // dependency here isn't needed since we only crawl what's already reachable via
     // relative specifiers once the entry's own bare import is pre-seeded into the
     // resolutionCache directly, matching how extract-cem-components.js's real run
-    // resolves it through cdn-resolve.js's manifest-driven resolver.
+    // resolves it through locate-published-files.js's manifest-driven resolver.
     const resolutionCache = new Map([
       [
         '@adobe/spectrum-wc::2.0.0-beta.2/dist/components/button/Button.d.ts @adobe/spectrum-wc-core/components/button',

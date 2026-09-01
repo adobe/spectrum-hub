@@ -16,7 +16,7 @@
  */
 
 import ts from 'typescript';
-import { componentEntryPath, rebaseInheritedModule } from './cdn-resolve.js';
+import { componentEntryPath, rebaseInheritedModule } from './locate-published-files.js';
 import { crawl, buildProgram } from './ts-cdn-host.js';
 
 // A bare alias this pipeline can expand, optionally unioned with undefined.

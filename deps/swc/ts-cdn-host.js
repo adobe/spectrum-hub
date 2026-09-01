@@ -8,7 +8,7 @@
  * two-phase async-then-sync split, same reasoning for reading TS's own lib.*.d.ts from
  * disk rather than the CDN) — duplicated rather than shared, because this pipeline's
  * resolveSpecifier is async (bare-specifier resolution needs each package's own
- * published manifest, fetched on demand — see cdn-resolve.js), while RSP's is a
+ * published manifest, fetched on demand — see locate-published-files.js), while RSP's is a
  * synchronous lookup into a small hardcoded table. Sharing would mean either making
  * RSP's proven, already-relied-upon pipeline async for no reason it needs, or a
  * resolver-injection refactor of that working file — both riskier than this small
@@ -18,7 +18,7 @@ import ts from 'typescript';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { createRequire } from 'module';
-import { resolveSpecifier, cdnUrlsForCanonicalPath } from './cdn-resolve.js';
+import { resolveSpecifier, cdnUrlsForCanonicalPath } from './locate-published-files.js';
 
 const require = createRequire(import.meta.url);
 const TS_LIB_DIR = join(dirname(require.resolve('typescript/package.json')), 'lib');
@@ -57,7 +57,7 @@ async function fetchWithFallback(canonicalPath, fetchImpl) {
  *     look up the same answer without re-running the async resolveSpecifier.
  *
  * A file that fails to fetch, or a specifier this pipeline can't/won't resolve (see
- * cdn-resolve.js's doc comment — third-party runtime libs are skipped by design), is
+ * locate-published-files.js's doc comment — third-party runtime libs are skipped by design), is
  * simply not added to the queue; TypeScript treats a missing/unresolved import as
  * effectively `any` rather than erroring the whole program.
  *

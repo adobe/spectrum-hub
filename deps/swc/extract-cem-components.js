@@ -14,7 +14,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { fetchManifest, findCorePackageName } from './cdn-resolve.js';
+import { fetchManifest, findCorePackageName } from './locate-published-files.js';
 import { collectResolutionTargets, resolveTargets } from './resolve-attribute-types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
