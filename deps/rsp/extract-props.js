@@ -1,11 +1,11 @@
 /**
  * Extracts component prop metadata from @react-spectrum/s2 and writes per-component JSON files.
  *
- * For each component in components.json, crawls its `.d.ts` file's real import graph (via
- * build-ts-checker.js) and asks the real TypeScript checker for the component's props interface's
- * fully resolved, transitively-inherited property set (`checker.getPropertiesOfType()`) —
- * replacing the previous regex-based single-hop `extends`/`includes` lookup, which silently
- * dropped any prop inherited further up the chain than that.
+ * For each component in components.json, crawls its `.d.ts` import graph (build-ts-checker.js)
+ * and asks the TypeScript checker for the props interface's fully resolved, transitively
+ * inherited property set (`checker.getPropertiesOfType()`). The checker is the source of
+ * truth because S2 inherits through several hops and subtracts with `Omit<>` as often as
+ * it adds — reading interface headers can do neither reliably.
  *
  * Usage: node deps/rsp/extract-props.js
  */
@@ -19,7 +19,7 @@ import ts from 'typescript';
 import { fetchComponentDocStatus } from './extract-doc-status.js';
 import { crawl, buildProgram } from './build-ts-checker.js';
 import { S2_COMPONENT_BASE } from './locate-published-files.js';
-import { typeToDisplayString, typeToValues, propKind } from '../shared/prop-contract.js';
+import { typeToDisplayString, typeToValues, declaredValueOrder, propKind } from '../shared/prop-contract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
@@ -34,10 +34,9 @@ const ALLOW_LIST = JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8'));
 // documented escape hatches for the same className/style it otherwise omits — same reasoning.
 const EXCLUDED_PROPERTIES = new Set(['className', 'UNSAFE_className', 'UNSAFE_style']);
 
-// A component dropped from the roster used to leave its data file behind forever,
-// still serving stale rows to blocks/table. Returns the files to remove.
-// Fails closed: discovery breaking and returning a short roster would otherwise
-// delete the catalog, so a roster that lost most of its entries is refused.
+// Data files for components absent from the roster, so a dropped component's stale
+// rows stop reaching blocks/table. Fails closed: a roster smaller than half the data
+// directory means discovery failed, and must not be allowed to delete the catalog.
 const MIN_ROSTER_RATIO = 0.5;
 
 export function pruneStaleData(dataFiles, roster) {
@@ -97,7 +96,7 @@ export function extractPropsFromType(checker, type, primaryInterfaceName) {
     const optional = Boolean(symbol.flags & ts.SymbolFlags.Optional);
 
     const type = typeToDisplayString(checker, propType);
-    const values = typeToValues(propType);
+    const values = typeToValues(propType, declaredValueOrder(checker, symbol));
     const prop = {
       property: symbol.name, type, kind: propKind(type, values), values,
     };
@@ -190,7 +189,7 @@ async function main() {
   const stale = pruneStaleData(readdirSync(OUTPUT_DIR), Object.keys(ALLOW_LIST));
   stale.forEach((file) => {
     unlinkSync(join(OUTPUT_DIR, file));
-    console.log(`  Removed ${file} — no longer in components.json.`);
+    console.log(`  Removed ${file} — not in components.json.`);
   });
 
   console.log(`Done. Wrote ${count} component file(s) to ${OUTPUT_DIR}`);
