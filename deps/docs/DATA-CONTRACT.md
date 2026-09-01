@@ -2,7 +2,14 @@
 
 Originally a spike deliverable for SPDOCS-351; now the living reference for the data contract the status model and combined index are built against, including which deprecation/preview signals are available upstream. Keep this current as the mapping, sources, or upstream signal availability change.
 
-It complements the per-implementation pipeline docs — see [deps/rsp/README.md](../rsp/README.md) and [deps/swc/README.md](../swc/README.md) — rather than repeating them. Runtime normalization lives in [scripts/utils/extraction-status.js](../../scripts/utils/extraction-status.js).
+It complements the per-implementation pipeline docs — see [deps/rsp/README.md](../rsp/README.md) and [deps/swc/README.md](../swc/README.md) — rather than repeating them. Runtime normalization lives in [scripts/utils/extraction-status.js](../../scripts/utils/extraction-status.js). For a map of every file involved in building the combined status table (overrides, aliases, generated outputs), see [STATUS-FILES.md](./STATUS-FILES.md).
+
+**Per-component prop rows** (`deps/swc/data/*.json`) carry two contracts, deliberately separated:
+
+- `type` is a display string for [`blocks/table/table.js`](../../blocks/table/table.js). Human-readable only — nothing may branch on it.
+- `kind` + `values` are the machine contract the playground builds controls from. `kind` is one of `enum`/`boolean`/`text`/`number`/`unknown`, and is `enum` if and only if `values` is non-empty. `values` are real JSON, so numeric options stay numeric.
+
+Table columns are opt-out, not opt-in: an unrecognised row key is appended as a column, so `kind`/`values` are listed in `table.js`'s `EXCLUDED_COLUMNS`. Any future machine-only field needs the same. `test/extractions/swc-data-contract.node.test.js` enforces the contract over the committed catalog; see [deps/swc/README.md](../swc/README.md) for how types are resolved and why the CEM cannot be trusted directly.
 
 **Sources:**
 
