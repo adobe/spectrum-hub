@@ -79,8 +79,8 @@ const PRESENT_FLOOR = {
 const DEFAULT_FLOOR = { status: 'experimental' };
 
 // Per-column secondary-status overlay filenames. Figma's is qualified ("secondary")
-// because its roster already lives in component-status.json; rsp/swc keep the plain
-// <impl>-status.json since their roster is components.json.
+// to avoid colliding with its roster file (components.json, same name as rsp/swc's);
+// rsp/swc keep the plain <impl>-status.json since their roster has its own impl prefix.
 const OVERLAY_FILES = {
   figma: 'figma-secondary-status.json',
   rsp: 'rsp-secondary-status.json',
@@ -572,7 +572,7 @@ function main() {
   const rspComponents = readJson(join(__dirname, 'rsp', 'components.json'), {});
   // swc/components.json maps bare name -> module subpath; the roster is its keys as tags.
   const swcComponents = readJson(join(__dirname, 'swc', 'components.json'), {});
-  const figmaRoster = readJson(join(__dirname, 'figma', 'component-status.json'), []);
+  const figmaRoster = readJson(join(__dirname, 'figma', 'components.json'), []);
   // The secondary overlay lists Figma designs that carry redirect guidance; some are not
   // in the roster export but still exist in the library, so they count toward membership.
   const figmaOverlay = readJson(join(__dirname, 'figma', OVERLAY_FILES.figma), []);
