@@ -20,6 +20,12 @@ jobs:
         with:
           node-version: 20
 
+      # extract-cem-components.js now resolves named-alias attribute types via the
+      # real `typescript` compiler API (deps/swc/ts-cdn-host.js), so this step is
+      # required — it wasn't before (mirrors extract-rsp-properties.yml's same fix).
+      - name: Install dependencies
+        run: npm ci
+
       - name: Discover published SWC components
         run: node deps/swc/discover-components.js
 
