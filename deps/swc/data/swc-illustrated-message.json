@@ -21,8 +21,8 @@
     "type": "\"horizontal\" | \"vertical\"",
     "kind": "enum",
     "values": [
-      "horizontal",
-      "vertical"
+      "vertical",
+      "horizontal"
     ],
     "optional": false,
     "default": "'vertical'",

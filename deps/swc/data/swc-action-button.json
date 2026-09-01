@@ -66,11 +66,11 @@
     "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\"",
     "kind": "enum",
     "values": [
+      "xs",
       "s",
       "m",
       "l",
-      "xl",
-      "xs"
+      "xl"
     ],
     "optional": false,
     "description": "The size of the button.",

@@ -54,12 +54,12 @@
       "type": "\"start\" | \"end\" | \"bottom\" | \"top\" | \"left\" | \"right\"",
       "kind": "enum",
       "values": [
-        "start",
-        "end",
         "bottom",
         "top",
         "left",
-        "right"
+        "right",
+        "start",
+        "end"
       ],
       "default": "'bottom'",
       "description": "Where the Menu opens relative to its trigger.",
@@ -144,11 +144,11 @@
       "type": "\"S\" | \"M\" | \"L\" | \"XL\" | \"XS\"",
       "kind": "enum",
       "values": [
+        "XS",
         "S",
         "M",
         "L",
-        "XL",
-        "XS"
+        "XL"
       ],
       "default": "'M'",
       "description": "The size of the ActionButton.",

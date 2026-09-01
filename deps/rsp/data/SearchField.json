@@ -47,9 +47,9 @@
       "type": "\"list\" | \"none\" | \"inline\" | \"both\"",
       "kind": "enum",
       "values": [
-        "list",
         "none",
         "inline",
+        "list",
         "both"
       ],
       "description": "Indicates whether inputting text could trigger display of one or more predictions of the user's\nintended value for an input and specifies how predictions would be presented if they are made.",
@@ -76,12 +76,12 @@
       "type": "\"search\" | \"enter\" | \"done\" | \"go\" | \"next\" | \"previous\" | \"send\"",
       "kind": "enum",
       "values": [
-        "search",
         "enter",
         "done",
         "go",
         "next",
         "previous",
+        "search",
         "send"
       ],
       "description": "An enumerated attribute that defines what action label or icon to preset for the enter key on\nvirtual keyboards. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/enterkeyhint).",
@@ -284,14 +284,14 @@
       "type": "\"text\" | \"search\" | \"url\" | \"tel\" | \"email\" | \"none\" | \"numeric\" | \"decimal\"",
       "kind": "enum",
       "values": [
-        "text",
-        "search",
-        "url",
-        "tel",
-        "email",
         "none",
+        "text",
+        "tel",
+        "url",
+        "email",
         "numeric",
-        "decimal"
+        "decimal",
+        "search"
       ],
       "description": "Hints at the type of data that might be entered by the user while editing the element or its\ncontents. See\n[MDN](https://html.spec.whatwg.org/multipage/interaction.html#input-modalities:-the-inputmode-attribute).",
       "inheritedFrom": "TextInputDOMProps"
@@ -467,8 +467,8 @@
       "type": "\"label\" | \"icon\"",
       "kind": "enum",
       "values": [
-        "label",
-        "icon"
+        "icon",
+        "label"
       ],
       "default": "'icon'",
       "description": "Whether the required state should be shown as an icon or text.",
