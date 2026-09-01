@@ -88,3 +88,29 @@ describe('deps/rsp/data pipeline canary', () => {
     assert.deepEqual(empty.map(({ component }) => component), []);
   });
 });
+
+// Ordering guard. `values` is contractually in declaration order (see
+// declaredValueOrder in deps/shared/prop-contract.js) — the checker interns unions by
+// type ID, so a component narrowing a shared union used to get that union's order with
+// its own members appended. This exact check is what surfaced the original four
+// symptoms (RSP ActionMenu.size, SWC action-button/icon.size, SWC status-light.variant),
+// so it is known to catch the regression rather than merely to pass.
+describe('values are in declaration order', () => {
+  const SIZE_ORDER = ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl'];
+  const rank = new Map(SIZE_ORDER.map((size, index) => [size, index]));
+
+  // Only size unions can be checked from the catalog alone: their declaration order is
+  // knowable without a TypeScript program, because it is smallest-to-largest.
+  for (const impl of ['rsp', 'swc']) {
+    it(`orders every ${impl} size-like enum smallest to largest`, () => {
+      const bad = allRows(impl)
+        .filter((row) => row.values.length > 1
+          && row.values.every((value) => typeof value === 'string' && rank.has(value.toLowerCase())))
+        .filter((row) => {
+          const ranks = row.values.map((value) => rank.get(value.toLowerCase()));
+          return ranks.some((value, index) => index > 0 && value < ranks[index - 1]);
+        });
+      assert.deepEqual(bad.map((row) => `${row.id}=${row.values.join(',')}`), []);
+    });
+  }
+});
