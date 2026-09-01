@@ -16,7 +16,7 @@
      deps/rsp/data/DropZone.json marks `children` required. `IllustratedMessage`
      is the real documented content shape for a DropZone's default/empty
      state; `Heading`/`Content` are real @react-spectrum/s2 exports used
-     inside it (confirmed via Content.d.ts — see dialog.jsx for why they
+     inside it (confirmed via Content.d.ts — see standard-dialog.jsx for why they
      have no catalog entry of their own). A FileTrigger + Button pairing is
      part of DropZone's real full doc example too, but FileTrigger has no
      @react-spectrum/s2 export or extracted prop data in this repo to verify

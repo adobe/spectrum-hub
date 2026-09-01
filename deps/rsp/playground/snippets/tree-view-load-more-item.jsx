@@ -9,7 +9,7 @@
      row TreeView renders itself while more items are loading, so an author
      wouldn't normally hand-author one at all. `isLoading` is written as
      `isLoading=""` (empty string) per this fragment's strict-XML parsing —
-     see table-view.jsx's comment on the same convention for a boolean flag
+     see table.jsx's comment on the same convention for a boolean flag
      attribute. `children` here is plain text standing in for the real
      loading-spinner content the component would otherwise render.
 

@@ -1,5 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
+import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import init, {
   parseBlockMetadata,
   parseDefault,
@@ -549,7 +550,7 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
   });
 
   it('shows the toast route\'s Button as a sibling line, not a wrapper', () => {
-    const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast-container');
+    const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast');
     // Same multi-attribute formatting as any other element serializeElement prints (e.g.
     // the DialogTrigger case's AlertDialog above) — onPress is a JSX expression (unquoted),
     // variant is a normal string attribute.
@@ -623,9 +624,9 @@ describe('composite snippet fragments — real committed files', () => {
     expect(snippet.includes('<Tooltip>')).to.be.true;
   });
 
-  it('gives the real RSP toast-container JSX snippet a sibling trigger Button', async () => {
-    const markup = await (await fetch('/deps/rsp/playground/snippets/toast-container.jsx')).text();
-    const snippet = buildRspSnippet('ToastContainer', {}, markup, false, 'toast-container');
+  it('gives the real RSP toast JSX snippet a sibling trigger Button', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/toast.jsx')).text();
+    const snippet = buildRspSnippet('ToastContainer', {}, markup, false, 'toast');
     expect(snippet.includes('onPress={() => ToastQueue.info(\'Toasting…\')}')).to.be.true;
     expect(snippet.includes('<ToastContainer />')).to.be.true;
   });
@@ -757,6 +758,44 @@ describe('playground block — init()', () => {
     expect(iframe.src).to.include('/blocks/playground/index.html');
     expect(iframe.src).to.include('component=button');
     expect(iframe.src).to.include('implementation=ios');
+  });
+
+  // IMPL_COMPONENT_NAMES's `export` field (deps/impl-component-names.js) resolves a
+  // component whose real RSP
+  // export differs from its canonical Spectrum Hub name — e.g. "action-group" ships as
+  // RSP's ActionButtonGroup, not a naive pascalCase("action-group") -> "ActionGroup".
+  // Regression: before this resolution existed, such components 404'd on their prop
+  // data and snippet markup, and threw "No RSP export named ..." in the live preview.
+  it('resolves the real RSP export name for a component whose canonical name differs', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'action-group' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    expect(rspEl.querySelector('pre').textContent).to.equal('<ActionButtonGroup>Label</ActionButtonGroup>');
+
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/snippets/action-button-group.jsx'))).to.be.false;
+    expect(urls.some((url) => url.includes('/snippets/action-group.jsx'))).to.be.true;
+  });
+
+  // Regression: fetchPlaygroundInputs used to fetch deps/swc/data/swc-<component>.json
+  // unconditionally, even on rsp pages — most RSP components have no SWC counterpart at
+  // all, so this was a guaranteed, noisy 404 on every RSP playground page.
+  it('does not fetch SWC prop data on an rsp-implementation page', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/deps/swc/data/'))).to.be.false;
+  });
+
+  it('does fetch SWC prop data on an swc-implementation page', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    await init(el);
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/deps/swc/data/'))).to.be.true;
   });
 
   it('uses the PascalCase RSP-style code disclosure for rsp implementation', async () => {
@@ -1244,5 +1283,25 @@ describe('playground block — init()', () => {
     expect(pre.textContent.includes('<TabList>')).to.be.true;
     expect(pre.textContent.includes('<TabPanel')).to.be.true;
     expect(pre.textContent.includes('Details panel content.')).to.be.true;
+  });
+});
+
+// The authored slug and the RSP export diverge for a minority of components:
+// `action-group` ships as ActionButtonGroup. Without this the data fetch, the
+// snippet URL and the live esm.sh import all 404 on a name that does not exist.
+describe('resolveRspComponentName', () => {
+  it('resolves an authored slug to its real RSP export', () => {
+    expect(resolveRspComponentName('action-group')).to.equal('ActionButtonGroup');
+    expect(resolveRspComponentName('table')).to.equal('TableView');
+    expect(resolveRspComponentName('takeover-dialog')).to.equal('FullscreenDialog');
+  });
+
+  it('falls back to plain PascalCase when the names already agree', () => {
+    expect(resolveRspComponentName('action-button')).to.equal('ActionButton');
+    expect(resolveRspComponentName('button')).to.equal('Button');
+  });
+
+  it('is case- and whitespace-insensitive on the slug', () => {
+    expect(resolveRspComponentName('  Action-Group ')).to.equal('ActionButtonGroup');
   });
 });

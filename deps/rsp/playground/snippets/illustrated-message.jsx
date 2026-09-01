@@ -5,7 +5,7 @@
      package's main `Image` export (see build-composite-element.js). Matches the
      real docs' rendered example (an inline illustration SVG, not a generic
      <img>) — a plain Image picks up IllustratedMessage's generic-photo frame
-     styling instead, which looks different (see image.jsx for that case). -->
+     styling instead, which looks different (see thumbnail.jsx for that case). -->
 <IllustratedMessage>
   <Heading>Create your first asset.</Heading>
   <Content>Get started by uploading or importing some assets.</Content>

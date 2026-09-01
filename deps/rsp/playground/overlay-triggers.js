@@ -1,18 +1,19 @@
 // Route -> which Trigger wraps it + the trigger Button's label. These
 // components render nothing standalone without one.
-// An entry with no `trigger` (toast-container) has no wrapping Trigger
+// An entry with no `trigger` (toast) has no wrapping Trigger
 // component of its own — the queue fires imperatively (ToastQueue.info(...)),
 // so its Button sits as a sibling instead of a parent (see initRsp() in
 // index.html and buildRspSnippet() in ../../../blocks/playground/playground.js).
 // No timeout is passed, so the toast stays open until dismissed.
 export const OVERLAY_TRIGGERS = {
-  dialog: { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
+  'standard-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
   'alert-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
+  'coach-mark': { trigger: 'DialogTrigger', triggerLabel: 'Open coach mark' },
   'custom-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
-  'fullscreen-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
+  'takeover-dialog': { trigger: 'DialogTrigger', triggerLabel: 'Open dialog' },
   popover: { trigger: 'DialogTrigger', triggerLabel: 'Open popover' },
   tooltip: { trigger: 'TooltipTrigger', triggerLabel: 'Hover me' },
-  'toast-container': { triggerLabel: 'Show Toast', queueExport: 'ToastQueue', toastMessage: 'Toasting…' },
+  toast: { triggerLabel: 'Show Toast', queueExport: 'ToastQueue', toastMessage: 'Toasting…' },
 };
 
 /**
@@ -22,7 +23,7 @@ export const OVERLAY_TRIGGERS = {
  * re-deriving it from `trigger`'s presence independently:
  *  - 'wrap': a real Trigger component wraps both the Button and the route's own element.
  *  - 'sibling': no Trigger of its own — the Button fires an imperative queue call and sits
- *    next to the element instead of wrapping it (toast-container).
+ *    next to the element instead of wrapping it (toast).
  *  - 'none': the route has no overlay trigger at all.
  *
  * @param {string} routeName

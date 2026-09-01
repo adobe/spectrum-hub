@@ -3,7 +3,7 @@
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component, so there's no SWC shape to
-     mirror; the columns line up with table-header.jsx/table-view.jsx's
+     mirror; the columns line up with table-header.jsx/table.jsx's
      Name/Type/Date-modified shape, filled in as a summary row.
 
      TableFooter.json documents an empty `props` array — no properties

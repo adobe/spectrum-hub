@@ -3,7 +3,7 @@
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component, so there's no SWC shape to
-     mirror; text reuses table-view.jsx's first row's first cell value.
+     mirror; text reuses table.jsx's first row's first cell value.
 
      A leaf-with-text fragment: Row's own prop data doesn't mark `children`
      required (unlike Column/Cell), but a real Row's children are normally

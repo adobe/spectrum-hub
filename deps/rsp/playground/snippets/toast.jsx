@@ -6,7 +6,7 @@
 
      Real usage needs a Button that fires ToastQueue.info(...) to show
      anything, but ToastContainer has no wrapping Trigger of its own to
-     author that inline the way dialog.jsx/popover.jsx/tooltip.jsx do — so
+     author that inline the way standard-dialog.jsx/popover.jsx/tooltip.jsx do — so
      initRsp()/buildRspSnippet() synthesize that Button as a sibling instead
      (overlay-triggers.js). -->
 <ToastContainer />

@@ -7,7 +7,7 @@
      deps/rsp/data/FullscreenDialog.json's `children` prop (inherited from
      DialogProps) has no required flag, and `variant` defaults to
      'fullscreen', so it's left unset here. `Heading`/`Content` are real
-     @react-spectrum/s2 exports (confirmed via Content.d.ts — see dialog.jsx
+     @react-spectrum/s2 exports (confirmed via Content.d.ts — see standard-dialog.jsx
      for why they have no catalog entry of their own).
 
      FullscreenDialog has no standalone open state, so initRsp()/buildRspSnippet()

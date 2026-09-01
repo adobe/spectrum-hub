@@ -28,13 +28,15 @@ describe('overlayShape', () => {
     assert.equal(overlayShape('action-button'), 'none');
   });
 
+  // Keyed by the authored slug, like every other playground lookup — the RSP export
+  // name is resolved only where the export itself is needed.
   it('specifically classifies the documented routes (regression guard)', () => {
-    assert.equal(overlayShape('dialog'), 'wrap');
+    assert.equal(overlayShape('standard-dialog'), 'wrap');
     assert.equal(overlayShape('alert-dialog'), 'wrap');
     assert.equal(overlayShape('custom-dialog'), 'wrap');
-    assert.equal(overlayShape('fullscreen-dialog'), 'wrap');
+    assert.equal(overlayShape('takeover-dialog'), 'wrap');
     assert.equal(overlayShape('popover'), 'wrap');
     assert.equal(overlayShape('tooltip'), 'wrap');
-    assert.equal(overlayShape('toast-container'), 'sibling');
+    assert.equal(overlayShape('toast'), 'sibling');
   });
 });

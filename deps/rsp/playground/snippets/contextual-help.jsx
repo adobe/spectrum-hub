@@ -20,7 +20,7 @@
      deps/rsp/data/ContextualHelp.json marks `children` as required; the
      published .d.ts further notes the real ContextualHelpPopover "Supports
      Heading, Content, and Footer elements" — the same `Heading`/`Content`
-     real @react-spectrum/s2 exports used in dialog.jsx (confirmed via
+     real @react-spectrum/s2 exports used in standard-dialog.jsx (confirmed via
      Content.d.ts, excluded from this repo's catalog only because
      discover-components.js's SKIP_FILES skips their shared source file, not
      because they aren't real). -->

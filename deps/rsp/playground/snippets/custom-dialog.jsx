@@ -8,9 +8,9 @@
      the published CustomDialog.d.ts shows it extends react-aria-components'
      DialogProps the same way Dialog does — a floating window with a custom
      layout, still fundamentally dialog content. `Heading`/`Content` are real
-     @react-spectrum/s2 exports (confirmed via Content.d.ts — see dialog.jsx
+     @react-spectrum/s2 exports (confirmed via Content.d.ts — see standard-dialog.jsx
      for the full explanation of why they have no catalog entry of their
-     own), used here the same way as dialog.jsx's default content.
+     own), used here the same way as standard-dialog.jsx's default content.
 
      CustomDialog has no standalone open state, so initRsp()/buildRspSnippet()
      wrap it in a real DialogTrigger + Button (overlay-triggers.js). -->

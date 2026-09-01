@@ -11,7 +11,7 @@ import {
   TEXT_KEYS,
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
-import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
+import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
@@ -194,7 +194,7 @@ export function buildRspSnippet(
   buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
 
   // Some routes need a real Trigger wrapper to be usable; a route with no
-  // `trigger` of its own (e.g. toast-container) fires imperatively instead,
+  // `trigger` of its own (e.g. toast) fires imperatively instead,
   // so its Button is a sibling line rather than a parent (overlay-triggers.js).
   const shape = overlayShape(routeName);
   if (shape === 'none') { return serializeElement(el, 0, true); }
@@ -377,7 +377,10 @@ function fetchText(url) {
 // (drives both the live preview and, for composites, subcomponent structure),
 // and which preview shell renders the live iframe.
 function resolveComponentMeta(component, implementation, base) {
-  const componentTitle = pascalCase(component);
+  // Every playground lookup — snippet file, overlay trigger, sizing set — is keyed
+  // by the authored slug. Only the RSP export name differs, and only where the export
+  // itself is needed: the data fetch and the code disclosure's tag name.
+  const componentTitle = resolveRspComponentName(component);
   const previewName = implementation === 'rsp' ? componentTitle : `swc-${component}`;
   const markupUrl = implementation === 'rsp'
     ? `${base}/deps/rsp/playground/snippets/${component}.jsx`
@@ -399,13 +402,21 @@ function resolveComponentMeta(component, implementation, base) {
 
 // Only the spreadsheet fetch is allowed to reject and abort init(); a missing
 // prop-data file or markup fragment (leaf component) degrades to empty instead.
-async function fetchPlaygroundInputs(base, componentTitle, component, spreadsheetUrl, markupUrl) {
+async function fetchPlaygroundInputs(base, componentMeta, component, impl, spreadsheetUrl) {
+  const { componentTitle, markupUrl } = componentMeta;
+  // Only the page's own catalog is fetched. Most RSP components have no SWC
+  // counterpart, so fetching both guaranteed a 404 on every RSP page — and it was
+  // what let one implementation's options leak onto the other's controls.
   const [
     { componentsSheet, controlsSheet }, rspProps, swcProps, snippetMarkup,
   ] = await Promise.all([
     fetchPlaygroundSheets(spreadsheetUrl),
-    fetchJson(`${base}/deps/rsp/data/${componentTitle}.json`).then((d) => d.props ?? d).catch(() => []),
-    fetchJson(`${base}/deps/swc/data/swc-${component}.json`).catch(() => []),
+    impl === 'rsp'
+      ? fetchJson(`${base}/deps/rsp/data/${componentTitle}.json`).then((d) => d.props ?? d).catch(() => [])
+      : [],
+    impl === 'swc'
+      ? fetchJson(`${base}/deps/swc/data/swc-${component}.json`).catch(() => [])
+      : [],
     fetchText(markupUrl).catch(() => ''),
   ]);
   return {
@@ -583,10 +594,9 @@ export default async function init(el) {
   }
 
   const base = config.codeBase;
-  const spreadsheetUrl = meta.spreadsheet ?? `${base}/playground-data.json`;
-  const {
-    componentTitle, previewName, markupUrl, previewShellPath,
-  } = resolveComponentMeta(component, implementation, base);
+  const sheetUrl = meta.spreadsheet ?? `${base}/playground-data.json`;
+  const componentMeta = resolveComponentMeta(component, implementation, base);
+  const { componentTitle, previewName, previewShellPath } = componentMeta;
 
   let componentsSheet;
   let controlsSheet;
@@ -597,7 +607,7 @@ export default async function init(el) {
   try {
     ({
       componentsSheet, controlsSheet, rspProps, swcProps, snippetMarkup,
-    } = await fetchPlaygroundInputs(base, componentTitle, component, spreadsheetUrl, markupUrl));
+    } = await fetchPlaygroundInputs(base, componentMeta, component, implementation, sheetUrl));
   } catch (err) {
     config.log('sandbox block: data fetch failed', err);
     el.remove();
