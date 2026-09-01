@@ -528,6 +528,9 @@ function wireIframeMessaging(iframe, currentProps, snippetMarkup) {
 
 // onControlChange fires after currentProps is already updated — the caller
 // only has to react (post the update, refresh the code disclosure, ...).
+// Returns null when nothing rendered: a component can legitimately have no
+// controls (swc's link is utility CSS classes, not a component API), and an
+// empty panel would still hold its column and label a region with nothing in it.
 function buildControlsPanel(descriptors, currentProps, onControlChange) {
   const controlsPanel = document.createElement('div');
   controlsPanel.classList.add('playground-controls');
@@ -544,7 +547,7 @@ function buildControlsPanel(descriptors, currentProps, onControlChange) {
     controlsPanel.appendChild(control);
   });
 
-  return controlsPanel;
+  return controlsPanel.children.length ? controlsPanel : null;
 }
 
 // Expand button only grows/shrinks the visible height (max-height in CSS),
@@ -674,7 +677,8 @@ export default async function init(el) {
 
   const layout = document.createElement('div');
   layout.classList.add('playground-layout');
-  layout.append(previewArea, controlsPanel);
+  // With no controls the preview is the only flex child and fills the row.
+  layout.append(...[previewArea, controlsPanel].filter(Boolean));
 
   el.replaceChildren(layout, disclosure);
 }
