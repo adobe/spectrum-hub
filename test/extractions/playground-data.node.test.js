@@ -579,6 +579,66 @@ describe('resolveControl', () => {
     assert.deepEqual(result.options, [NONE_OPTION, 'white', 'black', 'auto']);
   });
 
+  // curated options are the only way to populate a picker/segmentedControl for it.
+  it("falls back to the controls sheet's curated options when the type can't be introspected", () => {
+    const curatedMap = buildControlsMap([{ property: 'labelAlign', control: 'segmentedControl', options: 'start, end' }]);
+    const result = resolveControl('labelAlign', 'swc', curatedMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result, {
+      controlType: 'segmentedControl',
+      options: ['start', 'end'],
+      attribute: 'label-align',
+    });
+  });
+
+  it('does not warn when curated options cover a type that cannot be introspected', () => {
+    const curatedMap = buildControlsMap([{ property: 'labelAlign', control: 'segmentedControl', options: 'start, end' }]);
+    const onSkip = mock.fn();
+    resolveControl('labelAlign', 'swc', curatedMap, RSP_PROPS, SWC_PROPS, onSkip);
+    assert.equal(onSkip.mock.callCount(), 0);
+  });
+
+  it('prefers options derived from real type data over curated ones when both are available', () => {
+    const curatedMap = buildControlsMap([{ property: 'variant', control: 'picker', options: 'ignored, alsoIgnored' }]);
+    const result = resolveControl('variant', 'rsp', curatedMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result.options, ['primary', 'secondary', 'accent', 'negative', 'premium', 'genai']);
+  });
+
+  it('returns a descriptor for a swc-only property when implementation is swc', () => {
+    const result = resolveControl('truncate', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result, {
+      controlType: 'picker',
+      options: ['no', 'yes'],
+      attribute: 'truncate',
+    });
+  });
+
+  // A property literally named "icon" is always treated as the icon slot
+  // property (resolveControl's isIcon check is keyed purely on the property
+  // name) — the same by-name existence-check exemption TEXT_KEYS gets — even
+  // with no authored "icon" row in the controls sheet at all. With no row to
+  // read from, it still resolves: controlType defaults to "picker" and its
+  // options fall back to the shared ICON_OPTIONS catalog (see the "icon"
+  // control describe block below for the case where a row IS authored).
+  it('resolves a property literally named "icon" even with no authored control row', () => {
+    const result = resolveControl('icon', 'swc', controlsMap, RSP_PROPS, SWC_PROPS);
+    assert.notEqual(result, null);
+    assert.equal(result.controlType, 'picker');
+    assert.equal(result.attribute, null);
+    assert.deepEqual(result.options, [NO_ICON, ...ICON_OPTIONS]);
+  });
+
+  it('defaults controlType to picker when property is not in the controls sheet', () => {
+    const result = resolveControl('variant', 'rsp', new Map(), RSP_PROPS, SWC_PROPS);
+    assert.equal(result.controlType, 'picker');
+  });
+
+  // staticColor has no documented default (unlike variant/fillStyle/size), so
+  // NONE_OPTION leads its options the same way NO_ICON leads icon's.
+  it('leads staticColor\'s options with NONE_OPTION', () => {
+    const result = resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
+    assert.deepEqual(result.options, [NONE_OPTION, 'white', 'black', 'auto']);
+  });
+
   it('returns null attribute when property has no swc equivalent even after normalization', () => {
     const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS, SWC_PROPS);
     assert.equal(result.attribute, null);
