@@ -1,34 +1,117 @@
 {
   "props": [
     {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the label."
+    },
+    {
+      "property": "role",
+      "type": "\"status\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "An accessibility role for the status light. Should be set when the status\ncan change at runtime, and no more than one status light will update simultaneously.\nFor cases where multiple statuses can change at the same time, use a Toast instead."
+    },
+    {
       "property": "variant",
-      "type": "'informative' | 'neutral' | 'positive' | 'notice' | 'negative' | 'celery' | 'chartreuse' | 'cyan' | 'fuchsia' | 'purple' | 'magenta' | 'indigo' | 'seafoam' | 'yellow' | 'pink' | 'turquoise' | 'cinnamon' | 'brown' | 'silver'",
+      "type": "\"informative\" | \"neutral\" | \"positive\" | \"notice\" | \"negative\" | \"celery\" | \"chartreuse\" | \"cyan\" | \"fuchsia\" | \"purple\" | \"magenta\" | \"indigo\" | \"seafoam\" | \"yellow\" | \"pink\" | \"turquoise\" | \"cinnamon\" | \"brown\" | \"silver\"",
+      "kind": "enum",
+      "values": [
+        "informative",
+        "neutral",
+        "positive",
+        "notice",
+        "negative",
+        "celery",
+        "chartreuse",
+        "cyan",
+        "fuchsia",
+        "purple",
+        "magenta",
+        "indigo",
+        "seafoam",
+        "yellow",
+        "pink",
+        "turquoise",
+        "cinnamon",
+        "brown",
+        "silver"
+      ],
       "default": "'neutral'",
-      "description": "The variant changes the color of the status light. When status lights have a semantic meaning, they should use the variant for semantic colors.",
+      "description": "The variant changes the color of the status light.\nWhen status lights have a semantic meaning, they should use the variant for semantic colors.",
       "inheritedFrom": "StatusLightStyleProps"
     },
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the StatusLight.",
       "inheritedFrom": "StatusLightStyleProps"
     },
     {
-      "property": "children",
-      "type": "ReactNode",
-      "description": "The content to display as the label."
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     },
     {
-      "property": "role",
-      "type": "'status'",
-      "description": "An accessibility role for the status light. Should be set when the status can change at runtime, and no more than one status light will update simultaneously. For cases where multiple statuses can change at the same time, use a Toast instead."
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

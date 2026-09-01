@@ -1,6 +1,6 @@
 # SWC Playground — Type Resolution and Refactor
 
-**Status: Tasks 1–7 cherry-picked onto `refactor-swc`; the playground itself is being fully recreated, so Tasks 8–10 are superseded by the redesign in “Recreating the playground” below; Tasks 11–12 (cleanup that survives the rewrite) open** (2026-08-28).
+**Status: Tasks 1–7, 11, 13–15, 18–22 done; Task 12 answered by `refactor-rsp` (the RSP rewrite was brought over); Layer 1 complete for both catalogs; Layer 2 done on `refactor-playground`. Tasks 16–17 open, and Task 16 gates merging to `main`** (2026-08-31).
 
 The SWC half of the component playground had the same class of defect the RSP half already fixed in [the RSP inheritance-gap batch](./2026-08-13-rsp-playground-inheritance-gap-fixes.md): its extractor could not resolve named types, so the playground borrowed the *other* implementation's data to compensate — and shipped options for values the real component does not support. That is now fixed at the data source, not patched at the consumer.
 
@@ -403,12 +403,12 @@ Build **two** checks, not one: a mocked-workbook version as the CI gate (determi
 
 This is the regression net for the block refactor. It should exist **before** that branch starts, not after.
 
-### Task 18 — Document the canonical-name rule — NOT STARTED
-**Files:** `deps/docs/DATA-CONTRACT.md` (or a new `deps/docs/PLAYGROUND-CONTRACT.md`)
+### Task 18 — Document the canonical-name rule — DONE (`refactor-rsp`)
+**Files:** `deps/docs/PLAYGROUND-CONTRACT.md` (new), `deps/docs/DATA-CONTRACT.md`, `deps/rsp/README.md`, `deps/swc/README.md`
 
-The controls sheet is RSP-keyed and staying that way (see "Decisions taken 2026-08-29"), but nothing records that as a rule. Today a new row could use `disabled` or `isDisabled` and `propertyNameCandidates` would absorb either silently — the inconsistency never surfaces as an error.
+`DATA-CONTRACT.md` turned out to be about status resolution rather than the prop-row contract, so the consumer rules got their own file. `PLAYGROUND-CONTRACT.md` records the canonical-name rule (`is`/`has` prefix, each implementation's own spelling in its catalog row, the bridge as a documented mapping that retires when SWC emits a canonical name) alongside the rest of the consumer contract: one catalog per page, options from `values` and never `type`, `attribute` never crossing implementations, the catalog-only existence gate, and the derived "None" rule being SWC-only.
 
-Write down: canonical names use the `is`/`has` boolean prefix; each implementation's own property spelling and DOM attribute live in its catalog row; the bridge between them is a documented mapping, not a fallback. Fold in the `implementations` column schema and its two failure modes once those are settled.
+It points at the row shape rather than restating it, and closes with the known gaps and a table of which test enforces which rule. Both implementation READMEs link to it; two stale claims were corrected while doing this — the RSP README still listed union ordering as a limitation after it was fixed, and `DATA-CONTRACT.md` still pointed at `swc-data-contract.node.test.js`, which no longer exists.
 
 ### Task 19 — Layer 1 (SWC extraction half) — DONE (`refactor-swc`)
 **Files:** `deps/swc/resolve-attribute-types.js`, `deps/swc/extract-cem-components.js`, their two test files, `deps/swc/data/*.json`

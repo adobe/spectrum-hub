@@ -3,25 +3,151 @@
     {
       "property": "styles",
       "type": "StylesPropWithHeight",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro."
     },
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The content to display in the tabs."
     },
     {
       "property": "density",
-      "type": "'compact' | 'regular'",
+      "type": "\"compact\" | \"regular\"",
+      "kind": "enum",
+      "values": [
+        "compact",
+        "regular"
+      ],
       "default": "'regular'",
       "description": "The amount of space between the tabs."
     },
     {
       "property": "labelBehavior",
-      "type": "'show' | 'hide'",
+      "type": "\"show\" | \"hide\"",
+      "kind": "enum",
+      "values": [
+        "show",
+        "hide"
+      ],
       "default": "'show'",
-      "description": "Defines if the text within the tabs should be hidden and only the icon should be shown. The text is always visible when the item is collapsed into a picker."
+      "description": "Defines if the text within the tabs should be hidden and only the icon should be shown.\nThe text is always visible when the item is collapsed into a picker."
+    },
+    {
+      "property": "selectedKey",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The currently selected key in the collection (controlled).",
+      "inheritedFrom": "TabListProps"
+    },
+    {
+      "property": "defaultSelectedKey",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "TabListProps"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(key: Key) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "TabListProps"
+    },
+    {
+      "property": "keyboardActivation",
+      "type": "\"automatic\" | \"manual\"",
+      "kind": "enum",
+      "values": [
+        "automatic",
+        "manual"
+      ],
+      "default": "'automatic'",
+      "description": "Whether tabs are activated automatically on focus or manually.",
+      "inheritedFrom": "AriaTabListProps"
+    },
+    {
+      "property": "orientation",
+      "type": "\"horizontal\" | \"vertical\"",
+      "kind": "enum",
+      "values": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "'horizontal'",
+      "description": "The orientation of the tabs.",
+      "inheritedFrom": "AriaTabListProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the TabList is disabled.\nShows that a selection exists, but is not available in that circumstance.",
+      "inheritedFrom": "TabListProps"
+    },
+    {
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

@@ -18,10 +18,12 @@
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
-    import { OVERLAY_TRIGGERS, overlayShape } from './overlay-triggers.js';
+    import {
+      OVERLAY_TRIGGERS, overlayShape, propsOwner, splitTriggerProps,
+    } from './overlay-triggers.js';
     import { NONE_OPTION } from '../../shared/playground/none-option.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
-    import { capitalize, pascalCase } from './pascal-case.js';
+    import { capitalize, resolveRspComponentName } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
 
     const mount = document.getElementById('mount');
@@ -40,12 +42,12 @@
       return doc.querySelector('parsererror') ? null : doc.documentElement;
     }
     // Virtualized — silently render zero rows without a real sized box.
-    const VIRTUALIZED_RSP_COMPONENTS = new Set(['card-view', 'table-view']);
+    const VIRTUALIZED_RSP_COMPONENTS = new Set(['cards', 'table']);
     // No intrinsic content of their own (no text/children) — same #mount flex-item
     // shrink-to-fit collapse as VIRTUALIZED_RSP_COMPONENTS, just width, no forced height.
-    const FULL_WIDTH_RSP_COMPONENTS = new Set(['divider', 'select-box-group']);
+    const FULL_WIDTH_RSP_COMPONENTS = new Set(['divider', 'select-box']);
     // Vertical divider needs #mount height, not width, or it collapses.
-    const VERTICAL_ORIENTATION_COMPONENTS = new Set(['divider', 'select-box-group']);
+    const VERTICAL_ORIENTATION_COMPONENTS = new Set(['divider', 'select-box']);
 
     // Sizes #mount for a component with no intrinsic size; re-run on orientation change.
     function applyMountSizing(orientation) {
@@ -85,16 +87,23 @@
 
     async function initRsp() {
       const PKG = '@react-spectrum/s2';
-      const exportName = pascalCase(component);
+      const exportName = resolveRspComponentName(component);
       const overlayTrigger = OVERLAY_TRIGGERS[component];
       const shape = overlayShape(component);
+      // Tooltip's props are declared on TooltipTrigger, so they are applied to the
+      // wrapper rather than the route's own element (see propsOwner). Without this the
+      // controls would resolve from the right catalog and then do nothing.
+      // Read the same catalog the block reads (resolveComponentMeta's propsTitle), so
+      // the preview and the code disclosure cannot disagree about the prop set.
+      const propsName = propsOwner(component) ?? exportName;
+      const propsOnTrigger = propsName !== exportName;
 
       try {
         const [pkg, compositeRoot, ownRspProps] = await Promise.all([
           fetch(`https://esm.sh/${PKG}/package.json`).then((r) => r.json()),
           fetchCompositeRoot(),
           // A 404 or malformed file just means "no label prop" — see apply-rsp-prop.js.
-          fetch(`../data/${exportName}.json`)
+          fetch(`../data/${propsName}.json`)
             .then((r) => (r.ok ? r.json() : []))
             .then((d) => (Array.isArray(d) ? d : (d.props ?? [])))
             .catch(() => []),
@@ -163,17 +172,23 @@
 
         function render() {
           const scheme = resolveColorScheme(currentScheme, matchMedia('(prefers-color-scheme: dark)').matches);
+          // Split live, not once: currentProps is mutated in place by the control
+          // listener. Text and children stay with the route's own element even when its
+          // configuration belongs to the trigger (splitTriggerProps).
+          const { own: ownProps, trigger: triggerProps } = propsOnTrigger
+            ? splitTriggerProps(currentProps)
+            : { own: currentProps, trigger: {} };
           const innerElement = compositeChildren.length
-            ? createElement(Component, currentProps, ...rootChildArgs)
-            : createElement(Component, currentProps);
+            ? createElement(Component, ownProps, ...rootChildArgs)
+            : createElement(Component, ownProps);
           // Overlay routes need a real Trigger to mount anything, or (with no
-          // `trigger` of their own, e.g. toast-container) a sibling Button
+          // `trigger` of their own, e.g. toast) a sibling Button
           // that fires imperatively (overlay-triggers.js).
           let rootElement = innerElement;
           if (shape === 'wrap') {
             rootElement = createElement(
               RSP[overlayTrigger.trigger],
-              {},
+              triggerProps,
               createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
               innerElement,
             );

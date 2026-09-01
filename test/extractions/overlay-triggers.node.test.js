@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
+import {
+  OVERLAY_TRIGGERS, overlayShape, propsOwner, splitTriggerProps,
+} from '../../deps/rsp/playground/overlay-triggers.js';
 
 // overlayShape is the single source of truth the live preview (deps/rsp/playground/
 // index.html) and the snippet builder (blocks/playground/playground.js) both call — this
@@ -28,13 +30,76 @@ describe('overlayShape', () => {
     assert.equal(overlayShape('action-button'), 'none');
   });
 
+  // Keyed by the authored slug, like every other playground lookup — the RSP export
+  // name is resolved only where the export itself is needed.
   it('specifically classifies the documented routes (regression guard)', () => {
-    assert.equal(overlayShape('dialog'), 'wrap');
+    assert.equal(overlayShape('standard-dialog'), 'wrap');
     assert.equal(overlayShape('alert-dialog'), 'wrap');
     assert.equal(overlayShape('custom-dialog'), 'wrap');
-    assert.equal(overlayShape('fullscreen-dialog'), 'wrap');
+    assert.equal(overlayShape('takeover-dialog'), 'wrap');
     assert.equal(overlayShape('popover'), 'wrap');
     assert.equal(overlayShape('tooltip'), 'wrap');
-    assert.equal(overlayShape('toast-container'), 'sibling');
+    assert.equal(overlayShape('toast'), 'sibling');
+  });
+});
+
+// RSP splits Tooltip's API across two exports: `Tooltip` renders the bubble, but every
+// controllable prop (placement, trigger, delay, isDisabled, shouldFlip, ...) is declared
+// on `TooltipTrigger`. The route is keyed `tooltip`, so without this the playground reads
+// Tooltip.json — 6 props, none of them a control — and every authored property is
+// rejected by the existence gate. It is the only route where the trigger owns the API;
+// the dialogs all declare their own props.
+describe('propsOwner', () => {
+  it('names the trigger for a route whose props live there', () => {
+    assert.equal(propsOwner('tooltip'), 'TooltipTrigger');
+  });
+
+  it('returns null for an overlay route that declares its own props', () => {
+    ['popover', 'standard-dialog', 'alert-dialog', 'takeover-dialog', 'toast']
+      .forEach((route) => assert.equal(propsOwner(route), null, route));
+  });
+
+  it('returns null for a route with no overlay at all', () => {
+    assert.equal(propsOwner('action-button'), null);
+    assert.equal(propsOwner('nonexistent'), null);
+  });
+});
+
+// A route whose props live on its trigger still owns its own content. `children` is set
+// from the fragment's text, so sending the whole prop bag to the trigger left the
+// route's element with nothing to render — a tooltip bubble with no text in it. React's
+// createElement varargs also override props.children, so the string was silently
+// dropped rather than erroring.
+describe('splitTriggerProps', () => {
+  const props = {
+    placement: { value: 'top' },
+    children: { value: 'Helpful tip text' },
+    text: { value: 'x' },
+    label: { value: 'y' },
+    isDisabled: { value: 'no' },
+  };
+
+  it('keeps text and children on the route, everything else on the trigger', () => {
+    const { own, trigger } = splitTriggerProps(props);
+    assert.deepEqual(Object.keys(own).sort(), ['children', 'label', 'text']);
+    assert.deepEqual(Object.keys(trigger).sort(), ['isDisabled', 'placement']);
+  });
+
+  it('preserves the entries themselves, not just the keys', () => {
+    const { own, trigger } = splitTriggerProps(props);
+    assert.equal(own.children.value, 'Helpful tip text');
+    assert.equal(trigger.placement.value, 'top');
+  });
+
+  it('loses nothing', () => {
+    const { own, trigger } = splitTriggerProps(props);
+    assert.deepEqual(
+      [...Object.keys(own), ...Object.keys(trigger)].sort(),
+      Object.keys(props).sort(),
+    );
+  });
+
+  it('handles an empty bag', () => {
+    assert.deepEqual(splitTriggerProps({}), { own: {}, trigger: {} });
   });
 });

@@ -1,40 +1,131 @@
 {
   "props": [
     {
-      "property": "selectedRoute",
-      "type": "string | null",
-      "description": "The route that is currently selected."
-    },
-    {
       "property": "styles",
       "type": "StylesPropWithHeight",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro."
     },
     {
-      "property": "selectionBehavior",
-      "type": "SelectionBehavior",
-      "default": "'toggle'",
-      "description": "How multiple selection should behave in the tree.",
-      "inheritedFrom": "TreeProps"
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (item: T) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "The contents of the collection.",
+      "inheritedFrom": "CollectionProps"
     },
     {
-      "property": "renderEmptyState",
-      "type": "(props: TreeEmptyStateRenderProps) => ReactNode",
-      "description": "Provides content to display when there are no items in the list.",
-      "inheritedFrom": "TreeProps"
+      "property": "autoFocus",
+      "type": "false | true | \"first\" | \"last\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "Whether to auto focus the gridlist or an option.",
+      "inheritedFrom": "GridListProps"
     },
     {
-      "property": "disabledBehavior",
-      "type": "DisabledBehavior",
-      "default": "'all'",
-      "description": "Whether `disabledKeys` applies to all interactions, or only selection.",
-      "inheritedFrom": "TreeProps"
+      "property": "items",
+      "type": "Iterable<T>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
     },
     {
-      "property": "dragAndDropHooks",
-      "type": "DragAndDropHooks<NoInfer<T>>",
-      "description": "The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Tree.",
-      "inheritedFrom": "TreeProps"
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "kind": "unknown",
+      "values": [],
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "CollectionProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "expandedKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The currently expanded keys in the collection (controlled).",
+      "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "defaultExpandedKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The initial expanded keys in the collection (uncontrolled).",
+      "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "onExpandedChange",
+      "type": "(keys: Set<Key>) => any",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when items are expanded or collapsed.",
+      "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "selectedRoute",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The route that is currently selected, matched against each item's `href`.",
+      "inheritedFrom": "NavigationTreeProps"
     }
   ],
   "status": "alpha"

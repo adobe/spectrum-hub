@@ -3,28 +3,54 @@
     {
       "property": "alt",
       "type": "string",
+      "kind": "text",
+      "values": [],
       "description": "Text description of the avatar."
     },
     {
       "property": "src",
       "type": "string",
+      "kind": "text",
+      "values": [],
       "description": "The image URL for the avatar."
     },
     {
       "property": "styles",
       "type": "StylesPropWithoutWidth",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro."
     },
     {
       "property": "size",
-      "type": "16 | 20 | 24 | 28 | 32 | 36 | 40 | 44 | 48 | 56 | 64 | 80 | 96 | 112 | (number & {})",
+      "type": "28 | 16 | 20 | 24 | 32 | 36 | 40 | 44 | 48 | 56 | 64 | 80 | 96 | 112 | number & {} | `${number}lh`",
+      "kind": "unknown",
+      "values": [],
       "default": "24",
       "description": "The size of the avatar."
     },
     {
       "property": "isOverBackground",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the avatar is over a color background."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

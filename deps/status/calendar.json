@@ -3,7 +3,7 @@
     "figma": {
       "status": "available",
       "secondary": "Use date and time component",
-      "originalName": "Date and time field",
+      "figmaPageSource": "Date and time field",
       "note": "No standalone Figma design; the Date and time field design covers it."
     },
     "rsp": {

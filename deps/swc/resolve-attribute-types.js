@@ -18,6 +18,7 @@
 import ts from 'typescript';
 import { componentEntryPath, rebaseInheritedModule } from './locate-published-files.js';
 import { crawl, buildProgram } from './build-ts-checker.js';
+import { typeToDisplayString, typeToValues, declaredValueOrder } from '../shared/prop-contract.js';
 
 // A bare alias this pipeline can expand, optionally unioned with undefined.
 const BARE_ALIAS_RE = /^[A-Za-z_$][A-Za-z0-9_$]*(\s*\|\s*undefined)?$/;
@@ -87,33 +88,6 @@ export function collectResolutionTargets(rawAttrs, {
   return targets;
 }
 
-// Members are stringified individually: typeToString() prefers a type's own alias
-// name over expanding it.
-function typeToDisplayString(checker, type) {
-  const format = ts.TypeFormatFlags.NoTruncation;
-  if (type.isUnion?.()) {
-    return type.types.map((member) => checker.typeToString(member, undefined, format)).join(' | ');
-  }
-  return checker.typeToString(type, undefined, format);
-}
-
-// eslint-disable-next-line no-bitwise
-const isNullish = (t) => Boolean(t.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Null | ts.TypeFlags.Void));
-
-/**
- * A union's selectable values as real JSON. Empty unless every non-nullish member is
- * a literal — one mixing literals with an open type has no fixed option set. Nullish
- * is dropped, never offered; "none" is a control-layer sentinel.
- *
- * Order is the checker's (unions interned by type ID), not source order.
- */
-function typeToValues(type) {
-  if (!type.isUnion?.()) return [];
-  const members = type.types.filter((member) => !isNullish(member));
-  if (!members.length || !members.every((member) => member.isLiteral?.())) return [];
-  return members.map((member) => member.value);
-}
-
 // `fixed?: FixedValues` can be absent, so its control needs a "none" option; a
 // required attribute must not get one. Read from the symbol, not the type:
 // strictNullChecks is off, so `?` never widens the type to include undefined.
@@ -132,7 +106,7 @@ function findMemberType(checker, sourceFile, memberName) {
     if (!symbol) return;
     const type = checker.getDeclaredTypeOfSymbol(symbol);
     const propSymbol = checker.getPropertiesOfType(type).find((p) => p.name === memberName);
-    if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol) };
+    if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol), symbol: propSymbol };
   });
   return found;
 }
@@ -153,7 +127,7 @@ function findOwnStaticValidValues(checker, sourceFile, memberName) {
       if (!member.modifiers?.some((m) => m.kind === ts.SyntaxKind.StaticKeyword)) continue;
       // `readonly T[]` -> T. getNumberIndexType() covers readonly arrays and tuples.
       const elementType = checker.getTypeAtLocation(member).getNumberIndexType();
-      if (elementType) { found = { type: elementType, optional: false }; return; }
+      if (elementType) { found = { type: elementType, optional: false, tupleNode: member }; return; }
     }
   });
   return found;
@@ -176,7 +150,7 @@ function findNamedDeclarationMember(checker, program, className, memberName) {
       if (!symbol) return;
       const type = checker.getDeclaredTypeOfSymbol(symbol);
       const propSymbol = checker.getPropertiesOfType(type).find((p) => p.name === memberName);
-      if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol) };
+      if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol), symbol: propSymbol };
     });
     if (found) return found;
   }
@@ -238,7 +212,9 @@ export async function resolveTargets(targets, {
     }
     resolved.set(target.key, {
       type: typeToDisplayString(checker, type),
-      values: typeToValues(type),
+      // Declaration order, not the checker's interned order. Rungs 2/3 pass the prop
+      // symbol; rung 1 has no prop declaration at all, so it passes the VALID_*S node.
+      values: typeToValues(type, declaredValueOrder(checker, found.symbol ?? found.tupleNode)),
       optional: found.optional,
     });
   }

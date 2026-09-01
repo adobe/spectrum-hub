@@ -2,33 +2,88 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The ColorSwatches within the ColorSwatchPicker."
     },
     {
       "property": "density",
-      "type": "'compact' | 'regular' | 'spacious'",
+      "type": "\"compact\" | \"regular\" | \"spacious\"",
+      "kind": "enum",
+      "values": [
+        "compact",
+        "regular",
+        "spacious"
+      ],
       "default": "'regular'",
       "description": "The amount of padding between the swatches."
     },
     {
       "property": "size",
-      "type": "'XS' | 'S' | 'M' | 'L'",
+      "type": "\"XS\" | \"S\" | \"M\" | \"L\"",
+      "kind": "enum",
+      "values": [
+        "XS",
+        "S",
+        "M",
+        "L"
+      ],
       "default": "'M'",
       "description": "The size of the color swatches."
     },
     {
       "property": "rounding",
-      "type": "'none' | 'default' | 'full'",
+      "type": "\"none\" | \"default\" | \"full\"",
+      "kind": "enum",
+      "values": [
+        "none",
+        "default",
+        "full"
+      ],
       "default": "'none'",
       "description": "The corner rounding of the color swatches."
     },
     {
+      "property": "value",
+      "type": "string | Color",
+      "kind": "unknown",
+      "values": [],
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "string | Color",
+      "kind": "unknown",
+      "values": [],
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: Color) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

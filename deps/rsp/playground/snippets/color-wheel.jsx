@@ -17,5 +17,5 @@
      rsp-base-props.json, but same as ColorArea/ColorSlider, a color wheel has
      no sensible default color to render a thumb position for — this is the
      same undocumented-but-required situation as ColorSwatch's `color` (see
-     color-swatch-picker.jsx). A hex string is accepted directly. -->
+     swatch-group.jsx). A hex string is accepted directly. -->
 <ColorWheel aria-label="Color" defaultValue="#7B61FF" />

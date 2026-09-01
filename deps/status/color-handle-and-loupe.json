@@ -8,14 +8,14 @@
       "context": "Stable",
       "secondary": "Use color components",
       "page": "color-handle-and-loupe",
-      "originalName": "ColorSlider",
+      "upstreamName": "ColorSlider",
       "note": "Built into color components instead."
     },
     "swc": {
       "status": "available",
       "context": "Stable",
       "page": "color-handle-and-loupe",
-      "originalName": "ColorHandle"
+      "upstreamName": "ColorHandle"
     }
   },
   "figmaPageId": "9306:18338"

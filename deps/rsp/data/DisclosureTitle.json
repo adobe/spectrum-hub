@@ -3,19 +3,33 @@
     {
       "property": "level",
       "type": "number",
+      "kind": "number",
+      "values": [],
       "default": "3",
       "description": "The heading level of the disclosure header."
     },
     {
       "property": "children",
-      "type": "React.ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The contents of the disclosure header."
     },
     {
       "property": "styles",
       "type": "StylesPropWithFont",
-      "description": "Spectrum-defined styles, returned by the `style()` macro. Only allows overriding `font`, `fontFamily`, `fontWeight`, `fontSize`, and `lineHeight`."
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro. Only allows overriding\n`font`, `fontFamily`, `fontWeight`, `fontSize`, and `lineHeight`."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ]
 }

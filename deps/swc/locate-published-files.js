@@ -4,7 +4,7 @@
  * union, the same way deps/rsp/extract-props.js already does for RSP via the real
  * TypeScript checker.
  *
- * Unlike deps/rsp/cdn-resolve.js (a small hand-maintained PACKAGE_BASES table of a few
+ * Unlike deps/rsp/locate-published-files.js (a small hand-maintained PACKAGE_BASES table of a few
  * known peer packages), this resolves bare specifiers dynamically from each package's
  * own published `exports` map. That's deliberate: @adobe/spectrum-wc's own peer
  * "core" package has already been renamed once between versions
@@ -15,7 +15,7 @@
  *
  * Third-party runtime libraries (`lit`, `@lit-labs/observers`, `@floating-ui/dom`,
  * `colorjs.io`) are deliberately left UNRESOLVED — resolveSpecifier returns null for
- * them, same graceful-skip behavior deps/rsp/cdn-resolve.js already has for any bare
+ * them, same graceful-skip behavior deps/rsp/locate-published-files.js already has for any bare
  * specifier outside its own known set. This is safe here because the enum-like
  * attribute types this pipeline cares about (e.g. Button's `variant`, `size`) never
  * themselves depend on lit — confirmed by direct inspection of the published .d.ts
@@ -85,7 +85,7 @@ export function makeCanonicalPath(pkgName, version, filePath) {
   return `${pkgName}::${version}/${filePath}`;
 }
 
-// Collapses "." and ".." segments, same as deps/rsp/cdn-resolve.js's normalizeSegments.
+// Collapses "." and ".." segments, same as deps/rsp/locate-published-files.js's normalizeSegments.
 function normalizeSegments(path) {
   const stack = [];
   for (const part of path.split('/')) {

@@ -2,15 +2,205 @@
   "props": [
     {
       "property": "menuSize",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the Menu."
     },
     {
+      "property": "isOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (controlled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "defaultOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (uncontrolled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the overlay's open state changes.",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "align",
+      "type": "\"start\" | \"end\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "end"
+      ],
+      "default": "'start'",
+      "description": "Alignment of the menu relative to the trigger.",
+      "inheritedFrom": "MenuTriggerProps"
+    },
+    {
+      "property": "direction",
+      "type": "\"start\" | \"end\" | \"bottom\" | \"top\" | \"left\" | \"right\"",
+      "kind": "enum",
+      "values": [
+        "bottom",
+        "top",
+        "left",
+        "right",
+        "start",
+        "end"
+      ],
+      "default": "'bottom'",
+      "description": "Where the Menu opens relative to its trigger.",
+      "inheritedFrom": "MenuTriggerProps"
+    },
+    {
+      "property": "shouldFlip",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "default": "true",
+      "description": "Whether the menu should automatically flip direction when space is limited.",
+      "inheritedFrom": "MenuTriggerProps"
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (item: T) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "required": true,
+      "description": "The contents of the collection.",
+      "inheritedFrom": "MenuProps"
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "onAction",
+      "type": "(key: Key, value: T) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when an item is selected.",
+      "inheritedFrom": "MenuProps"
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the menu should close when the menu item is selected.",
+      "inheritedFrom": "MenuProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the button is disabled.",
+      "inheritedFrom": "ButtonProps"
+    },
+    {
+      "property": "isQuiet",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the button should be displayed with a [quiet\nstyle](https://spectrum.adobe.com/page/action-button/#Quiet).",
+      "inheritedFrom": "ActionButtonStyleProps"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\" | \"XS\"",
+      "kind": "enum",
+      "values": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "default": "'M'",
+      "description": "The size of the ActionButton.",
+      "inheritedFrom": "ActionButtonStyleProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     }
   ],
   "status": "stable"

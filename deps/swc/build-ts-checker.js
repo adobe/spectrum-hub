@@ -4,7 +4,7 @@
  * real literal union — without installing @adobe/spectrum-wc / @adobe/spectrum-wc-core
  * as real npm packages.
  *
- * Structurally identical to deps/rsp/ts-cdn-host.js (crawl() then buildProgram(), same
+ * Structurally identical to deps/rsp/build-ts-checker.js (crawl() then buildProgram(), same
  * two-phase async-then-sync split, same reasoning for reading TS's own lib.*.d.ts from
  * disk rather than the CDN) — duplicated rather than shared, because this pipeline's
  * resolveSpecifier is async (bare-specifier resolution needs each package's own

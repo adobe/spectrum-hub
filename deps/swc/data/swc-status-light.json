@@ -6,9 +6,10 @@
     "kind": "enum",
     "values": [
       "neutral",
+      "info",
       "positive",
-      "notice",
       "negative",
+      "notice",
       "fuchsia",
       "indigo",
       "magenta",
@@ -22,8 +23,7 @@
       "turquoise",
       "brown",
       "cinnamon",
-      "silver",
-      "info"
+      "silver"
     ],
     "optional": false,
     "default": "'neutral'",

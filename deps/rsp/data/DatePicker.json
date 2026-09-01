@@ -2,65 +2,447 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the DateField."
     },
     {
       "property": "maxVisibleMonths",
       "type": "number",
+      "kind": "number",
+      "values": [],
       "default": "1",
-      "description": "The maximum number of months to display at once in the calendar popover, if screen space permits."
+      "description": "The maximum number of months to display at once in the calendar popover, if screen space\npermits."
     },
     {
-      "property": "trigger",
+      "property": "validationBehavior",
+      "type": "\"native\" | \"aria\"",
+      "kind": "enum",
+      "values": [
+        "native",
+        "aria"
+      ],
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen the value is missing or invalid, or mark the field as required\nor invalid via ARIA.",
+      "inheritedFrom": "RACValidation"
+    },
+    {
+      "property": "autoComplete",
       "type": "string",
-      "description": "The name of the component that triggered the popover. This is reflected on the element as the `data-trigger` attribute, and can be used to provide specific styles for the popover depending on which element triggered it.",
-      "inheritedFrom": "PopoverProps"
+      "kind": "text",
+      "values": [],
+      "description": "Describes the type of autocomplete functionality the input should provide if any. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefautocomplete).",
+      "inheritedFrom": "AriaDatePickerProps"
     },
     {
-      "property": "triggerRef",
-      "type": "RefObject<Element | null>",
-      "description": "The ref for the element which the popover positions itself with respect to. When used within a trigger component such as DialogTrigger, MenuTrigger, Select, etc., this is set automatically. It is only required when used standalone.",
-      "inheritedFrom": "PopoverProps"
+      "property": "pageBehavior",
+      "type": "\"single\" | \"visible\"",
+      "kind": "enum",
+      "values": [
+        "single",
+        "visible"
+      ],
+      "default": "visible",
+      "description": "Controls the behavior of paging. Pagination either works by advancing the visible page by\nvisibleDuration (default) or one unit of visibleDuration.",
+      "inheritedFrom": "DatePickerBase"
     },
     {
-      "property": "isEntering",
+      "property": "firstDayOfWeek",
+      "type": "\"sun\" | \"mon\" | \"tue\" | \"wed\" | \"thu\" | \"fri\" | \"sat\"",
+      "kind": "enum",
+      "values": [
+        "sun",
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri",
+        "sat"
+      ],
+      "description": "The day that starts the week.",
+      "inheritedFrom": "DatePickerBase"
+    },
+    {
+      "property": "minValue",
+      "type": "ZonedDateTime | CalendarDate | CalendarDateTime",
+      "kind": "unknown",
+      "values": [],
+      "description": "The minimum allowed date that a user may select.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "maxValue",
+      "type": "ZonedDateTime | CalendarDate | CalendarDateTime",
+      "kind": "unknown",
+      "values": [],
+      "description": "The maximum allowed date that a user may select.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "isDateUnavailable",
+      "type": "(date: DateValue) => boolean",
+      "kind": "unknown",
+      "values": [],
+      "description": "Callback that is called for each date of the calendar. If it returns true, then the date is\nunavailable.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "placeholderValue",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "A placeholder date that influences the format of the placeholder shown when no value is\nselected. Defaults to today's date at midnight.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "hourCycle",
+      "type": "12 | 24",
+      "kind": "enum",
+      "values": [
+        12,
+        24
+      ],
+      "description": "Whether to display the time in 12 or 24 hour format. By default, this is determined by the\nuser's locale.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "granularity",
+      "type": "\"day\" | \"hour\" | \"minute\" | \"second\"",
+      "kind": "enum",
+      "values": [
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ],
+      "description": "Determines the smallest unit that is displayed in the date picker. By default, this is `\"day\"`\nfor dates, and `\"minute\"` for times.",
+      "inheritedFrom": "DateFieldBase"
+    },
+    {
+      "property": "hideTimeZone",
       "type": "boolean",
-      "description": "Whether the popover is currently performing an entry animation.",
-      "inheritedFrom": "PopoverProps"
+      "kind": "boolean",
+      "values": [],
+      "default": "false",
+      "description": "Whether to hide the time zone abbreviation.",
+      "inheritedFrom": "DateFieldBase"
     },
     {
-      "property": "isExiting",
+      "property": "shouldForceLeadingZeros",
       "type": "boolean",
-      "description": "Whether the popover is currently performing an exit animation.",
-      "inheritedFrom": "PopoverProps"
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether to always show leading zeros in the month, day, and hour fields.\nBy default, this is determined by the user's locale.",
+      "inheritedFrom": "DateFieldBase"
     },
     {
-      "property": "shouldSkipAnimation",
+      "property": "isDisabled",
       "type": "boolean",
-      "description": "Whether the popover should appear and disappear without an entry or exit animation. This is used by components such as PreviewTrigger to skip animations when quickly swapping between overlays.",
-      "inheritedFrom": "PopoverProps"
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input is disabled.",
+      "inheritedFrom": "InputBase"
     },
     {
-      "property": "UNSTABLE_portalContainer",
-      "type": "Element",
-      "default": "document.body",
-      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
-      "inheritedFrom": "PopoverProps"
+      "property": "isReadOnly",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input can be selected but not changed by the user.",
+      "inheritedFrom": "InputBase"
     },
     {
-      "property": "offset",
-      "type": "number",
-      "default": "8",
-      "description": "The additional offset applied along the main axis between the element and its anchor element.",
-      "inheritedFrom": "PopoverProps"
+      "property": "isRequired",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether user input is required on the input before form submission.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input value is invalid.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "validate",
+      "type": "(value: MappedDateValue<T>) => true | ValidationError",
+      "kind": "unknown",
+      "values": [],
+      "description": "A function that returns an error message if a given value is invalid.\nValidation errors are displayed to the user when the form is submitted\nif `validationBehavior=\"native\"`. For realtime validation, use the `isInvalid`\nprop instead.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (controlled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "defaultOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (uncontrolled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the overlay's open state changes.",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: MappedDateValue<T>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "false | true | () => boolean",
+      "kind": "unknown",
+      "values": [],
+      "default": "true",
+      "description": "Determines whether the date picker popover should close automatically when a date is selected.",
+      "inheritedFrom": "DatePickerStateOptions"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "createCalendar",
+      "type": "(identifier: CalendarIdentifier) => Calendar",
+      "kind": "unknown",
+      "values": [],
+      "description": "A function to create a new\n[Calendar](https://react-spectrum.adobe.com/internationalized/date/Calendar.html) object for a\ngiven calendar identifier. If not provided, the `createCalendar` function from\n`@internationalized/date` will be used.",
+      "inheritedFrom": "CalendarProps"
+    },
+    {
+      "property": "shouldFlip",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "default": "true",
+      "description": "Whether the element should flip its orientation (e.g. top to bottom or left to right) when\nthere is insufficient room for it to render completely.",
+      "inheritedFrom": "PositionProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "\"top\" | \"side\"",
+      "kind": "enum",
+      "values": [
+        "top",
+        "side"
+      ],
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "\"start\" | \"end\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "end"
+      ],
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "necessityIndicator",
+      "type": "\"label\" | \"icon\"",
+      "kind": "enum",
+      "values": [
+        "icon",
+        "label"
+      ],
+      "default": "'icon'",
+      "description": "Whether the required state should be shown as an icon or text.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "label",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
+    },
+    {
+      "property": "description",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A description for the field. Provides a hint such as specific requirements for what to choose.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
+      "property": "errorMessage",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (v: ValidationResult) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "An error message for the field.",
+      "inheritedFrom": "HelpTextProps"
     }
   ],
   "status": "stable"

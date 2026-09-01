@@ -3,8 +3,8 @@
      markup file of its own to source this from, since it renders via
      React.createElement rather than an HTML string. No deps/swc/playground/snippets/*.html
      counterpart exists for this component yet, so there's no SWC shape to
-     mirror — this is a fresh two-item default, matching table-view.jsx/
-     card-view.jsx's file shape.
+     mirror — this is a fresh two-item default, matching table.jsx/
+     cards.jsx's file shape.
 
      aria-label is required here: like TableView/CardView, ListView's own
      stories always pass one ('Files'), and its underlying GridList throws

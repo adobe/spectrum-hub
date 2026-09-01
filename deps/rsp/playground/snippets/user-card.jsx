@@ -7,7 +7,7 @@
      (children/size/density/variant, all `inheritedFrom: "CardProps"`) — no
      user-specific slots (avatar/name/role/etc.) show up in the extracted
      data, so this fragment reuses the exact Card+CardPreview shape from
-     card.jsx/card-view.jsx rather than inventing an untested subcomponent
+     card.jsx/cards.jsx rather than inventing an untested subcomponent
      composition.
 
      GENUINELY UNSURE: UserCard is documented as a ready-made Card preset

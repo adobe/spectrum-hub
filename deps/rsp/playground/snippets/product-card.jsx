@@ -7,7 +7,7 @@
      (children/size/density/variant, all `inheritedFrom: "CardProps"`) — no
      product-specific slots (thumbnail/price/etc.) show up in the extracted
      data, so this fragment reuses the exact Card+CardPreview shape from
-     card.jsx/card-view.jsx rather than inventing an untested subcomponent
+     card.jsx/cards.jsx rather than inventing an untested subcomponent
      composition.
 
      GENUINELY UNSURE: ProductCard is documented as a ready-made Card preset

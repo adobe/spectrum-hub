@@ -2,55 +2,228 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The contents of the item."
     },
     {
       "property": "id",
-      "type": "Key",
-      "description": "The unique id of the item.",
-      "inheritedFrom": "MenuItemProps"
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The unique id of the item."
     },
     {
       "property": "value",
-      "type": "T",
-      "description": "The object value that this item represents. When using dynamic collections, this is set automatically.",
-      "inheritedFrom": "MenuItemProps"
+      "type": "object",
+      "kind": "unknown",
+      "values": [],
+      "description": "The object value that this item represents. When using dynamic collections, this is set\nautomatically."
     },
     {
       "property": "textValue",
       "type": "string",
-      "description": "A string representation of the item's contents, used for features like typeahead.",
-      "inheritedFrom": "MenuItemProps"
+      "kind": "text",
+      "values": [],
+      "description": "A string representation of the item's contents, used for features like typeahead."
     },
     {
-      "property": "'aria-label'",
+      "property": "aria-label",
       "type": "string",
-      "description": "An accessibility label for this item.",
-      "inheritedFrom": "MenuItemProps"
+      "kind": "text",
+      "values": [],
+      "description": "An accessibility label for this item."
     },
     {
       "property": "isDisabled",
       "type": "boolean",
-      "description": "Whether the item is disabled.",
-      "inheritedFrom": "MenuItemProps"
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the item is disabled."
     },
     {
       "property": "onAction",
       "type": "() => void",
-      "description": "Handler that is called when the item is selected.",
-      "inheritedFrom": "MenuItemProps"
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the item is selected."
     },
     {
       "property": "shouldCloseOnSelect",
       "type": "boolean",
-      "description": "Whether the menu should close when the menu item is selected.",
-      "inheritedFrom": "MenuItemProps"
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the menu should close when the menu item is selected."
+    },
+    {
+      "property": "href",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "hrefLang",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Hints at the human language of the linked URL.\nSee[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "target",
+      "type": "\"_self\" | \"_blank\" | \"_parent\" | \"_top\" | string & {}",
+      "kind": "unknown",
+      "values": [],
+      "description": "The target window for the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "rel",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The relationship between the linked resource and the current page. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "download",
+      "type": "string | false | true",
+      "kind": "unknown",
+      "values": [],
+      "description": "Causes the browser to download the linked URL. A string may be provided to suggest a file name.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "ping",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A space-separated list of URLs to ping when the link is followed. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "referrerPolicy",
+      "type": "\"\" | \"no-referrer\" | \"no-referrer-when-downgrade\" | \"origin\" | \"origin-when-cross-origin\" | \"same-origin\" | \"strict-origin\" | \"strict-origin-when-cross-origin\" | \"unsafe-url\"",
+      "kind": "enum",
+      "values": [
+        "",
+        "no-referrer",
+        "no-referrer-when-downgrade",
+        "origin",
+        "origin-when-cross-origin",
+        "same-origin",
+        "strict-origin",
+        "strict-origin-when-cross-origin",
+        "unsafe-url"
+      ],
+      "description": "How much of the referrer to send when following the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "routerOptions",
+      "type": "never",
+      "kind": "unknown",
+      "values": [],
+      "description": "Options for the configured client side router.",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "onHoverStart",
+      "type": "(e: HoverEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a hover interaction starts.",
+      "inheritedFrom": "HoverEvents"
+    },
+    {
+      "property": "onHoverEnd",
+      "type": "(e: HoverEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a hover interaction ends.",
+      "inheritedFrom": "HoverEvents"
+    },
+    {
+      "property": "onHoverChange",
+      "type": "(isHovering: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the hover state changes.",
+      "inheritedFrom": "HoverEvents"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onPress",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the press is released over the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressStart",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a press interaction starts.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressEnd",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a press interaction ends, either\nover the target or when the pointer leaves the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressChange",
+      "type": "(isPressed: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the press state changes.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressUp",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a press is released over the target, regardless of\nwhether it started on the target or not.",
+      "inheritedFrom": "PressEvents"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

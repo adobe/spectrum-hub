@@ -6,7 +6,7 @@
     "rsp": {
       "status": "available",
       "context": "Alpha",
-      "originalName": "SideNav"
+      "upstreamName": "SideNav"
     },
     "swc": {
       "status": "not-available"

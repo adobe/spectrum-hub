@@ -8,7 +8,7 @@
  * that downstream surfaces bind to — plus one small `deps/status/<slug>.json` per
  * component (its web cells + Figma node id) for blocks/component-status.js, so a single
  * component page's status pills don't need to fetch and search the whole index — and
- * `deps/impl-aliases.js`, a tiny slug → originalName lookup statically imported (no
+ * `deps/impl-aliases.js`, a tiny slug → upstreamName lookup statically imported (no
  * fetch) by scripts/utils/go-to-impl.js.
  *
  * Design guarantees:
@@ -48,7 +48,7 @@ const SLICES_DIR = join(__dirname, 'status');
 const ALIASES_FILE = join(__dirname, 'component-aliases.json');
 const OVERRIDES_FILE = join(__dirname, 'status-overrides.json');
 const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
-const IMPL_ALIASES_FILE = join(__dirname, 'impl-aliases.js');
+const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 
 // The single platform surfaced today. New platforms are additive (see the memory /
 // data-contract notes); each brings its own roster + columns.
@@ -117,7 +117,7 @@ export function swcTagToPascal(tag) {
   return normalizeName(tag.replace(/^swc-/, ''));
 }
 
-/** An alias entry is a plain canonical-name string, or `{ canonical, externalName }`. */
+/** An alias entry is a plain canonical-name string, or `{ canonical, upstreamName }`. */
 function resolveAliasEntry(value) {
   return typeof value === 'string' ? { canonical: value } : value;
 }
@@ -135,8 +135,8 @@ export function canonicalNameForRsp(name, aliases = {}) {
 }
 
 /** The verified real upstream name for an rsp/swc alias entry, or null (see resolveAliasEntry). */
-function externalNameForAlias(sourceKey, aliases = {}) {
-  return Object.hasOwn(aliases, sourceKey) ? (resolveAliasEntry(aliases[sourceKey]).externalName ?? null) : null;
+function upstreamNameForAlias(sourceKey, aliases = {}) {
+  return Object.hasOwn(aliases, sourceKey) ? (resolveAliasEntry(aliases[sourceKey]).upstreamName ?? null) : null;
 }
 
 /** Resolves the canonical name for a Figma display name, letting the alias map override. */
@@ -190,18 +190,18 @@ function displayLabel(canonical, sources) {
  */
 export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
   const byName = new Map();
-  const add = (canonical, id, sourceKey, externalName = null) => {
-    const entry = byName.get(canonical) ?? { name: canonical, sources: {}, externalNames: {} };
+  const add = (canonical, id, sourceKey, upstreamName = null) => {
+    const entry = byName.get(canonical) ?? { name: canonical, sources: {}, upstreamNames: {} };
     entry.sources[id] = sourceKey;
-    if (externalName && !entry.externalNames[id]) { entry.externalNames[id] = externalName; }
+    if (upstreamName && !entry.upstreamNames[id]) { entry.upstreamNames[id] = upstreamName; }
     byName.set(canonical, entry);
   };
 
   for (const name of rspNames) {
-    add(canonicalNameForRsp(name, aliases.rsp), 'rsp', name, externalNameForAlias(name, aliases.rsp));
+    add(canonicalNameForRsp(name, aliases.rsp), 'rsp', name, upstreamNameForAlias(name, aliases.rsp));
   }
   for (const tag of swcTags) {
-    add(canonicalNameForSwc(tag, aliases.swc), 'swc', tag, externalNameForAlias(tag, aliases.swc));
+    add(canonicalNameForSwc(tag, aliases.swc), 'swc', tag, upstreamNameForAlias(tag, aliases.swc));
   }
   for (const name of figmaNames) { add(canonicalNameForFigma(name, aliases.figma), 'figma', name); }
 
@@ -349,21 +349,23 @@ export function applyOverrides(components, overrides = {}) {
           && (current.context ?? null) === (override.context ?? null)
           && (current.hasPage ?? true) === hasPage
           && (current.page ?? null) === (override.page ?? null)
-          && (current.originalName ?? null) === (override.originalName ?? null)) {
+          && (current.upstreamName ?? null) === (override.upstreamName ?? null)
+          && (current.figmaPageSource ?? null) === (override.figmaPageSource ?? null)) {
           warnings.push(`redundant override for "${name}" ${platform}/${impl} (already ${override.status})`);
         }
 
-        // Preserve any secondary guidance / auto-derived originalName already on the cell.
+        // Preserve any secondary guidance / auto-derived upstreamName already on the cell.
         const next = { status: override.status };
         if (override.context) { next.context = override.context; }
         if (current.secondary) { next.secondary = current.secondary; }
         if (!hasPage) { next.hasPage = false; }
         if (override.page) { next.page = override.page; }
-        if (override.originalName) {
-          next.originalName = override.originalName;
-        } else if (current.originalName) {
-          next.originalName = current.originalName;
+        if (override.upstreamName) {
+          next.upstreamName = override.upstreamName;
+        } else if (current.upstreamName) {
+          next.upstreamName = current.upstreamName;
         }
+        if (override.figmaPageSource) { next.figmaPageSource = override.figmaPageSource; }
         if (override.note) { next.note = override.note; }
         component.platforms[platform][impl] = next;
       }
@@ -401,7 +403,7 @@ export function statusLegend() {
 export function buildIndex({
   roster, readData, columns = WEB_COLUMNS, overrides = {}, secondaries = {},
 }) {
-  const components = roster.map(({ name, sources, externalNames = {} }) => {
+  const components = roster.map(({ name, sources, upstreamNames = {} }) => {
     const web = {};
     for (const { id } of columns) {
       const sourceName = sources[id];
@@ -414,14 +416,12 @@ export function buildIndex({
       const cell = resolved.status === 'not-available'
         ? { ...(PRESENT_FLOOR[id] ?? DEFAULT_FLOOR) }
         : resolved;
-      // The verified real upstream name for this cell, when a component-aliases.json entry
-      // (see joinRosters) renamed it away from that source's own name — e.g. RSP's real
-      // export is `ActionButtonGroup`, aliased to the canonical `ActionGroup` row, and
-      // react-spectrum.adobe.com has no `ActionGroup.html` page. Only set when the alias
-      // entry explicitly carries `externalName` (verified by hand) — a rename's direction
-      // isn't reliably inferable (some canonical names are themselves the real upstream
-      // name; see the alias file's comments).
-      if (externalNames[id]) { cell.originalName = externalNames[id]; }
+      // What this source's own public docs site calls the component, when that differs
+      // from the canonical name — react-spectrum.adobe.com has no `ActionGroup.html`, only
+      // `ActionButtonGroup.html`. Set only when the alias entry says so explicitly: a
+      // rename's direction isn't inferable, since some canonical names are themselves the
+      // real upstream name.
+      if (upstreamNames[id]) { cell.upstreamName = upstreamNames[id]; }
       web[id] = cell;
     }
     return { name, label: displayLabel(name, sources), platforms: { [PLATFORM]: web } };
@@ -450,7 +450,7 @@ function sharedPageSlug(component) {
  * one small file per component (`{ web, figmaPageId? }`) instead of the whole index, so a
  * component page's status pills need a single small fetch rather than parsing the full
  * multi-KB index and searching a separate Figma roster client-side. Each cell's own
- * `originalName` (buildIndex's auto-derived alias, or a manual override — see
+ * `upstreamName` (buildIndex's auto-derived alias, or a manual override — see
  * applyOverrides) rides along on `web` unchanged; this function only decides the file name.
  *
  * Normally a slice is named by the component's own slug. When a `page` override redirects
@@ -471,15 +471,16 @@ export function buildComponentSlices(roster, components, figmaRoster) {
 
   const slices = roster.map(({ name, sources }) => {
     const component = componentByName.get(name);
-    // A `web.figma.originalName` override (see applyOverrides) redirects the Figma link to a
-    // different design's node id — e.g. Calendar borrowing Date and time field's page, or
-    // Cards pinning one of its six variant pages as the canonical link — without changing
-    // which Figma roster name/status this component's own roster membership came from.
-    const originalName = component.platforms[PLATFORM]?.figma?.originalName;
-    const figmaSourceName = originalName ?? sources.figma;
+    // `web.figma.figmaPageSource` (an override — see applyOverrides) names which Figma
+    // roster entry supplies this component's node id: Calendar borrows Date and time
+    // field's page, Cards pins one of its six variant pages. It does not change which
+    // Figma name or status this component's own roster membership came from. Distinct
+    // from `upstreamName`, which is a display name used to build a doc URL.
+    const pageSource = component.platforms[PLATFORM]?.figma?.figmaPageSource;
+    const figmaSourceName = pageSource ?? sources.figma;
     const figmaPageId = figmaSourceName ? figmaPageIdByName.get(figmaSourceName) : undefined;
-    if (originalName && !figmaPageId) {
-      warnings.push(`figma originalName override for "${name}" targets unmatched Figma roster entry "${originalName}"`);
+    if (pageSource && !figmaPageId) {
+      warnings.push(`figma figmaPageSource override for "${name}" targets unmatched Figma roster entry "${pageSource}"`);
     }
     const data = { web: component.platforms[PLATFORM] };
     if (figmaPageId) { data.figmaPageId = figmaPageId; }
@@ -491,38 +492,63 @@ export function buildComponentSlices(roster, components, figmaRoster) {
 }
 
 /**
- * Aggregates every cell's `originalName` (buildIndex's auto-derived alias, or a manual
- * override — see applyOverrides) into a tiny lookup keyed by the exact slug a live URL
- * carries: `{ <impl>: { <slug>: <originalName> } }`. Built from the already-computed
- * component slices (buildComponentSlices) so a `page` override's shared slug is picked up
- * for free, rather than re-deriving slugs by hand.
+ * The names an implementation uses for a component, keyed by the exact slug a live URL
+ * carries: `{ <impl>: { <slug>: { docs?, export? } } }`.
  *
- * Written once to `deps/impl-aliases.js` (a plain `export default {...}` module, not JSON —
- * this repo's ESLint parser target can't follow a JSON-with-import-attributes module through
- * scripts/utils/go-to-impl.js's own import, and a plain object literal needs no special
- * loading in the browser either) and statically imported (no fetch) from there. The whole
- * table is a couple dozen entries at most (most components have no alias at all), so shipping
- * it as a module avoids a per-page-load network round trip for data that's almost always
- * empty for the current page anyway.
+ * Two fields, deliberately, because they answer different questions and disagree for
+ * real components:
  *
- * Figma is excluded — it's a design source with its own originalName use (redirecting
- * buildComponentSlices' figmaPageId lookup, see there), not a code implementation go-to-impl.js
- * ever looks up by, and go-to-impl.js only ever reads `IMPL_ALIASES[impl]` for a registered
- * implementation id.
+ *   docs    which page the source's own documentation site publishes it on. Several
+ *           components can share one page — AlertDialog, Dialog and FullscreenDialog
+ *           all link to Dialog.html — so this is many-to-one.
+ *   export  what to import and render. One-to-one: FullscreenDialog is its own real
+ *           component even though its docs redirect to Dialog's page.
+ *
+ * They differ today on `cards` (Card vs CardView), `radio-button` (RadioGroup vs Radio)
+ * and `takeover-dialog` (Dialog vs FullscreenDialog). Collapsing them to one value has
+ * shipped a bug before — the playground 404'd rendering components whose docs merely
+ * redirected elsewhere. Keep both, and read the one that answers your question.
+ *
+ * `docs` comes from each cell's `upstreamName` (auto-derived, or a manual override —
+ * see applyOverrides), read off the already-computed slices so a `page` override's
+ * shared slug is picked up for free. `export` comes from the roster, where an entry
+ * exists only when the implementation's own name differs from the canonical one.
+ *
+ * The shape is implementation-agnostic, but only RSP populates `export`: SWC renders by
+ * tag name, which `deps/swc/components.json` already maps, so it has no separate export
+ * to record. Figma is excluded entirely — its redirect field is `figmaPageSource`, not a
+ * code implementation anything looks up here.
+ *
+ * Written to `deps/impl-component-names.js` as a plain `export default {...}` module
+ * rather than JSON: this repo's ESLint parser target cannot follow a JSON module through
+ * its consumers' imports, and a plain object literal needs no special loading in the
+ * browser. It is a couple dozen entries at most, so shipping it as a module avoids a
+ * per-page network round trip for data that is usually empty for the current page.
  *
  * @param {{ slug: string, data: { web: object } }[]} slices
- * @returns {Record<string, Record<string, string>>}
+ * @param {{ name: string, sources: Record<string, string> }[]} roster
+ * @returns {Record<string, Record<string, { docs?: string, export?: string }>>}
  */
-export function buildImplAliases(slices) {
-  const aliases = {};
+export function buildImplComponentNames(slices, roster) {
+  const names = {};
+  const put = (impl, slug, field, value) => {
+    names[impl] = names[impl] ?? {};
+    names[impl][slug] = names[impl][slug] ?? {};
+    names[impl][slug][field] = value;
+  };
+
   for (const { slug, data } of slices) {
     for (const [impl, cell] of Object.entries(data.web ?? {})) {
-      if (!cell?.originalName || !getImplementationById(impl)) { continue; }
-      aliases[impl] = aliases[impl] ?? {};
-      aliases[impl][slug] = cell.originalName;
+      if (!cell?.upstreamName || !getImplementationById(impl)) { continue; }
+      put(impl, slug, 'docs', cell.upstreamName);
     }
   }
-  return aliases;
+
+  for (const { name, sources } of roster) {
+    if (sources.rsp && sources.rsp !== name) { put('rsp', toSlug(name), 'export', sources.rsp); }
+  }
+
+  return names;
 }
 
 /**
@@ -619,12 +645,12 @@ function main() {
   console.log(`Wrote ${index.components.length} component(s) to ${OUTPUT_FILE}`);
   console.log(`Wrote ${slices.length} component status slice(s) to ${SLICES_DIR}`);
 
-  const implAliases = buildImplAliases(slices);
-  const implAliasesModule = '// Generated by deps/build-status-index.js — do not edit by hand.\n'
-    + `export default ${JSON.stringify(implAliases, null, 2)};\n`;
-  writeFileSync(IMPL_ALIASES_FILE, implAliasesModule);
-  const aliasCount = Object.values(implAliases).reduce((n, bySlug) => n + Object.keys(bySlug).length, 0);
-  console.log(`Wrote ${aliasCount} impl alias entr${aliasCount === 1 ? 'y' : 'ies'} to ${IMPL_ALIASES_FILE}`);
+  const implComponentNames = buildImplComponentNames(slices, roster);
+  writeFileSync(IMPL_COMPONENT_NAMES_FILE, '// Generated by deps/build-status-index.js — do not edit by hand.\n'
+    + `export default ${JSON.stringify(implComponentNames, null, 2)};\n`);
+  const nameCount = Object.values(implComponentNames)
+    .reduce((n, bySlug) => n + Object.keys(bySlug).length, 0);
+  console.log(`Wrote ${nameCount} component name entr${nameCount === 1 ? 'y' : 'ies'} to ${IMPL_COMPONENT_NAMES_FILE}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

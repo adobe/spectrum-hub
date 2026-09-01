@@ -1,34 +1,219 @@
 {
   "props": [
     {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The children of the popover."
+    },
+    {
+      "property": "padding",
+      "type": "\"default\" | \"none\"",
+      "kind": "enum",
+      "values": [
+        "default",
+        "none"
+      ],
+      "default": "'default'",
+      "description": "The amount of padding around the contents of the dialog."
+    },
+    {
       "property": "styles",
-      "type": "StyleString",
-      "description": "The styles of the popover.",
+      "type": "PopoverStylesProp",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\" | \"L\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L"
+      ],
+      "description": "The size of the Popover. If not specified, the popover fits its contents.",
       "inheritedFrom": "PopoverProps"
     },
     {
       "property": "hideArrow",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "default": "false",
       "description": "Whether a popover's arrow should be hidden.",
       "inheritedFrom": "PopoverProps"
     },
     {
-      "property": "size",
-      "type": "'S' | 'M' | 'L'",
-      "description": "The size of the Popover. If not specified, the popover fits its contents.",
+      "property": "placement",
+      "type": "\"bottom\" | \"bottom left\" | \"bottom right\" | \"bottom start\" | \"bottom end\" | \"top\" | \"top left\" | \"top right\" | \"top start\" | \"top end\" | \"left\" | \"left top\" | \"left bottom\" | \"start\" | \"start top\" | \"start bottom\" | \"right\" | \"right top\" | \"right bottom\" | \"end\" | \"end top\" | \"end bottom\"",
+      "kind": "enum",
+      "values": [
+        "bottom",
+        "bottom left",
+        "bottom right",
+        "bottom start",
+        "bottom end",
+        "top",
+        "top left",
+        "top right",
+        "top start",
+        "top end",
+        "left",
+        "left top",
+        "left bottom",
+        "start",
+        "start top",
+        "start bottom",
+        "right",
+        "right top",
+        "right bottom",
+        "end",
+        "end top",
+        "end bottom"
+      ],
+      "default": "'bottom'",
+      "description": "The placement of the element with respect to its anchor element.",
+      "inheritedFrom": "PositionProps"
+    },
+    {
+      "property": "shouldFlip",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "default": "true",
+      "description": "Whether the element should flip its orientation (e.g. top to bottom or left to right) when\nthere is insufficient room for it to render completely.",
+      "inheritedFrom": "PositionProps"
+    },
+    {
+      "property": "containerPadding",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "12",
+      "description": "The placement padding that should be applied between the element and its\nsurrounding container.",
+      "inheritedFrom": "PositionProps"
+    },
+    {
+      "property": "offset",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "8",
+      "description": "The additional offset applied along the main axis between the element and its\nanchor element.",
       "inheritedFrom": "PopoverProps"
     },
     {
-      "property": "children",
-      "type": "ReactNode",
-      "description": "The children of the popover."
+      "property": "crossOffset",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "0",
+      "description": "The additional offset applied along the cross axis between the element and its\nanchor element.",
+      "inheritedFrom": "PositionProps"
     },
     {
-      "property": "padding",
-      "type": "'default' | 'none'",
-      "default": "'default'",
-      "description": "The amount of padding around the contents of the dialog."
+      "property": "getTargetRect",
+      "type": "(target: Element) => DOMRect",
+      "kind": "unknown",
+      "values": [],
+      "default": "target.getBoundingClientRect()",
+      "description": "Overrides the target element's bounding rectangle. Useful for positioning relative to\na specific point such as the mouse cursor (e.g. context menus) or text selection.",
+      "inheritedFrom": "AriaPositionProps"
+    },
+    {
+      "property": "isNonModal",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the popover is non-modal, i.e. elements outside the popover may be\ninteracted with by assistive technologies.\n\nMost popovers should not use this option as it may negatively impact the screen\nreader experience. Only use with components such as combobox, which are designed\nto handle this situation carefully.",
+      "inheritedFrom": "AriaPopoverProps"
+    },
+    {
+      "property": "triggerRef",
+      "type": "RefObject<Element>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The ref for the element which the popover positions itself with respect to.\n\nWhen used within a trigger component such as DialogTrigger, MenuTrigger, Select, etc.,\nthis is set automatically. It is only required when used standalone.",
+      "inheritedFrom": "PopoverProps"
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (controlled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the overlay's open state changes.",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "role",
+      "type": "\"dialog\" | \"alertdialog\"",
+      "kind": "enum",
+      "values": [
+        "dialog",
+        "alertdialog"
+      ],
+      "default": "'dialog'",
+      "description": "The accessibility role for the dialog.",
+      "inheritedFrom": "AriaDialogProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ],
   "status": "stable"

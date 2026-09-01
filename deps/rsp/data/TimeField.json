@@ -2,15 +2,344 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the TimeField."
     },
     {
+      "property": "validationBehavior",
+      "type": "\"native\" | \"aria\"",
+      "kind": "enum",
+      "values": [
+        "native",
+        "aria"
+      ],
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen the value is missing or invalid, or mark the field as required\nor invalid via ARIA.",
+      "inheritedFrom": "RACValidation"
+    },
+    {
+      "property": "hourCycle",
+      "type": "12 | 24",
+      "kind": "enum",
+      "values": [
+        12,
+        24
+      ],
+      "description": "Whether to display the time in 12 or 24 hour format. By default, this is determined by the\nuser's locale.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "granularity",
+      "type": "\"hour\" | \"minute\" | \"second\"",
+      "kind": "enum",
+      "values": [
+        "hour",
+        "minute",
+        "second"
+      ],
+      "default": "'minute'",
+      "description": "Determines the smallest unit that is displayed in the time picker.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "hideTimeZone",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether to hide the time zone abbreviation.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "shouldForceLeadingZeros",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether to always show leading zeros in the hour field.\nBy default, this is determined by the user's locale.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "placeholderValue",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "A placeholder time that influences the format of the placeholder shown when no value is\nselected. Defaults to 12:00 AM or 00:00 depending on the hour cycle.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "minValue",
+      "type": "ZonedDateTime | Time | CalendarDateTime",
+      "kind": "unknown",
+      "values": [],
+      "description": "The minimum allowed time that a user may select.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "maxValue",
+      "type": "ZonedDateTime | Time | CalendarDateTime",
+      "kind": "unknown",
+      "values": [],
+      "description": "The maximum allowed time that a user may select.",
+      "inheritedFrom": "TimePickerProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input is disabled.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input can be selected but not changed by the user.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether user input is required on the input before form submission.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input value is invalid.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "validate",
+      "type": "(value: MappedTimeValue<T>) => true | ValidationError",
+      "kind": "unknown",
+      "values": [],
+      "description": "A function that returns an error message if a given value is invalid.\nValidation errors are displayed to the user when the form is submitted\nif `validationBehavior=\"native\"`. For realtime validation, use the `isInvalid`\nprop instead.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<Element, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: MappedTimeValue<T>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "\"top\" | \"side\"",
+      "kind": "enum",
+      "values": [
+        "top",
+        "side"
+      ],
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "\"start\" | \"end\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "end"
+      ],
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "necessityIndicator",
+      "type": "\"label\" | \"icon\"",
+      "kind": "enum",
+      "values": [
+        "icon",
+        "label"
+      ],
+      "default": "'icon'",
+      "description": "Whether the required state should be shown as an icon or text.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "label",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
+    },
+    {
+      "property": "description",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A description for the field. Provides a hint such as specific requirements for what to choose.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
+      "property": "errorMessage",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (v: ValidationResult) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "An error message for the field.",
+      "inheritedFrom": "HelpTextProps"
     }
   ],
   "status": "stable"

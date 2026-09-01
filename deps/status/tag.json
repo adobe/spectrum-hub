@@ -5,7 +5,7 @@
     },
     "rsp": {
       "status": "available",
-      "originalName": "TagGroup"
+      "upstreamName": "TagGroup"
     },
     "swc": {
       "status": "not-available"

@@ -2,12 +2,16 @@
   "props": [
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true
     },
     {
       "property": "isLoading",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "required": true
     }
   ],

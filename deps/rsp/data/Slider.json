@@ -1,13 +1,179 @@
 {
   "props": [
     {
-      "property": "children",
-      "type": "ReactNode",
-      "inheritedFrom": "SliderBaseProps"
+      "property": "fillOffset",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The offset from which to start the fill."
+    },
+    {
+      "property": "label",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the whole Slider is disabled."
+    },
+    {
+      "property": "onChangeEnd",
+      "type": "(value: number) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Fired when the slider stops moving, due to being let go."
+    },
+    {
+      "property": "minValue",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "0",
+      "description": "The slider's minimum value."
+    },
+    {
+      "property": "maxValue",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "100",
+      "description": "The slider's maximum value."
+    },
+    {
+      "property": "step",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "1",
+      "description": "The slider's step value."
+    },
+    {
+      "property": "value",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: number) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "formatOptions",
+      "type": "NumberFormatOptions",
+      "kind": "unknown",
+      "values": [],
+      "description": "The display format of the value label."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "labelPosition",
+      "type": "\"top\" | \"side\"",
+      "kind": "enum",
+      "values": [
+        "top",
+        "side"
+      ],
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "\"start\" | \"end\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "end"
+      ],
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the Slider.",
       "inheritedFrom": "SliderBaseProps"
@@ -15,27 +181,58 @@
     {
       "property": "isEmphasized",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the Slider should be displayed with an emphasized style.",
       "inheritedFrom": "SliderBaseProps"
     },
     {
       "property": "trackStyle",
-      "type": "'thin' | 'thick'",
+      "type": "\"thin\" | \"thick\"",
+      "kind": "enum",
+      "values": [
+        "thin",
+        "thick"
+      ],
       "default": "'thin'",
       "description": "The style of the Slider's track.",
       "inheritedFrom": "SliderBaseProps"
     },
     {
       "property": "thumbStyle",
-      "type": "'default' | 'precise'",
+      "type": "\"default\" | \"precise\"",
+      "kind": "enum",
+      "values": [
+        "default",
+        "precise"
+      ],
       "default": "'default'",
       "description": "The style of the Slider's thumb.",
       "inheritedFrom": "SliderBaseProps"
     },
     {
-      "property": "fillOffset",
-      "type": "number",
-      "description": "The offset from which to start the fill."
+      "property": "styles",
+      "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
     }
   ],
   "status": "stable"

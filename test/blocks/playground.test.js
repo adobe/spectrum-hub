@@ -1,5 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
+import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import init, {
   parseBlockMetadata,
   parseDefault,
@@ -501,8 +502,12 @@ describe('buildRspSnippet — self-closing components', () => {
     expect(snippet).to.equal('<Divider\n  size="L"\n/>');
   });
 
-  it('still falls back to Label when the fragment has its own text (e.g. Button)', () => {
-    expect(buildRspSnippet('Button', {}, '<Button>Button</Button>')).to.equal('<Button>Label</Button>');
+  // Was asserting the opposite. The fragment's own text is the authored content and
+  // the live preview always used it (initRsp sets currentProps.children from it), so
+  // replacing it with the placeholder here made the copyable code disagree with what
+  // was on screen — "Label" in the disclosure, "New" in the preview, on 13 routes.
+  it('keeps the fragment\'s own text rather than the placeholder', () => {
+    expect(buildRspSnippet('Button', {}, '<Button>Button</Button>')).to.equal('<Button>Button</Button>');
   });
 
   it('still falls back to Label when no fragment is given at all', () => {
@@ -517,7 +522,8 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
   const alertDialogMarkup = '<AlertDialog title="Delete file?" primaryActionLabel="Delete">This action cannot be undone.</AlertDialog>';
 
   it('wraps a DialogTrigger-family route in DialogTrigger + a labeled Button', () => {
-    // No `children` in currentProps, so it falls back to 'Label' like any leaf snippet.
+    // The fragment's own body text is kept — alert-dialog authors no text control, so
+    // this is the only content source and the preview renders it either way.
     const snippet = buildRspSnippet('AlertDialog', {}, alertDialogMarkup, false, 'alert-dialog');
     expect(snippet).to.equal([
       '<DialogTrigger>',
@@ -525,7 +531,7 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
       '  <AlertDialog',
       '    title="Delete file?"',
       '    primaryActionLabel="Delete">',
-      '    Label',
+      '    This action cannot be undone.',
       '  </AlertDialog>',
       '</DialogTrigger>',
     ].join('\n'));
@@ -549,7 +555,7 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
   });
 
   it('shows the toast route\'s Button as a sibling line, not a wrapper', () => {
-    const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast-container');
+    const snippet = buildRspSnippet('ToastContainer', {}, '<ToastContainer />', false, 'toast');
     // Same multi-attribute formatting as any other element serializeElement prints (e.g.
     // the DialogTrigger case's AlertDialog above) — onPress is a JSX expression (unquoted),
     // variant is a normal string attribute.
@@ -623,9 +629,9 @@ describe('composite snippet fragments — real committed files', () => {
     expect(snippet.includes('<Tooltip>')).to.be.true;
   });
 
-  it('gives the real RSP toast-container JSX snippet a sibling trigger Button', async () => {
-    const markup = await (await fetch('/deps/rsp/playground/snippets/toast-container.jsx')).text();
-    const snippet = buildRspSnippet('ToastContainer', {}, markup, false, 'toast-container');
+  it('gives the real RSP toast JSX snippet a sibling trigger Button', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/toast.jsx')).text();
+    const snippet = buildRspSnippet('ToastContainer', {}, markup, false, 'toast');
     expect(snippet.includes('onPress={() => ToastQueue.info(\'Toasting…\')}')).to.be.true;
     expect(snippet.includes('<ToastContainer />')).to.be.true;
   });
@@ -671,12 +677,26 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
       { Property: 'size', control: 'picker' },
       { Property: 'isDisabled', control: 'picker' },
     ];
+  // Rows carry `kind`/`values` because that is what the extractors write and what
+  // resolveControl reads — a fixture with only `type` would exercise a path that no
+  // longer exists (deps/shared/prop-contract.js).
   const rspBody = overrides.rsp
-    ?? { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] };
+    ?? {
+      props: [{
+        property: 'variant', type: "'primary' | 'secondary'", kind: 'enum', values: ['primary', 'secondary'], default: "'primary'",
+      }],
+    };
   const swcBody = overrides.swc
     ?? [
-      { property: 'size', attribute: 'size', type: 'ElementSize' },
-      { property: 'disabled', attribute: 'disabled', type: 'boolean' },
+      // Deliberately a row with no fixed option set — kind 'unknown', no values, the
+      // shape an opaque API type produces (RSP's StylesProp, an interface, a generic).
+      // Several tests below assert that such a row draws no control and warns.
+      {
+        property: 'size', attribute: 'size', type: 'ElementSize', kind: 'unknown', values: [],
+      },
+      {
+        property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [],
+      },
     ];
 
   return sandbox.stub(window, 'fetch').callsFake(async (input) => {
@@ -759,6 +779,43 @@ describe('playground block — init()', () => {
     expect(iframe.src).to.include('implementation=ios');
   });
 
+  // RSP_EXPORT_NAMES (deps/rsp-export-names.js) resolves a component whose real RSP
+  // export differs from its canonical Spectrum Hub name — e.g. "action-group" ships as
+  // RSP's ActionButtonGroup, not a naive pascalCase("action-group") -> "ActionGroup".
+  // Regression: before this resolution existed, such components 404'd on their prop
+  // data and snippet markup, and threw "No RSP export named ..." in the live preview.
+  it('resolves the real RSP export name for a component whose canonical name differs', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'action-group' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    expect(rspEl.querySelector('pre').textContent).to.equal('<ActionButtonGroup>Label</ActionButtonGroup>');
+
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/snippets/action-button-group.jsx'))).to.be.false;
+    expect(urls.some((url) => url.includes('/snippets/action-group.jsx'))).to.be.true;
+  });
+
+  // Regression: fetchPlaygroundInputs used to fetch deps/swc/data/swc-<component>.json
+  // unconditionally, even on rsp pages — most RSP components have no SWC counterpart at
+  // all, so this was a guaranteed, noisy 404 on every RSP playground page.
+  it('does not fetch SWC prop data on an rsp-implementation page', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/deps/swc/data/'))).to.be.false;
+  });
+
+  it('does fetch SWC prop data on an swc-implementation page', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    await init(el);
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/deps/swc/data/'))).to.be.true;
+  });
+
   it('uses the PascalCase RSP-style code disclosure for rsp implementation', async () => {
     stubPlaygroundFetch(sandbox);
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -771,7 +828,11 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'disabled' }],
       controls: [{ Property: 'disabled', control: 'picker' }],
-      rsp: { props: [{ property: 'isDisabled', type: 'boolean', default: 'true' }] },
+      rsp: {
+        props: [{
+          property: 'isDisabled', type: 'boolean', kind: 'boolean', values: [], default: 'true',
+        }],
+      },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -887,7 +948,9 @@ describe('playground block — init()', () => {
       }
       if (url.includes('/deps/rsp/data/')) { return jsonResponse([]); }
       if (url.includes('/deps/swc/data/')) {
-        return jsonResponse([{ property: 'disabled', attribute: 'disabled', type: 'boolean' }]);
+        return jsonResponse([{
+          property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [],
+        }]);
       }
       if (url.includes('/deps/swc/playground/snippets/button.html')) {
         return new Response('<swc-button>Label</swc-button>', { status: 200 });
@@ -983,7 +1046,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string', default: "'Click me'" }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [], default: "'Click me'",
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -997,7 +1062,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string' }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [],
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1009,7 +1076,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string' }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [],
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1021,7 +1090,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string', default: "'Click me'" }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [], default: "'Click me'",
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1043,7 +1114,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'weight' }],
       controls: [{ Property: 'weight', control: 'slider' }],
-      swc: [{ property: 'weight', attribute: 'weight', type: 'number', default: '50' }],
+      swc: [{
+        property: 'weight', attribute: 'weight', type: 'number', kind: 'number', values: [], default: '50',
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1057,7 +1130,11 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'variant' }],
       controls: [{ Property: 'variant', control: 'segmentedControl' }],
-      rsp: { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] },
+      rsp: {
+        props: [{
+          property: 'variant', type: "'primary' | 'secondary'", kind: 'enum', values: ['primary', 'secondary'], default: "'primary'",
+        }],
+      },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -1075,7 +1152,11 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'variant' }],
       controls: [{ Property: 'variant', control: 'segmentedControl' }],
-      rsp: { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] },
+      rsp: {
+        props: [{
+          property: 'variant', type: "'primary' | 'secondary'", kind: 'enum', values: ['primary', 'secondary'], default: "'primary'",
+        }],
+      },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -1098,7 +1179,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'isDisabled' }],
       controls: [{ Property: 'isDisabled', control: 'switch' }],
-      swc: [{ property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'true' }],
+      swc: [{
+        property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [], default: 'true',
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1113,7 +1196,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'isDisabled' }],
       controls: [{ Property: 'isDisabled', control: 'switch' }],
-      swc: [{ property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'false' }],
+      swc: [{
+        property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [], default: 'false',
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1193,7 +1278,9 @@ describe('playground block — init()', () => {
       }
       if (url.includes('/deps/rsp/data/')) { return jsonResponse({ props: [] }); }
       if (url.includes('/deps/swc/data/')) {
-        return jsonResponse([{ property: 'selected', attribute: 'selected', type: 'string', default: "'overview'" }]);
+        return jsonResponse([{
+          property: 'selected', attribute: 'selected', type: 'string', kind: 'text', values: [], default: "'overview'",
+        }]);
       }
       if (url.includes('/deps/swc/playground/snippets/tabs.html')) {
         return new Response(tabsMarkup, { status: 200 });
@@ -1229,7 +1316,11 @@ describe('playground block — init()', () => {
         return jsonResponse({ data: [{ Property: 'density', control: 'picker' }] });
       }
       if (url.includes('/deps/rsp/data/')) {
-        return jsonResponse({ props: [{ property: 'density', type: "'compact' | 'regular'", default: "'regular'" }] });
+        return jsonResponse({
+          props: [{
+            property: 'density', type: "'compact' | 'regular'", kind: 'enum', values: ['compact', 'regular'], default: "'regular'",
+          }],
+        });
       }
       if (url.includes('/deps/swc/data/')) { return jsonResponse([]); }
       if (url.includes('/deps/rsp/playground/snippets/tabs.jsx')) {
@@ -1244,5 +1335,180 @@ describe('playground block — init()', () => {
     expect(pre.textContent.includes('<TabList>')).to.be.true;
     expect(pre.textContent.includes('<TabPanel')).to.be.true;
     expect(pre.textContent.includes('Details panel content.')).to.be.true;
+  });
+});
+
+// The authored slug and the RSP export diverge for a minority of components:
+// `action-group` ships as ActionButtonGroup. Without this the data fetch, the
+// snippet URL and the live esm.sh import all 404 on a name that does not exist.
+describe('resolveRspComponentName', () => {
+  it('resolves an authored slug to its real RSP export', () => {
+    expect(resolveRspComponentName('action-group')).to.equal('ActionButtonGroup');
+    expect(resolveRspComponentName('table')).to.equal('TableView');
+    expect(resolveRspComponentName('takeover-dialog')).to.equal('FullscreenDialog');
+  });
+
+  it('falls back to plain PascalCase when the names already agree', () => {
+    expect(resolveRspComponentName('action-button')).to.equal('ActionButton');
+    expect(resolveRspComponentName('button')).to.equal('Button');
+  });
+
+  it('is case- and whitespace-insensitive on the slug', () => {
+    expect(resolveRspComponentName('  Action-Group ')).to.equal('ActionButtonGroup');
+  });
+});
+
+// A component can legitimately have no controls — swc's link is utility CSS classes
+// rather than a component API. An empty controls column stole 300px from the preview
+// and left a labelled region with nothing in it.
+describe('playground block — a component with no controls', () => {
+  let sandbox;
+
+  const noControls = {
+    components: [{ Component: 'Link', Properties: 'variant, isQuiet' }],
+    // Neither property exists in this implementation's data, so both are skipped.
+    swc: [],
+    rsp: { props: [] },
+  };
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(console, 'warn');
+    document.body.innerHTML = '';
+    clearFetchCache();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  it('omits the controls panel entirely', async () => {
+    stubPlaygroundFetch(sandbox, noControls);
+    const el = makeMetaEl({ implementation: 'swc', component: 'link' });
+    document.body.append(el);
+    await init(el);
+
+    // Boolean, not .to.equal(null) — chai diffing a live DOM element hangs wtr.
+    expect(el.querySelector('.playground-controls') === null).to.be.true;
+    const layout = el.querySelector('.playground-layout');
+    expect([...layout.children].map((c) => c.className)).to.deep.equal(['playground-preview']);
+  });
+
+  it('still renders the preview and the code disclosure', async () => {
+    stubPlaygroundFetch(sandbox, noControls);
+    const el = makeMetaEl({ implementation: 'swc', component: 'link' });
+    document.body.append(el);
+    await init(el);
+
+    expect(el.querySelector('.playground-preview iframe') !== null).to.be.true;
+    expect(el.querySelector('.playground-disclosure') !== null).to.be.true;
+  });
+
+  it('keeps the controls panel when at least one control renders', async () => {
+    stubPlaygroundFetch(sandbox);
+    const el = makeMetaEl({ implementation: 'swc', component: 'button' });
+    document.body.append(el);
+    await init(el);
+
+    const panel = el.querySelector('.playground-controls');
+    expect(panel !== null).to.be.true;
+    expect(panel.children.length).to.be.greaterThan(0);
+  });
+});
+
+// RSP declares Tooltip's controllable props on TooltipTrigger, so the route reads that
+// catalog (propsOwner in overlay-triggers.js) and must apply them there too — a
+// `placement` landing on <Tooltip> would render a control that does nothing.
+describe('playground block — a route whose props live on its trigger', () => {
+  let sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(console, 'warn');
+    document.body.innerHTML = '';
+    clearFetchCache();
+  });
+
+  afterEach(() => { sandbox.restore(); });
+
+  it('serializes the props onto the trigger, not the tooltip', () => {
+    const snippet = buildRspSnippet(
+      'Tooltip',
+      { placement: { value: 'top', attribute: 'placement' } },
+      '<Tooltip>Tip text</Tooltip>',
+      false,
+      'tooltip',
+    );
+    // serializeElement breaks attributes onto their own lines.
+    expect(snippet.startsWith('<TooltipTrigger\n  placement="top">')).to.be.true;
+    expect(snippet.includes('<Tooltip placement')).to.be.false;
+    // The route's own element is still the wrapped child.
+    expect(snippet.includes('<Tooltip>')).to.be.true;
+  });
+
+  it('leaves a self-owned overlay route applying props to its own element', () => {
+    const snippet = buildRspSnippet(
+      'AlertDialog',
+      { title: { value: 'Heads up', attribute: 'title' } },
+      '<AlertDialog />',
+      false,
+      'alert-dialog',
+    );
+    expect(snippet, snippet).to.include('title="Heads up"');
+    expect(snippet.includes('<DialogTrigger title')).to.be.false;
+  });
+
+  it('fetches the trigger\'s catalog for the tooltip route', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    const el = makeMetaEl({ implementation: 'rsp', component: 'tooltip' });
+    document.body.append(el);
+    await init(el);
+
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/deps/rsp/data/TooltipTrigger.json'))).to.be.true;
+    expect(urls.some((url) => url.includes('/deps/rsp/data/Tooltip.json'))).to.be.false;
+  });
+
+  it('still names the route\'s own component in the code disclosure', async () => {
+    stubPlaygroundFetch(sandbox);
+    const el = makeMetaEl({ implementation: 'rsp', component: 'tooltip' });
+    document.body.append(el);
+    await init(el);
+    expect(el.querySelector('pre').textContent.includes('<Tooltip')).to.be.true;
+  });
+});
+
+// The 'Label' placeholder exists for a component whose text control has no value yet.
+// A component with NO text control (tooltip: placement, delay, trigger — none of them
+// TEXT_KEYS) was getting its authored fragment text replaced by that placeholder, so
+// the tooltip rendered the word "Label" instead of its content.
+describe('a fragment\'s own text survives when there is no text control', () => {
+  it('keeps the authored text', () => {
+    const snippet = buildRspSnippet(
+      'Tooltip',
+      { placement: { value: 'top', attribute: 'placement' } },
+      '<Tooltip>Helpful tip text</Tooltip>',
+      false,
+      'tooltip',
+    );
+    expect(snippet.includes('Helpful tip text')).to.be.true;
+    expect(snippet.includes('Label')).to.be.false;
+  });
+
+  it('still lets a text control override it', () => {
+    const snippet = buildRspSnippet(
+      'Button',
+      { text: { value: 'Press me', attribute: null } },
+      '<Button>Authored</Button>',
+      false,
+      null,
+    );
+    expect(snippet.includes('Press me')).to.be.true;
+    expect(snippet.includes('Authored')).to.be.false;
+  });
+
+  it('still falls back to the placeholder with no fragment at all', () => {
+    const snippet = buildRspSnippet('Button', {}, '', false, null);
+    expect(snippet.includes('Label')).to.be.true;
   });
 });

@@ -2,11 +2,165 @@
   "props": [
     {
       "property": "label",
-      "type": "string"
+      "type": "string",
+      "kind": "text",
+      "values": []
+    },
+    {
+      "property": "onChange",
+      "type": "(value: Color) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the value changes, as the user drags."
+    },
+    {
+      "property": "onChangeEnd",
+      "type": "(value: Color) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the user stops dragging."
+    },
+    {
+      "property": "orientation",
+      "type": "\"horizontal\" | \"vertical\"",
+      "kind": "enum",
+      "values": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "'horizontal'",
+      "description": "The orientation of the Slider.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the whole Slider is disabled.",
+      "inheritedFrom": "SliderProps"
+    },
+    {
+      "property": "value",
+      "type": "string | Color",
+      "kind": "unknown",
+      "values": [],
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "string | Color",
+      "kind": "unknown",
+      "values": [],
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "colorSpace",
+      "type": "\"rgb\" | \"hsl\" | \"hsb\"",
+      "kind": "enum",
+      "values": [
+        "rgb",
+        "hsl",
+        "hsb"
+      ],
+      "description": "The color space that the slider operates in. The `channel` must be in this color space.\nIf not provided, this defaults to the color space of the `color` or `defaultColor` value."
+    },
+    {
+      "property": "channel",
+      "type": "\"hue\" | \"saturation\" | \"brightness\" | \"lightness\" | \"red\" | \"green\" | \"blue\" | \"alpha\"",
+      "kind": "enum",
+      "values": [
+        "hue",
+        "saturation",
+        "brightness",
+        "lightness",
+        "red",
+        "green",
+        "blue",
+        "alpha"
+      ],
+      "required": true,
+      "description": "The color channel that the slider manipulates."
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

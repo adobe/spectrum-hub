@@ -2,6 +2,8 @@
 
 Extracts component property metadata from [Spectrum Web Components](https://github.com/adobe/spectrum-web-components) 2nd-gen and stores it as per-component JSON files in `data/`.
 
+What the playground does with these rows, and the naming rules every lookup is keyed on, is documented in [../docs/PLAYGROUND-CONTRACT.md](../docs/PLAYGROUND-CONTRACT.md).
+
 ## How it works
 
 2nd-gen SWC publishes one Custom Elements Manifest (CEM) for all components. Tag names use the `swc-*` prefix (for example `swc-button`, not 1st-gen `sp-*`). The extractor reads that manifest once, then filters declarations by `tagName`.

@@ -9,7 +9,7 @@
      only the same props Card.json does (children/size/density/variant, all
      `inheritedFrom: "CardProps"`) — no asset-specific slots (thumbnail/file
      type icon/etc.) show up in the extracted data, so this fragment reuses
-     the exact Card+CardPreview shape from card.jsx/card-view.jsx rather than
+     the exact Card+CardPreview shape from card.jsx/cards.jsx rather than
      inventing an untested subcomponent composition.
 
      GENUINELY UNSURE: AssetCard is documented as a ready-made Card preset

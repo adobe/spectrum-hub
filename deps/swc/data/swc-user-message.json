@@ -5,9 +5,9 @@
     "type": "\"card\" | \"media\" | \"copy\"",
     "kind": "enum",
     "values": [
+      "copy",
       "card",
-      "media",
-      "copy"
+      "media"
     ],
     "optional": false,
     "default": "'copy'",

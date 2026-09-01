@@ -2,20 +2,516 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the SearchField."
     },
     {
+      "property": "validationBehavior",
+      "type": "\"native\" | \"aria\"",
+      "kind": "enum",
+      "values": [
+        "native",
+        "aria"
+      ],
+      "default": "'native'",
+      "description": "Whether to use native HTML form validation to prevent form submission\nwhen the value is missing or invalid, or mark the field as required\nor invalid via ARIA.",
+      "inheritedFrom": "RACValidation"
+    },
+    {
+      "property": "type",
+      "type": "\"text\" | \"search\" | \"url\" | \"tel\" | \"email\" | \"password\" | string & {}",
+      "kind": "unknown",
+      "values": [],
+      "default": "'search'",
+      "description": "The type of input to render. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdeftype).",
+      "inheritedFrom": "AriaSearchFieldProps"
+    },
+    {
+      "property": "aria-activedescendant",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the currently active element when DOM focus is on a composite widget, textbox,\ngroup, or application.",
+      "inheritedFrom": "AriaTextFieldProps"
+    },
+    {
+      "property": "aria-autocomplete",
+      "type": "\"list\" | \"none\" | \"inline\" | \"both\"",
+      "kind": "enum",
+      "values": [
+        "none",
+        "inline",
+        "list",
+        "both"
+      ],
+      "description": "Indicates whether inputting text could trigger display of one or more predictions of the user's\nintended value for an input and specifies how predictions would be presented if they are made.",
+      "inheritedFrom": "AriaTextFieldProps"
+    },
+    {
+      "property": "aria-haspopup",
+      "type": "false | true | \"false\" | \"true\" | \"menu\" | \"listbox\" | \"tree\" | \"grid\" | \"dialog\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that\ncan be triggered by an element.",
+      "inheritedFrom": "AriaTextFieldProps"
+    },
+    {
+      "property": "aria-controls",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) whose contents or presence are controlled by the current\nelement.",
+      "inheritedFrom": "AriaTextFieldProps"
+    },
+    {
+      "property": "enterKeyHint",
+      "type": "\"search\" | \"enter\" | \"done\" | \"go\" | \"next\" | \"previous\" | \"send\"",
+      "kind": "enum",
+      "values": [
+        "enter",
+        "done",
+        "go",
+        "next",
+        "previous",
+        "search",
+        "send"
+      ],
+      "description": "An enumerated attribute that defines what action label or icon to preset for the enter key on\nvirtual keyboards. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/enterkeyhint).",
+      "inheritedFrom": "AriaSearchFieldProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input is disabled.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isReadOnly",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input can be selected but not changed by the user.",
+      "inheritedFrom": "InputBase"
+    },
+    {
+      "property": "isRequired",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether user input is required on the input before form submission.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "isInvalid",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the input value is invalid.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "validate",
+      "type": "(value: string) => true | ValidationError",
+      "kind": "unknown",
+      "values": [],
+      "description": "A function that returns an error message if a given value is invalid.\nValidation errors are displayed to the user when the form is submitted\nif `validationBehavior=\"native\"`. For realtime validation, use the `isInvalid`\nprop instead.",
+      "inheritedFrom": "Validation"
+    },
+    {
+      "property": "autoFocus",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the element should receive focus on render.",
+      "inheritedFrom": "FocusableProps"
+    },
+    {
+      "property": "onFocus",
+      "type": "(e: FocusEvent<HTMLInputElement, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element receives focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onBlur",
+      "type": "(e: FocusEvent<HTMLInputElement, Element>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element loses focus.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onFocusChange",
+      "type": "(isFocused: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the element's focus status changes.",
+      "inheritedFrom": "FocusEvents"
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a key is pressed.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a key is released.",
+      "inheritedFrom": "KeyboardEvents"
+    },
+    {
+      "property": "value",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The current value (controlled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "defaultValue",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The default value (uncontrolled).",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "onChange",
+      "type": "(value: string) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the value changes.",
+      "inheritedFrom": "ValueBase"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "excludeFromTabOrder",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether to exclude the element from the sequential tab order. If true,\nthe element will not be focusable via the keyboard by tabbing. This should\nbe avoided except in rare scenarios where an alternative means of accessing\nthe element or its functionality via the keyboard is available.",
+      "inheritedFrom": "FocusableDOMProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "autoComplete",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Describes the type of autocomplete functionality the input should provide if any. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefautocomplete).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "maxLength",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The maximum number of characters supported by the input. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefmaxlength).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "minLength",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The minimum number of characters required by the input. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefminlength).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "pattern",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Regex pattern that the value of the input must match to be valid. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefpattern).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "inputMode",
+      "type": "\"text\" | \"search\" | \"url\" | \"tel\" | \"email\" | \"none\" | \"numeric\" | \"decimal\"",
+      "kind": "enum",
+      "values": [
+        "none",
+        "text",
+        "tel",
+        "url",
+        "email",
+        "numeric",
+        "decimal",
+        "search"
+      ],
+      "description": "Hints at the type of data that might be entered by the user while editing the element or its\ncontents. See\n[MDN](https://html.spec.whatwg.org/multipage/interaction.html#input-modalities:-the-inputmode-attribute).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "autoCorrect",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "An attribute that takes as its value a space-separated string that describes what, if any, type\nof autocomplete functionality the input should provide. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#autocomplete).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "spellCheck",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "An enumerated attribute that defines whether the element may be checked for spelling errors.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/spellcheck).",
+      "inheritedFrom": "TextInputDOMProps"
+    },
+    {
+      "property": "name",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The name of the input element, used when submitting an HTML form. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#htmlattrdefname).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "form",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The `<form>` element to associate the input with.\nThe value of this attribute must be the id of a `<form>` in the same document.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#form).",
+      "inheritedFrom": "InputDOMProps"
+    },
+    {
+      "property": "onCopy",
+      "type": "ClipboardEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the user copies text. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/oncopy).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onCut",
+      "type": "ClipboardEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the user cuts text. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/oncut).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onPaste",
+      "type": "ClipboardEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the user pastes text. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/onpaste).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onCompositionStart",
+      "type": "CompositionEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a text composition system starts a new text composition session.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Element/compositionstart_event).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onCompositionEnd",
+      "type": "CompositionEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a text composition system completes or cancels the current text\ncomposition session. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/Element/compositionend_event).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onCompositionUpdate",
+      "type": "CompositionEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a new character is received in the current text composition\nsession. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/Element/compositionupdate_event).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onSelect",
+      "type": "ReactEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when text in the input is selected. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/Element/select_event).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onBeforeInput",
+      "type": "FormEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the input value is about to be modified. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/beforeinput_event).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "onInput",
+      "type": "FormEventHandler<HTMLInputElement>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the input value is modified. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event).",
+      "inheritedFrom": "TextInputDOMEvents"
+    },
+    {
+      "property": "aria-errormessage",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element that provides an error message for the object.",
+      "inheritedFrom": "AriaValidationProps"
+    },
+    {
+      "property": "onSubmit",
+      "type": "(value: string) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the SearchField is submitted."
+    },
+    {
+      "property": "onClear",
+      "type": "() => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the clear button is pressed."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     },
     {
+      "property": "labelPosition",
+      "type": "\"top\" | \"side\"",
+      "kind": "enum",
+      "values": [
+        "top",
+        "side"
+      ],
+      "default": "'top'",
+      "description": "The label's overall position relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "labelAlign",
+      "type": "\"start\" | \"end\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "end"
+      ],
+      "default": "'start'",
+      "description": "The label's horizontal alignment relative to the element it is labeling.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "necessityIndicator",
+      "type": "\"label\" | \"icon\"",
+      "kind": "enum",
+      "values": [
+        "icon",
+        "label"
+      ],
+      "default": "'icon'",
+      "description": "Whether the required state should be shown as an icon or text.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "contextualHelp",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A ContextualHelp element to place next to the label.",
+      "inheritedFrom": "SpectrumLabelableProps"
+    },
+    {
+      "property": "label",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content to display as the label.",
+      "inheritedFrom": "LabelableProps"
+    },
+    {
+      "property": "description",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "A description for the field. Provides a hint such as specific requirements for what to choose.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
+      "property": "errorMessage",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (v: ValidationResult) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "An error message for the field.",
+      "inheritedFrom": "HelpTextProps"
+    },
+    {
       "property": "placeholder",
       "type": "string",
-      "description": "Temporary text that occupies the text input when it is empty. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
+      "kind": "text",
+      "values": [],
+      "description": "Temporary text that occupies the text input when it is empty.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/placeholder).",
       "inheritedFrom": "InputProps"
     }
   ],

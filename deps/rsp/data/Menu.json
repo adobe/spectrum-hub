@@ -2,36 +2,200 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the Menu."
     },
     {
       "property": "children",
-      "type": "ReactNode | ((item: T) => ReactNode)",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (item: T) => ReactNode",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The contents of the collection."
     },
     {
       "property": "hideLinkOutIcon",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Hides the default link out icons on menu items that open links in a new tab."
     },
     {
-      "property": "renderEmptyState",
-      "type": "() => ReactNode",
-      "description": "Provides content to display when there are no items in the list.",
-      "inheritedFrom": "MenuProps"
+      "property": "escapeKeyBehavior",
+      "type": "\"clearSelection\" | \"none\"",
+      "kind": "enum",
+      "values": [
+        "clearSelection",
+        "none"
+      ],
+      "default": "'clearSelection'",
+      "description": "Whether pressing the escape key should clear selection in the menu or not.\n\nMost experiences should not modify this option as it eliminates a keyboard user's ability to\neasily clear selection. Only use if the escape key is being handled externally or should not\ntrigger selection clearing contextually.",
+      "inheritedFrom": "AriaMenuProps"
+    },
+    {
+      "property": "autoFocus",
+      "type": "false | true | \"first\" | \"last\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "Where the focus should be set."
+    },
+    {
+      "property": "shouldFocusWrap",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether keyboard navigation is circular."
+    },
+    {
+      "property": "onAction",
+      "type": "(key: Key, value: T) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when an item is selected."
+    },
+    {
+      "property": "onClose",
+      "type": "() => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the menu should close after selecting an item."
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "disabledKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The item keys that are disabled. These items cannot be selected, focused, or otherwise\ninteracted with.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "selectionMode",
+      "type": "\"none\" | \"single\" | \"multiple\"",
+      "kind": "enum",
+      "values": [
+        "none",
+        "single",
+        "multiple"
+      ],
+      "description": "The type of selection that is allowed in the collection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the collection allows empty selection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "selectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "The currently selected keys in the collection (controlled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "defaultSelectedKeys",
+      "type": "Iterable<Key> | \"all\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(keys: Selection) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
     },
     {
       "property": "shouldCloseOnSelect",
       "type": "boolean",
-      "description": "Whether the menu should close when the menu item is selected.",
-      "inheritedFrom": "MenuProps"
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the menu should close when the menu item is selected."
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "kind": "unknown",
+      "values": [],
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "CollectionProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

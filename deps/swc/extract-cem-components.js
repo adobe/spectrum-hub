@@ -16,6 +16,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { fetchManifest, findCorePackageName } from './locate-published-files.js';
 import { collectResolutionTargets, resolveTargets } from './resolve-attribute-types.js';
+import { propKind } from '../shared/prop-contract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
@@ -69,27 +70,6 @@ function getInheritedFromName(attr) {
     : attr.inheritedFrom.name;
 }
 
-/**
- * The kind of control a row's data can back, so no consumer parses `type`.
- * `values` (from the TypeScript checker, see resolve-attribute-types.js) decides
- * "enum" on its own — a resolved union is an enum whatever its type text says.
- * Anything else falls through to "unknown", which draws no control and keeps the
- * existing skip warning: aria-haspopup/aria-expanded reach the CEM with no type at
- * all, and guessing would build a control out of nothing.
- */
-export function attributeKind(typeText, values) {
-  if (values?.length) return 'enum';
-  // A nullable primitive is just that primitive — nullish is stripped everywhere,
-  // never offered as a value (see typeToValues in resolve-attribute-types.js).
-  const bare = String(typeText ?? '').replace(/\s*\|\s*(null|undefined)\b/g, '').trim();
-  switch (bare) {
-    case 'boolean': return 'boolean';
-    case 'string': return 'text';
-    case 'number': return 'number';
-    default: return 'unknown';
-  }
-}
-
 // Writes resolution results back onto a component's formatted rows, in place.
 // A row with no result keeps its original bare type — resolution failing is a
 // degraded run, not an error (see resolveAllAttributeTypes).
@@ -100,7 +80,7 @@ export function applyResolvedTypes(rows, resolvedTypes, tag) {
     if (!resolved) continue;
     row.type = resolved.type;
     row.values = resolved.values;
-    row.kind = attributeKind(resolved.type, resolved.values);
+    row.kind = propKind(resolved.type, resolved.values);
     row.optional = resolved.optional;
   }
   return rows;
@@ -111,7 +91,7 @@ function formatAttr(a, componentStatus, componentSince) {
     attribute: a.name,
     property: a.fieldName,
     type: a.type?.text,
-    kind: attributeKind(a.type?.text, []),
+    kind: propKind(a.type?.text, []),
     values: [],
     optional: false,
   };
@@ -211,11 +191,10 @@ async function main() {
     console.log(`Wrote resolved version ${version} to ${VERSION_FILE}`);
   }
 
-  // Only runs against the daily/CI path (a concrete resolved `version` to pin the
-  // crawl to) — the manual `<cem-path>` workflow has no reliable version for that,
-  // so it writes bare (unresolved) alias names, same as before this rewrite. A
-  // failure here degrades to "no resolution this run" rather than aborting the
-  // whole extraction — every attribute still gets written with its original type.
+  // Resolution needs a concrete version to pin the crawl to, which only the daily/CI
+  // path has; the manual `<cem-path>` workflow writes bare alias names instead. A
+  // failure degrades to "no resolution this run" rather than aborting — every
+  // attribute is still written, with its original type.
   let resolvedTypes = new Map();
   if (version) {
     try {

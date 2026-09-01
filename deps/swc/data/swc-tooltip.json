@@ -5,8 +5,8 @@
     "type": "\"informative\" | \"neutral\" | \"negative\"",
     "kind": "enum",
     "values": [
-      "informative",
       "neutral",
+      "informative",
       "negative"
     ],
     "optional": false,
@@ -21,12 +21,12 @@
     "type": "\"start\" | \"end\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
     "kind": "enum",
     "values": [
-      "start",
-      "end",
       "top",
       "bottom",
       "left",
-      "right"
+      "right",
+      "start",
+      "end"
     ],
     "optional": false,
     "default": "'top'",

@@ -1,295 +1,147 @@
 /**
  * Extracts component prop metadata from @react-spectrum/s2 and writes per-component JSON files.
  *
- * Fetches each component's TypeScript declaration file from unpkg, parses the target
- * interface (and optional co-located *StyleProps / *SpectrumProps interfaces), then
- * merges shared base types from data/rsp-base-props.json.
+ * For each component in components.json, crawls its `.d.ts` import graph (build-ts-checker.js)
+ * and asks the TypeScript checker for the props interface's fully resolved, transitively
+ * inherited property set (`checker.getPropertiesOfType()`). The checker is the source of
+ * truth because S2 inherits through several hops and subtracts with `Omit<>` as often as
+ * it adds — reading interface headers can do neither reliably.
  *
  * Usage: node deps/rsp/extract-props.js
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import {
+  readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync,
+} from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import ts from 'typescript';
 import { fetchComponentDocStatus } from './extract-doc-status.js';
+import { crawl, buildProgram } from './build-ts-checker.js';
+import { S2_COMPONENT_BASE } from './locate-published-files.js';
+import { typeToDisplayString, typeToValues, declaredValueOrder, propKind } from '../shared/prop-contract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
-const BASE_PROPS_FILE = join(__dirname, 'data', 'rsp-base-props.json');
 
 const ALLOW_LIST = JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8'));
 
-const BASE_PROPS = existsSync(BASE_PROPS_FILE)
-  ? JSON.parse(readFileSync(BASE_PROPS_FILE, 'utf8'))
-  : {};
+// S2 omits these from public component APIs (Omit<..., 'className' | 'style' | ...>) in
+// favor of the `styles` prop / style() macro — they remain reachable via real inheritance
+// resolution (unlike the previous regex pipeline, which could never see them at all), so
+// they're filtered explicitly here instead. UNSAFE_className/UNSAFE_style are S2's own
+// documented escape hatches for the same className/style it otherwise omits — same reasoning.
+const EXCLUDED_PROPERTIES = new Set(['className', 'UNSAFE_className', 'UNSAFE_style']);
 
-// S2 omits these from public component APIs (Omit<..., 'className' | 'style' | ...>).
-// They remain on react-aria-components base types but are not surfaced in S2 docs.
-const EXCLUDED_PROPERTIES = new Set(['className']);
+// Data files for components absent from the roster, so a dropped component's stale
+// rows stop reaching blocks/table. Fails closed: a roster smaller than half the data
+// directory means discovery failed, and must not be allowed to delete the catalog.
+const MIN_ROSTER_RATIO = 0.5;
 
-const CDN_URLS = [
-  (component) => `https://unpkg.com/@react-spectrum/s2/dist/types/src/${component}.d.ts`,
-  (component) => `https://cdn.jsdelivr.net/npm/@react-spectrum/s2/dist/types/src/${component}.d.ts`,
-];
-
-// Tries each CDN in order; jsdelivr is the fallback in case unpkg is rate-limited or unavailable.
-async function fetchTypes(component) {
-  for (const buildUrl of CDN_URLS) {
-    const url = buildUrl(component);
-    try {
-      const res = await fetch(url);
-      if (res.ok) return res.text();
-    } catch { /* try next CDN */ }
-  }
-  throw new Error(`Failed to fetch types for ${component} from all CDNs`);
-}
-
-/** Fetches component and include `.d.ts` sources using paths from components.json. */
-async function loadComponentSources(component, config) {
-  const sourcesByFile = new Map();
-  const load = async (typesComponent) => {
-    if (!sourcesByFile.has(typesComponent)) {
-      sourcesByFile.set(typesComponent, await fetchTypes(typesComponent));
-    }
-    return sourcesByFile.get(typesComponent);
-  };
-
-  const mainTypesComponent = config.file ?? component;
-  const mainSource = await load(mainTypesComponent);
-
-  const includeSources = {};
-  for (const includeName of config.includes ?? []) {
-    const typesComponent = config.includeFiles?.[includeName] ?? mainTypesComponent;
-    includeSources[includeName] = await load(typesComponent);
-  }
-
-  return { mainSource, includeSources };
-}
-
-/**
- * Extracts the body of a named interface or type from TypeScript source.
- * Uses bracket counting rather than a closing-brace regex because interface
- * bodies can contain nested object types ({ }) that would cause a simple
- * pattern to close too early.
- */
-export function extractInterfaceBlock(source, interfaceName) {
-  const startRegex = new RegExp(
-    `(?:export\\s+)?(?:interface|type)\\s+${interfaceName}([^{]*)\\{`,
-  );
-  const startMatch = startRegex.exec(source);
-  if (!startMatch) return null;
-
-  let depth = 1;
-  let i = startMatch.index + startMatch[0].length;
-  const start = i;
-
-  while (i < source.length && depth > 0) {
-    if (source[i] === '{') depth++;
-    else if (source[i] === '}') depth--;
-    i++;
-  }
-
-  return source.slice(start, i - 1);
-}
-
-/**
- * Captures the resolved `extends` list from the interface header in the .d.ts source.
- *
- * Rather than parsing TypeScript syntax, this intersects all word tokens in the header
- * against known rsp-base-props.json keys. Utility type names (Omit, Pick, Partial, and
- * similar tokens in `ignored`) are skipped explicitly. Other tokens that are not in the
- * catalog are skipped without a warning unless they look like base types (Props, Events,
- * or Mixin).
- *
- * A warning is emitted for untracked names that look like base types — rerun
- * extract-base-props.js so react-aria-components types land in the catalog, or add an
- * explicit `"extends"` entry in components.json (what discover-components.js writes).
- *
- * Production extraction uses `"extends"` from components.json only; this helper supports
- * tests and diagnosing headers when extends is omitted.
- */
-export function extractExtends(source, interfaceName, baseProps = BASE_PROPS) {
-  const startRegex = new RegExp(
-    `(?:export\\s+)?(?:interface|type)\\s+${interfaceName}([^{]*)\\{`,
-  );
-  const match = startRegex.exec(source);
-  if (!match) return [];
-
-  // Manually maintained: same role as IGNORE_EXTENDS in discover-components.js but smaller.
-  // Production uses `extends` from components.json (from discovery), not this helper — drift
-  // between the two sets is a known source of test vs CI mismatch if either list is updated alone.
-  const ignored = new Set([
-    'extends', 'Omit', 'Pick', 'Partial', 'Required', 'Readonly', 'Record',
-    'keyof', 'GlobalDOMAttributes',
-  ]);
-  const allNames = match[1].match(/\b\w+\b/g) ?? [];
-  const known = allNames.filter((name) => !ignored.has(name) && baseProps[name]);
-  const unknown = allNames.filter(
-    (name) =>
-      !ignored.has(name) &&
-      !baseProps[name] &&
-      /Props|Events|Mixin/.test(name),
-  );
-
-  if (unknown.length) {
-    console.warn(
-      `Warning: [${unknown.join(', ')}] found in ${interfaceName} header but not in rsp-base-props.json — rerun extract-base-props.js or add "extends" to components.json`,
+export function pruneStaleData(dataFiles, roster) {
+  const jsonFiles = dataFiles.filter((f) => f.endsWith('.json'));
+  if (jsonFiles.length && roster.length < jsonFiles.length * MIN_ROSTER_RATIO) {
+    throw new Error(
+      `Refusing to prune: roster has ${roster.length} components for ${jsonFiles.length} data files. `
+      + 'Discovery probably failed — re-run it before extracting.',
     );
   }
-
-  return known;
+  const rostered = new Set(roster);
+  return jsonFiles.filter((f) => !rostered.has(f.replace(/\.json$/, '')));
 }
 
-// Strips delimiters and leading `* ` from a raw JSDoc comment block, then extracts
-// a plain-text description and optional @default value.
-export function parseJSDoc(comment) {
-  const result = { description: '', default: null };
-  if (!comment) return result;
-
-  const cleaned = comment.replace(/^\/\*\*/, '').replace(/\*\/$/, '');
-  const lines = cleaned
-    .split('\n')
-    .map((l) => l.replace(/^\s*\*\s?/, '').trim())
-    .filter(Boolean);
-
-  const descLines = [];
-  for (const line of lines) {
-    if (line.startsWith('@')) break;
-    descLines.push(line);
-  }
-  result.description = descLines.join(' ').trim();
-
-  const defaultMatch = comment.match(/@default\s+([^\n*]+)/);
-  if (defaultMatch) result.default = defaultMatch[1].trim();
-
-  return result;
+/** Finds a top-level interface declaration by name in a parsed source file. */
+export function findInterfaceDeclaration(sourceFile, interfaceName) {
+  let found;
+  ts.forEachChild(sourceFile, (node) => {
+    if (!found && ts.isInterfaceDeclaration(node) && node.name.text === interfaceName) {
+      found = node;
+    }
+  });
+  return found;
 }
 
 /**
- * Parses individual property declarations from an interface body.
- *
- * Uses a single-line regex and will silently skip or misparse:
- *   - Multi-line type unions
- *   - Generic types with angle brackets (e.g. Array<string>)
- *   - Function signatures (e.g. (val: T) => void)
- *   - Conditional or mapped types
- *
- * Spot-check output JSON against RSP docs when adding a new component. If output
- * looks sparse, the component likely uses one of these patterns.
+ * Renders a symbol's JSDoc description and `@default` tag the same shape the previous
+ * regex-based `parseJSDoc` produced.
  */
-export function parseProps(block) {
+function readJsDoc(symbol, checker) {
+  const description = ts.displayPartsToString(symbol.getDocumentationComment(checker));
+  const defaultTag = symbol.getJsDocTags(checker).find((tag) => tag.name === 'default');
+  const defaultValue = defaultTag ? ts.displayPartsToString(defaultTag.text) : null;
+  return { description, default: defaultValue };
+}
+
+/**
+ * @param {import('typescript').TypeChecker} checker
+ * @param {import('typescript').Type} type - the component's resolved props type
+ * @param {string} primaryInterfaceName - only used to omit `inheritedFrom` when a prop is
+ *   declared directly on the component's own interface, matching prior output shape.
+ */
+export function extractPropsFromType(checker, type, primaryInterfaceName) {
   const props = [];
-  const lines = block.split('\n');
 
-  let jsdocLines = [];
-  let inJSDoc = false;
+  for (const symbol of checker.getPropertiesOfType(type)) {
+    if (EXCLUDED_PROPERTIES.has(symbol.name)) continue;
 
-  for (const raw of lines) {
-    const line = raw.trim();
+    const decl = symbol.getDeclarations()?.[0];
+    const declaringInterface = decl?.parent && ts.isInterfaceDeclaration(decl.parent)
+      ? decl.parent.name.text
+      : undefined;
 
-    // Single-line JSDoc (/** ... */) must close inJSDoc on the same iteration;
-    // otherwise the next line (the property declaration) gets absorbed into jsdocLines.
-    if (line.startsWith('/**')) {
-      inJSDoc = true;
-      jsdocLines = [line];
+    const propType = checker.getTypeOfSymbol(symbol);
+    const { description, default: defaultValue } = readJsDoc(symbol, checker);
+    // eslint-disable-next-line no-bitwise
+    const optional = Boolean(symbol.flags & ts.SymbolFlags.Optional);
 
-      if (line.includes('*/')) inJSDoc = false; continue;
+    const type = typeToDisplayString(checker, propType);
+    const values = typeToValues(propType, declaredValueOrder(checker, symbol));
+    const prop = {
+      property: symbol.name, type, kind: propKind(type, values), values,
+    };
+    // Only recorded when true: 3% of RSP props are required, since TS props are
+    // optional by default. (SWC is the mirror image and records `optional`.)
+    if (!optional) prop.required = true;
+    if (defaultValue) prop.default = defaultValue;
+    if (description) prop.description = description;
+    if (declaringInterface && declaringInterface !== primaryInterfaceName) {
+      prop.inheritedFrom = declaringInterface;
     }
-    if (inJSDoc) {
-      jsdocLines.push(line);
-
-      if (line.includes('*/')) inJSDoc = false; continue;
-    }
-
-    const propMatch = line.match(/^(?:readonly\s+)?(\w+)(\??):\s*(.+?);?\s*$/);
-    if (propMatch) {
-      const [, name, optional, type] = propMatch;
-      const { description, default: defaultVal } = parseJSDoc(jsdocLines.join('\n'));
-
-      const prop = { property: name, type: type.trim().replace(/,$/, '') };
-      if (optional !== '?') prop.required = true;
-      if (defaultVal) prop.default = defaultVal;
-      if (description) prop.description = description;
-
-      props.push(prop);
-    }
-
-    if (line && !line.startsWith('//')) jsdocLines = [];
+    props.push(prop);
   }
 
   return props;
 }
 
 /**
- * @param {string} source - Component .d.ts source
- * @param {{ interface: string, includes?: string[], includeFiles?: Record<string, string>, extends?: string[] }} config
+ * Crawls a component's `.d.ts` import graph and resolves its named props interface to a
+ * fully-inherited property list. Returns null when the interface itself can't be found (a
+ * removed/renamed export), matching the previous pipeline's "not found" signal.
+ *
+ * @param {{ interface: string, file?: string }} config
+ * @param {Map<string, string|null>} sharedFileCache - reused across components in the same
+ *   run (see build-ts-checker.js's crawl()) so the ~200 base files aren't re-fetched every time.
  */
-export function collectComponentProps(
-  source,
-  config,
-  baseProps = BASE_PROPS,
-  includeSources = {},
-) {
-  const {
-    interface: interfaceName,
-    includes = [],
-    extends: configBases,
-  } = config;
+export async function extractComponentProps(component, config, sharedFileCache) {
+  const entryPath = `${S2_COMPONENT_BASE}/${config.file ?? component}.d.ts`;
+  const fileCache = await crawl([entryPath], { cache: sharedFileCache });
 
-  const ownProps = [];
-  const seen = new Set();
+  const { program, checker } = buildProgram(fileCache, [entryPath]);
+  const sourceFile = program.getSourceFile(entryPath);
+  if (!sourceFile) return null;
 
-  const addProps = (props, inheritedFrom) => {
-    for (const prop of props) {
-      if (EXCLUDED_PROPERTIES.has(prop.property) || seen.has(prop.property)) continue;
-      seen.add(prop.property);
-      ownProps.push(
-        inheritedFrom ? { ...prop, inheritedFrom } : prop,
-      );
-    }
-  };
+  const interfaceDecl = findInterfaceDeclaration(sourceFile, config.interface);
+  if (!interfaceDecl) return null;
 
-  for (const includeName of includes) {
-    const includeSource = includeSources[includeName] ?? source;
-    const includeBlock = extractInterfaceBlock(includeSource, includeName);
-    if (!includeBlock) {
-      console.warn(`  Warning: include "${includeName}" not found in source`);
-      continue;
-    }
-    addProps(parseProps(includeBlock), includeName);
-  }
-
-  const block = extractInterfaceBlock(source, interfaceName);
-  if (block) {
-    addProps(parseProps(block));
-  }
-
-  if (!block && ownProps.length === 0) {
-    return null;
-  }
-
-  const bases = configBases ?? [];
-
-  const inheritedBaseProps = bases.flatMap((base) => {
-    if (!baseProps[base]) {
-      console.warn(
-        `  Warning: base type "${base}" not found in rsp-base-props.json — run extract-base-props.js`,
-      );
-      return [];
-    }
-    return baseProps[base]
-      .filter((p) => !EXCLUDED_PROPERTIES.has(p.property) && !seen.has(p.property))
-      .map((p) => ({ ...p, inheritedFrom: base }));
-  });
-
-  return [...ownProps, ...inheritedBaseProps];
+  const type = checker.getTypeAtLocation(interfaceDecl);
+  return extractPropsFromType(checker, type, config.interface);
 }
 
 /**
  * Builds the JSON object written to data/{Component}.json.
  *
- * @param {object[]} props Parsed prop rows from collectComponentProps.
+ * @param {object[]} props Parsed prop rows from extractComponentProps.
  * @param {string | null} status From fetchComponentDocStatus; omitted when null (no doc page).
  */
 export function buildComponentData(props, status) {
@@ -301,17 +153,21 @@ export function buildComponentData(props, status) {
 async function main() {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
+  const sharedFileCache = new Map();
   let count = 0;
   for (const [component, config] of Object.entries(ALLOW_LIST)) {
-    console.log(`Fetching types for ${component} (@react-spectrum/s2/dist/types/src/${config.file ?? component}.d.ts)...`,);
+    console.log(`Extracting ${component} (@react-spectrum/s2/dist/types/src/${config.file ?? component}.d.ts)...`);
 
-    const { mainSource, includeSources } = await loadComponentSources(component, config);
-    const props = collectComponentProps(mainSource, config, BASE_PROPS, includeSources);
+    let props;
+    try {
+      props = await extractComponentProps(component, config, sharedFileCache);
+    } catch (err) {
+      console.warn(`  Warning: failed to extract ${component}: ${err.message}`);
+      continue;
+    }
 
     if (!props) {
-      console.warn(
-        `  Warning: ${config.interface} not found in ${config.file ?? component}.d.ts`,
-      );
+      console.warn(`  Warning: ${config.interface} not found in ${config.file ?? component}.d.ts`);
       continue;
     }
 
@@ -329,6 +185,12 @@ async function main() {
     );
     count++;
   }
+
+  const stale = pruneStaleData(readdirSync(OUTPUT_DIR), Object.keys(ALLOW_LIST));
+  stale.forEach((file) => {
+    unlinkSync(join(OUTPUT_DIR, file));
+    console.log(`  Removed ${file} — not in components.json.`);
+  });
 
   console.log(`Done. Wrote ${count} component file(s) to ${OUTPUT_DIR}`);
 }

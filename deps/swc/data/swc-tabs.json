@@ -19,8 +19,8 @@
     "type": "\"compact\" | \"regular\"",
     "kind": "enum",
     "values": [
-      "compact",
-      "regular"
+      "regular",
+      "compact"
     ],
     "optional": false,
     "description": "Layout density: `regular` (default) or `compact` (reduced tab spacing).",
