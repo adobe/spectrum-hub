@@ -95,8 +95,8 @@
       "type": "\"all\" | \"selection\"",
       "kind": "enum",
       "values": [
-        "all",
-        "selection"
+        "selection",
+        "all"
       ],
       "default": "'all'",
       "description": "Whether `disabledKeys` applies to all interactions, or only selection.",

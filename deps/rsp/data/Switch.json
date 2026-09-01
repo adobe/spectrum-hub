@@ -260,7 +260,7 @@
     },
     {
       "property": "inputRef",
-      "type": "RefObject<HTMLInputElement>",
+      "type": "(instance: HTMLInputElement) => void | (() => VoidOrUndefinedOnly) | RefObject<HTMLInputElement>",
       "kind": "unknown",
       "values": [],
       "description": "A ref for the HTML input element.",

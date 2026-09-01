@@ -1,13 +1,6 @@
 {
   "props": [
     {
-      "property": "selectedRoute",
-      "type": "string",
-      "kind": "text",
-      "values": [],
-      "description": "The route that is currently selected."
-    },
-    {
       "property": "styles",
       "type": "StylesPropWithHeight",
       "kind": "unknown",
@@ -125,6 +118,14 @@
       "values": [],
       "description": "Handler that is called when items are expanded or collapsed.",
       "inheritedFrom": "Expandable"
+    },
+    {
+      "property": "selectedRoute",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The route that is currently selected, matched against each item's `href`.",
+      "inheritedFrom": "NavigationTreeProps"
     }
   ],
   "status": "alpha"
