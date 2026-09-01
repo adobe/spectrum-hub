@@ -2,7 +2,30 @@
   {
     "attribute": "variant",
     "property": "variant",
-    "type": "string",
+    "type": "\"neutral\" | \"positive\" | \"notice\" | \"negative\" | \"fuchsia\" | \"indigo\" | \"magenta\" | \"purple\" | \"seafoam\" | \"yellow\" | \"chartreuse\" | \"celery\" | \"cyan\" | \"pink\" | \"turquoise\" | \"brown\" | \"cinnamon\" | \"silver\" | \"info\"",
+    "kind": "enum",
+    "values": [
+      "neutral",
+      "positive",
+      "notice",
+      "negative",
+      "fuchsia",
+      "indigo",
+      "magenta",
+      "purple",
+      "seafoam",
+      "yellow",
+      "chartreuse",
+      "celery",
+      "cyan",
+      "pink",
+      "turquoise",
+      "brown",
+      "cinnamon",
+      "silver",
+      "info"
+    ],
+    "optional": false,
     "default": "'neutral'",
     "description": "Semantic or non-semantic color variant for the status dot.",
     "since": "2.0.0-beta.1"
@@ -10,7 +33,15 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": false,
     "description": "The size of the status light.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"

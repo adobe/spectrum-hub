@@ -3,6 +3,9 @@
     "attribute": "value",
     "property": "value",
     "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
     "default": "0",
     "description": "Current value. Sanitized via `clampedValue` for rendering and\n`aria-valuenow`.",
     "inheritedFrom": "LinearProgressMixin",
@@ -12,6 +15,9 @@
     "attribute": "min-value",
     "property": "minValue",
     "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
     "default": "0",
     "description": "Bottom of the value range.",
     "inheritedFrom": "LinearProgressMixin",
@@ -21,6 +27,9 @@
     "attribute": "max-value",
     "property": "maxValue",
     "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
     "default": "100",
     "description": "Top of the value range.",
     "inheritedFrom": "LinearProgressMixin",
@@ -30,6 +39,9 @@
     "attribute": "accessible-label",
     "property": "accessibleLabel",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "''",
     "description": "Rare-case accessible-name fallback used when there is no visible\n`label` slot content (for example, a data grid of meters).\nRenders into `aria-label` on the role element when set.",
     "inheritedFrom": "LinearProgressMixin",
@@ -38,7 +50,10 @@
   {
     "attribute": "value-label",
     "property": "valueLabel",
-    "type": "string | undefined",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": true,
     "description": "Custom value text (e.g. `\"1 of 4\"`). Overrides the auto-formatted\nvalue in both rendered text and `aria-valuetext`.",
     "inheritedFrom": "LinearProgressMixin",
     "since": "2.0.0"
@@ -46,7 +61,13 @@
   {
     "attribute": "label-position",
     "property": "labelPosition",
-    "type": "LinearProgressLabelPosition",
+    "type": "\"top\" | \"side\"",
+    "kind": "enum",
+    "values": [
+      "top",
+      "side"
+    ],
+    "optional": false,
     "default": "'top'",
     "description": "Position of the label relative to the bar.",
     "inheritedFrom": "LinearProgressMixin",
@@ -55,7 +76,13 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "LinearProgressStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
+    "kind": "enum",
+    "values": [
+      "white",
+      "black"
+    ],
+    "optional": true,
     "description": "Static color override for use on images or colored backgrounds.",
     "inheritedFrom": "LinearProgressMixin",
     "since": "2.0.0"
@@ -63,7 +90,15 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": false,
     "description": "The size of the progress bar.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0"
@@ -72,6 +107,9 @@
     "attribute": "indeterminate",
     "property": "indeterminate",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "When true, the bar runs a looping fill animation and all four\n`aria-value*` attributes are omitted from the DOM. The visible\nvalue text is also omitted.",
     "inheritedFrom": "ProgressBarBase",

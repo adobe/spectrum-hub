@@ -2,14 +2,27 @@
   {
     "attribute": "static-color",
     "property": "staticColor",
-    "type": "ProgressCircleStaticColor | undefined",
+    "type": "\"white\" | \"black\"",
+    "kind": "enum",
+    "values": [
+      "white",
+      "black"
+    ],
+    "optional": true,
     "description": "Static color variant for use on different backgrounds.\n\nWhen set to 'white', the component uses white styling for images with a dark tinted background.\n\nWhen set to 'black', the component uses black styling for images with a light tinted background.",
     "since": "2.0.0-beta.1"
   },
   {
     "attribute": "size",
     "property": "size",
-    "type": "ElementSize",
+    "type": "\"s\" | \"m\" | \"l\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l"
+    ],
+    "optional": false,
     "description": "The size of the progress circle.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
@@ -18,6 +31,9 @@
     "attribute": "label",
     "property": "label",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "''",
     "description": "Accessible label for the progress circle.\n\nUsed to provide context about what is loading or progressing.\nWhen no accessible name is provided (no label, aria-label, or\naria-labelledby), a default \"Loading\" label is applied.",
     "inheritedFrom": "ProgressCircleBase",
@@ -27,6 +43,9 @@
     "attribute": "progress",
     "property": "progress",
     "type": "number | null",
+    "kind": "number",
+    "values": [],
+    "optional": false,
     "default": "null",
     "description": "Progress value from 0 to 100.\n\nWhen `null` (indeterminate), the component shows a loading animation.\nSetting a number switches to determinate mode. Removing the `progress`\nattribute or setting this property to `null` returns to indeterminate.\nValues outside 0–100 or non-finite numbers are clamped (non-finite becomes 0).\n\nReflected to the `progress` attribute when set; the attribute is omitted when indeterminate.",
     "inheritedFrom": "ProgressCircleBase",

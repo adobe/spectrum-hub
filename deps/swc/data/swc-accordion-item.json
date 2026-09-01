@@ -3,6 +3,9 @@
     "attribute": "open",
     "property": "open",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "description": "Whether the accordion item panel is expanded.",
     "inheritedFrom": "AccordionItemBase",
     "since": "2.0.0-beta.1"
@@ -11,6 +14,9 @@
     "attribute": "disabled",
     "property": "disabled",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "Whether the accordion item is disabled. A disabled item keeps its header\nin the tab order but blocks toggling.",
     "inheritedFrom": "AccordionItemBase",
@@ -19,7 +25,15 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "AccordionSize | undefined",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": true,
     "description": "The size of the item. Inherited from the parent accordion; controls which\nchevron icon is displayed. Has no effect when the item is used standalone.",
     "inheritedFrom": "AccordionItemBase",
     "since": "2.0.0-beta.1"

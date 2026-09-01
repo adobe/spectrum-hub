@@ -2,7 +2,14 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "IllustratedMessageSize",
+    "type": "\"s\" | \"m\" | \"l\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l"
+    ],
+    "optional": false,
     "default": "'m'",
     "description": "The size of the message",
     "inheritedFrom": "IllustratedMessageBase",
@@ -11,7 +18,13 @@
   {
     "attribute": "orientation",
     "property": "orientation",
-    "type": "IllustratedMessageOrientation",
+    "type": "\"horizontal\" | \"vertical\"",
+    "kind": "enum",
+    "values": [
+      "horizontal",
+      "vertical"
+    ],
+    "optional": false,
     "default": "'vertical'",
     "description": "The layout orientation",
     "inheritedFrom": "IllustratedMessageBase",

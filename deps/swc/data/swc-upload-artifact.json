@@ -2,7 +2,13 @@
   {
     "attribute": "type",
     "property": "type",
-    "type": "'card' | 'media'",
+    "type": "\"card\" | \"media\"",
+    "kind": "enum",
+    "values": [
+      "card",
+      "media"
+    ],
+    "optional": false,
     "default": "'card'",
     "description": "Visual treatment type for this artifact."
   },
@@ -10,6 +16,9 @@
     "attribute": "dismissible",
     "property": "dismissible",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "When `true`, show a dismiss affordance and emit `swc-upload-artifact-dismiss` on click."
   },
@@ -17,6 +26,9 @@
     "attribute": "dismiss-label",
     "property": "dismissLabel",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "'Remove attachment'",
     "description": "Accessible label for the dismiss/remove attachment button."
   }

@@ -2,7 +2,14 @@
   {
     "attribute": "status",
     "property": "status",
-    "type": "ResponseStatusStatus",
+    "type": "\"active\" | \"complete\" | \"stopped\"",
+    "kind": "enum",
+    "values": [
+      "active",
+      "complete",
+      "stopped"
+    ],
+    "optional": false,
     "default": "'active'",
     "description": "Whole response lifecycle status."
   },
@@ -10,6 +17,9 @@
     "attribute": "open",
     "property": "open",
     "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
     "default": "false",
     "description": "`true`: step timeline open."
   },
@@ -17,6 +27,9 @@
     "attribute": "accessible-label",
     "property": "accessibleLabel",
     "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
     "default": "''",
     "description": "Accessible name for the step list panel."
   }
