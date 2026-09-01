@@ -2,28 +2,109 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL' | 'fullscreen' | 'fullscreenTakeover'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\" | \"fullscreen\" | \"fullscreenTakeover\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "fullscreen",
+        "fullscreenTakeover"
+      ],
       "default": "'M'",
       "description": "The size of the Modal."
     },
     {
+      "property": "shouldCloseOnInteractOutside",
+      "type": "(element: Element) => boolean",
+      "kind": "unknown",
+      "values": [],
+      "description": "When user interacts with the argument element outside of the overlay ref,\nreturn true if onClose should be called.  This gives you a chance to filter\nout interaction with elements that should not dismiss the overlay.\nBy default, onClose will always be called on interaction outside the overlay ref.",
+      "inheritedFrom": "AriaOverlayProps"
+    },
+    {
       "property": "isEntering",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the modal is currently performing an entry animation.",
       "inheritedFrom": "ModalOverlayProps"
     },
     {
       "property": "isExiting",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the modal is currently performing an exit animation.",
       "inheritedFrom": "ModalOverlayProps"
     },
     {
       "property": "UNSTABLE_portalContainer",
       "type": "Element",
+      "kind": "unknown",
+      "values": [],
       "default": "document.body",
-      "description": "The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.",
+      "description": "The container element in which the overlay portal will be placed. This may have unknown\nbehavior depending on where it is portalled to.",
       "inheritedFrom": "ModalOverlayProps"
+    },
+    {
+      "property": "isDismissable",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "default": "false",
+      "description": "Whether to close the modal when the user interacts outside it.",
+      "inheritedFrom": "AriaModalOverlayProps"
+    },
+    {
+      "property": "isKeyboardDismissDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "default": "false",
+      "description": "Whether pressing the escape key to close the modal should be disabled.",
+      "inheritedFrom": "AriaModalOverlayProps"
+    },
+    {
+      "property": "isOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (controlled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "defaultOpen",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the overlay is open by default (uncontrolled).",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the overlay's open state changes.",
+      "inheritedFrom": "OverlayTriggerProps"
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (values: ModalRenderProps & { defaultChildren: ReactNode; }) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "The children of the component. A function may be provided to alter the children based on\ncomponent state.",
+      "inheritedFrom": "RenderProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     }
   ]
 }

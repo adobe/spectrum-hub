@@ -2,28 +2,45 @@
   "props": [
     {
       "property": "id",
-      "type": "Key",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
       "description": "The unique id of the SelectBox."
     },
     {
       "property": "textValue",
       "type": "string",
+      "kind": "text",
+      "values": [],
       "description": "A string representation of the SelectBox's contents, used for features like typeahead."
     },
     {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "An accessibility label for this item."
+    },
+    {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The contents of the SelectBox."
     },
     {
       "property": "isDisabled",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the SelectBox is disabled."
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

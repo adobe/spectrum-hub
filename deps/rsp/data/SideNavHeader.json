@@ -1,3 +1,506 @@
 {
-  "props": []
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The children of the component.",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "dir",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "lang",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "hidden",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "inert",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "translate",
+      "type": "\"yes\" | \"no\"",
+      "kind": "enum",
+      "values": [
+        "yes",
+        "no"
+      ],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "onClick",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onClickCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAuxClick",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAuxClickCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onContextMenu",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onContextMenuCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onDoubleClick",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onDoubleClickCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseDown",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseDownCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseEnter",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseLeave",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseMove",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseMoveCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOut",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOutCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOver",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOverCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseUp",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseUpCapture",
+      "type": "MouseEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchCancel",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchCancelCapture",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchEnd",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchEndCapture",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchMove",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchMoveCapture",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchStart",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchStartCapture",
+      "type": "TouchEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerDown",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerDownCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerMove",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerMoveCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerUp",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerUpCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerCancel",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerCancelCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerEnter",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerLeave",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOver",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOverCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOut",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOutCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onGotPointerCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onGotPointerCaptureCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onLostPointerCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onLostPointerCaptureCapture",
+      "type": "PointerEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onScroll",
+      "type": "UIEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onScrollCapture",
+      "type": "UIEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onWheel",
+      "type": "WheelEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onWheelCapture",
+      "type": "WheelEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationStart",
+      "type": "AnimationEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationStartCapture",
+      "type": "AnimationEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationEnd",
+      "type": "AnimationEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationEndCapture",
+      "type": "AnimationEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationIteration",
+      "type": "AnimationEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationIterationCapture",
+      "type": "AnimationEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionCancel",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionCancelCapture",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionEnd",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionEndCapture",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionRun",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionRunCapture",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionStart",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionStartCapture",
+      "type": "TransitionEventHandler<HTMLElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    }
+  ]
 }

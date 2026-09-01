@@ -3,7 +3,193 @@
     {
       "property": "isEmphasized",
       "type": "boolean",
-      "description": "Whether the button should be displayed with an [emphasized style](https://spectrum.adobe.com/page/action-button/#Emphasis)."
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the button should be displayed with an [emphasized\nstyle](https://spectrum.adobe.com/page/action-button/#Emphasis)."
+    },
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true,
+      "description": "The children of the group.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "size",
+      "type": "\"XS\" | \"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "default": "'M'",
+      "description": "Size of the buttons.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "density",
+      "type": "\"compact\" | \"regular\"",
+      "kind": "enum",
+      "values": [
+        "compact",
+        "regular"
+      ],
+      "default": "'regular'",
+      "description": "Spacing between the buttons.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "isQuiet",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the button should be displayed with a [quiet\nstyle](https://spectrum.adobe.com/page/action-button/#Quiet).",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "isJustified",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the buttons should divide the container width equally.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "staticColor",
+      "type": "\"white\" | \"black\" | \"auto\"",
+      "kind": "enum",
+      "values": [
+        "white",
+        "black",
+        "auto"
+      ],
+      "description": "The static color style to apply. Useful when the ActionButtonGroup appears over a color\nbackground.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "orientation",
+      "type": "\"horizontal\" | \"vertical\"",
+      "kind": "enum",
+      "values": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "'horizontal'",
+      "description": "The axis the group should align with.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the group is disabled.",
+      "inheritedFrom": "ActionButtonGroupProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "selectionMode",
+      "type": "\"single\" | \"multiple\"",
+      "kind": "enum",
+      "values": [
+        "single",
+        "multiple"
+      ],
+      "default": "'single'",
+      "description": "Whether single or multiple selection is enabled.",
+      "inheritedFrom": "ToggleGroupProps"
+    },
+    {
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the collection allows empty selection.",
+      "inheritedFrom": "ToggleGroupProps"
+    },
+    {
+      "property": "selectedKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The currently selected keys in the collection (controlled).",
+      "inheritedFrom": "ToggleGroupProps"
+    },
+    {
+      "property": "defaultSelectedKeys",
+      "type": "Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "ToggleGroupProps"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(keys: Set<Key>) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "ToggleGroupProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
     }
   ],
   "status": "stable"

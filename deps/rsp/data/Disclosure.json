@@ -2,36 +2,96 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'XL'",
+      "type": "\"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the disclosure."
     },
     {
       "property": "density",
-      "type": "'compact' | 'regular' | 'spacious'",
+      "type": "\"compact\" | \"regular\" | \"spacious\"",
+      "kind": "enum",
+      "values": [
+        "compact",
+        "regular",
+        "spacious"
+      ],
       "default": "'regular'",
       "description": "The amount of space between the disclosures."
     },
     {
       "property": "isQuiet",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the disclosure should be displayed with a quiet style."
     },
     {
       "property": "children",
-      "type": "ReactNode",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The contents of the disclosure, consisting of a DisclosureTitle and DisclosurePanel."
     },
     {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the disclosure is disabled.",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "onExpandedChange",
+      "type": "(isExpanded: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the disclosure's expanded state changes.",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "isExpanded",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the disclosure is expanded (controlled).",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "defaultExpanded",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the disclosure is expanded by default (uncontrolled).",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
       "property": "id",
-      "type": "Key",
-      "description": "An id for the disclosure when used within a DisclosureGroup, matching the id used in `expandedKeys`.",
-      "inheritedFrom": "DisclosureProps"
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "An id for the disclosure when used within a DisclosureGroup, matching the id used in\n`expandedKeys`."
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
     },
     {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

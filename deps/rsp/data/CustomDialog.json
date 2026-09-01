@@ -2,34 +2,115 @@
   "props": [
     {
       "property": "size",
-      "type": "'S' | 'M' | 'L' | 'fullscreen' | 'fullscreenTakeover'",
+      "type": "\"S\" | \"M\" | \"L\" | \"fullscreen\" | \"fullscreenTakeover\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M",
+        "L",
+        "fullscreen",
+        "fullscreenTakeover"
+      ],
       "description": "The size of the Dialog."
     },
     {
       "property": "isDismissible",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the Dialog is dismissible."
     },
     {
       "property": "isKeyboardDismissDisabled",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether pressing the escape key to close the dialog should be disabled."
     },
     {
       "property": "padding",
-      "type": "'default' | 'none'",
+      "type": "\"default\" | \"none\"",
+      "kind": "enum",
+      "values": [
+        "default",
+        "none"
+      ],
       "default": "'default'",
       "description": "The amount of padding around the contents of the dialog."
     },
     {
       "property": "children",
-      "type": "ReactNode | ((opts: DialogRenderProps) => ReactNode)",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (opts: DialogRenderProps) => ReactNode",
+      "kind": "unknown",
+      "values": [],
       "description": "Children of the dialog. A function may be provided to access a function to close the dialog.",
       "inheritedFrom": "DialogProps"
     },
     {
+      "property": "role",
+      "type": "\"dialog\" | \"alertdialog\"",
+      "kind": "enum",
+      "values": [
+        "dialog",
+        "alertdialog"
+      ],
+      "default": "'dialog'",
+      "description": "The accessibility role for the dialog.",
+      "inheritedFrom": "AriaDialogProps"
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    },
+    {
       "property": "styles",
       "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
       "description": "Spectrum-defined styles, returned by the `style()` macro.",
       "inheritedFrom": "StyleProps"
     }

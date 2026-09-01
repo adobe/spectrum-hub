@@ -1,42 +1,113 @@
 {
   "props": [
     {
-      "property": "isSticky",
-      "type": "boolean",
-      "inheritedFrom": "CellProps"
-    },
-    {
-      "property": "children",
-      "type": "ReactNode",
-      "required": true,
-      "description": "The content to render as the cell children.",
-      "inheritedFrom": "CellProps"
-    },
-    {
       "property": "renderEditing",
       "type": "() => ReactNode",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The component which will handle editing the cell. For example, a `TextField` or a `Picker`."
     },
     {
       "property": "isSaving",
       "type": "boolean",
+      "kind": "boolean",
+      "values": [],
       "description": "Whether the cell is currently being saved."
     },
     {
       "property": "onSubmit",
       "type": "(e: FormEvent<HTMLFormElement>) => void",
+      "kind": "unknown",
+      "values": [],
       "description": "Handler that is called when the value has been changed and is ready to be saved."
     },
     {
       "property": "onCancel",
       "type": "() => void",
+      "kind": "unknown",
+      "values": [],
       "description": "Handler that is called when the user cancels the edit."
     },
     {
       "property": "action",
-      "type": "string | FormHTMLAttributes<HTMLFormElement>['action']",
+      "type": "string | (formData: FormData) => void | Promise<void>",
+      "kind": "unknown",
+      "values": [],
       "description": "The action to submit the form to. Only available in React 19+."
+    },
+    {
+      "property": "id",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The unique id of the cell.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A string representation of the cell's contents, used for features like typeahead.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "colSpan",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "Indicates how many columns the data cell spans.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "focusMode",
+      "type": "\"child\" | \"cell\"",
+      "kind": "enum",
+      "values": [
+        "child",
+        "cell"
+      ],
+      "description": "Whether the cell or its first focusable child element should be focused when the cell is\nfocused. Defaults to 'child' in arrow keyboard navigation mode and 'cell' in tab keyboard\nnavigation mode.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the cell should support arrow key navigation even when the containing table uses\ntab keyboard navigation. Allows users to navigate between cells and rows with arrow keys while\nfocus is on an interactive child element within the cell.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true,
+      "description": "The content to render as the cell children.",
+      "inheritedFrom": "CellProps"
+    },
+    {
+      "property": "align",
+      "type": "\"start\" | \"center\" | \"end\"",
+      "kind": "enum",
+      "values": [
+        "start",
+        "center",
+        "end"
+      ],
+      "default": "'start'",
+      "description": "The alignment of the column's contents relative to its allotted width.",
+      "inheritedFrom": "ColumnProps"
+    },
+    {
+      "property": "showDivider",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the column should render a divider between it and the next column.",
+      "inheritedFrom": "ColumnProps"
     }
   ]
 }

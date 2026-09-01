@@ -1,32 +1,220 @@
 {
   "props": [
     {
+      "property": "variant",
+      "type": "\"primary\" | \"secondary\" | \"tertiary\"",
+      "kind": "enum",
+      "values": [
+        "primary",
+        "secondary",
+        "tertiary"
+      ],
+      "description": "The visual style of the Card."
+    },
+    {
       "property": "children",
-      "type": "ReactNode | ((renderProps: CardRenderProps) => ReactNode)",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (renderProps: CardRenderProps) => ReactNode",
+      "kind": "unknown",
+      "values": [],
       "required": true,
       "description": "The children of the Card.",
       "inheritedFrom": "CardProps"
     },
     {
+      "property": "id",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The unique id of the item.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "value",
+      "type": "object",
+      "kind": "unknown",
+      "values": [],
+      "description": "The object value that this item represents. When using dynamic collections, this is set\nautomatically.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A string representation of the item's contents, used for features like typeahead.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the item is disabled.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "onAction",
+      "type": "() => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a user performs an action on the item. The exact user event depends\non the collection's `selectionBehavior` prop and the interaction modality.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "focusMode",
+      "type": "\"child\" | \"row\"",
+      "kind": "enum",
+      "values": [
+        "child",
+        "row"
+      ],
+      "description": "Whether the row or its first focusable child element should be focused when navigating\nto the row. Defaults to 'row'.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the row should support arrow key navigation even when the containing collection uses\ntab keyboard navigation. Allows users to navigate between rows with arrow keys while\nfocus is on an interactive child element within the row.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "href",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A URL to link to. See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#href).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "hrefLang",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Hints at the human language of the linked URL.\nSee[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#hreflang).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "target",
+      "type": "\"_self\" | \"_blank\" | \"_parent\" | \"_top\" | string & {}",
+      "kind": "unknown",
+      "values": [],
+      "description": "The target window for the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "rel",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The relationship between the linked resource and the current page. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "download",
+      "type": "string | false | true",
+      "kind": "unknown",
+      "values": [],
+      "description": "Causes the browser to download the linked URL. A string may be provided to suggest a file name.\nSee [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#download).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "ping",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A space-separated list of URLs to ping when the link is followed. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#ping).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "referrerPolicy",
+      "type": "\"\" | \"no-referrer\" | \"no-referrer-when-downgrade\" | \"origin\" | \"origin-when-cross-origin\" | \"same-origin\" | \"strict-origin\" | \"strict-origin-when-cross-origin\" | \"unsafe-url\"",
+      "kind": "enum",
+      "values": [
+        "",
+        "no-referrer",
+        "no-referrer-when-downgrade",
+        "origin",
+        "origin-when-cross-origin",
+        "same-origin",
+        "strict-origin",
+        "strict-origin-when-cross-origin",
+        "unsafe-url"
+      ],
+      "description": "How much of the referrer to send when following the link. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#referrerpolicy).",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "routerOptions",
+      "type": "never",
+      "kind": "unknown",
+      "values": [],
+      "description": "Options for the configured client side router.",
+      "inheritedFrom": "LinkDOMProps"
+    },
+    {
+      "property": "onPress",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the press is released over the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressStart",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a press interaction starts.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressEnd",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a press interaction ends, either\nover the target or when the pointer leaves the target.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressChange",
+      "type": "(isPressed: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the press state changes.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
+      "property": "onPressUp",
+      "type": "(e: PressEvent) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when a press is released over the target, regardless of\nwhether it started on the target or not.",
+      "inheritedFrom": "PressEvents"
+    },
+    {
       "property": "size",
-      "type": "'XS' | 'S' | 'M' | 'L' | 'XL'",
+      "type": "\"XS\" | \"S\" | \"M\" | \"L\" | \"XL\"",
+      "kind": "enum",
+      "values": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "default": "'M'",
       "description": "The size of the Card.",
       "inheritedFrom": "CardProps"
     },
     {
-      "property": "density",
-      "type": "'compact' | 'regular' | 'spacious'",
-      "default": "'regular'",
-      "description": "The amount of internal padding within the Card.",
-      "inheritedFrom": "CardProps"
-    },
-    {
-      "property": "variant",
-      "type": "'primary' | 'secondary' | 'tertiary' | 'quiet'",
-      "default": "'primary'",
-      "description": "The visual style of the Card.",
-      "inheritedFrom": "CardProps"
+      "property": "styles",
+      "type": "StylesProp",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "StyleProps"
     }
   ]
 }
