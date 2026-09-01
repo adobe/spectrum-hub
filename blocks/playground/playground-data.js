@@ -68,13 +68,48 @@ export async function fetchPlaygroundSheets(url) {
   return { componentsSheet, controlsSheet };
 }
 
-// Returns the authored property names for a component (rows with
-// "component"/"properties" columns), empty if none authored.
-export function getComponentProperties(name, componentsSheet) {
+// Splits a comma-separated sheet cell into trimmed, non-empty entries.
+function splitCell(value) {
+  return String(value ?? '').split(',').map((part) => part.trim()).filter(Boolean);
+}
+
+/**
+ * The authored property names for a component on this implementation's page.
+ *
+ * A component may be authored once for every implementation that shares a property
+ * list, or split into one row per implementation where they diverge (Badge has
+ * `fillStyle` on RSP but not SWC). The optional "implementation" column holds a
+ * comma-separated list; a row without one serves every implementation, so existing
+ * rows keep working unqualified.
+ *
+ * A qualified row wins over an unqualified one. Anything the author cannot have
+ * meant — no row at all, or two rows claiming the same implementation — warns
+ * rather than silently picking, since a dropped property looks identical to one
+ * that was never authored.
+ */
+export function getComponentProperties(name, implementation, componentsSheet, onSkip) {
   const normalized = name.trim().toLowerCase();
-  const row = componentsSheet.find((r) => r.component?.trim().toLowerCase() === normalized);
-  if (!row?.properties?.trim()) { return []; }
-  return row.properties.split(',').map((p) => p.trim()).filter(Boolean);
+  const rows = componentsSheet.filter((r) => r.component?.trim().toLowerCase() === normalized);
+  if (!rows.length) {
+    onSkip?.(`No row in the components sheet for "${name}", so no controls can be built.`);
+    return [];
+  }
+
+  const target = implementation?.trim().toLowerCase();
+  const qualified = rows.filter((r) => splitCell(r.implementation)
+    .some((entry) => entry.toLowerCase() === target));
+  const unqualified = rows.filter((r) => !splitCell(r.implementation).length);
+  const candidates = qualified.length ? qualified : unqualified;
+
+  if (!candidates.length) {
+    onSkip?.(`The components sheet has rows for "${name}" but none covering "${implementation}", so no controls can be built.`);
+    return [];
+  }
+  if (candidates.length > 1) {
+    onSkip?.(`The components sheet has more than one row for "${name}" covering "${implementation}" — using the first.`);
+  }
+
+  return splitCell(candidates[0].properties);
 }
 
 // Builds a lookup map from property name to its control type + options (the

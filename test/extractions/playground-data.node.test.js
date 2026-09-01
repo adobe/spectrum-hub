@@ -186,26 +186,88 @@ describe('cachedFetch', () => {
 });
 
 describe('getComponentProperties', () => {
-  it('returns the property list for a known component', () => {
-    const result = getComponentProperties('Button', COMPONENTS_SHEET);
+  // Every existing row predates the implementation column, so an unqualified row
+  // must keep serving every implementation — otherwise all 88 need backfilling.
+  it('uses an unqualified row for any implementation', () => {
+    const result = getComponentProperties('Button', 'swc', COMPONENTS_SHEET);
     assert.deepEqual(result, ['variant', 'staticColor', 'text', 'fillStyle', 'size', 'isDisabled']);
   });
 
   it('is case-insensitive on the component name', () => {
-    assert.equal(getComponentProperties('button', COMPONENTS_SHEET).length, 6);
-    assert.equal(getComponentProperties('BUTTON', COMPONENTS_SHEET).length, 6);
+    assert.equal(getComponentProperties('button', 'rsp', COMPONENTS_SHEET).length, 6);
+    assert.equal(getComponentProperties('BUTTON', 'rsp', COMPONENTS_SHEET).length, 6);
   });
 
   it('returns an empty array for a component with an empty properties string', () => {
-    assert.deepEqual(getComponentProperties('Accordion', COMPONENTS_SHEET), []);
+    assert.deepEqual(getComponentProperties('Accordion', 'rsp', COMPONENTS_SHEET), []);
   });
 
   it('returns an empty array for a component with a null properties value', () => {
-    assert.deepEqual(getComponentProperties('Badge', COMPONENTS_SHEET), []);
+    assert.deepEqual(getComponentProperties('Badge', 'rsp', COMPONENTS_SHEET), []);
   });
 
-  it('returns an empty array for an unknown component', () => {
-    assert.deepEqual(getComponentProperties('NonExistent', COMPONENTS_SHEET), []);
+  it('warns and returns an empty array for an unknown component', () => {
+    const warnings = [];
+    assert.deepEqual(getComponentProperties('NonExistent', 'rsp', COMPONENTS_SHEET, (m) => warnings.push(m)), []);
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /no row/i);
+  });
+
+  describe('implementation column', () => {
+    const SHEET = [
+      { component: 'badge', implementation: 'rsp', properties: 'fillStyle, overflowMode, size' },
+      { component: 'badge', implementation: 'swc', properties: 'fixed, outline, size' },
+      { component: 'button', implementation: 'ios, rsp, swc', properties: 'variant, size' },
+      { component: 'divider', properties: 'size, orientation' },
+      { component: 'tabs', implementation: 'rsp', properties: 'density' },
+    ];
+
+    it('picks the row matching the page implementation', () => {
+      assert.deepEqual(getComponentProperties('badge', 'rsp', SHEET), ['fillStyle', 'overflowMode', 'size']);
+      assert.deepEqual(getComponentProperties('badge', 'swc', SHEET), ['fixed', 'outline', 'size']);
+    });
+
+    it('reads the column as a comma-separated list', () => {
+      for (const impl of ['ios', 'rsp', 'swc']) {
+        assert.deepEqual(getComponentProperties('button', impl, SHEET), ['variant', 'size'], impl);
+      }
+    });
+
+    it('falls back to an unqualified row when no qualified row matches', () => {
+      assert.deepEqual(getComponentProperties('divider', 'swc', SHEET), ['size', 'orientation']);
+    });
+
+    it('prefers a qualified row over an unqualified one', () => {
+      const sheet = [
+        { component: 'badge', properties: 'shared' },
+        { component: 'badge', implementation: 'swc', properties: 'specific' },
+      ];
+      assert.deepEqual(getComponentProperties('badge', 'swc', sheet), ['specific']);
+      assert.deepEqual(getComponentProperties('badge', 'rsp', sheet), ['shared']);
+    });
+
+    it('warns when rows exist for the component but none covers this implementation', () => {
+      const warnings = [];
+      assert.deepEqual(getComponentProperties('tabs', 'swc', SHEET, (m) => warnings.push(m)), []);
+      assert.equal(warnings.length, 1);
+      assert.match(warnings[0], /swc/);
+    });
+
+    it('warns and takes the first when two rows claim the same implementation', () => {
+      const warnings = [];
+      const sheet = [
+        { component: 'badge', implementation: 'swc', properties: 'first' },
+        { component: 'badge', implementation: 'swc, ios', properties: 'second' },
+      ];
+      assert.deepEqual(getComponentProperties('badge', 'swc', sheet, (m) => warnings.push(m)), ['first']);
+      assert.equal(warnings.length, 1);
+      assert.match(warnings[0], /more than one/i);
+    });
+
+    it('ignores case and spacing in the column', () => {
+      const sheet = [{ component: 'badge', implementation: '  IOS , SWC ', properties: 'a, b' }];
+      assert.deepEqual(getComponentProperties('badge', 'swc', sheet), ['a', 'b']);
+    });
   });
 });
 
