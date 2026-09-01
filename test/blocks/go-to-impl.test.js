@@ -68,7 +68,7 @@ describe('go-to-impl block', () => {
 
   describe('decorateGoToImpl', () => {
     // upstreamName now comes from a static import of deps/build-status-index.js's build
-    // output (deps/impl-aliases.json) rather than a per-page fetch — these exercise real
+    // output (deps/impl-component-names.js) rather than a per-page fetch — these exercise real
     // committed alias entries instead of stubbing a network response.
     it('sets the SWC label and deep-links to the SWC docs in a new tab', () => {
       window.history.pushState({}, '', '/web/swc/components/action-button');
@@ -91,7 +91,7 @@ describe('go-to-impl block', () => {
     });
 
     it('deep-links to the primary component when the current impl carries an alias', () => {
-      // deps/impl-aliases.json's swc entry for this shared slug: upstreamName "ColorHandle".
+      // deps/impl-component-names.js's swc entry for this shared slug: docs "ColorHandle".
       window.history.pushState({}, '', '/web/swc/components/color-handle-and-loupe');
       const a = makeAnchor();
       decorateGoToImpl(a, a.querySelector('span'));
@@ -101,8 +101,9 @@ describe('go-to-impl block', () => {
     });
 
     it('ignores another impl\'s alias — only the current impl\'s entry applies', () => {
-      // deps/impl-aliases.json aliases "action-group" for rsp (ActionButtonGroup) but not
-      // for swc, so the swc page falls back to its own URL slug unchanged.
+      // deps/impl-component-names.js gives "action-group" a docs name for rsp
+      // (ActionButtonGroup) but not for swc, so the swc page falls back to its own
+      // URL slug unchanged.
       window.history.pushState({}, '', '/web/swc/components/action-group');
       const a = makeAnchor();
       decorateGoToImpl(a, a.querySelector('span'));

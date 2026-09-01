@@ -8,8 +8,8 @@
  * that downstream surfaces bind to — plus one small `deps/status/<slug>.json` per
  * component (its web cells + Figma node id) for blocks/component-status.js, so a single
  * component page's status pills don't need to fetch and search the whole index — and
- * `deps/impl-aliases.js`, a tiny slug → upstreamName lookup statically imported (no
- * fetch) by scripts/utils/go-to-impl.js.
+ * `deps/impl-component-names.js`, a tiny per-implementation slug → { docs, export }
+ * lookup statically imported (no fetch) by scripts/utils/go-to-impl.js and the playground.
  *
  * Design guarantees:
  * - Columns are data-driven. The status table's web columns are defined here (WEB_COLUMNS)
@@ -48,8 +48,7 @@ const SLICES_DIR = join(__dirname, 'status');
 const ALIASES_FILE = join(__dirname, 'component-aliases.json');
 const OVERRIDES_FILE = join(__dirname, 'status-overrides.json');
 const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
-const IMPL_ALIASES_FILE = join(__dirname, 'impl-aliases.js');
-const RSP_EXPORT_NAMES_FILE = join(__dirname, 'rsp-export-names.js');
+const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 
 // The single platform surfaced today. New platforms are additive (see the memory /
 // data-contract notes); each brings its own roster + columns.
@@ -493,57 +492,60 @@ export function buildComponentSlices(roster, components, figmaRoster) {
 }
 
 /**
- * Aggregates every cell's `upstreamName` (buildIndex's auto-derived alias, or a manual
- * override — see applyOverrides) into a tiny lookup keyed by the exact slug a live URL
- * carries: `{ <impl>: { <slug>: <upstreamName> } }`. Built from the already-computed
- * component slices (buildComponentSlices) so a `page` override's shared slug is picked up
- * for free, rather than re-deriving slugs by hand.
+ * The names an implementation uses for a component, keyed by the exact slug a live URL
+ * carries: `{ <impl>: { <slug>: { docs?, export? } } }`.
  *
- * Written once to `deps/impl-aliases.js` (a plain `export default {...}` module, not JSON —
- * this repo's ESLint parser target can't follow a JSON-with-import-attributes module through
- * scripts/utils/go-to-impl.js's own import, and a plain object literal needs no special
- * loading in the browser either) and statically imported (no fetch) from there. The whole
- * table is a couple dozen entries at most (most components have no alias at all), so shipping
- * it as a module avoids a per-page-load network round trip for data that's almost always
- * empty for the current page anyway.
+ * Two fields, because they answer different questions and disagree for real components:
  *
- * Figma is excluded — its own redirect field is `figmaPageSource` (selecting
- * buildComponentSlices' figmaPageId lookup, see there), not a code implementation go-to-impl.js
- * ever looks up by, and go-to-impl.js only ever reads `IMPL_ALIASES[impl]` for a registered
- * implementation id.
+ *   docs    which page the source's own docs site publishes it on. Many-to-one —
+ *           AlertDialog, Dialog and FullscreenDialog all link to Dialog.html.
+ *   export  what to import and render. One-to-one: FullscreenDialog is its own
+ *           component even though its docs redirect to Dialog's page.
+ *
+ * They diverge today on `cards` (Card vs CardView), `radio-button` (RadioGroup vs Radio)
+ * and `takeover-dialog` (Dialog vs FullscreenDialog). Collapsing them to a single value
+ * has shipped a bug before, so keep both and read the one that answers your question.
+ *
+ * `docs` comes from each cell's `upstreamName` (buildIndex's auto-derived alias, or a
+ * manual override — see applyOverrides), read off the already-computed slices so a `page`
+ * override's shared slug is picked up for free. `export` comes from the roster, where an
+ * entry exists only when the implementation's own name differs from the canonical one.
+ *
+ * Only RSP populates `export`: SWC renders by tag name, which deps/swc/components.json
+ * already maps. Figma is excluded entirely — its redirect field is `figmaPageSource`
+ * (selecting buildComponentSlices' figmaPageId lookup, see there), not a code
+ * implementation anything looks up here.
+ *
+ * Written to `deps/impl-component-names.js` as a plain `export default {...}` module, not
+ * JSON — this repo's ESLint parser target can't follow a JSON-with-import-attributes
+ * module through its consumers' own imports, and a plain object literal needs no special
+ * loading in the browser either. The whole table is a couple dozen entries at most, so a
+ * static import avoids a per-page-load round trip for data that's usually empty for the
+ * current page anyway.
  *
  * @param {{ slug: string, data: { web: object } }[]} slices
- * @returns {Record<string, Record<string, string>>}
+ * @param {{ name: string, sources: Record<string, string> }[]} roster
+ * @returns {Record<string, Record<string, { docs?: string, export?: string }>>}
  */
-export function buildImplAliases(slices) {
-  const aliases = {};
+export function buildImplComponentNames(slices, roster) {
+  const names = {};
+  const put = (impl, slug, field, value) => {
+    names[impl] = names[impl] ?? {};
+    names[impl][slug] = names[impl][slug] ?? {};
+    names[impl][slug][field] = value;
+  };
+
   for (const { slug, data } of slices) {
     for (const [impl, cell] of Object.entries(data.web ?? {})) {
       if (!cell?.upstreamName || !getImplementationById(impl)) { continue; }
-      aliases[impl] = aliases[impl] ?? {};
-      aliases[impl][slug] = cell.upstreamName;
+      put(impl, slug, 'docs', cell.upstreamName);
     }
   }
-  return aliases;
-}
 
-/**
- * Authored slug -> the real RSP export to import and render, for the minority whose
- * RSP name differs from the canonical one (`action-group` ships as ActionButtonGroup).
- *
- * Distinct from impl-aliases.js, which answers "which RSP *docs page* covers this
- * slug" and so points a slug at its family page — `radio-button` -> RadioGroup there,
- * but Radio here. Conflating the two has shipped a bug before; see
- * deps/docs/STATUS-FILES.md.
- *
- * @param {{ name: string, sources: Record<string, string> }[]} roster
- * @returns {Record<string, string>}
- */
-export function buildRspExportNames(roster) {
-  const names = {};
   for (const { name, sources } of roster) {
-    if (sources.rsp && sources.rsp !== name) { names[toSlug(name)] = sources.rsp; }
+    if (sources.rsp && sources.rsp !== name) { put('rsp', toSlug(name), 'export', sources.rsp); }
   }
+
   return names;
 }
 
@@ -641,17 +643,12 @@ function main() {
   console.log(`Wrote ${index.components.length} component(s) to ${OUTPUT_FILE}`);
   console.log(`Wrote ${slices.length} component status slice(s) to ${SLICES_DIR}`);
 
-  const implAliases = buildImplAliases(slices);
-  const implAliasesModule = '// Generated by deps/build-status-index.js — do not edit by hand.\n'
-    + `export default ${JSON.stringify(implAliases, null, 2)};\n`;
-  writeFileSync(IMPL_ALIASES_FILE, implAliasesModule);
-  const aliasCount = Object.values(implAliases).reduce((n, bySlug) => n + Object.keys(bySlug).length, 0);
-  console.log(`Wrote ${aliasCount} impl alias entr${aliasCount === 1 ? 'y' : 'ies'} to ${IMPL_ALIASES_FILE}`);
-
-  const rspExportNames = buildRspExportNames(roster);
-  writeFileSync(RSP_EXPORT_NAMES_FILE, '// Generated by deps/build-status-index.js — do not edit by hand.\n'
-    + `export default ${JSON.stringify(rspExportNames, null, 2)};\n`);
-  console.log(`Wrote ${Object.keys(rspExportNames).length} RSP export-name override(s) to ${RSP_EXPORT_NAMES_FILE}`);
+  const implComponentNames = buildImplComponentNames(slices, roster);
+  writeFileSync(IMPL_COMPONENT_NAMES_FILE, '// Generated by deps/build-status-index.js — do not edit by hand.\n'
+    + `export default ${JSON.stringify(implComponentNames, null, 2)};\n`);
+  const nameCount = Object.values(implComponentNames)
+    .reduce((n, bySlug) => n + Object.keys(bySlug).length, 0);
+  console.log(`Wrote ${nameCount} component name entr${nameCount === 1 ? 'y' : 'ies'} to ${IMPL_COMPONENT_NAMES_FILE}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

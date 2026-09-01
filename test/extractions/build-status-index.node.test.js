@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  buildRspExportNames,
   normalizeName,
   swcTagToPascal,
   canonicalNameForSwc,
@@ -18,7 +17,7 @@ import {
   applyOverrides,
   buildIndex,
   buildComponentSlices,
-  buildImplAliases,
+  buildImplComponentNames,
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
@@ -647,12 +646,17 @@ describe('buildComponentSlices', () => {
   });
 });
 
-describe('buildImplAliases', () => {
-  it('keys an upstreamName by impl and the slice\'s own slug', () => {
+// Two fields per entry, because `docs` and `export` answer different questions and
+// genuinely disagree: takeover-dialog documents at Dialog but renders FullscreenDialog.
+// Collapsing them to one value shipped a bug before — see deps/docs/STATUS-FILES.md.
+describe('buildImplComponentNames', () => {
+  it('keys a docs name by impl and the slice\'s own slug', () => {
     const slices = [
       { slug: 'action-group', data: { web: { rsp: { status: 'available', upstreamName: 'ActionButtonGroup' } } } },
     ];
-    assert.deepEqual(buildImplAliases(slices), { rsp: { 'action-group': 'ActionButtonGroup' } });
+    assert.deepEqual(buildImplComponentNames(slices, []), {
+      rsp: { 'action-group': { docs: 'ActionButtonGroup' } },
+    });
   });
 
   it('picks up a page override\'s shared slug, since it reads the slice\'s slug directly', () => {
@@ -667,19 +671,19 @@ describe('buildImplAliases', () => {
         },
       },
     ];
-    assert.deepEqual(buildImplAliases(slices), {
-      rsp: { 'color-handle-and-loupe': 'ColorHandle' },
-      swc: { 'color-handle-and-loupe': 'ColorHandle' },
+    assert.deepEqual(buildImplComponentNames(slices, []), {
+      rsp: { 'color-handle-and-loupe': { docs: 'ColorHandle' } },
+      swc: { 'color-handle-and-loupe': { docs: 'ColorHandle' } },
     });
   });
 
   it('omits a cell with no upstreamName', () => {
     const slices = [{ slug: 'action-button', data: { web: { rsp: { status: 'available' } } } }];
-    assert.deepEqual(buildImplAliases(slices), {});
+    assert.deepEqual(buildImplComponentNames(slices, []), {});
   });
 
-  it('returns an empty object for no slices', () => {
-    assert.deepEqual(buildImplAliases([]), {});
+  it('returns an empty object for no slices and no roster', () => {
+    assert.deepEqual(buildImplComponentNames([], []), {});
   });
 
   it('excludes a figma cell\'s upstreamName — it redirects the Figma link, not a code implementation', () => {
@@ -692,32 +696,41 @@ describe('buildImplAliases', () => {
         },
       },
     }];
-    assert.deepEqual(buildImplAliases(slices), {});
+    assert.deepEqual(buildImplComponentNames(slices, []), {});
   });
-});
 
-// The authored slug and the RSP export name diverge for a minority of components —
-// `action-group` ships as ActionButtonGroup. Derived from the roster rather than
-// hand-maintained, so a rename upstream cannot leave a stale entry behind.
-describe('buildRspExportNames', () => {
-  it('records only the components whose RSP name differs from the canonical one', () => {
+  it('records an export only where the RSP name differs from the canonical one', () => {
     const roster = [
       { name: 'Button', sources: { rsp: 'Button' } },
       { name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' } },
       { name: 'Table', sources: { rsp: 'TableView' } },
     ];
-    assert.deepEqual(buildRspExportNames(roster), {
-      'action-group': 'ActionButtonGroup',
-      table: 'TableView',
+    assert.deepEqual(buildImplComponentNames([], roster), {
+      rsp: {
+        'action-group': { export: 'ActionButtonGroup' },
+        table: { export: 'TableView' },
+      },
     });
   });
 
   it('skips a component with no RSP source at all', () => {
-    const roster = [{ name: 'FigmaOnly', sources: { figma: 'FigmaOnly' } }];
-    assert.deepEqual(buildRspExportNames(roster), {});
+    assert.deepEqual(buildImplComponentNames([], [{ name: 'FigmaOnly', sources: { figma: 'FigmaOnly' } }]), {});
   });
 
-  it('is empty for a roster where every name already matches', () => {
-    assert.deepEqual(buildRspExportNames([{ name: 'Button', sources: { rsp: 'Button' } }]), {});
+  // SWC renders by tag name, which deps/swc/components.json already maps, so it has no
+  // separate export to record — only the shape is implementation-agnostic today.
+  it('records no export for a SWC-only component', () => {
+    assert.deepEqual(buildImplComponentNames([], [{ name: 'ActionButton', sources: { swc: 'action-button' } }]), {});
+  });
+
+  // The case the merge exists for: one slug, two different answers, both kept.
+  it('carries docs and export side by side when they disagree', () => {
+    const slices = [
+      { slug: 'takeover-dialog', data: { web: { rsp: { status: 'available', upstreamName: 'Dialog' } } } },
+    ];
+    const roster = [{ name: 'TakeoverDialog', sources: { rsp: 'FullscreenDialog' } }];
+    assert.deepEqual(buildImplComponentNames(slices, roster), {
+      rsp: { 'takeover-dialog': { docs: 'Dialog', export: 'FullscreenDialog' } },
+    });
   });
 });
