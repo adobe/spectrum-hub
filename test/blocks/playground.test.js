@@ -502,8 +502,12 @@ describe('buildRspSnippet — self-closing components', () => {
     expect(snippet).to.equal('<Divider\n  size="L"\n/>');
   });
 
-  it('still falls back to Label when the fragment has its own text (e.g. Button)', () => {
-    expect(buildRspSnippet('Button', {}, '<Button>Button</Button>')).to.equal('<Button>Label</Button>');
+  // Was asserting the opposite. The fragment's own text is the authored content and
+  // the live preview always used it (initRsp sets currentProps.children from it), so
+  // replacing it with the placeholder here made the copyable code disagree with what
+  // was on screen — "Label" in the disclosure, "New" in the preview, on 13 routes.
+  it('keeps the fragment\'s own text rather than the placeholder', () => {
+    expect(buildRspSnippet('Button', {}, '<Button>Button</Button>')).to.equal('<Button>Button</Button>');
   });
 
   it('still falls back to Label when no fragment is given at all', () => {
@@ -518,7 +522,8 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
   const alertDialogMarkup = '<AlertDialog title="Delete file?" primaryActionLabel="Delete">This action cannot be undone.</AlertDialog>';
 
   it('wraps a DialogTrigger-family route in DialogTrigger + a labeled Button', () => {
-    // No `children` in currentProps, so it falls back to 'Label' like any leaf snippet.
+    // The fragment's own body text is kept — alert-dialog authors no text control, so
+    // this is the only content source and the preview renders it either way.
     const snippet = buildRspSnippet('AlertDialog', {}, alertDialogMarkup, false, 'alert-dialog');
     expect(snippet).to.equal([
       '<DialogTrigger>',
@@ -526,7 +531,7 @@ describe('buildRspSnippet — overlay trigger wrapping', () => {
       '  <AlertDialog',
       '    title="Delete file?"',
       '    primaryActionLabel="Delete">',
-      '    Label',
+      '    This action cannot be undone.',
       '  </AlertDialog>',
       '</DialogTrigger>',
     ].join('\n'));
@@ -1471,5 +1476,40 @@ describe('playground block — a route whose props live on its trigger', () => {
     document.body.append(el);
     await init(el);
     expect(el.querySelector('pre').textContent.includes('<Tooltip')).to.be.true;
+  });
+});
+
+// The 'Label' placeholder exists for a component whose text control has no value yet.
+// A component with NO text control (tooltip: placement, delay, trigger — none of them
+// TEXT_KEYS) was getting its authored fragment text replaced by that placeholder, so
+// the tooltip rendered the word "Label" instead of its content.
+describe('a fragment\'s own text survives when there is no text control', () => {
+  it('keeps the authored text', () => {
+    const snippet = buildRspSnippet(
+      'Tooltip',
+      { placement: { value: 'top', attribute: 'placement' } },
+      '<Tooltip>Helpful tip text</Tooltip>',
+      false,
+      'tooltip',
+    );
+    expect(snippet.includes('Helpful tip text')).to.be.true;
+    expect(snippet.includes('Label')).to.be.false;
+  });
+
+  it('still lets a text control override it', () => {
+    const snippet = buildRspSnippet(
+      'Button',
+      { text: { value: 'Press me', attribute: null } },
+      '<Button>Authored</Button>',
+      false,
+      null,
+    );
+    expect(snippet.includes('Press me')).to.be.true;
+    expect(snippet.includes('Authored')).to.be.false;
+  });
+
+  it('still falls back to the placeholder with no fragment at all', () => {
+    const snippet = buildRspSnippet('Button', {}, '', false, null);
+    expect(snippet.includes('Label')).to.be.true;
   });
 });
