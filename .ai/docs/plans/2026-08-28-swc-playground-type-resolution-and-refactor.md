@@ -1,6 +1,6 @@
 # SWC Playground — Type Resolution and Refactor
 
-**Status: Tasks 1–7 cherry-picked onto `refactor-swc`; the playground itself is being fully recreated, so Tasks 8–10 are superseded by the redesign in “Recreating the playground” below; Tasks 11–12 (cleanup that survives the rewrite) open** (2026-08-28).
+**Status: Tasks 1–7, 11, 13–15, 18–22 done; Task 12 answered by `refactor-rsp` (the RSP rewrite was brought over); Layer 1 complete for both catalogs; Layer 2 done on `refactor-playground`. Tasks 16–17 open, and Task 16 gates merging to `main`** (2026-08-31).
 
 The SWC half of the component playground had the same class of defect the RSP half already fixed in [the RSP inheritance-gap batch](./2026-08-13-rsp-playground-inheritance-gap-fixes.md): its extractor could not resolve named types, so the playground borrowed the *other* implementation's data to compensate — and shipped options for values the real component does not support. That is now fixed at the data source, not patched at the consumer.
 
@@ -56,7 +56,7 @@ Four `blocks/playground/` prerequisite commits were **not** carried over — `78
 - **No exclusion lists, no hand-edited data.** A narrower interim fix — excluding `premium`/`genai` from SWC's options by name — was considered and explicitly declined. The generated catalogs are rebuilt daily by cron; anything a hand-edit cannot survive is throwaway scaffolding, the same trap already documented for `components.json` in the RSP batch.
 - **Package resolution is derived, not tabled.** `deps/swc/cdn-resolve.js` resolves bare specifiers from each package's own published `exports` map, and `findCorePackageName()` discovers the `@adobe/*`-scoped core dependency at run time. This was a deliberate departure from RSP's static `PACKAGE_BASES` table, because that peer package has already been renamed once (`@spectrum-web-components/core` → `@adobe/spectrum-wc-core`).
 - **Crawl the CDN at the version `deps/swc/version.json` records, never local `node_modules`.** `package.json` pins `2.0.0-beta.0`; the `@beta` dist-tag currently resolves to `2.0.0-beta.2`. Confirmed drift between them — the local install is missing components entirely (`close-button`), and the peer package name differs.
-- **`impl-aliases.js` and `rsp-export-names.js` stay separate.** They look redundant and are not; conflating them has already shipped a real bug once. `deps/docs/STATUS-FILES.md` documents why.
+- **~~`impl-aliases.js` and `rsp-export-names.js` stay separate.~~ Superseded on `refactor-rsp` (2026-09-01).** The distinction is real and still enforced, but it did not need two files: they are now the `docs` and `export` fields of one generated `deps/impl-component-names.js`, and each reader names the field it wants. What shipped the original bug was answering a rendering question with the docs *value*, not the two files sharing a home. `deps/docs/STATUS-FILES.md` documents the current shape.
 - **Extend the existing implementation registry; do not build a second one.** A *new* per-implementation registry was proposed to generalize `resolveComponentMeta`'s branching, then walked back — correctly at the time, because it was justified by a hypothetical third implementation. Two things have since changed: ios/android is confirmed for October, and `scripts/utils/implementations.js` already exists and already promises "adding a new web implementation is intended to be a single edit here." The current position is therefore **not** a reversal of that walk-back: still no new registry file, but the playground should stop hardcoding `implementation === 'rsp'` and start importing the registry every other block already uses. Keep those entries a data table — the moment they grow lifecycle hooks, it becomes the thing that was rejected. The generic fallback shell (`blocks/playground/index.html`) and its image-viewer logic stay as they are.
 
 ## Priority order
@@ -403,12 +403,12 @@ Build **two** checks, not one: a mocked-workbook version as the CI gate (determi
 
 This is the regression net for the block refactor. It should exist **before** that branch starts, not after.
 
-### Task 18 — Document the canonical-name rule — NOT STARTED
-**Files:** `deps/docs/DATA-CONTRACT.md` (or a new `deps/docs/PLAYGROUND-CONTRACT.md`)
+### Task 18 — Document the canonical-name rule — DONE (`refactor-rsp`)
+**Files:** `deps/docs/PLAYGROUND-CONTRACT.md` (new), `deps/docs/DATA-CONTRACT.md`, `deps/rsp/README.md`, `deps/swc/README.md`
 
-The controls sheet is RSP-keyed and staying that way (see "Decisions taken 2026-08-29"), but nothing records that as a rule. Today a new row could use `disabled` or `isDisabled` and `propertyNameCandidates` would absorb either silently — the inconsistency never surfaces as an error.
+`DATA-CONTRACT.md` turned out to be about status resolution rather than the prop-row contract, so the consumer rules got their own file. `PLAYGROUND-CONTRACT.md` records the canonical-name rule (`is`/`has` prefix, each implementation's own spelling in its catalog row, the bridge as a documented mapping that retires when SWC emits a canonical name) alongside the rest of the consumer contract: one catalog per page, options from `values` and never `type`, `attribute` never crossing implementations, the catalog-only existence gate, and the derived "None" rule being SWC-only.
 
-Write down: canonical names use the `is`/`has` boolean prefix; each implementation's own property spelling and DOM attribute live in its catalog row; the bridge between them is a documented mapping, not a fallback. Fold in the `implementations` column schema and its two failure modes once those are settled.
+It points at the row shape rather than restating it, and closes with the known gaps and a table of which test enforces which rule. Both implementation READMEs link to it; two stale claims were corrected while doing this — the RSP README still listed union ordering as a limitation after it was fixed, and `DATA-CONTRACT.md` still pointed at `swc-data-contract.node.test.js`, which no longer exists.
 
 ### Task 19 — Layer 1 (SWC extraction half) — DONE (`refactor-swc`)
 **Files:** `deps/swc/resolve-attribute-types.js`, `deps/swc/extract-cem-components.js`, their two test files, `deps/swc/data/*.json`
