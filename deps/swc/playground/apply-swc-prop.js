@@ -4,10 +4,9 @@ import { buildIconSvg, buildIconUse } from '../../shared/playground/build-icon-s
 import { NO_ICON } from '../../shared/playground/icon-options.js';
 import { NONE_OPTION } from '../../shared/playground/none-option.js';
 
-// Applies one prop-update message from the block to a live SWC custom element.
+// Applies one prop-update message to a live SWC element.
 export function applySwcProp(el, { property, attribute, value }) {
-  // "label" prefers a real attribute or a `slot="label"` element over
-  // flat textContent — see apply-label-prop.js.
+  // See apply-label-prop.js for why a real attribute or slot beats textContent.
   if (property === 'label' && applyLabelProp(el, attribute, value)) {
     return;
   }
@@ -18,7 +17,7 @@ export function applySwcProp(el, { property, attribute, value }) {
   }
 
   if (property === 'icon') {
-    // swc-icon IS the icon (no separate slot element to reserve space).
+    // swc-icon is itself the icon — no slot element.
     if (el.localName === 'swc-icon') {
       if (value === NO_ICON) {
         el.replaceChildren();
@@ -27,14 +26,12 @@ export function applySwcProp(el, { property, attribute, value }) {
       }
       return;
     }
-    // Remove (not just clear) the slot element for "No icon" — an empty
-    // slotted element still reserves the icon's box and gap.
+    // Remove, not clear: an empty slotted element still reserves its box and gap.
     if (value === NO_ICON) {
       el.querySelector('[slot="icon"]')?.remove();
       return;
     }
-    // Fill the existing `<svg slot="icon">` in place, recreating it if a
-    // prior "No icon" removed it.
+    // Fill the existing svg in place, recreating it if "No icon" removed it.
     const existing = el.querySelector('[slot="icon"]');
     if (existing) {
       if (!existing.hasAttribute('viewBox')) { existing.setAttribute('viewBox', '0 0 20 20'); }
@@ -47,7 +44,7 @@ export function applySwcProp(el, { property, attribute, value }) {
     return;
   }
 
-  // An unset sentinel is the control's label for an absent value, not a real one.
+  // Remove the attribute rather than reflect the sentinel.
   if (value === NONE_OPTION) {
     applyAttribute(el, attribute, null);
     return;
