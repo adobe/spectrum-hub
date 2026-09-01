@@ -157,6 +157,16 @@ export const ioProfile = JSON.stringify({
 export const playgroundComponentsSheet = JSON.stringify({ data: [{ Component: 'Button', Properties: 'isDisabled' }] });
 export const playgroundControlsSheet = JSON.stringify({ data: [{ Property: 'isDisabled', control: 'switch' }] });
 export const playgroundRspProps = JSON.stringify({ props: [] });
+// Mirrors a real deps/swc/data row: `kind` and `values` are what the block builds
+// controls from — `type` is display text and nothing branches on it (see
+// deps/docs/PLAYGROUND-CONTRACT.md). A row without `kind` yields no control at all,
+// so dropping it here silently empties the controls panel.
 export const playgroundSwcProps = JSON.stringify([{
-  property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'false',
+  property: 'disabled',
+  attribute: 'disabled',
+  type: 'boolean',
+  kind: 'boolean',
+  values: [],
+  optional: false,
+  default: 'false',
 }]);
