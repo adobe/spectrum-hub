@@ -11,7 +11,7 @@
  */
 
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NO_STATIC_COLOR } from '../../deps/shared/playground/static-color-options.js';
+import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
 import { TEXT_KEYS } from '../../deps/shared/playground/text-keys.js';
 import { capitalize } from '../../deps/rsp/playground/pascal-case.js';
 
@@ -187,7 +187,9 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
   // "icon" is a slot property (like TEXT_KEYS), not a real attribute.
   const isIcon = property === 'icon';
   const isSlotProperty = TEXT_KEYS.has(property) || isIcon;
-  const isStaticColor = property === 'staticColor';
+  // A property that can be absent entirely needs an explicit "unset" choice in
+  // its control. staticColor is the only one named today.
+  const needsNoneOption = property === 'staticColor';
 
   // Any other implementation (e.g. ios/android) skips this gate entirely.
   const existsByImplementation = { rsp: existsInRsp, swc: existsInSwc };
@@ -204,12 +206,12 @@ export function resolveControl(property, implementation, controlsMap, rspProps, 
 
   // NO_ICON leads the list (so it's the default). A controls-sheet row may
   // curate its own icon subset; otherwise falls back to ICON_OPTIONS.
-  // NO_STATIC_COLOR leads the same way
+  // NONE_OPTION leads the same way
   let options;
   if (isIcon) {
     options = [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)];
-  } else if (isStaticColor) {
-    options = [NO_STATIC_COLOR, ...resolvePickerOptions(property, rspProps, swcProps)];
+  } else if (needsNoneOption) {
+    options = [NONE_OPTION, ...resolvePickerOptions(property, rspProps, swcProps)];
   } else {
     options = resolvePickerOptions(property, rspProps, swcProps);
   }
