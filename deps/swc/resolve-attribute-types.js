@@ -18,7 +18,7 @@
 import ts from 'typescript';
 import { componentEntryPath, rebaseInheritedModule } from './locate-published-files.js';
 import { crawl, buildProgram } from './build-ts-checker.js';
-import { typeToDisplayString, typeToValues } from '../shared/prop-contract.js';
+import { typeToDisplayString, typeToValues, declaredValueOrder } from '../shared/prop-contract.js';
 
 // A bare alias this pipeline can expand, optionally unioned with undefined.
 const BARE_ALIAS_RE = /^[A-Za-z_$][A-Za-z0-9_$]*(\s*\|\s*undefined)?$/;
@@ -106,7 +106,7 @@ function findMemberType(checker, sourceFile, memberName) {
     if (!symbol) return;
     const type = checker.getDeclaredTypeOfSymbol(symbol);
     const propSymbol = checker.getPropertiesOfType(type).find((p) => p.name === memberName);
-    if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol) };
+    if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol), symbol: propSymbol };
   });
   return found;
 }
@@ -127,7 +127,7 @@ function findOwnStaticValidValues(checker, sourceFile, memberName) {
       if (!member.modifiers?.some((m) => m.kind === ts.SyntaxKind.StaticKeyword)) continue;
       // `readonly T[]` -> T. getNumberIndexType() covers readonly arrays and tuples.
       const elementType = checker.getTypeAtLocation(member).getNumberIndexType();
-      if (elementType) { found = { type: elementType, optional: false }; return; }
+      if (elementType) { found = { type: elementType, optional: false, tupleNode: member }; return; }
     }
   });
   return found;
@@ -150,7 +150,7 @@ function findNamedDeclarationMember(checker, program, className, memberName) {
       if (!symbol) return;
       const type = checker.getDeclaredTypeOfSymbol(symbol);
       const propSymbol = checker.getPropertiesOfType(type).find((p) => p.name === memberName);
-      if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol) };
+      if (propSymbol) found = { type: checker.getTypeOfSymbol(propSymbol), optional: memberIsOptional(propSymbol), symbol: propSymbol };
     });
     if (found) return found;
   }
@@ -212,7 +212,9 @@ export async function resolveTargets(targets, {
     }
     resolved.set(target.key, {
       type: typeToDisplayString(checker, type),
-      values: typeToValues(type),
+      // Declaration order, not the checker's interned order. Rungs 2/3 pass the prop
+      // symbol; rung 1 has no prop declaration at all, so it passes the VALID_*S node.
+      values: typeToValues(type, declaredValueOrder(checker, found.symbol ?? found.tupleNode)),
       optional: found.optional,
     });
   }
