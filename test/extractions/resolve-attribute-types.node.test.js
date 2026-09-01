@@ -258,7 +258,7 @@ describe('resolveTargets', () => {
   });
 
   // Decision B: nullish is dropped, never offered. "None" is a control-layer
-  // sentinel (NO_ICON / NO_STATIC_COLOR), not a value the component accepts.
+  // sentinel (NO_ICON / NONE_OPTION), not a value the component accepts.
   it('drops undefined and null from values', async () => {
     const ownEntryPath = makeCanonicalPath('@adobe/spectrum-wc', '2.0.0-beta.2', 'dist/components/message-feedback/MessageFeedback.d.ts');
     const fetchImpl = makeMockFetch({
