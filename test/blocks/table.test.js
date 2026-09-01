@@ -301,6 +301,31 @@ describe('table block', () => {
       expect(cells).to.not.include('2.0.0');
     });
 
+    // kind/values back the playground's controls; the table shows the human-readable
+    // `type` instead. Without this they append as columns, and `values` renders as a
+    // comma-joined array.
+    it('keeps the playground control contract out of table columns', async () => {
+      stubFetchOk([
+        {
+          attribute: 'variant',
+          type: '"accent" | "primary"',
+          kind: 'enum',
+          values: ['accent', 'primary'],
+          optional: true,
+        },
+      ]);
+      const el = makeDataEl();
+      await init(el);
+      const headers = [...el.querySelectorAll('th')].map((th) => th.textContent);
+      const cells = [...el.querySelectorAll('td')].map((td) => td.textContent);
+      expect(headers).to.not.include('Kind');
+      expect(headers).to.not.include('Values');
+      expect(headers).to.not.include('Optional');
+      expect(cells).to.not.include('enum');
+      expect(cells).to.not.include('accent,primary');
+      expect(headers).to.include('Type');
+    });
+
     it('filters rows whose inheritedFrom is StyleProps', async () => {
       stubFetchOk(PROPS);
       const el = makeDataEl();
