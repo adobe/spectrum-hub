@@ -114,3 +114,44 @@ describe('values are in declaration order', () => {
     });
   }
 });
+
+// Completeness guard, and deliberately not part of the canary above: readCatalog only
+// sees files that exist, so a component that produces NO file at all passes every
+// assertion in this suite. That is the louder of the two extraction failures and was
+// the unguarded one — a component can drop out of the catalog and only be noticed when
+// someone opens its page and finds an empty API table.
+//
+// Asserted as an exact set rather than a subset so it fails in both directions: a NEW
+// component going missing fails, and fixing a known gap also fails, which is the prompt
+// to delete its entry here.
+describe('every rostered RSP component has a data file', () => {
+  const KNOWN_MISSING = [
+    // discover-components.js captures the props type with `[^&>]+`, which truncates at
+    // the first `>` inside a generic argument. LabeledValue is declared
+    //   ForwardRefExoticComponent<LabeledValueProps<LabeledValueTypes> & RefAttributes<…>>
+    // so the roster records the malformed `LabeledValueProps<LabeledValueTypes`, which
+    // resolves to nothing. Fixing it needs the capture to stop at the generic's own
+    // closing bracket AND extract-props to resolve a generic *type alias* — its
+    // LabeledValueProps<T> is `type`, not `interface`, so the type argument has to be
+    // instantiated before the checker will yield properties.
+    'LabeledValue',
+  ];
+
+  it('writes one data file per roster entry', () => {
+    const roster = Object.keys(JSON.parse(readFileSync(join(DEPS, 'rsp/components.json'), 'utf8')));
+    const extracted = new Set(readdirSync(join(DEPS, 'rsp/data'))
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => file.replace(/\.json$/, '')));
+    const missing = roster.filter((component) => !extracted.has(component));
+    assert.deepEqual(missing.sort(), [...KNOWN_MISSING].sort());
+  });
+
+  it('writes no data file without a roster entry', () => {
+    const roster = new Set(Object.keys(JSON.parse(readFileSync(join(DEPS, 'rsp/components.json'), 'utf8'))));
+    const orphaned = readdirSync(join(DEPS, 'rsp/data'))
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => file.replace(/\.json$/, ''))
+      .filter((component) => !roster.has(component));
+    assert.deepEqual(orphaned, []);
+  });
+});
