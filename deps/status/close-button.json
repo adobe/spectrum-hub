@@ -5,7 +5,7 @@
     },
     "rsp": {
       "status": "available",
-      "originalName": "Button",
+      "upstreamName": "Button",
       "secondary": "In package, not RSP docs"
     },
     "swc": {

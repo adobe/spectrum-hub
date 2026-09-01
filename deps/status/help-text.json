@@ -7,6 +7,7 @@
       "status": "available",
       "context": "Stable",
       "secondary": "Use form component",
+      "upstreamName": "Form",
       "note": "Built into Form components instead."
     },
     "swc": {
