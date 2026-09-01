@@ -672,12 +672,26 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
       { Property: 'size', control: 'picker' },
       { Property: 'isDisabled', control: 'picker' },
     ];
+  // Rows carry `kind`/`values` because that is what the extractors write and what
+  // resolveControl reads — a fixture with only `type` would exercise a path that no
+  // longer exists (deps/shared/prop-contract.js).
   const rspBody = overrides.rsp
-    ?? { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] };
+    ?? {
+      props: [{
+        property: 'variant', type: "'primary' | 'secondary'", kind: 'enum', values: ['primary', 'secondary'], default: "'primary'",
+      }],
+    };
   const swcBody = overrides.swc
     ?? [
-      { property: 'size', attribute: 'size', type: 'ElementSize' },
-      { property: 'disabled', attribute: 'disabled', type: 'boolean' },
+      // Deliberately a row with no fixed option set — kind 'unknown', no values, the
+      // shape an opaque API type produces (RSP's StylesProp, an interface, a generic).
+      // Several tests below assert that such a row draws no control and warns.
+      {
+        property: 'size', attribute: 'size', type: 'ElementSize', kind: 'unknown', values: [],
+      },
+      {
+        property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [],
+      },
     ];
 
   return sandbox.stub(window, 'fetch').callsFake(async (input) => {
@@ -810,7 +824,11 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'disabled' }],
       controls: [{ Property: 'disabled', control: 'picker' }],
-      rsp: { props: [{ property: 'isDisabled', type: 'boolean', default: 'true' }] },
+      rsp: {
+        props: [{
+          property: 'isDisabled', type: 'boolean', kind: 'boolean', values: [], default: 'true',
+        }],
+      },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -926,7 +944,9 @@ describe('playground block — init()', () => {
       }
       if (url.includes('/deps/rsp/data/')) { return jsonResponse([]); }
       if (url.includes('/deps/swc/data/')) {
-        return jsonResponse([{ property: 'disabled', attribute: 'disabled', type: 'boolean' }]);
+        return jsonResponse([{
+          property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [],
+        }]);
       }
       if (url.includes('/deps/swc/playground/snippets/button.html')) {
         return new Response('<swc-button>Label</swc-button>', { status: 200 });
@@ -1022,7 +1042,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string', default: "'Click me'" }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [], default: "'Click me'",
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1036,7 +1058,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string' }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [],
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1048,7 +1072,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string' }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [],
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1060,7 +1086,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'label' }],
       controls: [{ Property: 'label', control: 'textfield' }],
-      swc: [{ property: 'label', attribute: 'label', type: 'string', default: "'Click me'" }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'text', values: [], default: "'Click me'",
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1082,7 +1110,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'weight' }],
       controls: [{ Property: 'weight', control: 'slider' }],
-      swc: [{ property: 'weight', attribute: 'weight', type: 'number', default: '50' }],
+      swc: [{
+        property: 'weight', attribute: 'weight', type: 'number', kind: 'number', values: [], default: '50',
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1096,7 +1126,11 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'variant' }],
       controls: [{ Property: 'variant', control: 'segmentedControl' }],
-      rsp: { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] },
+      rsp: {
+        props: [{
+          property: 'variant', type: "'primary' | 'secondary'", kind: 'enum', values: ['primary', 'secondary'], default: "'primary'",
+        }],
+      },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -1114,7 +1148,11 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'variant' }],
       controls: [{ Property: 'variant', control: 'segmentedControl' }],
-      rsp: { props: [{ property: 'variant', type: "'primary' | 'secondary'", default: "'primary'" }] },
+      rsp: {
+        props: [{
+          property: 'variant', type: "'primary' | 'secondary'", kind: 'enum', values: ['primary', 'secondary'], default: "'primary'",
+        }],
+      },
       swc: [],
     });
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
@@ -1137,7 +1175,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'isDisabled' }],
       controls: [{ Property: 'isDisabled', control: 'switch' }],
-      swc: [{ property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'true' }],
+      swc: [{
+        property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [], default: 'true',
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1152,7 +1192,9 @@ describe('playground block — init()', () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'isDisabled' }],
       controls: [{ Property: 'isDisabled', control: 'switch' }],
-      swc: [{ property: 'disabled', attribute: 'disabled', type: 'boolean', default: 'false' }],
+      swc: [{
+        property: 'disabled', attribute: 'disabled', type: 'boolean', kind: 'boolean', values: [], default: 'false',
+      }],
       rsp: { props: [] },
     });
     await init(el);
@@ -1232,7 +1274,9 @@ describe('playground block — init()', () => {
       }
       if (url.includes('/deps/rsp/data/')) { return jsonResponse({ props: [] }); }
       if (url.includes('/deps/swc/data/')) {
-        return jsonResponse([{ property: 'selected', attribute: 'selected', type: 'string', default: "'overview'" }]);
+        return jsonResponse([{
+          property: 'selected', attribute: 'selected', type: 'string', kind: 'text', values: [], default: "'overview'",
+        }]);
       }
       if (url.includes('/deps/swc/playground/snippets/tabs.html')) {
         return new Response(tabsMarkup, { status: 200 });
@@ -1268,7 +1312,11 @@ describe('playground block — init()', () => {
         return jsonResponse({ data: [{ Property: 'density', control: 'picker' }] });
       }
       if (url.includes('/deps/rsp/data/')) {
-        return jsonResponse({ props: [{ property: 'density', type: "'compact' | 'regular'", default: "'regular'" }] });
+        return jsonResponse({
+          props: [{
+            property: 'density', type: "'compact' | 'regular'", kind: 'enum', values: ['compact', 'regular'], default: "'regular'",
+          }],
+        });
       }
       if (url.includes('/deps/swc/data/')) { return jsonResponse([]); }
       if (url.includes('/deps/rsp/playground/snippets/tabs.jsx')) {
