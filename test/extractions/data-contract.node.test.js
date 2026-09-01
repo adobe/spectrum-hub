@@ -155,3 +155,40 @@ describe('every rostered RSP component has a data file', () => {
     assert.deepEqual(orphaned, []);
   });
 });
+
+// Each extractor records the optionality signal that is rare, and therefore informative,
+// for its own language: TS props are optional by default so RSP marks the 3% that are
+// `required`, while SWC declares attributes required by default so it marks `optional`.
+// The two are deliberately not unified — see deps/rsp/README.md.
+//
+// This is a consumer guard, not a tidiness one. blocks/playground/playground-data.js reads
+// `row.optional` and `row.attribute` off whichever catalog the page is for, having
+// previously read them off the SWC row by name. Both reads are safe only because RSP rows
+// carry neither field. If RSP's extractor ever emitted `optional`, every RSP control would
+// silently gain a "None" choice on ~97% of its props; if it emitted `attribute`, RSP props
+// would start being written to the DOM as attributes. Neither failure raises an error —
+// they just render wrongly — so the invariant is asserted here rather than assumed.
+describe('each catalog carries only its own optionality signal', () => {
+  const fieldsPresent = (impl, field) => readCatalog(impl)
+    .flatMap(({ component, rows }) => rows
+      .filter((row) => field in row)
+      .map((row) => `${component}.${row.property}`));
+
+  it('marks RSP rows required, never optional', () => {
+    assert.deepEqual(fieldsPresent('rsp', 'optional'), []);
+    // The mirror is a live signal, not a formality — it would catch the two extractors
+    // converging on one field by accident.
+    assert.ok(fieldsPresent('rsp', 'required').length > 0, 'expected some RSP row to be required');
+  });
+
+  it('marks SWC rows optional, never required', () => {
+    assert.deepEqual(fieldsPresent('swc', 'required'), []);
+    assert.ok(fieldsPresent('swc', 'optional').length > 0, 'expected SWC rows to carry optional');
+  });
+
+  // RSP props are React props, not DOM attributes. The playground uses this to decide
+  // what to write onto the previewed element.
+  it('gives no RSP row a DOM attribute', () => {
+    assert.deepEqual(fieldsPresent('rsp', 'attribute'), []);
+  });
+});
