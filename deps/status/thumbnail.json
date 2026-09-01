@@ -6,7 +6,7 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
-      "originalName": "Image",
+      "upstreamName": "Image",
       "secondary": "Use image"
     },
     "swc": {

@@ -6,7 +6,7 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
-      "originalName": "SelectBoxGroup"
+      "upstreamName": "SelectBoxGroup"
     },
     "swc": {
       "status": "not-available"

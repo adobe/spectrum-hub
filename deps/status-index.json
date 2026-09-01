@@ -105,7 +105,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "ActionButtonGroup"
+            "upstreamName": "ActionButtonGroup"
           },
           "swc": {
             "status": "not-available"
@@ -159,7 +159,7 @@
           },
           "rsp": {
             "status": "available",
-            "originalName": "Dialog",
+            "upstreamName": "Dialog",
             "secondary": "Use dialog component"
           },
           "swc": {
@@ -305,7 +305,7 @@
           "figma": {
             "status": "available",
             "secondary": "Use date and time component",
-            "originalName": "Date and time field",
+            "figmaPageSource": "Date and time field",
             "note": "No standalone Figma design; the Date and time field design covers it."
           },
           "rsp": {
@@ -325,13 +325,13 @@
         "web": {
           "figma": {
             "status": "available",
-            "originalName": "Cards (Asset)",
+            "figmaPageSource": "Cards (Asset)",
             "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
           },
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "Card"
+            "upstreamName": "Card"
           },
           "swc": {
             "status": "not-available"
@@ -385,7 +385,7 @@
           },
           "rsp": {
             "status": "available",
-            "originalName": "Button",
+            "upstreamName": "Button",
             "secondary": "In package, not RSP docs"
           },
           "swc": {
@@ -480,14 +480,14 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorSlider",
+            "upstreamName": "ColorSlider",
             "note": "Built into color components instead."
           },
           "swc": {
             "status": "available",
             "context": "Stable",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorHandle"
+            "upstreamName": "ColorHandle"
           }
         }
       }
@@ -505,14 +505,14 @@
             "context": "Stable",
             "secondary": "Use color components",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorSlider",
+            "upstreamName": "ColorSlider",
             "note": "Built into color components instead."
           },
           "swc": {
             "status": "available",
             "context": "Stable",
             "page": "color-handle-and-loupe",
-            "originalName": "ColorHandle"
+            "upstreamName": "ColorHandle"
           }
         }
       }
@@ -676,6 +676,7 @@
             "status": "available",
             "context": "Stable",
             "secondary": "Use form component",
+            "upstreamName": "Form",
             "note": "Built into Form components instead."
           },
           "swc": {
@@ -715,6 +716,7 @@
             "status": "available",
             "context": "Stable",
             "secondary": "Use form component",
+            "upstreamName": "Form",
             "note": "Built into Form components instead."
           },
           "swc": {
@@ -753,7 +755,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "InlineAlert"
+            "upstreamName": "InlineAlert"
           },
           "swc": {
             "status": "not-available"
@@ -976,7 +978,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "RadioGroup",
+            "upstreamName": "RadioGroup",
             "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
           },
           "swc": {
@@ -1084,7 +1086,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "SelectBoxGroup"
+            "upstreamName": "SelectBoxGroup"
           },
           "swc": {
             "status": "not-available"
@@ -1103,7 +1105,7 @@
           "rsp": {
             "status": "available",
             "context": "Alpha",
-            "originalName": "SideNav"
+            "upstreamName": "SideNav"
           },
           "swc": {
             "status": "not-available"
@@ -1140,7 +1142,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "Dialog",
+            "upstreamName": "Dialog",
             "secondary": "Use dialog component"
           },
           "swc": {
@@ -1215,7 +1217,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "ColorSwatch"
+            "upstreamName": "ColorSwatch"
           },
           "swc": {
             "status": "not-available"
@@ -1234,7 +1236,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "ColorSwatchPicker"
+            "upstreamName": "ColorSwatchPicker"
           },
           "swc": {
             "status": "not-available"
@@ -1271,7 +1273,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "TableView"
+            "upstreamName": "TableView"
           },
           "swc": {
             "status": "not-available"
@@ -1308,7 +1310,7 @@
           },
           "rsp": {
             "status": "available",
-            "originalName": "TagGroup"
+            "upstreamName": "TagGroup"
           },
           "swc": {
             "status": "not-available"
@@ -1361,7 +1363,7 @@
           },
           "rsp": {
             "status": "available",
-            "originalName": "Dialog"
+            "upstreamName": "Dialog"
           },
           "swc": {
             "status": "not-available",
@@ -1418,7 +1420,7 @@
           "rsp": {
             "status": "available",
             "context": "Stable",
-            "originalName": "Image",
+            "upstreamName": "Image",
             "secondary": "Use image"
           },
           "swc": {

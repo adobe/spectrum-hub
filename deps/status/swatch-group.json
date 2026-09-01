@@ -6,7 +6,7 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
-      "originalName": "ColorSwatchPicker"
+      "upstreamName": "ColorSwatchPicker"
     },
     "swc": {
       "status": "not-available"

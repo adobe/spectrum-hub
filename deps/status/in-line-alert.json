@@ -6,7 +6,7 @@
     "rsp": {
       "status": "available",
       "context": "Stable",
-      "originalName": "InlineAlert"
+      "upstreamName": "InlineAlert"
     },
     "swc": {
       "status": "not-available"

@@ -6,6 +6,8 @@ export default {
     "cards": "Card",
     "close-button": "Button",
     "color-handle-and-loupe": "ColorSlider",
+    "field-label": "Form",
+    "help-text": "Form",
     "in-line-alert": "InlineAlert",
     "radio-button": "RadioGroup",
     "select-box": "SelectBoxGroup",
