@@ -50,6 +50,29 @@
   }
 }
 
+/* Carries its own padding — .playground-preview drops its own at container widths. */
+.playground-preview-note {
+  max-inline-size: 44ch;
+  padding: var(--s2-spacing-400);
+  text-align: center;
+  text-wrap: pretty;
+  color: var(--s2-gray-700);
+  font-size: var(--s2-body-size-s);
+
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-block-start: var(--s2-spacing-100);
+  }
+}
+
+.playground-preview-note-title {
+  color: var(--s2-gray-900);
+  font-weight: 700;
+}
+
 .playground-controls {
   display: flex;
   flex-direction: column;

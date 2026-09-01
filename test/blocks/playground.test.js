@@ -800,6 +800,51 @@ describe('playground block — init()', () => {
     expect(urls.some((url) => url.includes('/snippets/action-group.jsx'))).to.be.true;
   });
 
+  // @react-spectrum/s2 publishes no runtime export for these, so the shell's only
+  // possible outcome is a failed import — see deps/rsp/playground/unreachable-exports.js.
+  describe('a component with no reachable RSP export', () => {
+    it('renders an explanatory note instead of the preview iframe', async () => {
+      stubPlaygroundFetch(sandbox);
+      const rspEl = makeMetaEl({ implementation: 'rsp', component: 'coach-mark' });
+      document.body.append(rspEl);
+      await init(rspEl);
+
+      expect(rspEl.querySelector('iframe')).to.equal(null);
+      const note = rspEl.querySelector('.playground-preview-note');
+      expect(note).to.not.equal(null);
+      expect(note.textContent).to.include('CoachMark');
+      expect(note.parentElement.classList.contains('playground-preview')).to.be.true;
+    });
+
+    it('still renders the code disclosure', async () => {
+      stubPlaygroundFetch(sandbox);
+      const rspEl = makeMetaEl({ implementation: 'rsp', component: 'coach-mark' });
+      document.body.append(rspEl);
+      await init(rspEl);
+      expect(rspEl.querySelector('pre')).to.not.equal(null);
+    });
+
+    // The same slug under swc has a working preview of its own; only rsp is affected.
+    it('keeps the preview for the same slug on a non-rsp implementation', async () => {
+      stubPlaygroundFetch(sandbox);
+      const swcEl = makeMetaEl({ implementation: 'swc', component: 'coach-mark' });
+      document.body.append(swcEl);
+      await init(swcEl);
+      expect(swcEl.querySelector('iframe')).to.not.equal(null);
+      expect(swcEl.querySelector('.playground-preview-note')).to.equal(null);
+    });
+
+    // CloseButton *is* exported; ClearButton is not. One letter apart, opposite outcomes.
+    it('keeps the preview for close-button, whose export does exist', async () => {
+      stubPlaygroundFetch(sandbox);
+      const rspEl = makeMetaEl({ implementation: 'rsp', component: 'close-button' });
+      document.body.append(rspEl);
+      await init(rspEl);
+      expect(rspEl.querySelector('iframe')).to.not.equal(null);
+      expect(rspEl.querySelector('.playground-preview-note')).to.equal(null);
+    });
+  });
+
   // Regression: fetchPlaygroundInputs used to fetch deps/swc/data/swc-<component>.json
   // unconditionally, even on rsp pages — most RSP components have no SWC counterpart at
   // all, so this was a guaranteed, noisy 404 on every RSP playground page.
