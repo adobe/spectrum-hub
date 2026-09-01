@@ -10,7 +10,7 @@ import {
   fetchResolvedVersion,
   resolveAllAttributeTypes,
 } from '../../deps/swc/extract-cem-components.js';
-import { cdnUrlsForCanonicalPath, clearManifestCache } from '../../deps/swc/cdn-resolve.js';
+import { cdnUrlsForCanonicalPath, clearManifestCache } from '../../deps/swc/locate-published-files.js';
 
 // fetchCEM/fetchResolvedVersion share the same unpkg-then-jsdelivr CDN fallback
 // (fetchFromCdns) — real global.fetch is stubbed per test and restored after.
@@ -303,7 +303,8 @@ describe('findDeclarationAndModule', () => {
 // resolveAllAttributeTypes wires findDeclarationAndModule + collectResolutionTargets +
 // resolveTargets together across every allow-listed component in one pass — these tests
 // cover that wiring itself, not the resolution logic each piece already has its own
-// dedicated tests for (resolve-attribute-types.node.test.js, swc-cdn-resolve.node.test.js).
+// dedicated tests for (resolve-attribute-types.node.test.js and
+// swc-locate-published-files.node.test.js).
 describe('resolveAllAttributeTypes', () => {
   let originalFetch;
   let originalWarn;

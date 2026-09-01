@@ -10,7 +10,7 @@ import {
   makeCanonicalPath,
   clearManifestCache,
   fetchManifest,
-} from '../../deps/swc/cdn-resolve.js';
+} from '../../deps/swc/locate-published-files.js';
 
 // resolveSpecifier's manifest cache is module-level (shared across a whole
 // extraction run by design) — clear it between tests so one test's mocked
