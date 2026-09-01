@@ -133,9 +133,13 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
   // text slot at all — leave it empty instead of injecting a placeholder it can't take.
   if (fragmentRoot && !fragmentRoot.textContent) { return; }
 
+  // A text control's value wins; failing that the fragment's own text is the authored
+  // content and must survive. 'Label' is only a placeholder for a component that has
+  // neither — without this a component with no text control at all (tooltip: placement,
+  // delay, trigger, none of them TEXT_KEYS) rendered the literal word "Label".
   const fallbackKeys = hasRealLabelTarget ? new Set(['text', 'children']) : TEXT_KEYS;
   const textEntry = Object.entries(currentProps).find(([prop]) => fallbackKeys.has(prop));
-  el.textContent = textEntry?.[1]?.value ?? 'Label';
+  el.textContent = textEntry?.[1]?.value ?? fragmentRoot?.textContent ?? 'Label';
 }
 
 // `attributeTarget` is where controlled props land, which is not always `el`: a route
