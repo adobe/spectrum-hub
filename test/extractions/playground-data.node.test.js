@@ -14,7 +14,7 @@ import {
   clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
+import { NONE_OPTION, DEFAULT_OPTION, isUnsetOption } from '../../deps/shared/playground/none-option.js';
 
 const COMPONENTS_SHEET = [
   { component: 'Button', properties: 'variant, staticColor, text, fillStyle, size, isDisabled' },
@@ -50,6 +50,12 @@ const RSP_PROPS = [
   },
   {
     property: 'staticColor', type: "'white' | 'black' | 'auto'", kind: 'enum', values: ['white', 'black', 'auto'],
+  },
+  {
+    property: 'xChannel', type: "'hue' | 'red' | 'green'", kind: 'enum', values: ['hue', 'red', 'green'],
+  },
+  {
+    property: 'yChannel', type: "'hue' | 'red' | 'green'", kind: 'enum', values: ['hue', 'red', 'green'],
   },
   {
     property: 'isPending', type: 'boolean', kind: 'boolean', values: [],
@@ -628,6 +634,27 @@ describe('resolveControl', () => {
     assert.deepEqual(result.options, [NONE_OPTION, 'white', 'black', 'auto']);
   });
 
+  // ColorArea derives both channels from the value's color space when neither is
+  // passed. Without an unset choice the picker's first option led — colorSpace="rgb"
+  // with xChannel="hue" and yChannel="hue", which is both the wrong space and the same
+  // axis twice, and ColorArea rendered nothing at all. Verified live: unset renders,
+  // and re-renders differently when colorSpace changes.
+  it('leads xChannel and yChannel with DEFAULT_OPTION, not NONE_OPTION', () => {
+    ['xChannel', 'yChannel'].forEach((property) => {
+      const result = resolveControl(property, 'rsp', controlsMap, RSP_PROPS);
+      assert.equal(result.options[0], DEFAULT_OPTION, property);
+      assert.deepEqual(result.options, [DEFAULT_OPTION, 'hue', 'red', 'green'], property);
+    });
+  });
+
+  it('still leads staticColor with NONE_OPTION, so the two sentinels stay distinct', () => {
+    assert.equal(resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS).options[0], NONE_OPTION);
+  });
+
+  it('gives a property with no unset choice no sentinel at all', () => {
+    assert.equal(resolveControl('variant', 'rsp', controlsMap, RSP_PROPS).options[0], 'primary');
+  });
+
   it('returns null attribute when property has no swc equivalent even after normalization', () => {
     const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS);
     assert.equal(result.attribute, null);
@@ -898,5 +925,29 @@ describe('the existence gate applies only to implementations with a catalog', ()
     for (const impl of ['rsp', 'swc']) {
       assert.equal(resolveControl('variant', impl, controlsMap, []), null, impl);
     }
+  });
+});
+
+// Both sentinels mean the same thing to every apply and serialize path — the label
+// differs only because "default" is what RSP's docs call an inferred channel. A path
+// that compared against one constant would silently reflect the other as a literal
+// string value.
+describe('isUnsetOption', () => {
+  it('recognises both sentinels', () => {
+    assert.equal(isUnsetOption(NONE_OPTION), true);
+    assert.equal(isUnsetOption(DEFAULT_OPTION), true);
+  });
+
+  it('rejects a real option value', () => {
+    ['white', 'hue', 'red', 'primary', ''].forEach((v) => assert.equal(isUnsetOption(v), false, v));
+  });
+
+  it('rejects a value that merely looks like a sentinel in another case', () => {
+    assert.equal(isUnsetOption('none'), false);
+    assert.equal(isUnsetOption('Default'), false);
+  });
+
+  it('keeps the two sentinels distinct', () => {
+    assert.notEqual(NONE_OPTION, DEFAULT_OPTION);
   });
 });

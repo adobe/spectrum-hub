@@ -12,7 +12,7 @@ import {
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
-import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
+import { isUnsetOption } from '../../deps/shared/playground/none-option.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import { UNREACHABLE_RSP_EXPORTS } from '../../deps/rsp/playground/unreachable-exports.js';
 import '../../deps/se/se.js';
@@ -164,9 +164,10 @@ function buildSnippetElement(
     const { value } = entry;
     const isRealLabelProp = prop === 'label' && hasRealLabelTarget;
     const attribute = resolveAttribute(prop, entry);
-    // NONE_OPTION is the control's "unset" label, never real markup — the same
-    // reason the apply path removes the attribute instead of reflecting it.
-    const isUnset = value === undefined || value === '' || value === 'no' || value === NONE_OPTION;
+    // An unset sentinel ("None"/"default") is the control's label for an absent prop,
+    // never real markup — the same reason the apply path removes it rather than
+    // reflecting it. Compared via isUnsetOption so a new sentinel can't slip through.
+    const isUnset = value === undefined || value === '' || value === 'no' || isUnsetOption(value);
     if ((TEXT_KEYS.has(prop) && !isRealLabelProp) || attribute === null || isUnset) { return; }
     attributeTarget.setAttribute(attribute, value === 'yes' ? '' : value);
   });

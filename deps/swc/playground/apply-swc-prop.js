@@ -2,7 +2,7 @@ import { applyAttribute } from '../../shared/playground/apply-attribute.js';
 import { applyLabelProp } from './apply-label-prop.js';
 import { buildIconSvg, buildIconUse } from '../../shared/playground/build-icon-svg.js';
 import { NO_ICON } from '../../shared/playground/icon-options.js';
-import { NONE_OPTION } from '../../shared/playground/none-option.js';
+import { isUnsetOption } from '../../shared/playground/none-option.js';
 
 // Applies one prop-update message to a live SWC element.
 export function applySwcProp(el, { property, attribute, value }) {
@@ -44,8 +44,9 @@ export function applySwcProp(el, { property, attribute, value }) {
     return;
   }
 
-  // Remove the attribute rather than reflect the sentinel.
-  if (value === NONE_OPTION) {
+  // The "unset" choice for an optional attribute — remove it rather than reflect
+  // the sentinel string.
+  if (isUnsetOption(value)) {
     applyAttribute(el, attribute, null);
     return;
   }

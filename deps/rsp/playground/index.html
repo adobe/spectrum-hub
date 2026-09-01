@@ -21,7 +21,7 @@
     import {
       OVERLAY_TRIGGERS, overlayShape, propsOwner, splitTriggerProps,
     } from './overlay-triggers.js';
-    import { NONE_OPTION } from '../../shared/playground/none-option.js';
+    import { isUnsetOption } from '../../shared/playground/none-option.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, resolveRspComponentName } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
@@ -243,7 +243,7 @@
               currentProps.children = composeLabeledChildren();
             } else {
               // staticColor has no real "unset" value of its own — omit the prop entirely.
-              const unset = value === NONE_OPTION;
+              const unset = isUnsetOption(value);
               if (unset) { delete currentProps[key]; } else { currentProps[key] = value; }
               // RSP doesn't reflect props as DOM attributes, so mirror onto #mount for CSS
               // that keys off one (the static-color backdrop). The name is derived, not read
