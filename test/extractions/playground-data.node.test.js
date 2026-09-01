@@ -307,6 +307,24 @@ describe('parsePickerOptions', () => {
     );
   });
 
+  // The TS checker's own renderer (checker.typeToString(), used by the compiler-based
+  // extractors) emits double-quoted literals, while hand-authored .d.ts source text uses
+  // single quotes. Both reach this function, so both must parse — a single-quote-only
+  // regex silently drops every compiler-resolved union (e.g. swc-badge's variant).
+  it('extracts values from a double-quoted union type string', () => {
+    assert.deepEqual(
+      parsePickerOptions('"s" | "m" | "l" | "xl"'),
+      ['s', 'm', 'l', 'xl'],
+    );
+  });
+
+  it('extracts a long double-quoted union without dropping members', () => {
+    assert.deepEqual(
+      parsePickerOptions('"accent" | "informative" | "neutral" | "positive" | "notice"'),
+      ['accent', 'informative', 'neutral', 'positive', 'notice'],
+    );
+  });
+
   it('returns an empty array for a non-union type like boolean', () => {
     assert.deepEqual(parsePickerOptions('boolean'), []);
   });
