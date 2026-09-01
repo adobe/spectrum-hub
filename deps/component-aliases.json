@@ -3,7 +3,7 @@
   "rsp": {
     "AlertDialog": {
       "canonical": "AlertDialog",
-      "externalName": "Dialog"
+      "upstreamName": "Dialog"
     },
     "ToastContainer": "Toast",
     "CardPreview": "Cards",
@@ -16,63 +16,63 @@
     "CardView": "Cards",
     "Card": {
       "canonical": "Cards",
-      "externalName": "Card"
+      "upstreamName": "Card"
     },
     "CloseButton": {
       "canonical": "CloseButton",
-      "externalName": "Button"
+      "upstreamName": "Button"
     },
     "ColorHandle": {
       "canonical": "ColorHandle",
-      "externalName": "ColorSlider"
+      "upstreamName": "ColorSlider"
     },
     "ColorSwatchPicker": {
       "canonical": "SwatchGroup",
-      "externalName": "ColorSwatchPicker"
+      "upstreamName": "ColorSwatchPicker"
     },
     "ColorSwatch": {
       "canonical": "Swatch",
-      "externalName": "ColorSwatch"
+      "upstreamName": "ColorSwatch"
     },
     "SelectBoxGroup": {
       "canonical": "SelectBox",
-      "externalName": "SelectBoxGroup"
+      "upstreamName": "SelectBoxGroup"
     },
     "ActionButtonGroup": {
       "canonical": "ActionGroup",
-      "externalName": "ActionButtonGroup"
+      "upstreamName": "ActionButtonGroup"
     },
     "Dialog": {
       "canonical": "StandardDialog",
-      "externalName": "Dialog"
+      "upstreamName": "Dialog"
     },
     "FullscreenDialog": {
       "canonical": "TakeoverDialog",
-      "externalName": "Dialog"
+      "upstreamName": "Dialog"
     },
     "InlineAlert": {
       "canonical": "InLineAlert",
-      "externalName": "InlineAlert"
+      "upstreamName": "InlineAlert"
     },
     "TableView": {
       "canonical": "Table",
-      "externalName": "TableView"
+      "upstreamName": "TableView"
     },
     "Radio": {
       "canonical": "RadioButton",
-      "externalName": "RadioGroup"
+      "upstreamName": "RadioGroup"
     },
     "Image": {
       "canonical": "Thumbnail",
-      "externalName": "Image"
+      "upstreamName": "Image"
     },
     "SideNav": {
       "canonical": "SideNavigation",
-      "externalName": "SideNav"
+      "upstreamName": "SideNav"
     },
     "Tag": {
       "canonical": "Tag",
-      "externalName": "TagGroup"
+      "upstreamName": "TagGroup"
     }
   },
   "figma": {

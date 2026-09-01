@@ -16,12 +16,12 @@ const IMPLEMENTATIONS = {
   },
 };
 
-/** `originalName` overrides the URL slug when the upstream docs site uses a different name. */
-export function resolveImplementation(pathname, originalName) {
+/** `upstreamName` overrides the URL slug when the upstream docs site uses a different name. */
+export function resolveImplementation(pathname, upstreamName) {
   const { impl: implId, slug } = implAndSlugFromPath(pathname);
   const impl = IMPLEMENTATIONS[implId];
   if (!impl || !slug) { return null; }
-  const component = originalName ? toSlug(originalName) : slug;
+  const component = upstreamName ? toSlug(upstreamName) : slug;
   return { label: impl.label, href: impl.href(component) };
 }
 
@@ -33,8 +33,8 @@ export function resolveImplementation(pathname, originalName) {
 export function decorateGoToImpl(a, span) {
   const { pathname } = window.location;
   const { impl, slug } = implAndSlugFromPath(pathname);
-  const originalName = (impl && slug) ? IMPL_ALIASES[impl]?.[slug] ?? null : null;
-  const target = resolveImplementation(pathname, originalName);
+  const upstreamName = (impl && slug) ? IMPL_ALIASES[impl]?.[slug] ?? null : null;
+  const target = resolveImplementation(pathname, upstreamName);
   if (!target) {
     a.remove();
     return;

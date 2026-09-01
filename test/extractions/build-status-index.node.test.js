@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  buildRspExportNames,
   normalizeName,
   swcTagToPascal,
   canonicalNameForSwc,
@@ -47,7 +48,7 @@ describe('canonicalNameForSwc', () => {
   });
 
   it('reads the canonical name off an object-shaped alias entry', () => {
-    const aliases = { 'swc-cta': { canonical: 'CallToAction', externalName: 'swc-cta' } };
+    const aliases = { 'swc-cta': { canonical: 'CallToAction', upstreamName: 'swc-cta' } };
     assert.equal(canonicalNameForSwc('swc-cta', aliases), 'CallToAction');
   });
 });
@@ -89,7 +90,7 @@ describe('canonicalNameForRsp', () => {
   });
 
   it('reads the canonical name off an object-shaped alias entry', () => {
-    const aliases = { ActionButtonGroup: { canonical: 'ActionGroup', externalName: 'ActionButtonGroup' } };
+    const aliases = { ActionButtonGroup: { canonical: 'ActionGroup', upstreamName: 'ActionButtonGroup' } };
     assert.equal(canonicalNameForRsp('ActionButtonGroup', aliases), 'ActionGroup');
   });
 });
@@ -101,7 +102,7 @@ describe('joinRosters', () => {
       {
         name: 'ActionButton',
         sources: { rsp: 'ActionButton', swc: 'swc-action-button', figma: 'Action button' },
-        externalNames: {},
+        upstreamNames: {},
       },
     ]);
   });
@@ -109,28 +110,28 @@ describe('joinRosters', () => {
   it('keeps an RSP-only component as a single-source row', () => {
     const roster = joinRosters(['TableView'], [], [], {});
     assert.deepEqual(roster, [
-      { name: 'TableView', sources: { rsp: 'TableView' }, externalNames: {} },
+      { name: 'TableView', sources: { rsp: 'TableView' }, upstreamNames: {} },
     ]);
   });
 
   it('keeps a SWC-only component as a single-source row', () => {
     const roster = joinRosters([], ['swc-color-loupe'], [], {});
     assert.deepEqual(roster, [
-      { name: 'ColorLoupe', sources: { swc: 'swc-color-loupe' }, externalNames: {} },
+      { name: 'ColorLoupe', sources: { swc: 'swc-color-loupe' }, upstreamNames: {} },
     ]);
   });
 
   it('keeps a Figma-only design as a single-source row (union membership)', () => {
     const roster = joinRosters([], [], ['Bar panel and toolbar'], {});
     assert.deepEqual(roster, [
-      { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' }, externalNames: {} },
+      { name: 'BarPanelAndToolbar', sources: { figma: 'Bar panel and toolbar' }, upstreamNames: {} },
     ]);
   });
 
   it('merges a Figma name into an existing row via the figma alias map', () => {
     const roster = joinRosters(['TableView'], [], ['Table'], { figma: { Table: 'TableView' } });
     assert.deepEqual(roster, [
-      { name: 'TableView', sources: { rsp: 'TableView', figma: 'Table' }, externalNames: {} },
+      { name: 'TableView', sources: { rsp: 'TableView', figma: 'Table' }, upstreamNames: {} },
     ]);
   });
 
@@ -149,7 +150,7 @@ describe('joinRosters', () => {
       { rsp: { ToastContainer: 'Toast' } },
     );
     assert.deepEqual(roster, [
-      { name: 'Toast', sources: { rsp: 'ToastContainer', figma: 'Toast' }, externalNames: {} },
+      { name: 'Toast', sources: { rsp: 'ToastContainer', figma: 'Toast' }, upstreamNames: {} },
     ]);
   });
 
@@ -169,7 +170,7 @@ describe('joinRosters', () => {
       },
     );
     assert.deepEqual(roster, [
-      { name: 'Cards (Asset)', sources: { rsp: 'AssetCard', figma: 'Cards (Asset)' }, externalNames: {} },
+      { name: 'Cards (Asset)', sources: { rsp: 'AssetCard', figma: 'Cards (Asset)' }, upstreamNames: {} },
     ]);
   });
 
@@ -178,34 +179,34 @@ describe('joinRosters', () => {
       ['ActionButtonGroup'],
       [],
       [],
-      { rsp: { ActionButtonGroup: { canonical: 'ActionGroup', externalName: 'ActionButtonGroup' } } },
+      { rsp: { ActionButtonGroup: { canonical: 'ActionGroup', upstreamName: 'ActionButtonGroup' } } },
     );
     assert.deepEqual(roster, [
       {
         name: 'ActionGroup',
         sources: { rsp: 'ActionButtonGroup' },
-        externalNames: { rsp: 'ActionButtonGroup' },
+        upstreamNames: { rsp: 'ActionButtonGroup' },
       },
     ]);
   });
 
   it('does not set an external name for a plain-string alias entry (no verified direction)', () => {
     const roster = joinRosters(['ToastContainer'], [], [], { rsp: { ToastContainer: 'Toast' } });
-    assert.deepEqual(roster[0].externalNames, {});
+    assert.deepEqual(roster[0].upstreamNames, {});
   });
 
   it('keeps the first-found external name across a many-to-one merge, regardless of order', () => {
     const aliases = {
       rsp: {
         CardPreview: 'Cards',
-        Card: { canonical: 'Cards', externalName: 'Card' },
+        Card: { canonical: 'Cards', upstreamName: 'Card' },
         CardView: 'Cards',
       },
     };
     const forward = joinRosters(['CardPreview', 'Card', 'CardView'], [], [], aliases);
     const reversed = joinRosters(['CardView', 'Card', 'CardPreview'], [], [], aliases);
-    assert.equal(forward[0].externalNames.rsp, 'Card');
-    assert.equal(reversed[0].externalNames.rsp, 'Card');
+    assert.equal(forward[0].upstreamNames.rsp, 'Card');
+    assert.equal(reversed[0].upstreamNames.rsp, 'Card');
   });
 
   it('splits a card into duplicate rows when the Figma identity alias is missing', () => {
@@ -355,9 +356,9 @@ describe('buildIndex', () => {
     assert.deepEqual(ab.platforms.web.swc, { status: 'available', context: 'Stable' });
   });
 
-  it('carries a roster entry\'s externalNames onto the matching cell as originalName', () => {
+  it('carries a roster entry\'s upstreamNames onto the matching cell as upstreamName', () => {
     const aliasedRoster = [
-      { name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' }, externalNames: { rsp: 'ActionButtonGroup' } },
+      { name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' }, upstreamNames: { rsp: 'ActionButtonGroup' } },
     ];
     const { index } = buildIndex({
       roster: aliasedRoster,
@@ -365,13 +366,13 @@ describe('buildIndex', () => {
       columns,
     });
     const ag = index.components.find((c) => c.name === 'ActionGroup');
-    assert.equal(ag.platforms.web.rsp.originalName, 'ActionButtonGroup');
+    assert.equal(ag.platforms.web.rsp.upstreamName, 'ActionButtonGroup');
   });
 
-  it('omits originalName when the roster entry has no externalNames entry for that column', () => {
+  it('omits upstreamName when the roster entry has no upstreamNames entry for that column', () => {
     const { index } = buildIndex({ roster, readData, columns });
     const ab = index.components.find((c) => c.name === 'ActionButton');
-    assert.ok(!Object.hasOwn(ab.platforms.web.rsp, 'originalName'));
+    assert.ok(!Object.hasOwn(ab.platforms.web.rsp, 'upstreamName'));
   });
 
   it('emits Not available for a source a component lacks', () => {
@@ -570,13 +571,13 @@ describe('buildComponentSlices', () => {
     assert.ok(slices[1].shared);
   });
 
-  it('carries a cell\'s own originalName through unchanged (buildIndex/applyOverrides set it, not this function)', () => {
+  it('carries a cell\'s own upstreamName through unchanged (buildIndex/applyOverrides set it, not this function)', () => {
     const withOriginalName = [
-      { name: 'ActionButton', platforms: { web: { rsp: { status: 'available', originalName: 'ActionBtn' } } } },
+      { name: 'ActionButton', platforms: { web: { rsp: { status: 'available', upstreamName: 'ActionBtn' } } } },
     ];
     const rosterWithRsp = [{ name: 'ActionButton', sources: { rsp: 'ActionButton' } }];
     const { slices } = buildComponentSlices(rosterWithRsp, withOriginalName, []);
-    assert.equal(slices[0].data.web.rsp.originalName, 'ActionBtn');
+    assert.equal(slices[0].data.web.rsp.upstreamName, 'ActionBtn');
   });
 
   it('attaches the figma page id by source name, unaffected by a page override', () => {
@@ -590,7 +591,7 @@ describe('buildComponentSlices', () => {
     assert.deepEqual(warnings, []);
   });
 
-  it('prefers a `web.figma.originalName` override over the roster source name', () => {
+  it('prefers a `web.figma.figmaPageSource` override over the roster source name', () => {
     // Calendar has no Figma page of its own; a status-overrides.json entry redirects its
     // Design link to the Date and time field design without touching Calendar's own roster
     // membership (sources.figma is absent — this is a code-only component in Figma terms).
@@ -599,7 +600,7 @@ describe('buildComponentSlices', () => {
       rosterNoFigmaSource,
       [{
         name: 'Calendar',
-        platforms: { web: { figma: { status: 'available', originalName: 'Date and time field' } } },
+        platforms: { web: { figma: { status: 'available', figmaPageSource: 'Date and time field' } } },
       }],
       [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
     );
@@ -607,16 +608,16 @@ describe('buildComponentSlices', () => {
     assert.deepEqual(warnings, []);
   });
 
-  it('pins one Figma variant via originalName when several sources could match the canonical name', () => {
+  it('pins one Figma variant via upstreamName when several sources could match the canonical name', () => {
     // Cards has six Figma variant pages all aliased to the canonical "Cards" name; without an
-    // override the last-processed source wins by accident. An originalName override pins one
+    // override the last-processed source wins by accident. An upstreamName override pins one
     // deliberately.
     const rosterCards = [{ name: 'Cards', sources: { figma: 'Cards (User)' } }];
     const { slices, warnings } = buildComponentSlices(
       rosterCards,
       [{
         name: 'Cards',
-        platforms: { web: { figma: { status: 'available', originalName: 'Cards (Asset)' } } },
+        platforms: { web: { figma: { status: 'available', figmaPageSource: 'Cards (Asset)' } } },
       }],
       [
         { name: 'Cards (Asset)', figmaPageId: '10182:4354' },
@@ -627,7 +628,7 @@ describe('buildComponentSlices', () => {
     assert.deepEqual(warnings, []);
   });
 
-  it('warns when a `web.figma.originalName` override matches nothing in the Figma roster', () => {
+  it('warns when a `web.figma.figmaPageSource` override matches nothing in the Figma roster', () => {
     // A typo'd or stale name (roster entry renamed/removed upstream) must not fail silently —
     // the component's Figma link just vanishes otherwise, with no build signal.
     const rosterNoFigmaSource = [{ name: 'Calendar', sources: { rsp: 'Calendar' } }];
@@ -635,21 +636,21 @@ describe('buildComponentSlices', () => {
       rosterNoFigmaSource,
       [{
         name: 'Calendar',
-        platforms: { web: { figma: { status: 'available', originalName: 'Date and Time Field' } } },
+        platforms: { web: { figma: { status: 'available', figmaPageSource: 'Date and Time Field' } } },
       }],
       [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
     );
     assert.equal(slices[0].data.figmaPageId, undefined);
     assert.deepEqual(warnings, [
-      'figma originalName override for "Calendar" targets unmatched Figma roster entry "Date and Time Field"',
+      'figma figmaPageSource override for "Calendar" targets unmatched Figma roster entry "Date and Time Field"',
     ]);
   });
 });
 
 describe('buildImplAliases', () => {
-  it('keys an originalName by impl and the slice\'s own slug', () => {
+  it('keys an upstreamName by impl and the slice\'s own slug', () => {
     const slices = [
-      { slug: 'action-group', data: { web: { rsp: { status: 'available', originalName: 'ActionButtonGroup' } } } },
+      { slug: 'action-group', data: { web: { rsp: { status: 'available', upstreamName: 'ActionButtonGroup' } } } },
     ];
     assert.deepEqual(buildImplAliases(slices), { rsp: { 'action-group': 'ActionButtonGroup' } });
   });
@@ -660,8 +661,8 @@ describe('buildImplAliases', () => {
         slug: 'color-handle-and-loupe',
         data: {
           web: {
-            rsp: { status: 'available', originalName: 'ColorHandle' },
-            swc: { status: 'available', originalName: 'ColorHandle' },
+            rsp: { status: 'available', upstreamName: 'ColorHandle' },
+            swc: { status: 'available', upstreamName: 'ColorHandle' },
           },
         },
       },
@@ -672,7 +673,7 @@ describe('buildImplAliases', () => {
     });
   });
 
-  it('omits a cell with no originalName', () => {
+  it('omits a cell with no upstreamName', () => {
     const slices = [{ slug: 'action-button', data: { web: { rsp: { status: 'available' } } } }];
     assert.deepEqual(buildImplAliases(slices), {});
   });
@@ -681,16 +682,42 @@ describe('buildImplAliases', () => {
     assert.deepEqual(buildImplAliases([]), {});
   });
 
-  it('excludes a figma cell\'s originalName — it redirects the Figma link, not a code implementation', () => {
+  it('excludes a figma cell\'s upstreamName — it redirects the Figma link, not a code implementation', () => {
     const slices = [{
       slug: 'calendar',
       data: {
         web: {
-          figma: { status: 'available', originalName: 'Date and time field' },
+          figma: { status: 'available', figmaPageSource: 'Date and time field' },
           rsp: { status: 'available' },
         },
       },
     }];
     assert.deepEqual(buildImplAliases(slices), {});
+  });
+});
+
+// The authored slug and the RSP export name diverge for a minority of components —
+// `action-group` ships as ActionButtonGroup. Derived from the roster rather than
+// hand-maintained, so a rename upstream cannot leave a stale entry behind.
+describe('buildRspExportNames', () => {
+  it('records only the components whose RSP name differs from the canonical one', () => {
+    const roster = [
+      { name: 'Button', sources: { rsp: 'Button' } },
+      { name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' } },
+      { name: 'Table', sources: { rsp: 'TableView' } },
+    ];
+    assert.deepEqual(buildRspExportNames(roster), {
+      'action-group': 'ActionButtonGroup',
+      table: 'TableView',
+    });
+  });
+
+  it('skips a component with no RSP source at all', () => {
+    const roster = [{ name: 'FigmaOnly', sources: { figma: 'FigmaOnly' } }];
+    assert.deepEqual(buildRspExportNames(roster), {});
+  });
+
+  it('is empty for a roster where every name already matches', () => {
+    assert.deepEqual(buildRspExportNames([{ name: 'Button', sources: { rsp: 'Button' } }]), {});
   });
 });

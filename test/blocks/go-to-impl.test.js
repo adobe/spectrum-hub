@@ -49,8 +49,8 @@ describe('go-to-impl block', () => {
       expect(resolveImplementation('/')).to.equal(null);
     });
 
-    it('uses the given originalName\'s slug instead of the URL slug when present', () => {
-      // A shared page's status slice carries `originalName` (deps/build-status-index.js) —
+    it('uses the given upstreamName\'s slug instead of the URL slug when present', () => {
+      // A shared page's status slice carries `upstreamName` (deps/build-status-index.js) —
       // neither upstream docs site has a page at the shared slug itself.
       expect(resolveImplementation('/web/swc/components/color-handle-and-loupe', 'ColorHandle')).to.deep.equal({
         label: 'SWC',
@@ -58,7 +58,7 @@ describe('go-to-impl block', () => {
       });
     });
 
-    it('ignores an empty originalName and falls back to the URL slug', () => {
+    it('ignores an empty upstreamName and falls back to the URL slug', () => {
       expect(resolveImplementation('/web/swc/components/action-button', undefined)).to.deep.equal({
         label: 'SWC',
         href: 'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
@@ -67,7 +67,7 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
-    // originalName now comes from a static import of deps/build-status-index.js's build
+    // upstreamName now comes from a static import of deps/build-status-index.js's build
     // output (deps/impl-aliases.json) rather than a per-page fetch — these exercise real
     // committed alias entries instead of stubbing a network response.
     it('sets the SWC label and deep-links to the SWC docs in a new tab', () => {
@@ -91,7 +91,7 @@ describe('go-to-impl block', () => {
     });
 
     it('deep-links to the primary component when the current impl carries an alias', () => {
-      // deps/impl-aliases.json's swc entry for this shared slug: originalName "ColorHandle".
+      // deps/impl-aliases.json's swc entry for this shared slug: upstreamName "ColorHandle".
       window.history.pushState({}, '', '/web/swc/components/color-handle-and-loupe');
       const a = makeAnchor();
       decorateGoToImpl(a, a.querySelector('span'));

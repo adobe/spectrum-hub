@@ -13,7 +13,8 @@
       "rsp": {
         "status": "available",
         "context": "Stable",
-        "note": "Built into Form components instead."
+        "note": "Built into Form components instead.",
+        "upstreamName": "Form"
       }
     }
   },
@@ -22,12 +23,13 @@
       "rsp": {
         "status": "available",
         "context": "Stable",
-        "note": "Built into Form components instead."
+        "note": "Built into Form components instead.",
+        "upstreamName": "Form"
       }
     }
   },
   "Link": {
-     "web": {
+    "web": {
       "swc": {
         "status": "available",
         "context": "Stable",
@@ -42,13 +44,13 @@
         "context": "Stable",
         "note": "Built into color components instead.",
         "page": "color-handle-and-loupe",
-        "originalName": "ColorSlider"
+        "upstreamName": "ColorSlider"
       },
       "swc": {
         "status": "available",
         "context": "Stable",
         "page": "color-handle-and-loupe",
-        "originalName": "ColorHandle"
+        "upstreamName": "ColorHandle"
       }
     }
   },
@@ -59,13 +61,13 @@
         "context": "Stable",
         "note": "Built into color components instead.",
         "page": "color-handle-and-loupe",
-        "originalName": "ColorSlider"
+        "upstreamName": "ColorSlider"
       },
       "swc": {
         "status": "available",
         "context": "Stable",
         "page": "color-handle-and-loupe",
-        "originalName": "ColorHandle"
+        "upstreamName": "ColorHandle"
       }
     }
   },
@@ -91,7 +93,7 @@
     "web": {
       "figma": {
         "status": "available",
-        "originalName": "Date and time field",
+        "figmaPageSource": "Date and time field",
         "note": "No standalone Figma design; the Date and time field design covers it."
       }
     }
@@ -100,7 +102,7 @@
     "web": {
       "figma": {
         "status": "available",
-        "originalName": "Cards (Asset)",
+        "figmaPageSource": "Cards (Asset)",
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
     }
