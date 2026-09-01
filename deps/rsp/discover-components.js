@@ -1,10 +1,10 @@
 /**
  * Discovers published @react-spectrum/s2 components from unpkg and writes components.json.
  *
- * Only records which primary props interface (and, when it differs, which source file)
- * each component's props live in — extract-props.js resolves the interface's full,
- * transitively-inherited shape itself via the real TypeScript compiler (ts-cdn-host.js),
- * so this file no longer needs to guess at `extends`/`includes` from header text.
+ * Records only which primary props interface each component uses, and which source file
+ * it lives in when that differs from the component name. Inheritance is deliberately not
+ * recorded: extract-props.js resolves it from the declarations themselves via the
+ * TypeScript checker, so there is nothing here to configure or drift from.
  *
  * Usage: node deps/rsp/discover-components.js
  */
