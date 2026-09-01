@@ -67,11 +67,33 @@ function getInheritedFromName(attr) {
     : attr.inheritedFrom.name;
 }
 
+/**
+ * The kind of control a row's data can back, so no consumer parses `type`.
+ * `values` decides "enum" on its own — a resolved union is an enum whatever its type
+ * text says. Anything else falls through to "unknown", which draws no control and
+ * keeps the existing skip warning: aria-haspopup/aria-expanded reach the CEM with no
+ * type at all, and guessing would build a control out of nothing.
+ */
+export function attributeKind(typeText, values) {
+  if (values?.length) return 'enum';
+  // A nullable primitive is just that primitive — nullish is never offered as a value.
+  const bare = String(typeText ?? '').replace(/\s*\|\s*(null|undefined)\b/g, '').trim();
+  switch (bare) {
+    case 'boolean': return 'boolean';
+    case 'string': return 'text';
+    case 'number': return 'number';
+    default: return 'unknown';
+  }
+}
+
 function formatAttr(a, componentStatus, componentSince) {
   const entry = {
     attribute: a.name,
     property: a.fieldName,
     type: a.type?.text,
+    kind: attributeKind(a.type?.text, []),
+    values: [],
+    optional: false,
   };
   if (a.default) entry.default = a.default;
   if (a.description) entry.description = a.description;

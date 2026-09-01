@@ -18,7 +18,9 @@ const PROP_ORDER = Object.keys(PROPS_TO_LABELS);
 // Base types whose props apply to every RSP component (layout, spacing, etc.) — not useful
 // in a component-specific API table.
 const EXCLUDED_SOURCES = new Set(['StyleProps']);
-const EXCLUDED_COLUMNS = new Set(['status', 'since']);
+// `kind`/`values`/`optional` back the playground's controls; this table shows the
+// human-readable `type` instead.
+const EXCLUDED_COLUMNS = new Set(['status', 'since', 'kind', 'values', 'optional']);
 
 const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');

@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it, beforeEach, afterEach } from 'node:test';
 
-import { collectComponentData, fetchCEM, fetchResolvedVersion } from '../../deps/swc/extract-cem-components.js';
+import {
+  attributeKind,
+  collectComponentData,
+  fetchCEM,
+  fetchResolvedVersion,
+} from '../../deps/swc/extract-cem-components.js';
 
 // fetchCEM/fetchResolvedVersion share the same unpkg-then-jsdelivr CDN fallback
 // (fetchFromCdns) — real global.fetch is stubbed per test and restored after.
@@ -51,6 +56,40 @@ describe('CDN fallback (fetchCEM, fetchResolvedVersion)', () => {
   });
 });
 
+// Layer 1: every row carries `kind` + `values` so no consumer re-parses `type`.
+describe('attributeKind', () => {
+  it('classifies the four kinds SWC actually uses', () => {
+    assert.equal(attributeKind('boolean', []), 'boolean');
+    assert.equal(attributeKind('string', []), 'text');
+    assert.equal(attributeKind('number', []), 'number');
+    assert.equal(attributeKind('"s" | "m"', ['s', 'm']), 'enum');
+    assert.equal(attributeKind('50 | 75', [50, 75]), 'enum');
+  });
+
+  it('classifies anything with values as an enum regardless of its type text', () => {
+    assert.equal(attributeKind('StatusLightVariant', ['neutral', 'info']), 'enum');
+  });
+
+  // aria-haspopup / aria-expanded reach the CEM with no type at all. Guessing a kind
+  // would build a control from nothing; the skip warning is the correct outcome.
+  it('is "unknown" for a type the CEM never recorded', () => {
+    assert.equal(attributeKind('', []), 'unknown');
+    assert.equal(attributeKind(undefined, []), 'unknown');
+  });
+
+  it('is "unknown" for a type it cannot turn into a control', () => {
+    assert.equal(attributeKind('(e: Event) => void', []), 'unknown');
+    assert.equal(attributeKind('ReactNode', []), 'unknown');
+  });
+
+  // Nullish is stripped, never offered — "none" is a control-layer sentinel, so a
+  // nullable primitive is just that primitive (swc-progress-circle.progress).
+  it('sees through a nullable primitive', () => {
+    assert.equal(attributeKind('number | null', []), 'number');
+    assert.equal(attributeKind('string | undefined', []), 'text');
+  });
+});
+
 describe('collectComponentData', () => {
   it('filters one 2nd-gen CEM by tagName and formats declaration attributes', () => {
     const cem = {
@@ -67,6 +106,9 @@ describe('collectComponentData', () => {
                   name: 'variant',
                   fieldName: 'variant',
                   type: { text: 'ButtonVariant' },
+                  kind: 'unknown',
+                  values: [],
+                  optional: false,
                   default: "'primary'",
                   description: 'The visual variant of the button.',
                 },
@@ -74,6 +116,9 @@ describe('collectComponentData', () => {
                   name: 'disabled',
                   fieldName: 'disabled',
                   type: { text: 'boolean' },
+                  kind: 'boolean',
+                  values: [],
+                  optional: false,
                   default: 'false',
                   description: 'Whether the button is disabled.',
                   inheritedFrom: {
@@ -96,6 +141,9 @@ describe('collectComponentData', () => {
                   name: 'variant',
                   fieldName: 'variant',
                   type: { text: 'BadgeVariant' },
+                  kind: 'unknown',
+                  values: [],
+                  optional: false,
                 },
               ],
             },
@@ -111,6 +159,9 @@ describe('collectComponentData', () => {
         attribute: 'variant',
         property: 'variant',
         type: 'ButtonVariant',
+        kind: 'unknown',
+        values: [],
+        optional: false,
         default: "'primary'",
         description: 'The visual variant of the button.',
         status: 'preview',
@@ -120,6 +171,9 @@ describe('collectComponentData', () => {
         attribute: 'disabled',
         property: 'disabled',
         type: 'boolean',
+        kind: 'boolean',
+        values: [],
+        optional: false,
         default: 'false',
         description: 'Whether the button is disabled.',
         inheritedFrom: 'ButtonBase',
@@ -143,6 +197,9 @@ describe('collectComponentData', () => {
                   name: 'open',
                   fieldName: 'open',
                   type: { text: 'boolean' },
+                  kind: 'boolean',
+                  values: [],
+                  optional: false,
                 },
               ],
             },
@@ -158,6 +215,9 @@ describe('collectComponentData', () => {
                   name: 'open',
                   fieldName: 'open',
                   type: { text: 'boolean' },
+                  kind: 'boolean',
+                  values: [],
+                  optional: false,
                   inheritedFrom: { name: 'ColorLoupeBase' },
                 },
               ],
@@ -172,6 +232,9 @@ describe('collectComponentData', () => {
         attribute: 'open',
         property: 'open',
         type: 'boolean',
+        kind: 'boolean',
+        values: [],
+        optional: false,
         since: '0.0.1',
       },
     ]);
