@@ -326,7 +326,7 @@ describe('resolveAllAttributeTypes', () => {
   });
 
   // Values may be a manifest object (package.json responses, read via .json()) or a
-  // plain string (crawled .d.ts file contents, read via .text() — see ts-cdn-host.js).
+  // plain string (crawled .d.ts file contents, read via .text() — see build-ts-checker.js).
   function mockCdnFetch(responsesByCanonicalPath) {
     const urlToValue = new Map();
     for (const [canonicalPath, value] of Object.entries(responsesByCanonicalPath)) {

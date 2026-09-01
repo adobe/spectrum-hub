@@ -143,4 +143,4 @@ The package ships `dist/custom-elements.json` (`files: ["dist/"]`, `customElemen
 
 **Duplicate tag names** — If multiple declarations share a `tagName`, the extractor uses the first match in module order.
 
-**Tests** — `extract-cem-components`, `resolve-attribute-types`, `swc-locate-published-files`, and `swc-ts-cdn-host` cover the pipeline with mocked fetches (no live CDN); `swc-data-contract` validates the committed catalog.
+**Tests** — `extract-cem-components`, `resolve-attribute-types`, `swc-locate-published-files`, and `swc-build-ts-checker` cover the pipeline with mocked fetches (no live CDN); `swc-data-contract` validates the committed catalog.

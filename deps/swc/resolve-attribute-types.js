@@ -17,7 +17,7 @@
 
 import ts from 'typescript';
 import { componentEntryPath, rebaseInheritedModule } from './locate-published-files.js';
-import { crawl, buildProgram } from './ts-cdn-host.js';
+import { crawl, buildProgram } from './build-ts-checker.js';
 
 // A bare alias this pipeline can expand, optionally unioned with undefined.
 const BARE_ALIAS_RE = /^[A-Za-z_$][A-Za-z0-9_$]*(\s*\|\s*undefined)?$/;

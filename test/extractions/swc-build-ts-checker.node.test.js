@@ -7,11 +7,12 @@ import {
   createCdnCompilerHost,
   buildProgram,
   crawl,
-} from '../../deps/swc/ts-cdn-host.js';
+} from '../../deps/swc/build-ts-checker.js';
 import { cdnUrlsForCanonicalPath } from '../../deps/swc/locate-published-files.js';
 
 // A fetchImpl stand-in that serves fixed content for known canonical paths (in the
-// "pkgName::version/filePath" form ts-cdn-host.js/locate-published-files.js use everywhere) and
+// "pkgName::version/filePath" form build-ts-checker.js and locate-published-files.js
+// both use everywhere) and
 // 404s otherwise. Keyed by canonical path rather than URL, so fixtures read the same
 // as the fileCache/resolutionCache keys they end up producing; cdnUrlsForCanonicalPath
 // (the same function the real code uses) maps each key to its real unpkg/jsdelivr
