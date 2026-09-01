@@ -15,9 +15,28 @@ const PROPS_TO_LABELS = {
 
 const PROP_ORDER = Object.keys(PROPS_TO_LABELS);
 
-// Base types whose props apply to every RSP component (layout, spacing, etc.) — not useful
-// in a component-specific API table.
-const EXCLUDED_SOURCES = new Set(['StyleProps']);
+// Base interfaces whose props are DOM/ARIA/event plumbing rather than component API.
+// The compiler-based RSP extractor resolves the full inherited surface — Button carries
+// 42 props, only 8 of them Spectrum's — so these are filtered for display. The catalog
+// stays complete; this is a rendering choice.
+const EXCLUDED_SOURCES = new Set([
+  'StyleProps',
+  'DOMProps',
+  'SlotProps',
+  'GlobalDOMEvents',
+  'GlobalDOMAttributes',
+  'AriaLabelingProps',
+  'AriaBaseButtonProps',
+  'LinkDOMProps',
+  'PressEvents',
+  'FocusEvents',
+  'KeyboardEvents',
+  'HoverEvents',
+  'FocusableDOMProps',
+  'InputDOMProps',
+  'TextInputDOMProps',
+  'TextInputDOMEvents',
+]);
 // `kind`/`values`/`optional` back the playground's controls; this table shows the
 // human-readable `type` instead.
 const EXCLUDED_COLUMNS = new Set(['status', 'since', 'kind', 'values', 'optional']);
