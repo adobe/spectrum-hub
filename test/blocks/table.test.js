@@ -326,6 +326,28 @@ describe('table block', () => {
       expect(headers).to.include('Type');
     });
 
+    // The compiler-based RSP extractor resolves the full inherited surface, so a
+    // component carries its DOM/ARIA/event plumbing alongside its Spectrum API —
+    // Button goes from 7 rows to 42. These sources are the plumbing.
+    it('filters rows inherited from DOM, ARIA and event base interfaces', async () => {
+      stubFetchOk([
+        { property: 'variant', type: '"primary"', inheritedFrom: 'ButtonStyleProps' },
+        { property: 'isDisabled', type: 'boolean' },
+        { property: 'aria-label', type: 'string', inheritedFrom: 'AriaLabelingProps' },
+        { property: 'onPress', type: '() => void', inheritedFrom: 'PressEvents' },
+        { property: 'onKeyDown', type: '() => void', inheritedFrom: 'GlobalDOMEvents' },
+        { property: 'id', type: 'string', inheritedFrom: 'DOMProps' },
+      ]);
+      const el = makeDataEl();
+      await init(el);
+      const cells = [...el.querySelectorAll('td')].map((td) => td.textContent);
+      expect(cells).to.include('variant');
+      expect(cells).to.include('isDisabled');
+      for (const dropped of ['aria-label', 'onPress', 'onKeyDown', 'id']) {
+        expect(cells).to.not.include(dropped);
+      }
+    });
+
     it('filters rows whose inheritedFrom is StyleProps', async () => {
       stubFetchOk(PROPS);
       const el = makeDataEl();
