@@ -11,7 +11,7 @@ import {
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
-import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
+import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -138,7 +138,18 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
   el.textContent = textEntry?.[1]?.value ?? 'Label';
 }
 
-function buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelTarget, resolveAttribute) {
+// `attributeTarget` is where controlled props land, which is not always `el`: a route
+// whose props are declared on its trigger (propsOwner in overlay-triggers.js) serializes
+// them onto the wrapper. Text and children always belong to `el` — they are the route's
+// own content regardless of which export declares the props.
+function buildSnippetElement(
+  el,
+  currentProps,
+  fragmentRoot,
+  hasRealLabelTarget,
+  resolveAttribute,
+  attributeTarget = el,
+) {
   if (fragmentRoot) {
     [...fragmentRoot.attributes].forEach((attr) => el.setAttribute(attr.name, attr.value));
   }
@@ -147,7 +158,7 @@ function buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelTarget,
     const isRealLabelProp = prop === 'label' && hasRealLabelTarget;
     const attribute = resolveAttribute(prop, entry);
     if ((TEXT_KEYS.has(prop) && !isRealLabelProp) || attribute === null || value === undefined || value === '' || value === 'no') { return; }
-    el.setAttribute(attribute, value === 'yes' ? '' : value);
+    attributeTarget.setAttribute(attribute, value === 'yes' ? '' : value);
   });
 
   applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget);
@@ -189,15 +200,27 @@ export function buildRspSnippet(
   const xmlDoc = document.implementation.createDocument(null, null, null);
   const el = xmlDoc.createElement(componentName);
   const fragmentRoot = parseXmlFragmentRoot(markup);
-  // RSP prop names are used as-authored, unlike SWC.
-  buildSnippetElement(el, currentProps, fragmentRoot, hasRealLabelProp, (prop) => prop);
 
   // Some routes need a real Trigger wrapper to be usable; a route with no
   // `trigger` of its own (e.g. toast) fires imperatively instead,
   // so its Button is a sibling line rather than a parent (overlay-triggers.js).
   const shape = overlayShape(routeName);
-  if (shape === 'none') { return serializeElement(el, 0, true); }
   const overlayTrigger = OVERLAY_TRIGGERS[routeName];
+  // Built before the props are applied, because for a route whose props are declared on
+  // the trigger (tooltip) this is what they serialize onto.
+  const trigger = shape === 'wrap' ? xmlDoc.createElement(overlayTrigger.trigger) : null;
+
+  // RSP prop names are used as-authored, unlike SWC.
+  buildSnippetElement(
+    el,
+    currentProps,
+    fragmentRoot,
+    hasRealLabelProp,
+    (prop) => prop,
+    trigger && propsOwner(routeName) ? trigger : el,
+  );
+
+  if (shape === 'none') { return serializeElement(el, 0, true); }
 
   const triggerButton = xmlDoc.createElement('Button');
   triggerButton.textContent = overlayTrigger.triggerLabel;
@@ -208,7 +231,6 @@ export function buildRspSnippet(
     return [serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n');
   }
 
-  const trigger = xmlDoc.createElement(overlayTrigger.trigger);
   trigger.append(triggerButton, el);
   return serializeElement(trigger, 0, true);
 }
@@ -380,6 +402,9 @@ function resolveComponentMeta(component, implementation, base) {
   // by the authored slug. Only the RSP export name differs, and only where the export
   // itself is needed: the data fetch and the code disclosure's tag name.
   const componentTitle = resolveRspComponentName(component);
+  // Which export's catalog holds this route's props. The same as its own component for
+  // every route but tooltip, whose props RSP declares on TooltipTrigger.
+  const propsTitle = propsOwner(component) ?? componentTitle;
   const previewName = implementation === 'rsp' ? componentTitle : `swc-${component}`;
   const markupUrl = implementation === 'rsp'
     ? `${base}/deps/rsp/playground/snippets/${component}.jsx`
@@ -395,19 +420,19 @@ function resolveComponentMeta(component, implementation, base) {
     previewShellPath = 'blocks/playground/index.html';
   }
   return {
-    componentTitle, previewName, markupUrl, previewShellPath,
+    componentTitle, propsTitle, previewName, markupUrl, previewShellPath,
   };
 }
 
 // Only the spreadsheet fetch is allowed to reject and abort init(); a missing
 // prop-data file or markup fragment (leaf component) degrades to empty instead.
 async function fetchPlaygroundInputs(base, componentMeta, component, impl, spreadsheetUrl) {
-  const { componentTitle, markupUrl } = componentMeta;
+  const { propsTitle, markupUrl } = componentMeta;
   // Exactly one catalog: the page's own. Fetching both guaranteed a 404 on every RSP
   // page (most RSP components have no SWC counterpart) and was what let one
   // implementation's option lists leak onto the other's controls.
   const catalogUrl = {
-    rsp: `${base}/deps/rsp/data/${componentTitle}.json`,
+    rsp: `${base}/deps/rsp/data/${propsTitle}.json`,
     swc: `${base}/deps/swc/data/swc-${component}.json`,
   }[impl];
   const [{ componentsSheet, controlsSheet }, propRows, snippetMarkup] = await Promise.all([

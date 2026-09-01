@@ -29,6 +29,12 @@ The division matters: **the workbook is the allow-list, the catalog is the vocab
 
 **A "None" choice is derived from `optional`, which only SWC emits.** SWC declares attributes required by default, so `optional` is its rare, informative signal. TypeScript props are optional by default, so the same rule on RSP would put a spurious *None* on 97% of controls. RSP's `staticColor` therefore names itself explicitly in `playground-data.js` — a deliberate exception, not an oversight. See [deps/rsp/README.md](../rsp/README.md#required-not-optional).
 
+**A route may declare that its props live on another export.** RSP splits Tooltip's API in two: `Tooltip` renders the bubble, but `placement`, `trigger`, `delay`, `isDisabled`, `shouldFlip`, `containerPadding`, `crossOffset` and `shouldCloseOnPress` are all declared on `TooltipTrigger`. Reading the route's own catalog there gives six props, none of them a control, so every authored property was rejected and the page rendered no controls at all.
+
+`propsOnTrigger` on the route's `OVERLAY_TRIGGERS` entry moves two things together, and they have to move together: which catalog is read (`propsOwner()`, used by `resolveComponentMeta`'s `propsTitle` and by the shell) **and** which element the props are applied to — the wrapper rather than the route's own element, in the live preview and the code disclosure alike. Reading the right catalog without moving the apply target would render controls that silently do nothing.
+
+Text and children stay on the route's own element regardless: they are its content, not its configuration. `tooltip` is the only route that needs this — every dialog declares its own props.
+
 **A component with no controls gets no controls panel.** Some components legitimately have none: SWC's `link` is utility CSS classes rather than a component API and is absent from `components.json` entirely, so the existence gate rejects every authored property; RSP's `SideNav` has 16 catalog props, but every one is `unknown` or `text` with no options, so every control is skipped. `buildControlsPanel` returns `null` when nothing rendered, and the layout appends only what exists — otherwise an empty panel keeps its fixed column and labels a region containing nothing. No CSS is involved: `.playground-controls` is `flex: 0 0 <fixed>` and `.playground-preview` is `flex: 1 1 auto`, so with the panel gone the preview is the sole flex child and fills the row.
 
 ## Naming: the authored name is the thread
@@ -66,7 +72,7 @@ That bridge is a **runtime walk only until SWC's extractor writes a canonical na
 | `values` in declared order, membership never changing when reordered | `test/extractions/prop-contract.node.test.js` |
 | Options from `values` and never from `type`; the existence gate; the name bridge | `test/extractions/playground-data.node.test.js` |
 | One catalog fetched; authored-slug snippet and shell routing; no panel when there are no controls | `test/blocks/playground.test.js` |
-| Overlay routes keyed by authored slug | `test/extractions/overlay-triggers.node.test.js` |
+| Overlay routes keyed by authored slug; which export owns a route's props | `test/extractions/overlay-triggers.node.test.js` |
 
 The catalog guards are deliberately written so they have been *seen* to fail: the zero-props canary was checked against a planted empty component, the ordering guard is the same check that surfaced the original four out-of-order enums, and the `values`-over-`type` tests were run against the old type-parsing consumer to confirm all three go red.
 

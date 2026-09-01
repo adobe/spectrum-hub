@@ -1411,3 +1411,65 @@ describe('playground block — a component with no controls', () => {
     expect(panel.children.length).to.be.greaterThan(0);
   });
 });
+
+// RSP declares Tooltip's controllable props on TooltipTrigger, so the route reads that
+// catalog (propsOwner in overlay-triggers.js) and must apply them there too — a
+// `placement` landing on <Tooltip> would render a control that does nothing.
+describe('playground block — a route whose props live on its trigger', () => {
+  let sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(console, 'warn');
+    document.body.innerHTML = '';
+    clearFetchCache();
+  });
+
+  afterEach(() => { sandbox.restore(); });
+
+  it('serializes the props onto the trigger, not the tooltip', () => {
+    const snippet = buildRspSnippet(
+      'Tooltip',
+      { placement: { value: 'top', attribute: 'placement' } },
+      '<Tooltip>Tip text</Tooltip>',
+      false,
+      'tooltip',
+    );
+    // serializeElement breaks attributes onto their own lines.
+    expect(snippet.startsWith('<TooltipTrigger\n  placement="top">')).to.be.true;
+    expect(snippet.includes('<Tooltip placement')).to.be.false;
+    // The route's own element is still the wrapped child.
+    expect(snippet.includes('<Tooltip>')).to.be.true;
+  });
+
+  it('leaves a self-owned overlay route applying props to its own element', () => {
+    const snippet = buildRspSnippet(
+      'AlertDialog',
+      { title: { value: 'Heads up', attribute: 'title' } },
+      '<AlertDialog />',
+      false,
+      'alert-dialog',
+    );
+    expect(snippet, snippet).to.include('title="Heads up"');
+    expect(snippet.includes('<DialogTrigger title')).to.be.false;
+  });
+
+  it('fetches the trigger\'s catalog for the tooltip route', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox);
+    const el = makeMetaEl({ implementation: 'rsp', component: 'tooltip' });
+    document.body.append(el);
+    await init(el);
+
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    expect(urls.some((url) => url.includes('/deps/rsp/data/TooltipTrigger.json'))).to.be.true;
+    expect(urls.some((url) => url.includes('/deps/rsp/data/Tooltip.json'))).to.be.false;
+  });
+
+  it('still names the route\'s own component in the code disclosure', async () => {
+    stubPlaygroundFetch(sandbox);
+    const el = makeMetaEl({ implementation: 'rsp', component: 'tooltip' });
+    document.body.append(el);
+    await init(el);
+    expect(el.querySelector('pre').textContent.includes('<Tooltip')).to.be.true;
+  });
+});

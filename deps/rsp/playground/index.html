@@ -18,7 +18,7 @@
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
-    import { OVERLAY_TRIGGERS, overlayShape } from './overlay-triggers.js';
+    import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from './overlay-triggers.js';
     import { NONE_OPTION } from '../../shared/playground/none-option.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, resolveRspComponentName } from './pascal-case.js';
@@ -88,13 +88,20 @@
       const exportName = resolveRspComponentName(component);
       const overlayTrigger = OVERLAY_TRIGGERS[component];
       const shape = overlayShape(component);
+      // Tooltip's props are declared on TooltipTrigger, so they are applied to the
+      // wrapper rather than the route's own element (see propsOwner). Without this the
+      // controls would resolve from the right catalog and then do nothing.
+      // Read the same catalog the block reads (resolveComponentMeta's propsTitle), so
+      // the preview and the code disclosure cannot disagree about the prop set.
+      const propsName = propsOwner(component) ?? exportName;
+      const propsOnTrigger = propsName !== exportName;
 
       try {
         const [pkg, compositeRoot, ownRspProps] = await Promise.all([
           fetch(`https://esm.sh/${PKG}/package.json`).then((r) => r.json()),
           fetchCompositeRoot(),
           // A 404 or malformed file just means "no label prop" — see apply-rsp-prop.js.
-          fetch(`../data/${exportName}.json`)
+          fetch(`../data/${propsName}.json`)
             .then((r) => (r.ok ? r.json() : []))
             .then((d) => (Array.isArray(d) ? d : (d.props ?? [])))
             .catch(() => []),
@@ -163,9 +170,10 @@
 
         function render() {
           const scheme = resolveColorScheme(currentScheme, matchMedia('(prefers-color-scheme: dark)').matches);
+          const ownProps = propsOnTrigger ? {} : currentProps;
           const innerElement = compositeChildren.length
-            ? createElement(Component, currentProps, ...rootChildArgs)
-            : createElement(Component, currentProps);
+            ? createElement(Component, ownProps, ...rootChildArgs)
+            : createElement(Component, ownProps);
           // Overlay routes need a real Trigger to mount anything, or (with no
           // `trigger` of their own, e.g. toast) a sibling Button
           // that fires imperatively (overlay-triggers.js).
@@ -173,7 +181,7 @@
           if (shape === 'wrap') {
             rootElement = createElement(
               RSP[overlayTrigger.trigger],
-              {},
+              propsOnTrigger ? currentProps : {},
               createElement(RSP.Button, {}, overlayTrigger.triggerLabel),
               innerElement,
             );

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { OVERLAY_TRIGGERS, overlayShape } from '../../deps/rsp/playground/overlay-triggers.js';
+import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 
 // overlayShape is the single source of truth the live preview (deps/rsp/playground/
 // index.html) and the snippet builder (blocks/playground/playground.js) both call — this
@@ -38,5 +38,27 @@ describe('overlayShape', () => {
     assert.equal(overlayShape('popover'), 'wrap');
     assert.equal(overlayShape('tooltip'), 'wrap');
     assert.equal(overlayShape('toast'), 'sibling');
+  });
+});
+
+// RSP splits Tooltip's API across two exports: `Tooltip` renders the bubble, but every
+// controllable prop (placement, trigger, delay, isDisabled, shouldFlip, ...) is declared
+// on `TooltipTrigger`. The route is keyed `tooltip`, so without this the playground reads
+// Tooltip.json — 6 props, none of them a control — and every authored property is
+// rejected by the existence gate. It is the only route where the trigger owns the API;
+// the dialogs all declare their own props.
+describe('propsOwner', () => {
+  it('names the trigger for a route whose props live there', () => {
+    assert.equal(propsOwner('tooltip'), 'TooltipTrigger');
+  });
+
+  it('returns null for an overlay route that declares its own props', () => {
+    ['popover', 'standard-dialog', 'alert-dialog', 'takeover-dialog', 'toast']
+      .forEach((route) => assert.equal(propsOwner(route), null, route));
+  });
+
+  it('returns null for a route with no overlay at all', () => {
+    assert.equal(propsOwner('action-button'), null);
+    assert.equal(propsOwner('nonexistent'), null);
   });
 });
