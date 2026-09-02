@@ -31,7 +31,7 @@ export const STATUSES = {
   available: {
     id: 'available',
     label: 'Available',
-    color: '--s2-green-900',
+    color: '--s2-green-1000',
     definition: 'Ready for use. Fidelity may vary.',
   },
   experimental: {
