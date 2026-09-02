@@ -7,6 +7,13 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+
+env:
+  # One long-lived branch rather than one per run, so a quiet week leaves no debris and
+  # there is only ever a single extraction PR to review. Recreated from the default
+  # branch every run and force-pushed — see the "Commit" step.
+  BRANCH: chore/swc-component-properties
 
 jobs:
   update-properties:
@@ -37,10 +44,65 @@ jobs:
       - name: Build combined status index
         run: node deps/build-status-index.js
 
-      - name: Commit changes
+      - name: Stage extraction output
+        id: stage
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add deps/swc/data/ deps/status-index.json deps/status/ deps/impl-component-names.js deps/swc/components.json deps/swc/version.json
-          git diff --staged --quiet || git commit -m "chore: update component properties from CEM and status index"
-          git push
+          if git diff --staged --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Upstream is unchanged since the last run. No branch, no PR."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --staged --stat
+          fi
+
+      # The PR this opens gets no `pull_request` checks of its own (GitHub does not run
+      # workflows for PRs opened with GITHUB_TOKEN), so the extraction is validated here
+      # instead. A run that produces a catalog the suite rejects fails loudly rather than
+      # opening a PR that merely looks green.
+      - name: Verify the extraction before proposing it
+        if: steps.stage.outputs.changed == 'true'
+        run: |
+          npm run lint:js
+          npm run test:extractions
+
+      - name: Describe what changed
+        if: steps.stage.outputs.changed == 'true'
+        run: |
+          {
+            echo "Automated run of \`.github/workflows/extract-swc-properties.yml\`."
+            echo
+            echo "Re-ran discovery and CEM extraction against \`@adobe/spectrum-wc@$(node -p "require('./deps/swc/version.json').version")\`,"
+            echo "then rebuilt the combined status index."
+            echo
+            node .github/scripts/roster-delta.js deps/swc/components.json
+            echo
+            echo "\`npm run lint:js\` and \`npm run test:extractions\` passed on this output"
+            echo "before the PR was opened."
+          } > "$RUNNER_TEMP/pr-body.md"
+
+      - name: Commit to a branch and open a PR
+        if: steps.stage.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git switch -c "$BRANCH"
+          git commit -m "chore: update component properties from CEM and status index"
+          # Force is safe on a bot-owned branch recreated from the default branch each
+          # run — but it does discard commits pushed onto the branch by hand. Land the
+          # PR, or make follow-up fixes on a branch of your own.
+          git push --force origin "$BRANCH"
+
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --body-file "$RUNNER_TEMP/pr-body.md"
+            echo "Updated existing PR #$existing"
+          else
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore: update SWC component properties from the published CEM" \
+              --body-file "$RUNNER_TEMP/pr-body.md"
+          fi
