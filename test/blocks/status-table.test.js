@@ -212,8 +212,29 @@ describe('status-table block', () => {
 
     it('renders the component display label in the row header cell', () => {
       const colorAreaRow = [...el.querySelectorAll('tbody tr')]
-        .find((tr) => tr.querySelector('th').textContent === 'Color Area');
+        .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === 'Color Area');
       expect(colorAreaRow).to.not.be.undefined;
+    });
+
+    // Below the block's 650px container width the thead is clipped out of view, so each
+    // body cell repeats its column header beside the status.
+    it('repeats every column header inside its body cells', () => {
+      const labels = [...el.querySelectorAll('tbody tr:first-child .status-table-cell-label')]
+        .map((label) => label.textContent);
+      expect(labels).to.deep.equal([
+        'Component', 'Figma', 'React Spectrum', 'Spectrum Web Components',
+      ]);
+    });
+
+    it('hides the labels from assistive tech, which already gets the real column header', () => {
+      const labels = [...el.querySelectorAll('.status-table-cell-label')];
+      expect(labels.length).to.be.above(0);
+      labels.forEach((label) => expect(label.getAttribute('aria-hidden')).to.equal('true'));
+    });
+
+    it('keeps the label out of the searchable and sortable component name', () => {
+      const value = el.querySelector('tbody th .status-table-cell-value');
+      expect(value.textContent).to.not.match(/^Component/);
     });
   });
 
@@ -227,7 +248,7 @@ describe('status-table block', () => {
 
     // The table loads sorted by Component ascending, so target rows by name, not position.
     const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
-      .find((tr) => tr.querySelector('th').textContent === name);
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
 
     it('renders the unified status label per column cell, in index column order', () => {
       const calendarCells = rowByName(el, 'Calendar').querySelectorAll('td');
@@ -244,7 +265,7 @@ describe('status-table block', () => {
 
     it('renders the secondary guidance line when present', () => {
       const colorAreaRow = [...el.querySelectorAll('tbody tr')]
-        .find((tr) => tr.querySelector('th').textContent === 'Color Area');
+        .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === 'Color Area');
       const secondary = colorAreaRow.querySelector('.status-table-secondary');
       expect(secondary).to.not.be.null;
       expect(secondary.textContent).to.include('Use Gen1');
@@ -265,7 +286,7 @@ describe('status-table block', () => {
     });
 
     const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
-      .find((tr) => tr.querySelector('th').textContent === name);
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
     const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
 
     it('links an available RSP cell to that implementation\'s component page', () => {
@@ -356,7 +377,7 @@ describe('status-table block', () => {
 
   describe('query-index gating', () => {
     const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
-      .find((tr) => tr.querySelector('th').textContent === name);
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
     const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
 
     it('fetches query-index.json alongside the status index', async () => {
@@ -453,7 +474,7 @@ describe('status-table block', () => {
       input.value = 'color';
       input.dispatchEvent(new Event('input'));
       const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
-      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal([
+      expect(visible.map((tr) => tr.querySelector('th .status-table-cell-value').textContent)).to.deep.equal([
         'Color Area', 'Color Handle', 'Color Loupe',
       ]);
     });
@@ -463,7 +484,7 @@ describe('status-table block', () => {
       input.value = 'BUTTON';
       input.dispatchEvent(new Event('input'));
       const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
-      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal(['Button']);
+      expect(visible.map((tr) => tr.querySelector('th .status-table-cell-value').textContent)).to.deep.equal(['Button']);
     });
 
     it('restores every row when the query is cleared', () => {
@@ -597,7 +618,7 @@ describe('status-table block', () => {
     });
 
     const names = (root) => [...root.querySelectorAll('tbody tr')]
-      .map((tr) => tr.querySelector('th').textContent);
+      .map((tr) => tr.querySelector('th .status-table-cell-value').textContent);
 
     it('loads sorted by Component ascending', () => {
       expect(names(el)).to.deep.equal([

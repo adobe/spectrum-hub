@@ -88,6 +88,28 @@ const withRole = (node, role) => {
   return node;
 };
 
+/**
+ * The column-header text repeated inside a body cell. Only the narrow stacked layout
+ * shows it — there the `thead` is clipped out of view, so without this the statuses
+ * arrive with no indication of which implementation they belong to. `aria-hidden`
+ * because the real `<th scope="col">` already names the cell for assistive tech; a
+ * second copy would announce every header twice.
+ */
+const buildCellLabel = (text) => {
+  const label = document.createElement('span');
+  label.className = 'status-table-cell-label';
+  label.setAttribute('aria-hidden', 'true');
+  label.textContent = text;
+  return label;
+};
+
+/** A body cell's value, wrapped so it stays one grid item beside its label. */
+const buildCellValue = () => {
+  const value = document.createElement('span');
+  value.className = 'status-table-cell-value';
+  return value;
+};
+
 /** A colored status dot + its unified label; `data-status` is the CSS/color hook. */
 const buildBadge = (cell) => {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
@@ -116,6 +138,8 @@ const buildStatusCell = (cell, context = {}) => {
     columnId, columnLabel, componentName, componentLabel, web, publishedPaths,
   } = context;
   const td = withRole(document.createElement('td'), 'cell');
+  const value = buildCellValue();
+  td.append(buildCellLabel(columnLabel), value);
 
   const badge = buildBadge(cell);
   const href = componentPageHref(columnId, cell?.status, componentName, web, cell, publishedPaths);
@@ -130,16 +154,16 @@ const buildStatusCell = (cell, context = {}) => {
     // In Context).
     link.setAttribute('aria-label', `${componentLabel}, ${status.label} in ${columnLabel}`);
     link.append(badge);
-    td.append(link);
+    value.append(link);
   } else {
-    td.append(badge);
+    value.append(badge);
   }
 
   if (cell?.secondary) {
     const secondary = document.createElement('span');
     secondary.className = 'status-table-secondary';
     secondary.textContent = cell.secondary;
-    td.append(secondary);
+    value.append(secondary);
   }
   return td;
 };
@@ -167,6 +191,8 @@ const buildTable = (index, publishedPaths) => {
   thead.classList.add('header-row');
   thead.append(headRow);
 
+  const componentLabel = componentHead.textContent;
+
   const tbody = withRole(document.createElement('tbody'), 'rowgroup');
   for (const component of index.components ?? []) {
     const row = withRole(document.createElement('tr'), 'row');
@@ -174,7 +200,9 @@ const buildTable = (index, publishedPaths) => {
 
     const nameCell = withRole(document.createElement('th'), 'rowheader');
     nameCell.scope = 'row';
-    nameCell.textContent = component.label ?? component.name;
+    const nameValue = buildCellValue();
+    nameValue.textContent = component.label ?? component.name;
+    nameCell.append(buildCellLabel(componentLabel), nameValue);
     row.append(nameCell);
 
     const web = component.platforms?.web ?? {};
@@ -292,7 +320,7 @@ const buildSearch = (table, announce) => {
   const filter = (query) => {
     let visible = 0;
     for (const row of table.querySelectorAll('tbody tr')) {
-      const name = row.querySelector('th')?.textContent.toLowerCase() ?? '';
+      const name = row.querySelector('th .status-table-cell-value')?.textContent.toLowerCase() ?? '';
       row.hidden = query !== '' && !name.includes(query);
       if (!row.hidden) { visible += 1; }
     }
@@ -429,7 +457,7 @@ const buildSorting = (table, columns, announce) => {
   let dirButton;
 
   const sortKey = (row, id) => (id === COMPONENT
-    ? row.querySelector('th[scope="row"]')?.textContent
+    ? row.querySelector('th[scope="row"] .status-table-cell-value')?.textContent
     : row.querySelector(`td[data-col="${id}"] .status-table-label`)?.textContent) ?? '';
 
   // Reflect the current sort onto both affordances (headers' aria-sort + the control).
