@@ -1,4 +1,5 @@
 import { getSvgRef } from '../../scripts/utils/svg.js';
+import { getMetadata } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -7,8 +8,17 @@ export function isComponentPath(pathname) {
   return pathname.split('/').includes('components');
 }
 
-export function shouldRenderWidget(name, isComponentPage) {
-  return isComponentPage || GLOBAL_WIDGETS.has(name);
+// A page is "private" when it carries <meta name="audience" content="private">.
+export function isPrivatePage() {
+  return getMetadata('audience') === 'private';
+}
+
+export function shouldRenderWidget(widget, isComponentPage, isPrivate) {
+  // A private widget is only offered on a private page. The backend does not
+  // strip it at runtime, so this client check is the gate that keeps it out of
+  // the public view.
+  if (widget.private && !isPrivate) { return false; }
+  return isComponentPage || GLOBAL_WIDGETS.has(widget.name);
 }
 
 function makeWidgetElement(tag, name, label, icon) {
@@ -46,7 +56,7 @@ const WIDGETS = [
     name: 'go-to-impl', tag: 'a', label: 'Go to implementation', icon: 'openin', decorate: decorateGoToImplWidget,
   },
   {
-    name: 'see-in-figma', tag: 'a', label: 'See in Figma', icon: 'vectordraw', decorate: decorateSeeInFigmaWidget,
+    name: 'see-in-figma', tag: 'a', label: 'See in Figma', icon: 'vectordraw', decorate: decorateSeeInFigmaWidget, private: true,
   },
 ];
 
@@ -54,7 +64,10 @@ const WIDGETS = [
 // them below the nav's table of contents. Widgets that decorate themselves away
 async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
-  const candidates = WIDGETS.filter(({ name }) => shouldRenderWidget(name, isComponentPage));
+  const isPrivate = isPrivatePage();
+  const candidates = WIDGETS.filter(
+    (widget) => shouldRenderWidget(widget, isComponentPage, isPrivate),
+  );
   if (!candidates.length) { return; }
 
   const group = document.createElement('div');

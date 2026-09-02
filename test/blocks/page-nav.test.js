@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
+import { isComponentPath, shouldRenderWidget, isPrivatePage } from '../../blocks/page-nav/page-nav.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
@@ -431,21 +431,55 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('shouldRenderWidget — which widgets survive the URL filter', () => {
+  describe('shouldRenderWidget — which widgets survive the URL/audience filter', () => {
+    const copyMarkdown = { name: 'copy-markdown' };
+    const goToImpl = { name: 'go-to-impl' };
+    const seeInFigma = { name: 'see-in-figma', private: true };
+
     it('renders a global widget (copy-markdown) on a non-component page', () => {
-      expect(shouldRenderWidget('copy-markdown', false)).to.be.true;
+      expect(shouldRenderWidget(copyMarkdown, false, false)).to.be.true;
     });
 
     it('renders a global widget on a component page too', () => {
-      expect(shouldRenderWidget('copy-markdown', true)).to.be.true;
+      expect(shouldRenderWidget(copyMarkdown, true, false)).to.be.true;
     });
 
     it('hides a non-global widget on a non-component page', () => {
-      expect(shouldRenderWidget('see-in-figma', false)).to.be.false;
+      expect(shouldRenderWidget(goToImpl, false, false)).to.be.false;
     });
 
     it('renders a non-global widget on a component page', () => {
-      expect(shouldRenderWidget('see-in-figma', true)).to.be.true;
+      expect(shouldRenderWidget(goToImpl, true, false)).to.be.true;
+    });
+
+    it('hides a private widget on a public component page', () => {
+      expect(shouldRenderWidget(seeInFigma, true, false)).to.be.false;
+    });
+
+    it('renders a private widget on a private component page', () => {
+      expect(shouldRenderWidget(seeInFigma, true, true)).to.be.true;
+    });
+
+    it('still requires the URL gate for a private widget on a private page', () => {
+      expect(shouldRenderWidget(seeInFigma, false, true)).to.be.false;
+    });
+  });
+
+  describe('isPrivatePage — reads the audience meta', () => {
+    afterEach(() => {
+      document.head.querySelectorAll('meta[name="audience"]').forEach((m) => m.remove());
+    });
+
+    it('is true when the page declares audience=private', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'audience';
+      meta.content = 'private';
+      document.head.append(meta);
+      expect(isPrivatePage()).to.be.true;
+    });
+
+    it('is false with no audience meta', () => {
+      expect(isPrivatePage()).to.be.false;
     });
   });
 
@@ -469,9 +503,19 @@ describe('page-nav block', () => {
 
     afterEach(() => {
       window.history.pushState({}, '', originalUrl);
+      document.head.querySelectorAll('meta[name="audience"]').forEach((m) => m.remove());
     });
 
-    it('renders all three decorated widgets, above the TOC, on a component page', async () => {
+    // see-in-figma is a private widget, so it only renders on a private page.
+    const markPrivate = () => {
+      const meta = document.createElement('meta');
+      meta.name = 'audience';
+      meta.content = 'private';
+      document.head.append(meta);
+    };
+
+    it('renders all three decorated widgets, above the TOC, on a private component page', async () => {
+      markPrivate();
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
       const group = await waitForEl(el, '.page-nav-widgets');
@@ -504,6 +548,7 @@ describe('page-nav block', () => {
     });
 
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
+      markPrivate();
       fetchStub.resolves({ ok: true, json: async () => ({ web: {} }) });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
@@ -511,6 +556,18 @@ describe('page-nav block', () => {
 
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
+    });
+
+    it('hides the private see-in-figma widget on a public component page', async () => {
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      const el = await loadPageNav();
+      const group = await waitForEl(el, '.page-nav-widgets');
+
+      const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
+      expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
+      // see-in-figma is never a candidate on a public page, so its Figma lookup
+      // never fires.
+      expect(fetchStub.called).to.be.false;
     });
   });
 });

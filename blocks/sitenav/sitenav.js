@@ -136,9 +136,34 @@ export const filterNavByIndex = (ul, index) => {
     // Skip parents: a list item that contains a nested list may hold visible
     // children even when its own link is private/unindexed.
     if (!li || li.querySelector('ul')) { return; }
-    log(`sitenav: hiding ${a.pathname} (not in query-index for this audience)`);
     li.remove();
   });
+};
+
+// filterNavByIndex only drops leaf links, never parents, so a parent whose
+// children are all audience-filtered is left with an empty child list. After
+// decorateLevel has wrapped that list, the parent renders an expand button whose
+// flyout is empty (e.g. "Support" when its links aren't visible to this visitor).
+// Remove any empty list along with the item that opened it (which takes its menu
+// wrapper and toggle button too), so no dead expander is shown. Emptying an item
+// can in turn empty its own parent's list, so we repeat until the tree is stable
+// — pruning cascades up to any depth.
+export const removeEmptyMenus = (navList) => {
+  // navList itself (the root <ul>) is never matched by this descendant query,
+  // so the top level is safe from removal.
+  const pruneOnce = () => {
+    let removed = 0;
+    navList.querySelectorAll('ul').forEach((ul) => {
+      if (ul.querySelector(':scope > li')) { return; }
+      const li = ul.closest('li');
+      if (li) {
+        li.remove();
+        removed += 1;
+      }
+    });
+    return removed;
+  };
+  while (pruneOnce() > 0) { /* repeat until no more empty lists remain */ }
 };
 
 export const decorateIndexBasedNav = (navList, index) => {
@@ -416,6 +441,9 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   filterNavByIndex(ul, index);
 
   const navList = decorateLevel(ul, 1);
+
+  // Drop any parent (at any depth) left with an empty flyout after audience filtering.
+  removeEmptyMenus(navList);
 
   // Build the desktop expand button and its mobile trigger-button counterpart
   const expandBtn = await getExpandButton(sitenav);
