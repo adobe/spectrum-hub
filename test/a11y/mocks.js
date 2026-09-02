@@ -32,11 +32,9 @@ export const footerFragment = `<main>
   </div>
 </main>`;
 
-// Pairs with navAreasFragment: every leaf link there needs an entry here, because
-// filterNavByIndex drops an unindexed leaf and removeEmptyMenus then prunes the parent
-// left holding an empty list — together they empty the whole nav. Paths are matched
-// against each link's `pathname`, so they are the fragment's hrefs verbatim and have
-// nothing to do with where the fixture itself is served from.
+// Pairs with navAreasFragment. filterNavByIndex drops any leaf link missing from this
+// index and removeEmptyMenus then prunes the parent it emptied, so every link in the
+// fragment needs an entry here or the rendered nav comes back empty.
 export const sitenavIndex = JSON.stringify({
   data: [
     { path: '/getting-started', title: 'Getting started' },
