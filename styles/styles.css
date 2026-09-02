@@ -793,6 +793,22 @@ div[data-status],
       width: 1px;
     }
 
+    /* Bypass-blocks links (header, sitenav). They rest as .visually-hidden and share
+    one revealed appearance; each host owns only placement and motion. */
+    .skip-link:focus-visible {
+      clip-path: none;
+      overflow: visible;
+      width: auto;
+      height: auto;
+      z-index: 1;
+      padding: var(--s2-spacing-100) var(--s2-spacing-200);
+      border-radius: var(--s2-corner-radius-300);
+      background-color: var(--s2-gray-25);
+      color: var(--s2-gray-1000);
+      outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
+      outline-offset: var(--s2-spacing-50);
+    }
+
     .light-scheme {
       color-scheme: light;
     }

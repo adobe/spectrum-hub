@@ -103,6 +103,36 @@ describe('sitenav block', () => {
       const { sitenav } = getSiteNav();
       expect(sitenav.hasAttribute('is-expanded')).to.be.true;
     });
+
+    // The header's own skip link is stop 1, but by the time focus has moved through
+    // the header actions there's no way forward past the rail. This is the second
+    // chance, immediately before the nav landmark.
+    describe('skip link', () => {
+      beforeEach(() => {
+        document.body.append(document.createElement('main'));
+      });
+
+      it('is the first focusable thing in the rail, ahead of the nav landmark', () => {
+        const { sitenav, nav } = getSiteNav();
+        const skip = sitenav.firstElementChild;
+        expect(skip.tagName).to.equal('A');
+        expect(skip.classList.contains('skip-link')).to.be.true;
+        const order = [...sitenav.children];
+        expect(order.indexOf(skip)).to.be.lessThan(order.indexOf(nav));
+      });
+
+      it('targets main content and names what it skips', () => {
+        const { sitenav } = getSiteNav();
+        const skip = sitenav.querySelector('.skip-link');
+        expect(skip.getAttribute('href')).to.equal('#main-content');
+        expect(skip.textContent).to.equal('Skip navigation');
+      });
+
+      it('makes main focusable so the jump moves focus, not just scroll', () => {
+        getSiteNav();
+        expect(document.querySelector('main').getAttribute('tabindex')).to.equal('-1');
+      });
+    });
   });
 
   describe('decorateLevel — accessible name for icon-only toggle buttons', () => {
