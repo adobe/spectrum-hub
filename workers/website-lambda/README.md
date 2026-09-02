@@ -17,8 +17,14 @@ Set these on the Lambda (they are read from `process.env`):
   allowlist read (required by `/auth/session`).
 - `ALLOWED_ORIGINS` — comma-separated origins permitted to call `/auth/session` (CSRF defense).
   **Set this explicitly in production.** When unset the check falls back to the request's own origin
-  (derived from `x-forwarded-host`), which is only trustworthy behind CloudFront/OAC; a missing value
+  (derived from the public host), which is only trustworthy behind CloudFront/OAC; a missing value
   is logged once per container.
+- `PUBLIC_HOST` — the canonical public host (e.g. `preview.spectrum.adobe.com`), host only, no
+  scheme. It overrides the request headers when set, so the worker reports one public origin
+  regardless of which URL reached it; it drives the `x-forwarded-host` sent to AEM (absolute URLs,
+  redirects, sitemap) and the `ALLOWED_ORIGINS` fallback. Behind CloudFront's AllViewerExceptHostHeader
+  origin policy the viewer Host isn't forwarded, so set this (or a CloudFront `X-Forwarded-Host`
+  origin header) — otherwise the worker only sees the Function URL host.
 - `AEM_HOST_SUFFIX` — the AEM tier to proxy: `aem.live` (published, the default) or `aem.page`
   (preview). The stage Lambda (`spectrum-stage-lambda-proxy`) sets this to `aem.page`; prod leaves it
   unset.

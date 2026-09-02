@@ -23,6 +23,9 @@
 # mismatch (override with ALLOW_ENV_MISMATCH=1).
 set -euo pipefail
 
+# Send AWS CLI output straight to the console instead of through a pager (less).
+export AWS_PAGER=""
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Optional local config for account-specific values (role ARN, profile, ...),

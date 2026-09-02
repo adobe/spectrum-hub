@@ -40,13 +40,32 @@ const IO_ENV = {
   prod: 'cc-collab.adobe.io',
 };
 
+// The token params imslib puts in the return fragment. imslib normally removes
+// them asynchronously, but our reloads fire from inside onReady - before that
+// cleanup completes - and location.reload() would otherwise carry them forward
+// into the reloaded page, where no fresh IMS redirect exists to clean them up.
+const IMS_HASH_KEYS = ['access_token', 'token_type', 'expires_in'];
+
+// Reload the current path, first stripping only the IMS token params from the
+// fragment. Any other hash - a page-navigation anchor, say - is preserved.
+const reloadClean = () => {
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  if (IMS_HASH_KEYS.some((key) => params.has(key))) {
+    IMS_HASH_KEYS.forEach((key) => params.delete(key));
+    const rest = params.toString();
+    const url = window.location.pathname + window.location.search + (rest ? `#${rest}` : '');
+    window.history.replaceState(null, '', url);
+  }
+  window.location.reload();
+};
+
 // Reload the current path at most once per tab for the given guard key. The key
 // survives the reload, so if the cookie, IMS token, and page state are still
 // mismatched afterwards we do not loop.
 const reloadOnce = (key) => {
   if (sessionStorage.getItem(key)) { return false; }
   sessionStorage.setItem(key, '1');
-  window.location.reload();
+  reloadClean();
   return true;
 };
 
@@ -223,7 +242,7 @@ export const loadIms = (() => {
             // click, cleared just above) already makes this fire exactly once,
             // and it must not be suppressed by an earlier reconcile in this tab.
             clearTimeout(timeout);
-            window.location.reload();
+            reloadClean();
             return;
           }
           if (established && !hadSession && reloadOnce(ESTABLISH_RELOAD)) {

@@ -268,9 +268,8 @@ const formatRequest = async (request, url) => {
   const req = new Request(aemUrl, request);
   // x-forwarded-host tells aem.live the public hostname (for absolute URLs,
   // redirects, sitemaps). Behind CloudFront the request's own Host is the
-  // Lambda Function URL, not the public domain - url.host already resolves to
-  // the CloudFront-sent X-Forwarded-Host when that origin custom header is
-  // configured, falling back to the Function URL host otherwise.
+  // Lambda Function URL, not the public domain, so url.host comes from
+  // PUBLIC_HOST (or a CloudFront-set X-Forwarded-Host header) - see toRequest.
   req.headers.set('x-forwarded-host', url.host);
 
   // The session cookie is the worker's own credential; no upstream (aem.live
@@ -383,10 +382,19 @@ const toRequest = (event) => {
   const cookieHeader = (event.cookies ?? []).join('; ');
   if (cookieHeader) { headers.set('cookie', cookieHeader); }
 
-  const host = headers.get('x-forwarded-host')
-    ?? headers.get('host')
-    ?? event.requestContext?.domainName
-    ?? 'localhost';
+  // PUBLIC_HOST, when set, is the environment's canonical public host and wins
+  // over the request headers - so the worker reports the same public origin no
+  // matter which URL reached it (custom domain or the raw *.cloudfront.net one).
+  // It drives the x-forwarded-host sent upstream to AEM (absolute URLs,
+  // redirects, sitemap) and the CSRF origin-check fallback. A scheme/path is
+  // tolerated but stripped; falls back to the forwarded/Host header, then the
+  // Function URL host.
+  const publicHost = env.PUBLIC_HOST?.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  const host = publicHost
+    || headers.get('x-forwarded-host')
+    || headers.get('host')
+    || event.requestContext?.domainName
+    || 'localhost';
   const proto = headers.get('x-forwarded-proto') ?? 'https';
   const query = event.rawQueryString ? `?${event.rawQueryString}` : '';
   const requestUrl = `${proto}://${host}${event.rawPath ?? '/'}${query}`;

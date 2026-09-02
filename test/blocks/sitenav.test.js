@@ -10,7 +10,7 @@ const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
   syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
-  findCurrentPageInNav,
+  findCurrentPageInNav, removeEmptyMenus,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -589,6 +589,119 @@ describe('sitenav block', () => {
       const ul = buildNavList('<ul><li><a href="/secret">Secret</a></li></ul>');
       filterNavByIndex(ul, null);
       expect(paths(ul)).to.deep.equal(['/secret']);
+    });
+  });
+
+  describe('removeEmptyMenus', () => {
+    it('removes a level-1 parent whose child list was emptied by filtering', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Support</p>
+            <ul><li><a href="/support/faqs">FAQs</a></li></ul>
+          </li>
+          <li>
+            <p>Guides</p>
+            <ul><li><a href="/guides/intro">Intro</a></li></ul>
+          </li>
+        </ul>
+      `);
+      // Everything under Support is private/unindexed; Guides keeps a child.
+      filterNavByIndex(ul, [{ path: '/guides/intro' }]);
+      const navList = decorateLevel(ul, 1);
+
+      removeEmptyMenus(navList);
+
+      const labels = [...navList.querySelectorAll(':scope > li > .level-1-button .list-item-label')]
+        .map((el) => el.textContent);
+      expect(labels).to.deep.equal(['Guides']);
+      expect(navList.querySelector('.level-2-menu')).to.not.be.null; // Guides' menu survives
+    });
+
+    it('leaves parents with visible children untouched', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Guides</p>
+            <ul><li><a href="/guides/intro">Intro</a></li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 1);
+
+      removeEmptyMenus(navList);
+
+      expect(navList.querySelector('.level-1')).to.not.be.null;
+      expect(navList.querySelector('.level-2-list > li')).to.not.be.null;
+    });
+
+    it('keeps a level-1 leaf item that has no child list at all', () => {
+      const ul = buildNavList('<ul><li><a href="/overview">Overview</a></li></ul>');
+      const navList = decorateLevel(ul, 1);
+
+      removeEmptyMenus(navList);
+
+      expect(navList.querySelector('a[href="/overview"]')).to.not.be.null;
+    });
+
+    it('cascades: an empty deep list removes its whole ancestor branch', () => {
+      // Section > Group > (only child link) — filtering the deepest link empties
+      // the level-3 list, which empties the level-2 list, which drops the level-1 item.
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Section</p>
+            <ul>
+              <li>
+                <p>Group</p>
+                <ul><li><a href="/section/group/page">Page</a></li></ul>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <p>Guides</p>
+            <ul><li><a href="/guides/intro">Intro</a></li></ul>
+          </li>
+        </ul>
+      `);
+      filterNavByIndex(ul, [{ path: '/guides/intro' }]);
+      const navList = decorateLevel(ul, 1);
+
+      removeEmptyMenus(navList);
+
+      const labels = [...navList.querySelectorAll(':scope > li > .level-1-button .list-item-label')]
+        .map((el) => el.textContent);
+      expect(labels).to.deep.equal(['Guides']);
+    });
+
+    it('prunes only the emptied branch, keeping siblings with content', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Section</p>
+            <ul>
+              <li>
+                <p>Empty group</p>
+                <ul><li><a href="/section/empty/page">Page</a></li></ul>
+              </li>
+              <li>
+                <p>Full group</p>
+                <ul><li><a href="/section/full/page">Page</a></li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+      filterNavByIndex(ul, [{ path: '/section/full/page' }]);
+      const navList = decorateLevel(ul, 1);
+
+      removeEmptyMenus(navList);
+
+      // Section survives (still has Full group); Empty group is gone.
+      const groupLabels = [...navList.querySelectorAll('.level-2-list > li > .level-2-button .list-item-label')]
+        .map((el) => el.textContent);
+      expect(groupLabels).to.deep.equal(['Full group']);
+      expect(navList.querySelector('a[href="/section/full/page"]')).to.not.be.null;
     });
   });
 
