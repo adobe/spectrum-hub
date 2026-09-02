@@ -1,5 +1,27 @@
 [
   {
+    "attribute": "icon",
+    "property": "icon",
+    "type": "\"arrow\" | \"add\" | \"asterisk\" | \"checkmark\" | \"chevron\" | \"corner-triangle\" | \"cross\" | \"dash\" | \"drag-handle\" | \"link-out\"",
+    "kind": "enum",
+    "values": [
+      "arrow",
+      "add",
+      "asterisk",
+      "checkmark",
+      "chevron",
+      "corner-triangle",
+      "cross",
+      "dash",
+      "drag-handle",
+      "link-out"
+    ],
+    "optional": false,
+    "description": "The logical UI icon to render, matching a key in the icon-set registry (for\nexample `chevron` or `corner-triangle`).",
+    "status": "internal",
+    "since": "2.0.0-beta.1"
+  },
+  {
     "attribute": "size",
     "property": "size",
     "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\"",

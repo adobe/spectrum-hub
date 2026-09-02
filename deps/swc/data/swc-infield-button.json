@@ -1,18 +1,5 @@
 [
   {
-    "attribute": "static-color",
-    "property": "staticColor",
-    "type": "\"white\" | \"black\"",
-    "kind": "enum",
-    "values": [
-      "white",
-      "black"
-    ],
-    "optional": true,
-    "description": "Static color treatment for display over colored or image backgrounds.",
-    "since": "2.0.0-beta.2"
-  },
-  {
     "attribute": "size",
     "property": "size",
     "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
@@ -24,9 +11,21 @@
       "xl"
     ],
     "optional": false,
-    "description": "The size of the button.",
+    "description": "Size delegated from the parent field. Defaults to medium when no parent sets it, though standalone usage is not supported.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "quiet",
+    "property": "quiet",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Applies the quiet (no-background) visual treatment. Used when the infield button\nis part of a quiet field variant.",
+    "inheritedFrom": "InfieldButtonBase",
+    "since": "2.0.0"
   },
   {
     "attribute": "disabled",
@@ -38,7 +37,7 @@
     "default": "false",
     "description": "Whether the button is disabled. Removes focusability and prevents\ninteraction.",
     "inheritedFrom": "ButtonBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0"
   },
   {
     "attribute": "accessible-label",
@@ -49,6 +48,6 @@
     "optional": true,
     "description": "Accessible label forwarded to the internal `<button>` element as\n`aria-label`. Required for icon-only buttons, which have no visible text.",
     "inheritedFrom": "ButtonBase",
-    "since": "2.0.0-beta.2"
+    "since": "2.0.0"
   }
 ]

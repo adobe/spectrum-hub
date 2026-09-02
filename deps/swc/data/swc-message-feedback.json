@@ -9,7 +9,8 @@
       "negative"
     ],
     "optional": true,
-    "description": "The currently selected feedback status.\n- `positive`: positive feedback selected\n- `negative`: negative feedback selected\n- `undefined`: no feedback selected\n\nThis is controlled by the consumer. The component dispatches `swc-message-feedback-change`\non click and expects the parent to update `status`."
+    "description": "The currently selected feedback status.\n- `positive`: positive feedback selected\n- `negative`: negative feedback selected\n- `undefined`: no feedback selected\n\nThis is controlled by the consumer. The component dispatches `swc-message-feedback-change`\non click and expects the parent to update `status`.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "group-label",
@@ -19,7 +20,8 @@
     "values": [],
     "optional": false,
     "default": "'Response feedback'",
-    "description": "Accessible label for the feedback button group."
+    "description": "Accessible label for the feedback button group.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "positive-label",
@@ -29,7 +31,8 @@
     "values": [],
     "optional": false,
     "default": "'Positive response'",
-    "description": "Accessible label for the positive feedback button."
+    "description": "Accessible label for the positive feedback button.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "negative-label",
@@ -39,6 +42,7 @@
     "values": [],
     "optional": false,
     "default": "'Negative response'",
-    "description": "Accessible label for the negative feedback button."
+    "description": "Accessible label for the negative feedback button.",
+    "since": "2.0.0-beta.3"
   }
 ]

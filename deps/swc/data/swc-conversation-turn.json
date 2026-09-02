@@ -10,7 +10,8 @@
     ],
     "optional": false,
     "default": "'user'",
-    "description": "`user` — end-aligned; `system` — start-aligned, full width of the column.\nDrives the accessible name of the turn (`User message` vs `System message`)."
+    "description": "`user` — end-aligned; `system` — start-aligned, full width of the column.\nDrives the accessible name of the turn (`User message` vs `System message`).",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "accessible-label",
@@ -20,6 +21,7 @@
     "values": [],
     "optional": false,
     "default": "''",
-    "description": "Optional accessible label override for the turn group.\nWhen omitted, the label falls back to `type` (\"User message\" / \"System message\")."
+    "description": "Optional accessible label override for the turn group.\nWhen omitted, the label falls back to `type` (\"User message\" / \"System message\").",
+    "since": "2.0.0-beta.3"
   }
 ]

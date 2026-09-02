@@ -23,7 +23,7 @@ const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
 const VERSION_FILE = join(__dirname, 'version.json');
 const PACKAGE_NAME = '@adobe/spectrum-wc';
-const DIST_TAG = 'beta';
+const DIST_TAG = 'latest';
 
 // components.json maps bare component name -> module subpath; extraction only
 // needs the roster of names. Tags carry the `swc-` prefix in the CEM.

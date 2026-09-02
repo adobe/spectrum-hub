@@ -14,6 +14,13 @@
     "since": "2.0.0-beta.1"
   },
   {
+    "attribute": "aria-disabled",
+    "kind": "unknown",
+    "values": [],
+    "optional": false,
+    "since": "2.0.0-beta.1"
+  },
+  {
     "attribute": "quiet",
     "property": "quiet",
     "type": "boolean",

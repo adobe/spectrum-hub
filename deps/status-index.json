@@ -108,7 +108,8 @@
             "upstreamName": "ActionButtonGroup"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -314,6 +315,24 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Card",
+      "label": "Card",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -647,6 +666,24 @@
       }
     },
     {
+      "name": "Dropzone",
+      "label": "Dropzone",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "DropZone",
       "label": "Drop Zone",
       "platforms": {
@@ -736,6 +773,24 @@
           "rsp": {
             "status": "available",
             "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "InfieldButton",
+      "label": "Infield Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
           },
           "swc": {
             "status": "available",
