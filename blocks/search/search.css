@@ -63,7 +63,10 @@ viewport edges instead of the anchor. */
     }
 
     .result-row[aria-selected="true"] {
-      background-color: var(--s2-gray-100);
+      background-color: light-dark(
+        rgb(from var(--s2-gray-1000) r g b / 8%),
+        rgb(from var(--s2-gray-1000) r g b / 12%)
+      );
     }
 
     /* Remove selected background when any sibling is hovered */
@@ -96,7 +99,10 @@ viewport edges instead of the anchor. */
       }
 
       &:hover {
-        background-color: var(--s2-gray-100);
+        background-color: light-dark(
+          rgb(from var(--s2-gray-1000) r g b / 8%),
+          rgb(from var(--s2-gray-1000) r g b / 12%)
+        );
       }
     }
 
