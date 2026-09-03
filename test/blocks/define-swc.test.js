@@ -30,13 +30,13 @@ const makeElement = () => class extends HTMLElement {};
 
 describe('BASE', () => {
   // VERSION is deps/swc/version.json — the concrete release the last daily
-  // extraction run resolved `@beta` to (see extract-cem-components.js), not a
-  // live `@beta` tag read here — so BASE never drifts from what
+  // extraction run resolved `@latest` to (see extract-cem-components.js), not a
+  // live `@latest` tag read here — so BASE never drifts from what
   // components.json/data were actually extracted from.
-  it('is built from the committed VERSION, not a live @beta tag', () => {
+  it('is built from the committed VERSION, not a live @latest tag', () => {
     expect(VERSION).to.be.a('string').with.length.greaterThan(0);
     expect(BASE).to.equal(`https://esm.sh/@adobe/spectrum-wc@${VERSION}`);
-    expect(BASE).to.not.include('@beta');
+    expect(BASE).to.not.include('@latest');
   });
 });
 

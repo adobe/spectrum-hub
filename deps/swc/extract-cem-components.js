@@ -36,7 +36,7 @@ const CDN_BASE_URLS = [
 
 // Shared CDN-fallback: tries each CDN's version of `path` in turn, returning
 // the first successful `parse(response)`. Used for both the CEM itself and
-// (separately) resolving the concrete version `@beta` currently points to.
+// (separately) resolving the concrete version `@latest` currently points to.
 async function fetchFromCdns(path, parse) {
   for (const buildBase of CDN_BASE_URLS) {
     try {
@@ -53,10 +53,10 @@ export async function fetchCEM() {
   return cem;
 }
 
-// The concrete version `@beta` resolves to right now — written to version.json
+// The concrete version `@latest` resolves to right now — written to version.json
 // (see main()) so the browser-side playground (deps/swc/playground/define-swc.js)
 // loads a committed, always-daily-fresh version instead of independently
-// floating on `@beta` on every single page load with no record of what ran.
+// floating on `@latest` on every single page load with no record of what ran.
 export async function fetchResolvedVersion() {
   const version = await fetchFromCdns('/package.json', async (res) => (await res.json()).version);
   if (!version) { throw new Error(`Failed to resolve the published version of ${PACKAGE_NAME}`); }
