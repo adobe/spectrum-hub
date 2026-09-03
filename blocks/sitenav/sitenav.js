@@ -1,4 +1,6 @@
-import { loadStyle, loadArea, toClassName, getConfig, getMetadata } from '../../scripts/ak.js';
+import {
+  loadStyle, loadArea, toClassName, getConfig, getMetadata, checkIms,
+} from '../../scripts/ak.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
@@ -212,8 +214,8 @@ export const decorateBadges = () => {
   });
 };
 
-const fetchRes = async (path) => {
-  const resp = await fetch(path);
+const fetchRes = async (path, init) => {
+  const resp = await fetch(path, init);
   if (!resp.ok) { return null; }
   if (path.includes('.json')) {
     const json = await resp.json();
@@ -431,9 +433,15 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   // root-relative so they hit this origin's worker, which audience-filters the
   // index and honours ?compact=true (projecting to the path/title columns the
   // nav needs, ~90% smaller).
+  //
+  // The anonymous index is cacheable (public, max-age) and the browser HTTP
+  // cache is cookie-blind, so a signed-in viewer must bypass it - otherwise it
+  // reuses the cached anonymous index and shows no private items until the TTL
+  // lapses. Anonymous viewers keep the cache (nothing private to miss).
+  const { anonymous } = await checkIms();
   const [ul, index] = await Promise.all([
     fetchRes(DEF_SITE_NAV_PATH),
-    fetchRes('/query-index.json?compact=true'),
+    fetchRes('/query-index.json?compact=true', anonymous ? undefined : { cache: 'no-store' }),
   ]);
   if (!ul) { return; }
 

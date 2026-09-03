@@ -20,7 +20,7 @@ Rules can be found in the `rules` directory in `md` format.
 
 #### Writing issues/tickets
 
-- **File**: [`.ai/rules/issue-ticket.md`](./rules/issue-ticket.md)
+- **File**: [`.ai/rules/write-issues-tickets.md`](./rules/write-issues-tickets.md)
 - **Purpose**: Guidelines for drafting and formatting Jira tickets and/or GitHub issues — title format, severity classification, labels, issue types, and templates for general tickets and bugs.
 - **How to invoke**: Ask to create or draft a Jira ticket (e.g. "write a Jira ticket for this bug", "draft a new issue ticket").
 
