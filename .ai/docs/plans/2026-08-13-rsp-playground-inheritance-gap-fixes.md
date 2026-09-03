@@ -1,8 +1,12 @@
 # RSP Playground Bug Batch — Root-Cause Fixes
 
-**Status: Tasks 4/5/6 committed; Tasks 3/7/8 closed by user decision; Task 9 Phase 1 (spike) done with zero regressions, Phase 2 (real cutover) in progress** (2026-08-13). Task 1 (the `LabelableProps` extends fix) plus a durability shim in `discover-components.js` were built, verified working end-to-end, then **reverted back to a clean tree** — the shim would have been thrown away as soon as Task 9 (the compiler rewrite) landed, and the user decided not to spend time on throwaway scaffolding. Reconsidering scope at that point surfaced that **Task 9 only fixes Class A** (~9 of the 25 reports) — it touches `extract-base-props.js`/`extract-props.js` only, so it does nothing for Class B/C/D (~16 of the 25). Decision at the time: **fix Class B/C/D first (Tasks 4–8), Task 9 last.**
+**Status: COMPLETE. Tasks 4/5/6 committed; Tasks 3/7/8 closed by user decision; Task 9 landed (both phases); Task 1 closed as moot — Task 9 fixed 8 of its 9 items automatically and the 9th was never a bug** (verified against the code 2026-09-03). Task 1 (the `LabelableProps` extends fix) plus a durability shim in `discover-components.js` were built, verified working end-to-end, then **reverted back to a clean tree** — the shim would have been thrown away as soon as Task 9 (the compiler rewrite) landed, and the user decided not to spend time on throwaway scaffolding. Reconsidering scope at that point surfaced that **Task 9 only fixes Class A** (~9 of the 25 reports) — it touches `extract-base-props.js`/`extract-props.js` only, so it does nothing for Class B/C/D (~16 of the 25). Decision at the time: **fix Class B/C/D first (Tasks 4–8), Task 9 last.**
 
-Tasks 4 (`68ed120`), 6 (`5f0d194`), and 5 (`9e07cd5`) are now committed on their respective branches. Tasks 3, 7, and 8 were then **closed without code changes** on user review: Radio is never used standalone in practice (RadioGroup is), Swatch/SwatchGroup aren't actually missing (real components under different React names, already aliased), and Badge's outline-color limitation plus Help text's loading issue are expected behavior / a content-authoring fix respectively, not code bugs. **The user has asked to move to Task 9 as soon as possible** — it's the only item left in this batch (besides the deferred Task 1).
+Tasks 4 (`68ed120`), 6 (`5f0d194`), and 5 (`9e07cd5`) are now committed on their respective branches. Tasks 3, 7, and 8 were then **closed without code changes** on user review: Radio is never used standalone in practice (RadioGroup is), Swatch/SwatchGroup aren't actually missing (real components under different React names, already aliased), and Badge's outline-color limitation plus Help text's loading issue are expected behavior / a content-authoring fix respectively, not code bugs. Task 9 was taken next on that basis and has since landed, which closed the batch.
+
+**Task 1 outcome, verified 2026-09-03.** The bet recorded below — that the compiler rewrite would make the hand-maintained `extends` list unnecessary — held. `deps/rsp/data/*.json` now resolves `label` from `LabelableProps` with no `components.json` entry for it on **8 of the 9** Class A components: NumberField (52 props), Picker (54), RadioGroup (33), SearchField (59), TextArea (56), TextField (58), TagGroup (33), Slider (27).
+
+The ninth, **ProgressCircle, was a misclassification in the original bug report.** S2's ProgressCircle genuinely has no `label` prop — it exposes `aria-label`/`aria-labelledby` instead, while its sibling ProgressBar does have a real `label`. A circle has no room for visible text, so there was never an inheritance gap to close. Task 1 needs no code and is closed rather than deferred.
 
 This plan classifies 25 reported RSP-playground bugs by actual root cause (verified against the code and, for the console-warning question, against a live browser reproduction), then lays out fixes. It does **not** treat "we never scanned the upstream package for inherited properties" as the explanation for all 25 — that hypothesis holds for about a third of them; the rest are distinct bugs with distinct fixes. Forcing everything into one bucket would under-fix the real inheritance gap (see [[rsp-base-props-inheritance-gap]]) while leaving several unrelated defects unaddressed.
 
@@ -23,7 +27,7 @@ This plan classifies 25 reported RSP-playground bugs by actual root cause (verif
 |---|---|---|---|
 | Number field (label) | A | `components.json` NumberField extends `[NumberFieldProps, StyleProps, InputProps]` — no `LabelableProps`; `label` is declared on `LabelableProps` in `rsp-base-props.json` | Add `LabelableProps` to `extends` |
 | Picker (label) | A | Same gap — extends omits `LabelableProps` | Add `LabelableProps` to `extends` |
-| Progress Circle (label) | A | Same gap | Add `LabelableProps` to `extends` |
+| Progress Circle (label) | **Not A — misclassified** | S2's ProgressCircle has no `label` prop at all; it exposes `aria-label`/`aria-labelledby`, unlike ProgressBar, which has a real one. Verified against the regenerated catalog 2026-09-03 | None — no gap to close |
 | Radio group (label) | A | `RadioGroup.json`'s own `children` prop means "the Radios inside it," not text — group has no real `label` at all; `radio-group.jsx`'s own comment confirms react-aria's RadioGroup requires an accessible name | Add `LabelableProps` to `extends` |
 | Search field (label) | A | Same gap | Add `LabelableProps` to `extends` |
 | Text area (label) | A | `TextArea` entry (`includes: [TextFieldProps]`) has no `LabelableProps` either | Add `LabelableProps` to `extends` |
@@ -83,11 +87,18 @@ This comes from react-aria's `useRadio` reading `RadioGroupState` off a `null` c
 
 ## Tasks
 
-### Task 1 — Add missing `LabelableProps` extends entries (Class A cluster)
+### Task 1 — Add missing `LabelableProps` extends entries (Class A cluster) — CLOSED AS MOOT (2026-09-03)
+
+Task 9's compiler rewrite resolves inheritance live, so all eight real items fixed themselves with no `extends` edit; ProgressCircle was never a gap (see the status note at the top). Nothing below was implemented, and nothing should be — the mechanism it patches no longer exists.
+
+<details><summary>Original plan, kept for the reasoning</summary>
+
 **Files:** `deps/rsp/components.json`
 Add `"LabelableProps"` to the `extends` array for: `NumberField`, `Picker`, `ProgressCircle`, `RadioGroup`, `SearchField`, `TextArea`, `TextField`, `TagGroup`. For `Slider` (currently `includes`-only, no `extends` key), add `"extends": ["LabelableProps"]` alongside the existing `includes`.
 Regenerate the affected `deps/rsp/data/*.json` files via the existing extraction script and confirm each now has a `label` entry (`inheritedFrom: "LabelableProps"`).
 Add/extend `test/extractions/extract-props.node.test.js` coverage so a future accidental removal of one of these entries fails a test, not just a playground bug report.
+
+</details>
 
 ### Task 2 — Do NOT touch Radio's extends list
 No code change here — this task exists only to record that Radio was investigated and correctly excluded from Task 1 (see Design decisions).

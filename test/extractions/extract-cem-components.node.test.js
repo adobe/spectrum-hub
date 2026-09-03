@@ -22,7 +22,7 @@ describe('CDN fallback (fetchCEM, fetchResolvedVersion)', () => {
   it('fetchCEM returns the first CDN\'s response when it succeeds', async () => {
     const cem = { modules: [] };
     globalThis.fetch = async (url) => {
-      assert.match(url, /^https:\/\/unpkg\.com\/@adobe\/spectrum-wc@beta\/dist\/custom-elements\.json$/);
+      assert.match(url, /^https:\/\/unpkg\.com\/@adobe\/spectrum-wc@latest\/dist\/custom-elements\.json$/);
       return { ok: true, json: async () => cem };
     };
     assert.deepEqual(await fetchCEM(), cem);

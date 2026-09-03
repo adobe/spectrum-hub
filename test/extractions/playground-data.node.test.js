@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock, beforeEach } from 'node:test';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   fetchPlaygroundSheets,
@@ -14,7 +16,9 @@ import {
   clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
+import {
+  NONE_OPTION, DEFAULT_OPTION, isUnsetOption, optionLabel,
+} from '../../deps/shared/playground/unset-control-options.js';
 
 const COMPONENTS_SHEET = [
   { component: 'Button', properties: 'variant, staticColor, text, fillStyle, size, isDisabled' },
@@ -50,6 +54,19 @@ const RSP_PROPS = [
   },
   {
     property: 'staticColor', type: "'white' | 'black' | 'auto'", kind: 'enum', values: ['white', 'black', 'auto'],
+  },
+  {
+    property: 'channel',
+    type: "'hue' | 'saturation' | 'red' | 'alpha'",
+    kind: 'enum',
+    values: ['hue', 'saturation', 'red', 'alpha'],
+    required: true,
+  },
+  {
+    property: 'xChannel', type: "'hue' | 'red' | 'green'", kind: 'enum', values: ['hue', 'red', 'green'],
+  },
+  {
+    property: 'yChannel', type: "'hue' | 'red' | 'green'", kind: 'enum', values: ['hue', 'red', 'green'],
   },
   {
     property: 'isPending', type: 'boolean', kind: 'boolean', values: [],
@@ -628,6 +645,54 @@ describe('resolveControl', () => {
     assert.deepEqual(result.options, [NONE_OPTION, 'white', 'black', 'auto']);
   });
 
+  // ColorArea derives both channels from the value's color space when neither is
+  // passed. Without an unset choice the picker's first option led — colorSpace="rgb"
+  // with xChannel="hue" and yChannel="hue", which is both the wrong space and the same
+  // axis twice, and ColorArea rendered nothing at all. Verified live: unset renders,
+  // and re-renders differently when colorSpace changes.
+  it('leads xChannel and yChannel with DEFAULT_OPTION, not NONE_OPTION', () => {
+    ['xChannel', 'yChannel'].forEach((property) => {
+      const result = resolveControl(property, 'rsp', controlsMap, RSP_PROPS);
+      assert.equal(result.options[0], DEFAULT_OPTION, property);
+      assert.deepEqual(result.options, [DEFAULT_OPTION, 'hue', 'red', 'green'], property);
+    });
+  });
+
+  it('still leads staticColor with NONE_OPTION, so the two sentinels stay distinct', () => {
+    assert.equal(resolveControl('staticColor', 'rsp', controlsMap, RSP_PROPS).options[0], NONE_OPTION);
+  });
+
+  it('gives a property with no unset choice no sentinel at all', () => {
+    assert.equal(resolveControl('variant', 'rsp', controlsMap, RSP_PROPS).options[0], 'primary');
+  });
+
+  // ColorSlider's `channel` is required and, unlike ColorArea's, is not inferred —
+  // omitting it renders nothing, so it gets no unset choice. Its catalog lists all
+  // eight channels across all three color spaces with `hue` leading, but `hue` is
+  // invalid in `rgb`, which is colorSpace's own default. Measured live: rgb accepts
+  // red/green/blue/alpha, hsl hue/saturation/lightness/alpha, hsb
+  // hue/saturation/brightness/alpha — `alpha` is the only channel valid in all three.
+  it('overrides the default for channel to the one valid in every color space', () => {
+    const result = resolveControl('channel', 'rsp', controlsMap, RSP_PROPS);
+    assert.equal(result.defaultOverride, 'alpha');
+  });
+
+  it('leaves the channel option list in its declared order', () => {
+    const result = resolveControl('channel', 'rsp', controlsMap, RSP_PROPS);
+    assert.deepEqual(result.options, ['hue', 'saturation', 'red', 'alpha']);
+  });
+
+  it('gives channel no unset choice, since omitting a required prop renders nothing', () => {
+    const result = resolveControl('channel', 'rsp', controlsMap, RSP_PROPS);
+    assert.equal(isUnsetOption(result.options[0]), false);
+  });
+
+  it('leaves every other property without a default override', () => {
+    ['variant', 'size', 'staticColor', 'xChannel'].forEach((property) => {
+      assert.equal(resolveControl(property, 'rsp', controlsMap, RSP_PROPS).defaultOverride, undefined, property);
+    });
+  });
+
   it('returns null attribute when property has no swc equivalent even after normalization', () => {
     const result = resolveControl('children', 'rsp', controlsMap, RSP_PROPS);
     assert.equal(result.attribute, null);
@@ -898,5 +963,75 @@ describe('the existence gate applies only to implementations with a catalog', ()
     for (const impl of ['rsp', 'swc']) {
       assert.equal(resolveControl('variant', impl, controlsMap, []), null, impl);
     }
+  });
+});
+
+// Both sentinels mean the same thing to every apply and serialize path — the label
+// differs only because "default" is what RSP's docs call an inferred channel. A path
+// that compared against one constant would silently reflect the other as a literal
+// string value.
+describe('isUnsetOption', () => {
+  it('recognises both sentinels', () => {
+    assert.equal(isUnsetOption(NONE_OPTION), true);
+    assert.equal(isUnsetOption(DEFAULT_OPTION), true);
+  });
+
+  it('rejects a real option value', () => {
+    ['white', 'hue', 'red', 'primary', ''].forEach((v) => assert.equal(isUnsetOption(v), false, v));
+  });
+
+  it('rejects a value that merely looks like a sentinel in another case', () => {
+    assert.equal(isUnsetOption('none'), false);
+    assert.equal(isUnsetOption('Default'), false);
+  });
+
+  it('keeps the two sentinels distinct', () => {
+    assert.notEqual(NONE_OPTION, DEFAULT_OPTION);
+  });
+
+  // The regression this shape exists for. "default" and "None" are real enum members
+  // in the shipped catalogs, so a readable sentinel swallows them: ColorSwatchPicker's
+  // `rounding` offers "default" with `none` as its own default, and treating the
+  // selection as unset dropped the prop and rendered the wrong value.
+  it('rejects the real catalog values the labels are drawn from', () => {
+    ['default', 'None', 'none', 'full', 'precise'].forEach((v) => {
+      assert.equal(isUnsetOption(v), false, v);
+    });
+  });
+
+  it('renders a label for each sentinel and leaves a real option alone', () => {
+    assert.equal(optionLabel(NONE_OPTION), 'None');
+    assert.equal(optionLabel(DEFAULT_OPTION), 'default');
+    assert.equal(optionLabel('default'), 'default');
+    assert.equal(optionLabel('hue'), 'hue');
+  });
+});
+
+// Guards the collision at the source: no sentinel may equal a value any catalog ships,
+// or selecting that value silently means "unset". Reads the real catalogs rather than a
+// fixture, so a future upstream enum member that matches fails here.
+describe('the sentinels cannot collide with a shipped catalog value', () => {
+  const catalogValues = () => {
+    const values = new Set();
+    for (const dir of ['deps/swc/data', 'deps/rsp/data']) {
+      for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+        const parsed = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+        for (const row of Array.isArray(parsed) ? parsed : (parsed.props ?? [])) {
+          (row.values ?? []).forEach((v) => values.add(String(v)));
+        }
+      }
+    }
+    return values;
+  };
+
+  it('neither sentinel appears in any catalog row', () => {
+    const values = catalogValues();
+    assert.equal(values.has(NONE_OPTION), false, NONE_OPTION);
+    assert.equal(values.has(DEFAULT_OPTION), false, DEFAULT_OPTION);
+  });
+
+  it('proves the guard bites — the old readable sentinels do collide', () => {
+    const values = catalogValues();
+    assert.ok(values.has('default'), '"default" should still be a real catalog value');
   });
 });

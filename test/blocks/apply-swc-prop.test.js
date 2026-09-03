@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import { applySwcProp } from '../../deps/swc/playground/apply-swc-prop.js';
 import { NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
+import { NONE_OPTION } from '../../deps/shared/playground/unset-control-options.js';
 
 // Exercises the single dispatch point deps/swc/playground/index.html wires
 // every prop-update message through — see its applySwcProp import.

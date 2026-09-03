@@ -108,7 +108,8 @@
             "upstreamName": "ActionButtonGroup"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -334,7 +335,9 @@
             "upstreamName": "Card"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable",
+            "upstreamName": "Card"
           }
         }
       }
@@ -421,7 +424,7 @@
             "status": "available"
           },
           "rsp": {
-            "status": "available",
+            "status": "not-available",
             "hasPage": false,
             "note": "Docs page not yet written."
           },
@@ -659,7 +662,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -736,6 +740,24 @@
           "rsp": {
             "status": "available",
             "context": "Stable"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "InfieldButton",
+      "label": "Infield Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
           },
           "swc": {
             "status": "available",

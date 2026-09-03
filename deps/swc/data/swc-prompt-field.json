@@ -1,17 +1,51 @@
 [
   {
-    "attribute": "mode",
-    "property": "mode",
-    "type": "\"default\" | \"loading\" | \"disabled\"",
+    "attribute": "disabled",
+    "property": "disabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Disables the textarea and all actions.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "generating",
+    "property": "generating",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Shows the stop button in place of send while a response is generating.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "variant",
+    "property": "variant",
+    "type": "\"subtle\" | \"balanced\" | \"prominent\"",
     "kind": "enum",
     "values": [
-      "default",
-      "loading",
-      "disabled"
+      "subtle",
+      "balanced",
+      "prominent"
     ],
     "optional": false,
-    "default": "'default'",
-    "description": "Visual mode for the prompt field action/interaction state."
+    "default": "'balanced'",
+    "description": "Visual intensity of the AI brand treatment.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "loader",
+    "property": "loader",
+    "type": "PixelLoaderIconName | PixelLoaderPresetName",
+    "kind": "unknown",
+    "values": [],
+    "optional": false,
+    "default": "'aiLogo'",
+    "description": "Status loader artwork: a single icon name (static), or a preset name (`cc`, `dc`, `exp`, `analyze`, `mega`) that cycles a themed sequence. Routed to the loader's icon/preset in `_renderStatusIcon`.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "label",
@@ -21,7 +55,8 @@
     "values": [],
     "optional": false,
     "default": "'Prompt'",
-    "description": "Accessible label shown above the textarea."
+    "description": "Accessible name for the textarea; visually hidden.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "accessible-label",
@@ -31,7 +66,8 @@
     "values": [],
     "optional": false,
     "default": "''",
-    "description": "Optional accessible label override for the textarea."
+    "description": "Optional accessible label override for the textarea.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "send-label",
@@ -41,7 +77,8 @@
     "values": [],
     "optional": false,
     "default": "'Send'",
-    "description": "Accessible label for the send action button."
+    "description": "Accessible label for the send action button.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "stop-label",
@@ -51,7 +88,8 @@
     "values": [],
     "optional": false,
     "default": "'Stop generating'",
-    "description": "Accessible label for the stop action button in loading mode."
+    "description": "Accessible label for the stop action button while generating.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "upload-label",
@@ -61,7 +99,41 @@
     "values": [],
     "optional": false,
     "default": "'Add attachment'",
-    "description": "Accessible label for the upload button."
+    "description": "Accessible label for the upload button.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "attachment-scroll-prev-label",
+    "property": "attachmentScrollPrevLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'Show previous attachments'",
+    "description": "Accessible label for the previous-attachment scroll button.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "attachment-scroll-next-label",
+    "property": "attachmentScrollNextLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'Show more attachments'",
+    "description": "Accessible label for the next-attachment scroll button.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "attachment-strip-label",
+    "property": "attachmentStripLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'Uploaded assets strip'",
+    "description": "Accessible name for the uploaded-attachments strip landmark.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "placeholder",
@@ -71,7 +143,8 @@
     "values": [],
     "optional": false,
     "default": "'Ready to get started? Ask a question, share an idea, or add a task.'",
-    "description": "Placeholder text shown inside the textarea."
+    "description": "Placeholder text shown inside the textarea.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "value",
@@ -81,7 +154,8 @@
     "values": [],
     "optional": false,
     "default": "''",
-    "description": "The current textarea value; internally updated and externally mirrorable."
+    "description": "The current textarea value; internally updated and externally mirrorable.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "min-rows",
@@ -89,9 +163,9 @@
     "type": "number",
     "kind": "number",
     "values": [],
-    "optional": false,
-    "default": "1",
-    "description": "Minimum visible textarea rows before growth."
+    "optional": true,
+    "description": "Minimum visible textarea rows before growth; unset relies on the natural single-line height.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "max-rows",
@@ -99,8 +173,8 @@
     "type": "number",
     "kind": "number",
     "values": [],
-    "optional": false,
-    "default": "4",
-    "description": "Maximum visible textarea rows before internal scrolling."
+    "optional": true,
+    "description": "Maximum visible textarea rows before internal scrolling; unset relies on max-block-size alone.",
+    "since": "2.0.0-beta.3"
   }
 ]

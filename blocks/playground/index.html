@@ -20,6 +20,7 @@
   <script type="module">
     import { listenForPropUpdates, notifyPreviewReady } from '../../deps/shared/playground/prop-listener.js';
     import { showError, resolvePreviewParams } from './preview-params.js';
+    import { isUnsetOption } from '../../deps/shared/playground/unset-control-options.js';
 
     const { component, implementation } = resolvePreviewParams();
 
@@ -53,7 +54,9 @@
       updateImage();
 
       listenForPropUpdates(({ property, value }) => {
-        currentProps[property] = value;
+        // An unset choice means the prop is absent, so it names no image variant —
+        // and the sentinel is opaque, so it must never reach a filename or alt text.
+        if (isUnsetOption(value)) { delete currentProps[property]; } else { currentProps[property] = value; }
         updateImage();
       });
       notifyPreviewReady();

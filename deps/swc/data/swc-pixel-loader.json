@@ -1,0 +1,82 @@
+[
+  {
+    "attribute": "icon",
+    "property": "icon",
+    "type": "\"folder\" | \"aiLogo\" | \"brush\" | \"eye\" | \"hourglass\" | \"mag\" | \"crop\" | \"flower\" | \"image\" | \"lasso\" | \"page\" | \"wand\" | \"bargraph\" | \"trefoil\" | \"dial\" | \"arrow\" | \"cloud\" | \"comment\" | \"filter\" | \"microphone\" | \"pencil\" | \"potion\" | \"slider\" | \"timeline\" | \"eyedrop\" | \"adobeA\" | \"adobeD\" | \"adobeO\" | \"adobeB\" | \"adobeE\"",
+    "kind": "enum",
+    "values": [
+      "aiLogo",
+      "brush",
+      "eye",
+      "hourglass",
+      "mag",
+      "crop",
+      "flower",
+      "image",
+      "lasso",
+      "page",
+      "wand",
+      "bargraph",
+      "trefoil",
+      "dial",
+      "folder",
+      "arrow",
+      "cloud",
+      "comment",
+      "filter",
+      "microphone",
+      "pencil",
+      "potion",
+      "slider",
+      "timeline",
+      "eyedrop",
+      "adobeA",
+      "adobeD",
+      "adobeO",
+      "adobeB",
+      "adobeE"
+    ],
+    "optional": false,
+    "default": "'aiLogo'",
+    "description": "Icon to display. Ignored while `preset` is set.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "preset",
+    "property": "preset",
+    "type": "\"cc\" | \"dc\" | \"exp\" | \"analyze\" | \"mega\"",
+    "kind": "enum",
+    "values": [
+      "cc",
+      "dc",
+      "exp",
+      "analyze",
+      "mega"
+    ],
+    "optional": true,
+    "description": "Cycles through a themed sequence of icons, one per loop, instead of a\nsingle `icon`.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "paused",
+    "property": "paused",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Renders the fully-settled, non-animating appearance.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "label",
+    "property": "label",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'Loading'",
+    "description": "Accessible label for the loading indicator.",
+    "since": "2.0.0-beta.3"
+  }
+]

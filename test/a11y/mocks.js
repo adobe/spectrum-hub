@@ -32,14 +32,15 @@ export const footerFragment = `<main>
   </div>
 </main>`;
 
-// Paths must start with the second URL segment of the fixture (/test/…) so that
-// sitenav.js's getTopSection() — which reads window.location — finds matching entries.
+// Pairs with navAreasFragment: every leaf link there needs an entry here, because
+// filterNavByIndex drops an unindexed leaf and removeEmptyMenus then prunes the parent
+// left holding an empty list — together they empty the whole nav. Paths are matched
+// against each link's `pathname`, so they are the fragment's hrefs verbatim and have
+// nothing to do with where the fixture itself is served from.
 export const sitenavIndex = JSON.stringify({
   data: [
-    { path: '/test/overview', title: 'Overview' },
-    { path: '/test/components', title: 'Components' },
-    { path: '/test/components/button', title: 'Button' },
-    { path: '/test/components/card', title: 'Card' },
+    { path: '/getting-started', title: 'Getting started' },
+    { path: '/foundations', title: 'Foundations' },
   ],
 });
 

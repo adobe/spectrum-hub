@@ -4,8 +4,8 @@
 // exist and where each tag's module lives.
 import COMPONENTS from '../components.json' with { type: 'json' };
 
-// The concrete version `@beta` resolved to as of the last daily extraction run
-// (deps/swc/extract-cem-components.js writes this file) — not a live `@beta`
+// The concrete version `@latest` resolved to as of the last daily extraction run
+// (deps/swc/extract-cem-components.js writes this file) — not a live `@latest`
 // tag read here directly, so this never drifts from what components.json/data
 // were actually extracted from (a hardcoded stale pin caused exactly that: an
 // old 0.3.0 pin predated progress-bar). Refreshed automatically every day;
