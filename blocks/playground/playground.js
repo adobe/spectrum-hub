@@ -14,7 +14,6 @@ import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.j
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
 import { isUnsetOption } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
-import { UNREACHABLE_RSP_EXPORTS } from '../../deps/rsp/playground/unreachable-exports.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -702,16 +701,8 @@ export default async function init(el) {
   // markup fragment (deps/swc/playground/snippets/<component>.html); for rsp it
   // loads from esm.sh; for ios/android it shows the image viewer.
   const iframeUrl = `${base}/${previewShellPath}?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
-  // A component s2 ships no export for can never render, so say so in the preview's
-  // place rather than loading a shell whose only outcome is a failed import.
-  const previewUnavailable = implementation === 'rsp' && UNREACHABLE_RSP_EXPORTS.has(component);
-  const iframe = previewUnavailable
-    ? null
-    : createPreviewIframe(iframeUrl, `${componentTitle} component preview`);
-  // Controls still drive the code disclosure with no preview to post to.
-  const postPropUpdate = iframe
-    ? wireIframeMessaging(iframe, currentProps, snippetMarkup)
-    : () => {};
+  const iframe = createPreviewIframe(iframeUrl, `${componentTitle} component preview`);
+  const postPropUpdate = wireIframeMessaging(iframe, currentProps, snippetMarkup);
 
   const pre = document.createElement('pre');
   updateDisclosure(pre, buildSnippet, previewName, currentProps);
@@ -738,7 +729,7 @@ export default async function init(el) {
 
   const previewArea = document.createElement('div');
   previewArea.classList.add('playground-preview');
-  previewArea.appendChild(iframe ?? buildUnavailablePreviewNote(componentTitle));
+  previewArea.appendChild(iframe);
 
   const layout = document.createElement('div');
   layout.classList.add('playground-layout');
