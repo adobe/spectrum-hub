@@ -48,13 +48,9 @@ describe('workflow file references resolve', () => {
       assert.deepEqual(missing, [], `${file} git-adds paths that do not exist`);
     });
 
-    // `node deps/rsp/extract-props.js` — the script must exist, or the step fails.
-    // Matched anywhere rather than only straight after `run:`, because a multi-line
-    // `run: |` block puts the invocation on its own line; the original pattern silently
-    // covered none of those. Requiring a script extension skips `node -p "…"` inline
-    // evaluation, which references no file.
+    // `run: node deps/rsp/extract-props.js` — the script must exist, or the step fails.
     it(`${file}: every node script exists`, () => {
-      const scripts = referencesIn(source, /(?:^|\s)node\s+([\w./-]+\.[cm]?js)\b/, (m) => [m[1]]);
+      const scripts = referencesIn(source, /run:\s*node\s+(\S+)/, (m) => [m[1]]);
       const missing = scripts.filter((path) => !existsSync(join(ROOT, path)));
       assert.deepEqual(missing, [], `${file} runs scripts that do not exist`);
     });
