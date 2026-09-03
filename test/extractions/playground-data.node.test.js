@@ -14,7 +14,7 @@ import {
   clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION, DEFAULT_OPTION, isUnsetOption } from '../../deps/shared/playground/none-option.js';
+import { NONE_OPTION, DEFAULT_OPTION, isUnsetOption } from '../../deps/shared/playground/unset-control-options.js';
 
 const COMPONENTS_SHEET = [
   { component: 'Button', properties: 'variant, staticColor, text, fillStyle, size, isDisabled' },

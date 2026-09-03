@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
-import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
+import { NONE_OPTION } from '../../deps/shared/playground/unset-control-options.js';
 import init, {
   parseBlockMetadata,
   parseDefault,

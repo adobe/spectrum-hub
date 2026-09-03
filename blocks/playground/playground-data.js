@@ -11,7 +11,7 @@
  */
 
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION, DEFAULT_OPTION } from '../../deps/shared/playground/none-option.js';
+import { NONE_OPTION, DEFAULT_OPTION } from '../../deps/shared/playground/unset-control-options.js';
 import { TEXT_KEYS } from '../../deps/shared/playground/text-keys.js';
 import { capitalize } from '../../deps/rsp/playground/pascal-case.js';
 

@@ -12,7 +12,7 @@ import {
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
-import { isUnsetOption } from '../../deps/shared/playground/none-option.js';
+import { isUnsetOption } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import { UNREACHABLE_RSP_EXPORTS } from '../../deps/rsp/playground/unreachable-exports.js';
 import '../../deps/se/se.js';

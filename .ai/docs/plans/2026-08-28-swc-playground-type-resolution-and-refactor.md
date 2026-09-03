@@ -465,7 +465,7 @@ Cases 3 and 4 warn rather than silently picking, because a dropped property is i
 **Sheet state at implementation time** (preview, not yet published): 78 of 89 rows carry a value, most of them `rsp` only. Three SWC components have a row that omits `swc` and will render zero controls until it is added — **`avatar`, `button`, `button-group`**. A further 17 SWC components have no sheet row at all (`accordion-item`, `asset`, `icon`, `tab`, `tab-panel`, and the AI cluster) — a pre-existing gap, now warned instead of silent.
 
 ### Task 22 — "None" for optional attributes, derived not hardcoded — DONE (`refactor-swc`)
-**Files:** `deps/swc/resolve-attribute-types.js`, `deps/swc/extract-cem-components.js`, `blocks/playground/playground-data.js`, `blocks/table/table.js`, `deps/swc/playground/apply-swc-prop.js`, `deps/rsp/playground/index.html`, `deps/shared/playground/none-option.js`
+**Files:** `deps/swc/resolve-attribute-types.js`, `deps/swc/extract-cem-components.js`, `blocks/playground/playground-data.js`, `blocks/table/table.js`, `deps/swc/playground/apply-swc-prop.js`, `deps/rsp/playground/index.html`, `deps/shared/playground/unset-control-options.js`
 
 SWC Badge's `fixed` control needed a "none" choice like `staticColor`. The signal turned out to be in the type system already: `fixed?: FixedValues` and `staticColor?: ButtonStaticColor` are **optional**, while `size`, `variant` and `subtle` are not. So this generalizes rather than adding a third hardcoded property name.
 
@@ -473,7 +473,7 @@ SWC Badge's `fixed` control needed a "none" choice like `staticColor`. The signa
 - Every row carries `optional`, defaulting false.
 - `resolveControl()` prepends the sentinel when a row is optional. This **replaces** the `property === 'staticColor'` special case for SWC; the name is kept only as a fallback for RSP, whose extractor does not emit `optional` yet, and should go when it is rewritten.
 - The apply path (both the SWC module and the RSP shell) now removes the attribute for **any** property whose value is the sentinel, rather than gating on the property name.
-- `static-color-options.js` became `none-option.js` (`NO_STATIC_COLOR` → `NONE_OPTION`); the value `'None'` is unchanged, so nothing shifts behaviourally.
+- `static-color-options.js` became `unset-control-options.js` (`NO_STATIC_COLOR` → `NONE_OPTION`); the value `'None'` is unchanged, so nothing shifts behaviourally.
 
 19 of 151 attributes are optional. The enums among them now lead with "None": `badge.fixed`, every `static-color`, `message-feedback.status`, plus **`accordion-item.size` and `popover.size`** — both genuinely declared optional, so a "None" meaning "use the default" is consistent, but it is a change nobody asked for and worth a look.
 

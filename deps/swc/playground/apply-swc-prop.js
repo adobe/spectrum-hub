@@ -2,7 +2,7 @@ import { applyAttribute } from '../../shared/playground/apply-attribute.js';
 import { applyLabelProp } from './apply-label-prop.js';
 import { buildIconSvg, buildIconUse } from '../../shared/playground/build-icon-svg.js';
 import { NO_ICON } from '../../shared/playground/icon-options.js';
-import { isUnsetOption } from '../../shared/playground/none-option.js';
+import { isUnsetOption } from '../../shared/playground/unset-control-options.js';
 
 // Applies one prop-update message to a live SWC element.
 export function applySwcProp(el, { property, attribute, value }) {
