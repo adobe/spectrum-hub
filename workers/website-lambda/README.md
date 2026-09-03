@@ -37,6 +37,8 @@ Set these on the Lambda (they are read from `process.env`):
 
 ### Secrets (AWS Secrets Manager)
 
+> Setup, rotation, console steps, and the `set-secrets.sh` helper are in [`SECRETS.md`](./SECRETS.md).
+
 Adobe's **AWS Security Standard §3.5.8.5** prohibits plaintext secrets in Lambda environment
 variables. So the secret **values** never live in `env.json`; instead the env carries only a
 non-secret *id* and the function fetches the value at runtime from Secrets Manager via its
