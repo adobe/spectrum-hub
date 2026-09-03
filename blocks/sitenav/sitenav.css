@@ -1,5 +1,10 @@
 #sitenav {
   --sitenav-blur: 32px;
+
+  /* Opaque stand-in for the translucent panel fills when the blur can't run (see the
+     @supports / prefers-reduced-transparency blocks at the end). The gray tokens are
+     already light-dark() pairs, so this must not wrap them in another one. */
+  --sitenav-panel-solid: var(--s2-gray-50);
   --sitenav-corner-radius: var(--s2-corner-radius-950);
   --sitenav-children-transition-duration: 160ms;
   --sitenav-children-transition-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -47,6 +52,7 @@
       inset-block: 0;
       inset-inline: var(--sitenav-inline-start-margin) 0;
       z-index: -1;
+      -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       border-radius: var(--sitenav-corner-radius);
       pointer-events: none;
@@ -248,6 +254,7 @@
     top: 0;
     inset-inline-start: 100%;
     border-radius: var(--sitenav-corner-radius);
+    -webkit-backdrop-filter: blur(var(--sitenav-blur));
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
@@ -465,6 +472,7 @@
       inset: 0;
       z-index: -1;
       border-radius: inherit;
+      -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       pointer-events: none;
     }
@@ -549,5 +557,24 @@ html:has(meta[name="template"][content="marketing"]) {
   nav:not(.page-nav, .breadcrumbs), .level-2-menu, .sitenav-expand-btn::before {
     background-color: #ffffff0a;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+  }
+}
+
+/* Those panel fills are 50% white in light and 4% in dark: they only read as surfaces
+   because of the backdrop blur behind them. Where the blur can't run, nav text sits
+   on whatever the page put there, so fall back to an opaque surface. Two triggers —
+   no blur support at all, and readers who asked for less transparency (iOS "Reduce
+   Transparency", which switches it off even where it is supported). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #sitenav nav::before,
+  #sitenav .level-2-menu {
+    background-color: var(--sitenav-panel-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  #sitenav nav::before,
+  #sitenav .level-2-menu {
+    background-color: var(--sitenav-panel-solid);
   }
 }
