@@ -89,15 +89,13 @@ export default defineConfig([
   },
   {
     // Node scripts, not browser code
-    files: ['tools/indexer/**/*.js', '.github/scripts/**/*.js'],
+    files: ['tools/indexer/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,
       },
     },
     rules: {
-      // These scripts exist to print — roster-delta.js writes the PR body the
-      // extraction workflows open with.
       'no-console': 'off',
     },
   },
