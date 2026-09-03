@@ -5,7 +5,7 @@ description: Implement WCAG 2.2 compliant interfaces with mobile accessibility, 
 
 # Accessibility Compliance
 
-Master accessibility implementation to create inclusive experiences that work for everyone, including users with disabilities.
+Build inclusive experiences that work for everyone, including users with disabilities. This project ships vanilla-JS EDS blocks (`init(el)`), BEM CSS, and design tokens — the patterns below use plain DOM APIs, not a framework. For deeper reference material, see the files in [`references/`](./references/): [`wcag-guidelines.md`](./references/wcag-guidelines.md), [`aria-patterns.md`](./references/aria-patterns.md), and [`mobile-accessibility.md`](./references/mobile-accessibility.md).
 
 ## When to Use This Skill
 
@@ -74,325 +74,167 @@ Master accessibility implementation to create inclusive experiences that work fo
 
 ## Key Patterns
 
+These are expressed in the project's idiom: a block's `init(el)` populates `el` with plain DOM. Use the global `.visually-hidden` utility (defined in `styles/styles.css`) for screen-reader-only text rather than a bespoke class.
+
 ### Pattern 1: Accessible Button
 
-```tsx
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary';
-  isLoading?: boolean;
-}
+A native `<button>` is keyboard- and AT-accessible for free. Communicate state with ARIA and keep the target big enough (WCAG 2.5.8 — 24×24px minimum).
 
-function AccessibleButton({
-  children,
-  variant = 'primary',
-  isLoading = false,
-  disabled,
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      // Disable when loading
-      disabled={disabled || isLoading}
-      // Announce loading state to screen readers
-      aria-busy={isLoading}
-      // Describe the button's current state
-      aria-disabled={disabled || isLoading}
-      className={cn(
-        // Visible focus ring
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-        // Minimum touch target size (44x44px)
-        'min-h-[44px] min-w-[44px]',
-        variant === 'primary' && 'bg-primary text-primary-foreground',
-        (disabled || isLoading) && 'opacity-50 cursor-not-allowed'
-      )}
-      {...props}
-    >
-      {isLoading ? (
-        <>
-          <span className="sr-only">Loading</span>
-          <Spinner aria-hidden="true" />
-        </>
-      ) : (
-        children
-      )}
-    </button>
-  );
+```js
+const button = document.createElement('button');
+button.type = 'button';
+button.classList.add('my-block__action');
+
+function setLoading(isLoading) {
+  button.disabled = isLoading;
+  button.setAttribute('aria-busy', String(isLoading));
+  button.replaceChildren();
+  if (isLoading) {
+    const label = document.createElement('span');
+    label.className = 'visually-hidden';
+    label.textContent = 'Loading';
+    const spinner = document.createElement('span');
+    spinner.className = 'my-block__spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    button.append(label, spinner);
+  } else {
+    button.textContent = 'Save';
+  }
+}
+```
+
+```css
+.my-block__action {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+}
+.my-block__action:focus-visible {
+  outline: 2px solid var(--s2-blue-900);
+  outline-offset: 2px;
 }
 ```
 
 ### Pattern 2: Accessible Modal Dialog
 
-```tsx
-import * as React from 'react';
-import { FocusTrap } from '@headlessui/react';
+Prefer the native `<dialog>` element — `showModal()` gives focus trapping, `Escape` to close, and inert background handling without hand-rolled logic.
 
-interface DialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}
+```js
+const dialog = document.createElement('dialog');
+dialog.setAttribute('aria-labelledby', 'dialog-title');
 
-function AccessibleDialog({ isOpen, onClose, title, children }: DialogProps) {
-  const titleId = React.useId();
-  const descriptionId = React.useId();
+const heading = document.createElement('h2');
+heading.id = 'dialog-title';
+heading.textContent = 'Confirm';
 
-  // Close on Escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+const close = document.createElement('button');
+close.type = 'button';
+close.textContent = 'Close';
+close.addEventListener('click', () => dialog.close());
 
-  // Prevent body scroll when open
-  React.useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+dialog.append(heading, close);
+el.append(dialog);
 
-  if (!isOpen) return null;
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      aria-describedby={descriptionId}
-    >
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50"
-        aria-hidden="true"
-        onClick={onClose}
-      />
-
-      {/* Focus trap container */}
-      <FocusTrap>
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6">
-            <h2 id={titleId} className="text-lg font-semibold">
-              {title}
-            </h2>
-            <div id={descriptionId}>{children}</div>
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4"
-              aria-label="Close dialog"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </FocusTrap>
-    </div>
-  );
-}
+// Opening traps focus and enables Escape-to-close automatically.
+dialog.showModal();
 ```
 
-### Pattern 3: Accessible Form
+If you must build a non-native dialog, set `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, move focus into it on open, trap Tab within it, restore focus to the trigger on close, and handle `Escape`.
 
-```tsx
-function AccessibleForm() {
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+### Pattern 3: Accessible Form Field
 
-  return (
-    <form aria-describedby="form-errors" noValidate>
-      {/* Error summary for screen readers */}
-      {Object.keys(errors).length > 0 && (
-        <div
-          id="form-errors"
-          role="alert"
-          aria-live="assertive"
-          className="bg-destructive/10 border border-destructive p-4 rounded-md mb-4"
-        >
-          <h2 className="font-semibold text-destructive">
-            Please fix the following errors:
-          </h2>
-          <ul className="list-disc list-inside mt-2">
-            {Object.entries(errors).map(([field, message]) => (
-              <li key={field}>
-                <a href={`#${field}`} className="underline">
-                  {message}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+Associate every control with a `<label>` via `for`/`id`, mark required fields for AT, and wire errors with `aria-describedby` + `aria-invalid`.
 
-      {/* Required field with error */}
-      <div className="space-y-2">
-        <label htmlFor="email" className="block font-medium">
-          Email address
-          <span aria-hidden="true" className="text-destructive ml-1">
-            *
-          </span>
-          <span className="sr-only">(required)</span>
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          aria-required="true"
-          aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? 'email-error' : 'email-hint'}
-          className={cn(
-            'w-full px-3 py-2 border rounded-md',
-            errors.email && 'border-destructive'
-          )}
-        />
-        {errors.email ? (
-          <p id="email-error" className="text-sm text-destructive" role="alert">
-            {errors.email}
-          </p>
-        ) : (
-          <p id="email-hint" className="text-sm text-muted-foreground">
-            We'll never share your email.
-          </p>
-        )}
-      </div>
+```js
+const label = document.createElement('label');
+label.htmlFor = 'email';
+label.textContent = 'Email address';
 
-      <button type="submit" className="mt-4">
-        Submit
-      </button>
-    </form>
-  );
+const input = document.createElement('input');
+input.id = 'email';
+input.name = 'email';
+input.type = 'email';
+input.required = true;
+input.setAttribute('aria-describedby', 'email-hint');
+
+const hint = document.createElement('p');
+hint.id = 'email-hint';
+hint.textContent = "We'll never share your email.";
+
+function showError(message) {
+  input.setAttribute('aria-invalid', 'true');
+  input.setAttribute('aria-describedby', 'email-error');
+  const error = document.createElement('p');
+  error.id = 'email-error';
+  error.setAttribute('role', 'alert'); // announces the error when it appears
+  error.textContent = message;
+  hint.replaceWith(error);
 }
+
+el.append(label, input, hint);
 ```
 
 ### Pattern 4: Skip Navigation Link
 
-```tsx
-function SkipLink() {
-  return (
-    <a
-      href="#main-content"
-      className={cn(
-        // Hidden by default, visible on focus
-        'sr-only focus:not-sr-only',
-        'focus:absolute focus:top-4 focus:left-4 focus:z-50',
-        'focus:bg-background focus:px-4 focus:py-2 focus:rounded-md',
-        'focus:ring-2 focus:ring-primary'
-      )}
-    >
-      Skip to main content
-    </a>
-  );
-}
+Let keyboard users bypass repeated chrome (WCAG 2.4.1). Hide it until focused with `.visually-hidden` plus a focus override.
 
-// In layout
-function Layout({ children }) {
-  return (
-    <>
-      <SkipLink />
-      <header>...</header>
-      <nav aria-label="Main navigation">...</nav>
-      <main id="main-content" tabIndex={-1}>
-        {children}
-      </main>
-      <footer>...</footer>
-    </>
-  );
+```html
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" tabindex="-1">…</main>
+```
+
+```css
+.skip-link {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: var(--s2-spacing-300);
+  transform: translateY(-100%);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 ```
 
 ### Pattern 5: Live Region for Announcements
 
-```tsx
-function useAnnounce() {
-  const [message, setMessage] = React.useState('');
+Announce async updates (search results, save status) without moving focus. Create the region once, then update its text.
 
-  const announce = React.useCallback(
-    (text: string, priority: 'polite' | 'assertive' = 'polite') => {
-      setMessage(''); // Clear first to ensure re-announcement
-      setTimeout(() => setMessage(text), 100);
-    },
-    []
-  );
+```js
+const announcer = document.createElement('div');
+announcer.setAttribute('role', 'status');
+announcer.setAttribute('aria-live', 'polite');
+announcer.setAttribute('aria-atomic', 'true');
+announcer.className = 'visually-hidden';
+el.append(announcer);
 
-  const Announcer = () => (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-      className="sr-only"
-    >
-      {message}
-    </div>
-  );
-
-  return { announce, Announcer };
+function announce(text) {
+  announcer.textContent = ''; // clear first so identical text re-announces
+  requestAnimationFrame(() => { announcer.textContent = text; });
 }
 
-// Usage
-function SearchResults({ results, isLoading }) {
-  const { announce, Announcer } = useAnnounce();
-
-  React.useEffect(() => {
-    if (!isLoading && results) {
-      announce(`${results.length} results found`);
-    }
-  }, [results, isLoading, announce]);
-
-  return (
-    <>
-      <Announcer />
-      <ul>{/* results */}</ul>
-    </>
-  );
-}
+announce(`${results.length} results found`);
 ```
 
 ## Color Contrast Requirements
 
-```typescript
-// Contrast ratio utilities
-function getContrastRatio(foreground: string, background: string): number {
-  const fgLuminance = getLuminance(foreground);
-  const bgLuminance = getLuminance(background);
-  const lighter = Math.max(fgLuminance, bgLuminance);
-  const darker = Math.min(fgLuminance, bgLuminance);
-  return (lighter + 0.05) / (darker + 0.05);
-}
+Use design tokens for color; they resolve for light and dark mode via `light-dark()` (see the `stylesheet-conventions` skill), which keeps contrast consistent across schemes. Meet these ratios:
 
-// WCAG requirements
-const CONTRAST_REQUIREMENTS = {
-  // Normal text (<18pt or <14pt bold)
-  normalText: {
-    AA: 4.5,
-    AAA: 7,
-  },
-  // Large text (>=18pt or >=14pt bold)
-  largeText: {
-    AA: 3,
-    AAA: 4.5,
-  },
-  // UI components and graphics
-  uiComponents: {
-    AA: 3,
-  },
-};
-```
+| Content | AA | AAA |
+| --- | --- | --- |
+| Normal text (<18pt, or <14pt bold) | 4.5:1 | 7:1 |
+| Large text (≥18pt, or ≥14pt bold) | 3:1 | 4.5:1 |
+| UI components and graphics | 3:1 | — |
+
+The a11y test suite runs a `color-contrast` axe scan in both light and dark mode for every block (see Testing below), so contrast regressions fail CI.
 
 ## Best Practices
 
 1. **Use Semantic HTML**: Prefer native elements over ARIA when possible
-2. **Test with Real Users**: Include people with disabilities in user testing
-3. **Keyboard First**: Design interactions to work without a mouse
-4. **Don't Disable Focus Styles**: Style them, don't remove them
-5. **Provide Text Alternatives**: All non-text content needs descriptions
-6. **Support Zoom**: Content should work at 200% zoom
-7. **Announce Changes**: Use live regions for dynamic content
-8. **Respect Preferences**: Honor prefers-reduced-motion and prefers-contrast
+2. **Keyboard First**: Design interactions to work without a mouse
+3. **Don't Disable Focus Styles**: Style them, don't remove them
+4. **Provide Text Alternatives**: All non-text content needs descriptions
+5. **Support Zoom**: Content should work at 200% zoom
+6. **Announce Changes**: Use live regions for dynamic content
+7. **Respect Preferences**: Honor `prefers-reduced-motion` and `prefers-contrast`
 
 ## Common Issues
 
@@ -405,7 +247,11 @@ const CONTRAST_REQUIREMENTS = {
 - **Missing skip links**: No way to bypass repetitive content
 - **Focus order issues**: Tab order doesn't match visual order
 
-## Testing Tools
+## Testing
+
+This project enforces accessibility in CI: axe-core WCAG 2.2 AA scans (light and dark) plus a Playwright `toMatchAriaSnapshot()` accessibility-tree check run against every block and template, and a coverage check fails CI if a block has no spec. When you build or change a block, add or update its spec — see the [`create-new-block`](../create-new-block/SKILL.md) skill's "Accessibility tests" step and [`test/a11y/README.md`](../../../test/a11y/README.md).
+
+For manual verification beyond what automation catches (focus order, announcements, keyboard flow):
 
 - **Automated**: axe DevTools, WAVE, Lighthouse
 - **Manual**: VoiceOver (macOS/iOS), NVDA/JAWS (Windows), TalkBack (Android)
