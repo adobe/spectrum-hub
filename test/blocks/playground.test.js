@@ -1237,6 +1237,28 @@ describe('playground block — init()', () => {
     expect(select.value).to.equal('No icon');
   });
 
+  // The sentinel is opaque so it cannot collide with a catalog value, which means the
+  // reader must never see it — the option carries the sentinel as its value and the
+  // human label as its text.
+  it('shows an unset choice by its label while sending the opaque sentinel', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'Button', Properties: 'staticColor' }],
+      controls: [{ Property: 'staticColor', control: 'picker' }],
+      swc: [],
+      rsp: { props: [{ property: 'staticColor', kind: 'enum', values: ['white', 'black'] }] },
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const select = rspEl.querySelector('.playground-control se-select');
+    await select.updateComplete;
+    const first = select.shadowRoot.querySelector('select option');
+    expect(first.value).to.equal(NONE_OPTION);
+    expect(first.textContent).to.equal('None');
+    expect(NONE_OPTION).to.not.equal('None');
+  });
+
   it('posts a prop-update with the icon name as the value (no attribute) when the selection changes', async () => {
     stubPlaygroundFetch(sandbox, {
       components: [{ Component: 'Button', Properties: 'icon' }],
@@ -1572,5 +1594,13 @@ describe('the unset sentinel never reaches a snippet', () => {
     const out = buildRspSnippet('Button', props(NONE_OPTION), '', false, 'button');
     expect(out).to.not.include('None');
     expect(out).to.include('variant="primary"');
+  });
+
+  // The other half of the collision fix: "default" is a real enum member on seven RSP
+  // props, so it has to serialize as itself rather than being read as an unset choice.
+  it('prints a real "default" value rather than treating it as unset', () => {
+    const rounding = { rounding: { value: 'default', attribute: 'rounding' } };
+    expect(buildSwcSnippet('swc-swatch', rounding, '')).to.include('rounding="default"');
+    expect(buildRspSnippet('ColorSwatchPicker', rounding, '', false, 'swatch-group')).to.include('rounding="default"');
   });
 });

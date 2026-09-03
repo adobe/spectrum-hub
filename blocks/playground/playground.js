@@ -12,7 +12,7 @@ import {
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
-import { isUnsetOption } from '../../deps/shared/playground/unset-control-options.js';
+import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
@@ -298,8 +298,9 @@ function buildPickerControl(property, options, currentValue, onChange) {
   select.labelPosition = 'side';
   select.append(...options.map((opt) => {
     const option = document.createElement('option');
+    // An unset sentinel is opaque by design — optionLabel is what a reader sees.
     option.value = opt;
-    option.textContent = opt;
+    option.textContent = optionLabel(opt);
     return option;
   }));
   select.value = currentValue;
@@ -346,7 +347,7 @@ function buildSegmentedControl(property, options, currentValue, onChange) {
     radio.value = opt;
     radio.checked = opt === currentValue;
     const span = document.createElement('span');
-    span.textContent = opt;
+    span.textContent = optionLabel(opt);
     label.append(radio, span);
     fieldset.append(label);
   });

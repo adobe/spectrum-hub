@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it, mock, beforeEach } from 'node:test';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   fetchPlaygroundSheets,
@@ -14,7 +16,9 @@ import {
   clearFetchCache,
 } from '../../blocks/playground/playground-data.js';
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION, DEFAULT_OPTION, isUnsetOption } from '../../deps/shared/playground/unset-control-options.js';
+import {
+  NONE_OPTION, DEFAULT_OPTION, isUnsetOption, optionLabel,
+} from '../../deps/shared/playground/unset-control-options.js';
 
 const COMPONENTS_SHEET = [
   { component: 'Button', properties: 'variant, staticColor, text, fillStyle, size, isDisabled' },
@@ -983,5 +987,51 @@ describe('isUnsetOption', () => {
 
   it('keeps the two sentinels distinct', () => {
     assert.notEqual(NONE_OPTION, DEFAULT_OPTION);
+  });
+
+  // The regression this shape exists for. "default" and "None" are real enum members
+  // in the shipped catalogs, so a readable sentinel swallows them: ColorSwatchPicker's
+  // `rounding` offers "default" with `none` as its own default, and treating the
+  // selection as unset dropped the prop and rendered the wrong value.
+  it('rejects the real catalog values the labels are drawn from', () => {
+    ['default', 'None', 'none', 'full', 'precise'].forEach((v) => {
+      assert.equal(isUnsetOption(v), false, v);
+    });
+  });
+
+  it('renders a label for each sentinel and leaves a real option alone', () => {
+    assert.equal(optionLabel(NONE_OPTION), 'None');
+    assert.equal(optionLabel(DEFAULT_OPTION), 'default');
+    assert.equal(optionLabel('default'), 'default');
+    assert.equal(optionLabel('hue'), 'hue');
+  });
+});
+
+// Guards the collision at the source: no sentinel may equal a value any catalog ships,
+// or selecting that value silently means "unset". Reads the real catalogs rather than a
+// fixture, so a future upstream enum member that matches fails here.
+describe('the sentinels cannot collide with a shipped catalog value', () => {
+  const catalogValues = () => {
+    const values = new Set();
+    for (const dir of ['deps/swc/data', 'deps/rsp/data']) {
+      for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+        const parsed = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+        for (const row of Array.isArray(parsed) ? parsed : (parsed.props ?? [])) {
+          (row.values ?? []).forEach((v) => values.add(String(v)));
+        }
+      }
+    }
+    return values;
+  };
+
+  it('neither sentinel appears in any catalog row', () => {
+    const values = catalogValues();
+    assert.equal(values.has(NONE_OPTION), false, NONE_OPTION);
+    assert.equal(values.has(DEFAULT_OPTION), false, DEFAULT_OPTION);
+  });
+
+  it('proves the guard bites — the old readable sentinels do collide', () => {
+    const values = catalogValues();
+    assert.ok(values.has('default'), '"default" should still be a real catalog value');
   });
 });
