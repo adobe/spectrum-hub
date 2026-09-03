@@ -28,8 +28,8 @@
   }
 
   nav {
-    position: relative;
-    anchor-name: --sitenav;
+    /* Intentionally unpositioned: .level-2-menu anchors to #sitenav instead, which is
+    how it escapes the overflow clipping here and on ul.level-1-list. */
     box-sizing: border-box;
     width: var(--sitenav-nav-width);
     margin-inline-start: var(--sitenav-inline-start-margin);
@@ -38,10 +38,14 @@
     padding: var(--s2-spacing-300) var(--s2-spacing-200);
     transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
 
+    /* Pinned explicitly: #sitenav is this pseudo-element's containing block now, and
+    it's wider than nav by nav's inline-start margin. Keep backdrop-filter off nav
+    itself — it would make nav a containing block again and re-trap the flyouts. */
     &::before {
       content: "";
       position: absolute;
-      inset: 0;
+      inset-block: 0;
+      inset-inline: var(--sitenav-inline-start-margin) 0;
       z-index: -1;
       backdrop-filter: blur(var(--sitenav-blur));
       border-radius: var(--sitenav-corner-radius);
@@ -236,18 +240,22 @@
     width: var(--sitenav-level-2-width);
     max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
     padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
-    position: fixed;
-    position-anchor: --sitenav;
-    top: anchor(top);
-    left: anchor(right);
+
+    /* #sitenav's box is the rail plus its inline-start margin, so 100%/0 land on the
+    rail's outer edge and top. Replaces anchor() (Chromium-only — Safari and Firefox
+    drop it and strand the panel at its static position, overlapping the rail). */
+    position: absolute;
+    top: 0;
+    inset-inline-start: 100%;
     border-radius: var(--sitenav-corner-radius);
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
 
-    /* Anything taller scrolls internally instead of running past the edge of the screen. */
+    /* Anything taller scrolls internally instead of running past the edge of the
+    screen. 100% is the rail's own height — what anchor-size(height) meant. */
     @media (width < 900px) {
-      max-height: anchor-size(height);
+      max-height: 100%;
     }
 
     > * {
