@@ -1,7 +1,8 @@
 {
   "swc": {
     "swc-card": {
-      "canonical": "Cards"
+      "canonical": "Cards",
+      "upstreamName": "Card"
     },
     "swc-dropzone": {
       "canonical": "DropZone"

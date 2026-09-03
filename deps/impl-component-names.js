@@ -72,6 +72,9 @@ export default {
     }
   },
   "swc": {
+    "cards": {
+      "docs": "Card"
+    },
     "color-handle-and-loupe": {
       "docs": "ColorHandle"
     }

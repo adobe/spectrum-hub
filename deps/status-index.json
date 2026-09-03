@@ -336,7 +336,8 @@
           },
           "swc": {
             "status": "available",
-            "context": "Stable"
+            "context": "Stable",
+            "upstreamName": "Card"
           }
         }
       }

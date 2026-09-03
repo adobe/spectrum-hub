@@ -12,7 +12,8 @@
     },
     "swc": {
       "status": "available",
-      "context": "Stable"
+      "context": "Stable",
+      "upstreamName": "Card"
     }
   },
   "figmaPageId": "10182:4354"
