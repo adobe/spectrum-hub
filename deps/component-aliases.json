@@ -1,5 +1,12 @@
 {
-  "swc": {},
+  "swc": {
+    "swc-card": {
+      "canonical": "Cards"
+    },
+    "swc-dropzone": {
+      "canonical": "DropZone"
+    }
+  },
   "rsp": {
     "AlertDialog": {
       "canonical": "AlertDialog",

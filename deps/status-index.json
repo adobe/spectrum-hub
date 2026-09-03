@@ -320,24 +320,6 @@
       }
     },
     {
-      "name": "Card",
-      "label": "Card",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available",
-            "context": "Stable"
-          }
-        }
-      }
-    },
-    {
       "name": "Cards",
       "label": "Cards",
       "platforms": {
@@ -353,7 +335,8 @@
             "upstreamName": "Card"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -666,24 +649,6 @@
       }
     },
     {
-      "name": "Dropzone",
-      "label": "Dropzone",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available",
-            "context": "Stable"
-          }
-        }
-      }
-    },
-    {
       "name": "DropZone",
       "label": "Drop Zone",
       "platforms": {
@@ -696,7 +661,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
