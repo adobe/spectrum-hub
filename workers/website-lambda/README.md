@@ -11,10 +11,12 @@ filtering `query-index.json`. See [`index.js`](./index.js) for the pipeline and
 Set these on the Lambda (they are read from `process.env`):
 
 - `SESSION_SECRET` — HMAC key for the session cookie. Unset ⇒ every request is treated as
-  anonymous (fails closed).
+  anonymous (fails closed). **Do not set this in plaintext env in AWS** — provide it via
+  `SESSION_SECRET_ID` instead (see "Secrets" below).
 - `AEM_ORG` / `AEM_SITE` — the upstream `main--<site>--<org>.aem.live` origin.
 - `IMS_CLIENT_ID` / `IMS_CLIENT_SECRET` / `IMS_SCOPE` — service credential for the DA visitor
-  allowlist read (required by `/auth/session`).
+  allowlist read (required by `/auth/session`). Like `SESSION_SECRET`, `IMS_CLIENT_SECRET` should
+  come from `IMS_CLIENT_SECRET_ID`, not plaintext env.
 - `ALLOWED_ORIGINS` — comma-separated origins permitted to call `/auth/session` (CSRF defense).
   **Set this explicitly in production.** When unset the check falls back to the request's own origin
   (derived from the public host), which is only trustworthy behind CloudFront/OAC; a missing value
@@ -32,6 +34,35 @@ Set these on the Lambda (they are read from `process.env`):
   Bounds how long a publish takes to show up when edge caching is on (see "Content caching").
 - Optional: `ORIGIN` (dev origin override), `ORIGIN_AUTHENTICATION`, `IMS_ENV`, `SESSION_MAX_AGE_MS`,
   `PUSH_INVALIDATION`.
+
+### Secrets (AWS Secrets Manager)
+
+Adobe's **AWS Security Standard §3.5.8.5** prohibits plaintext secrets in Lambda environment
+variables. So the secret **values** never live in `env.json`; instead the env carries only a
+non-secret *id* and the function fetches the value at runtime from Secrets Manager via its
+execution role:
+
+- `SESSION_SECRET_ID` — Secrets Manager name/ARN holding the `SESSION_SECRET` value.
+- `IMS_CLIENT_SECRET_ID` — Secrets Manager name/ARN holding the `IMS_CLIENT_SECRET` value.
+
+At the first request on a cold container `handler` calls `resolveSecrets()`, which pulls each
+configured id and assigns the value onto `process.env` under the plain name (`SESSION_SECRET` /
+`IMS_CLIENT_SECRET`) — so the rest of the code reads it unchanged. Behavior:
+
+- **Bounded TTL cache** (`SECRET_TTL_MS`, 10 min): a rotated secret propagates within that window
+  with no redeploy. For an immediate rotation (compromise), redeploy/update the function to force
+  fresh cold starts.
+- **Fail-closed:** if the fetch fails on a cold container the secret stays unset, so
+  `isAuthenticated` returns false (everyone anonymous) and `/auth/session` returns 500 — public
+  pages still serve; nothing degrades open. A transient failure *after* a good fetch keeps the
+  last-known-good value and retries after a short backoff (`SECRET_FAILURE_BACKOFF_MS`).
+- **Migration-safe:** if a `*_SECRET_ID` is unset the resolver leaves any existing plaintext
+  `env[name]` in place, so the code can ship before the AWS-side secrets are created.
+
+The SDK (`@aws-sdk/client-secrets-manager`) is a **devDependency** only and is imported
+dynamically — the `nodejs22.x` runtime provides AWS SDK v3, so it is not bundled. If a runtime
+ever lacks it, the dynamic import degrades to fail-closed instead of crashing init; the fallback is
+to `npm i` it and include `node_modules` in the deploy zip.
 
 ## CloudFront caching — responses vary by viewer
 

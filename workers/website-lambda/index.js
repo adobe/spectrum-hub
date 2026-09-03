@@ -38,6 +38,7 @@ import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
 import { classifyPublicPath, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
 import { filterAudienceBlocks } from './lib/audience.js';
 import { filterPrivateEntries, compactEntries } from './lib/query-index.js';
+import { resolveSecrets } from './lib/secrets.js';
 
 const env = process.env;
 
@@ -466,6 +467,11 @@ const toLambdaResponse = async (response) => {
 
 export const handler = async (event) => {
   try {
+    // Ensure SESSION_SECRET / IMS_CLIENT_SECRET are populated from Secrets Manager
+    // before any request touches them. Cached across invocations (bounded TTL), so
+    // this is a no-op after the first cold-start fetch. Never rejects: on failure the
+    // secrets stay unset and the pipeline degrades to anonymous / 500, not a crash.
+    await resolveSecrets(env);
     const response = await route(toRequest(event));
     return await toLambdaResponse(response);
   } catch (err) {
