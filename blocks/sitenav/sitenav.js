@@ -4,6 +4,7 @@ import {
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import createSkipLink from '../../scripts/utils/skip-link.js';
+import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
 const { log } = getConfig();
@@ -280,8 +281,47 @@ export const closeSitenav = (sitenav) => {
 };
 
 const getFocusableEls = (container) => [...container.querySelectorAll(
-  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-)].filter((el) => el.checkVisibility());
+  'a[href], button:not([disabled]), [tabindex]',
+)].filter((el) => isFocusable(el) && el.tabIndex > -1);
+
+const isToggle = (el) => el.tagName === 'BUTTON' && el.hasAttribute('aria-expanded');
+const isOpen = (btn) => btn.getAttribute('aria-expanded') === 'true';
+const menuOf = (btn) => document.getElementById(btn.getAttribute('aria-controls'));
+// decorateLevel appends each flyout to the <li> whose button opens it, so the parent
+// control is that <li>'s own direct-child button.
+const parentToggleOf = (el) => el
+  .closest('.level-2-menu, .level-3-menu, .level-4-menu')
+  ?.parentElement.querySelector(':scope > button');
+
+// One tab stop for the whole tree, walked as a disclosure tree: Up/Down over what's on
+// screen, Right to open a menu then step in, Left to close or go up. The rail's expand
+// button stays its own stop — it controls the nav rather than belonging to it.
+// Scoped to the rail, not the list: below 900px the list is display:none until the
+// trigger opens it, so the group starts empty and has to re-sync on that click.
+export const setupRovingTabindex = (sitenav, navList) => rovingTabindex(sitenav, {
+  items: () => focusableIn(navList),
+  // Landing on "you are here" beats landing on the top of the tree.
+  initial: (list) => list.find((el) => el.classList.contains('is-current-page')) ?? list[0],
+  keys: {
+    ArrowRight: (el, list) => {
+      if (!isToggle(el)) { return false; }
+      if (!isOpen(el)) {
+        // Reuses the button's own handler, which also collapses its siblings.
+        el.click();
+        return true;
+      }
+      const menu = menuOf(el);
+      return list.find((item) => menu?.contains(item)) ?? true;
+    },
+    ArrowLeft: (el) => {
+      if (isToggle(el) && isOpen(el)) {
+        el.click();
+        return true;
+      }
+      return parentToggleOf(el) ?? false;
+    },
+  },
+});
 
 // Level-1 buttons only need a tooltip while the rail is collapsed
 export const syncLevel1Tooltips = (sitenav) => {
@@ -484,6 +524,10 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   const main = document.querySelector('main');
   if (!main) { return; }
   main.before(sitenav);
+
+  // After insertion: the visibility checks it depends on only mean anything for
+  // elements that are actually in the document.
+  setupRovingTabindex(sitenav, navList);
 
   // Scroll the level-2 flyout (the only scrollable nav container) so the
   // current page is visible, rather than always starting at the top.

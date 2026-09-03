@@ -10,7 +10,7 @@ const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
   syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
-  findCurrentPageInNav, removeEmptyMenus,
+  findCurrentPageInNav, removeEmptyMenus, setupRovingTabindex,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -1221,6 +1221,135 @@ describe('sitenav block', () => {
     it('is false at or above the breakpoint', () => {
       stubMatchMedia(sandbox, false);
       expect(isMobileViewport()).to.be.false;
+    });
+  });
+
+  describe('setupRovingTabindex — the nav as one tab stop', () => {
+    // Collapsed flyouts are hidden with visibility:hidden by sitenav.css, which isn't
+    // loaded here; mirror it on the wrapper so the group sees what a real page sees.
+    function buildTree() {
+      const sitenav = document.createElement('div');
+      const navList = buildNavList(`
+        <ul>
+          <li><p>Web</p>
+            <ul>
+              <li><a href="/web/one">One</a></li>
+              <li><a href="/web/two">Two</a></li>
+            </ul>
+          </li>
+          <li><p>Support</p>
+            <ul><li><a href="/support/faqs">FAQs</a></li></ul>
+          </li>
+        </ul>`);
+      decorateLevel(navList, 1);
+      sitenav.append(navList);
+      document.body.append(sitenav);
+
+      // Stand in for the stylesheet: a menu is visible only while its button is open.
+      const syncVisibility = () => {
+        navList.querySelectorAll('.level-2-menu').forEach((menu) => {
+          const btn = menu.parentElement.querySelector(':scope > button');
+          menu.style.visibility = btn.getAttribute('aria-expanded') === 'true' ? 'visible' : 'hidden';
+        });
+      };
+      syncVisibility();
+      sitenav.addEventListener('click', syncVisibility);
+      return { sitenav, navList };
+    }
+
+    const buttonNamed = (root, name) => [...root.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === name);
+    const linkNamed = (root, name) => [...root.querySelectorAll('a')]
+      .find((a) => a.textContent.trim() === name);
+    const press = (el, key) => el.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+    const tabbable = (root) => [...root.querySelectorAll('a, button')]
+      .filter((el) => el.checkVisibility({ visibilityProperty: true }) && el.tabIndex > -1);
+
+    it('leaves the whole tree reachable in a single Tab', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      expect(tabbable(navList).length).to.equal(1);
+    });
+
+    it('starts on the current page rather than the top of the tree', () => {
+      const { sitenav, navList } = buildTree();
+      buttonNamed(navList, 'Web').setAttribute('aria-expanded', 'true');
+      sitenav.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      linkNamed(navList, 'Two').classList.add('is-current-page');
+
+      setupRovingTabindex(sitenav, navList);
+      // Identity as a boolean: a failing .to.equal() on live DOM makes chai serialize
+      // the whole tree into its diff, which hangs the runner instead of reporting.
+      const stop = tabbable(navList)[0];
+      expect(stop === linkNamed(navList, 'Two'), `tab stop was "${stop?.textContent.trim()}"`).to.be.true;
+    });
+
+    it('opens a collapsed menu with ArrowRight, staying on the button', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      const web = buttonNamed(navList, 'Web');
+      web.focus();
+      press(web, 'ArrowRight');
+      expect(web.getAttribute('aria-expanded')).to.equal('true');
+      expectFocus(web, 'the Web button');
+    });
+
+    it('steps into an already-open menu with ArrowRight', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      const web = buttonNamed(navList, 'Web');
+      web.focus();
+      press(web, 'ArrowRight');
+      press(web, 'ArrowRight');
+      expectFocus(linkNamed(navList, 'One'), 'the first link inside the Web menu');
+    });
+
+    it('returns to the parent button with ArrowLeft', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      const web = buttonNamed(navList, 'Web');
+      web.focus();
+      press(web, 'ArrowRight');
+      press(web, 'ArrowRight');
+      press(linkNamed(navList, 'One'), 'ArrowLeft');
+      expectFocus(web, 'the Web button');
+    });
+
+    it('closes an open menu with ArrowLeft on its button', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      const web = buttonNamed(navList, 'Web');
+      web.focus();
+      press(web, 'ArrowRight');
+      press(web, 'ArrowLeft');
+      expect(web.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('walks what is on screen with ArrowDown, skipping collapsed menus', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      const web = buttonNamed(navList, 'Web');
+      web.focus();
+      press(web, 'ArrowDown');
+      expectFocus(buttonNamed(navList, 'Support'), 'the Support button');
+    });
+
+    // Collapsing the menu the tab stop lives in would otherwise leave the nav with no
+    // way in at all.
+    it('re-picks the tab stop when the open menu holding it closes', () => {
+      const { sitenav, navList } = buildTree();
+      setupRovingTabindex(sitenav, navList);
+      const web = buttonNamed(navList, 'Web');
+      web.focus();
+      press(web, 'ArrowRight');
+      press(web, 'ArrowRight');
+      expectFocus(linkNamed(navList, 'One'), 'the first link inside the Web menu');
+
+      press(web, 'ArrowLeft');
+      press(web, 'ArrowLeft');
+      expect(tabbable(navList).length).to.equal(1);
     });
   });
 
