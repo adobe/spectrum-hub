@@ -24,16 +24,16 @@ describe('components.json — tricky groupings (generated from the CEM)', () => 
   });
 
   it('maps swc-suggestion-group to the `suggestion` module (name diverges from tag)', () => {
-    assert.equal(COMPONENTS['suggestion-group'], 'patterns/conversational-ai/suggestion');
+    assert.equal(COMPONENTS['suggestion-group'], 'patterns/ai-toolkit/suggestion');
   });
 
   it('keeps suggestion-item as its own module (not folded into suggestion)', () => {
-    assert.equal(COMPONENTS['suggestion-item'], 'patterns/conversational-ai/suggestion-item');
+    assert.equal(COMPONENTS['suggestion-item'], 'patterns/ai-toolkit/suggestion-item');
   });
 
-  it('routes the conversational-ai family under patterns/conversational-ai', () => {
+  it('routes the ai-toolkit family under patterns/ai-toolkit', () => {
     for (const tag of ['conversation-thread', 'conversation-turn', 'user-message', 'system-message']) {
-      assert.match(COMPONENTS[tag], /^patterns\/conversational-ai\//, `${tag} should be a pattern`);
+      assert.match(COMPONENTS[tag], /^patterns\/ai-toolkit\//, `${tag} should be a pattern`);
     }
   });
 });
