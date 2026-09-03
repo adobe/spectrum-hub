@@ -514,23 +514,6 @@ function buildControlDescriptors(
   }, []);
 }
 
-// Stands in for the preview iframe when the component has no reachable RSP export.
-export function buildUnavailablePreviewNote(exportName) {
-  const note = document.createElement('div');
-  note.classList.add('playground-preview-note');
-
-  const title = document.createElement('p');
-  title.classList.add('playground-preview-note-title');
-  title.textContent = 'No live preview';
-
-  const body = document.createElement('p');
-  body.textContent = `@react-spectrum/s2 does not export ${exportName}, so it cannot render here. `
-    + 'The controls and code below reflect its published API.';
-
-  note.append(title, body);
-  return note;
-}
-
 function createPreviewIframe(iframeUrl, title) {
   const iframe = document.createElement('iframe');
   iframe.src = iframeUrl;
