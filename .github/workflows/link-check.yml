@@ -1,0 +1,52 @@
+name: Link check
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Daily at 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Site to crawl (defaults to production)'
+        type: string
+        default: 'https://main--spectrum-hub--adobe.aem.live'
+
+# One crawl at a time; a full-site crawl can run long and there's no benefit to
+# overlapping runs against the same target.
+concurrency:
+  group: link-check
+  cancel-in-progress: false
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Crawl site for broken navigation
+        run: npx playwright test --config=playwright.link-check.config.js
+        env:
+          LINKCHECK_BASE_URL: ${{ inputs.base_url || 'https://main--spectrum-hub--adobe.aem.live' }}
+
+      - name: Upload link check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-check-report
+          path: |
+            test-results/link-check/
+            playwright-report-links/
+          retention-days: 30
