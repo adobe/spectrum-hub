@@ -95,6 +95,13 @@ function slugify(text) {
 // Keeps each link's aria-current in sync with the heading the visitor is reading.
 function watchScrollSpy(headings, linkById) {
   let activeId = null;
+  // A click (or the initial-hash scroll) can itself cause a heading to cross
+  // the observer's band — most visibly when the target undershoots (a last
+  // heading too close to the page's end) and an earlier heading is left
+  // sitting in the band instead. Without this, the observer's own async
+  // reaction to that scroll fires right after and steals the highlight back.
+  // Suppressed until the visitor actually takes over scrolling themselves.
+  let suppressed = false;
 
   const setActive = (id) => {
     if (id === activeId) {
@@ -102,12 +109,17 @@ function watchScrollSpy(headings, linkById) {
     }
     if (activeId && linkById.get(activeId)) {
       linkById.get(activeId).removeAttribute('aria-current');
+      linkById.get(activeId).classList.remove('is-current');
     }
     activeId = id;
     if (id && linkById.get(id)) {
       linkById.get(id).setAttribute('aria-current', 'location');
     }
   };
+
+  ['wheel', 'touchstart', 'keydown'].forEach((type) => {
+    window.addEventListener(type, () => { suppressed = false; }, { passive: true });
+  });
 
   // Top offset matches the site header so a heading registers as "active"
   // the moment it scrolls under the sticky chrome. Bottom -50% keeps it
@@ -129,7 +141,7 @@ function watchScrollSpy(headings, linkById) {
         visible.delete(e.target);
       }
     });
-    if (!visible.size) {
+    if (suppressed || !visible.size) {
       return;
     }
     const topmost = [...visible].sort(
@@ -139,6 +151,8 @@ function watchScrollSpy(headings, linkById) {
   }, { rootMargin });
 
   headings.forEach((h) => observer.observe(h));
+
+  return { setActive, suppress: () => { suppressed = true; } };
 }
 
 (() => {
@@ -211,7 +225,8 @@ function watchScrollSpy(headings, linkById) {
     linkById.set(h.id, a);
   });
 
-  // TODO: Revisit the back-to-top items after the section links.
+  // TODO: Revisit the back-to-top items after the section links. if we have a back-to-top,
+  // it'll be treated differently.
   // if (h1) {
   //   const topLi = document.createElement('li');
   //   const topLink = document.createElement('a');
@@ -243,5 +258,41 @@ function watchScrollSpy(headings, linkById) {
   syncPresence();
   desktopMql.addEventListener('change', syncPresence);
 
-  watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+  const { setActive, suppress } = watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+
+  const lastId = headings[headings.length - 1].id;
+
+  // Clicking a link shouldn't have to wait on the IntersectionObserver to confirm
+  // it: mark it current immediately. This also covers the last heading, which
+  // can sit too close to the document's end to ever cross into the observer's
+  // (bottom -50%) active band on its own — `.is-current` is a visual-only
+  // stand-in for that one case, since the page genuinely can't scroll it under
+  // the header, so it doesn't earn aria-current the way the others do.
+  linkById.forEach((a, id) => {
+    a.addEventListener('click', () => {
+      suppress();
+      setActive(id);
+      if (id === lastId) {
+        a.classList.add('is-current');
+      }
+    });
+  });
+
+  // A heading's id is often assigned above (slugified from its text) rather than
+  // authored in the source, so it doesn't exist yet at the moment the browser
+  // does its one-time, load-time scroll-to-fragment — that scroll silently
+  // no-ops, and the hash sits in the URL with the page never having moved.
+  // Once we've just finished assigning ids, do that same scroll ourselves.
+  // Resolved against our own collected headings rather than a document-wide
+  // getElementById: some other element elsewhere on the page (e.g. the sitenav,
+  // which slugifies its own category names into ids the same way) can happen to
+  // share the same id, and getElementById would silently return that instead.
+  const allTargets = h1 ? [...headings, h1] : headings;
+  const hashId = window.location.hash ? window.location.hash.slice(1) : null;
+  const initialTarget = hashId ? allTargets.find((h) => h.id === hashId) : null;
+  if (initialTarget) {
+    suppress();
+    initialTarget.scrollIntoView({ block: 'start' });
+    setActive(initialTarget.id);
+  }
 })();
