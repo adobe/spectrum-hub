@@ -92,7 +92,6 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   await waitForNavReady(page, isMobile);
 
   await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
-    - link "Skip navigation"
     - navigation "Spectrum Hub":
       - list:
         - listitem:

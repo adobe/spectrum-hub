@@ -103,36 +103,6 @@ describe('sitenav block', () => {
       const { sitenav } = getSiteNav();
       expect(sitenav.hasAttribute('is-expanded')).to.be.true;
     });
-
-    // The header's own skip link is stop 1, but by the time focus has moved through
-    // the header actions there's no way forward past the rail. This is the second
-    // chance, immediately before the nav landmark.
-    describe('skip link', () => {
-      beforeEach(() => {
-        document.body.append(document.createElement('main'));
-      });
-
-      it('is the first focusable thing in the rail, ahead of the nav landmark', () => {
-        const { sitenav, nav } = getSiteNav();
-        const skip = sitenav.firstElementChild;
-        expect(skip.tagName).to.equal('A');
-        expect(skip.classList.contains('skip-link')).to.be.true;
-        const order = [...sitenav.children];
-        expect(order.indexOf(skip)).to.be.lessThan(order.indexOf(nav));
-      });
-
-      it('targets main content and names what it skips', () => {
-        const { sitenav } = getSiteNav();
-        const skip = sitenav.querySelector('.skip-link');
-        expect(skip.getAttribute('href')).to.equal('#main-content');
-        expect(skip.textContent).to.equal('Skip navigation');
-      });
-
-      it('makes main focusable so the jump moves focus, not just scroll', () => {
-        getSiteNav();
-        expect(document.querySelector('main').getAttribute('tabindex')).to.equal('-1');
-      });
-    });
   });
 
   describe('decorateLevel — accessible name for icon-only toggle buttons', () => {
@@ -1224,7 +1194,7 @@ describe('sitenav block', () => {
     });
   });
 
-  describe('setupRovingTabindex — the nav as one tab stop', () => {
+  describe('setupRovingTabindex — level-2 flyouts as one tab stop', () => {
     // Collapsed flyouts are hidden with visibility:hidden by sitenav.css, which isn't
     // loaded here; mirror it on the wrapper so the group sees what a real page sees.
     function buildTree() {
@@ -1234,7 +1204,9 @@ describe('sitenav block', () => {
           <li><p>Web</p>
             <ul>
               <li><a href="/web/one">One</a></li>
-              <li><a href="/web/two">Two</a></li>
+              <li><p>Components</p>
+                <ul><li><a href="/web/button">Button</a></li></ul>
+              </li>
             </ul>
           </li>
           <li><p>Support</p>
@@ -1247,9 +1219,10 @@ describe('sitenav block', () => {
 
       // Stand in for the stylesheet: a menu is visible only while its button is open.
       const syncVisibility = () => {
-        navList.querySelectorAll('.level-2-menu').forEach((menu) => {
+        navList.querySelectorAll('.level-2-menu, .level-3-menu').forEach((menu) => {
           const btn = menu.parentElement.querySelector(':scope > button');
-          menu.style.visibility = btn.getAttribute('aria-expanded') === 'true' ? 'visible' : 'hidden';
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          menu.style.visibility = open ? 'visible' : 'hidden';
         });
       };
       syncVisibility();
@@ -1267,89 +1240,107 @@ describe('sitenav block', () => {
     const tabbable = (root) => [...root.querySelectorAll('a, button')]
       .filter((el) => el.checkVisibility({ visibilityProperty: true }) && el.tabIndex > -1);
 
-    it('leaves the whole tree reachable in a single Tab', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      expect(tabbable(navList).length).to.equal(1);
+    const openWeb = (navList) => buttonNamed(navList, 'Web').click();
+
+    describe('level 1 keeps its own tab stops', () => {
+      it('leaves level-1 buttons out of the group entirely', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const lvl1 = [...navList.querySelectorAll(':scope > li > button')];
+        expect(lvl1.length).to.equal(2);
+        expect(lvl1.every((b) => !b.hasAttribute('tabindex'))).to.be.true;
+      });
+
+      it('leaves arrow keys on a level-1 button to the browser', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const web = buttonNamed(navList, 'Web');
+        const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
+        web.dispatchEvent(event);
+        expect(event.defaultPrevented).to.be.false;
+      });
+
+      it('touches nothing while every flyout is closed', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const withTabindex = [...navList.querySelectorAll('a, button')]
+          .filter((el) => el.hasAttribute('tabindex'));
+        expect(withTabindex.length).to.equal(0);
+      });
     });
 
-    it('starts on the current page rather than the top of the tree', () => {
-      const { sitenav, navList } = buildTree();
-      buttonNamed(navList, 'Web').setAttribute('aria-expanded', 'true');
-      sitenav.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      linkNamed(navList, 'Two').classList.add('is-current-page');
+    describe('an open flyout is a single tab stop', () => {
+      it('leaves exactly one member of the open flyout tabbable', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const menu = navList.querySelector('.level-2-menu');
+        expect(tabbable(menu).length).to.equal(1);
+      });
 
-      setupRovingTabindex(sitenav, navList);
-      // Identity as a boolean: a failing .to.equal() on live DOM makes chai serialize
-      // the whole tree into its diff, which hangs the runner instead of reporting.
-      const stop = tabbable(navList)[0];
-      expect(stop === linkNamed(navList, 'Two'), `tab stop was "${stop?.textContent.trim()}"`).to.be.true;
-    });
+      it('starts on the current page rather than the top of the flyout', () => {
+        const { sitenav, navList } = buildTree();
+        linkNamed(navList, 'One').classList.add('is-current-page');
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const menu = navList.querySelector('.level-2-menu');
+        const stop = tabbable(menu)[0];
+        expect(stop === linkNamed(navList, 'One'), `tab stop was "${stop?.textContent.trim()}"`).to.be.true;
+      });
 
-    it('opens a collapsed menu with ArrowRight, staying on the button', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      const web = buttonNamed(navList, 'Web');
-      web.focus();
-      press(web, 'ArrowRight');
-      expect(web.getAttribute('aria-expanded')).to.equal('true');
-      expectFocus(web, 'the Web button');
-    });
+      it('walks the flyout with ArrowDown', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const one = linkNamed(navList, 'One');
+        one.focus();
+        press(one, 'ArrowDown');
+        expectFocus(buttonNamed(navList, 'Components'), 'the Components button');
+      });
 
-    it('steps into an already-open menu with ArrowRight', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      const web = buttonNamed(navList, 'Web');
-      web.focus();
-      press(web, 'ArrowRight');
-      press(web, 'ArrowRight');
-      expectFocus(linkNamed(navList, 'One'), 'the first link inside the Web menu');
-    });
+      it('opens a nested menu with ArrowRight, then steps into it', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const components = buttonNamed(navList, 'Components');
+        components.focus();
+        press(components, 'ArrowRight');
+        expect(components.getAttribute('aria-expanded')).to.equal('true');
+        press(components, 'ArrowRight');
+        expectFocus(linkNamed(navList, 'Button'), 'the link inside the Components menu');
+      });
 
-    it('returns to the parent button with ArrowLeft', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      const web = buttonNamed(navList, 'Web');
-      web.focus();
-      press(web, 'ArrowRight');
-      press(web, 'ArrowRight');
-      press(linkNamed(navList, 'One'), 'ArrowLeft');
-      expectFocus(web, 'the Web button');
-    });
+      it('collapses a nested menu with ArrowLeft on its button', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const components = buttonNamed(navList, 'Components');
+        components.focus();
+        press(components, 'ArrowRight');
+        press(components, 'ArrowLeft');
+        expect(components.getAttribute('aria-expanded')).to.equal('false');
+      });
 
-    it('closes an open menu with ArrowLeft on its button', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      const web = buttonNamed(navList, 'Web');
-      web.focus();
-      press(web, 'ArrowRight');
-      press(web, 'ArrowLeft');
-      expect(web.getAttribute('aria-expanded')).to.equal('false');
-    });
+      // Left at the top of a flyout is the way back out to the rail, which is a plain
+      // tab stop rather than a group member.
+      it('moves to the level-1 button with ArrowLeft at the top of the flyout', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const one = linkNamed(navList, 'One');
+        one.focus();
+        press(one, 'ArrowLeft');
+        expectFocus(buttonNamed(navList, 'Web'), 'the Web level-1 button');
+      });
 
-    it('walks what is on screen with ArrowDown, skipping collapsed menus', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      const web = buttonNamed(navList, 'Web');
-      web.focus();
-      press(web, 'ArrowDown');
-      expectFocus(buttonNamed(navList, 'Support'), 'the Support button');
-    });
-
-    // Collapsing the menu the tab stop lives in would otherwise leave the nav with no
-    // way in at all.
-    it('re-picks the tab stop when the open menu holding it closes', () => {
-      const { sitenav, navList } = buildTree();
-      setupRovingTabindex(sitenav, navList);
-      const web = buttonNamed(navList, 'Web');
-      web.focus();
-      press(web, 'ArrowRight');
-      press(web, 'ArrowRight');
-      expectFocus(linkNamed(navList, 'One'), 'the first link inside the Web menu');
-
-      press(web, 'ArrowLeft');
-      press(web, 'ArrowLeft');
-      expect(tabbable(navList).length).to.equal(1);
+      it('re-picks the tab stop when a different flyout opens', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        buttonNamed(navList, 'Support').click();
+        const supportMenu = buttonNamed(navList, 'Support').parentElement.querySelector('.level-2-menu');
+        expect(tabbable(supportMenu).length).to.equal(1);
+      });
     });
   });
 

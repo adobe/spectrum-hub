@@ -289,13 +289,17 @@ const parentToggleOf = (el) => el
   .closest('.level-2-menu, .level-3-menu, .level-4-menu')
   ?.parentElement.querySelector(':scope > button');
 
-// One tab stop for the whole tree, walked as a disclosure tree: Up/Down over what's on
-// screen, Right to open a menu then step in, Left to close or go up. The rail's expand
-// button stays its own stop — it controls the nav rather than belonging to it.
+// Level-1 buttons stay ordinary tab stops — there are only a handful and they are the
+// primary nav. The flyouts are the long part (up to ~90 links), so each becomes a single
+// tab stop walked with arrows: Up/Down over what's on screen, Right to open a nested menu
+// then step in, Left to close it or go back out to the level-1 button.
 // Scoped to the rail, not the list: below 900px the list is display:none until the
 // trigger opens it, so the group starts empty and has to re-sync on that click.
 export const setupRovingTabindex = (sitenav, navList) => rovingTabindex(sitenav, {
-  items: () => focusableIn(navList),
+  // Only what's inside the open flyout. focusableIn already drops the hidden ones, and
+  // level-1 buttons are siblings of .level-2-menu rather than descendants, so they are
+  // never members and keep their natural tabindex.
+  items: () => focusableIn(navList).filter((el) => el.closest('.level-2-menu')),
   // Landing on "you are here" beats landing on the top of the tree.
   initial: (list) => list.find((el) => el.classList.contains('is-current-page')) ?? list[0],
   keys: {
