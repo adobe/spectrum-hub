@@ -32,6 +32,8 @@ Set these on the Lambda (they are read from `process.env`):
   unset.
 - `ANON_CACHE_MAX_AGE` — TTL (seconds, default 300) for edge-cached anonymous HTML / query-index.
   Bounds how long a publish takes to show up when edge caching is on (see "Content caching").
+  Set to `0` to disable anonymous edge caching (`no-store`), so publishes show immediately — used on
+  the low-traffic, VPN-only preview.
 - Optional: `ORIGIN` (dev origin override), `ORIGIN_AUTHENTICATION`, `IMS_ENV`, `SESSION_MAX_AGE_MS`,
   `PUSH_INVALIDATION`.
 
@@ -174,7 +176,9 @@ requests (unique cookie) get their own, and their viewer-varying responses are
   a **short shared TTL** — `public, max-age=<ANON_CACHE_MAX_AGE>` (default 300s,
   env-overridable) — so a publish shows up within a few minutes **without push
   invalidation**. `isPrivateHtml` has already 404'd private pages, so the anon body
-  is the public, audience-stripped view.
+  is the public, audience-stripped view. Setting `ANON_CACHE_MAX_AGE=0` makes this
+  `no-store` instead: every anonymous request goes live to the Lambda, so publishes
+  are instant, at the cost of edge caching — the choice for the low-traffic preview.
 - **Authenticated HTML / the full query index** stay `private, no-store`, and
   **gate 404s** stay `no-store` (no negative caching).
 
