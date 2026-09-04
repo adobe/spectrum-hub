@@ -35,7 +35,6 @@
       content: '';
       position: absolute;
       inset: 0;
-      -webkit-backdrop-filter: blur(200px);
       backdrop-filter: blur(200px);
       mask-image: linear-gradient(to right bottom, rgb(0 0 0 / 80%) 40%, rgb(0 0 0 / 20%) 125%);
     }
