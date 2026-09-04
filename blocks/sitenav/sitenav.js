@@ -60,7 +60,9 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       if (labelText === 'Components') {
         // Normalized to match a URL segment (e.g. "Design only" -> "design-only") so nav
         // content can use natural spacing rather than being authored pre-hyphenated.
-        const prevLiLabel = li.previousElementSibling.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+        // A "Components" item authored first in its list has no sibling to read a
+        // prefix from; without the guard the whole nav dies on the null.
+        const prevLiLabel = li.previousElementSibling?.textContent.trim().toLowerCase().replace(/\s+/g, '-');
         if (INDEX_BASED_PARENT_NAMES.some((name) => name === prevLiLabel)) {
           label.setAttribute('index-based-nav-prefix', `/web/${prevLiLabel}`);
         }
@@ -118,6 +120,12 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
     if (depth === 1) {
       btn.id = `sitenav-level-1-tooltip-${toClassName(labelText)}`;
     }
+
+    // Name the sublist after the control that discloses it, so it isn't announced as a
+    // bare list. Set after the id above so it can reuse it. Goes on the <ul>, which has
+    // an implicit role of list — aria-labelledby on the role-less wrapper is ignored.
+    btn.id ||= `${menuId}-button`;
+    childList.setAttribute('aria-labelledby', btn.id);
   });
 
   return ul;

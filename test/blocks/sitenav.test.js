@@ -274,6 +274,56 @@ describe('sitenav block', () => {
     });
   });
 
+  describe('decorateLevel — sublists are named by the control that opens them', () => {
+    // Matches sp-sidenav, which labels each nested role="list" back to its item. Without
+    // it the flyout is an unnamed list. On the <ul>, not the wrapper: a role-less <div>
+    // ignores aria-labelledby.
+    function buildTwoDeep() {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Web</p>
+            <ul>
+              <li><p>Components</p>
+                <ul><li><a href="/web/button">Button</a></li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>`);
+      return decorateLevel(ul, 1);
+    }
+
+    it('labels the level-2 list with the level-1 button', () => {
+      const navList = buildTwoDeep();
+      const lvl2 = navList.querySelector('.level-2-list');
+      const btn = navList.querySelector('.level-1-button');
+      expect(lvl2.getAttribute('aria-labelledby')).to.equal(btn.id);
+      expect(btn.id).to.not.be.empty;
+    });
+
+    it('labels the level-3 list with the level-2 button', () => {
+      const navList = buildTwoDeep();
+      const lvl3 = navList.querySelector('.level-3-list');
+      const btn = navList.querySelector('.level-2-button');
+      expect(lvl3.getAttribute('aria-labelledby')).to.equal(btn.id);
+      expect(btn.id).to.not.be.empty;
+    });
+
+    it('points every label at an id that actually resolves', () => {
+      const navList = buildTwoDeep();
+      document.body.append(navList);
+      const labelled = [...navList.querySelectorAll('[aria-labelledby]')];
+      expect(labelled.length).to.be.greaterThan(0);
+      expect(labelled.every((el) => document.getElementById(el.getAttribute('aria-labelledby')))).to.be.true;
+    });
+
+    it('reuses the level-1 button id the tooltip already relies on', () => {
+      const navList = buildTwoDeep();
+      const btn = navList.querySelector('.level-1-button');
+      expect(btn.id).to.equal('sitenav-level-1-tooltip-web');
+      expect(navList.querySelector('.level-2-list').getAttribute('aria-labelledby')).to.equal(btn.id);
+    });
+  });
+
   describe('decorateLevel — level-1 tooltip id', () => {
     it('gives a level-1 button a stable id for a tooltip to target via `for`', () => {
       const ul = buildNavList(`
@@ -287,7 +337,7 @@ describe('sitenav block', () => {
       expect(btn.id).to.equal('sitenav-level-1-tooltip-foundations');
     });
 
-    it('does not id a nested (depth 2+) button the same way', () => {
+    it('does not give a nested (depth 2+) button the level-1 tooltip id', () => {
       const ul = buildNavList(`
         <ul>
           <li>
@@ -299,7 +349,10 @@ describe('sitenav block', () => {
       decorateLevel(ul, 1);
       const level2Btn = ul.querySelector('button.level-2-button');
 
-      expect(level2Btn.id).to.equal('');
+      expect(level2Btn.id).to.not.match(/^sitenav-level-1-tooltip-/);
+      // It still needs *an* id: its sublist is labelled by it (see the sublist naming
+      // tests above), so only the tooltip scheme is level-1's alone.
+      expect(level2Btn.id).to.equal('overview-button');
     });
   });
 
@@ -1465,7 +1518,10 @@ describe('sitenav block', () => {
         expect(saved()).to.deep.equal({ id: 'web', top: 140 });
       });
 
-      it('writes once for a burst of scroll events', async () => {
+      // Asserts the trailing edge (nothing written while the burst is still going)
+      // rather than a call count: assigning scrollTop also queues a *real* scroll event,
+      // which lands at an unpredictable point and makes any count racy.
+      it('holds off writing until a burst of scroll events settles', async () => {
         const clock = sandbox.useFakeTimers();
         // Spy the instance, not Storage.prototype — localStorage shares that prototype.
         const spy = sandbox.spy(sessionStorage, 'setItem');
@@ -1475,8 +1531,9 @@ describe('sitenav block', () => {
           menu.scrollTop = top;
           menu.dispatchEvent(new Event('scroll'));
         });
+
+        expect(spy.getCalls().filter((c) => c.args[0] === 'sitenav-scroll')).to.be.empty;
         await clock.tickAsync(300);
-        expect(spy.getCalls().filter((c) => c.args[0] === 'sitenav-scroll').length).to.equal(1);
         expect(saved().top).to.equal(60);
       });
 
