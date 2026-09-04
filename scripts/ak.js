@@ -415,6 +415,19 @@ function groupChildren(section) {
   return groups;
 }
 
+// Audience gating (decorateAudience / worker) can strip every block out of a
+// section, leaving a `main > div` with only whitespace. decorateSections would
+// still give it the `.section` class and its divider, stacking blank dividers
+// on the page - so drop these empties first.
+function removeEmptySections(parent, isDoc) {
+  const selector = isDoc ? 'main > div' : ':scope > div';
+  for (const section of parent.querySelectorAll(selector)) {
+    if (!section.children.length && !section.textContent.trim()) {
+      section.remove();
+    }
+  }
+}
+
 function decorateSections(parent, isDoc) {
   const selector = isDoc ? 'main > div' : ':scope > div';
   return [...parent.querySelectorAll(selector)].map((section) => {
@@ -490,6 +503,7 @@ export async function loadArea({ area } = { area: document }) {
   // this; it matters where the worker is bypassed (e.g. the aem.page staging
   // origin).
   await decorateAudience(area);
+  removeEmptySections(area, isDoc);
   decoratePictures(area);
   const sections = decorateSections(area, isDoc);
   if (isDoc && isSession) { loadSession(); }
