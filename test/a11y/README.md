@@ -133,14 +133,13 @@ setConfig({ components: [], hostnames: [], linkBlocks: [] });
 
 `deps/se/se.js` registers shared form/UI web components (`se-button`, `se-input`, `se-textarea`, `se-checkbox`, `se-switch`, `se-select`, `se-segmentedcontrol`, `se-dialog`) used across several blocks. Rather than rely on whichever block happens to exercise them — which misses states like `disabled`/`error`/`checked` and, in a couple of cases, missed the element entirely — each gets its own fixture and spec, parallel to the block convention:
 
-- `test/a11y/fixtures/custom-components/<name>.html` imports `/deps/se/se.js` directly (a bare side-effect import registers every element) and lays out the element's meaningful states side-by-side inside `<div class="test-container">`, so one axe pass and one aria-snapshot cover all of them.
+- `test/a11y/fixtures/custom-components/<name>.html` imports `/deps/se/se.js` directly (a bare side-effect import registers every element) and lays out the element's meaningful states side-by-side inside `<main class="test-container">`, so one axe pass and one aria-snapshot cover all of them. It has to be a `<main>`: `styles.css` makes `body` a named-area grid, and only `main` is assigned a grid area — a plain `<div>` auto-places into the sitenav track, which collapses to `0` below 900px and gives the component no width. Keep direct `<div>` children out of it too, since `main > div` is `display: none`.
 - `test/a11y/custom-components/<name>.spec.js` is identical in shape to a block spec, with `ariaRoot: '.test-container'` (there's no single `.${name}` class to default to, since a fixture holds multiple instances).
 - `test/a11y/coverage.spec.js` parses `customElements.define(...)` calls out of `deps/se/se.js` and fails if a registered element has no matching spec — a new element can't ship without a11y coverage.
 
 Direct testing of these components surfaced real, pre-existing bugs that incidental block-level coverage had missed — left failing and documented rather than fixed as part of adding the tests:
 
 - `se-checkbox`: native checkbox renders at 12–13px, below the WCAG 2.2 AA 2.5.8 Target Size minimum (24px).
-- `se-textarea`: the `<textarea>` never gets an `id`, so its `<label for="...">` points at nothing — the field has no accessible label at all.
 - `se-dialog`/`se-button`: insufficient button contrast (down to ~2.25:1, need 4.5:1) in both light and dark mode — not dark-mode-specific as first suspected.
 
 ## CI policy

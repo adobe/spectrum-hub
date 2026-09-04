@@ -28,9 +28,10 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
     - text: Notes
-    - textbox "Add notes"
+    - textbox "Notes":
+      - /placeholder: Add notes
     - text: Bio
-    - textbox
+    - textbox "Bio"
     - paragraph: This field is required
   `);
 });
