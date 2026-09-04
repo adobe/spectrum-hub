@@ -11,6 +11,7 @@ const {
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
   syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
   findCurrentPageInNav, removeEmptyMenus, setupRovingTabindex,
+  restoreMenuScroll, setupScrollMemory,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -1340,6 +1341,135 @@ describe('sitenav block', () => {
         buttonNamed(navList, 'Support').click();
         const supportMenu = buttonNamed(navList, 'Support').parentElement.querySelector('.level-2-menu');
         expect(tabbable(supportMenu).length).to.equal(1);
+      });
+    });
+  });
+
+  describe('level-2 scroll memory', () => {
+    // A flyout tall enough to scroll: 20 links at 20px in a 100px window.
+    function buildScrollingMenu({ currentIndex = 15 } = {}) {
+      const sitenav = document.createElement('div');
+      const menu = document.createElement('div');
+      menu.classList.add('level-2-menu');
+      menu.id = 'web';
+      menu.style.cssText = 'overflow-y:auto;height:100px;display:block';
+      const links = [...Array(20)].map((_, i) => {
+        const a = document.createElement('a');
+        a.href = `/web/item-${i}`;
+        a.textContent = `Item ${i}`;
+        a.style.cssText = 'display:block;height:20px';
+        return a;
+      });
+      menu.append(...links);
+      sitenav.append(menu);
+      document.body.append(sitenav);
+      links[currentIndex].classList.add('is-current-page');
+      return { sitenav, menu, links, currentLink: links[currentIndex] };
+    }
+
+    const save = (id, top) => sessionStorage.setItem('sitenav-scroll', JSON.stringify({ id, top }));
+    const saved = () => JSON.parse(sessionStorage.getItem('sitenav-scroll') ?? 'null');
+
+    describe('restoreMenuScroll', () => {
+      it('declines when nothing has been saved', () => {
+        const { currentLink } = buildScrollingMenu();
+        expect(restoreMenuScroll(currentLink)).to.be.false;
+      });
+
+      it('declines when the saved position belongs to a different flyout', () => {
+        const { menu, currentLink } = buildScrollingMenu();
+        save('foundations', 220);
+        expect(restoreMenuScroll(currentLink)).to.be.false;
+        expect(menu.scrollTop).to.equal(0);
+      });
+
+      it('restores the saved offset when the current page is still visible there', () => {
+        const { menu, currentLink } = buildScrollingMenu({ currentIndex: 15 });
+        // item 15 spans 300-320; a 100px window at 260 shows 260-360
+        save('web', 260);
+        expect(restoreMenuScroll(currentLink)).to.be.true;
+        expect(menu.scrollTop).to.equal(260);
+      });
+
+      // Otherwise jumping to a distant page would restore an offset that hides it —
+      // strictly worse than starting from the top.
+      it('declines when the saved offset would scroll the current page out of view', () => {
+        const { currentLink } = buildScrollingMenu({ currentIndex: 15 });
+        save('web', 0);
+        expect(restoreMenuScroll(currentLink)).to.be.false;
+      });
+
+      it('declines when there is no current link at all', () => {
+        buildScrollingMenu();
+        save('web', 100);
+        expect(restoreMenuScroll(null)).to.be.false;
+      });
+
+      it('survives sessionStorage throwing, as it does in private mode', () => {
+        const { currentLink } = buildScrollingMenu();
+        sandbox.stub(sessionStorage, 'getItem').throws(new Error('denied'));
+        expect(() => restoreMenuScroll(currentLink)).to.not.throw();
+      });
+    });
+
+    describe('setupScrollMemory', () => {
+      it('records the flyout position under its own id', async () => {
+        const clock = sandbox.useFakeTimers();
+        const { sitenav, menu } = buildScrollingMenu();
+        setupScrollMemory(sitenav);
+        menu.scrollTop = 140;
+        menu.dispatchEvent(new Event('scroll'));
+        await clock.tickAsync(300);
+        expect(saved()).to.deep.equal({ id: 'web', top: 140 });
+      });
+
+      it('writes once for a burst of scroll events', async () => {
+        const clock = sandbox.useFakeTimers();
+        // Spy the instance, not Storage.prototype — localStorage shares that prototype.
+        const spy = sandbox.spy(sessionStorage, 'setItem');
+        const { sitenav, menu } = buildScrollingMenu();
+        setupScrollMemory(sitenav);
+        [20, 40, 60].forEach((top) => {
+          menu.scrollTop = top;
+          menu.dispatchEvent(new Event('scroll'));
+        });
+        await clock.tickAsync(300);
+        expect(spy.getCalls().filter((c) => c.args[0] === 'sitenav-scroll').length).to.equal(1);
+        expect(saved().top).to.equal(60);
+      });
+
+      it('ignores scrolling that is not a level-2 flyout', async () => {
+        const clock = sandbox.useFakeTimers();
+        const { sitenav } = buildScrollingMenu();
+        const other = document.createElement('div');
+        sitenav.append(other);
+        setupScrollMemory(sitenav);
+        other.dispatchEvent(new Event('scroll'));
+        await clock.tickAsync(300);
+        expect(saved()).to.be.null;
+      });
+
+      // Scrolling then clicking a link inside the debounce window must not lose the move.
+      it('flushes a pending position when the page goes away', () => {
+        sandbox.useFakeTimers();
+        const { sitenav, menu } = buildScrollingMenu();
+        setupScrollMemory(sitenav);
+        menu.scrollTop = 90;
+        menu.dispatchEvent(new Event('scroll'));
+        expect(saved()).to.be.null;
+        window.dispatchEvent(new Event('pagehide'));
+        expect(saved()).to.deep.equal({ id: 'web', top: 90 });
+      });
+
+      it('survives sessionStorage throwing on write', async () => {
+        const clock = sandbox.useFakeTimers();
+        const { sitenav, menu } = buildScrollingMenu();
+        sandbox.stub(sessionStorage, 'setItem').throws(new Error('denied'));
+        setupScrollMemory(sitenav);
+        menu.dispatchEvent(new Event('scroll'));
+        await clock.tickAsync(300);
+        // reaching here without an unhandled throw is the assertion
+        expect(true).to.be.true;
       });
     });
   });
