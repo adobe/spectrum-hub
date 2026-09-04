@@ -12,6 +12,10 @@
     inline-size: 100%;
     position: relative;
     margin-block-start: var(--s2-spacing-600);
+
+    /* Read by syncHeaderAccessibility(); flipped to 1 in the container query below, so
+       CSS stays the single source of truth for where the sort headers become usable. */
+    --status-table-headers-visible: 0;
   }
 
   /*
@@ -189,6 +193,9 @@
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
+
+      /* the thead is back in view below, so the sort headers become operable */
+      --status-table-headers-visible: 1;
     }
 
     thead {

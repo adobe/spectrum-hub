@@ -443,8 +443,9 @@ const buildExportButton = async (index) => {
  * Sorting for the table, shared by two affordances that drive a single sort state:
  *  - Clickable column headers — the mechanism on wide screens. Follows the WAI-ARIA APG
  *    "Sortable Table" pattern
- *  - A "Sort by" toolbar control (a column `se-select` + a direction button) — the only
- *    affordance below 900px, where the stacked layout clips the `<thead>` out of view.
+ *  - A "Sort by" toolbar control (a column `se-select` + a direction button) — intended
+ *    as the affordance for the stacked layout, currently CSS-disabled behind a TODO, so
+ *    that layout has no sort affordance at all today.
  */
 const buildSorting = (table, columns, announce) => {
   const COMPONENT = 'component';
@@ -501,8 +502,8 @@ const buildSorting = (table, columns, announce) => {
     button.addEventListener('click', () => {
       sortBy(id, activeId === id && direction === 'ascending' ? 'descending' : 'ascending');
     });
-    // Named independently of the button's content, so hiding the button below
-    // 900px (see syncHeaderAccessibility) doesn't blank out the column's name.
+    // Named independently of the button's content, so hiding the button in the stacked
+    // layout (see syncHeaderAccessibility) doesn't blank out the column's name.
     th.setAttribute('aria-label', text.textContent);
     th.replaceChildren(button);
     headers.set(id, th);
@@ -513,20 +514,25 @@ const buildSorting = (table, columns, announce) => {
     if (sortable.some((c) => c.id === id)) { wireHeader(th, id); }
   }
 
-  // Below 900px the thead is visually clipped to 1px; tabindex=-1 and
-  // aria-hidden to remove it from the accessibility tree. (WCAG 2.4.7).
-  const desktopMql = window.matchMedia('(width >= 900px)');
+  // While the stacked layout clips the thead out of view, the sort buttons are
+  // unreachable by pointer too — so take them out of the tab order and the a11y tree
+  // rather than expose a control nobody can operate (WCAG 2.1.1, 4.1.2).
+  const headersVisible = () => getComputedStyle(table)
+    .getPropertyValue('--status-table-headers-visible').trim() === '1';
+
   const syncHeaderAccessibility = () => {
+    const visible = headersVisible();
     for (const [, th] of headers) {
       const button = th.querySelector('.status-table-sort-header');
       if (button) {
-        button.tabIndex = desktopMql.matches ? 0 : -1;
-        button.setAttribute('aria-hidden', String(!desktopMql.matches));
+        button.tabIndex = visible ? 0 : -1;
+        button.setAttribute('aria-hidden', String(!visible));
       }
     }
   };
   syncHeaderAccessibility();
-  desktopMql.addEventListener('change', syncHeaderAccessibility);
+  // A container query can't be observed with matchMedia, so watch the element itself.
+  new ResizeObserver(syncHeaderAccessibility).observe(table);
 
   // The small-screen "Sort by" control: a column select plus a direction toggle.
   const control = document.createElement('div');

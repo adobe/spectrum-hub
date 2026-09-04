@@ -666,73 +666,84 @@ describe('status-table block', () => {
     });
   });
 
-  function stubMatchMedia(activeSandbox, matches = true) {
-    const listeners = [];
-    const mql = {
-      matches,
-      addEventListener: (_event, cb) => listeners.push(cb),
-      dispatch: (nextMatches) => {
-        mql.matches = nextMatches;
-        listeners.forEach((cb) => cb({ matches: nextMatches }));
-      },
-    };
-    activeSandbox.stub(window, 'matchMedia').returns(mql);
-    return mql;
-  }
+  // The block reads --status-table-headers-visible, a flag the CSS container query sets
+  // when the thead comes back into view. Block CSS isn't loaded here, so drive it directly
+  // — resizing alongside it, since the flag can only ever flip because the container's
+  // width crossed the breakpoint, and that resize is what the ResizeObserver reacts to.
+  const setHeadersVisible = (el, visible) => {
+    el.style.setProperty('--status-table-headers-visible', visible ? '1' : '0');
+    el.style.inlineSize = visible ? '800px' : '375px';
+  };
 
-  describe('toolbar — sort header accessibility at narrow widths', () => {
-    it('keeps sort-header buttons out of the tab order below 900px', async () => {
-      stubMatchMedia(sandbox, false);
-      stubFetchOk();
+  // A ResizeObserver callback lands after layout; two frames is enough for it to settle.
+  const settle = () => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+
+  describe('toolbar — sort header accessibility follows the thead', () => {
+    // These need a rendered element: getComputedStyle and ResizeObserver both no-op on a
+    // detached node, which is what makeEl() returns.
+    const mountEl = (visible) => {
       const el = makeEl();
+      setHeadersVisible(el, visible);
+      document.body.append(el);
+      return el;
+    };
+
+    it('keeps sort-header buttons out of the tab order while the thead is clipped', async () => {
+      stubFetchOk();
+      const el = mountEl(false);
       await init(el);
+      await settle();
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.length).to.be.greaterThan(0);
       expect(buttons.every((b) => b.tabIndex === -1)).to.be.true;
     });
 
-    it('hides sort-header buttons from screen readers below 900px', async () => {
-      stubMatchMedia(sandbox, false);
+    it('hides sort-header buttons from screen readers while the thead is clipped', async () => {
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(false);
       await init(el);
+      await settle();
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'true')).to.be.true;
     });
 
-    it('keeps sort-header buttons focusable and exposed at/above 900px', async () => {
-      stubMatchMedia(sandbox, true);
+    it('exposes sort-header buttons once the thead is back on screen', async () => {
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(true);
       await init(el);
+      await settle();
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.tabIndex === 0)).to.be.true;
       expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'false')).to.be.true;
     });
 
-    it('updates focusability and visibility live when the viewport crosses the breakpoint', async () => {
-      const mql = stubMatchMedia(sandbox, true);
+    it('updates focusability and visibility live when the breakpoint is crossed', async () => {
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(true);
       await init(el);
+      await settle();
       const button = el.querySelector('.status-table-sort-header');
       expect(button.tabIndex).to.equal(0);
       expect(button.getAttribute('aria-hidden')).to.equal('false');
 
-      mql.dispatch(false);
+      setHeadersVisible(el, false);
+      await settle();
       expect(button.tabIndex).to.equal(-1);
       expect(button.getAttribute('aria-hidden')).to.equal('true');
 
-      mql.dispatch(true);
+      setHeadersVisible(el, true);
+      await settle();
       expect(button.tabIndex).to.equal(0);
       expect(button.getAttribute('aria-hidden')).to.equal('false');
     });
 
     it('keeps the column header\'s accessible name even when its button is hidden', async () => {
-      stubMatchMedia(sandbox, false);
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(false);
       await init(el);
+      await settle();
       const figmaHeader = el.querySelector('thead th[data-col="figma"]');
       expect(figmaHeader.getAttribute('aria-label')).to.equal('Figma');
     });
