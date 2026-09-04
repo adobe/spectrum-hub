@@ -37,9 +37,8 @@
   tbody tr {
     display: grid;
 
-    /* fit-content keeps short labels narrow; long ones cap out rather than
-       crowding the value column */
-    grid-template-columns: 50% calc(50% - var(--s2-spacing-300)); /* accommodates the gap so the second column doesn't overflow */
+    /* even halves; the second track subtracts the gap so it doesn't overflow the row */
+    grid-template-columns: 50% calc(50% - var(--s2-spacing-300));
     column-gap: var(--s2-spacing-300);
     border: var(--status-table-border-width) solid var(--s2-gray-300);
 
