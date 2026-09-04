@@ -31,13 +31,13 @@ export const STATUSES = {
   available: {
     id: 'available',
     label: 'Available',
-    color: '--s2-green-900',
+    color: '--s2-green-1000',
     definition: 'Ready for use. Fidelity may vary.',
   },
   experimental: {
     id: 'experimental',
     label: 'Experimental',
-    color: '--s2-blue-900',
+    color: '--s2-blue-1000',
     definition: 'Available for exploration and testing, but not recommended for production use.',
   },
   'not-available': {

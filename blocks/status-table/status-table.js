@@ -88,6 +88,28 @@ const withRole = (node, role) => {
   return node;
 };
 
+/**
+ * The column-header text repeated inside a body cell. Only the narrow stacked layout
+ * shows it — there the `thead` is clipped out of view, so without this the statuses
+ * arrive with no indication of which implementation they belong to. `aria-hidden`
+ * because the real `<th scope="col">` already names the cell for assistive tech; a
+ * second copy would announce every header twice.
+ */
+const buildCellLabel = (text) => {
+  const label = document.createElement('span');
+  label.className = 'status-table-cell-label';
+  label.setAttribute('aria-hidden', 'true');
+  label.textContent = text;
+  return label;
+};
+
+/** A body cell's value, wrapped so it stays one grid item beside its label. */
+const buildCellValue = () => {
+  const value = document.createElement('span');
+  value.className = 'status-table-cell-value';
+  return value;
+};
+
 /** A colored status dot + its unified label; `data-status` is the CSS/color hook. */
 const buildBadge = (cell) => {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
@@ -116,6 +138,8 @@ const buildStatusCell = (cell, context = {}) => {
     columnId, columnLabel, componentName, componentLabel, web, publishedPaths,
   } = context;
   const td = withRole(document.createElement('td'), 'cell');
+  const value = buildCellValue();
+  td.append(buildCellLabel(columnLabel), value);
 
   const badge = buildBadge(cell);
   const href = componentPageHref(columnId, cell?.status, componentName, web, cell, publishedPaths);
@@ -130,16 +154,16 @@ const buildStatusCell = (cell, context = {}) => {
     // In Context).
     link.setAttribute('aria-label', `${componentLabel}, ${status.label} in ${columnLabel}`);
     link.append(badge);
-    td.append(link);
+    value.append(link);
   } else {
-    td.append(badge);
+    value.append(badge);
   }
 
   if (cell?.secondary) {
     const secondary = document.createElement('span');
     secondary.className = 'status-table-secondary';
     secondary.textContent = cell.secondary;
-    td.append(secondary);
+    value.append(secondary);
   }
   return td;
 };
@@ -167,6 +191,8 @@ const buildTable = (index, publishedPaths) => {
   thead.classList.add('header-row');
   thead.append(headRow);
 
+  const componentLabel = componentHead.textContent;
+
   const tbody = withRole(document.createElement('tbody'), 'rowgroup');
   for (const component of index.components ?? []) {
     const row = withRole(document.createElement('tr'), 'row');
@@ -174,7 +200,9 @@ const buildTable = (index, publishedPaths) => {
 
     const nameCell = withRole(document.createElement('th'), 'rowheader');
     nameCell.scope = 'row';
-    nameCell.textContent = component.label ?? component.name;
+    const nameValue = buildCellValue();
+    nameValue.textContent = component.label ?? component.name;
+    nameCell.append(buildCellLabel(componentLabel), nameValue);
     row.append(nameCell);
 
     const web = component.platforms?.web ?? {};
@@ -292,7 +320,7 @@ const buildSearch = (table, announce) => {
   const filter = (query) => {
     let visible = 0;
     for (const row of table.querySelectorAll('tbody tr')) {
-      const name = row.querySelector('th')?.textContent.toLowerCase() ?? '';
+      const name = row.querySelector('th .status-table-cell-value')?.textContent.toLowerCase() ?? '';
       row.hidden = query !== '' && !name.includes(query);
       if (!row.hidden) { visible += 1; }
     }
@@ -415,9 +443,27 @@ const buildExportButton = async (index) => {
  * Sorting for the table, shared by two affordances that drive a single sort state:
  *  - Clickable column headers — the mechanism on wide screens. Follows the WAI-ARIA APG
  *    "Sortable Table" pattern
- *  - A "Sort by" toolbar control (a column `se-select` + a direction button) — the only
- *    affordance below 900px, where the stacked layout clips the `<thead>` out of view.
+ *  - A "Sort by" toolbar control (a column `se-select` + a direction button) — intended
+ *    as the affordance for the stacked layout, currently CSS-disabled behind a TODO, so
+ *    that layout has no sort affordance at all today.
  */
+/**
+ * Sort headers are only operable while the thead is on screen — below the container
+ * breakpoint the stacked layout clips it away, so the buttons come out of the tab order
+ * and the a11y tree rather than expose controls nobody can reach (WCAG 2.1.1, 4.1.2).
+ * The CSS container query owns that breakpoint and publishes it as
+ * `--status-table-headers-visible`, so the two can't drift apart. Reads empty (and so
+ * hides) on a detached table — call this once the table is in the document.
+ */
+const syncHeaderAccessibility = (table) => {
+  const visible = getComputedStyle(table)
+    .getPropertyValue('--status-table-headers-visible').trim() === '1';
+  for (const button of table.querySelectorAll('.status-table-sort-header')) {
+    button.tabIndex = visible ? 0 : -1;
+    button.setAttribute('aria-hidden', String(!visible));
+  }
+};
+
 const buildSorting = (table, columns, announce) => {
   const COMPONENT = 'component';
   const sortable = [{ id: COMPONENT, label: 'Component' }, ...columns];
@@ -429,7 +475,7 @@ const buildSorting = (table, columns, announce) => {
   let dirButton;
 
   const sortKey = (row, id) => (id === COMPONENT
-    ? row.querySelector('th[scope="row"]')?.textContent
+    ? row.querySelector('th[scope="row"] .status-table-cell-value')?.textContent
     : row.querySelector(`td[data-col="${id}"] .status-table-label`)?.textContent) ?? '';
 
   // Reflect the current sort onto both affordances (headers' aria-sort + the control).
@@ -473,8 +519,8 @@ const buildSorting = (table, columns, announce) => {
     button.addEventListener('click', () => {
       sortBy(id, activeId === id && direction === 'ascending' ? 'descending' : 'ascending');
     });
-    // Named independently of the button's content, so hiding the button below
-    // 900px (see syncHeaderAccessibility) doesn't blank out the column's name.
+    // Named independently of the button's content, so hiding the button in the stacked
+    // layout (see syncHeaderAccessibility) doesn't blank out the column's name.
     th.setAttribute('aria-label', text.textContent);
     th.replaceChildren(button);
     headers.set(id, th);
@@ -485,20 +531,9 @@ const buildSorting = (table, columns, announce) => {
     if (sortable.some((c) => c.id === id)) { wireHeader(th, id); }
   }
 
-  // Below 900px the thead is visually clipped to 1px; tabindex=-1 and
-  // aria-hidden to remove it from the accessibility tree. (WCAG 2.4.7).
-  const desktopMql = window.matchMedia('(width >= 900px)');
-  const syncHeaderAccessibility = () => {
-    for (const [, th] of headers) {
-      const button = th.querySelector('.status-table-sort-header');
-      if (button) {
-        button.tabIndex = desktopMql.matches ? 0 : -1;
-        button.setAttribute('aria-hidden', String(!desktopMql.matches));
-      }
-    }
-  };
-  syncHeaderAccessibility();
-  desktopMql.addEventListener('change', syncHeaderAccessibility);
+  // A container query can't be observed with matchMedia, so watch the element itself.
+  // init() does the first sync, once the table is attached and the flag is readable.
+  new ResizeObserver(() => syncHeaderAccessibility(table)).observe(table);
 
   // The small-screen "Sort by" control: a column select plus a direction toggle.
   const control = document.createElement('div');
@@ -604,6 +639,10 @@ export default async function init(el) {
     table,
     region,
   );
+
+  // Only now is the table in the document, so the container query's flag actually
+  // resolves; the ResizeObserver in buildSorting keeps it current from here.
+  syncHeaderAccessibility(table);
 
   // Scrollable-region pattern (WAI-ARIA APG + WCAG 2.1.1 Keyboard, 4.1.2 Name/Role/Value):
   // the table scrolls horizontally on wide viewports, so the block is exposed as a named
