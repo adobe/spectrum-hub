@@ -3,3 +3,4 @@ env.json
 env.stage.json
 debug.mjs
 deploy.env
+nets.json
