@@ -58,9 +58,15 @@
     }
 
     &.secondary {
-      --se-button-color: var(--s2-gray-900);
-      --se-button-background-color: var(--s2-gray-500);
-      --se-button-border-color: var(--s2-gray-500);
+      --se-button-color: var(--s2-gray-800);
+      --se-button-background-color: var(--s2-gray-100);
+      --se-button-border-color: var(--s2-gray-100);
+
+       &:hover, &:focus-visible {
+        --se-button-color: var(--s2-gray-900);
+        --se-button-background-color: var(--s2-gray-200);
+        --se-button-border-color: var(--s2-gray-200);
+      }
 
       &.outline {
         --se-button-background-color: transparent;

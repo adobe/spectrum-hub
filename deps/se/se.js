@@ -189,9 +189,10 @@ class SETextarea extends SEFormElement {
   render() {
     return html`
       <div class="se-inputfield se-inputarea ${this.labelPosition === 'side' ? 'side-label' : ''}">
-        ${this.label ? html`<label for="${this.name}">${this.label}</label>` : nothing}
+        ${this.label ? html`<label for="${this._idHash}">${this.label}</label>` : nothing}
         <textarea
           name=${this.name}
+          id=${this._idHash}
           .value="${this.value || ''}"
           rows=${this.rows || nothing}
           cols=${this.cols || nothing}
