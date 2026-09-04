@@ -474,6 +474,30 @@ describe('sitenav block', () => {
   });
 
   describe('decorateIndexBasedNav + decorateBadges', () => {
+    // A row with no title would otherwise render <a href="..."></a> — a link with no
+    // accessible name (WCAG 2.4.4 / 4.1.2). axe misses it: collapsed flyouts are
+    // visibility:hidden when the page is scanned.
+    it('skips index entries with no title rather than emitting a nameless link', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>SWC</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 2);
+      decorateIndexBasedNav(navList, [
+        { path: '/web/swc/components/button', title: 'Button' },
+        { path: '/web/swc/components/patterns/conversational-ai', title: '' },
+      ]);
+
+      const links = [...navList.querySelectorAll('.level-3-list a')];
+      expect(links.map((a) => a.getAttribute('href'))).to.deep.equal(['/web/swc/components/button']);
+      expect(links.every((a) => a.textContent.trim())).to.be.true;
+    });
+
     it('counts design-only pages from the query index, badges the label, and lists them', () => {
       const ul = buildNavList(`
         <ul>
@@ -727,6 +751,24 @@ describe('sitenav block', () => {
   });
 
   describe('findCurrentPageInNav', () => {
+    // The current page is otherwise conveyed by weight and a colour bar only, which
+    // WCAG 1.3.1 requires be programmatically determinable too.
+    it('marks the current page with aria-current="page", not just a class', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Web</p>
+            <ul>
+              <li><a href="${window.location.pathname}">Here</a></li>
+              <li><a href="/elsewhere">Elsewhere</a></li>
+            </ul>
+          </li>
+        </ul>`);
+      decorateLevel(ul, 1);
+      const current = findCurrentPageInNav(ul);
+      expect(current.getAttribute('aria-current')).to.equal('page');
+      expect(ul.querySelector('a[href="/elsewhere"]').hasAttribute('aria-current')).to.be.false;
+    });
+
     const originalUrl = window.location.pathname + window.location.search + window.location.hash;
 
     afterEach(() => {

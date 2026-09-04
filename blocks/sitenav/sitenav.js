@@ -171,7 +171,11 @@ export const removeEmptyMenus = (navList) => {
 
 export const decorateIndexBasedNav = (navList, index) => {
   // Sorting the whole index up front
-  const sortedIndex = [...index].sort((a, b) => a.title.localeCompare(b.title));
+  // A titleless row would become <a href="..."></a> — a link with no accessible name.
+  // The nav is index-driven, so bad data must not be able to produce one.
+  const sortedIndex = index
+    .filter((entry) => entry.title?.trim())
+    .sort((a, b) => a.title.localeCompare(b.title));
   sortedIndex.forEach((entry) => {
     const parentPrefix = INDEX_BASED_NAV.find((top) => entry.path.startsWith(`${top.prefix}/`));
     if (!parentPrefix) { return; }
@@ -253,6 +257,8 @@ export const findCurrentPageInNav = (navList) => {
     .find((a) => a.pathname === pathname);
   if (!currentLink) { return null; }
   currentLink.classList.add('is-current-page');
+  // Weight and the colour bar convey this visually; aria-current carries it to AT.
+  currentLink.setAttribute('aria-current', 'page');
 
   [1, 2, 3].forEach((level) => {
     const li = currentLink.closest(`.level-${level}`);
