@@ -39,8 +39,10 @@ viewport edges instead of the anchor. */
   background-color: light-dark(#f8f8f8, #262626); /* pulled from prototype */
 
   .results-heading {
-    font-weight: 700;
-    font-size: var(--s2-component-m-regular-font-size);
+    /* TODO: we need a 300 font weight still */
+    font-weight: 400;
+    color: var(--s2-gray-700);
+    font-size: var(--s2-component-s-regular-font-size);
     padding: var(--s2-spacing-75) var(--s2-spacing-100);
   }
 
@@ -81,7 +83,7 @@ viewport edges instead of the anchor. */
       align-items: center;
       text-decoration: none;
       padding: var(--s2-spacing-300);
-      border-radius: 10px;
+      border-radius: 12px;
       min-height: 72px;
       color: var(--se-body-color);
       box-sizing: border-box;
@@ -120,7 +122,7 @@ viewport edges instead of the anchor. */
 
     .hit-title {
       font-size: var(--s2-component-l-regular-font-size);
-      font-weight: 700;
+      font-weight: 500;
       line-height: 1;
       color: var(--s2-gray-800);
     }
