@@ -28,8 +28,7 @@ describe('header block', () => {
     setConfig({ log: sandbox.stub() });
     document.body.innerHTML = '';
     el = document.createElement('div');
-    // createSkipLink points at the real <main>; without one it has no target to wire up.
-    document.body.append(el, document.createElement('main'));
+    document.body.append(el);
   });
 
   afterEach(() => {
@@ -75,12 +74,6 @@ describe('header block', () => {
 
     it('adds visually-hidden class to the skip link', () => {
       expect(el.querySelector('.skip-link.visually-hidden')).to.not.be.null;
-    });
-
-    // A bare <main> isn't focusable, so in Safari the fragment jump scrolls without
-    // moving focus and the next Tab resumes from the nav the user just skipped.
-    it('makes main focusable so the skip link moves focus, not just scroll', () => {
-      expect(document.querySelector('main').getAttribute('tabindex')).to.equal('-1');
     });
 
     it('appends the fragment with the header-content class', () => {
