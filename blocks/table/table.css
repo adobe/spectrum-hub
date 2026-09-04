@@ -35,7 +35,7 @@
 
     /* fit-content keeps short labels narrow; long ones cap out rather than
        crowding the value column */
-    grid-template-columns: fit-content(40%) minmax(0, 1fr);
+    grid-template-columns: 50% calc(50% - var(--s2-spacing-300));
     column-gap: var(--s2-spacing-300);
     background-color: var(--s2-gray-25);
     border: var(--table-border-width) solid rgb(from var(--s2-gray-1000) r g b / 20%);
