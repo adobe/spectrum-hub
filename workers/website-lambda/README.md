@@ -210,3 +210,50 @@ klam-federated account doesn't permit those long-lived keys, and the short TTL
 makes them unnecessary. Hardening option: add `Vary: Cookie` to the anonymous
 response so cookie-blind browser/proxy caches can't serve it to a signed-in
 viewer (CloudFront already keys on the cookie).
+
+## Access allowlist (Adobe VPN only)
+
+The preview distribution is restricted to Adobe corporate VPN traffic with AWS
+WAF. This is a network gate in front of the app's own IMS/DA auth: a request from
+any other IP gets a `403` before it reaches the Lambda.
+
+[`set-vpn-allowlist.sh`](./set-vpn-allowlist.sh) manages the whole setup and is
+safe to re-run. It has three phases:
+
+- **Preview (default):** extract and print the CIDRs; change nothing.
+- **`APPLY=1`:** create or refresh the WAF **IP set** (`adobe-vpn-egress`, plus
+  `adobe-vpn-egress-v6` when the source has IPv6) from the CIDRs.
+- **`ENFORCE=1`:** create or update the **Web ACL** (`preview-vpn-only`, default
+  action **Block**, one rule that **allows** the IP set), associate it with the
+  preview distribution, and **disable IPv6** on that distribution
+  (`KEEP_IPV6=1` keeps IPv6 on).
+
+The CIDRs come from the IT-Network egress list,
+`git.corp.adobe.com/IT-Network/egress/blob/master/nets.json` — the source of
+truth for Adobe corporate egress. Download it (corp git needs your credentials,
+so the script does not fetch it) and pass the path. Extraction is
+schema-agnostic: every valid IPv4/IPv6 address or CIDR in the file is used, and
+bare IPs become `/32` or `/128`.
+
+```bash
+# preview only
+NETS_FILE=~/Downloads/nets.json ./set-vpn-allowlist.sh
+# first-time setup: write the IP set, create + associate the Web ACL, turn IPv6 off
+APPLY=1 ENFORCE=1 NETS_FILE=~/Downloads/nets.json ./set-vpn-allowlist.sh
+# later: refresh the CIDRs only (the Web ACL keeps pointing at the same IP set)
+APPLY=1 NETS_FILE=~/Downloads/nets.json ./set-vpn-allowlist.sh
+```
+
+Notes:
+
+- **WAF for CloudFront is global** — the script uses `--scope CLOUDFRONT --region
+  us-east-1`. Only the preview distribution is changed; prod is untouched.
+- **IPv6 is disabled** so every viewer presents an IPv4 address the allowlist can
+  match. The egress list is IPv4, so leaving IPv6 on would `403` anyone arriving
+  over it. Use `KEEP_IPV6=1` (with IPv6 ranges in the source) to keep it on.
+- **True client IP:** WAF matches the viewer's source IP — the VPN egress IP for
+  your users — so no forwarded-header setup is needed.
+- **Overrides:** `IPSET_NAME`, `WEB_ACL_NAME`, `DIST_DOMAIN`, `KEEP_IPV6`.
+- **To lift the restriction:** clear the distribution's `WebACLId` (and re-enable
+  IPv6 if you turned it off).
+- **Cost:** about $5/month per Web ACL, plus $1/rule and per-request charges.
