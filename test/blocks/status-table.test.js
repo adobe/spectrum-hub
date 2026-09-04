@@ -666,26 +666,14 @@ describe('status-table block', () => {
     });
   });
 
-  // The block reads --status-table-headers-visible, a flag the CSS container query sets
-  // when the thead comes back into view. Block CSS isn't loaded here, so drive it directly
-  // — resizing alongside it, since the flag can only ever flip because the container's
-  // width crossed the breakpoint, and that resize is what the ResizeObserver reacts to.
-  const setHeadersVisible = (el, visible) => {
-    el.style.setProperty('--status-table-headers-visible', visible ? '1' : '0');
-    el.style.inlineSize = visible ? '800px' : '375px';
-  };
-
-  // A ResizeObserver callback lands after layout; two frames is enough for it to settle.
-  const settle = () => new Promise((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(resolve));
-  });
-
   describe('toolbar — sort header accessibility follows the thead', () => {
-    // These need a rendered element: getComputedStyle and ResizeObserver both no-op on a
-    // detached node, which is what makeEl() returns.
-    const mountEl = (visible) => {
+    // The CSS container query normally sets --status-table-headers-visible when the thead
+    // comes back into view. Block CSS isn't loaded here, so set the flag directly; the
+    // element has to be in the document, because getComputedStyle reports nothing for a
+    // custom property on a detached node (the same reason init() syncs after attaching).
+    const mountEl = (headersVisible) => {
       const el = makeEl();
-      setHeadersVisible(el, visible);
+      el.style.setProperty('--status-table-headers-visible', headersVisible ? '1' : '0');
       document.body.append(el);
       return el;
     };
@@ -694,7 +682,6 @@ describe('status-table block', () => {
       stubFetchOk();
       const el = mountEl(false);
       await init(el);
-      await settle();
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.length).to.be.greaterThan(0);
       expect(buttons.every((b) => b.tabIndex === -1)).to.be.true;
@@ -704,46 +691,35 @@ describe('status-table block', () => {
       stubFetchOk();
       const el = mountEl(false);
       await init(el);
-      await settle();
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'true')).to.be.true;
     });
 
-    it('exposes sort-header buttons once the thead is back on screen', async () => {
+    it('exposes sort-header buttons once the thead is on screen', async () => {
       stubFetchOk();
       const el = mountEl(true);
       await init(el);
-      await settle();
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.tabIndex === 0)).to.be.true;
       expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'false')).to.be.true;
     });
 
-    it('updates focusability and visibility live when the breakpoint is crossed', async () => {
+    // Guards the bug this replaced: buildSorting used to sync while the table was still
+    // detached, so the flag read empty and wide screens shipped unreachable headers until
+    // the first ResizeObserver delivery. Live breakpoint crossings need a rendered page
+    // (a hidden one fires no ResizeObserver at all) and are covered in
+    // test/a11y/blocks/status-table.spec.js across 375/800/1200px.
+    it('has the headers already exposed by the time init resolves', async () => {
       stubFetchOk();
       const el = mountEl(true);
       await init(el);
-      await settle();
-      const button = el.querySelector('.status-table-sort-header');
-      expect(button.tabIndex).to.equal(0);
-      expect(button.getAttribute('aria-hidden')).to.equal('false');
-
-      setHeadersVisible(el, false);
-      await settle();
-      expect(button.tabIndex).to.equal(-1);
-      expect(button.getAttribute('aria-hidden')).to.equal('true');
-
-      setHeadersVisible(el, true);
-      await settle();
-      expect(button.tabIndex).to.equal(0);
-      expect(button.getAttribute('aria-hidden')).to.equal('false');
+      expect(el.querySelector('.status-table-sort-header').tabIndex).to.equal(0);
     });
 
     it('keeps the column header\'s accessible name even when its button is hidden', async () => {
       stubFetchOk();
       const el = mountEl(false);
       await init(el);
-      await settle();
       const figmaHeader = el.querySelector('thead th[data-col="figma"]');
       expect(figmaHeader.getAttribute('aria-label')).to.equal('Figma');
     });

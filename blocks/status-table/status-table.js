@@ -447,6 +447,23 @@ const buildExportButton = async (index) => {
  *    as the affordance for the stacked layout, currently CSS-disabled behind a TODO, so
  *    that layout has no sort affordance at all today.
  */
+/**
+ * Sort headers are only operable while the thead is on screen — below the container
+ * breakpoint the stacked layout clips it away, so the buttons come out of the tab order
+ * and the a11y tree rather than expose controls nobody can reach (WCAG 2.1.1, 4.1.2).
+ * The CSS container query owns that breakpoint and publishes it as
+ * `--status-table-headers-visible`, so the two can't drift apart. Reads empty (and so
+ * hides) on a detached table — call this once the table is in the document.
+ */
+const syncHeaderAccessibility = (table) => {
+  const visible = getComputedStyle(table)
+    .getPropertyValue('--status-table-headers-visible').trim() === '1';
+  for (const button of table.querySelectorAll('.status-table-sort-header')) {
+    button.tabIndex = visible ? 0 : -1;
+    button.setAttribute('aria-hidden', String(!visible));
+  }
+};
+
 const buildSorting = (table, columns, announce) => {
   const COMPONENT = 'component';
   const sortable = [{ id: COMPONENT, label: 'Component' }, ...columns];
@@ -514,25 +531,9 @@ const buildSorting = (table, columns, announce) => {
     if (sortable.some((c) => c.id === id)) { wireHeader(th, id); }
   }
 
-  // While the stacked layout clips the thead out of view, the sort buttons are
-  // unreachable by pointer too — so take them out of the tab order and the a11y tree
-  // rather than expose a control nobody can operate (WCAG 2.1.1, 4.1.2).
-  const headersVisible = () => getComputedStyle(table)
-    .getPropertyValue('--status-table-headers-visible').trim() === '1';
-
-  const syncHeaderAccessibility = () => {
-    const visible = headersVisible();
-    for (const [, th] of headers) {
-      const button = th.querySelector('.status-table-sort-header');
-      if (button) {
-        button.tabIndex = visible ? 0 : -1;
-        button.setAttribute('aria-hidden', String(!visible));
-      }
-    }
-  };
-  syncHeaderAccessibility();
   // A container query can't be observed with matchMedia, so watch the element itself.
-  new ResizeObserver(syncHeaderAccessibility).observe(table);
+  // init() does the first sync, once the table is attached and the flag is readable.
+  new ResizeObserver(() => syncHeaderAccessibility(table)).observe(table);
 
   // The small-screen "Sort by" control: a column select plus a direction toggle.
   const control = document.createElement('div');
@@ -638,6 +639,10 @@ export default async function init(el) {
     table,
     region,
   );
+
+  // Only now is the table in the document, so the container query's flag actually
+  // resolves; the ResizeObserver in buildSorting keeps it current from here.
+  syncHeaderAccessibility(table);
 
   // Scrollable-region pattern (WAI-ARIA APG + WCAG 2.1.1 Keyboard, 4.1.2 Name/Role/Value):
   // the table scrolls horizontally on wide viewports, so the block is exposed as a named
