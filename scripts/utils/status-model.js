@@ -37,7 +37,7 @@ export const STATUSES = {
   experimental: {
     id: 'experimental',
     label: 'Experimental',
-    color: '--s2-blue-900',
+    color: '--s2-blue-1000',
     definition: 'Available for exploration and testing, but not recommended for production use.',
   },
   'not-available': {
