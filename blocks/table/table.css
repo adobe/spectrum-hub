@@ -32,9 +32,6 @@
   tbody tr {
     /* Technically breaks a11y relationships, which is why the roles are set again in JS */
     display: grid;
-
-    /* fit-content keeps short labels narrow; long ones cap out rather than
-       crowding the value column */
     grid-template-columns: 50% calc(50% - var(--s2-spacing-300));
     column-gap: var(--s2-spacing-300);
     background-color: var(--s2-gray-25);
