@@ -3,7 +3,6 @@ import {
 } from '../../scripts/ak.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
-import createSkipLink from '../../scripts/utils/skip-link.js';
 import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
@@ -243,10 +242,7 @@ export const getSiteNav = () => {
   const nav = document.createElement('nav');
   nav.setAttribute('aria-label', DEF_SITE_NAME);
 
-  // The header's skip link is the page's first tab stop, but once focus has moved
-  // past it into the header actions there's no way forward past the rail — the whole
-  // nav sits between the header and <main>. This is the second chance.
-  sitenav.append(createSkipLink('Skip navigation'), nav);
+  sitenav.append(nav);
 
   return { sitenav, nav };
 };

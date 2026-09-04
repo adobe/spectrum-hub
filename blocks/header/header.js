@@ -1,11 +1,26 @@
 import { getConfig, getMetadata } from '../../scripts/ak.js';
 import { picture2svg } from '../../scripts/utils/svg.js';
 import { loadFragment } from '../fragment/fragment.js';
-import createSkipLink from '../../scripts/utils/skip-link.js';
 
 const { locale } = getConfig();
 
 const HEADER_PATH = '/fragments/nav/header';
+
+/**
+ * Builds a skip link and prepares its target.
+ * @param {string} text visible label
+ * @returns {HTMLAnchorElement}
+ */
+function createSkipLink() {
+  const skipLink = document.createElement('a');
+  skipLink.classList.add('skip-link', 'visually-hidden');
+  const main = document.querySelector('main');
+  const id = main?.id || 'main-content';
+  if (main) { main.id = id; }
+  skipLink.href = `#${id}`;
+  skipLink.innerText = 'Skip to main content';
+  return skipLink;
+}
 
 async function decorateBrandSection(section) {
   section.classList.add('brand-section');

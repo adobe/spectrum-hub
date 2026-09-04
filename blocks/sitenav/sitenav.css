@@ -60,26 +60,6 @@
     }
   }
 
-  /* Rests clipped (.visually-hidden) rather than parked above like the header's — the
-  rail is sticky below the header, so an off-canvas transform would surface over it.
-  Overrides the `a` rules below, which style nav links, not this bypass affordance. */
-  .skip-link {
-    inset-inline-start: var(--s2-spacing-200);
-    inset-block-start: var(--s2-spacing-200);
-
-    &:focus-visible {
-      color: var(--s2-gray-1000);
-      outline-offset: var(--s2-spacing-50);
-      border-radius: var(--s2-corner-radius-300);
-    }
-
-    /* Below 900px the rail collapses behind a trigger button, so there is no run of
-    nav links in the tab order to bypass. */
-    @media (width < 900px) {
-      display: none;
-    }
-  }
-
   p {
     margin: 0;
   }
