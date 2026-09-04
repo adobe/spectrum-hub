@@ -3,6 +3,7 @@ import {
 } from '../../scripts/ak.js';
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
+import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 
 const { log } = getConfig();
@@ -264,6 +265,69 @@ export const findCurrentPageInNav = (navList) => {
   return currentLink;
 };
 
+const SCROLL_KEY = 'sitenav-scroll';
+const SCROLL_SAVE_DELAY = 150;
+
+// sessionStorage throws outright in Safari's private mode, so neither side may assume it.
+const readScroll = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem(SCROLL_KEY) ?? 'null');
+  } catch {
+    return null;
+  }
+};
+
+const writeScroll = (id, top) => {
+  try {
+    sessionStorage.setItem(SCROLL_KEY, JSON.stringify({ id, top }));
+  } catch {
+    // No memory this session; the scrollIntoView fallback still shows the current page.
+  }
+};
+
+// Puts the flyout back where the reader left it instead of snapping to the top. Only for
+// the same flyout, and only if the current page is still on screen at that offset —
+// otherwise a jump to a distant section would restore a position that hides it, which is
+// worse than starting from the top. Returns whether it took, so the caller can fall back.
+export const restoreMenuScroll = (currentLink) => {
+  const menu = currentLink?.closest('.level-2-menu');
+  const saved = readScroll();
+  if (!menu || !saved || saved.id !== menu.id) { return false; }
+
+  menu.scrollTop = saved.top;
+  const menuBox = menu.getBoundingClientRect();
+  const linkBox = currentLink.getBoundingClientRect();
+  // Deliberately not undone on a miss: the caller's scrollIntoView corrects from here,
+  // and resetting to 0 would echo back through the scroll listener and clobber the save.
+  return linkBox.top >= menuBox.top && linkBox.bottom <= menuBox.bottom;
+};
+
+// scroll doesn't bubble, so this listens in the capture phase rather than per flyout.
+// Trailing-edge only: a scroll fires dozens of events and each save is a synchronous
+// serialise plus write.
+export const setupScrollMemory = (sitenav) => {
+  let timer;
+  let pending;
+
+  const flush = () => {
+    if (!pending) { return; }
+    clearTimeout(timer);
+    writeScroll(pending.id, pending.top);
+    pending = null;
+  };
+
+  sitenav.addEventListener('scroll', ({ target }) => {
+    if (!target?.classList?.contains('level-2-menu') || !target.id) { return; }
+    pending = { id: target.id, top: target.scrollTop };
+    clearTimeout(timer);
+    timer = setTimeout(flush, SCROLL_SAVE_DELAY);
+  }, true);
+
+  // Scrolling and clicking a link inside the debounce window would otherwise lose the
+  // last move. pagehide rather than beforeunload, which would cost the bfcache.
+  window.addEventListener('pagehide', flush);
+};
+
 export const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
 
 // Escape and clicking outside behave the same way
@@ -276,8 +340,51 @@ export const closeSitenav = (sitenav) => {
 };
 
 const getFocusableEls = (container) => [...container.querySelectorAll(
-  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-)].filter((el) => el.checkVisibility());
+  'a[href], button:not([disabled]), [tabindex]',
+)].filter((el) => isFocusable(el) && el.tabIndex > -1);
+
+const isToggle = (el) => el.tagName === 'BUTTON' && el.hasAttribute('aria-expanded');
+const isOpen = (btn) => btn.getAttribute('aria-expanded') === 'true';
+const menuOf = (btn) => document.getElementById(btn.getAttribute('aria-controls'));
+// decorateLevel appends each flyout to the <li> whose button opens it, so the parent
+// control is that <li>'s own direct-child button.
+const parentToggleOf = (el) => el
+  .closest('.level-2-menu, .level-3-menu, .level-4-menu')
+  ?.parentElement.querySelector(':scope > button');
+
+// Level-1 buttons stay ordinary tab stops — there are only a handful and they are the
+// primary nav. The flyouts are the long part (up to ~90 links), so each becomes a single
+// tab stop walked with arrows: Up/Down over what's on screen, Right to open a nested menu
+// then step in, Left to close it or go back out to the level-1 button.
+// Scoped to the rail, not the list: below 900px the list is display:none until the
+// trigger opens it, so the group starts empty and has to re-sync on that click.
+export const setupRovingTabindex = (sitenav, navList) => rovingTabindex(sitenav, {
+  // Only what's inside the open flyout. focusableIn already drops the hidden ones, and
+  // level-1 buttons are siblings of .level-2-menu rather than descendants, so they are
+  // never members and keep their natural tabindex.
+  items: () => focusableIn(navList).filter((el) => el.closest('.level-2-menu')),
+  // Landing on "you are here" beats landing on the top of the tree.
+  initial: (list) => list.find((el) => el.classList.contains('is-current-page')) ?? list[0],
+  keys: {
+    ArrowRight: (el, list) => {
+      if (!isToggle(el)) { return false; }
+      if (!isOpen(el)) {
+        // Reuses the button's own handler, which also collapses its siblings.
+        el.click();
+        return true;
+      }
+      const menu = menuOf(el);
+      return list.find((item) => menu?.contains(item)) ?? true;
+    },
+    ArrowLeft: (el) => {
+      if (isToggle(el) && isOpen(el)) {
+        el.click();
+        return true;
+      }
+      return parentToggleOf(el) ?? false;
+    },
+  },
+});
 
 // Level-1 buttons only need a tooltip while the rail is collapsed
 export const syncLevel1Tooltips = (sitenav) => {
@@ -481,7 +588,14 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   if (!main) { return; }
   main.before(sitenav);
 
-  // Scroll the level-2 flyout (the only scrollable nav container) so the
-  // current page is visible, rather than always starting at the top.
-  currentLink?.scrollIntoView({ block: 'nearest' });
+  // After insertion: the visibility checks it depends on only mean anything for
+  // elements that are actually in the document.
+  setupRovingTabindex(sitenav, navList);
+
+  // Prefer where this reader last left the flyout; fall back to just revealing the
+  // current page when there's nothing to restore or the saved offset would hide it.
+  setupScrollMemory(sitenav);
+  if (!restoreMenuScroll(currentLink)) {
+    currentLink?.scrollIntoView({ block: 'nearest' });
+  }
 })();

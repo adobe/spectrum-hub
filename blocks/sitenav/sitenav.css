@@ -1,5 +1,10 @@
 #sitenav {
   --sitenav-blur: 32px;
+
+  /* Opaque stand-in for the translucent panel fills when the blur can't run (see the
+     @supports / prefers-reduced-transparency blocks at the end). The gray tokens are
+     already light-dark() pairs, so this must not wrap them in another one. */
+  --sitenav-panel-solid: var(--s2-gray-50);
   --sitenav-corner-radius: var(--s2-corner-radius-950);
   --sitenav-children-transition-duration: 160ms;
   --sitenav-children-transition-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -28,8 +33,8 @@
   }
 
   nav {
-    position: relative;
-    anchor-name: --sitenav;
+    /* Intentionally unpositioned: .level-2-menu anchors to #sitenav instead, which is
+    how it escapes the overflow clipping here and on ul.level-1-list. */
     box-sizing: border-box;
     width: var(--sitenav-nav-width);
     margin-inline-start: var(--sitenav-inline-start-margin);
@@ -38,11 +43,16 @@
     padding: var(--s2-spacing-300) var(--s2-spacing-200);
     transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
 
+    /* Pinned explicitly: #sitenav is this pseudo-element's containing block now, and
+    it's wider than nav by nav's inline-start margin. Keep backdrop-filter off nav
+    itself — it would make nav a containing block again and re-trap the flyouts. */
     &::before {
       content: "";
       position: absolute;
-      inset: 0;
+      inset-block: 0;
+      inset-inline: var(--sitenav-inline-start-margin) 0;
       z-index: -1;
+      -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       border-radius: var(--sitenav-corner-radius);
       pointer-events: none;
@@ -216,18 +226,23 @@
     width: var(--sitenav-level-2-width);
     max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
     padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
-    position: fixed;
-    position-anchor: --sitenav;
-    top: anchor(top);
-    left: anchor(right);
+
+    /* #sitenav's box is the rail plus its inline-start margin, so 100%/0 land on the
+    rail's outer edge and top. Replaces anchor() (Chromium-only — Safari and Firefox
+    drop it and strand the panel at its static position, overlapping the rail). */
+    position: absolute;
+    top: 0;
+    inset-inline-start: 100%;
     border-radius: var(--sitenav-corner-radius);
+    -webkit-backdrop-filter: blur(var(--sitenav-blur));
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
 
-    /* Anything taller scrolls internally instead of running past the edge of the screen. */
+    /* Anything taller scrolls internally instead of running past the edge of the
+    screen. 100% is the rail's own height — what anchor-size(height) meant. */
     @media (width < 900px) {
-      max-height: anchor-size(height);
+      max-height: 100%;
     }
 
     > * {
@@ -437,6 +452,7 @@
       inset: 0;
       z-index: -1;
       border-radius: inherit;
+      -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       pointer-events: none;
     }
@@ -521,5 +537,24 @@ html:has(meta[name="template"][content="marketing"]) {
   nav:not(.page-nav, .breadcrumbs), .level-2-menu, .sitenav-expand-btn::before {
     background-color: #ffffff0a;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+  }
+}
+
+/* Those panel fills are 50% white in light and 4% in dark: they only read as surfaces
+   because of the backdrop blur behind them. Where the blur can't run, nav text sits
+   on whatever the page put there, so fall back to an opaque surface. Two triggers —
+   no blur support at all, and readers who asked for less transparency (iOS "Reduce
+   Transparency", which switches it off even where it is supported). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #sitenav nav::before,
+  #sitenav .level-2-menu {
+    background-color: var(--sitenav-panel-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  #sitenav nav::before,
+  #sitenav .level-2-menu {
+    background-color: var(--sitenav-panel-solid);
   }
 }

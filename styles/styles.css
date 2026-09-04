@@ -350,7 +350,7 @@
   /* se etc conveniences */
   --se-adobe-corporate-color: rgb(235 16 0);
   --se-corner-radius-50: 1px;
-  --se-body-background-color: light-dark(#fff, #000);
+  --se-body-background-color: light-dark(#e1e9f4, #071a2a);
   --se-border-width-200: 2px;
   --se-focus-indicator-width: 2px;
   --se-component-m-height: 32px;
@@ -746,7 +746,7 @@ div[data-status],
     }
 
     a {
-      color: var(--s2-blue-900);
+      color: var(--s2-blue-1000);
     }
 
     code {
