@@ -2,12 +2,16 @@
   --sitenav-blur: 32px;
 
   /* Opaque stand-in for the translucent panel fills when the blur can't run (see the
-     @supports / prefers-reduced-transparency blocks at the end). The gray tokens are
-     already light-dark() pairs, so this must not wrap them in another one. */
+     @supports / prefers-reduced-transparency blocks at the end). */
   --sitenav-panel-solid: var(--s2-gray-50);
   --sitenav-corner-radius: var(--s2-corner-radius-950);
   --sitenav-children-transition-duration: 160ms;
   --sitenav-children-transition-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* -10px accommodates the focus ring so that it wraps around the ::before selection indicator bar:
+  2px width of selection indicator, 6px padding to text, 2px to focus ring */
+  --sitenav-focus-ring-inline: -10px;
+  --sitenav-focus-ring-block: -2px;
 
   /* Level 1 */
   --level-1-content-margin: 7px; /* 56px - 32px / 2 */
@@ -74,39 +78,42 @@
     color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
     text-decoration: none;
     outline: none;
+    position: relative;
 
-      &[class="is-current-page"] {
-        position: relative;
-      }
-
-      &[class="is-current-page"]::before {
-        content: '';
-        position: absolute;
-        inset-inline-start: -6px;
-        inset-block: 0;
-        inline-size: 2px;
-        block-size: 18px;
-        margin-block: auto;
-        background-color: var(--s2-gray-800);
-        border-radius: 2px;
-      }
-
-    &:hover {
-      color:  var(--s2-gray-700);
+    &::before {
+      content: '';
+      position: absolute;
+      inset-inline-start: -6px;
+      inset-block: 0;
+      inline-size: 2px;
+      block-size: 18px;
+      margin-block: auto;
+      background-color: transparent;
+      border-radius: 2px;
+      transition: background-color 150ms ease;
     }
 
     &.is-current-page {
       color: var(--s2-gray-900);
       font-weight: 700;
+
+      &::before {
+        background-color: var(--s2-gray-900);
+      }
     }
 
+    &:hover {
+      color:  var(--s2-gray-800);
+    }
+
+    &:hover::before {
+      background-color: var(--s2-gray-800);
+    }
+
+    /* Fallback for a leaf link sitting directly in the rail, with no flyout
+    ancestor to overflow into. Flyout rows use the ::after ring instead. */
     &:focus-visible {
       outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-
-      /* Inset rather than the usual outward offset: several ancestors here
-      (ul.level-1-list, .level-3-list) need overflow:hidden for their
-      collapse/expand animations and have no padding to spare, so an outward
-      ring gets clipped. */
       outline-offset: calc(-1 * var(--se-focus-indicator-width));
       border-radius: var(--s2-corner-radius-600);
     }
@@ -251,6 +258,32 @@
       transition: opacity var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
     }
 
+    /* focus ring for level-2 */
+    :is(a, button) {
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset-inline: var(--sitenav-focus-ring-inline);
+        inset-block: var(--sitenav-focus-ring-block);
+        border-radius: var(--s2-corner-radius-600);
+        pointer-events: none;
+      }
+
+      &:focus-visible {
+        outline: none;
+
+        &::after {
+          border: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+        }
+      }
+    }
+
+    li.linked-list > button {
+      --sitenav-focus-ring-inline: -4px 0;
+    }
+
     > .list-item-label {
       color: var(--s2-blue-900);
       font-weight: 700;
@@ -307,15 +340,29 @@
       }
 
       button {
+        inline-size: 100%;
+        box-sizing: border-box;
         color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset-inline-start: -6px;
+          inset-block: 0;
+          inline-size: 2px;
+          block-size: 18px;
+          margin-block: auto;
+          background-color: transparent;
+          border-radius: 2px;
+        }
 
         &:hover {
           color: var(--s2-gray-800);
         }
-      }
 
-      :is(.level-2-button, .level-3-button) {
-        position: relative;
+        &:hover::before {
+          background-color: var(--s2-gray-800);
+        }
       }
 
       :is(.level-2-button, .level-3-button)[aria-expanded="true"] {
@@ -329,15 +376,11 @@
         font-weight: 700;
 
         &::before {
-          content: '';
-          position: absolute;
-          inset-inline-start: -6px;
-          inset-block: 0;
-          inline-size: 2px;
-          block-size: 18px;
-          margin-block: auto;
+          background-color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
+        }
+
+        &:hover::before {
           background-color: var(--s2-gray-800);
-          border-radius: 2px;
         }
       }
     }
@@ -355,16 +398,22 @@
         var(--sitenav-children-transition-ease);
     }
 
-    .level-3-list {
-      padding-inline-start: var(--s2-spacing-300);
-      list-style: none;
-      overflow: hidden;
-    }
-
+    .level-3-list,
     .level-4-list {
       padding-inline-start: var(--s2-spacing-300);
       list-style: none;
-      overflow: hidden;
+
+      /* when the parent is collapsed, the level 3/4 lists should be 0px high */
+      min-block-size: 0;
+
+      /* clip rather than hidden so the clip margin can let a row's focus ring paint
+      outside the list, while collapsed rows stay clipped out of .level-2-menu's
+      scroll region. */
+      overflow: clip;
+
+      /* overflow-clip-margin only accepts direct values, so using a calc with the custom property doesn't work.
+      opted for a magic number that's the same as the focus ring inline value */
+      overflow-clip-margin: 10px;
     }
 
     button {
@@ -556,5 +605,14 @@ html:has(meta[name="template"][content="marketing"]) {
   #sitenav nav::before,
   #sitenav .level-2-menu {
     background-color: var(--sitenav-panel-solid);
+  }
+}
+
+/* A bordered pseudo-element does render in forced colors, but border-color maps to
+   the plain text color. Name the system focus color instead so the ring reads as
+   focus rather than as a box drawn around the row. */
+@media (forced-colors: active) {
+  #sitenav .level-2-menu :is(a, button):focus-visible::after {
+    border-color: Highlight;
   }
 }
