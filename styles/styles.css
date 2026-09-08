@@ -13,65 +13,20 @@
 /* --- Fonts --- */
 
 @font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-regular.woff2") format("woff2");
+  font-family: adobe-clean-spectrum-vf;
+  src: url("fonts/AdobeCleanSpectrumVF-Roman.woff2") format("woff2");
   font-display: swap;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 300 900;
   font-stretch: normal;
 }
 
 @font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-italic.woff2") format("woff2");
+  font-family: adobe-clean-spectrum-vf;
+  src: url("fonts/AdobeCleanSpectrumVF-Italic.woff2") format("woff2");
   font-display: swap;
   font-style: italic;
-  font-weight: 400;
-  font-stretch: normal;
-}
-
-@font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-medium.woff2") format("woff2");
-  font-display: swap;
-  font-style: normal;
-  font-weight: 500;
-  font-stretch: normal;
-}
-
-@font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-bold.woff2") format("woff2");
-  font-display: swap;
-  font-style: normal;
-  font-weight: 700;
-  font-stretch: normal;
-}
-
-@font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-bold-italic.woff2") format("woff2");
-  font-display: swap;
-  font-style: italic;
-  font-weight: 700;
-  font-stretch: normal;
-}
-
-@font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-extrabold.woff2") format("woff2");
-  font-display: swap;
-  font-style: normal;
-  font-weight: 800;
-  font-stretch: normal;
-}
-
-@font-face {
-  font-family: adobe-clean;
-  src: url("fonts/adobe-clean-extrabold-italic.woff2") format("woff2");
-  font-display: swap;
-  font-style: italic;
-  font-weight: 800;
+  font-weight: 400 900;
   font-stretch: normal;
 }
 
@@ -344,7 +299,7 @@
   --s2-spacing-85: 6px;
 
   /* fonts */
-  --s2-font-family: adobe-clean, 'Adobe Clean', 'Trebuchet MS', sans-serif;
+  --s2-font-family: adobe-clean-spectrum-vf, 'Adobe Clean Spectrum VF', 'Trebuchet MS', sans-serif;
   --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
 
   /* se etc conveniences */
