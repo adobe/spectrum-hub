@@ -1,6 +1,26 @@
 header {
+  --header-border-radius: 12px;
+  --sh-brand-ring-size: 56px; /* square focus ring, matching the logo height */
+  --header-surface-transition: 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  --header-inner-shadow: light-dark(rgb(255 255 255), rgb(248 248 248));
+  --header-outer-shadow: light-dark(rgb(255 255 255), var(--s2-gray-800));
+
   visibility: visible;
   z-index: 200;
+
+  &.is-scrolled .header-content {
+    box-shadow:
+      inset 0 0 3px 0 rgb(from var(--header-inner-shadow) r g b / 65%),
+      0 0 1px 0 rgb(from var(--header-outer-shadow) r g b / 10%),
+      0 9px 95px 0 rgb(from var(--header-outer-shadow) r g b / 5%);
+    background-color: rgb(from var(--s2-gray-25) r g b / 25%);
+    border-radius: var(--header-border-radius);
+
+    &::before {
+      background-color: var(--sh-glass-background-color);
+      backdrop-filter: blur(var(--sh-glass-blur));
+    }
+  }
 
   .skip-link {
     position: absolute;
@@ -43,6 +63,30 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    transition:
+      background-color var(--header-surface-transition),
+      border-radius var(--header-surface-transition),
+      box-shadow var(--header-surface-transition);
+    padding-inline: 13px; /* ✨ magic number to align the A in logo with icons in nav */
+    
+
+    /* Frosted backing, revealed once main scrolls up under the header. It lives on
+       a pseudo-element because backdrop-filter would otherwise make the header a
+       containing block for the anchor-positioned search and profile popovers.
+       It stays in the box tree unscrolled so the blur has a state to ease from. */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      pointer-events: none;
+      background-image: var(--sh-glass-background-image);
+      transition:
+        background-color var(--header-surface-transition),
+        backdrop-filter var(--header-surface-transition);
+    }
   }
 
   .brand-section {
@@ -50,7 +94,6 @@ header {
       display: block;
       position: relative;
       outline: none;
-      border: 1px solid red;
 
       &::after {
         position: absolute;
@@ -68,7 +111,30 @@ header {
       display: block;
       width: 166px;
       height: 56px;
-      padding-inline-start: 13px; /* ✨ magic number to align the A in logo with icons in nav */
+    }
+
+    /* Narrow screens keep the "A" and drop the wordmark. The logo renders 1:1
+       from a 166-unit viewBox: the "A" spans 0-32 and the wordmark starts at 45,
+       so the link shrinks to a window in the gap between them. */
+    @media (width < 900px) {
+      --sh-brand-mark-width: 38px;
+
+      a {
+        inline-size: var(--sh-brand-mark-width);
+      }
+
+      /* Centre the ring on the "A" rather than on the link: the glyph's centre
+         is 16px in, so a square ring starts half its own width before that.
+         Sizing it this way keeps it centred if the window width changes. */
+      a::after {
+        inset-block: 0;
+        inset-inline: calc(16px - (var(--sh-brand-ring-size) / 2)) auto;
+        inline-size: var(--sh-brand-ring-size);
+      }
+
+      svg {
+        clip-path: inset(0 calc(100% - var(--sh-brand-mark-width)) 0 0);
+      }
     }
   }
 
@@ -95,6 +161,8 @@ header {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  header .header-content,
+  header .header-content::before,
   header .skip-link,
   header .skip-link:focus-visible,
   header .main-nav-section a,

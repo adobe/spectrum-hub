@@ -52,6 +52,37 @@ async function decorateHeader(fragment) {
 }
 
 /**
+ * Adds `is-scrolled` to the header once main has scrolled up under it, which is
+ * what reveals the header's frosted backing.
+ * @param {Element} el The header element
+ * @returns {Function|undefined} teardown for the listeners it registers
+ */
+export function watchScroll(el) {
+  const main = document.querySelector('main');
+  if (!main) { return undefined; }
+
+  // The header is fixed, so main starts life flush against its bottom edge. The
+  // gap to close is whatever sits above main minus the header's own height.
+  let threshold = 0;
+  const measure = () => { threshold = Math.max(main.offsetTop - el.offsetHeight, 0); };
+  // Deliberately free of layout reads so it stays cheap to run on every scroll.
+  const update = () => el.classList.toggle('is-scrolled', window.scrollY > threshold);
+  const remeasure = () => {
+    measure();
+    update();
+  };
+
+  remeasure();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', remeasure, { passive: true });
+
+  return () => {
+    window.removeEventListener('scroll', update);
+    window.removeEventListener('resize', remeasure);
+  };
+}
+
+/**
  * loads and decorates the header
  * @param {Element} el The header element
  */
@@ -65,4 +96,6 @@ export default async function init(el) {
 
   const skipLink = createSkipLink();
   el.prepend(skipLink);
+
+  watchScroll(el);
 }
