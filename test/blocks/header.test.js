@@ -53,10 +53,23 @@ describe('header block', () => {
       expect(stub.calledOnceWith('/custom/nav')).to.be.true;
     });
 
-    it('does nothing when the fragment fetch fails', async () => {
+    // The point of prepending before the fetch: on a returning page view the sitenav is
+    // loaded and awaited before the header block even starts, so a skip link gated
+    // behind this request doesn't exist yet when the nav is already tabbable.
+    it('adds the skip link without waiting on the fragment', () => {
+      sandbox.stub(window, 'fetch').returns(new Promise(() => {}));
+      init(el);
+      expect(el.querySelector('.skip-link')).to.not.be.null;
+    });
+
+    // The skip link is built locally and prepended before the fetch, so a failed
+    // fragment costs the header content but never the bypass link.
+    it('renders no header content when the fragment fetch fails', async () => {
       sandbox.stub(window, 'fetch').resolves(new Response('', { status: 500 }));
       await init(el);
-      expect(el.children.length).to.equal(0);
+      expect(el.querySelector('.header-content')).to.be.null;
+      expect(el.querySelector('.skip-link')).to.not.be.null;
+      expect(el.children.length).to.equal(1);
     });
   });
 
