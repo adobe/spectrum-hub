@@ -202,17 +202,25 @@
     overflow: hidden;
     position: relative;
 
-    &[aria-expanded="true"]::before {
-      content: "";
+    &::before {
+      content: '';
       position: absolute;
       inset: 0;
       inline-size: 2px;
-      block-size: calc(100% - 12px);
+      block-size: 18px;
       margin-block: auto;
-      background-color: var(--s2-gray-800);
-      pointer-events: none;
-      transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+      background-color: transparent;
       border-radius: 2px;
+      transition: background-color 150ms ease;
+      pointer-events: none;
+    }
+
+    &:hover::before {
+      background-color: var(--s2-gray-800);
+    }
+
+    &[aria-expanded="true"]::before {
+      background-color: var(--s2-gray-800);
     }
 
     svg {
@@ -354,6 +362,7 @@
           margin-block: auto;
           background-color: transparent;
           border-radius: 2px;
+          transition: background-color 150ms ease;
         }
 
         &:hover {
