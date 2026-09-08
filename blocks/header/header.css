@@ -50,6 +50,7 @@ header {
       display: block;
       position: relative;
       outline: none;
+      border: 1px solid red;
 
       &::after {
         position: absolute;
@@ -65,8 +66,9 @@ header {
 
     svg {
       display: block;
-      width: 56px;
+      width: 166px;
       height: 56px;
+      padding-inline-start: 13px; /* ✨ magic number to align the A in logo with icons in nav */
     }
   }
 
