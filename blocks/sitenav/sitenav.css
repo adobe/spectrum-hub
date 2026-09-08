@@ -36,6 +36,12 @@
     transition: none;
   }
 
+  /* Safari can't transition `overlay`, so a closing tooltip leaves the top layer while still
+  displayed */
+  swc-tooltip {
+    transition-property: transform, opacity;
+  }
+
   nav {
     /* Intentionally unpositioned: .level-2-menu anchors to #sitenav instead, which is
     how it escapes the overflow clipping here and on ul.level-1-list. */
