@@ -18,7 +18,7 @@
   font-display: swap;
   font-style: normal;
   font-weight: 300 900;
-  font-stretch: normal;
+  /* font-stretch: normal; */
 }
 
 @font-face {
@@ -26,8 +26,8 @@
   src: url("fonts/AdobeCleanSpectrumVF-Italic.woff2") format("woff2");
   font-display: swap;
   font-style: italic;
-  font-weight: 400 900;
-  font-stretch: normal;
+  font-weight: 300 900;
+  /* font-stretch: normal; */
 }
 
 @font-face {
@@ -572,7 +572,7 @@ div[data-status],
       margin: 0;
       background-color: var(--se-body-background-color);
       color: var(--se-body-color);
-      font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
+      font-family: adobe-clean-spectrum-vf, 'Trebuchet MS', sans-serif;
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
 

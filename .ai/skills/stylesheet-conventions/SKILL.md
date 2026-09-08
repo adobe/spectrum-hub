@@ -96,7 +96,7 @@ Other color scales follow the same pattern: `--s2-red-*`, `--s2-orange-*`, `--s2
 
 #### Typography — fonts
 ```
---s2-font-family:         'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif
+--s2-font-family:         adobe-clean-spectrum-vf, 'Adobe Clean Spectrum VF', 'Trebuchet MS', sans-serif
 --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif
 ```
 

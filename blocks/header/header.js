@@ -87,6 +87,9 @@ export function watchScroll(el) {
  * @param {Element} el The header element
  */
 export default async function init(el) {
+  const skipLink = createSkipLink();
+  el.prepend(skipLink);
+
   const path = getMetadata('header-path') || HEADER_PATH;
   const { fragment } = await loadFragment(`${locale.prefix}${path}`);
   if (!fragment) { return; }
