@@ -1,8 +1,17 @@
 #sitenav {
   --sitenav-blur: 32px;
+
+  /* Opaque stand-in for the translucent panel fills when the blur can't run (see the
+     @supports / prefers-reduced-transparency blocks at the end). */
+  --sitenav-panel-solid: var(--s2-gray-50);
   --sitenav-corner-radius: var(--s2-corner-radius-950);
   --sitenav-children-transition-duration: 160ms;
   --sitenav-children-transition-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* -10px accommodates the focus ring so that it wraps around the ::before selection indicator bar:
+  2px width of selection indicator, 6px padding to text, 2px to focus ring */
+  --sitenav-focus-ring-inline: -10px;
+  --sitenav-focus-ring-block: -2px;
 
   /* Level 1 */
   --level-1-content-margin: 7px; /* 56px - 32px / 2 */
@@ -27,9 +36,15 @@
     transition: none;
   }
 
+  /* Safari can't transition `overlay`, so a closing tooltip leaves the top layer while still
+  displayed */
+  swc-tooltip {
+    transition-property: transform, opacity;
+  }
+
   nav {
-    position: relative;
-    anchor-name: --sitenav;
+    /* Intentionally unpositioned: .level-2-menu anchors to #sitenav instead, which is
+    how it escapes the overflow clipping here and on ul.level-1-list. */
     box-sizing: border-box;
     width: var(--sitenav-nav-width);
     margin-inline-start: var(--sitenav-inline-start-margin);
@@ -38,11 +53,16 @@
     padding: var(--s2-spacing-300) var(--s2-spacing-200);
     transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
 
+    /* Pinned explicitly: #sitenav is this pseudo-element's containing block now, and
+    it's wider than nav by nav's inline-start margin. Keep backdrop-filter off nav
+    itself — it would make nav a containing block again and re-trap the flyouts. */
     &::before {
       content: "";
       position: absolute;
-      inset: 0;
+      inset-block: 0;
+      inset-inline: var(--sitenav-inline-start-margin) 0;
       z-index: -1;
+      -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       border-radius: var(--sitenav-corner-radius);
       pointer-events: none;
@@ -64,39 +84,42 @@
     color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
     text-decoration: none;
     outline: none;
+    position: relative;
 
-      &[class="is-current-page"] {
-        position: relative;
-      }
-
-      &[class="is-current-page"]::before {
-        content: '';
-        position: absolute;
-        inset-inline-start: -6px;
-        inset-block: 0;
-        inline-size: 2px;
-        block-size: 18px;
-        margin-block: auto;
-        background-color: var(--s2-gray-800);
-        border-radius: 2px;
-      }
-
-    &:hover {
-      color:  var(--s2-gray-700);
+    &::before {
+      content: '';
+      position: absolute;
+      inset-inline-start: -6px;
+      inset-block: 0;
+      inline-size: 2px;
+      block-size: 18px;
+      margin-block: auto;
+      background-color: transparent;
+      border-radius: 2px;
+      transition: background-color 150ms ease;
     }
 
     &.is-current-page {
       color: var(--s2-gray-900);
       font-weight: 700;
+
+      &::before {
+        background-color: var(--s2-gray-900);
+      }
     }
 
+    &:hover {
+      color:  var(--s2-gray-800);
+    }
+
+    &:hover::before {
+      background-color: var(--s2-gray-800);
+    }
+
+    /* Fallback for a leaf link sitting directly in the rail, with no flyout
+    ancestor to overflow into. Flyout rows use the ::after ring instead. */
     &:focus-visible {
       outline: var(--se-focus-indicator-width) solid var(--s2-blue-800);
-
-      /* Inset rather than the usual outward offset: several ancestors here
-      (ul.level-1-list, .level-3-list) need overflow:hidden for their
-      collapse/expand animations and have no padding to spare, so an outward
-      ring gets clipped. */
       outline-offset: calc(-1 * var(--se-focus-indicator-width));
       border-radius: var(--s2-corner-radius-600);
     }
@@ -185,17 +208,25 @@
     overflow: hidden;
     position: relative;
 
-    &[aria-expanded="true"]::before {
-      content: "";
+    &::before {
+      content: '';
       position: absolute;
       inset: 0;
       inline-size: 2px;
-      block-size: calc(100% - 12px);
+      block-size: 18px;
       margin-block: auto;
-      background-color: var(--s2-gray-800);
-      pointer-events: none;
-      transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+      background-color: transparent;
       border-radius: 2px;
+      transition: background-color 150ms ease;
+      pointer-events: none;
+    }
+
+    &:hover::before {
+      background-color: var(--s2-gray-800);
+    }
+
+    &[aria-expanded="true"]::before {
+      background-color: var(--s2-gray-800);
     }
 
     svg {
@@ -216,24 +247,55 @@
     width: var(--sitenav-level-2-width);
     max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
     padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
-    position: fixed;
-    position-anchor: --sitenav;
-    top: anchor(top);
-    left: anchor(right);
+
+    /* #sitenav's box is the rail plus its inline-start margin, so 100%/0 land on the
+    rail's outer edge and top. Replaces anchor() (Chromium-only — Safari and Firefox
+    drop it and strand the panel at its static position, overlapping the rail). */
+    position: absolute;
+    top: 0;
+    inset-inline-start: 100%;
     border-radius: var(--sitenav-corner-radius);
+    -webkit-backdrop-filter: blur(var(--sitenav-blur));
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
     overflow-y: auto;
 
-    /* Anything taller scrolls internally instead of running past the edge of the screen. */
+    /* Anything taller scrolls internally instead of running past the edge of the
+    screen. 100% is the rail's own height — what anchor-size(height) meant. */
     @media (width < 900px) {
-      max-height: anchor-size(height);
+      max-height: 100%;
     }
 
     > * {
       display: block;
       opacity: 0;
       transition: opacity var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+    }
+
+    /* focus ring for level-2 */
+    :is(a, button) {
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset-inline: var(--sitenav-focus-ring-inline);
+        inset-block: var(--sitenav-focus-ring-block);
+        border-radius: var(--s2-corner-radius-600);
+        pointer-events: none;
+      }
+
+      &:focus-visible {
+        outline: none;
+
+        &::after {
+          border: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+        }
+      }
+    }
+
+    li.linked-list > button {
+      --sitenav-focus-ring-inline: -4px 0;
     }
 
     > .list-item-label {
@@ -292,15 +354,30 @@
       }
 
       button {
+        inline-size: 100%;
+        box-sizing: border-box;
         color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
+
+        &::before {
+          content: '';
+          position: absolute;
+          inset-inline-start: -6px;
+          inset-block: 0;
+          inline-size: 2px;
+          block-size: 18px;
+          margin-block: auto;
+          background-color: transparent;
+          border-radius: 2px;
+          transition: background-color 150ms ease;
+        }
 
         &:hover {
           color: var(--s2-gray-800);
         }
-      }
 
-      :is(.level-2-button, .level-3-button) {
-        position: relative;
+        &:hover::before {
+          background-color: var(--s2-gray-800);
+        }
       }
 
       :is(.level-2-button, .level-3-button)[aria-expanded="true"] {
@@ -314,15 +391,11 @@
         font-weight: 700;
 
         &::before {
-          content: '';
-          position: absolute;
-          inset-inline-start: -6px;
-          inset-block: 0;
-          inline-size: 2px;
-          block-size: 18px;
-          margin-block: auto;
+          background-color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
+        }
+
+        &:hover::before {
           background-color: var(--s2-gray-800);
-          border-radius: 2px;
         }
       }
     }
@@ -340,16 +413,22 @@
         var(--sitenav-children-transition-ease);
     }
 
-    .level-3-list {
-      padding-inline-start: var(--s2-spacing-300);
-      list-style: none;
-      overflow: hidden;
-    }
-
+    .level-3-list,
     .level-4-list {
       padding-inline-start: var(--s2-spacing-300);
       list-style: none;
-      overflow: hidden;
+
+      /* when the parent is collapsed, the level 3/4 lists should be 0px high */
+      min-block-size: 0;
+
+      /* clip rather than hidden so the clip margin can let a row's focus ring paint
+      outside the list, while collapsed rows stay clipped out of .level-2-menu's
+      scroll region. */
+      overflow: clip;
+
+      /* overflow-clip-margin only accepts direct values, so using a calc with the custom property doesn't work.
+      opted for a magic number that's the same as the focus ring inline value */
+      overflow-clip-margin: 10px;
     }
 
     button {
@@ -437,6 +516,7 @@
       inset: 0;
       z-index: -1;
       border-radius: inherit;
+      -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       pointer-events: none;
     }
@@ -521,5 +601,33 @@ html:has(meta[name="template"][content="marketing"]) {
   nav:not(.page-nav, .breadcrumbs), .level-2-menu, .sitenav-expand-btn::before {
     background-color: #ffffff0a;
     background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+  }
+}
+
+/* Those panel fills are 50% white in light and 4% in dark: they only read as surfaces
+   because of the backdrop blur behind them. Where the blur can't run, nav text sits
+   on whatever the page put there, so fall back to an opaque surface. Two triggers —
+   no blur support at all, and readers who asked for less transparency (iOS "Reduce
+   Transparency", which switches it off even where it is supported). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #sitenav nav::before,
+  #sitenav .level-2-menu {
+    background-color: var(--sitenav-panel-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  #sitenav nav::before,
+  #sitenav .level-2-menu {
+    background-color: var(--sitenav-panel-solid);
+  }
+}
+
+/* A bordered pseudo-element does render in forced colors, but border-color maps to
+   the plain text color. Name the system focus color instead so the ring reads as
+   focus rather than as a box drawn around the row. */
+@media (forced-colors: active) {
+  #sitenav .level-2-menu :is(a, button):focus-visible::after {
+    border-color: Highlight;
   }
 }

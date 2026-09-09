@@ -10,7 +10,8 @@ const {
   decorateLevel, getSiteNav, getExpandButton, getTriggerButton, closeSitenav,
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
   syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
-  findCurrentPageInNav, removeEmptyMenus,
+  findCurrentPageInNav, removeEmptyMenus, setupRovingTabindex,
+  restoreMenuScroll, setupScrollMemory,
 } = await import('../../blocks/sitenav/sitenav.js');
 
 bootstrapFetchStub.restore();
@@ -273,6 +274,56 @@ describe('sitenav block', () => {
     });
   });
 
+  describe('decorateLevel — sublists are named by the control that opens them', () => {
+    // Matches sp-sidenav, which labels each nested role="list" back to its item. Without
+    // it the flyout is an unnamed list. On the <ul>, not the wrapper: a role-less <div>
+    // ignores aria-labelledby.
+    function buildTwoDeep() {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Web</p>
+            <ul>
+              <li><p>Components</p>
+                <ul><li><a href="/web/button">Button</a></li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>`);
+      return decorateLevel(ul, 1);
+    }
+
+    it('labels the level-2 list with the level-1 button', () => {
+      const navList = buildTwoDeep();
+      const lvl2 = navList.querySelector('.level-2-list');
+      const btn = navList.querySelector('.level-1-button');
+      expect(lvl2.getAttribute('aria-labelledby')).to.equal(btn.id);
+      expect(btn.id).to.not.be.empty;
+    });
+
+    it('labels the level-3 list with the level-2 button', () => {
+      const navList = buildTwoDeep();
+      const lvl3 = navList.querySelector('.level-3-list');
+      const btn = navList.querySelector('.level-2-button');
+      expect(lvl3.getAttribute('aria-labelledby')).to.equal(btn.id);
+      expect(btn.id).to.not.be.empty;
+    });
+
+    it('points every label at an id that actually resolves', () => {
+      const navList = buildTwoDeep();
+      document.body.append(navList);
+      const labelled = [...navList.querySelectorAll('[aria-labelledby]')];
+      expect(labelled.length).to.be.greaterThan(0);
+      expect(labelled.every((el) => document.getElementById(el.getAttribute('aria-labelledby')))).to.be.true;
+    });
+
+    it('reuses the level-1 button id the tooltip already relies on', () => {
+      const navList = buildTwoDeep();
+      const btn = navList.querySelector('.level-1-button');
+      expect(btn.id).to.equal('sitenav-level-1-tooltip-web');
+      expect(navList.querySelector('.level-2-list').getAttribute('aria-labelledby')).to.equal(btn.id);
+    });
+  });
+
   describe('decorateLevel — level-1 tooltip id', () => {
     it('gives a level-1 button a stable id for a tooltip to target via `for`', () => {
       const ul = buildNavList(`
@@ -286,7 +337,7 @@ describe('sitenav block', () => {
       expect(btn.id).to.equal('sitenav-level-1-tooltip-foundations');
     });
 
-    it('does not id a nested (depth 2+) button the same way', () => {
+    it('does not give a nested (depth 2+) button the level-1 tooltip id', () => {
       const ul = buildNavList(`
         <ul>
           <li>
@@ -298,7 +349,10 @@ describe('sitenav block', () => {
       decorateLevel(ul, 1);
       const level2Btn = ul.querySelector('button.level-2-button');
 
-      expect(level2Btn.id).to.equal('');
+      expect(level2Btn.id).to.not.match(/^sitenav-level-1-tooltip-/);
+      // It still needs *an* id: its sublist is labelled by it (see the sublist naming
+      // tests above), so only the tooltip scheme is level-1's alone.
+      expect(level2Btn.id).to.equal('overview-button');
     });
   });
 
@@ -473,6 +527,30 @@ describe('sitenav block', () => {
   });
 
   describe('decorateIndexBasedNav + decorateBadges', () => {
+    // A row with no title would otherwise render <a href="..."></a> — a link with no
+    // accessible name (WCAG 2.4.4 / 4.1.2). axe misses it: collapsed flyouts are
+    // visibility:hidden when the page is scanned.
+    it('skips index entries with no title rather than emitting a nameless link', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>SWC</p></li>
+          <li>
+            <p>Components</p>
+            <ul><li>[auto-generated]</li></ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 2);
+      decorateIndexBasedNav(navList, [
+        { path: '/web/swc/components/button', title: 'Button' },
+        { path: '/web/swc/components/patterns/conversational-ai', title: '' },
+      ]);
+
+      const links = [...navList.querySelectorAll('.level-3-list a')];
+      expect(links.map((a) => a.getAttribute('href'))).to.deep.equal(['/web/swc/components/button']);
+      expect(links.every((a) => a.textContent.trim())).to.be.true;
+    });
+
     it('counts design-only pages from the query index, badges the label, and lists them', () => {
       const ul = buildNavList(`
         <ul>
@@ -726,6 +804,24 @@ describe('sitenav block', () => {
   });
 
   describe('findCurrentPageInNav', () => {
+    // The current page is otherwise conveyed by weight and a colour bar only, which
+    // WCAG 1.3.1 requires be programmatically determinable too.
+    it('marks the current page with aria-current="page", not just a class', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><p>Web</p>
+            <ul>
+              <li><a href="${window.location.pathname}">Here</a></li>
+              <li><a href="/elsewhere">Elsewhere</a></li>
+            </ul>
+          </li>
+        </ul>`);
+      decorateLevel(ul, 1);
+      const current = findCurrentPageInNav(ul);
+      expect(current.getAttribute('aria-current')).to.equal('page');
+      expect(ul.querySelector('a[href="/elsewhere"]').hasAttribute('aria-current')).to.be.false;
+    });
+
     const originalUrl = window.location.pathname + window.location.search + window.location.hash;
 
     afterEach(() => {
@@ -1191,6 +1287,289 @@ describe('sitenav block', () => {
     it('is false at or above the breakpoint', () => {
       stubMatchMedia(sandbox, false);
       expect(isMobileViewport()).to.be.false;
+    });
+  });
+
+  describe('setupRovingTabindex — level-2 flyouts as one tab stop', () => {
+    // Collapsed flyouts are hidden with visibility:hidden by sitenav.css, which isn't
+    // loaded here; mirror it on the wrapper so the group sees what a real page sees.
+    function buildTree() {
+      const sitenav = document.createElement('div');
+      const navList = buildNavList(`
+        <ul>
+          <li><p>Web</p>
+            <ul>
+              <li><a href="/web/one">One</a></li>
+              <li><p>Components</p>
+                <ul><li><a href="/web/button">Button</a></li></ul>
+              </li>
+            </ul>
+          </li>
+          <li><p>Support</p>
+            <ul><li><a href="/support/faqs">FAQs</a></li></ul>
+          </li>
+        </ul>`);
+      decorateLevel(navList, 1);
+      sitenav.append(navList);
+      document.body.append(sitenav);
+
+      // Stand in for the stylesheet: a menu is visible only while its button is open.
+      const syncVisibility = () => {
+        navList.querySelectorAll('.level-2-menu, .level-3-menu').forEach((menu) => {
+          const btn = menu.parentElement.querySelector(':scope > button');
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          menu.style.visibility = open ? 'visible' : 'hidden';
+        });
+      };
+      syncVisibility();
+      sitenav.addEventListener('click', syncVisibility);
+      return { sitenav, navList };
+    }
+
+    const buttonNamed = (root, name) => [...root.querySelectorAll('button')]
+      .find((b) => b.textContent.trim() === name);
+    const linkNamed = (root, name) => [...root.querySelectorAll('a')]
+      .find((a) => a.textContent.trim() === name);
+    const press = (el, key) => el.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+    const tabbable = (root) => [...root.querySelectorAll('a, button')]
+      .filter((el) => el.checkVisibility({ visibilityProperty: true }) && el.tabIndex > -1);
+
+    const openWeb = (navList) => buttonNamed(navList, 'Web').click();
+
+    describe('level 1 keeps its own tab stops', () => {
+      it('leaves level-1 buttons out of the group entirely', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const lvl1 = [...navList.querySelectorAll(':scope > li > button')];
+        expect(lvl1.length).to.equal(2);
+        expect(lvl1.every((b) => !b.hasAttribute('tabindex'))).to.be.true;
+      });
+
+      it('leaves arrow keys on a level-1 button to the browser', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const web = buttonNamed(navList, 'Web');
+        const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
+        web.dispatchEvent(event);
+        expect(event.defaultPrevented).to.be.false;
+      });
+
+      it('touches nothing while every flyout is closed', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const withTabindex = [...navList.querySelectorAll('a, button')]
+          .filter((el) => el.hasAttribute('tabindex'));
+        expect(withTabindex.length).to.equal(0);
+      });
+    });
+
+    describe('an open flyout is a single tab stop', () => {
+      it('leaves exactly one member of the open flyout tabbable', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const menu = navList.querySelector('.level-2-menu');
+        expect(tabbable(menu).length).to.equal(1);
+      });
+
+      it('starts on the current page rather than the top of the flyout', () => {
+        const { sitenav, navList } = buildTree();
+        linkNamed(navList, 'One').classList.add('is-current-page');
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const menu = navList.querySelector('.level-2-menu');
+        const stop = tabbable(menu)[0];
+        expect(stop === linkNamed(navList, 'One'), `tab stop was "${stop?.textContent.trim()}"`).to.be.true;
+      });
+
+      it('walks the flyout with ArrowDown', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const one = linkNamed(navList, 'One');
+        one.focus();
+        press(one, 'ArrowDown');
+        expectFocus(buttonNamed(navList, 'Components'), 'the Components button');
+      });
+
+      it('opens a nested menu with ArrowRight, then steps into it', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const components = buttonNamed(navList, 'Components');
+        components.focus();
+        press(components, 'ArrowRight');
+        expect(components.getAttribute('aria-expanded')).to.equal('true');
+        press(components, 'ArrowRight');
+        expectFocus(linkNamed(navList, 'Button'), 'the link inside the Components menu');
+      });
+
+      it('collapses a nested menu with ArrowLeft on its button', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const components = buttonNamed(navList, 'Components');
+        components.focus();
+        press(components, 'ArrowRight');
+        press(components, 'ArrowLeft');
+        expect(components.getAttribute('aria-expanded')).to.equal('false');
+      });
+
+      // Left at the top of a flyout is the way back out to the rail, which is a plain
+      // tab stop rather than a group member.
+      it('moves to the level-1 button with ArrowLeft at the top of the flyout', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        const one = linkNamed(navList, 'One');
+        one.focus();
+        press(one, 'ArrowLeft');
+        expectFocus(buttonNamed(navList, 'Web'), 'the Web level-1 button');
+      });
+
+      it('re-picks the tab stop when a different flyout opens', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        buttonNamed(navList, 'Support').click();
+        const supportMenu = buttonNamed(navList, 'Support').parentElement.querySelector('.level-2-menu');
+        expect(tabbable(supportMenu).length).to.equal(1);
+      });
+    });
+  });
+
+  describe('level-2 scroll memory', () => {
+    // A flyout tall enough to scroll: 20 links at 20px in a 100px window.
+    function buildScrollingMenu({ currentIndex = 15 } = {}) {
+      const sitenav = document.createElement('div');
+      const menu = document.createElement('div');
+      menu.classList.add('level-2-menu');
+      menu.id = 'web';
+      menu.style.cssText = 'overflow-y:auto;height:100px;display:block';
+      const links = [...Array(20)].map((_, i) => {
+        const a = document.createElement('a');
+        a.href = `/web/item-${i}`;
+        a.textContent = `Item ${i}`;
+        a.style.cssText = 'display:block;height:20px';
+        return a;
+      });
+      menu.append(...links);
+      sitenav.append(menu);
+      document.body.append(sitenav);
+      links[currentIndex].classList.add('is-current-page');
+      return { sitenav, menu, links, currentLink: links[currentIndex] };
+    }
+
+    const save = (id, top) => sessionStorage.setItem('sitenav-scroll', JSON.stringify({ id, top }));
+    const saved = () => JSON.parse(sessionStorage.getItem('sitenav-scroll') ?? 'null');
+
+    describe('restoreMenuScroll', () => {
+      it('declines when nothing has been saved', () => {
+        const { currentLink } = buildScrollingMenu();
+        expect(restoreMenuScroll(currentLink)).to.be.false;
+      });
+
+      it('declines when the saved position belongs to a different flyout', () => {
+        const { menu, currentLink } = buildScrollingMenu();
+        save('foundations', 220);
+        expect(restoreMenuScroll(currentLink)).to.be.false;
+        expect(menu.scrollTop).to.equal(0);
+      });
+
+      it('restores the saved offset when the current page is still visible there', () => {
+        const { menu, currentLink } = buildScrollingMenu({ currentIndex: 15 });
+        // item 15 spans 300-320; a 100px window at 260 shows 260-360
+        save('web', 260);
+        expect(restoreMenuScroll(currentLink)).to.be.true;
+        expect(menu.scrollTop).to.equal(260);
+      });
+
+      // Otherwise jumping to a distant page would restore an offset that hides it —
+      // strictly worse than starting from the top.
+      it('declines when the saved offset would scroll the current page out of view', () => {
+        const { currentLink } = buildScrollingMenu({ currentIndex: 15 });
+        save('web', 0);
+        expect(restoreMenuScroll(currentLink)).to.be.false;
+      });
+
+      it('declines when there is no current link at all', () => {
+        buildScrollingMenu();
+        save('web', 100);
+        expect(restoreMenuScroll(null)).to.be.false;
+      });
+
+      it('survives sessionStorage throwing, as it does in private mode', () => {
+        const { currentLink } = buildScrollingMenu();
+        sandbox.stub(sessionStorage, 'getItem').throws(new Error('denied'));
+        expect(() => restoreMenuScroll(currentLink)).to.not.throw();
+      });
+    });
+
+    describe('setupScrollMemory', () => {
+      it('records the flyout position under its own id', async () => {
+        const clock = sandbox.useFakeTimers();
+        const { sitenav, menu } = buildScrollingMenu();
+        setupScrollMemory(sitenav);
+        menu.scrollTop = 140;
+        menu.dispatchEvent(new Event('scroll'));
+        await clock.tickAsync(300);
+        expect(saved()).to.deep.equal({ id: 'web', top: 140 });
+      });
+
+      // Asserts the trailing edge (nothing written while the burst is still going)
+      // rather than a call count: assigning scrollTop also queues a *real* scroll event,
+      // which lands at an unpredictable point and makes any count racy.
+      it('holds off writing until a burst of scroll events settles', async () => {
+        const clock = sandbox.useFakeTimers();
+        // Spy the instance, not Storage.prototype — localStorage shares that prototype.
+        const spy = sandbox.spy(sessionStorage, 'setItem');
+        const { sitenav, menu } = buildScrollingMenu();
+        setupScrollMemory(sitenav);
+        [20, 40, 60].forEach((top) => {
+          menu.scrollTop = top;
+          menu.dispatchEvent(new Event('scroll'));
+        });
+
+        expect(spy.getCalls().filter((c) => c.args[0] === 'sitenav-scroll')).to.be.empty;
+        await clock.tickAsync(300);
+        expect(saved().top).to.equal(60);
+      });
+
+      it('ignores scrolling that is not a level-2 flyout', async () => {
+        const clock = sandbox.useFakeTimers();
+        const { sitenav } = buildScrollingMenu();
+        const other = document.createElement('div');
+        sitenav.append(other);
+        setupScrollMemory(sitenav);
+        other.dispatchEvent(new Event('scroll'));
+        await clock.tickAsync(300);
+        expect(saved()).to.be.null;
+      });
+
+      // Scrolling then clicking a link inside the debounce window must not lose the move.
+      it('flushes a pending position when the page goes away', () => {
+        sandbox.useFakeTimers();
+        const { sitenav, menu } = buildScrollingMenu();
+        setupScrollMemory(sitenav);
+        menu.scrollTop = 90;
+        menu.dispatchEvent(new Event('scroll'));
+        expect(saved()).to.be.null;
+        window.dispatchEvent(new Event('pagehide'));
+        expect(saved()).to.deep.equal({ id: 'web', top: 90 });
+      });
+
+      it('survives sessionStorage throwing on write', async () => {
+        const clock = sandbox.useFakeTimers();
+        const { sitenav, menu } = buildScrollingMenu();
+        sandbox.stub(sessionStorage, 'setItem').throws(new Error('denied'));
+        setupScrollMemory(sitenav);
+        menu.dispatchEvent(new Event('scroll'));
+        await clock.tickAsync(300);
+        // reaching here without an unhandled throw is the assertion
+        expect(true).to.be.true;
+      });
     });
   });
 
