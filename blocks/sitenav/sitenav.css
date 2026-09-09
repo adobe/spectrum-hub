@@ -32,6 +32,12 @@
   color: color-mix(in srgb, var(--s2-gray-800) 70%, transparent);
   z-index: 100;
 
+  /* Carried across cross-document navigations so the rail holds still instead
+     of cross-fading. The synchronous cached-nav inject in scripts.js guarantees
+     #sitenav exists at the new document's first render so both snapshots share
+     this name; the dissolve is suppressed in styles/styles.css. */
+  view-transition-name: se-sitenav;
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }

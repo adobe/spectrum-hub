@@ -4,11 +4,35 @@ import {
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
+import {
+  findCurrentPageInNav, restoreMenuScroll, setupScrollMemory,
+} from '../../scripts/utils/nav-current.js';
+import { SITENAV_CACHE, writeChromeCache } from '../../scripts/utils/chrome-cache.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
+
+// Re-exported so existing importers (and tests) keep the sitenav.js path even
+// though the implementations now live in nav-current.js.
+export { findCurrentPageInNav, restoreMenuScroll, setupScrollMemory };
 
 const { log } = getConfig();
 
 loadStyle(import.meta.url.replace('js', 'css'));
+
+// Serialize a page-agnostic copy of the fully-decorated rail so scripts.js can
+// inject it synchronously at first paint on the next navigation (see
+// injectCachedChrome). Per-page state (current-page highlight + the ancestor
+// disclosures it opens) is stripped from a clone so the live rail keeps its
+// highlight; the destination page re-applies its own via findCurrentPageInNav.
+const writeNavCache = (sitenav, anonymous) => {
+  const clone = sitenav.cloneNode(true);
+  clone.querySelector('.is-current-page')?.classList.remove('is-current-page');
+  clone.querySelectorAll('[aria-current]').forEach((el) => el.removeAttribute('aria-current'));
+  ['level-1-button', 'level-2-button', 'level-3-button'].forEach((cls) => {
+    clone.querySelectorAll(`.${cls}[aria-expanded="true"]`)
+      .forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+  });
+  writeChromeCache(SITENAV_CACHE, clone.outerHTML, anonymous ? 'anon' : 'auth');
+};
 
 const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
@@ -257,89 +281,6 @@ export const getSiteNav = () => {
   sitenav.append(nav);
 
   return { sitenav, nav };
-};
-
-export const findCurrentPageInNav = (navList) => {
-  const { pathname } = window.location;
-  const currentLink = [...navList.querySelectorAll('a')]
-    .find((a) => a.pathname === pathname);
-  if (!currentLink) { return null; }
-  currentLink.classList.add('is-current-page');
-  // Weight and the colour bar convey this visually; aria-current carries it to AT.
-  currentLink.setAttribute('aria-current', 'page');
-
-  [1, 2, 3].forEach((level) => {
-    const li = currentLink.closest(`.level-${level}`);
-    if (!li) { return; }
-    const button = li.querySelector(`.level-${level}-button`);
-    if (!button) { return; }
-    button.setAttribute('aria-expanded', true);
-  });
-
-  return currentLink;
-};
-
-const SCROLL_KEY = 'sitenav-scroll';
-const SCROLL_SAVE_DELAY = 150;
-
-// sessionStorage throws outright in Safari's private mode, so neither side may assume it.
-const readScroll = () => {
-  try {
-    return JSON.parse(sessionStorage.getItem(SCROLL_KEY) ?? 'null');
-  } catch {
-    return null;
-  }
-};
-
-const writeScroll = (id, top) => {
-  try {
-    sessionStorage.setItem(SCROLL_KEY, JSON.stringify({ id, top }));
-  } catch {
-    // No memory this session; the scrollIntoView fallback still shows the current page.
-  }
-};
-
-// Puts the flyout back where the reader left it instead of snapping to the top. Only for
-// the same flyout, and only if the current page is still on screen at that offset —
-// otherwise a jump to a distant section would restore a position that hides it, which is
-// worse than starting from the top. Returns whether it took, so the caller can fall back.
-export const restoreMenuScroll = (currentLink) => {
-  const menu = currentLink?.closest('.level-2-menu');
-  const saved = readScroll();
-  if (!menu || !saved || saved.id !== menu.id) { return false; }
-
-  menu.scrollTop = saved.top;
-  const menuBox = menu.getBoundingClientRect();
-  const linkBox = currentLink.getBoundingClientRect();
-  // Deliberately not undone on a miss: the caller's scrollIntoView corrects from here,
-  // and resetting to 0 would echo back through the scroll listener and clobber the save.
-  return linkBox.top >= menuBox.top && linkBox.bottom <= menuBox.bottom;
-};
-
-// scroll doesn't bubble, so this listens in the capture phase rather than per flyout.
-// Trailing-edge only: a scroll fires dozens of events and each save is a synchronous
-// serialise plus write.
-export const setupScrollMemory = (sitenav) => {
-  let timer;
-  let pending;
-
-  const flush = () => {
-    if (!pending) { return; }
-    clearTimeout(timer);
-    writeScroll(pending.id, pending.top);
-    pending = null;
-  };
-
-  sitenav.addEventListener('scroll', ({ target }) => {
-    if (!target?.classList?.contains('level-2-menu') || !target.id) { return; }
-    pending = { id: target.id, top: target.scrollTop };
-    clearTimeout(timer);
-    timer = setTimeout(flush, SCROLL_SAVE_DELAY);
-  }, true);
-
-  // Scrolling and clicking a link inside the debounce window would otherwise lose the
-  // last move. pagehide rather than beforeunload, which would cost the bfcache.
-  window.addEventListener('pagehide', flush);
 };
 
 export const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
@@ -600,7 +541,18 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
 
   const main = document.querySelector('main');
   if (!main) { return; }
-  main.before(sitenav);
+
+  // scripts.js may have synchronously injected a cached shell at first paint. If
+  // so, swap this freshly-built (authoritative) rail in place of it rather than
+  // prepending a second #sitenav. The markup is near-identical and both carry the
+  // same view-transition-name, so this post-paint swap is visually invisible; it's
+  // a plain DOM mutation (not a navigation) so it doesn't trigger a transition.
+  const cached = document.querySelector('#sitenav[data-cached]');
+  if (cached) {
+    cached.replaceWith(sitenav);
+  } else {
+    main.before(sitenav);
+  }
 
   // After insertion: the visibility checks it depends on only mean anything for
   // elements that are actually in the document.
@@ -612,4 +564,7 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   if (!restoreMenuScroll(currentLink)) {
     currentLink?.scrollIntoView({ block: 'nearest' });
   }
+
+  // Refresh the cache so the next navigation can paint the rail synchronously.
+  writeNavCache(sitenav, anonymous);
 })();

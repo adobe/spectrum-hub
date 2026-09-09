@@ -3,10 +3,13 @@ import {
   getMetadata,
   setConfig,
   setScheme,
-  makePicture,
   checkIms,
   loadNav,
+  loadStyle,
+  isAnonymousSoft,
 } from './ak.js';
+import { findCurrentPageInNav, restoreMenuScroll } from './utils/nav-current.js';
+import { SITENAV_CACHE, HEADER_CACHE, readChromeCache } from './utils/chrome-cache.js';
 
 const hostnames = ['spectrum.adobe.com'];
 
@@ -41,7 +44,7 @@ const env = (() => {
 document.documentElement.classList.add('spectrum-edge');
 const isReturning = sessionStorage.getItem('session');
 if (isReturning) { document.body.classList.add('is-returning'); }
-const scheme = setScheme(document.body);
+setScheme(document.body);
 const template = getMetadata('template');
 if (template !== 'marketing') {
   document.documentElement.toggleAttribute('expand-sitenav', true);
@@ -96,31 +99,6 @@ const decorateArea = ({ area = document }) => {
   eagerLoad(area, select);
 };
 
-const decorateBackground = async () => {
-  const currColor = scheme.replace('-scheme', '');
-
-  const getPic = (color) => {
-    const path = getMetadata(`${color}-bg`);
-    const opts = {
-      sizes: [1000, 2000],
-      class: `bg-img scheme-aware-pic ${color}-pic`,
-      loading: currColor === color ? 'eager' : 'lazy',
-    };
-    if (!path) { return null; }
-    return makePicture(path, opts);
-  };
-
-  const pics = [getPic('light'), getPic('dark')];
-  document.body.prepend(...pics);
-  pics.forEach((pic) => {
-    if (!pic) { return; }
-    const img = pic.querySelector('img');
-    img.decode()
-      .then(() => img.classList.add('decoded'))
-      .catch(() => img.classList.add('decoded'));
-  });
-};
-
 const eagerLoad = (img) => {
   img?.setAttribute('loading', 'eager');
   img?.setAttribute('fetchpriority', 'high');
@@ -135,6 +113,66 @@ const eagerLoad = (img) => {
   }
 }());
 
+// Cross-document view transitions are opted in via CSS (@view-transition). Skip
+// the animation for readers who prefer reduced motion so they don't even pay the
+// snapshot cost. Registered before any await so it exists by the first render.
+window.addEventListener('pagereveal', (e) => {
+  if (!e.viewTransition) { return; }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    e.viewTransition.skipTransition();
+  }
+});
+
+// Paint the persistent chrome (sitenav rail + header) synchronously from the
+// sessionStorage cache, before first render, so it is present in the view-
+// transition snapshot and morphs across the navigation instead of popping in a
+// few hundred ms late. No-op on a cold visit (empty cache) — the authoritative
+// async build (loadNav / header block) then reconciles in place. Runs in the
+// module's synchronous top-level region, which — with blocking="render" on this
+// script — executes before first paint.
+const injectCachedChrome = () => {
+  const audience = isAnonymousSoft() ? 'anon' : 'auth';
+
+  // Header: its <header> element is already in the served HTML.
+  const headerEl = document.querySelector('header');
+  if (headerEl && getMetadata('header') !== 'off') {
+    const headerHTML = readChromeCache(HEADER_CACHE, audience);
+    if (headerHTML) {
+      headerEl.innerHTML = headerHTML;
+      headerEl.setAttribute('data-cached', '');
+      // Render-blocking so the injected header paints styled, not as raw markup.
+      loadStyle('/blocks/header/header.css');
+    }
+  }
+
+  // Sitenav: not in the served HTML, so build it from cache and insert it.
+  if (getMetadata('sitenav') === 'off') { return; }
+  const navHTML = readChromeCache(SITENAV_CACHE, audience);
+  const main = document.querySelector('main');
+  if (!navHTML || !main) { return; }
+  const tpl = document.createElement('template');
+  tpl.innerHTML = navHTML;
+  const sitenav = tpl.content.querySelector('#sitenav');
+  if (!sitenav) { return; }
+  sitenav.setAttribute('data-cached', '');
+  main.before(sitenav);
+  // Highlight needs no layout, so apply it now for a correct first paint.
+  const currentLink = findCurrentPageInNav(sitenav);
+  // Scroll restore needs layout, which needs the rail visible — defer it until
+  // sitenav.css (which flips #sitenav off display:none) has loaded. Render-
+  // blocking, so the styled rail is in the first paint.
+  loadStyle('/blocks/sitenav/sitenav.css').then(() => {
+    if (currentLink && !restoreMenuScroll(currentLink)) {
+      currentLink.scrollIntoView({ block: 'nearest' });
+    }
+  });
+};
+injectCachedChrome();
+
+// Bounded release of the render-block: once the first section is painted (or the
+// budget elapses), first paint proceeds so a slow block/fetch can never hang it.
+const FIRST_SECTION_BUDGET_MS = 120;
+const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
 export async function loadPage() {
   setConfig({
@@ -150,17 +188,28 @@ export async function loadPage() {
   // Preload IMS if returning visitor
   await checkIms();
 
+  // Returning visitor: the cached rail is already painted, so rebuild the
+  // authoritative rail without blocking first paint on its fetches.
   if (isReturning) {
-    await loadNav();
+    loadNav();
   }
-
-  decorateBackground();
 
   // Auto blocks
   const hero = buildAutoHero();
   buildBreadcrumbs(hero);
 
-  await loadArea();
+  // Kick the full area load (not awaited at top level — the rest of the sections,
+  // lazy.js and the footer continue in the background). For a returning visitor,
+  // hold first paint until the first section is revealed so the view-transition
+  // snapshot has real content; a cold visit has no inbound transition, so release
+  // immediately and add zero first-paint latency.
+  let resolveFirstSection;
+  const firstSection = new Promise((resolve) => { resolveFirstSection = resolve; });
+  loadArea({ onFirstSection: resolveFirstSection }).catch(() => {});
+
+  if (isReturning) {
+    await Promise.race([firstSection, wait(FIRST_SECTION_BUDGET_MS)]);
+  }
 }
 await loadPage();
 

@@ -85,6 +85,13 @@ export const checkIms = async () => {
   return loadIms();
 };
 
+// Synchronous best-guess of the audience, using the same signals as checkIms's
+// soft path (no IMS hash + no session marker => anonymous). Lets the early,
+// pre-paint cached-chrome inject in scripts.js pick the right cache bucket
+// without awaiting the async IMS check; a rare mismatch self-heals when the
+// authoritative build re-caches.
+export const isAnonymousSoft = () => !isImsHash() && !hasStoredSession();
+
 export const removeForAudience = async ({ publicEl, privateEl }) => {
   // Off-CDN (authoring/preview): always show the private/gated content.
   if (!getConfig().cdnEnv) {
@@ -492,7 +499,7 @@ async function loadSession() {
   }
 }
 
-export async function loadArea({ area } = { area: document }) {
+export async function loadArea({ area = document, onFirstSection } = {}) {
   const isDoc = area === document;
   const isSession = sessionStorage.getItem('session');
   if (isDoc) { decorateDoc(isSession); }
@@ -514,6 +521,11 @@ export async function loadArea({ area } = { area: document }) {
     delete section.dataset.status;
     if (isDoc && idx === 0) {
       if (!isSession) { loadSession(); }
+      // The first section is now un-gated (and body.session set), so the page has
+      // meaningful, painted content. scripts.js awaits this to release the
+      // render-block, aligning first paint (and the cross-document view-transition
+      // snapshot) with real content instead of the blank, gated document.
+      onFirstSection?.();
     }
   }
   if (isDoc) { import('./lazy.js'); }

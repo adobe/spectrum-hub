@@ -1,10 +1,19 @@
-import { getConfig, getMetadata } from '../../scripts/ak.js';
+import { getConfig, getMetadata, isAnonymousSoft } from '../../scripts/ak.js';
 import { picture2svg } from '../../scripts/utils/svg.js';
+import { HEADER_CACHE, writeChromeCache } from '../../scripts/utils/chrome-cache.js';
 import { loadFragment } from '../fragment/fragment.js';
 
 const { locale } = getConfig();
 
 const HEADER_PATH = '/fragments/nav/header';
+
+// Serialize the decorated header so scripts.js can inject it synchronously at
+// first paint on the next navigation. The interactive widgets (profile/search)
+// serialize in their current state and re-hydrate when the block reloads; brand
+// and action layout are identical pre/post-hydration, so the morph stays stable.
+const writeHeaderCache = (el) => {
+  writeChromeCache(HEADER_CACHE, el.innerHTML, isAnonymousSoft() ? 'anon' : 'auth');
+};
 
 /**
  * Builds a skip link and prepares its target.
@@ -61,8 +70,19 @@ export default async function init(el) {
   if (!fragment) { return; }
   fragment.classList.add('header-content');
   await decorateHeader(fragment);
-  el.append(fragment);
 
   const skipLink = createSkipLink();
-  el.prepend(skipLink);
+  if (el.hasAttribute('data-cached')) {
+    // Replace the synchronously-injected cached shell in place (skip link first,
+    // matching the prepend/append order used on a cold build). Shared se-header
+    // view-transition-name + near-identical markup make the swap invisible.
+    el.replaceChildren(skipLink, fragment);
+    el.removeAttribute('data-cached');
+  } else {
+    el.append(fragment);
+    el.prepend(skipLink);
+  }
+
+  // Refresh the cache so the next navigation can paint the header synchronously.
+  writeHeaderCache(el);
 }
