@@ -4,6 +4,10 @@ header {
   --header-surface-transition: 200ms cubic-bezier(0.23, 1, 0.32, 1);
   --header-inner-shadow: light-dark(rgb(255 255 255), rgb(248 248 248));
   --header-outer-shadow: light-dark(rgb(255 255 255), var(--s2-gray-800));
+  --sh-brand-wordmark-opacity: 1;
+  --sh-brand-mark-width-full: 140px;
+  --sh-brand-mark-width-compact: 38px;
+  --sh-brand-mark-width: var(--sh-brand-mark-width-full);
 
   visibility: visible;
   z-index: 200;
@@ -19,6 +23,16 @@ header {
     &::before {
       background-color: var(--sh-glass-background-color);
       backdrop-filter: blur(var(--sh-glass-blur));
+    }
+
+    @media (width >= 900px) {
+      box-shadow: none;
+      background-color: unset;
+      border-radius: 0;
+
+      &::before {
+        display: none;
+      }
     }
   }
 
@@ -70,11 +84,10 @@ header {
       box-shadow var(--header-surface-transition);
     padding-inline: 13px; /* ✨ magic number to align the A in logo with icons in nav */
     
-
     /* Frosted backing, revealed once main scrolls up under the header. It lives on
-       a pseudo-element because backdrop-filter would otherwise make the header a
-       containing block for the anchor-positioned search and profile popovers.
-       It stays in the box tree unscrolled so the blur has a state to ease from. */
+      a pseudo-element because backdrop-filter would otherwise make the header a
+      containing block for the anchor-positioned search and profile popovers.
+      It stays in the box tree unscrolled so the blur has a state to ease from. */
     &::before {
       content: '';
       position: absolute;
@@ -87,6 +100,12 @@ header {
         background-color var(--header-surface-transition),
         backdrop-filter var(--header-surface-transition);
     }
+    
+    @media (width >= 900px) {
+      &::before {
+        display: none;
+      }
+    }
   }
 
   .brand-section {
@@ -94,11 +113,14 @@ header {
       display: block;
       position: relative;
       outline: none;
+      inline-size: var(--sh-brand-mark-width);
 
       &::after {
         position: absolute;
         content: '';
-        inset: -6px;
+        inset-block: 0;
+        inset-inline: calc(16px - (var(--sh-brand-ring-size) / 2)) auto;
+        inline-size: var(--sh-brand-ring-size);
       }
     }
 
@@ -109,11 +131,16 @@ header {
 
     svg {
       display: block;
-      width: 166px;
+      width: var(--sh-brand-mark-width-full);
       height: 56px;
+
+      /* fade out the "Spectrum" wordmark as the page scrolls */
+      & > path:nth-child(2) {
+        opacity: var(--sh-brand-wordmark-opacity);
+      }
     }
 
-    /* Narrow screens keep the "A" and drop the wordmark. The logo renders 1:1
+     /* Narrow screens keep the "A" and drop the wordmark. The logo renders 1:1
        from a 166-unit viewBox: the "A" spans 0-32 and the wordmark starts at 45,
        so the link shrinks to a window in the gap between them. */
     @media (width < 900px) {
@@ -161,12 +188,14 @@ header {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  header .brand-section svg {
+    transition: none;
+  }
+
   header .header-content,
   header .header-content::before,
   header .skip-link,
-  header .skip-link:focus-visible,
-  header .main-nav-section a,
-  header .mobile-nav-button {
+  header .skip-link:focus-visible {
     transition: none;
   }
 }
