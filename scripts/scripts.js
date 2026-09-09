@@ -121,6 +121,21 @@ const decorateBackground = async () => {
   });
 };
 
+const eagerLoad = (img) => {
+  img?.setAttribute('loading', 'eager');
+  img?.setAttribute('fetchpriority', 'high');
+};
+
+(async function loadLCPImage() {
+  const firstDiv = document.querySelector('body > main > div:nth-child(1) > div');
+  if (firstDiv?.classList.contains('marquee')) {
+    firstDiv.querySelectorAll('img').forEach(eagerLoad);
+  } else {
+    eagerLoad(document.querySelector('img'));
+  }
+}());
+
+
 export async function loadPage() {
   setConfig({
     hostnames,
