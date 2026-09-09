@@ -34,6 +34,11 @@ header {
         display: none;
       }
     }
+
+    & > .brand-section svg > path:nth-child(2) {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
   }
 
   .skip-link {
@@ -133,11 +138,6 @@ header {
       display: block;
       width: var(--sh-brand-mark-width-full);
       height: 56px;
-
-      /* fade out the "Spectrum" wordmark as the page scrolls */
-      & > path:nth-child(2) {
-        opacity: var(--sh-brand-wordmark-opacity);
-      }
     }
 
      /* Narrow screens keep the "A" and drop the wordmark. The logo renders 1:1

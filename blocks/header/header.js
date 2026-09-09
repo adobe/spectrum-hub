@@ -4,18 +4,6 @@ import { loadFragment } from '../fragment/fragment.js';
 
 const { locale } = getConfig();
 
-const HEADER_PATH = '/fragments/nav/header';
-const FULL_BRAND_MARK_WIDTH = 140;
-const COMPACT_BRAND_MARK_WIDTH = 38;
-const BRAND_MARK_TRANSITION_DISTANCE = 80;
-
-function getScrollProgress(scrollY, threshold) {
-  if (!Number.isFinite(scrollY) || !Number.isFinite(threshold) || scrollY <= threshold) {
-    return 0;
-  }
-  return Math.min((scrollY - threshold) / BRAND_MARK_TRANSITION_DISTANCE, 1);
-}
-
 /**
  * Builds a skip link and prepares its target.
  * @param {string} text visible label
@@ -76,18 +64,7 @@ export function watchScroll(el) {
   let threshold = 0;
   const measure = () => { threshold = Math.max(main.offsetTop - el.offsetHeight, 0); };
   // Deliberately free of layout reads so it stays cheap to run on every scroll.
-  const update = () => {
-    const { scrollY } = window;
-    const progress = getScrollProgress(scrollY, threshold);
-    const isScrolled = scrollY > threshold;
-    const calculatedWidth = FULL_BRAND_MARK_WIDTH
-      + ((COMPACT_BRAND_MARK_WIDTH - FULL_BRAND_MARK_WIDTH) * progress);
-    const width = Math.round(calculatedWidth);
-    const opacity = 1 - progress;
-    el.style.setProperty('--sh-brand-mark-width', `${width}px`);
-    el.style.setProperty('--sh-brand-wordmark-opacity', `${opacity}`);
-    el.classList.toggle('is-scrolled', isScrolled);
-  };
+  const update = () => el.classList.toggle('is-scrolled', window.scrollY > threshold);
   const remeasure = () => {
     measure();
     update();
