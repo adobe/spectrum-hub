@@ -1,5 +1,5 @@
 #sitenav {
-  --sitenav-blur: 32px;
+  --sitenav-blur: var(--sh-glass-blur);
 
   /* Opaque stand-in for the translucent panel fills when the blur can't run (see the
      @supports / prefers-reduced-transparency blocks at the end). */
@@ -588,19 +588,20 @@ html:has(meta[name="template"][content="marketing"]) {
   }
 }
 
-/* Lifted direct from prototype */
+/* Lifted direct from prototype. The surface colors are shared with the
+   scrolled header, so they live as --sh-glass-* tokens in styles.css. */
 .light-scheme {
   nav::before, .level-2-menu, .sitenav-expand-btn::before {
     box-shadow: inset 0 0 3px #fff, 0 0 .5px #0000001a, 0 9px 94.8px #0000000d;
-    background-color: #ffffff80;
-    background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+    background-color: var(--sh-glass-background-color);
+    background-image: var(--sh-glass-background-image);
   }
 }
 
 .dark-scheme {
   nav:not(.page-nav, .breadcrumbs), .level-2-menu, .sitenav-expand-btn::before {
-    background-color: #ffffff0a;
-    background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+    background-color: var(--sh-glass-background-color);
+    background-image: var(--sh-glass-background-image);
   }
 }
 
