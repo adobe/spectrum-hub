@@ -7,6 +7,7 @@ import {
   loadNav,
   loadStyle,
   isAnonymousSoft,
+  makePicture,
 } from './ak.js';
 import { findCurrentPageInNav, restoreMenuScroll } from './utils/nav-current.js';
 import { SITENAV_CACHE, HEADER_CACHE, readChromeCache } from './utils/chrome-cache.js';
@@ -44,7 +45,7 @@ const env = (() => {
 document.documentElement.classList.add('spectrum-edge');
 const isReturning = sessionStorage.getItem('session');
 if (isReturning) { document.body.classList.add('is-returning'); }
-setScheme(document.body);
+const scheme = setScheme(document.body);
 const template = getMetadata('template');
 if (template !== 'marketing') {
   document.documentElement.toggleAttribute('expand-sitenav', true);
@@ -169,8 +170,49 @@ const injectCachedChrome = () => {
 };
 injectCachedChrome();
 
-// Bounded release of the render-block: once the first section is painted (or the
-// budget elapses), first paint proceeds so a slow block/fetch can never hang it.
+// Build the author-specified page background (light/dark PNGs from metadata) as
+// fixed, full-viewport <picture>s behind the page. Runs synchronously here —
+// before first paint — rather than inside loadPage, so the current-scheme image
+// is present in the new document's first-paint view-transition snapshot. The
+// background is intentionally left in the default `root` group (see styles.css)
+// so it cross-fades together with the content; being present at snapshot is what
+// stops it flashing through a blank state. Returns a promise that resolves once
+// that image has decoded, so loadPage can hold the render-block until it paints.
+const decorateBackground = () => {
+  const currColor = scheme.replace('-scheme', '');
+
+  const getPic = (color) => {
+    const path = getMetadata(`${color}-bg`);
+    if (!path) { return null; }
+    return makePicture(path, {
+      sizes: [1000, 2000],
+      class: `bg-img scheme-aware-pic ${color}-pic`,
+      loading: currColor === color ? 'eager' : 'lazy',
+    });
+  };
+
+  const pics = { light: getPic('light'), dark: getPic('dark') };
+  const ordered = [pics.light, pics.dark].filter(Boolean);
+  if (!ordered.length) { return Promise.resolve(); }
+  document.body.prepend(...ordered);
+
+  const decode = (pic) => {
+    const img = pic.querySelector('img');
+    return img.decode()
+      .then(() => img.classList.add('decoded'))
+      .catch(() => img.classList.add('decoded'));
+  };
+  const decodes = new Map(ordered.map((pic) => [pic, decode(pic)]));
+
+  // Only the visible (current-scheme) image gates first paint.
+  const current = pics[currColor];
+  return current ? decodes.get(current) : Promise.resolve();
+};
+const backgroundReady = decorateBackground();
+
+// Bounded release of the render-block: once the first section AND the page
+// background are painted (or the budget elapses), first paint proceeds so a slow
+// block/image/fetch can never hang it.
 const FIRST_SECTION_BUDGET_MS = 120;
 const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
@@ -200,15 +242,17 @@ export async function loadPage() {
 
   // Kick the full area load (not awaited at top level — the rest of the sections,
   // lazy.js and the footer continue in the background). For a returning visitor,
-  // hold first paint until the first section is revealed so the view-transition
-  // snapshot has real content; a cold visit has no inbound transition, so release
-  // immediately and add zero first-paint latency.
+  // hold first paint until the first section AND the page background are painted,
+  // so the view-transition snapshot has real content and its background (the main
+  // flash source); a cold visit has no inbound transition, so release immediately
+  // and add zero first-paint latency. Bounded so a slow section/image can't hang.
   let resolveFirstSection;
   const firstSection = new Promise((resolve) => { resolveFirstSection = resolve; });
   loadArea({ onFirstSection: resolveFirstSection }).catch(() => {});
 
   if (isReturning) {
-    await Promise.race([firstSection, wait(FIRST_SECTION_BUDGET_MS)]);
+    const ready = Promise.all([firstSection, backgroundReady]);
+    await Promise.race([ready, wait(FIRST_SECTION_BUDGET_MS)]);
   }
 }
 await loadPage();
