@@ -624,10 +624,18 @@ div[data-status],
     body {
       display: grid;
       place-content: center;
+
+      /* The pagenav track is a FIXED width (not minmax(..., auto)) so main's
+         width never depends on when the page-nav element or its stylesheet load:
+         an `auto` upper bound would let the column grow to the TOC's natural
+         width in the window after page-nav.js appends it but before page-nav.css
+         caps it, shifting main and then snapping back (CLS). --pagenav-track-width
+         already reserves the intended space and resolves to `auto` on marketing
+         pages and 0 below 900px. */
       grid-template:
         'header header header' var(--sh-header-height)
         'sitenav main pagenav' 1fr
-        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) minmax(var(--pagenav-track-width), auto);
+        'sitenav footer pagenav' auto / var(--sitenav-track-width) minmax(auto, var(--se-grid-container-width)) var(--pagenav-track-width);
       min-height: 100svh;
       margin: 0;
       background-color: var(--se-body-background-color);
