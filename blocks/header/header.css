@@ -6,7 +6,7 @@ header {
   --header-outer-shadow: light-dark(rgb(255 255 255), var(--s2-gray-800));
   --sh-brand-wordmark-opacity: 1;
   --sh-brand-mark-width-full: 140px;
-  --sh-brand-mark-width-compact: 38px;
+  --sh-brand-mark-width-compact: 28px;
   --sh-brand-mark-width: var(--sh-brand-mark-width-full);
 
   visibility: visible;
@@ -32,6 +32,19 @@ header {
 
       &::before {
         display: none;
+      }
+    }
+
+    & > .brand-section {
+      a {
+        inline-size: var(--sh-brand-mark-width-compact);
+      }
+
+      /* Center the ring */
+      a::after {
+        inset-block: 0;
+        inset-inline: calc(var(--sh-brand-mark-width-compact) / -2);
+        inline-size: var(--sh-brand-ring-size);
       }
     }
 
@@ -90,9 +103,9 @@ header {
     padding-inline: 13px; /* ✨ magic number to align the A in logo with icons in nav */
     
     /* Frosted backing, revealed once main scrolls up under the header. It lives on
-      a pseudo-element because backdrop-filter would otherwise make the header a
-      containing block for the anchor-positioned search and profile popovers.
-      It stays in the box tree unscrolled so the blur has a state to ease from. */
+    a pseudo-element because backdrop-filter would otherwise make the header a
+    containing block for the anchor-positioned search and profile popovers.
+    It stays in the box tree unscrolled so the blur has a state to ease from. */
     &::before {
       content: '';
       position: absolute;
@@ -124,8 +137,8 @@ header {
         position: absolute;
         content: '';
         inset-block: 0;
-        inset-inline: calc(16px - (var(--sh-brand-ring-size) / 2)) auto;
-        inline-size: var(--sh-brand-ring-size);
+        inset-inline: calc(-1 * var(--focus-indicator-width));
+        inline-size: 100%;
       }
     }
 
@@ -140,27 +153,21 @@ header {
       height: 56px;
     }
 
-     /* Narrow screens keep the "A" and drop the wordmark. The logo renders 1:1
-       from a 166-unit viewBox: the "A" spans 0-32 and the wordmark starts at 45,
-       so the link shrinks to a window in the gap between them. */
+     /* Narrow screens keep the "A" and drop the wordmark. */
     @media (width < 900px) {
-      --sh-brand-mark-width: 38px;
-
       a {
-        inline-size: var(--sh-brand-mark-width);
+        inline-size: var(--sh-brand-mark-width-compact);
       }
 
-      /* Centre the ring on the "A" rather than on the link: the glyph's centre
-         is 16px in, so a square ring starts half its own width before that.
-         Sizing it this way keeps it centred if the window width changes. */
+      /* Centre the ring. */
       a::after {
         inset-block: 0;
-        inset-inline: calc(16px - (var(--sh-brand-ring-size) / 2)) auto;
+        inset-inline: calc(var(--sh-brand-mark-width-compact) / -2);
         inline-size: var(--sh-brand-ring-size);
       }
 
       svg {
-        clip-path: inset(0 calc(100% - var(--sh-brand-mark-width)) 0 0);
+        clip-path: inset(0 calc(100% - var(--sh-brand-mark-width-compact)) 0 0);
       }
     }
   }
