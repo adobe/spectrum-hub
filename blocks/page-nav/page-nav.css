@@ -13,7 +13,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     inset-block-start: var(--sh-header-height); /* match the header so the page nav sticks in place */
     max-block-size: calc(100vh - var(--sh-header-height, 0px));
     max-inline-size: var(--pagenav-track-width);
-    font-family: var(--s2-font-family, 'Adobe Clean', 'Trebuchet MS', sans-serif);
+    font-family: var(--s2-font-family, 'Adobe Clean Spectrum VF', 'Trebuchet MS', sans-serif);
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
