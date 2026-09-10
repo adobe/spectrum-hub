@@ -2,9 +2,8 @@
 .columns {
   --columns-gap: 56px;
   --image-corner-radius: 32px;
-  --xs-image-size: 80px;
-  --s-image-size: 316px;
-  --m-image-size: 502px;
+  --grid-column-span-image: 1 / 1;
+  --grid-column-span-text: 1 / 1;
 
   inline-size: 100%;
   margin-block: var(--s2-spacing-600) var(--s2-spacing-500);
@@ -24,69 +23,106 @@
     margin-block-start: 0;
   }
 
+
+@media (width >= 600px) {
   /* extra-small */
-  &:not(.small, .medium, .large) {
-    --image-size: var(--xs-image-size);
+  &.extra-small {
+    --grid-column-span-image: 1 / 4;
+    --grid-column-span-text: 4 / 13;
   }
+
+  &.extra-small.image-right {
+    --grid-column-span-text: 1 / 10;
+    --grid-column-span-image: 10 / 13;
+  }
+
+  /* small */
+  &.small {
+    --grid-column-span-image: 1 / 5;
+    --grid-column-span-text: 5 / 13;
+  }
+
+  &.small.image-right {
+    --grid-column-span-text: 1 / 9;
+    --grid-column-span-image: 9 / 13;
+  }
+
+  /* medium */
+  &.medium {
+    --grid-column-span-image: 1 / 7;
+    --grid-column-span-text: 7 / 13;
+  }
+
+  &.medium.image-right {
+    --grid-column-span-text: 1 / 7;
+    --grid-column-span-image: 7 / 13;
+  }
+}
 
   /* small, medium, large, and single-column rows */
-  &.small,
+  /* &.small,
   &.medium,
   &.large {
-    --image-size: var(--s-image-size);
-  }
+    --image-size: minmax(4fr, var(--s-image-size));
+  } */
   
   @media (width >= 600px) {
-    &.medium {
-      --image-size: var(--m-image-size);
-    }
+    /* &.medium {
+      --image-size: minmax(var(--m-image-size), 100%);
+    } */
 
     /* large & image-only */
-    &.large,
+    /* &.large,
     &.centered > .row:only-child {
       --image-size: 100%;
-    }
+    } */
 
-    &:not(.small, .medium, .large, .align-start, .centered, .grid-layout) > .row {
+    /* &:not(.small, .medium, .large, .align-start, .centered, .grid-layout) > .row {
       display: grid;
-    }
+    } */
 
     /* xs/default will snap to the 2-column layout at 600px (except for when the image is on the right */
-    &:not(.small, .medium, .large, .image-right, .centered, .grid-layout) > .row {
+    /* &:not(.small, .medium, .large, .image-right, .centered, .grid-layout) > .row {
       grid-template-columns: var(--image-size) auto;
-    }
+    } */
 
     @container columns (width > 530px) {
       /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
-      &.small:not(.align-start, .image-right, .centered, .grid-layout) > .row {
+      /* &.small:not(.align-start, .image-right, .centered, .grid-layout) > .row {
         display: grid;
         grid-template-columns: var(--image-size) auto;
-      }
+      } */
     }
   }
 
   @media (width >= 900px) {
     @container columns (width > 725px) {
       /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 1200px wide */
-      &.medium:not(.align-start, .image-right, .centered) > .row,
+      /* &.medium:not(.align-start, .image-right, .centered) > .row,
       &.large:not(.align-start, .centered) > .row {
         display: grid;
         align-items: start;
         grid-template-columns: var(--image-size) auto;
-      }
+      } */
     }
   }
 
   .row {
-    display: flex;
-    flex-direction: column;
+    border: 1px solid red;
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: start;
     gap: var(--columns-gap);
+
+    @media (width >= 600px) {
+      grid-template-columns: repeat(12, 1fr);
+    } 
   }
 
   .col {
-    flex-direction: column;
+    border: 1px solid blue;
     display: flex;
+    flex-direction: column;
     gap: var(--s2-spacing-300);
     box-sizing: border-box;
     text-wrap-style: pretty;
@@ -98,6 +134,11 @@
 
     &:has(p, h2, h3, h4, h5, h6) {
       max-inline-size: 80ch;
+      grid-column: var(--grid-column-span-text);
+    }
+
+    &:has(img, picture) {
+      grid-column: var(--grid-column-span-image);
     }
   }
 
@@ -206,11 +247,10 @@
 
   /* Centered columns */
   &.centered {
-    display: flex;
-    flex-direction: column;
     gap: var(--columns-gap);
     align-items: center;
     text-align: center;
+    grid-template-columns: 1fr;
   }
 
   &.centered .col {
@@ -220,17 +260,17 @@
   &.image-right {
     @media (width >= 600px) {
       /* image-right flips the column sizing */
-      &:not(.medium, .large, .centered) .row {
+      /* &:not(.medium, .large, .centered) .row {
         display: grid;
         grid-template-columns: auto var(--image-size);
-      }
+      } */
     }
 
     @container columns (width >= 900px) {
-      &.medium:not(.centered) .row {
+      /* &.medium:not(.centered) .row {
         display: grid;
         grid-template-columns: auto var(--image-size);
-      }
+      } */
     }
   }
 
