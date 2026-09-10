@@ -421,6 +421,12 @@ div[data-status],
     max-width: var(--se-grid-container-width);
     margin: 0;
 
+    &:has(.btn-group + .btn-group) .btn-group {
+      display: inline-flex;
+      margin-block-start: 0;
+      margin-inline: 8px;
+    }
+
     > .btn-group {
       display: flex;
       justify-content: var(--section-justify-align);
