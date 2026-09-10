@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import init from '../../blocks/header/header.js';
+import init, { watchScroll } from '../../blocks/header/header.js';
 import { setConfig } from '../../scripts/ak.js';
 
 const BRAND_HTML = '<a href="/">Spectrum</a>';
@@ -129,6 +129,135 @@ describe('header block', () => {
 
     it('still renders the actions section', () => {
       expect(el.querySelector('.actions-section')).to.not.be.null;
+    });
+  });
+
+  describe('scroll state', () => {
+    let scrollDesc;
+    let teardown;
+
+    const setScrollY = (value) => {
+      Object.defineProperty(window, 'scrollY', { get: () => value, configurable: true });
+    };
+    beforeEach(() => {
+      // scrollY is an own, configurable property of window, so it can be shadowed
+      // for the test. The page itself can't be scrolled in a headless run.
+      scrollDesc = Object.getOwnPropertyDescriptor(window, 'scrollY');
+      document.body.append(document.createElement('main'));
+    });
+
+    afterEach(() => {
+      teardown?.();
+      teardown = undefined;
+      Object.defineProperty(window, 'scrollY', scrollDesc);
+    });
+
+    it('does nothing when the page has no main element', () => {
+      document.querySelector('main').remove();
+      expect(watchScroll(el)).to.be.undefined;
+      expect(el.classList.contains('is-scrolled')).to.be.false;
+    });
+
+    it('starts without the is-scrolled class at the top of the page', () => {
+      setScrollY(0);
+      teardown = watchScroll(el);
+      expect(el.classList.contains('is-scrolled')).to.be.false;
+    });
+
+    it('adds is-scrolled once main has scrolled under the header', () => {
+      setScrollY(0);
+      teardown = watchScroll(el);
+      setScrollY(5000);
+      window.dispatchEvent(new Event('scroll'));
+      expect(el.classList.contains('is-scrolled')).to.be.true;
+    });
+
+    it('removes is-scrolled when the page returns to the top', () => {
+      setScrollY(5000);
+      teardown = watchScroll(el);
+      expect(el.classList.contains('is-scrolled')).to.be.true;
+      setScrollY(0);
+      window.dispatchEvent(new Event('scroll'));
+      expect(el.classList.contains('is-scrolled')).to.be.false;
+    });
+
+    it('re-evaluates on resize', () => {
+      const main = document.querySelector('main');
+      let offsetTop = 200;
+      sandbox.stub(main, 'offsetTop').get(() => offsetTop);
+      sandbox.stub(el, 'offsetHeight').value(56);
+      setScrollY(0);
+      teardown = watchScroll(el);
+      setScrollY(5000);
+      window.dispatchEvent(new Event('resize'));
+      expect(el.classList.contains('is-scrolled')).to.be.true;
+      offsetTop = 6000;
+      window.dispatchEvent(new Event('resize'));
+      expect(el.classList.contains('is-scrolled')).to.be.false;
+    });
+
+    it('stops listening after teardown', () => {
+      setScrollY(0);
+      watchScroll(el)();
+      setScrollY(5000);
+      window.dispatchEvent(new Event('scroll'));
+      expect(el.classList.contains('is-scrolled')).to.be.false;
+    });
+
+    it('is wired up by init', async () => {
+      setScrollY(0);
+      stubFetch(sandbox);
+      await init(el);
+      setScrollY(5000);
+      window.dispatchEvent(new Event('scroll'));
+      expect(el.classList.contains('is-scrolled')).to.be.true;
+    });
+  });
+
+  describe('wordmark opacity styling', () => {
+    it('fades only the second direct-child wordmark path', async () => {
+      const link = document.createElement('link');
+      const fixture = document.createElement('header');
+      fixture.innerHTML = `
+        <div class="header-content">
+          <div class="brand-section">
+            <a href="/">
+              <svg viewBox="0 0 100 20">
+                <path d="M0 0h10v10H0z"></path>
+                <path d="M20 0h10v10H20z"></path>
+              </svg>
+            </a>
+          </div>
+          <svg viewBox="0 0 100 20">
+            <path d="M40 0h10v10H40z"></path>
+          </svg>
+        </div>
+      `;
+      document.body.append(fixture);
+
+      try {
+        link.rel = 'stylesheet';
+        link.href = '/blocks/header/header.css';
+        const stylesheetReady = new Promise((resolve, reject) => {
+          link.addEventListener('load', resolve, { once: true });
+          link.addEventListener('error', () => reject(new Error('Failed to load header.css')), { once: true });
+        });
+        document.head.append(link);
+        await stylesheetReady;
+
+        const wordmarkPath = fixture.querySelector('.brand-section svg > path:nth-child(2)');
+        const aPath = fixture.querySelector('.brand-section svg > path:first-child');
+        const unrelatedPath = fixture.querySelector('.header-content > svg > path');
+        expect(getComputedStyle(wordmarkPath).opacity).to.equal('1');
+        wordmarkPath.style.transition = 'none';
+        fixture.classList.add('is-scrolled');
+        expect(getComputedStyle(wordmarkPath).opacity).to.equal('0');
+        expect(getComputedStyle(aPath).opacity).to.equal('1');
+        expect(getComputedStyle(unrelatedPath).opacity).to.equal('1');
+      } finally {
+        link.remove();
+        fixture.remove();
+      }
     });
   });
 

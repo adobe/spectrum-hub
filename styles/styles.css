@@ -363,6 +363,11 @@
   /* header */
   --sh-header-height: 104px;
 
+  /* frosted surfaces shared by the sitenav and the scrolled header */
+  --sh-glass-blur: 32px;
+  --sh-glass-background-color: light-dark(#ffffff80, #ffffff0a);
+  --sh-glass-background-image: linear-gradient(135deg, #156bff01, #ff2bed00);
+
   /* options table buttons */
   --sh-content-color-white: rgb(255 255 255);
   --sh-decode-transition: opacity 0.2s ease-in-out;
