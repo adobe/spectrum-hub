@@ -14,11 +14,10 @@
      swatch-group.jsx), ColorArea is a 2D color picker with no sensible
      built-in default color, so a `defaultValue` is required at render time —
      a hex string is accepted directly. `xChannel`/`yChannel` are left
-     unset rather than guessed: neither is documented here, and ColorArea is
-     expected to derive sensible default channels from the value's color
-     space on its own, but that inference isn't verified live — worth
-     double-checking the rendered axes match a real ColorArea if this looks
-     off.
+     unset because ColorArea derives both from the value's color space —
+     verified live, including that it re-derives them when colorSpace
+     changes. Their controls lead with a "default" choice for the same
+     reason (playground-data.js's DERIVED_PROPERTIES).
 
      ColorArea has no `label`/`aria-label` documented anywhere either (it's a
      visual widget, not a labelable field, similar to Calendar/ColorWheel) —

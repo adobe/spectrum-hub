@@ -1,0 +1,78 @@
+[
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\" | \"xxs\" | \"xxl\"",
+    "kind": "enum",
+    "values": [
+      "xxs",
+      "xs",
+      "s",
+      "m",
+      "l",
+      "xl",
+      "xxl"
+    ],
+    "optional": false,
+    "description": "The size of the card.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "variant",
+    "property": "variant",
+    "type": "\"primary\" | \"secondary\" | \"tertiary\" | \"quiet\"",
+    "kind": "enum",
+    "values": [
+      "primary",
+      "secondary",
+      "tertiary",
+      "quiet"
+    ],
+    "optional": false,
+    "default": "'primary'",
+    "description": "The visual variant of the card.",
+    "inheritedFrom": "CardBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "density",
+    "property": "density",
+    "type": "\"compact\" | \"regular\" | \"spacious\"",
+    "kind": "enum",
+    "values": [
+      "compact",
+      "regular",
+      "spacious"
+    ],
+    "optional": false,
+    "default": "'regular'",
+    "description": "The density of the card, controlling internal spacing and gaps.",
+    "inheritedFrom": "CardBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "title-as-link",
+    "property": "titleAsLink",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Indicates the consumer has wrapped their `title` slot content in a real\nlink. Extends that link's hit area to cover the card surface while\nleaving navigation entirely consumer-owned; Card accepts no `href`.",
+    "inheritedFrom": "CardBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "selectable",
+    "property": "selectable",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Makes the card focusable and captures surface clicks (excluding nested\ninteractive targets) to dispatch a `swc-card-click` event, independent\nof `titleAsLink`.",
+    "inheritedFrom": "CardBase",
+    "since": "2.0.0"
+  }
+]

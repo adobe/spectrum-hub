@@ -18,14 +18,14 @@
     "since": "2.0.0-beta.1"
   },
   {
-    "attribute": "label",
-    "property": "label",
+    "attribute": "accessible-label",
+    "property": "accessibleLabel",
     "type": "string",
     "kind": "text",
     "values": [],
     "optional": false,
     "default": "''",
-    "description": "Accessible label for the icon.",
+    "description": "Accessible label for the icon. When empty the icon is decorative.",
     "inheritedFrom": "IconBase",
     "status": "internal",
     "since": "2.0.0-beta.1"

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { resolveRspPropKey, hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
+import { resolveRspPropKey, hasLabelProp, mountAttributeName } from '../../deps/rsp/playground/apply-rsp-prop.js';
 
 // The playground's authored property name for a component's text content can
 // be "text", "label", or "children" (whichever reads naturally for that
@@ -62,5 +62,38 @@ describe('hasLabelProp', () => {
   it('returns false for non-array input (e.g. a fetch that failed and fell back to undefined)', () => {
     assert.equal(hasLabelProp(undefined), false);
     assert.equal(hasLabelProp(null), false);
+  });
+});
+
+// SWC reflects a prop onto the live element under the DOM attribute its catalog row
+// names. RSP rows carry no `attribute` at all (playground-data.js:227 — props aren't
+// attributes), so the shell has to derive the name it mirrors onto #mount instead.
+// Without this the shared `body:has([static-color="white"])` backdrop rule in
+// preview-shell.css never matched on an RSP page: a white staticColor button rendered
+// white-on-white while the same SWC page went dark.
+describe('mountAttributeName', () => {
+  it('dasherizes a camelCase property to the attribute the shared CSS keys off', () => {
+    assert.equal(mountAttributeName('staticColor'), 'static-color');
+  });
+
+  it('leaves an already-lowercase property alone', () => {
+    assert.equal(mountAttributeName('variant'), 'variant');
+  });
+
+  it('splits every hump of a multi-word property', () => {
+    assert.equal(mountAttributeName('isKeyboardDismissDisabled'), 'is-keyboard-dismiss-disabled');
+  });
+
+  it('keeps an acronym run together, splitting only before its last letter', () => {
+    assert.equal(mountAttributeName('UNSAFEStyle'), 'unsafe-style');
+  });
+
+  it('leaves an already-dashed property unchanged, so aria-* round-trips', () => {
+    assert.equal(mountAttributeName('aria-label'), 'aria-label');
+  });
+
+  it('returns null for a missing property rather than an empty attribute name', () => {
+    assert.equal(mountAttributeName(''), null);
+    assert.equal(mountAttributeName(undefined), null);
   });
 });

@@ -1,0 +1,104 @@
+[
+  {
+    "attribute": "compact",
+    "property": "compact",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the group uses compact density. Buttons visually join by\ncollapsing shared borders and resetting interior border-radius values.\n\nHas no visual effect when `quiet` is also set.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "quiet",
+    "property": "quiet",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the group and its children use the quiet visual style.\n\nPropagated to all slotted `swc-action-button` and `swc-action-menu`\nchildren. Also disables the compact border-join styling when both\n`compact` and `quiet` are set.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "justified",
+    "property": "justified",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether slotted children should expand equally to fill the available\ninline width of the group.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "static-color",
+    "property": "staticColor",
+    "type": "\"white\" | \"black\"",
+    "kind": "enum",
+    "values": [
+      "white",
+      "black"
+    ],
+    "optional": true,
+    "description": "The static color variant to apply when the group is placed over an image\nor colored background. Propagated to all slotted children.\n\n- `\"white\"`: use on dark or colored backgrounds.\n- `\"black\"`: use on light backgrounds.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\"",
+    "kind": "enum",
+    "values": [
+      "xs",
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": false,
+    "description": "The size of the group and its children.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "orientation",
+    "property": "orientation",
+    "type": "\"horizontal\" | \"vertical\"",
+    "kind": "enum",
+    "values": [
+      "horizontal",
+      "vertical"
+    ],
+    "optional": false,
+    "default": "'horizontal'",
+    "description": "The layout direction of the action group.\n\nWhen set to `\"vertical\"`, the group stacks children vertically and\n`FocusgroupNavigationController` moves focus with the Up/Down arrow\nkeys instead of Left/Right.\n\nNote: this property does NOT set `aria-orientation` on the host. The\nhost's role is fixed to `role=\"group\"`, and `aria-orientation` is only\na supported ARIA attribute on roles that expose it (`toolbar`,\n`listbox`, `menu`, etc.), not `group`, regardless of this component's\nroving-tabindex keyboard model. Setting it anyway fails axe's\n`aria-allowed-attr` rule.",
+    "inheritedFrom": "ActionGroupBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "accessible-label",
+    "property": "accessibleLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "''",
+    "description": "Accessible label for the group. Reflected to `aria-label` on the host.\n\nProviding a label is recommended whenever the strip has a distinct\npurpose (e.g., \"Image adjustments\" or \"Edit\"). An empty value removes\nthe `aria-label` attribute.",
+    "inheritedFrom": "ActionGroupBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "disabled",
+    "property": "disabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the group and all of its children are disabled.\n\nSets `aria-disabled=\"true\"` on the host and propagates `aria-disabled`\nto each managed child. Children remain keyboard-reachable so that screen\nreader users can still discover the group. Native `disabled` is not\napplied to children.",
+    "inheritedFrom": "ActionGroupBase",
+    "since": "2.0.0"
+  }
+]

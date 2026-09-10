@@ -11,6 +11,8 @@ import {
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
+import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
+import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import '../../deps/se/se.js';
 
@@ -161,7 +163,11 @@ function buildSnippetElement(
     const { value } = entry;
     const isRealLabelProp = prop === 'label' && hasRealLabelTarget;
     const attribute = resolveAttribute(prop, entry);
-    if ((TEXT_KEYS.has(prop) && !isRealLabelProp) || attribute === null || value === undefined || value === '' || value === 'no') { return; }
+    // An unset sentinel ("None"/"default") is the control's label for an absent prop,
+    // never real markup — the same reason the apply path removes it rather than
+    // reflecting it. Compared via isUnsetOption so a new sentinel can't slip through.
+    const isUnset = value === undefined || value === '' || value === 'no' || isUnsetOption(value);
+    if ((TEXT_KEYS.has(prop) && !isRealLabelProp) || attribute === null || isUnset) { return; }
     attributeTarget.setAttribute(attribute, value === 'yes' ? '' : value);
   });
 
@@ -292,8 +298,9 @@ function buildPickerControl(property, options, currentValue, onChange) {
   select.labelPosition = 'side';
   select.append(...options.map((opt) => {
     const option = document.createElement('option');
+    // An unset sentinel is opaque by design — optionLabel is what a reader sees.
     option.value = opt;
-    option.textContent = opt;
+    option.textContent = optionLabel(opt);
     return option;
   }));
   select.value = currentValue;
@@ -340,7 +347,7 @@ function buildSegmentedControl(property, options, currentValue, onChange) {
     radio.value = opt;
     radio.checked = opt === currentValue;
     const span = document.createElement('span');
-    span.textContent = opt;
+    span.textContent = optionLabel(opt);
     label.append(radio, span);
     fieldset.append(label);
   });
@@ -397,34 +404,43 @@ function fetchText(url) {
 
 // --- Block wiring helpers (each a distinct job init() delegates to) --------
 
-// Resolves the URL-safe pieces derived from this block's authored metadata:
-// PascalCase title, code-disclosure name, dev-authored fragment markup URL
-// (drives both the live preview and, for composites, subcomponent structure),
-// and which preview shell renders the live iframe.
-function resolveComponentMeta(component, implementation, base) {
-  // Every playground lookup — snippet file, overlay trigger, sizing set — is keyed
-  // by the authored slug. Only the RSP export name differs, and only where the export
-  // itself is needed: the data fetch and the code disclosure's tag name.
+// The block's own shell: an image viewer for an implementation with no live
+// preview (ios/android). It needs no snippet and no prop catalog.
+const GENERIC_SHELL = 'blocks/playground/index.html';
+
+/**
+ * Where this component's preview comes from, resolved entirely from
+ * scripts/utils/implementations.js — adding an implementation is an edit there,
+ * not a branch here.
+ *
+ * Every lookup keyed off the component — snippet file, overlay trigger, sizing set —
+ * uses the authored slug. `componentTitle` is the one exception: RSP's real export
+ * name, which the data fetch and the code disclosure's tag both need, and which
+ * diverges from the authored slug for a minority of components.
+ */
+export function resolveComponentMeta(component, implementation, base) {
   const componentTitle = resolveRspComponentName(component);
   // Which export's catalog holds this route's props. The same as its own component for
   // every route but tooltip, whose props RSP declares on TooltipTrigger.
   const propsTitle = propsOwner(component) ?? componentTitle;
-  const previewName = implementation === 'rsp' ? componentTitle : `swc-${component}`;
-  const markupUrl = implementation === 'rsp'
-    ? `${base}/deps/rsp/playground/snippets/${component}.jsx`
-    : `${base}/deps/swc/playground/snippets/${component}.html`;
-  // RSP and SWC each have their own preview shell; anything else (ios/android,
-  // unrecognized) falls back to this block's own generic shell.
-  let previewShellPath;
-  if (implementation === 'rsp') {
-    previewShellPath = 'deps/rsp/playground/index.html';
-  } else if (implementation === 'swc') {
-    previewShellPath = 'deps/swc/playground/index.html';
-  } else {
-    previewShellPath = 'blocks/playground/index.html';
+  const config = getPlaygroundConfig(implementation);
+  if (!config) {
+    return {
+      componentTitle,
+      propsTitle,
+      previewName: componentTitle,
+      markupUrl: null,
+      previewShellPath: GENERIC_SHELL,
+    };
   }
   return {
-    componentTitle, propsTitle, previewName, markupUrl, previewShellPath,
+    componentTitle,
+    propsTitle,
+    previewName: config.tagPattern
+      .replace('{Pascal}', componentTitle)
+      .replace('{slug}', component),
+    markupUrl: `${base}/${config.snippetDir}/${component}.${config.snippetExt}`,
+    previewShellPath: config.shell,
   };
 }
 
@@ -445,7 +461,9 @@ async function fetchPlaygroundInputs(base, componentMeta, component, impl, sprea
     // component may have no data file. `d.props ?? d` absorbs the one remaining shape
     // difference between the catalogs — rsp wraps its rows, swc is a bare array.
     catalogUrl ? fetchJson(catalogUrl).then((d) => d.props ?? d).catch(() => []) : [],
-    fetchText(markupUrl).catch(() => ''),
+    // markupUrl is null for an implementation with no live preview — the generic
+    // image-viewer shell never asks for markup.
+    markupUrl ? fetchText(markupUrl).catch(() => '') : '',
   ]);
   return {
     componentsSheet, controlsSheet, propRows, snippetMarkup,
@@ -472,7 +490,12 @@ function buildControlDescriptors(
       (message) => console.warn(`Playground (${component}): ${message}`),
     );
     if (!descriptor) { return acc; }
-    let rawDefault = parseDefault(findProp(property, propRows)?.default) ?? descriptor.options[0];
+    // defaultOverride leads because it encodes a constraint between two properties
+    // (ColorSlider's channel must suit colorSpace), which a per-prop catalog default
+    // cannot express — see DEFAULT_OVERRIDES in playground-data.js.
+    let rawDefault = descriptor.defaultOverride
+      ?? parseDefault(findProp(property, propRows)?.default)
+      ?? descriptor.options[0];
     // A textfield with no authored default would otherwise start empty —
     // populate it with a placeholder label instead.
     if (descriptor.controlType === 'textfield' && rawDefault === undefined) {
@@ -646,9 +669,14 @@ export default async function init(el) {
   // side of this same decision.
   const hasRealLabelProp = implementation === 'rsp' && hasLabelProp(propRows);
 
-  const buildSnippet = implementation === 'rsp'
-    ? (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, component)
-    : (name, props) => buildSwcSnippet(name, props, snippetMarkup);
+  // The one thing that cannot live in the registry as data. Keyed by id rather than
+  // branched on, and defaulting to the markup serializer an implementation with no
+  // preview shell would use anyway.
+  const SNIPPET_BUILDERS = {
+    rsp: (name, props) => buildRspSnippet(name, props, snippetMarkup, hasRealLabelProp, component),
+    swc: (name, props) => buildSwcSnippet(name, props, snippetMarkup),
+  };
+  const buildSnippet = SNIPPET_BUILDERS[implementation] ?? SNIPPET_BUILDERS.swc;
 
   const controlsMap = buildControlsMap(controlsSheet);
   const authoredProps = getComponentProperties(

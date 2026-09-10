@@ -1,0 +1,49 @@
+[
+  {
+    "attribute": "type",
+    "property": "type",
+    "type": "\"card\" | \"media\"",
+    "kind": "enum",
+    "values": [
+      "card",
+      "media"
+    ],
+    "optional": false,
+    "default": "'card'",
+    "description": "Visual treatment type for this attachment.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "dismissible",
+    "property": "dismissible",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "When `true`, show a dismiss affordance and emit `swc-upload-attachment-dismiss` on click.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "dismiss-label",
+    "property": "dismissLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "''",
+    "description": "Accessible label for the dismiss/remove attachment button. When unset, derives\n\"Remove [file name].[file type]\" from the `title` slot's text content, falling\nback to \"Remove attachment\" when no title text is available.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "accessible-label",
+    "property": "accessibleLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "''",
+    "description": "Accessible name for the tile itself. When unset, derives from the `title`\nslot's text content (typically the file name and type).",
+    "since": "2.0.0-beta.3"
+  }
+]

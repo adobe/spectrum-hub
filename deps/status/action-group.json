@@ -9,7 +9,8 @@
       "upstreamName": "ActionButtonGroup"
     },
     "swc": {
-      "status": "not-available"
+      "status": "available",
+      "context": "Stable"
     }
   },
   "figmaPageId": "9230:10723"

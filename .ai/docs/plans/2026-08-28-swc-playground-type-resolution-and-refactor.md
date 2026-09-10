@@ -1,6 +1,10 @@
 # SWC Playground — Type Resolution and Refactor
 
-**Status: Tasks 1–7, 11, 13–15, 18–22 done; Task 12 answered by `refactor-rsp` (the RSP rewrite was brought over); Layer 1 complete for both catalogs; Layer 2 done on `refactor-playground`. Tasks 16–17 open, and Task 16 gates merging to `main`** (2026-08-31).
+**Status: Tasks 1–7, 11, 13–16, 18–22 done; Task 12 answered by `refactor-rsp` (the RSP rewrite was brought over); Layer 1 complete for both catalogs; Layer 2 done on `refactor-playground`. Task 16 no longer gates the merge — it landed on `main` in `db99e9a`. Task 17 and Layer 3 are the only open items** (2026-09-03).
+
+Verified against the code on 2026-09-03, since the 08-31 status had drifted: all four Task 11 items are done (`typescript` is `^5.9.3` in `devDependencies` and in the lockfile; both workflows `git add deps/impl-component-names.js`, the file that superseded `rsp-export-names.js`; `checkbox-group.jsx` has no stray `>`; `styles/styles.css` is back to `light-dark(#fff, #000)`). Task 16 shipped as `EXCLUDED_SOURCES` in `blocks/table/table.js` — an 18-entry set filtered on `inheritedFrom`, the "filter at render, keep the catalog complete" option this plan weighed.
+
+**Task 17 was supposed to precede the block refactor and did not.** This plan says of it: "This is the regression net for the block refactor. It should exist *before* that branch starts, not after." The block refactor shipped on `refactor-playground` without it, and the bug that cost the most review time on that branch — a control whose selected value rendered as a different one (see Task 23) — is exactly what it was designed to catch. Sequencing recorded rather than re-argued; the net is still worth building.
 
 The SWC half of the component playground had the same class of defect the RSP half already fixed in [the RSP inheritance-gap batch](./2026-08-13-rsp-playground-inheritance-gap-fixes.md): its extractor could not resolve named types, so the playground borrowed the *other* implementation's data to compensate — and shipped options for values the real component does not support. That is now fixed at the data source, not patched at the consumer.
 
@@ -47,8 +51,8 @@ Four `blocks/playground/` prerequisite commits were **not** carried over — `78
 | Compiler-resolved unions parsed to `[]` | A/B | `parsePickerOptions` matched single quotes only; `checker.typeToString()` emits double. Every SWC enum lost its picker (badge `variant`, button `size`, progress-bar `labelPosition`) | Widened the regex to accept both quote styles | ✅ Task 13 |
 | Picker options still come from regex-parsing a type string | A/B | The quote fix treats the symptom; the extractor still discards the structured `ts.Type` for a display string. The truncation trap and numeric-tail special case remain | Emit `kind`/`values` into the existing catalog files (Layer 1) | ⬜ Rewrite |
 | RSP and SWC `ts-cdn-host.js` overlap | D | 172 and 188 lines, 96 differing lines — **less duplicated than assumed**; the SWC file documents the split as deliberate (async vs sync `resolveSpecifier`) | Open question, not a task | ⚠️ Deferred |
-| `typescript` undeclared; workflows `git add` a missing file | C | Three SWC modules import `typescript`, absent from `package.json` and the lockfile; both workflows `git add deps/rsp-export-names.js`, which nothing on this branch generates | Declare the dep; reconcile the `git add` lists | ⬜ Task 11 |
-| Blue background tint committed by accident | D | `139d485` carries a one-line `styles/styles.css` change setting `--se-body-background-color` light value to `#aecee9`; the 2026-08-27 handoff flagged that exact edit as an unrelated pre-existing local experiment | Revert the line, or confirm it was intentional | ⬜ Task 11 |
+| `typescript` undeclared; workflows `git add` a missing file | C | Three SWC modules import `typescript`, absent from `package.json` and the lockfile; both workflows `git add deps/rsp-export-names.js`, which nothing on this branch generates | Declare the dep; reconcile the `git add` lists | ✅ Task 11 |
+| Blue background tint committed by accident | D | `139d485` carries a one-line `styles/styles.css` change setting `--se-body-background-color` light value to `#aecee9`; the 2026-08-27 handoff flagged that exact edit as an unrelated pre-existing local experiment | Revert the line, or confirm it was intentional | ✅ Task 11 |
 
 ## Design decisions already made (do not re-litigate)
 
@@ -383,14 +387,16 @@ Same cosmetic wrinkle as Task 14 — the checker's union ordering puts `info` la
 
 **Upstream fix:** `@property {StatusLightVariant} variant`, one word. Worth bundling into the same SWC report as Task 14's `VALID_SIZES` finding — together they show the published CEM misdescribes types in three different ways, which is a stronger case than any one of them alone.
 
-### Task 16 — Table block prop filtering — NOT STARTED, blocks the RSP compiler cutover
+### Task 16 — Table block prop filtering — DONE (`main`, `db99e9a`)
 **Files:** `blocks/table/table.js`
 
 The RSP compiler pipeline takes components from ~5 props to ~40 — Button 7→44, TextField 5→60 — mostly legitimate DOM/ARIA passthrough (`aria-*`, `onKeyDown`, `onFocus`, `styles`). The playground is insulated by the workbook allow-list, but `blocks/table/table.js` renders the **full** prop table and has no such filter.
 
-[The RSP plan](./2026-08-13-rsp-playground-inheritance-gap-fixes.md) flagged this during the Phase 1 spike as "a real per-component filtering pass (Phase 2 scope decision, not a bug)" and it was never decided. It is now a prerequisite: landing the compiler rewrite without it makes every RSP prop table unreadable overnight.
+[The RSP plan](./2026-08-13-rsp-playground-inheritance-gap-fixes.md) flagged this during the Phase 1 spike as "a real per-component filtering pass (Phase 2 scope decision, not a bug)" and it went undecided until this task. It was a genuine prerequisite: landing the compiler rewrite without it would have made every RSP prop table unreadable overnight.
 
-Existing precedent to extend rather than replace: `EXCLUDED_PROPERTIES = new Set(['className'])` in the extractor. Options worth weighing — filter at extraction (one place, but loses data the table might later want), filter at render (keeps the catalog complete), or mark rows with a `passthrough: true` flag at extraction and let each consumer decide. The last preserves the most optionality and fits the Layer 1 contract, since it is a data fact rather than a display choice.
+**Shipped as filter-at-render**, the middle option of the three weighed here: `EXCLUDED_SOURCES` in `blocks/table/table.js` is an 18-entry set of base interfaces (`StyleProps`, `DOMProps`, `AriaLabelingProps`, `PressEvents`, `TextInputDOMEvents`, …) filtered on each row's `inheritedFrom`. The catalog stays complete, so a consumer wanting the full list still has it, and the rule reads as one declarative set rather than a per-component list to maintain. The `passthrough: true` extraction flag was not needed — `inheritedFrom` already carries the same fact, and adding a second field derived from it would have been the redundancy this plan warns against elsewhere.
+
+The original three options are kept above because the reasoning is still the operative precedent: if a passthrough prop ever needs excluding *without* a distinguishing `inheritedFrom`, that is when the flag earns its place.
 
 ### Task 17 — Playground control smoke test — NOT STARTED
 **Files:** `test/playground/` (new), `playwright.config.js`
@@ -465,7 +471,7 @@ Cases 3 and 4 warn rather than silently picking, because a dropped property is i
 **Sheet state at implementation time** (preview, not yet published): 78 of 89 rows carry a value, most of them `rsp` only. Three SWC components have a row that omits `swc` and will render zero controls until it is added — **`avatar`, `button`, `button-group`**. A further 17 SWC components have no sheet row at all (`accordion-item`, `asset`, `icon`, `tab`, `tab-panel`, and the AI cluster) — a pre-existing gap, now warned instead of silent.
 
 ### Task 22 — "None" for optional attributes, derived not hardcoded — DONE (`refactor-swc`)
-**Files:** `deps/swc/resolve-attribute-types.js`, `deps/swc/extract-cem-components.js`, `blocks/playground/playground-data.js`, `blocks/table/table.js`, `deps/swc/playground/apply-swc-prop.js`, `deps/rsp/playground/index.html`, `deps/shared/playground/none-option.js`
+**Files:** `deps/swc/resolve-attribute-types.js`, `deps/swc/extract-cem-components.js`, `blocks/playground/playground-data.js`, `blocks/table/table.js`, `deps/swc/playground/apply-swc-prop.js`, `deps/rsp/playground/index.html`, `deps/shared/playground/unset-control-options.js`
 
 SWC Badge's `fixed` control needed a "none" choice like `staticColor`. The signal turned out to be in the type system already: `fixed?: FixedValues` and `staticColor?: ButtonStaticColor` are **optional**, while `size`, `variant` and `subtle` are not. So this generalizes rather than adding a third hardcoded property name.
 
@@ -473,10 +479,27 @@ SWC Badge's `fixed` control needed a "none" choice like `staticColor`. The signa
 - Every row carries `optional`, defaulting false.
 - `resolveControl()` prepends the sentinel when a row is optional. This **replaces** the `property === 'staticColor'` special case for SWC; the name is kept only as a fallback for RSP, whose extractor does not emit `optional` yet, and should go when it is rewritten.
 - The apply path (both the SWC module and the RSP shell) now removes the attribute for **any** property whose value is the sentinel, rather than gating on the property name.
-- `static-color-options.js` became `none-option.js` (`NO_STATIC_COLOR` → `NONE_OPTION`); the value `'None'` is unchanged, so nothing shifts behaviourally.
+- `static-color-options.js` became `unset-control-options.js` (`NO_STATIC_COLOR` → `NONE_OPTION`); the value `'None'` is unchanged, so nothing shifts behaviourally. **Superseded by Task 23** — that readable value turned out to collide with real catalog values and is now the opaque `__unset_none__`, displayed via `optionLabel()`.
 
 19 of 151 attributes are optional. The enums among them now lead with "None": `badge.fixed`, every `static-color`, `message-feedback.status`, plus **`accordion-item.size` and `popover.size`** — both genuinely declared optional, so a "None" meaning "use the default" is consistent, but it is a change nobody asked for and worth a look.
 
 `optional` was also added to `table.js`'s `EXCLUDED_COLUMNS` — the same trap as `kind`/`values`, since unrecognised row keys are appended as columns.
 
 570/570 node; browser unchanged at the same 2 pre-existing failures; lint clean. Verified live: SWC Badge's `fixed` reads `None, block-start, block-end, inline-start, inline-end`, and the table columns are untouched.
+
+### Task 23 — An unset sentinel must not look like a real value — DONE (`refactor-playground`)
+**Files:** `deps/shared/playground/unset-control-options.js`, `blocks/playground/playground.js`, `blocks/playground/index.html`, `test/extractions/playground-data.node.test.js`, `test/blocks/playground.test.js`, `deps/docs/PLAYGROUND-CONTRACT.md`
+
+Task 22 introduced `NONE_OPTION = 'None'` and the block refactor added `DEFAULT_OPTION = 'default'` for ColorArea's derived channels. Both were readable strings used directly as the option's value, and `isUnsetOption()` is a pure string test — so any catalog value spelled the same way was read as "unset".
+
+**Seven RSP props ship `"default"` as a genuine enum member**: `ColorSwatch.rounding`, `ColorSwatchPicker.rounding`, `ContextualHelpPopover.padding`, `CustomDialog.padding`, `Popover.padding`, `Slider.thumbStyle`, `RangeSlider.thumbStyle`. Six were harmless by coincidence — their own `default` is also `default`, so dropping the prop matched passing it. `ColorSwatchPicker.rounding` defaults to `none`, so selecting `default` deleted the prop and rendered `none`: the control displayed one value while the preview and the code disclosure showed another. `SwatchGroup` is `rsp=available`, so the page is live; whether a reader hits it depends only on the workbook authoring `rounding` for it.
+
+The fix separates the wire value from the label, which is the distinction that was missing rather than a new mechanism:
+
+- the sentinels are now `__unset_none__` / `__unset_default__` — values no catalog can produce;
+- `optionLabel(value)` returns `'None'` / `'default'` for a sentinel and the value itself otherwise, and both control builders (`buildPickerControl`, `buildSegmentedControl`) render it, so an opaque sentinel is never shown;
+- the generic image shell drops unset props from its filename and `alt` text. It builds `${k}-${v}` into a URL, so an opaque sentinel had to be kept out of one — and "absent" should name no image variant anyway.
+
+Guarded two ways: a unit test asserts `isUnsetOption` rejects `'default'`, `'None'`, `'none'`, `'full'` and `'precise'`; and a test reads **the real catalogs** to assert neither sentinel appears in any row's `values`, with a companion asserting `'default'` still does — so the guard is proven to bite, and a future upstream enum member matching a sentinel fails a test rather than a page.
+
+676/676 node, 798/798 browser, lint clean. **This is the bug Task 17 would have caught**, which is the argument for building it.

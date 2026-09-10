@@ -36,11 +36,13 @@ viewport edges instead of the anchor. */
   transition:
     opacity 0.4s cubic-bezier(0, 0, 0.4, 1),
     transform 0.4s cubic-bezier(0, 0, 0.4, 1);
-  background-color: var(--s2-gray-50);
+  background-color: light-dark(#f8f8f8, #262626); /* pulled from prototype */
 
   .results-heading {
-    font-weight: 700;
-    font-size: var(--s2-component-m-regular-font-size);
+    /* TODO: we need a 300 font weight still */
+    font-weight: 400;
+    color: var(--s2-gray-700);
+    font-size: var(--s2-component-s-regular-font-size);
     padding: var(--s2-spacing-75) var(--s2-spacing-100);
   }
 
@@ -63,7 +65,10 @@ viewport edges instead of the anchor. */
     }
 
     .result-row[aria-selected="true"] {
-      background-color: var(--s2-gray-100);
+      background-color: light-dark(
+        rgb(from var(--s2-gray-1000) r g b / 8%),
+        rgb(from var(--s2-gray-1000) r g b / 12%)
+      );
     }
 
     /* Remove selected background when any sibling is hovered */
@@ -78,7 +83,7 @@ viewport edges instead of the anchor. */
       align-items: center;
       text-decoration: none;
       padding: var(--s2-spacing-300);
-      border-radius: 10px;
+      border-radius: 12px;
       min-height: 72px;
       color: var(--se-body-color);
       box-sizing: border-box;
@@ -96,7 +101,10 @@ viewport edges instead of the anchor. */
       }
 
       &:hover {
-        background-color: var(--s2-gray-100);
+        background-color: light-dark(
+          rgb(from var(--s2-gray-1000) r g b / 8%),
+          rgb(from var(--s2-gray-1000) r g b / 12%)
+        );
       }
     }
 
@@ -114,7 +122,7 @@ viewport edges instead of the anchor. */
 
     .hit-title {
       font-size: var(--s2-component-l-regular-font-size);
-      font-weight: 700;
+      font-weight: 500;
       line-height: 1;
       color: var(--s2-gray-800);
     }

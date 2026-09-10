@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  getPlaygroundConfig,
   IMPLEMENTATIONS,
   ALL_OPTION,
   getImplementationById,
@@ -56,5 +57,36 @@ describe('getOtherImplementations', () => {
 
   it('returns all implementations when the id is not one of them', () => {
     assert.deepEqual(getOtherImplementations('all').map((impl) => impl.id), ['rsp', 'swc', 'design-only']);
+  });
+});
+
+// The playground is the one consumer that used to hardcode `implementation === 'rsp'`
+// instead of reading this file. Adding an implementation should stay a single edit here.
+describe('getPlaygroundConfig', () => {
+  it('returns the shell, snippet location and tag pattern for a web implementation', () => {
+    assert.deepEqual(getPlaygroundConfig('swc'), {
+      shell: 'deps/swc/playground/index.html',
+      snippetDir: 'deps/swc/playground/snippets',
+      snippetExt: 'html',
+      tagPattern: 'swc-{slug}',
+    });
+    assert.equal(getPlaygroundConfig('rsp').snippetExt, 'jsx');
+    assert.equal(getPlaygroundConfig('rsp').tagPattern, '{Pascal}');
+  });
+
+  // ios/android are not in this registry yet and design-only never renders a preview.
+  // Both must degrade to the generic shell rather than throwing.
+  it('returns null for an implementation with no playground', () => {
+    assert.equal(getPlaygroundConfig('design-only'), null);
+    assert.equal(getPlaygroundConfig('ios'), null);
+    assert.equal(getPlaygroundConfig(undefined), null);
+  });
+
+  it('gives every configured implementation a complete config', () => {
+    for (const impl of IMPLEMENTATIONS.filter((i) => i.playground)) {
+      const { shell, snippetDir, snippetExt, tagPattern } = impl.playground;
+      assert.ok(shell && snippetDir && snippetExt && tagPattern, impl.id);
+      assert.match(tagPattern, /\{(Pascal|slug)\}/, `${impl.id} tagPattern must interpolate`);
+    }
   });
 });

@@ -1,0 +1,91 @@
+[
+  {
+    "attribute": "dragged-message",
+    "property": "draggedMessage",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'File ready to drop'",
+    "description": "Message announced via the built-in status region when a file is dragged over an\nempty drop zone. Override to localize.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "filled-message",
+    "property": "filledMessage",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'File accepted'",
+    "description": "Message announced via the built-in status region when a file is accepted.\nOverride to localize.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "replace-message",
+    "property": "replaceMessage",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'Drop to replace existing file'",
+    "description": "Message announced via the built-in status region when a file is dragged over an\nalready-filled drop zone. Override to localize.",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "\"s\" | \"m\" | \"l\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l"
+    ],
+    "optional": false,
+    "description": "Controls the illustrated icon scale and container dimensions.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "dragged",
+    "property": "dragged",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether files are currently being dragged over the drop zone.\nSet automatically by the component; also settable to reflect programmatic state.",
+    "inheritedFrom": "DropzoneBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "filled",
+    "property": "filled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the drop zone has received a file and is in the filled state.\nSet by consuming code after a successful drop or browse-file selection to\nswitch the zone to its filled visual.",
+    "inheritedFrom": "DropzoneBase",
+    "since": "2.0.0"
+  },
+  {
+    "attribute": "drop-effect",
+    "property": "dropEffect",
+    "type": "\"copy\" | \"move\" | \"link\" | \"none\"",
+    "kind": "enum",
+    "values": [
+      "copy",
+      "move",
+      "link",
+      "none"
+    ],
+    "optional": false,
+    "default": "'copy'",
+    "description": "The OS drag-cursor feedback shown while a file is held over the zone.\nMaps directly to `DataTransfer.dropEffect`. Settable via the `drop-effect`\nattribute, but property changes do not reflect back to the attribute\nbecause it controls browser chrome, not component state.",
+    "inheritedFrom": "DropzoneBase",
+    "since": "2.0.0"
+  }
+]

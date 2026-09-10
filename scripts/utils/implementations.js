@@ -12,8 +12,28 @@
  */
 
 export const IMPLEMENTATIONS = [
-  { id: 'rsp', label: 'React Spectrum', shortLabel: 'RSP' },
-  { id: 'swc', label: 'Spectrum Web Components', shortLabel: 'SWC' },
+  {
+    id: 'rsp',
+    label: 'React Spectrum',
+    shortLabel: 'RSP',
+    playground: {
+      shell: 'deps/rsp/playground/index.html',
+      snippetDir: 'deps/rsp/playground/snippets',
+      snippetExt: 'jsx',
+      tagPattern: '{Pascal}',
+    },
+  },
+  {
+    id: 'swc',
+    label: 'Spectrum Web Components',
+    shortLabel: 'SWC',
+    playground: {
+      shell: 'deps/swc/playground/index.html',
+      snippetDir: 'deps/swc/playground/snippets',
+      snippetExt: 'html',
+      tagPattern: 'swc-{slug}',
+    },
+  },
   { id: 'design-only', label: 'Design only', shortLabel: 'Figma' },
 ];
 
@@ -37,4 +57,22 @@ export function getImplementationById(id) {
  */
 export function getOtherImplementations(currentId) {
   return IMPLEMENTATIONS.filter((impl) => impl.id !== currentId);
+}
+
+/**
+ * How the playground renders this implementation, or null when it has none.
+ *
+ * `tagPattern` interpolates `{Pascal}` (ActionButton) or `{slug}` (action-button)
+ * to give the element name the code disclosure prints.
+ *
+ * Null covers two real cases, both of which fall back to the block's generic
+ * image-viewer shell: design-only never renders a live preview, and ios/android
+ * are not in this registry yet — deliberately, since every consumer that lists
+ * implementations reads it and they are not ready to appear site-wide.
+ *
+ * @param {string} id
+ * @returns {{ shell: string, snippetDir: string, snippetExt: string, tagPattern: string } | null}
+ */
+export function getPlaygroundConfig(id) {
+  return getImplementationById(id)?.playground ?? null;
 }

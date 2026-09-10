@@ -212,8 +212,29 @@ describe('status-table block', () => {
 
     it('renders the component display label in the row header cell', () => {
       const colorAreaRow = [...el.querySelectorAll('tbody tr')]
-        .find((tr) => tr.querySelector('th').textContent === 'Color Area');
+        .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === 'Color Area');
       expect(colorAreaRow).to.not.be.undefined;
+    });
+
+    // Below the block's 650px container width the thead is clipped out of view, so each
+    // body cell repeats its column header beside the status.
+    it('repeats every column header inside its body cells', () => {
+      const labels = [...el.querySelectorAll('tbody tr:first-child .status-table-cell-label')]
+        .map((label) => label.textContent);
+      expect(labels).to.deep.equal([
+        'Component', 'Figma', 'React Spectrum', 'Spectrum Web Components',
+      ]);
+    });
+
+    it('hides the labels from assistive tech, which already gets the real column header', () => {
+      const labels = [...el.querySelectorAll('.status-table-cell-label')];
+      expect(labels.length).to.be.above(0);
+      labels.forEach((label) => expect(label.getAttribute('aria-hidden')).to.equal('true'));
+    });
+
+    it('keeps the label out of the searchable and sortable component name', () => {
+      const value = el.querySelector('tbody th .status-table-cell-value');
+      expect(value.textContent).to.not.match(/^Component/);
     });
   });
 
@@ -227,7 +248,7 @@ describe('status-table block', () => {
 
     // The table loads sorted by Component ascending, so target rows by name, not position.
     const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
-      .find((tr) => tr.querySelector('th').textContent === name);
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
 
     it('renders the unified status label per column cell, in index column order', () => {
       const calendarCells = rowByName(el, 'Calendar').querySelectorAll('td');
@@ -244,7 +265,7 @@ describe('status-table block', () => {
 
     it('renders the secondary guidance line when present', () => {
       const colorAreaRow = [...el.querySelectorAll('tbody tr')]
-        .find((tr) => tr.querySelector('th').textContent === 'Color Area');
+        .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === 'Color Area');
       const secondary = colorAreaRow.querySelector('.status-table-secondary');
       expect(secondary).to.not.be.null;
       expect(secondary.textContent).to.include('Use Gen1');
@@ -265,7 +286,7 @@ describe('status-table block', () => {
     });
 
     const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
-      .find((tr) => tr.querySelector('th').textContent === name);
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
     const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
 
     it('links an available RSP cell to that implementation\'s component page', () => {
@@ -356,7 +377,7 @@ describe('status-table block', () => {
 
   describe('query-index gating', () => {
     const rowByName = (root, name) => [...root.querySelectorAll('tbody tr')]
-      .find((tr) => tr.querySelector('th').textContent === name);
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
     const cell = (root, name, col) => rowByName(root, name).querySelector(`td[data-col="${col}"]`);
 
     it('fetches query-index.json alongside the status index', async () => {
@@ -453,7 +474,7 @@ describe('status-table block', () => {
       input.value = 'color';
       input.dispatchEvent(new Event('input'));
       const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
-      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal([
+      expect(visible.map((tr) => tr.querySelector('th .status-table-cell-value').textContent)).to.deep.equal([
         'Color Area', 'Color Handle', 'Color Loupe',
       ]);
     });
@@ -463,7 +484,7 @@ describe('status-table block', () => {
       input.value = 'BUTTON';
       input.dispatchEvent(new Event('input'));
       const visible = [...el.querySelectorAll('tbody tr')].filter((tr) => !tr.hidden);
-      expect(visible.map((tr) => tr.querySelector('th').textContent)).to.deep.equal(['Button']);
+      expect(visible.map((tr) => tr.querySelector('th .status-table-cell-value').textContent)).to.deep.equal(['Button']);
     });
 
     it('restores every row when the query is cleared', () => {
@@ -597,7 +618,7 @@ describe('status-table block', () => {
     });
 
     const names = (root) => [...root.querySelectorAll('tbody tr')]
-      .map((tr) => tr.querySelector('th').textContent);
+      .map((tr) => tr.querySelector('th .status-table-cell-value').textContent);
 
     it('loads sorted by Component ascending', () => {
       expect(names(el)).to.deep.equal([
@@ -645,72 +666,59 @@ describe('status-table block', () => {
     });
   });
 
-  function stubMatchMedia(activeSandbox, matches = true) {
-    const listeners = [];
-    const mql = {
-      matches,
-      addEventListener: (_event, cb) => listeners.push(cb),
-      dispatch: (nextMatches) => {
-        mql.matches = nextMatches;
-        listeners.forEach((cb) => cb({ matches: nextMatches }));
-      },
-    };
-    activeSandbox.stub(window, 'matchMedia').returns(mql);
-    return mql;
-  }
-
-  describe('toolbar — sort header accessibility at narrow widths', () => {
-    it('keeps sort-header buttons out of the tab order below 900px', async () => {
-      stubMatchMedia(sandbox, false);
-      stubFetchOk();
+  describe('toolbar — sort header accessibility follows the thead', () => {
+    // The CSS container query normally sets --status-table-headers-visible when the thead
+    // comes back into view. Block CSS isn't loaded here, so set the flag directly; the
+    // element has to be in the document, because getComputedStyle reports nothing for a
+    // custom property on a detached node (the same reason init() syncs after attaching).
+    const mountEl = (headersVisible) => {
       const el = makeEl();
+      el.style.setProperty('--status-table-headers-visible', headersVisible ? '1' : '0');
+      document.body.append(el);
+      return el;
+    };
+
+    it('keeps sort-header buttons out of the tab order while the thead is clipped', async () => {
+      stubFetchOk();
+      const el = mountEl(false);
       await init(el);
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.length).to.be.greaterThan(0);
       expect(buttons.every((b) => b.tabIndex === -1)).to.be.true;
     });
 
-    it('hides sort-header buttons from screen readers below 900px', async () => {
-      stubMatchMedia(sandbox, false);
+    it('hides sort-header buttons from screen readers while the thead is clipped', async () => {
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(false);
       await init(el);
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'true')).to.be.true;
     });
 
-    it('keeps sort-header buttons focusable and exposed at/above 900px', async () => {
-      stubMatchMedia(sandbox, true);
+    it('exposes sort-header buttons once the thead is on screen', async () => {
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(true);
       await init(el);
       const buttons = [...el.querySelectorAll('.status-table-sort-header')];
       expect(buttons.every((b) => b.tabIndex === 0)).to.be.true;
       expect(buttons.every((b) => b.getAttribute('aria-hidden') === 'false')).to.be.true;
     });
 
-    it('updates focusability and visibility live when the viewport crosses the breakpoint', async () => {
-      const mql = stubMatchMedia(sandbox, true);
+    // Guards the bug this replaced: buildSorting used to sync while the table was still
+    // detached, so the flag read empty and wide screens shipped unreachable headers until
+    // the first ResizeObserver delivery. Live breakpoint crossings need a rendered page
+    // (a hidden one fires no ResizeObserver at all) and are covered in
+    // test/a11y/blocks/status-table.spec.js across 375/800/1200px.
+    it('has the headers already exposed by the time init resolves', async () => {
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(true);
       await init(el);
-      const button = el.querySelector('.status-table-sort-header');
-      expect(button.tabIndex).to.equal(0);
-      expect(button.getAttribute('aria-hidden')).to.equal('false');
-
-      mql.dispatch(false);
-      expect(button.tabIndex).to.equal(-1);
-      expect(button.getAttribute('aria-hidden')).to.equal('true');
-
-      mql.dispatch(true);
-      expect(button.tabIndex).to.equal(0);
-      expect(button.getAttribute('aria-hidden')).to.equal('false');
+      expect(el.querySelector('.status-table-sort-header').tabIndex).to.equal(0);
     });
 
     it('keeps the column header\'s accessible name even when its button is hidden', async () => {
-      stubMatchMedia(sandbox, false);
       stubFetchOk();
-      const el = makeEl();
+      const el = mountEl(false);
       await init(el);
       const figmaHeader = el.querySelector('thead th[data-col="figma"]');
       expect(figmaHeader.getAttribute('aria-label')).to.equal('Figma');

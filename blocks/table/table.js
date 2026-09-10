@@ -41,6 +41,27 @@ const EXCLUDED_SOURCES = new Set([
 // human-readable `type` instead.
 const EXCLUDED_COLUMNS = new Set(['status', 'since', 'kind', 'values', 'optional']);
 
+/**
+ * The column-header text repeated inside a body cell. Only the narrow stacked layout
+ * shows it — there the `thead` is clipped out of view, so without this the values arrive
+ * unlabeled. `aria-hidden` because the real `<th scope="col">` already names the cell for
+ * assistive tech; a second copy would announce every header twice.
+ */
+const buildCellLabel = (text) => {
+  const label = document.createElement('span');
+  label.className = 'table-cell-label';
+  label.setAttribute('aria-hidden', 'true');
+  label.textContent = text;
+  return label;
+};
+
+/** A body cell's value, wrapped so it stays one grid item beside its label. */
+const buildCellValue = () => {
+  const value = document.createElement('span');
+  value.className = 'table-cell-value';
+  return value;
+};
+
 const buildTableElement = (headerCells, dataCells) => {
   const tableHead = document.createElement('thead');
   tableHead.classList.add('header-row');
@@ -61,7 +82,11 @@ const buildTableElement = (headerCells, dataCells) => {
     const bodyRow = document.createElement('tr');
     bodyRow.classList.add('row');
     bodyRow.role = 'row';
-    cells.forEach((cell) => { cell.role = 'cell'; });
+    cells.forEach((cell, i) => {
+      cell.role = 'cell';
+      const label = headerCells[i]?.textContent?.trim();
+      if (label) { cell.prepend(buildCellLabel(label)); }
+    });
     bodyRow.append(...cells);
     tableBody.append(bodyRow);
   }
@@ -85,7 +110,9 @@ const buildTable = (rows) => {
 
   const dataCells = dataRows.map((row) => [...row.children].map((col) => {
     const tableCell = document.createElement('td');
-    tableCell.innerHTML = col.innerHTML;
+    const value = buildCellValue();
+    value.innerHTML = col.innerHTML;
+    tableCell.append(value);
     return tableCell;
   }));
 
@@ -124,7 +151,9 @@ const buildDataTable = async (href) => {
   // Create data rows
   const dataCells = rows.map((props) => properties.map((key) => {
     const tableCell = document.createElement('td');
-    tableCell.textContent = props[key] || '-';
+    const value = buildCellValue();
+    value.textContent = props[key] || '-';
+    tableCell.append(value);
     return tableCell;
   }));
 

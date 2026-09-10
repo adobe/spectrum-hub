@@ -9,6 +9,11 @@ function makeEl(html) {
   return el;
 }
 
+// Each body cell also carries a repeated column-header label for the narrow stacked
+// layout, so read the value wrapper rather than the cell's whole textContent.
+const cellValues = (el) => [...el.querySelectorAll('td .table-cell-value')]
+  .map((value) => value.textContent);
+
 describe('table block', () => {
   let sandbox;
 
@@ -70,7 +75,7 @@ describe('table block', () => {
     });
 
     it('preserves inline markup in body cells', () => {
-      expect(el.querySelector('tbody tr:first-child td:first-child').innerHTML).to.equal('<em>italic</em> text');
+      expect(el.querySelector('tbody tr:first-child td:first-child .table-cell-value').innerHTML).to.equal('<em>italic</em> text');
     });
 
     it('preserves anchor links in body cells', () => {
@@ -82,6 +87,58 @@ describe('table block', () => {
 
     it('emits a <td> for an empty authored body cell', () => {
       expect(el.querySelectorAll('tbody tr:last-child td')).to.have.length(2);
+    });
+  });
+
+  // Below the block's 650px container width the thead is clipped out of view, so each
+  // body cell repeats its column header beside the value.
+  describe('the stacked layout labels', () => {
+    let el;
+
+    beforeEach(async () => {
+      el = makeEl(MOCK_TABLE);
+      await init(el);
+    });
+
+    it('repeats every column header inside its body cells', () => {
+      const labels = [...el.querySelectorAll('tbody tr:first-child .table-cell-label')]
+        .map((label) => label.textContent);
+      expect(labels).to.deep.equal(['Name', 'Type']);
+    });
+
+    it('takes the label from the header cell text, not its markup', () => {
+      // the authored header is `<strong>Name</strong>`
+      const label = el.querySelector('tbody .table-cell-label');
+      expect(label.innerHTML).to.equal('Name');
+    });
+
+    it('hides the labels from assistive tech, which already gets the real column header', () => {
+      const labels = [...el.querySelectorAll('.table-cell-label')];
+      expect(labels.length).to.be.above(0);
+      labels.forEach((label) => expect(label.getAttribute('aria-hidden')).to.equal('true'));
+    });
+
+    it('labels the data-table columns too', async () => {
+      sandbox.stub(window, 'fetch').resolves(new Response(
+        JSON.stringify([{ attribute: 'size', type: 'string' }]),
+        { status: 200 },
+      ));
+      const dataEl = makeEl('<div><div><a href="https://example.com/props.json">data</a></div></div>');
+      await init(dataEl);
+      const labels = [...dataEl.querySelectorAll('tbody .table-cell-label')]
+        .map((label) => label.textContent);
+      expect(labels).to.deep.equal(['Attribute', 'Type']);
+    });
+
+    it('omits the label for a column whose header is blank', async () => {
+      const blankHeader = makeEl(`
+        <div><div>Name</div><div></div></div>
+        <div><div>size</div><div>string</div></div>
+      `);
+      await init(blankHeader);
+      const cells = blankHeader.querySelectorAll('tbody td');
+      expect(cells[0].querySelector('.table-cell-label')).to.not.be.null;
+      expect(cells[1].querySelector('.table-cell-label')).to.be.null;
     });
   });
 
@@ -294,7 +351,7 @@ describe('table block', () => {
       const el = makeDataEl();
       await init(el);
       const headers = [...el.querySelectorAll('th')].map((th) => th.textContent);
-      const cells = [...el.querySelectorAll('td')].map((td) => td.textContent);
+      const cells = cellValues(el);
       expect(headers).to.not.include('Status');
       expect(headers).to.not.include('Since');
       expect(cells).to.not.include('internal');
@@ -317,7 +374,7 @@ describe('table block', () => {
       const el = makeDataEl();
       await init(el);
       const headers = [...el.querySelectorAll('th')].map((th) => th.textContent);
-      const cells = [...el.querySelectorAll('td')].map((td) => td.textContent);
+      const cells = cellValues(el);
       expect(headers).to.not.include('Kind');
       expect(headers).to.not.include('Values');
       expect(headers).to.not.include('Optional');
@@ -340,7 +397,7 @@ describe('table block', () => {
       ]);
       const el = makeDataEl();
       await init(el);
-      const cells = [...el.querySelectorAll('td')].map((td) => td.textContent);
+      const cells = cellValues(el);
       expect(cells).to.include('variant');
       expect(cells).to.include('isDisabled');
       for (const dropped of ['aria-label', 'onPress', 'onKeyDown', 'id']) {
@@ -370,7 +427,7 @@ describe('table block', () => {
       ]);
       const el = makeDataEl();
       await init(el);
-      const fallbacks = [...el.querySelectorAll('td')].filter((td) => td.textContent === '-');
+      const fallbacks = cellValues(el).filter((text) => text === '-');
       expect(fallbacks.length).to.be.above(0);
     });
 

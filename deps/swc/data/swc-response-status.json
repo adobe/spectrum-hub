@@ -11,7 +11,8 @@
     ],
     "optional": false,
     "default": "'active'",
-    "description": "Whole response lifecycle status."
+    "description": "Whole response lifecycle status.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "open",
@@ -21,7 +22,8 @@
     "values": [],
     "optional": false,
     "default": "false",
-    "description": "`true`: step timeline open."
+    "description": "`true`: step timeline open.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "accessible-label",
@@ -31,6 +33,18 @@
     "values": [],
     "optional": false,
     "default": "''",
-    "description": "Accessible name for the step list panel."
+    "description": "Accessible name for the step list panel.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "loader",
+    "property": "loader",
+    "type": "PixelLoaderIconName | PixelLoaderPresetName",
+    "kind": "unknown",
+    "values": [],
+    "optional": false,
+    "default": "'mega'",
+    "description": "Status loader artwork shown while `status=\"active\"`, matching\n`swc-prompt-field`'s `loader` attribute for the same underlying control:\na preset name (`cc`, `dc`, `exp`, `analyze`, `mega`) cycles a themed icon\nsequence; an icon name shows a single static icon. Invalid values fall\nback to the `mega` preset.",
+    "since": "2.0.0-beta.3"
   }
 ]

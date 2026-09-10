@@ -9,7 +9,7 @@
     "default": "0",
     "description": "Current value. Sanitized via `clampedValue` for rendering and\n`aria-valuenow`.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "min-value",
@@ -21,7 +21,7 @@
     "default": "0",
     "description": "Bottom of the value range.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "max-value",
@@ -33,7 +33,7 @@
     "default": "100",
     "description": "Top of the value range.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "accessible-label",
@@ -45,7 +45,7 @@
     "default": "''",
     "description": "Rare-case accessible-name fallback used when there is no visible\n`label` slot content (for example, a data grid of meters).\nRenders into `aria-label` on the role element when set.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "value-label",
@@ -56,7 +56,7 @@
     "optional": true,
     "description": "Custom value text (e.g. `\"1 of 4\"`). Overrides the auto-formatted\nvalue in both rendered text and `aria-valuetext`.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "label-position",
@@ -71,7 +71,7 @@
     "default": "'top'",
     "description": "Position of the label relative to the bar.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "static-color",
@@ -85,7 +85,7 @@
     "optional": true,
     "description": "Static color override for use on images or colored backgrounds.",
     "inheritedFrom": "LinearProgressMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "size",
@@ -101,7 +101,7 @@
     "optional": false,
     "description": "The size of the progress bar.",
     "inheritedFrom": "SizedMixin",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   },
   {
     "attribute": "indeterminate",
@@ -113,6 +113,6 @@
     "default": "false",
     "description": "When true, the bar runs a looping fill animation and all four\n`aria-value*` attributes are omitted from the DOM. The visible\nvalue text is also omitted.",
     "inheritedFrom": "ProgressBarBase",
-    "since": "2.0.0"
+    "since": "2.0.0-beta.2"
   }
 ]

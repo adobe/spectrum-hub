@@ -14,14 +14,14 @@
   <script type="module">
     import { listenForPropUpdates, notifyPreviewReady, requestMarkup } from '../../shared/playground/prop-listener.js';
     import { applyAttribute } from '../../shared/playground/apply-attribute.js';
-    import { resolveRspPropKey, hasLabelProp } from './apply-rsp-prop.js';
+    import { resolveRspPropKey, hasLabelProp, mountAttributeName } from './apply-rsp-prop.js';
     import { resolveStylesheetHrefs } from './resolve-stylesheet-hrefs.js';
     import { collectFragmentTagNames, buildCompositeElement } from './build-composite-element.js';
     import { composeChildren, buildIconChild } from './compose-preview-children.js';
     import {
       OVERLAY_TRIGGERS, overlayShape, propsOwner, splitTriggerProps,
     } from './overlay-triggers.js';
-    import { NONE_OPTION } from '../../shared/playground/none-option.js';
+    import { isUnsetOption } from '../../shared/playground/unset-control-options.js';
     import { resolveColorScheme } from './resolve-color-scheme.js';
     import { capitalize, resolveRspComponentName } from './pascal-case.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
@@ -230,7 +230,7 @@
 
         render();
 
-        listenForPropUpdates(({ property, attribute, value }) => {
+        listenForPropUpdates(({ property, value }) => {
           if (property === 'icon') {
             iconChild = buildIconChild(createElement, value);
             currentProps.children = composeLabeledChildren();
@@ -241,17 +241,17 @@
               // separate from any icon so the two compose rather than overwrite.
               textChild = value;
               currentProps.children = composeLabeledChildren();
-            } else if (value === NONE_OPTION) {
-              // staticColor has no real "unset" value of its own — omit the prop entirely
-              delete currentProps[key];
             } else {
-              currentProps[key] = value;
+              // staticColor has no real "unset" value of its own — omit the prop entirely.
+              const unset = isUnsetOption(value);
+              if (unset) { delete currentProps[key]; } else { currentProps[key] = value; }
+              // RSP doesn't reflect props as DOM attributes, so mirror onto #mount for CSS
+              // that keys off one (the static-color backdrop). The name is derived, not read
+              // from the message: an RSP row carries no `attribute`, which left this dead.
+              applyAttribute(mount, mountAttributeName(key), unset ? null : value);
             }
           }
           if (property === 'orientation') { applyMountSizing(value); }
-          // RSP doesn't reflect most props as real DOM attributes, so mirror
-          // onto #mount for CSS that keys off one (e.g. static-color backdrop).
-          applyAttribute(mount, attribute, value === NONE_OPTION ? null : value);
           render();
         });
         notifyPreviewReady();

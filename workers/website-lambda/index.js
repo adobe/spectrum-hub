@@ -45,23 +45,27 @@ const env = process.env;
 // Anonymous, cacheable content (public HTML and the filtered query index) gets a
 // short shared TTL so a publish becomes visible within a few minutes without push
 // invalidation; authenticated/private responses stay no-store. Env-overridable
-// (ANON_CACHE_MAX_AGE, seconds; default 300).
+// (ANON_CACHE_MAX_AGE, seconds; default 300). Set it to 0 to disable anonymous
+// edge caching entirely (no-store) so publishes show immediately - suitable for a
+// low-traffic preview; anything non-numeric/negative falls back to the default.
 const ANON_CACHE_MAX_AGE = (() => {
   const n = Number(env.ANON_CACHE_MAX_AGE);
-  return Number.isInteger(n) && n > 0 ? n : 300;
+  return Number.isInteger(n) && n >= 0 ? n : 300;
 })();
 
 // Cache-Control for a post-filter content response: a short shared TTL for
 // anonymous (the body is the public, audience-stripped view, and CloudFront's
 // cache key includes spectrum_session so it can never reach an authenticated
-// viewer), no-store for authenticated/private. The AEM ETag is deliberately left
-// in place so CloudFront's post-TTL revalidation is a cheap conditional 304, not
-// a full re-fetch + re-filter. NB: the ETag tracks the AEM page, not this
-// filtering code - a change to the filtering/gating logic won't bust already
-// cached bodies until the page itself changes, so run a manual CloudFront
-// invalidation when deploying such a change (see README "Content caching").
+// viewer), or no-store when ANON_CACHE_MAX_AGE is 0 (live, instant publishes);
+// no-store for authenticated/private. The AEM ETag is deliberately left in place
+// so CloudFront's post-TTL revalidation is a cheap conditional 304, not a full
+// re-fetch + re-filter. NB: the ETag tracks the AEM page, not this filtering
+// code - a change to the filtering/gating logic won't bust already cached bodies
+// until the page itself changes, so run a manual CloudFront invalidation when
+// deploying such a change (see README "Content caching").
 const setContentCacheControl = (resp, authed) => {
-  resp.headers.set('cache-control', authed ? 'private, no-store' : `public, max-age=${ANON_CACHE_MAX_AGE}`);
+  const anon = ANON_CACHE_MAX_AGE === 0 ? 'no-store' : `public, max-age=${ANON_CACHE_MAX_AGE}`;
+  resp.headers.set('cache-control', authed ? 'private, no-store' : anon);
   resp.headers.delete('age');
 };
 

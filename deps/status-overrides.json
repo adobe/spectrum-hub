@@ -83,7 +83,7 @@
   "CoachMark": {
     "web": {
       "rsp": {
-        "status": "available",
+        "status": "not-available",
         "hasPage": false,
         "note": "Docs page not yet written."
       }

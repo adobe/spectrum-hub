@@ -11,7 +11,7 @@
  */
 
 import { ICON_OPTIONS, NO_ICON } from '../../deps/shared/playground/icon-options.js';
-import { NONE_OPTION } from '../../deps/shared/playground/none-option.js';
+import { NONE_OPTION, DEFAULT_OPTION } from '../../deps/shared/playground/unset-control-options.js';
 import { TEXT_KEYS } from '../../deps/shared/playground/text-keys.js';
 import { capitalize } from '../../deps/rsp/playground/pascal-case.js';
 
@@ -188,6 +188,35 @@ export const CATALOG_IMPLEMENTATIONS = new Set(['rsp', 'swc']);
 // resolve anything before they can render.
 export const FREEFORM_CONTROLS = new Set(['textfield', 'slider']);
 
+// RSP props are optional by default, so optionality can't select these — they are named.
+// `staticColor` is simply off when absent; a DERIVED property is one the component works
+// out for itself, which is what "default" means to a reader of the S2 docs.
+const NONE_PROPERTIES = new Set(['staticColor']);
+const DERIVED_PROPERTIES = new Set(['xChannel', 'yChannel']);
+
+function resolveUnsetOption(property, isOptional) {
+  if (DERIVED_PROPERTIES.has(property)) { return DEFAULT_OPTION; }
+  return isOptional || NONE_PROPERTIES.has(property) ? NONE_OPTION : null;
+}
+
+/**
+ * A property whose first catalog value is not a safe starting one, because it is only
+ * valid in combination with another property's own default.
+ *
+ * ColorSlider's `channel` is the case: required, and — unlike ColorArea's xChannel /
+ * yChannel — not inferred, so it gets no unset choice; omitting it renders nothing.
+ * Its catalog lists all eight channels across all three color spaces, `hue` first, but
+ * `hue` is invalid in `rgb`, which is what colorSpace itself defaults to, so the
+ * preview loaded blank. Measured live: rgb takes red/green/blue/alpha, hsl
+ * hue/saturation/lightness/alpha, hsb hue/saturation/brightness/alpha — `alpha` is the
+ * only channel valid in all three, so it stays valid however colorSpace is changed.
+ *
+ * This is a cross-property constraint, which is exactly what a per-prop catalog
+ * `default` cannot express — so it wins over one. It does not stop a reader choosing
+ * an invalid pair deliberately; only the colorSpace-aware option filtering would.
+ */
+const DEFAULT_OVERRIDES = { channel: 'alpha' };
+
 export function resolveControl(property, implementation, controlsMap, propRows, onSkip) {
   const row = findProp(property, propRows);
   const controlEntry = controlsMap.get(property);
@@ -198,9 +227,15 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
   // An optional attribute can be absent, so its control needs an explicit "unset"
   // choice. Only SWC's extractor emits `optional`: RSP's props are optional by
   // default (97% of them), so the flag carries no signal there and would put a
-  // spurious "None" on nearly every control. staticColor is named explicitly for
-  // that reason — it is RSP's one genuine case, not an oversight.
-  const needsNoneOption = row?.optional || property === 'staticColor';
+  // spurious "None" on nearly every control. The RSP properties below are named
+  // explicitly for that reason — they are its genuine cases, not an oversight.
+  //
+  // DERIVED_PROPERTIES take "default" rather than "None" because the component works
+  // one out when the prop is absent: ColorArea reads both channels from its value's
+  // color space. Leaving the picker's first real option to lead instead sent
+  // colorSpace="rgb" with xChannel="hue" and yChannel="hue" — the wrong space, and
+  // the same axis twice — and ColorArea rendered nothing at all.
+  const unsetOption = resolveUnsetOption(property, row?.optional);
 
   // Only an implementation with a catalog can be checked for a missing row.
   // ios/android have none, so they skip the gate rather than failing it.
@@ -209,13 +244,13 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
     return null;
   }
 
-  // NO_ICON and NONE_OPTION both lead their list, so they land as the default.
+  // NO_ICON and the unset sentinel both lead their list, so they land as the default.
   let options;
   if (isIcon) {
     // A controls-sheet row may curate its own icon subset; otherwise ICON_OPTIONS.
     options = [NO_ICON, ...(controlEntry?.options?.length ? controlEntry.options : ICON_OPTIONS)];
-  } else if (needsNoneOption) {
-    options = [NONE_OPTION, ...resolvePickerOptions(property, propRows)];
+  } else if (unsetOption) {
+    options = [unsetOption, ...resolvePickerOptions(property, propRows)];
   } else {
     // A row with no fixed option set (a generic, an interface, RSP's StylesProp)
     // falls back to the controls sheet's curated options — the same role the sheet
@@ -234,5 +269,10 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
     }
   }
 
-  return { controlType, options, attribute };
+  // Spread rather than always set, so a property with no override keeps the descriptor
+  // shape it has always had instead of gaining an undefined key.
+  const defaultOverride = DEFAULT_OVERRIDES[property];
+  return {
+    controlType, options, attribute, ...(defaultOverride && { defaultOverride }),
+  };
 }

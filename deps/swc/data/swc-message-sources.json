@@ -7,7 +7,8 @@
     "values": [],
     "optional": false,
     "default": "false",
-    "description": "Whether the sources list is open."
+    "description": "Whether the sources list is open.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "label",
@@ -17,7 +18,8 @@
     "values": [],
     "optional": false,
     "default": "'Sources'",
-    "description": "Label shown in the disclosure button and applied to list ARIA labelling."
+    "description": "Label shown in the disclosure button and applied to list ARIA labelling.",
+    "since": "2.0.0-beta.3"
   },
   {
     "attribute": "accessible-label",
@@ -27,6 +29,7 @@
     "values": [],
     "optional": false,
     "default": "''",
-    "description": "Optional accessible label override for assistive technologies."
+    "description": "Optional accessible label override for assistive technologies.",
+    "since": "2.0.0-beta.3"
   }
 ]
