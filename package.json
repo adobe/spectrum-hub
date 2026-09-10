@@ -48,7 +48,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@adobe/spectrum-wc": "2.0.0-beta.0",
+    "@adobe/spectrum-wc": "2.0.0-beta.3",
     "algoliasearch": "^5.56.0",
     "esbuild": "^0.28.0",
     "lit": "^3.3.1",
