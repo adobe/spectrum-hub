@@ -4,6 +4,8 @@ import { loadFragment } from '../fragment/fragment.js';
 
 const { locale } = getConfig();
 
+const HEADER_PATH = '/fragments/nav/header';
+
 /**
  * Builds a skip link and prepares its target.
  * @param {string} text visible label
