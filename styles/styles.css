@@ -18,7 +18,6 @@
   font-display: swap;
   font-style: normal;
   font-weight: 300 900;
-  /* font-stretch: normal; */
 }
 
 @font-face {
@@ -27,7 +26,6 @@
   font-display: swap;
   font-style: italic;
   font-weight: 300 900;
-  /* font-stretch: normal; */
 }
 
 @font-face {
@@ -35,7 +33,7 @@
   src: url("fonts/adobe-clean-display-black.woff2") format("woff2");
   font-display: swap;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 700;
   font-stretch: normal;
 }
 
@@ -216,7 +214,7 @@
   --s2-heading-size-xxl: 40px;
   --s2-heading-size-xxxl: 58px;
   --s2-heading-size-xxxxl: 73px;
-  --s2-heading-font-weight: 500;
+  --s2-heading-font-weight: 700;
   --s2-heading-line-height: 1.2;
   --s2-heading-margin-top-multiplier: 0.8889;
   --s2-heading-margin-bottom-multiplier: 0.25;
@@ -300,7 +298,7 @@
 
   /* fonts */
   --s2-font-family: adobe-clean-spectrum-vf, 'Adobe Clean Spectrum VF', 'Trebuchet MS', sans-serif;
-  --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
+  --s2-font-display-family: adobe-clean-display, 'Adobe Clean Display', sans-serif;
 
   /* se etc conveniences */
   --se-adobe-corporate-color: rgb(235 16 0);
@@ -664,9 +662,17 @@ div[data-status],
     }
 
     /* Semantic elements */
-    h1, .heading-size-xxl { font-size: var(--s2-heading-size-xxl); }
-    h2, .heading-size-xl { font-size: var(--s2-heading-size-xl); }
-    h3, .heading-size-l { font-size: var(--s2-heading-size-l); }
+    h1, .heading-size-xxl {
+      font-size: var(--s2-heading-size-xxl);
+      letter-spacing: -1px;
+    }
+
+    h2, .heading-size-xl {
+      font-size: var(--s2-heading-size-xl);
+      letter-spacing: -1px;
+    }
+
+    h3, .heading-size-l { font-size: var(--s2-heading-size-l);}
     h4, .heading-size-m { font-size: var(--s2-heading-size-m); }
     h5, .heading-size-s { font-size: var(--s2-heading-size-s); }
     h6, .heading-size-xs { font-size: var(--s2-heading-size-xs); }
@@ -678,6 +684,7 @@ div[data-status],
     h5,
     h6,
     [class*="heading-size"] {
+      font-family: var(--s2-font-display-family);
       font-weight: var(--s2-heading-font-weight);
       line-height: var(--s2-heading-line-height);
       margin: calc(1em * var(--s2-heading-margin-top-multiplier)) 0 calc(1em * var(--s2-heading-margin-bottom-multiplier));
