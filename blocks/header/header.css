@@ -4,7 +4,6 @@ header {
   --header-surface-transition: 200ms cubic-bezier(0.23, 1, 0.32, 1);
   --header-inner-shadow: light-dark(rgb(255 255 255), rgb(248 248 248));
   --header-outer-shadow: light-dark(rgb(255 255 255), var(--s2-gray-800));
-  --sh-brand-wordmark-opacity: 1;
   --sh-brand-mark-width-full: 140px;
   --sh-brand-mark-width-compact: 28px;
   --sh-brand-mark-width: var(--sh-brand-mark-width-full);
