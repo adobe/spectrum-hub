@@ -18,35 +18,6 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
   document.body.append(main);
 }
 
-function makeImageFixture({
-  targetText = 'Section Two',
-  before = [],
-  after = [],
-} = {}) {
-  const target = [...document.querySelectorAll('main h1, main h2')]
-    .find((heading) => heading.textContent === targetText);
-  const makeImage = (complete) => {
-    const image = document.createElement('img');
-    Object.defineProperty(image, 'complete', { configurable: true, value: complete });
-    return image;
-  };
-  const beforeImages = before.map((complete) => makeImage(complete));
-  const afterImages = after.map((complete) => makeImage(complete));
-  beforeImages.forEach((image) => target.before(image));
-  afterImages.forEach((image) => target.after(image));
-  return { target, beforeImages, afterImages };
-}
-
-async function flushPromises(clock) {
-  if (clock) {
-    await clock.tickAsync(0);
-  } else {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 0);
-    });
-  }
-}
-
 // page-nav.js has no init export: a top-level IIFE builds its own <nav> and
 // appends it to the body on import. Importing the module *is* the decoration,
 // so every test sets up the DOM and its stubs first, then imports. A unique
@@ -90,6 +61,12 @@ function stubMatchMedia(sandbox, matches = false) {
   const mql = {
     matches,
     addEventListener: (_event, cb) => listeners.push(cb),
+    removeEventListener: (_event, cb) => {
+      const index = listeners.indexOf(cb);
+      if (index >= 0) {
+        listeners.splice(index, 1);
+      }
+    },
     dispatch: (nextMatches) => {
       mql.matches = nextMatches;
       listeners.forEach((cb) => cb({ matches: nextMatches }));
@@ -105,7 +82,9 @@ function stubMatchMedia(sandbox, matches = false) {
 // observer never fires under a test's static layout, which is why the
 // scroll-spy regression below went unnoticed until exercised this way.
 function stubIntersectionObserver(sandbox) {
-  const state = { cb: null, targets: [], count: 0 };
+  const state = {
+    cb: null, targets: [], count: 0, disconnectCount: 0,
+  };
   class FakeIntersectionObserver {
     constructor(cb) { state.cb = cb; state.count += 1; }
 
@@ -113,13 +92,14 @@ function stubIntersectionObserver(sandbox) {
 
     unobserve() {}
 
-    disconnect() {}
+    disconnect() { state.disconnectCount += 1; }
   }
   sandbox.stub(window, 'IntersectionObserver').value(FakeIntersectionObserver);
   return {
     trigger: (entries) => state.cb(entries),
     get targets() { return state.targets; },
     get count() { return state.count; },
+    get disconnectCount() { return state.disconnectCount; },
   };
 }
 
@@ -146,19 +126,12 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('the nav stays empty when no h2 headings are present', () => {
-    it('does not append content when main has no h2 headings', async () => {
+  describe('the nav is omitted when no h2 headings are present', () => {
+    it('does not append a landmark when main has no h2 headings', async () => {
       stubMatchMedia(sandbox, true);
       makeDOM({ h2Texts: [] });
       const el = await loadPageNav();
-      expect(el.children.length).to.equal(0);
-    });
-
-    it('does not mark the nav ready when main has no h2 headings', async () => {
-      stubMatchMedia(sandbox, true);
-      makeDOM({ h2Texts: [] });
-      const el = await loadPageNav();
-      expect(el.dataset.pageNav).to.be.undefined;
+      expect(el).to.be.null;
     });
   });
 
@@ -180,11 +153,6 @@ describe('page-nav block', () => {
       expect(el.querySelector(':scope > ul')).to.not.be.null;
     });
 
-    // Skipped: see TODO in page-nav.js.
-    it.skip('creates one list item per h2 heading plus a back-to-top entry', () => {
-      expect(el.querySelectorAll('ul li').length).to.equal(3);
-    });
-
     it('link text matches the corresponding h2 heading text', () => {
       const texts = [...el.querySelectorAll('ul a')].map((a) => a.textContent);
       expect(texts).to.include('Section One');
@@ -196,26 +164,8 @@ describe('page-nav block', () => {
       expect(link.getAttribute('href')).to.equal('#section-one');
     });
 
-    // Skipped: see TODO in page-nav.js.
-    it.skip('appends a back-to-top link as the last list item', () => {
-      expect(el.querySelector('ul li:last-child a').textContent).to.equal('Back to top');
-    });
-
-    // Skipped: see TODO in page-nav.js.
-    it.skip('back-to-top href points to the h1 id', () => {
-      const topLink = el.querySelector('ul li:last-child a');
-      const h1 = document.querySelector('main h1');
-      expect(topLink.getAttribute('href')).to.equal(`#${h1.id}`);
-    });
-
     it('no links have aria-current set before scrolling', () => {
       expect(el.querySelector('[aria-current]')).to.be.null;
-    });
-
-    // Skipped: see TODO in page-nav.js.
-    it.skip('does not list an h2 that lives inside the nav itself', () => {
-      const texts = [...el.querySelectorAll('ul a')].map((a) => a.textContent);
-      expect(texts).to.deep.equal(['Section One', 'Section Two', 'Back to top']);
     });
   });
 
@@ -245,6 +195,55 @@ describe('page-nav block', () => {
       const el = document.querySelector('nav.page-nav');
       expect(el).to.not.be.null;
       expect(el.querySelectorAll('ul li').length).to.equal(2);
+    });
+
+    it('starts and stops scroll spy as the nav crosses the desktop breakpoint', async () => {
+      const mql = stubMatchMedia(sandbox, false);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      await loadPageNav();
+
+      expect(io.count).to.equal(0);
+      mql.dispatch(true);
+      expect(io.count).to.equal(1);
+      mql.dispatch(false);
+      expect(io.disconnectCount).to.equal(1);
+      mql.dispatch(true);
+      expect(io.count).to.equal(2);
+    });
+
+    it('reuses its nav and widgets across viewport changes', async () => {
+      const mql = stubMatchMedia(sandbox, false);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      await loadPageNav();
+
+      mql.dispatch(true);
+      const firstNav = document.querySelector('nav.page-nav');
+      const firstWidgets = await waitForEl(firstNav, '.page-nav-widgets');
+      mql.dispatch(false);
+      mql.dispatch(true);
+
+      expect(document.querySelector('nav.page-nav')).to.equal(firstNav);
+      expect(document.querySelector('.page-nav-widgets')).to.equal(firstWidgets);
+      expect(document.querySelectorAll('.page-nav-widgets').length).to.equal(1);
+    });
+
+    it('restores initial-hash current state when first shown on desktop', async () => {
+      const originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      const mql = stubMatchMedia(sandbox, false);
+      stubIntersectionObserver(sandbox);
+      sandbox.stub(Element.prototype, 'scrollIntoView');
+      makeDOM();
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+      try {
+        await loadPageNav();
+        mql.dispatch(true);
+        expect(document.querySelector('a[href="#section-two"]').getAttribute('aria-current'))
+          .to.equal('location');
+      } finally {
+        window.history.replaceState({}, '', originalUrl);
+      }
     });
   });
 
@@ -343,380 +342,6 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('anchor navigation corrects image-driven drift without delaying scrolling', () => {
-    let originalUrl;
-
-    beforeEach(() => {
-      originalUrl = window.location.pathname + window.location.search + window.location.hash;
-      window.history.replaceState({}, '', window.location.pathname + window.location.search);
-      window.localStorage.removeItem('lazyhash');
-    });
-
-    afterEach(() => {
-      window.history.replaceState({}, '', originalUrl);
-      window.localStorage.removeItem('lazyhash');
-    });
-
-    it('scrolls and focuses immediately when an incomplete image precedes the target', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target } = makeImageFixture({ before: [false] });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-
-      expect(scrollIntoView.calledOnceWithExactly({
-        block: 'start',
-        behavior: 'instant',
-      })).to.be.true;
-      expect(document.activeElement).to.equal(target);
-    });
-
-    it('corrects the scroll after a preceding image moves the target', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages } = makeImageFixture({ before: [false] });
-      target.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      expect(scrollIntoView.calledOnce).to.be.true;
-
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-
-      expect(scrollIntoView.callCount).to.equal(2);
-    });
-
-    it('does not correct when the target remains within two pixels of its expected position', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages } = makeImageFixture({ before: [false] });
-      target.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 58 });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-
-      expect(scrollIntoView.calledOnce).to.be.true;
-    });
-
-    it('removes image listeners after all images settle', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages } = makeImageFixture({ before: [false] });
-      const removeEventListener = sandbox.spy(beforeImages[0], 'removeEventListener');
-      sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-
-      expect(removeEventListener.calledWith('load')).to.be.true;
-      expect(removeEventListener.calledWith('error')).to.be.true;
-    });
-
-    it('settles an image that completes while its listeners are being attached', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages } = makeImageFixture({ before: [false] });
-      const [image] = beforeImages;
-      const nativeAddEventListener = image.addEventListener.bind(image);
-      const removeEventListener = sandbox.spy(image, 'removeEventListener');
-      sandbox.stub(image, 'addEventListener').callsFake((type, listener, options) => {
-        nativeAddEventListener(type, listener, options);
-        Object.defineProperty(image, 'complete', { configurable: true, value: true });
-      });
-      target.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 56 });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      await flushPromises();
-
-      expect(scrollIntoView.calledOnce).to.be.true;
-      expect(removeEventListener.calledWith('load')).to.be.true;
-      expect(removeEventListener.calledWith('error')).to.be.true;
-    });
-
-    it('removes image listeners when navigation times out', async () => {
-      const clock = sinon.useFakeTimers();
-      try {
-        stubMatchMedia(sandbox, true);
-        stubIntersectionObserver(sandbox);
-        makeDOM();
-        const { target, beforeImages } = makeImageFixture({ before: [false] });
-        const removeEventListener = sandbox.spy(beforeImages[0], 'removeEventListener');
-        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-        const el = await loadPageNav();
-
-        el.querySelector('a[href="#section-two"]').click();
-        expect(scrollIntoView.calledOnce).to.be.true;
-        await clock.tickAsync(1000);
-
-        expect(scrollIntoView.calledOnce).to.be.true;
-        expect(removeEventListener.calledWith('load')).to.be.true;
-        expect(removeEventListener.calledWith('error')).to.be.true;
-      } finally {
-        clock.restore();
-      }
-    });
-
-    it('corrects after preceding images emit load or error', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages } = makeImageFixture({ before: [false, false] });
-      target.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-      expect(scrollIntoView.callCount).to.equal(2);
-
-      beforeImages[1].dispatchEvent(new Event('error'));
-      await flushPromises();
-      expect(scrollIntoView.callCount).to.equal(3);
-    });
-
-    it('does not create correction work for images after the target or already complete images', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages, afterImages } = makeImageFixture({
-        before: [true],
-        after: [false],
-      });
-      const beforeAddEventListener = sandbox.spy(beforeImages[0], 'addEventListener');
-      const afterAddEventListener = sandbox.spy(afterImages[0], 'addEventListener');
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      await flushPromises();
-
-      expect(scrollIntoView.calledOnceWithExactly({
-        block: 'start',
-        behavior: 'instant',
-      })).to.be.true;
-      expect(beforeAddEventListener.called).to.be.false;
-      expect(afterAddEventListener.called).to.be.false;
-    });
-
-    it('does not correct after the 1000 millisecond deadline', async () => {
-      const clock = sinon.useFakeTimers();
-      try {
-        stubMatchMedia(sandbox, true);
-        stubIntersectionObserver(sandbox);
-        makeDOM();
-        const { target, beforeImages } = makeImageFixture({ before: [false] });
-        target.style.scrollMarginBlockStart = '56px';
-        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-        const el = await loadPageNav();
-
-        el.querySelector('a[href="#section-two"]').click();
-        expect(scrollIntoView.calledOnce).to.be.true;
-        await clock.tickAsync(1000);
-
-        beforeImages[0].dispatchEvent(new Event('load'));
-        await flushPromises(clock);
-        expect(scrollIntoView.calledOnce).to.be.true;
-      } finally {
-        clock.restore();
-      }
-    });
-
-    it('scrolls and focuses immediately on popstate', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target } = makeImageFixture({ before: [false] });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      await loadPageNav();
-
-      window.history.pushState({}, '', '#section-two');
-      window.dispatchEvent(new PopStateEvent('popstate'));
-
-      expect(scrollIntoView.calledOnceWithExactly({
-        block: 'start',
-        behavior: 'instant',
-      })).to.be.true;
-      expect(document.activeElement).to.equal(target);
-    });
-
-    it('cancels correction when popstate no longer resolves to a page-nav heading', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target, beforeImages } = makeImageFixture({ before: [false] });
-      target.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      window.history.pushState({}, '', window.location.pathname);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-
-      expect(scrollIntoView.calledOnce).to.be.true;
-    });
-
-    it('scrolls and focuses immediately on an initial deep link and clears lazyhash', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target } = makeImageFixture({ before: [false] });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      window.history.replaceState(
-        {},
-        '',
-        `${window.location.pathname}${window.location.search}#section-two`,
-      );
-      window.localStorage.setItem('lazyhash', 'section-two');
-
-      const el = await loadPageNav();
-      expect(window.localStorage.getItem('lazyhash')).to.be.null;
-      expect(window.location.hash).to.equal('#section-two');
-
-      expect(scrollIntoView.calledOnceWithExactly({
-        block: 'start',
-        behavior: 'instant',
-      })).to.be.true;
-      expect(document.activeElement).to.equal(target);
-      expect(window.location.hash).to.equal('#section-two');
-      expect(el.querySelector('a[href="#section-two"]').getAttribute('aria-current')).to.equal('location');
-    });
-
-    it('does not correct a superseded target after its images settle', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const { target: targetB, beforeImages } = makeImageFixture({ before: [false] });
-      targetB.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(targetB, 'getBoundingClientRect').returns({ top: 80 });
-      const targetA = document.querySelector('main h2');
-      const removeEventListener = sandbox.spy(beforeImages[0], 'removeEventListener');
-      const scrollA = sandbox.stub(targetA, 'scrollIntoView');
-      const scrollB = sandbox.stub(targetB, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      el.querySelector('a[href="#section-one"]').click();
-      expect(scrollA.calledOnce).to.be.true;
-      expect(scrollB.calledOnce).to.be.true;
-      expect(removeEventListener.calledWith('load')).to.be.true;
-      expect(removeEventListener.calledWith('error')).to.be.true;
-
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-
-      expect(scrollA.calledOnce).to.be.true;
-      expect(scrollB.calledOnce).to.be.true;
-    });
-
-    ['wheel', 'touchstart'].forEach((eventType) => {
-      it(`cancels correction after ${eventType} input`, async () => {
-        stubMatchMedia(sandbox, true);
-        stubIntersectionObserver(sandbox);
-        makeDOM();
-        const { target, beforeImages } = makeImageFixture({ before: [false] });
-        target.style.scrollMarginBlockStart = '56px';
-        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-        const el = await loadPageNav();
-
-        el.querySelector('a[href="#section-two"]').click();
-        window.dispatchEvent(new Event(eventType));
-        beforeImages[0].dispatchEvent(new Event('load'));
-        await flushPromises();
-
-        expect(scrollIntoView.calledOnce).to.be.true;
-      });
-    });
-
-    ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].forEach((key) => {
-      it(`cancels correction after the ${key === ' ' ? 'Space' : key} key`, async () => {
-        stubMatchMedia(sandbox, true);
-        stubIntersectionObserver(sandbox);
-        makeDOM();
-        const { target, beforeImages } = makeImageFixture({ before: [false] });
-        target.style.scrollMarginBlockStart = '56px';
-        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-        const el = await loadPageNav();
-
-        el.querySelector('a[href="#section-two"]').click();
-        window.dispatchEvent(new KeyboardEvent('keydown', { key }));
-        beforeImages[0].dispatchEvent(new Event('load'));
-        await flushPromises();
-
-        expect(scrollIntoView.calledOnce).to.be.true;
-      });
-    });
-
-    ['input', 'textarea', 'select', 'button'].forEach((tag) => {
-      it(`does not cancel correction for navigation keys from a ${tag}`, async () => {
-        stubMatchMedia(sandbox, true);
-        stubIntersectionObserver(sandbox);
-        makeDOM();
-        const control = document.createElement(tag);
-        document.body.append(control);
-        const { target, beforeImages } = makeImageFixture({ before: [false] });
-        target.style.scrollMarginBlockStart = '56px';
-        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-        const el = await loadPageNav();
-
-        el.querySelector('a[href="#section-two"]').click();
-        control.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
-        beforeImages[0].dispatchEvent(new Event('load'));
-        await flushPromises();
-
-        expect(scrollIntoView.callCount).to.equal(2);
-      });
-    });
-
-    it('does not cancel correction for navigation keys from editable content', async () => {
-      stubMatchMedia(sandbox, true);
-      stubIntersectionObserver(sandbox);
-      makeDOM();
-      const editable = document.createElement('div');
-      editable.contentEditable = 'true';
-      document.body.append(editable);
-      const { target, beforeImages } = makeImageFixture({ before: [false] });
-      target.style.scrollMarginBlockStart = '56px';
-      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
-      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
-      const el = await loadPageNav();
-
-      el.querySelector('a[href="#section-two"]').click();
-      editable.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
-      beforeImages[0].dispatchEvent(new Event('load'));
-      await flushPromises();
-
-      expect(scrollIntoView.callCount).to.equal(2);
-    });
-  });
-
   describe('the last link gets a visual-only .is-current stand-in when clicked', () => {
     // The last heading can sit too close to the document's end to ever cross
     // into the observer's (bottom -50%) active band on its own, so it doesn't
@@ -800,6 +425,57 @@ describe('page-nav block', () => {
 
       expect(firstLink.getAttribute('aria-current')).to.equal('location');
       expect(secondLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    it('does not resume for non-scroll keys or scroll keys from editable controls', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const input = document.createElement('input');
+      document.body.append(input);
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    it('resumes for a scroll key outside editable controls', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink] = [...el.querySelectorAll('ul a')];
+
+      el.querySelector('a[href="#section-two"]').click();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown' }));
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('clears stale active state when popstate has no matching heading', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      window.history.pushState({}, '', window.location.pathname);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      expect(el.querySelector('[aria-current]')).to.be.null;
+
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
     });
   });
 
@@ -972,6 +648,26 @@ describe('page-nav block', () => {
       const [first, second] = document.querySelectorAll('main h2');
       expect(first.id).to.equal('overview');
       expect(second.id).to.equal('overview-2');
+    });
+
+    it('deduplicates authored ids in DOM order', async () => {
+      makeDOM();
+      const [first, second] = document.querySelectorAll('main h2');
+      first.id = 'overview';
+      second.id = 'overview';
+      await loadPageNav();
+      expect(first.id).to.equal('overview');
+      expect(second.id).to.equal('overview-2');
+    });
+
+    it('deduplicates an authored id that belongs to a non-heading element', async () => {
+      const reserved = document.createElement('div');
+      reserved.id = 'overview';
+      document.body.prepend(reserved);
+      makeDOM({ h2Texts: ['Overview'] });
+      document.querySelector('main h2').id = 'overview';
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('overview-2');
     });
 
     it('sets tabindex="-1" on each h2 heading', async () => {
