@@ -25,7 +25,7 @@ header {
       backdrop-filter: blur(var(--sh-glass-blur));
     }
 
-    @media (width >= 900px) {
+    @media (width >= 1200px) {
       box-shadow: none;
       background-color: unset;
       border-radius: 0;
@@ -50,7 +50,6 @@ header {
 
     & > .brand-section svg > path:nth-child(2) {
       opacity: 0;
-      transition: opacity 0.5s ease;
     }
   }
 
@@ -119,7 +118,7 @@ header {
         backdrop-filter var(--header-surface-transition);
     }
     
-    @media (width >= 900px) {
+    @media (width >= 1200px) {
       &::before {
         display: none;
       }
@@ -151,6 +150,13 @@ header {
       display: block;
       width: var(--sh-brand-mark-width-full);
       height: 56px;
+    }
+
+    /* Wordmark. Declared here rather than only under `is-scrolled` so the fade
+    runs both when the class is added and when it is removed. */
+    svg > path:nth-child(2) {
+      opacity: 1;
+      transition: opacity 0.5s ease;
     }
 
      /* Narrow screens keep the "A" and drop the wordmark. */
@@ -195,7 +201,7 @@ header {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  header .brand-section svg {
+  header .brand-section svg > path:nth-child(2) {
     transition: none;
   }
 
