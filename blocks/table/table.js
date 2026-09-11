@@ -160,6 +160,52 @@ const buildDataTable = async (href) => {
   return buildTableElement(headerCells, dataCells);
 };
 
+/**
+ * Wraps the table in the element that actually scrolls. `overflow` is ignored on a
+ * `display: table` box, so the scroll container has to be a block box around it — and
+ * keeping it separate from the block leaves `.table` itself unscrolled, so the scroll
+ * hint can sit at the edge instead of sliding away with the rows.
+ * @param {HTMLTableElement} table
+ * @param {string[]} labelIds ids naming the table, reused to name the scroll region
+ * @returns {HTMLDivElement}
+ */
+const buildScroller = (table, labelIds) => {
+  const scroller = document.createElement('div');
+  scroller.className = 'table-scroll';
+  // a scrollable region has to be reachable by keyboard (WCAG 2.1.1)
+  scroller.tabIndex = 0;
+  // only a named region is worth exposing as a landmark
+  if (labelIds.length) {
+    scroller.role = 'region';
+    scroller.setAttribute('aria-labelledby', labelIds.join(' '));
+  }
+  scroller.append(table);
+  return scroller;
+};
+
+/**
+ * Flags the block while table remains past the inline-end edge, which is what shows the
+ * scroll hint. Deliberately listener-based: a ResizeObserver never fires on the hidden
+ * pages the test runner uses.
+ * @param {Element} el The table block
+ * @param {Element} scroller The scroll container
+ * @returns {Function} the update, so callers can re-run it after a known reflow
+ */
+export function watchScrollHint(el, scroller) {
+  const update = () => {
+    const remaining = scroller.scrollWidth - scroller.clientWidth - Math.abs(scroller.scrollLeft);
+    el.toggleAttribute('data-scroll-hint', remaining > 1);
+  };
+
+  update();
+  scroller.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+  // column widths follow font metrics, so the first measurement can predate the real one
+  document.fonts?.ready.then(update);
+
+  return update;
+}
+
 export default async function init(el) {
   const dataHref = el.querySelector('a[href$=".json"]')?.href;
 
@@ -187,5 +233,10 @@ export default async function init(el) {
     return heading.id;
   });
   if (table && labelIds.length) { table.setAttribute('aria-labelledby', labelIds.join(' ')); }
-  el.tabIndex = 0;
+
+  if (table) {
+    const scroller = buildScroller(table, labelIds);
+    el.replaceChildren(scroller);
+    watchScrollHint(el, scroller);
+  }
 }

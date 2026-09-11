@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { getConfig } from '../../scripts/ak.js';
-import init from '../../blocks/table/table.js';
+import init, { watchScrollHint } from '../../blocks/table/table.js';
 
 function makeEl(html) {
   const el = document.createElement('div');
@@ -205,9 +205,34 @@ describe('table block', () => {
       expect(el.classList.contains('quiet')).to.be.true;
     });
 
-    it('sets el.tabIndex to 0', async () => {
+    it('makes the scroll container keyboard reachable rather than the block', async () => {
       await init(el);
-      expect(el.tabIndex).to.equal(0);
+      expect(el.querySelector('.table-scroll').tabIndex).to.equal(0);
+      expect(el.tabIndex).to.equal(-1);
+    });
+
+    it('wraps the table in a scroll container', async () => {
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller.parentElement === el).to.be.true;
+      expect(scroller.querySelector('table') === el.querySelector('table')).to.be.true;
+    });
+
+    it('names the scroll region with the same headings as the table', async () => {
+      const h1 = document.createElement('h1');
+      h1.id = 'page-heading';
+      document.body.append(h1, el);
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller.role).to.equal('region');
+      expect(scroller.getAttribute('aria-labelledby')).to.equal('page-heading');
+    });
+
+    it('leaves the scroll container unnamed and roleless when no heading names it', async () => {
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller.role).to.equal(null);
+      expect(scroller.hasAttribute('aria-labelledby')).to.be.false;
     });
 
     it('sets aria-labelledby from an existing h1 id', async () => {
@@ -447,6 +472,60 @@ describe('table block', () => {
       const el = makeDataEl();
       await init(el);
       expect(el.querySelector('table')).to.be.null;
+    });
+  });
+
+  describe('scroll hint', () => {
+    // jsdom-free measurements: stub the two sizes the hint is derived from, so the test
+    // does not depend on the runner's viewport or on fonts having loaded.
+    const makeScroller = ({ scrollWidth, clientWidth, scrollLeft = 0 }) => {
+      const scroller = document.createElement('div');
+      Object.defineProperties(scroller, {
+        scrollWidth: { value: scrollWidth, configurable: true },
+        clientWidth: { value: clientWidth, configurable: true },
+        scrollLeft: { value: scrollLeft, writable: true, configurable: true },
+      });
+      return scroller;
+    };
+
+    it('flags the block when the table is wider than the scroll container', () => {
+      const el = document.createElement('div');
+      watchScrollHint(el, makeScroller({ scrollWidth: 1000, clientWidth: 600 }));
+      expect(el.hasAttribute('data-scroll-hint')).to.be.true;
+    });
+
+    it('leaves the block unflagged when the table already fits', () => {
+      const el = document.createElement('div');
+      watchScrollHint(el, makeScroller({ scrollWidth: 600, clientWidth: 600 }));
+      expect(el.hasAttribute('data-scroll-hint')).to.be.false;
+    });
+
+    it('clears the flag once scrolled to the inline-end', () => {
+      const el = document.createElement('div');
+      const scroller = makeScroller({ scrollWidth: 1000, clientWidth: 600 });
+      const update = watchScrollHint(el, scroller);
+      expect(el.hasAttribute('data-scroll-hint')).to.be.true;
+
+      scroller.scrollLeft = 400;
+      update();
+      expect(el.hasAttribute('data-scroll-hint')).to.be.false;
+    });
+
+    it('reads a negative RTL scroll offset as distance travelled', () => {
+      const el = document.createElement('div');
+      const scroller = makeScroller({ scrollWidth: 1000, clientWidth: 600, scrollLeft: -400 });
+      watchScrollHint(el, scroller);
+      expect(el.hasAttribute('data-scroll-hint')).to.be.false;
+    });
+
+    it('re-evaluates when the scroll container is scrolled', () => {
+      const el = document.createElement('div');
+      const scroller = makeScroller({ scrollWidth: 1000, clientWidth: 600 });
+      watchScrollHint(el, scroller);
+
+      scroller.scrollLeft = 400;
+      scroller.dispatchEvent(new Event('scroll'));
+      expect(el.hasAttribute('data-scroll-hint')).to.be.false;
     });
   });
 });

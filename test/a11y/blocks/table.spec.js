@@ -26,29 +26,30 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   await gotoBlock(page, block);
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
-    - table "Button component Properties":
-      - rowgroup:
-        - row "Name Type Default Description":
-          - columnheader "Name"
-          - columnheader "Type"
-          - columnheader "Default"
-          - columnheader "Description"
-      - rowgroup:
-        - row "size string medium Controls the size of the button":
-          - cell "size"
-          - cell "string"
-          - cell "medium"
-          - cell "Controls the size of the button"
-        - row "variant string primary Sets the visual style variant":
-          - cell "variant"
-          - cell "string"
-          - cell "primary"
-          - cell "Sets the visual style variant"
-        - row "disabled boolean false Disables interaction and applies disabled styling":
-          - cell "disabled"
-          - cell "boolean"
-          - cell "false"
-          - cell "Disables interaction and applies disabled styling"
+    - region "Button component Properties":
+      - table "Button component Properties":
+        - rowgroup:
+          - row "Name Type Default Description":
+            - columnheader "Name"
+            - columnheader "Type"
+            - columnheader "Default"
+            - columnheader "Description"
+        - rowgroup:
+          - row "size string medium Controls the size of the button":
+            - cell "size"
+            - cell "string"
+            - cell "medium"
+            - cell "Controls the size of the button"
+          - row "variant string primary Sets the visual style variant":
+            - cell "variant"
+            - cell "string"
+            - cell "primary"
+            - cell "Sets the visual style variant"
+          - row "disabled boolean false Disables interaction and applies disabled styling":
+            - cell "disabled"
+            - cell "boolean"
+            - cell "false"
+            - cell "Disables interaction and applies disabled styling"
   `);
 });
 

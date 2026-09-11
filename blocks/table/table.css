@@ -4,7 +4,12 @@
   --table-border-width: 1px;
   --table-head-row-padding-block: 7px;
   --table-body-row-padding-block: 11px;
+  --table-scroll-hint-width: 48px;
 
+  /* the hint sits over the rows, so it fades to the row fill rather than the page */
+  --table-scroll-hint-color: var(--s2-gray-25);
+
+  position: relative; /* containing block for the scroll hint */
   container-type: inline-size;
   container-name: table-wrapper;
   margin-block: var(--s2-spacing-500) var(--s2-spacing-800);
@@ -94,9 +99,43 @@
     position: relative;
   }
 
-  @container table-wrapper (width >= 650px) {
+  /* The scroll container. A wide table is clipped here rather than running on under the
+  page nav, which is sticky and paints over anything that reaches it. */
+  .table-scroll {
     overflow-x: auto;
 
+    /* overflow-x makes overflow-y compute to auto as well, which would clip the focus
+    ring on a link in the last row — pad for it and pull the padding back out. Block axis
+    only: inline padding would push the block back out over the page nav. */
+    padding-block: var(--s2-spacing-100);
+    margin-block: calc(var(--s2-spacing-100) * -1);
+  }
+
+  /* Scroll hint. It lives on the block, not on the scroll container, because an
+  absolutely positioned child of a scroller is placed against the padding box and so
+  scrolls away from the edge with the rows. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: var(--table-scroll-hint-width);
+    background: linear-gradient(to right, transparent, var(--table-scroll-hint-color));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  &:dir(rtl)::after {
+    background: linear-gradient(to left, transparent, var(--table-scroll-hint-color));
+  }
+
+  /* set by watchScrollHint() while there is still table past the inline-end edge */
+  &[data-scroll-hint]::after {
+    opacity: 1;
+  }
+
+  @container table-wrapper (width >= 750px) {
     table {
       border-collapse: separate;
       border-spacing: 0;
@@ -172,7 +211,7 @@
     padding-inline: var(--s2-spacing-300) var(--s2-spacing-100);
     overflow-wrap: break-word;
 
-    @media (width >= 900px) {
+    @media (width >= 1200px) {
       overflow-wrap: normal;
     }
   }
@@ -195,6 +234,10 @@
     border-radius: 0;
   }
 
+  &.quiet {
+    --table-scroll-hint-color: var(--se-body-background-color);
+  }
+
   &.quiet th,
   &.quiet td {
     border-inline: 0;
@@ -210,5 +253,11 @@
   &.quiet thead tr {
     border-block-start: none;
     background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table::after {
+    transition: none;
   }
 }
