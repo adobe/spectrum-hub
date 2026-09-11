@@ -507,7 +507,7 @@ div[data-status],
     /* Page nav does not display below 1200px (see page-nav.css), so its
     track collapses rather than reserving an empty column. */
     @media (width >= 900px) and (width < 1200px) {
-      --pagenav-track-width: 56px;
+      --pagenav-track-width: var(--pagenav-inline-end-margin);
     }
 
     /* Only allow transition once sitenav is in the DOM */
@@ -570,7 +570,6 @@ div[data-status],
       &:has(meta[name="template"][content="status-table"]) {
         --pagenav-min-inline-size: 0;
         --pagenav-inline-start-margin: 0;
-        --pagenav-track-width: 0;
       }
     }
 
