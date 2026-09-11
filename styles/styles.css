@@ -504,6 +504,12 @@ div[data-status],
       --pagenav-track-width: 0;
     }
 
+    /* Page nav does not display below 1200px (see page-nav.css), so its
+    track collapses rather than reserving an empty column. */
+    @media (width >= 900px) and (width < 1200px) {
+      --pagenav-track-width: var(--pagenav-inline-end-margin);
+    }
+
     /* Only allow transition once sitenav is in the DOM */
     &:has(#sitenav) {
       transition:
@@ -546,6 +552,24 @@ div[data-status],
         padding-inline: unset;
         padding-block: unset;
         border-block-end: none;
+      }
+    }
+
+    /* status-table page doesn't have a page nav */
+    &:has(meta[name="template"][content="status-table"]) {
+      --pagenav-track-width: 0;
+    }
+    
+    @media (width >= 900px) {
+      &:has(meta[name="template"][content="status-table"]) {
+        --pagenav-track-width: var(--pagenav-inline-end-margin);
+      }
+    }
+
+    @media (width >= 1200px) {
+      &:has(meta[name="template"][content="status-table"]) {
+        --pagenav-min-inline-size: 0;
+        --pagenav-inline-start-margin: 0;
       }
     }
 
@@ -647,7 +671,7 @@ div[data-status],
       .page-nav {
         display: none;
 
-        @media (width >= 900px) {
+        @media (width >= 1200px) {
           display: block;
           grid-area: pagenav;
         }

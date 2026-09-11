@@ -153,7 +153,7 @@ describe('sitenav block', () => {
       const menu = ul.querySelector('.level-2-menu');
       expect(menu.classList.contains('can-expand')).to.be.true;
       expect(btn.getAttribute('aria-controls')).to.equal(menu.id);
-      expect(menu.id).to.equal('foundations');
+      expect(menu.id).to.equal('sitenav-menu-foundations');
     });
 
     it('starts collapsed and toggles aria-expanded on click', () => {
@@ -181,6 +181,37 @@ describe('sitenav block', () => {
       expect(ul.querySelector('a').getAttribute('href')).to.equal('/x');
     });
 
+    // The reason menu ids carry a prefix: a category label slugifies to the same
+    // string as an unrelated element's id often enough on a docs page, and whichever
+    // one lost would silently break aria-controls.
+    it('namespaces the menu id so it cannot collide with an unrelated page id', () => {
+      const heading = document.createElement('h2');
+      heading.id = 'typography';
+      document.body.append(heading);
+
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Typography</p>
+            <ul><li><a href="/foundations/typography/scale">Scale</a></li></ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      document.body.append(ul);
+
+      try {
+        const menu = ul.querySelector('.level-2-menu');
+        const btn = ul.querySelector('button.level-1-button');
+        expect(menu.id).to.not.equal(heading.id);
+        const controlled = document.getElementById(btn.getAttribute('aria-controls'));
+        expect(controlled === menu).to.be.true;
+      } finally {
+        heading.remove();
+        ul.remove();
+      }
+    });
+
     // Real content repeats this shape: the index-based nav stitches a sibling
     // "Components" item under each of rsp/swc/ios/android, so two menu
     // wrappers with the same label can legitimately land in the same list.
@@ -201,8 +232,8 @@ describe('sitenav block', () => {
       const [firstBtn, secondBtn] = ul.querySelectorAll('button.level-1-button');
       const [firstMenu, secondMenu] = ul.querySelectorAll('.level-2-menu');
 
-      expect(firstMenu.id).to.equal('overview');
-      expect(secondMenu.id).to.equal('overview-2');
+      expect(firstMenu.id).to.equal('sitenav-menu-overview');
+      expect(secondMenu.id).to.equal('sitenav-menu-overview-2');
       expect(firstBtn.getAttribute('aria-controls')).to.equal(firstMenu.id);
       expect(secondBtn.getAttribute('aria-controls')).to.equal(secondMenu.id);
     });
@@ -1593,7 +1624,7 @@ describe('sitenav block', () => {
     it('expands the level-1 button matching the dispatched label', () => {
       document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Foundations' } }));
 
-      const btn = navList.querySelector('.level-1-button[aria-controls="foundations"]');
+      const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
       expect(btn.getAttribute('aria-expanded')).to.equal('true');
     });
 

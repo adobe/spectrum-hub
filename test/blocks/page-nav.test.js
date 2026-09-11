@@ -53,7 +53,7 @@ function waitForEl(root, selector, timeout = 2000) {
   });
 }
 
-// matches=true simulates the >=900px desktop viewport where the nav renders;
+// matches=true simulates the >=1200px desktop viewport where the nav renders;
 // false simulates the small screens where it is removed. The captured change
 // listener lets tests drive a viewport crossing.
 function stubMatchMedia(sandbox, matches = false) {
@@ -61,6 +61,12 @@ function stubMatchMedia(sandbox, matches = false) {
   const mql = {
     matches,
     addEventListener: (_event, cb) => listeners.push(cb),
+    removeEventListener: (_event, cb) => {
+      const index = listeners.indexOf(cb);
+      if (index >= 0) {
+        listeners.splice(index, 1);
+      }
+    },
     dispatch: (nextMatches) => {
       mql.matches = nextMatches;
       listeners.forEach((cb) => cb({ matches: nextMatches }));
@@ -76,7 +82,9 @@ function stubMatchMedia(sandbox, matches = false) {
 // observer never fires under a test's static layout, which is why the
 // scroll-spy regression below went unnoticed until exercised this way.
 function stubIntersectionObserver(sandbox) {
-  const state = { cb: null, targets: [], count: 0 };
+  const state = {
+    cb: null, targets: [], count: 0, disconnectCount: 0,
+  };
   class FakeIntersectionObserver {
     constructor(cb) { state.cb = cb; state.count += 1; }
 
@@ -84,13 +92,14 @@ function stubIntersectionObserver(sandbox) {
 
     unobserve() {}
 
-    disconnect() {}
+    disconnect() { state.disconnectCount += 1; }
   }
   sandbox.stub(window, 'IntersectionObserver').value(FakeIntersectionObserver);
   return {
     trigger: (entries) => state.cb(entries),
     get targets() { return state.targets; },
     get count() { return state.count; },
+    get disconnectCount() { return state.disconnectCount; },
   };
 }
 
@@ -117,19 +126,12 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('the nav stays empty when no h2 headings are present', () => {
-    it('does not append content when main has no h2 headings', async () => {
+  describe('the nav is omitted when no h2 headings are present', () => {
+    it('does not append a landmark when main has no h2 headings', async () => {
       stubMatchMedia(sandbox, true);
       makeDOM({ h2Texts: [] });
       const el = await loadPageNav();
-      expect(el.children.length).to.equal(0);
-    });
-
-    it('does not mark the nav ready when main has no h2 headings', async () => {
-      stubMatchMedia(sandbox, true);
-      makeDOM({ h2Texts: [] });
-      const el = await loadPageNav();
-      expect(el.dataset.pageNav).to.be.undefined;
+      expect(el).to.be.null;
     });
   });
 
@@ -151,11 +153,6 @@ describe('page-nav block', () => {
       expect(el.querySelector(':scope > ul')).to.not.be.null;
     });
 
-    // Skipped: see TODO in page-nav.js.
-    it.skip('creates one list item per h2 heading plus a back-to-top entry', () => {
-      expect(el.querySelectorAll('ul li').length).to.equal(3);
-    });
-
     it('link text matches the corresponding h2 heading text', () => {
       const texts = [...el.querySelectorAll('ul a')].map((a) => a.textContent);
       expect(texts).to.include('Section One');
@@ -167,26 +164,8 @@ describe('page-nav block', () => {
       expect(link.getAttribute('href')).to.equal('#section-one');
     });
 
-    // Skipped: see TODO in page-nav.js.
-    it.skip('appends a back-to-top link as the last list item', () => {
-      expect(el.querySelector('ul li:last-child a').textContent).to.equal('Back to top');
-    });
-
-    // Skipped: see TODO in page-nav.js.
-    it.skip('back-to-top href points to the h1 id', () => {
-      const topLink = el.querySelector('ul li:last-child a');
-      const h1 = document.querySelector('main h1');
-      expect(topLink.getAttribute('href')).to.equal(`#${h1.id}`);
-    });
-
     it('no links have aria-current set before scrolling', () => {
       expect(el.querySelector('[aria-current]')).to.be.null;
-    });
-
-    // Skipped: see TODO in page-nav.js.
-    it.skip('does not list an h2 that lives inside the nav itself', () => {
-      const texts = [...el.querySelectorAll('ul a')].map((a) => a.textContent);
-      expect(texts).to.deep.equal(['Section One', 'Section Two', 'Back to top']);
     });
   });
 
@@ -216,6 +195,55 @@ describe('page-nav block', () => {
       const el = document.querySelector('nav.page-nav');
       expect(el).to.not.be.null;
       expect(el.querySelectorAll('ul li').length).to.equal(2);
+    });
+
+    it('starts and stops scroll spy as the nav crosses the desktop breakpoint', async () => {
+      const mql = stubMatchMedia(sandbox, false);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      await loadPageNav();
+
+      expect(io.count).to.equal(0);
+      mql.dispatch(true);
+      expect(io.count).to.equal(1);
+      mql.dispatch(false);
+      expect(io.disconnectCount).to.equal(1);
+      mql.dispatch(true);
+      expect(io.count).to.equal(2);
+    });
+
+    it('reuses its nav and widgets across viewport changes', async () => {
+      const mql = stubMatchMedia(sandbox, false);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      await loadPageNav();
+
+      mql.dispatch(true);
+      const firstNav = document.querySelector('nav.page-nav');
+      const firstWidgets = await waitForEl(firstNav, '.page-nav-widgets');
+      mql.dispatch(false);
+      mql.dispatch(true);
+
+      expect(document.querySelector('nav.page-nav')).to.equal(firstNav);
+      expect(document.querySelector('.page-nav-widgets')).to.equal(firstWidgets);
+      expect(document.querySelectorAll('.page-nav-widgets').length).to.equal(1);
+    });
+
+    it('restores initial-hash current state when first shown on desktop', async () => {
+      const originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      const mql = stubMatchMedia(sandbox, false);
+      stubIntersectionObserver(sandbox);
+      sandbox.stub(Element.prototype, 'scrollIntoView');
+      makeDOM();
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+      try {
+        await loadPageNav();
+        mql.dispatch(true);
+        expect(document.querySelector('a[href="#section-two"]').getAttribute('aria-current'))
+          .to.equal('location');
+      } finally {
+        window.history.replaceState({}, '', originalUrl);
+      }
     });
   });
 
@@ -281,6 +309,244 @@ describe('page-nav block', () => {
         ...document.querySelectorAll('main h2'),
         document.querySelector('main h1'),
       ]);
+    });
+  });
+
+  describe('clicking a link marks it current immediately', () => {
+    // A clicked heading's own scroll can undershoot (see the .is-current
+    // describe below), so the link can't wait on the observer to confirm it.
+    it('sets aria-current synchronously, before any observer signal', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const firstLink = el.querySelector('ul li:first-child a');
+      firstLink.click();
+
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('moves aria-current to the newly clicked link and clears the previous one', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+      firstLink.click();
+      secondLink.click();
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+  });
+
+  describe('the last link gets a visual-only .is-current stand-in when clicked', () => {
+    // The last heading can sit too close to the document's end to ever cross
+    // into the observer's (bottom -50%) active band on its own, so it doesn't
+    // earn aria-current the way the others do — .is-current stands in for it.
+    it('adds is-current alongside aria-current when the last section link is clicked', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const links = [...el.querySelectorAll('ul a')];
+      const lastLink = links[links.length - 1];
+      lastLink.click();
+
+      expect(lastLink.classList.contains('is-current')).to.be.true;
+      expect(lastLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('does not add is-current to a non-last link when clicked', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const firstLink = el.querySelector('ul li:first-child a');
+      firstLink.click();
+
+      expect(firstLink.classList.contains('is-current')).to.be.false;
+    });
+
+    it('clears is-current from the last link once a different link becomes active', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const links = [...el.querySelectorAll('ul a')];
+      const lastLink = links[links.length - 1];
+      lastLink.click();
+      expect(lastLink.classList.contains('is-current')).to.be.true;
+
+      links[0].click();
+      expect(lastLink.classList.contains('is-current')).to.be.false;
+      expect(lastLink.getAttribute('aria-current')).to.be.null;
+    });
+  });
+
+  describe('a click suppresses the scroll spy until the visitor scrolls themselves', () => {
+    // Regression: clicking a link that undershoots can leave an earlier heading
+    // sitting in the observer's band. The observer's own async reaction to that
+    // click-triggered scroll used to fire right after and steal the highlight
+    // back — this is what the suppression exists to prevent.
+    it('ignores an observer signal for a different heading right after a click', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    it('resumes once the visitor scrolls (a wheel event) themselves', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      window.dispatchEvent(new Event('wheel'));
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+      expect(secondLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    it('does not resume for non-scroll keys or scroll keys from editable controls', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const input = document.createElement('input');
+      document.body.append(input);
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'a' }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    it('resumes for a scroll key outside editable controls', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink] = [...el.querySelectorAll('ul a')];
+
+      el.querySelector('a[href="#section-two"]').click();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown' }));
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('clears stale active state when popstate has no matching heading', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      window.history.pushState({}, '', window.location.pathname);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      expect(el.querySelector('[aria-current]')).to.be.null;
+
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+    });
+  });
+
+  describe('resolving a #hash present at import time (a direct deep link)', () => {
+    let originalUrl;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+      window.localStorage.removeItem('lazyhash');
+    });
+
+    it('scrolls to the resolved heading itself and marks its link current', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      const scrollIntoView = sandbox.stub(Element.prototype, 'scrollIntoView');
+      makeDOM();
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+
+      const el = await loadPageNav();
+      const link = [...el.querySelectorAll('ul a')].find((a) => a.textContent === 'Section Two');
+
+      expect(scrollIntoView.calledOnceWithExactly({
+        block: 'start',
+        behavior: 'instant',
+      })).to.be.true;
+      expect(window.localStorage.getItem('lazyhash')).to.be.null;
+      expect(link.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('suppresses the scroll spy so a later observer signal cannot override the initial target', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      sandbox.stub(Element.prototype, 'scrollIntoView');
+      makeDOM();
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    // Regression: an unrelated element elsewhere in the document (e.g. the
+    // sitenav, which slugifies its own category names into ids the same way)
+    // can happen to share an id with what a heading would slugify to. A plain
+    // document.getElementById(hash) would resolve to whichever comes first in
+    // the document — this must resolve against the collected headings instead.
+    it('does not scroll to or activate an element that shares the hash id but is not a collected heading', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      const scrollIntoView = sandbox.stub(Element.prototype, 'scrollIntoView');
+
+      const decoy = document.createElement('div');
+      decoy.id = 'section-two';
+      document.body.append(decoy);
+
+      makeDOM({ h2Texts: ['Section One'] });
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+
+      await loadPageNav();
+
+      expect(scrollIntoView.called).to.be.false;
+      expect(document.querySelector('[aria-current]')).to.be.null;
     });
   });
 
@@ -382,6 +648,26 @@ describe('page-nav block', () => {
       const [first, second] = document.querySelectorAll('main h2');
       expect(first.id).to.equal('overview');
       expect(second.id).to.equal('overview-2');
+    });
+
+    it('deduplicates authored ids in DOM order', async () => {
+      makeDOM();
+      const [first, second] = document.querySelectorAll('main h2');
+      first.id = 'overview';
+      second.id = 'overview';
+      await loadPageNav();
+      expect(first.id).to.equal('overview');
+      expect(second.id).to.equal('overview-2');
+    });
+
+    it('deduplicates an authored id that belongs to a non-heading element', async () => {
+      const reserved = document.createElement('div');
+      reserved.id = 'overview';
+      document.body.prepend(reserved);
+      makeDOM({ h2Texts: ['Overview'] });
+      document.querySelector('main h2').id = 'overview';
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('overview-2');
     });
 
     it('sets tabindex="-1" on each h2 heading', async () => {
