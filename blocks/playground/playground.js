@@ -144,6 +144,20 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
   el.textContent = textEntry?.[1]?.value ?? fragmentRoot?.textContent ?? 'Label';
 }
 
+// The snippet fragment is dev-authored for one exact component, so its own value is a
+// better starting point for a control than the generic 'Label' placeholder — and without
+// it the control's placeholder overwrote the very text the fragment authored.
+function snippetDefault(property, attribute, fragmentRoot) {
+  if (!fragmentRoot) { return undefined; }
+  // `attribute` is the SWC name for this prop; RSP has none and uses the prop as-authored.
+  const authored = fragmentRoot.getAttribute(attribute ?? property);
+  if (authored !== null) { return authored; }
+  // Flat text only: a fragment with element children is a composite whose text belongs to
+  // its subcomponents, the same distinction applySnippetChildren makes above.
+  if (!TEXT_KEYS.has(property) || fragmentRoot.children.length) { return undefined; }
+  return fragmentRoot.textContent.trim() || undefined;
+}
+
 // `attributeTarget` is where controlled props land, which is not always `el`: a route
 // whose props are declared on its trigger (propsOwner in overlay-triggers.js) serializes
 // them onto the wrapper. Text and children always belong to `el` — they are the route's
@@ -479,6 +493,7 @@ function buildControlDescriptors(
   controlsMap,
   propRows,
   currentProps,
+  fragmentRoot,
 ) {
   return authoredProps.reduce((acc, property) => {
     const descriptor = resolveControl(
@@ -495,7 +510,10 @@ function buildControlDescriptors(
     // cannot express — see DEFAULT_OVERRIDES in playground-data.js.
     let rawDefault = descriptor.defaultOverride
       ?? parseDefault(findProp(property, propRows)?.default)
-      ?? descriptor.options[0];
+      ?? descriptor.options[0]
+      // Last of the real sources, so a picker keeps its catalog default: by here the
+      // only properties still unresolved are the freeform ones, which have no options.
+      ?? snippetDefault(property, descriptor.attribute, fragmentRoot);
     // A textfield with no authored default would otherwise start empty —
     // populate it with a placeholder label instead.
     if (descriptor.controlType === 'textfield' && rawDefault === undefined) {
@@ -678,6 +696,14 @@ export default async function init(el) {
   };
   const buildSnippet = SNIPPET_BUILDERS[implementation] ?? SNIPPET_BUILDERS.swc;
 
+  // Keyed the same way, and for the same reason: HTML parsing would lowercase RSP's
+  // JSX tag and prop names, so each implementation reads the fragment with its own parser.
+  const FRAGMENT_PARSERS = {
+    rsp: () => parseXmlFragmentRoot(snippetMarkup),
+    swc: () => parseHtmlFragmentRoot(snippetMarkup, previewName).fragmentRoot,
+  };
+  const fragmentRoot = (FRAGMENT_PARSERS[implementation] ?? FRAGMENT_PARSERS.swc)();
+
   const controlsMap = buildControlsMap(controlsSheet);
   const authoredProps = getComponentProperties(
     component,
@@ -695,6 +721,7 @@ export default async function init(el) {
     controlsMap,
     propRows,
     currentProps,
+    fragmentRoot,
   );
 
   // Each implementation's shell (previewShellPath, resolved above) reads
