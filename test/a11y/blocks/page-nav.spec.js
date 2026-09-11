@@ -33,7 +33,9 @@ test(`${block.name} clears the fixed header and avoids hidden desktop work`, asy
         navPresent: Boolean(document.querySelector('nav.page-nav')),
         scrollMargin: Number.parseFloat(getComputedStyle(target).scrollMarginBlockStart),
         targetTop: target.getBoundingClientRect().top,
-        trailingGridTrack: getComputedStyle(document.body).gridTemplateColumns.split(' ').at(-1),
+        pageNavTrackWidth: Number.parseFloat(
+          getComputedStyle(document.body).getPropertyValue('--pagenav-track-width'),
+        ),
       };
     });
 
@@ -42,7 +44,8 @@ test(`${block.name} clears the fixed header and avoids hidden desktop work`, asy
     expect(measurements.activeElementId).toBe('accessibility');
     expect(measurements.navPresent, `Page Nav presence at ${width}px`).toBe(width >= 1200);
     if (width < 1200) {
-      expect(measurements.trailingGridTrack).toBe('0px');
+      const expectedTrack = width < 900 ? 0 : 24;
+      expect(measurements.pageNavTrackWidth).toBe(expectedTrack);
       const desktopOnlyModules = [
         '/scripts/utils/svg.js',
         '/scripts/utils/copy-md.js',
@@ -60,9 +63,11 @@ test(`${block.name} clears the fixed header and avoids hidden desktop work`, asy
     meta.name = 'template';
     meta.content = 'status-table';
     document.head.append(meta);
-    return getComputedStyle(document.body).gridTemplateColumns.split(' ').at(-1);
+    return Number.parseFloat(
+      getComputedStyle(document.body).getPropertyValue('--pagenav-track-width'),
+    );
   });
-  expect(statusTableTrack).toBe('24px');
+  expect(statusTableTrack).toBe(24);
 });
 
 // Below 1200px, page-nav.js removes the nav from the DOM entirely — there's nothing to
