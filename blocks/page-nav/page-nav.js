@@ -50,18 +50,31 @@ async function decorateSeeInFigmaWidget(a) {
 
 const WIDGETS = [
   {
-    name: 'copy-markdown', tag: 'button', label: 'Copy markdown', icon: 'copy', decorate: decorateCopyMarkdown,
+    name: 'copy-markdown',
+    tag: 'button',
+    label: 'Copy markdown',
+    icon: 'copy',
+    decorate: decorateCopyMarkdown,
   },
   {
-    name: 'go-to-impl', tag: 'a', label: 'Go to implementation', icon: 'openin', decorate: decorateGoToImplWidget,
+    name: 'go-to-impl',
+    tag: 'a',
+    label: 'Go to implementation',
+    icon: 'openin',
+    decorate: decorateGoToImplWidget,
   },
   {
-    name: 'see-in-figma', tag: 'a', label: 'See in Figma', icon: 'vectordraw', decorate: decorateSeeInFigmaWidget, private: true,
+    name: 'see-in-figma',
+    tag: 'a',
+    label: 'See in Figma',
+    icon: 'vectordraw',
+    decorate: decorateSeeInFigmaWidget,
+    private: true,
   },
 ];
 
 // Builds and decorates the URL-appropriate widget buttons/links and appends
-// them below the nav's table of contents. Widgets that decorate themselves away
+// them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
   const isPrivate = isPrivatePage();
@@ -95,6 +108,13 @@ function slugify(text) {
 // Keeps each link's aria-current in sync with the heading the visitor is reading.
 function watchScrollSpy(headings, linkById) {
   let activeId = null;
+  // A click (or the initial-hash scroll) can itself cause a heading to cross
+  // the observer's band — most visibly when the target undershoots (a last
+  // heading too close to the page's end) and an earlier heading is left
+  // sitting in the band instead. Without this, the observer's own async
+  // reaction to that scroll fires right after and steals the highlight back.
+  // Suppressed until the visitor actually takes over scrolling themselves.
+  let suppressed = false;
 
   const setActive = (id) => {
     if (id === activeId) {
@@ -102,12 +122,17 @@ function watchScrollSpy(headings, linkById) {
     }
     if (activeId && linkById.get(activeId)) {
       linkById.get(activeId).removeAttribute('aria-current');
+      linkById.get(activeId).classList.remove('is-current');
     }
     activeId = id;
     if (id && linkById.get(id)) {
       linkById.get(id).setAttribute('aria-current', 'location');
     }
   };
+
+  ['wheel', 'touchstart', 'keydown'].forEach((type) => {
+    window.addEventListener(type, () => { suppressed = false; }, { passive: true });
+  });
 
   // Top offset matches the site header so a heading registers as "active"
   // the moment it scrolls under the sticky chrome. Bottom -50% keeps it
@@ -129,7 +154,7 @@ function watchScrollSpy(headings, linkById) {
         visible.delete(e.target);
       }
     });
-    if (!visible.size) {
+    if (suppressed || !visible.size) {
       return;
     }
     const topmost = [...visible].sort(
@@ -139,6 +164,138 @@ function watchScrollSpy(headings, linkById) {
   }, { rootMargin });
 
   headings.forEach((h) => observer.observe(h));
+
+  return { setActive, suppress: () => { suppressed = true; } };
+}
+
+// Jump immediately so navigation feels responsive, then briefly correct any
+// drift caused by incomplete images before the target. Manual scrolling always
+// cancels correction so page-nav never fights the visitor.
+const PAGE_NAV_IMAGE_TIMEOUT = 1000;
+const PAGE_NAV_POSITION_TOLERANCE = 2;
+const SCROLL_KEYS = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+  ' ',
+]);
+
+let activeNavigation;
+
+function getExpectedHeadingTop(heading) {
+  const scrollMargin = Number.parseFloat(getComputedStyle(heading).scrollMarginBlockStart);
+  if (Number.isFinite(scrollMargin)) {
+    return scrollMargin;
+  }
+  const headerHeight = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--sh-header-height'),
+  );
+  return Number.isFinite(headerHeight) ? headerHeight : 56;
+}
+
+function isEditableTarget(target) {
+  return target instanceof Element
+    && (target.isContentEditable
+      || target.closest('input, textarea, select, button, [contenteditable]:not([contenteditable="false"])'));
+}
+
+function navigateToHeading(heading) {
+  activeNavigation?.cancel();
+
+  heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+  heading.focus({ preventScroll: true });
+
+  const pendingImages = [...document.images].filter((image) => (
+    image.complete === false
+    && heading.compareDocumentPosition(image) === Node.DOCUMENT_POSITION_PRECEDING
+  ));
+  if (!pendingImages.length) {
+    activeNavigation = undefined;
+    return;
+  }
+
+  let active = true;
+  let timeoutId;
+  const imageListeners = [];
+  const interactionListeners = [];
+  const cleanup = () => {
+    imageListeners.forEach(({ image, settle }) => {
+      image.removeEventListener('load', settle);
+      image.removeEventListener('error', settle);
+    });
+    imageListeners.length = 0;
+    interactionListeners.forEach(({ type, listener, options }) => {
+      window.removeEventListener(type, listener, options);
+    });
+    interactionListeners.length = 0;
+  };
+  const cancel = () => {
+    if (!active) {
+      return;
+    }
+    active = false;
+    clearTimeout(timeoutId);
+    cleanup();
+    if (activeNavigation?.cancel === cancel) {
+      activeNavigation = undefined;
+    }
+  };
+  const correctPosition = () => {
+    const expectedTop = getExpectedHeadingTop(heading);
+    if (Math.abs(heading.getBoundingClientRect().top - expectedTop)
+      > PAGE_NAV_POSITION_TOLERANCE) {
+      heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
+  };
+  const cancelOnInteraction = () => cancel();
+  const cancelOnKeydown = (event) => {
+    if (SCROLL_KEYS.has(event.key) && !isEditableTarget(event.target)) {
+      cancel();
+    }
+  };
+  [
+    { type: 'wheel', listener: cancelOnInteraction, options: { passive: true } },
+    { type: 'touchstart', listener: cancelOnInteraction, options: { passive: true } },
+    { type: 'keydown', listener: cancelOnKeydown },
+  ].forEach(({ type, listener, options }) => {
+    window.addEventListener(type, listener, options);
+    interactionListeners.push({ type, listener, options });
+  });
+  activeNavigation = { cancel };
+
+  let remaining = pendingImages.length;
+  const settleImage = () => {
+    if (!active) {
+      return;
+    }
+    remaining -= 1;
+    correctPosition();
+    if (!remaining) {
+      cancel();
+    }
+  };
+  pendingImages.forEach((image) => {
+    let settled = false;
+    const settle = () => {
+      if (settled || !active) {
+        return;
+      }
+      settled = true;
+      settleImage();
+    };
+    image.addEventListener('load', settle, { once: true });
+    image.addEventListener('error', settle, { once: true });
+    imageListeners.push({ image, settle });
+    if (image.complete) {
+      settle();
+    }
+  });
+  if (active) {
+    timeoutId = setTimeout(cancel, PAGE_NAV_IMAGE_TIMEOUT);
+  }
 }
 
 (() => {
@@ -211,7 +368,8 @@ function watchScrollSpy(headings, linkById) {
     linkById.set(h.id, a);
   });
 
-  // TODO: Revisit the back-to-top items after the section links.
+  // TODO: Revisit the back-to-top items after the section links. if we have a back-to-top,
+  // it'll be treated differently.
   // if (h1) {
   //   const topLi = document.createElement('li');
   //   const topLink = document.createElement('a');
@@ -227,11 +385,11 @@ function watchScrollSpy(headings, linkById) {
   // sit below the table of contents.
   renderWidgets(pageNav);
 
-  // The nav is a desktop-only side rail (see detail template grid at >=900px).
+  // The nav is a desktop-only side rail (see detail template grid at >=1200px).
   // Below that it is removed from the DOM and the accessibility tree entirely: a
   // comment placeholder holds its slot so the <nav> can be restored in place when
   // the viewport widens again.
-  const desktopMql = window.matchMedia('(width >= 900px)');
+  const desktopMql = window.matchMedia('(width >= 1200px)');
   const placeholder = document.createComment('page-nav');
   const syncPresence = () => {
     if (desktopMql.matches && placeholder.parentNode) {
@@ -243,5 +401,71 @@ function watchScrollSpy(headings, linkById) {
   syncPresence();
   desktopMql.addEventListener('change', syncPresence);
 
-  watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+  const { setActive, suppress } = watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+
+  const lastId = headings[headings.length - 1].id;
+  // Resolved against our own collected headings rather than a document-wide
+  // getElementById: some other element elsewhere on the page (e.g. the sitenav,
+  // which slugifies its own category names into ids the same way) can happen to
+  // share the same id, and getElementById would silently return that instead.
+  const targetById = new Map((h1 ? [...headings, h1] : headings).map((h) => [h.id, h]));
+
+  // Clicking a link shouldn't have to wait on the IntersectionObserver to confirm
+  // it: mark it current immediately. This also covers the last heading, which
+  // can sit too close to the document's end to ever cross into the observer's
+  // (bottom -50%) active band on its own — `.is-current` is a visual-only
+  // stand-in for that one case, since the page genuinely can't scroll it under
+  // the header, so it doesn't earn aria-current the way the others do.
+  //
+  // The jump itself is handled here too (preventDefault + navigateToHeading)
+  // rather than left to the browser's native fragment-navigation.
+  linkById.forEach((a, id) => {
+    a.addEventListener('click', (event) => {
+      // Leave modifier/non-primary clicks (new tab, new window, etc.) and
+      // already-handled clicks alone — only the plain, default-bound click
+      // actually lands on this page and needs the jump.
+      if (event.defaultPrevented || event.button !== 0
+        || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+      event.preventDefault();
+      suppress();
+      setActive(id);
+      if (id === lastId) {
+        a.classList.add('is-current');
+      }
+      window.history.pushState(null, '', `#${id}`);
+      navigateToHeading(targetById.get(id));
+    });
+  });
+
+  // history.pushState (used above) doesn't scroll on its own, so back/forward
+  // through page-nav's own pushes needs its own handler to keep matching the
+  // native-anchor behavior this replaced.
+  window.addEventListener('popstate', () => {
+    activeNavigation?.cancel();
+    const id = window.location.hash.slice(1);
+    const heading = targetById.get(id);
+    if (!heading) {
+      return;
+    }
+    suppress();
+    setActive(linkById.has(id) ? id : null);
+    navigateToHeading(heading);
+  });
+
+  // A heading's id is often assigned above (slugified from its text) rather than
+  // authored in the source, so the browser's one-time, load-time fragment
+  // scroll can silently no-op. Handle a resolved hash through the same
+  // image-settled path as page-nav links.
+  const hashId = window.location.hash ? window.location.hash.slice(1) : null;
+  const initialTarget = hashId ? targetById.get(hashId) : null;
+  if (initialTarget) {
+    suppress();
+    setActive(initialTarget.id);
+    if (window.localStorage.getItem('lazyhash') === initialTarget.id) {
+      window.localStorage.removeItem('lazyhash');
+    }
+    navigateToHeading(initialTarget);
+  }
 })();

@@ -18,6 +18,35 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
   document.body.append(main);
 }
 
+function makeImageFixture({
+  targetText = 'Section Two',
+  before = [],
+  after = [],
+} = {}) {
+  const target = [...document.querySelectorAll('main h1, main h2')]
+    .find((heading) => heading.textContent === targetText);
+  const makeImage = (complete) => {
+    const image = document.createElement('img');
+    Object.defineProperty(image, 'complete', { configurable: true, value: complete });
+    return image;
+  };
+  const beforeImages = before.map((complete) => makeImage(complete));
+  const afterImages = after.map((complete) => makeImage(complete));
+  beforeImages.forEach((image) => target.before(image));
+  afterImages.forEach((image) => target.after(image));
+  return { target, beforeImages, afterImages };
+}
+
+async function flushPromises(clock) {
+  if (clock) {
+    await clock.tickAsync(0);
+  } else {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  }
+}
+
 // page-nav.js has no init export: a top-level IIFE builds its own <nav> and
 // appends it to the body on import. Importing the module *is* the decoration,
 // so every test sets up the DOM and its stubs first, then imports. A unique
@@ -53,7 +82,7 @@ function waitForEl(root, selector, timeout = 2000) {
   });
 }
 
-// matches=true simulates the >=900px desktop viewport where the nav renders;
+// matches=true simulates the >=1200px desktop viewport where the nav renders;
 // false simulates the small screens where it is removed. The captured change
 // listener lets tests drive a viewport crossing.
 function stubMatchMedia(sandbox, matches = false) {
@@ -281,6 +310,567 @@ describe('page-nav block', () => {
         ...document.querySelectorAll('main h2'),
         document.querySelector('main h1'),
       ]);
+    });
+  });
+
+  describe('clicking a link marks it current immediately', () => {
+    // A clicked heading's own scroll can undershoot (see the .is-current
+    // describe below), so the link can't wait on the observer to confirm it.
+    it('sets aria-current synchronously, before any observer signal', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const firstLink = el.querySelector('ul li:first-child a');
+      firstLink.click();
+
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('moves aria-current to the newly clicked link and clears the previous one', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+      firstLink.click();
+      secondLink.click();
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+  });
+
+  describe('anchor navigation corrects image-driven drift without delaying scrolling', () => {
+    let originalUrl;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      window.history.replaceState({}, '', window.location.pathname + window.location.search);
+      window.localStorage.removeItem('lazyhash');
+    });
+
+    afterEach(() => {
+      window.history.replaceState({}, '', originalUrl);
+      window.localStorage.removeItem('lazyhash');
+    });
+
+    it('scrolls and focuses immediately when an incomplete image precedes the target', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target } = makeImageFixture({ before: [false] });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+
+      expect(scrollIntoView.calledOnceWithExactly({
+        block: 'start',
+        behavior: 'instant',
+      })).to.be.true;
+      expect(document.activeElement).to.equal(target);
+    });
+
+    it('corrects the scroll after a preceding image moves the target', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages } = makeImageFixture({ before: [false] });
+      target.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      expect(scrollIntoView.calledOnce).to.be.true;
+
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+
+      expect(scrollIntoView.callCount).to.equal(2);
+    });
+
+    it('does not correct when the target remains within two pixels of its expected position', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages } = makeImageFixture({ before: [false] });
+      target.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 58 });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+
+      expect(scrollIntoView.calledOnce).to.be.true;
+    });
+
+    it('removes image listeners after all images settle', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages } = makeImageFixture({ before: [false] });
+      const removeEventListener = sandbox.spy(beforeImages[0], 'removeEventListener');
+      sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+
+      expect(removeEventListener.calledWith('load')).to.be.true;
+      expect(removeEventListener.calledWith('error')).to.be.true;
+    });
+
+    it('settles an image that completes while its listeners are being attached', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages } = makeImageFixture({ before: [false] });
+      const [image] = beforeImages;
+      const nativeAddEventListener = image.addEventListener.bind(image);
+      const removeEventListener = sandbox.spy(image, 'removeEventListener');
+      sandbox.stub(image, 'addEventListener').callsFake((type, listener, options) => {
+        nativeAddEventListener(type, listener, options);
+        Object.defineProperty(image, 'complete', { configurable: true, value: true });
+      });
+      target.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 56 });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      await flushPromises();
+
+      expect(scrollIntoView.calledOnce).to.be.true;
+      expect(removeEventListener.calledWith('load')).to.be.true;
+      expect(removeEventListener.calledWith('error')).to.be.true;
+    });
+
+    it('removes image listeners when navigation times out', async () => {
+      const clock = sinon.useFakeTimers();
+      try {
+        stubMatchMedia(sandbox, true);
+        stubIntersectionObserver(sandbox);
+        makeDOM();
+        const { target, beforeImages } = makeImageFixture({ before: [false] });
+        const removeEventListener = sandbox.spy(beforeImages[0], 'removeEventListener');
+        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+        const el = await loadPageNav();
+
+        el.querySelector('a[href="#section-two"]').click();
+        expect(scrollIntoView.calledOnce).to.be.true;
+        await clock.tickAsync(1000);
+
+        expect(scrollIntoView.calledOnce).to.be.true;
+        expect(removeEventListener.calledWith('load')).to.be.true;
+        expect(removeEventListener.calledWith('error')).to.be.true;
+      } finally {
+        clock.restore();
+      }
+    });
+
+    it('corrects after preceding images emit load or error', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages } = makeImageFixture({ before: [false, false] });
+      target.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+      expect(scrollIntoView.callCount).to.equal(2);
+
+      beforeImages[1].dispatchEvent(new Event('error'));
+      await flushPromises();
+      expect(scrollIntoView.callCount).to.equal(3);
+    });
+
+    it('does not create correction work for images after the target or already complete images', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages, afterImages } = makeImageFixture({
+        before: [true],
+        after: [false],
+      });
+      const beforeAddEventListener = sandbox.spy(beforeImages[0], 'addEventListener');
+      const afterAddEventListener = sandbox.spy(afterImages[0], 'addEventListener');
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      await flushPromises();
+
+      expect(scrollIntoView.calledOnceWithExactly({
+        block: 'start',
+        behavior: 'instant',
+      })).to.be.true;
+      expect(beforeAddEventListener.called).to.be.false;
+      expect(afterAddEventListener.called).to.be.false;
+    });
+
+    it('does not correct after the 1000 millisecond deadline', async () => {
+      const clock = sinon.useFakeTimers();
+      try {
+        stubMatchMedia(sandbox, true);
+        stubIntersectionObserver(sandbox);
+        makeDOM();
+        const { target, beforeImages } = makeImageFixture({ before: [false] });
+        target.style.scrollMarginBlockStart = '56px';
+        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+        const el = await loadPageNav();
+
+        el.querySelector('a[href="#section-two"]').click();
+        expect(scrollIntoView.calledOnce).to.be.true;
+        await clock.tickAsync(1000);
+
+        beforeImages[0].dispatchEvent(new Event('load'));
+        await flushPromises(clock);
+        expect(scrollIntoView.calledOnce).to.be.true;
+      } finally {
+        clock.restore();
+      }
+    });
+
+    it('scrolls and focuses immediately on popstate', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target } = makeImageFixture({ before: [false] });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      await loadPageNav();
+
+      window.history.pushState({}, '', '#section-two');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+
+      expect(scrollIntoView.calledOnceWithExactly({
+        block: 'start',
+        behavior: 'instant',
+      })).to.be.true;
+      expect(document.activeElement).to.equal(target);
+    });
+
+    it('cancels correction when popstate no longer resolves to a page-nav heading', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target, beforeImages } = makeImageFixture({ before: [false] });
+      target.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      window.history.pushState({}, '', window.location.pathname);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+
+      expect(scrollIntoView.calledOnce).to.be.true;
+    });
+
+    it('scrolls and focuses immediately on an initial deep link and clears lazyhash', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target } = makeImageFixture({ before: [false] });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      window.history.replaceState(
+        {},
+        '',
+        `${window.location.pathname}${window.location.search}#section-two`,
+      );
+      window.localStorage.setItem('lazyhash', 'section-two');
+
+      const el = await loadPageNav();
+      expect(window.localStorage.getItem('lazyhash')).to.be.null;
+      expect(window.location.hash).to.equal('#section-two');
+
+      expect(scrollIntoView.calledOnceWithExactly({
+        block: 'start',
+        behavior: 'instant',
+      })).to.be.true;
+      expect(document.activeElement).to.equal(target);
+      expect(window.location.hash).to.equal('#section-two');
+      expect(el.querySelector('a[href="#section-two"]').getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('does not correct a superseded target after its images settle', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const { target: targetB, beforeImages } = makeImageFixture({ before: [false] });
+      targetB.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(targetB, 'getBoundingClientRect').returns({ top: 80 });
+      const targetA = document.querySelector('main h2');
+      const removeEventListener = sandbox.spy(beforeImages[0], 'removeEventListener');
+      const scrollA = sandbox.stub(targetA, 'scrollIntoView');
+      const scrollB = sandbox.stub(targetB, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      el.querySelector('a[href="#section-one"]').click();
+      expect(scrollA.calledOnce).to.be.true;
+      expect(scrollB.calledOnce).to.be.true;
+      expect(removeEventListener.calledWith('load')).to.be.true;
+      expect(removeEventListener.calledWith('error')).to.be.true;
+
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+
+      expect(scrollA.calledOnce).to.be.true;
+      expect(scrollB.calledOnce).to.be.true;
+    });
+
+    ['wheel', 'touchstart'].forEach((eventType) => {
+      it(`cancels correction after ${eventType} input`, async () => {
+        stubMatchMedia(sandbox, true);
+        stubIntersectionObserver(sandbox);
+        makeDOM();
+        const { target, beforeImages } = makeImageFixture({ before: [false] });
+        target.style.scrollMarginBlockStart = '56px';
+        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+        const el = await loadPageNav();
+
+        el.querySelector('a[href="#section-two"]').click();
+        window.dispatchEvent(new Event(eventType));
+        beforeImages[0].dispatchEvent(new Event('load'));
+        await flushPromises();
+
+        expect(scrollIntoView.calledOnce).to.be.true;
+      });
+    });
+
+    ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].forEach((key) => {
+      it(`cancels correction after the ${key === ' ' ? 'Space' : key} key`, async () => {
+        stubMatchMedia(sandbox, true);
+        stubIntersectionObserver(sandbox);
+        makeDOM();
+        const { target, beforeImages } = makeImageFixture({ before: [false] });
+        target.style.scrollMarginBlockStart = '56px';
+        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+        const el = await loadPageNav();
+
+        el.querySelector('a[href="#section-two"]').click();
+        window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+        beforeImages[0].dispatchEvent(new Event('load'));
+        await flushPromises();
+
+        expect(scrollIntoView.calledOnce).to.be.true;
+      });
+    });
+
+    ['input', 'textarea', 'select', 'button'].forEach((tag) => {
+      it(`does not cancel correction for navigation keys from a ${tag}`, async () => {
+        stubMatchMedia(sandbox, true);
+        stubIntersectionObserver(sandbox);
+        makeDOM();
+        const control = document.createElement(tag);
+        document.body.append(control);
+        const { target, beforeImages } = makeImageFixture({ before: [false] });
+        target.style.scrollMarginBlockStart = '56px';
+        sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+        const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+        const el = await loadPageNav();
+
+        el.querySelector('a[href="#section-two"]').click();
+        control.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
+        beforeImages[0].dispatchEvent(new Event('load'));
+        await flushPromises();
+
+        expect(scrollIntoView.callCount).to.equal(2);
+      });
+    });
+
+    it('does not cancel correction for navigation keys from editable content', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const editable = document.createElement('div');
+      editable.contentEditable = 'true';
+      document.body.append(editable);
+      const { target, beforeImages } = makeImageFixture({ before: [false] });
+      target.style.scrollMarginBlockStart = '56px';
+      sandbox.stub(target, 'getBoundingClientRect').returns({ top: 80 });
+      const scrollIntoView = sandbox.stub(target, 'scrollIntoView');
+      const el = await loadPageNav();
+
+      el.querySelector('a[href="#section-two"]').click();
+      editable.dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }));
+      beforeImages[0].dispatchEvent(new Event('load'));
+      await flushPromises();
+
+      expect(scrollIntoView.callCount).to.equal(2);
+    });
+  });
+
+  describe('the last link gets a visual-only .is-current stand-in when clicked', () => {
+    // The last heading can sit too close to the document's end to ever cross
+    // into the observer's (bottom -50%) active band on its own, so it doesn't
+    // earn aria-current the way the others do — .is-current stands in for it.
+    it('adds is-current alongside aria-current when the last section link is clicked', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const links = [...el.querySelectorAll('ul a')];
+      const lastLink = links[links.length - 1];
+      lastLink.click();
+
+      expect(lastLink.classList.contains('is-current')).to.be.true;
+      expect(lastLink.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('does not add is-current to a non-last link when clicked', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const firstLink = el.querySelector('ul li:first-child a');
+      firstLink.click();
+
+      expect(firstLink.classList.contains('is-current')).to.be.false;
+    });
+
+    it('clears is-current from the last link once a different link becomes active', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const links = [...el.querySelectorAll('ul a')];
+      const lastLink = links[links.length - 1];
+      lastLink.click();
+      expect(lastLink.classList.contains('is-current')).to.be.true;
+
+      links[0].click();
+      expect(lastLink.classList.contains('is-current')).to.be.false;
+      expect(lastLink.getAttribute('aria-current')).to.be.null;
+    });
+  });
+
+  describe('a click suppresses the scroll spy until the visitor scrolls themselves', () => {
+    // Regression: clicking a link that undershoots can leave an earlier heading
+    // sitting in the observer's band. The observer's own async reaction to that
+    // click-triggered scroll used to fire right after and steal the highlight
+    // back — this is what the suppression exists to prevent.
+    it('ignores an observer signal for a different heading right after a click', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    it('resumes once the visitor scrolls (a wheel event) themselves', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      makeDOM();
+      const el = await loadPageNav();
+
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      secondLink.click();
+      window.dispatchEvent(new Event('wheel'));
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(firstLink.getAttribute('aria-current')).to.equal('location');
+      expect(secondLink.getAttribute('aria-current')).to.be.null;
+    });
+  });
+
+  describe('resolving a #hash present at import time (a direct deep link)', () => {
+    let originalUrl;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+      window.localStorage.removeItem('lazyhash');
+    });
+
+    it('scrolls to the resolved heading itself and marks its link current', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      const scrollIntoView = sandbox.stub(Element.prototype, 'scrollIntoView');
+      makeDOM();
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+
+      const el = await loadPageNav();
+      const link = [...el.querySelectorAll('ul a')].find((a) => a.textContent === 'Section Two');
+
+      expect(scrollIntoView.calledOnceWithExactly({
+        block: 'start',
+        behavior: 'instant',
+      })).to.be.true;
+      expect(window.localStorage.getItem('lazyhash')).to.be.null;
+      expect(link.getAttribute('aria-current')).to.equal('location');
+    });
+
+    it('suppresses the scroll spy so a later observer signal cannot override the initial target', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      sandbox.stub(Element.prototype, 'scrollIntoView');
+      makeDOM();
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+
+      const el = await loadPageNav();
+      const [sectionOne] = document.querySelectorAll('main h2');
+      const [firstLink, secondLink] = [...el.querySelectorAll('ul a')];
+
+      io.trigger([{ target: sectionOne, isIntersecting: true }]);
+
+      expect(secondLink.getAttribute('aria-current')).to.equal('location');
+      expect(firstLink.getAttribute('aria-current')).to.be.null;
+    });
+
+    // Regression: an unrelated element elsewhere in the document (e.g. the
+    // sitenav, which slugifies its own category names into ids the same way)
+    // can happen to share an id with what a heading would slugify to. A plain
+    // document.getElementById(hash) would resolve to whichever comes first in
+    // the document — this must resolve against the collected headings instead.
+    it('does not scroll to or activate an element that shares the hash id but is not a collected heading', async () => {
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      const scrollIntoView = sandbox.stub(Element.prototype, 'scrollIntoView');
+
+      const decoy = document.createElement('div');
+      decoy.id = 'section-two';
+      document.body.append(decoy);
+
+      makeDOM({ h2Texts: ['Section One'] });
+      window.history.pushState({}, '', `${window.location.pathname}#section-two`);
+
+      await loadPageNav();
+
+      expect(scrollIntoView.called).to.be.false;
+      expect(document.querySelector('[aria-current]')).to.be.null;
     });
   });
 
