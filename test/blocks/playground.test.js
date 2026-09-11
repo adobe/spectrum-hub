@@ -707,6 +707,10 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
     if (url.includes('sheet=controls')) { return jsonResponse({ data: controlsSheet }); }
     if (url.includes('/deps/rsp/data/')) { return jsonResponse(rspBody); }
     if (url.includes('/deps/swc/data/')) { return jsonResponse(swcBody); }
+    // 404 unless a test opts in — the default fixtures have no snippet fragment.
+    if (url.includes('/snippets/') && overrides.markup) {
+      return new Response(overrides.markup, { status: 200 });
+    }
     return new Response('', { status: 404 });
   });
 }
@@ -1602,5 +1606,114 @@ describe('the unset sentinel never reaches a snippet', () => {
     const rounding = { rounding: { value: 'default', attribute: 'rounding' } };
     expect(buildSwcSnippet('swc-swatch', rounding, '')).to.include('rounding="default"');
     expect(buildRspSnippet('ColorSwatchPicker', rounding, '', false, 'swatch-group')).to.include('rounding="default"');
+  });
+});
+
+// A snippet fragment is dev-authored for one exact component, so its own values beat the
+// generic "Label" placeholder as a text control's starting value. Without this a text
+// control started at "Label" and then overwrote the very text the fragment authored.
+describe('playground block — a snippet fragment seeds its text controls', () => {
+  let sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(console, 'warn');
+    document.body.innerHTML = '';
+    clearFetchCache();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  function renderWith(overrides, meta) {
+    stubPlaygroundFetch(sandbox, overrides);
+    const el = makeMetaEl(meta);
+    document.body.append(el);
+    return init(el).then(() => el);
+  }
+
+  it("seeds a text control from an HTML fragment's own text", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'text' }],
+      controls: [{ Property: 'text', control: 'textfield' }],
+      swc: [],
+      markup: '<swc-button>Button</swc-button>',
+    }, { implementation: 'swc', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Button');
+  });
+
+  it("seeds a text control from an HTML fragment's authored attribute", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'progress-circle', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'unknown', values: [],
+      }],
+      markup: '<swc-progress-circle label="Loading"></swc-progress-circle>',
+    }, { implementation: 'swc', component: 'progress-circle' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Loading');
+  });
+
+  it("seeds a text control from a JSX fragment's own text", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'children' }],
+      controls: [{ Property: 'children', control: 'textfield' }],
+      rsp: { props: [] },
+      markup: '<Button>Save changes</Button>',
+    }, { implementation: 'rsp', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Save changes');
+  });
+
+  it('stops the control from overwriting the text the fragment authored', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'text' }],
+      controls: [{ Property: 'text', control: 'textfield' }],
+      swc: [],
+      markup: '<swc-button>Button</swc-button>',
+    }, { implementation: 'swc', component: 'button' });
+
+    expect(el.querySelector('pre').textContent).to.equal('<swc-button>Button</swc-button>');
+  });
+
+  it('ignores a composite fragment\'s text, which belongs to its subcomponents', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'radio-group', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      rsp: { props: [] },
+      markup: '<RadioGroup><Radio value="a">Standard</Radio></RadioGroup>',
+    }, { implementation: 'rsp', component: 'radio-group' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Label');
+  });
+
+  it('still falls back to "Label" when there is no fragment at all', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'text' }],
+      controls: [{ Property: 'text', control: 'textfield' }],
+      swc: [],
+    }, { implementation: 'swc', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Label');
+  });
+
+  // Regression guard, not new behavior: a picker's catalog default already wins, and a
+  // fragment-authored attribute must not start displacing it.
+  it("keeps a picker's catalog default over the fragment's authored attribute", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'variant' }],
+      controls: [{ Property: 'variant', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'variant', type: "'primary' | 'accent'", kind: 'enum', values: ['primary', 'accent'], default: "'primary'",
+        }],
+      },
+      markup: '<Button variant="accent">Save</Button>',
+    }, { implementation: 'rsp', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-select').value).to.equal('primary');
   });
 });
