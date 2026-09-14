@@ -62,7 +62,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     }
 
     &:hover::before {
-      background-color: rgb(from var(--se-body-color) r g b / 32%);
+      background-color: rgb(from var(--s2-gray-700) r g b / 32%);
     }
 
     &:focus-visible::after {

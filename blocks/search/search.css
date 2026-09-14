@@ -87,7 +87,7 @@ viewport edges instead of the anchor. */
       padding: var(--s2-spacing-300);
       border-radius: 12px;
       min-height: 72px;
-      color: var(--se-body-color);
+      color: var(--s2-gray-700);
       box-sizing: border-box;
       width: 100%;
 
