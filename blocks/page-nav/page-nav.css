@@ -21,7 +21,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
-    overflow-y: scroll;
+    /* overflow-y: scroll; */
 
     & ul {
       grid-column: 2;
@@ -44,7 +44,9 @@ from the DOM and the accessibility tree (see page-nav.js). */
     color: inherit;
     text-decoration: none;
     position: relative;
+    outline: none;
 
+    &::before,
     &::after {
       content: '';
       position: absolute;
@@ -58,15 +60,17 @@ from the DOM and the accessibility tree (see page-nav.js). */
       color: var(--s2-gray-1000);
     }
 
-    &:hover::after {
+    &:hover::before {
       background-color: rgb(from var(--se-body-color) r g b / 32%);
     }
 
-    &:focus-visible {
-      outline: 2px solid var(--s2-blue-900);
-      outline-offset: var(--s2-spacing-50);
+    &:focus-visible::after {
+      border: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+      inline-size: calc(100% - var(--se-focus-indicator-width) * 2);
+      block-size: calc(100% + var(--se-focus-indicator-width) * 2);
+      inset-inline: calc(-4 * var(--se-focus-indicator-width));
+      inset-block: calc(-2 * var(--se-focus-indicator-width));
       border-radius: 9px;
-      color: var(--s2-gray-1000);
     }
   }
 
@@ -77,7 +81,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-weight: var(--s2-component-m-bold-font-weight);
     color: var(--s2-gray-1000);
 
-    &::after {
+    &::before {
       background-color: var(--s2-gray-1000);
     }
   }
