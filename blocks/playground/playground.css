@@ -106,45 +106,6 @@
   flex-direction: column;
   align-items: center;
 
-  .playground-expand {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s2-spacing-100);
-    font-size: var(--s2-component-m-regular-font-size);
-    font-weight: var(--s2-component-m-bold-font-weight);
-    color: var(--s2-gray-700);
-    cursor: pointer;
-    user-select: none;
-    padding-inline: var(--s2-spacing-200);
-    padding-block: 5px 6px;
-    background-color: var(--s2-gray-100);
-    border: none;
-    border-radius: var(--s2-corner-radius-500);
-
-    &::before {
-      content: '';
-      display: inline-block;
-      mask-image: url('/img/icons/s2-icon-chevrondown-20-n.svg');
-      background-color: currentcolor;
-      mask-repeat: no-repeat;
-      mask-position: center;
-      mask-size: contain;
-      inline-size: 20px;
-      block-size: 20px;
-      transition: transform 0.15s ease;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--s2-blue-800);
-      outline-offset: 2px;
-      border-radius: 2px;
-    }
-  }
-
-  &.is-expanded .playground-expand::before {
-    transform: rotate(180deg);
-  }
-
   .playground-code {
     inline-size: 100%;
     position: relative;

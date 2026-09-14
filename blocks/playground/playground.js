@@ -612,6 +612,7 @@ function buildCodeDisclosure(pre) {
   codeWrapper.classList.add('playground-code');
   codeWrapper.append(buildCopyButton(pre), pre);
 
+  /* TODO: do we even need the expand button any longer? */
   const expandButton = document.createElement('button');
   expandButton.type = 'button';
   expandButton.classList.add('playground-expand');
@@ -623,7 +624,7 @@ function buildCodeDisclosure(pre) {
     expandButton.setAttribute('aria-expanded', String(expanded));
   });
 
-  disclosure.append(codeWrapper, expandButton);
+  disclosure.append(codeWrapper);
   return disclosure;
 }
 
