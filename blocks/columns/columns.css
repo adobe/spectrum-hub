@@ -87,7 +87,7 @@
   .col {
     flex-direction: column;
     display: flex;
-    gap: var(--s2-spacing-300);
+    gap: var(--s2-spacing-100);
     box-sizing: border-box;
     text-wrap-style: pretty;
 
