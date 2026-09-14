@@ -23,8 +23,6 @@
   }
 
   .breadcrumbs {
-    padding-block-end: var(--s2-spacing-300);
-
     /* Reserve space during load */
     &:empty::after { content: "\00a0"; }
   }
