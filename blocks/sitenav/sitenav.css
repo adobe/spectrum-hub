@@ -51,6 +51,7 @@
     border-radius: var(--sitenav-corner-radius);
     overflow: hidden;
     padding: var(--s2-spacing-300) var(--s2-spacing-200);
+    background-color: var(--s2-gray-25);
     transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
 
     /* Pinned explicitly: #sitenav is this pseudo-element's containing block now, and
@@ -62,6 +63,8 @@
       inset-block: 0;
       inset-inline: var(--sitenav-inline-start-margin) 0;
       z-index: -1;
+
+      /* TODO: readdress/restyle background blur after preview release */
       -webkit-backdrop-filter: blur(var(--sitenav-blur));
       backdrop-filter: blur(var(--sitenav-blur));
       border-radius: var(--sitenav-corner-radius);
@@ -248,6 +251,7 @@
     width: var(--sitenav-level-2-width);
     max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
     padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
+    background-color: var(--s2-gray-25);
 
     /* #sitenav's box is the rail plus its inline-start margin, so 100%/0 land on the
     rail's outer edge and top. Replaces anchor() (Chromium-only — Safari and Firefox
@@ -256,6 +260,8 @@
     top: 0;
     inset-inline-start: 100%;
     border-radius: var(--sitenav-corner-radius);
+    
+    /* TODO: readdress/restyle background blur after preview release */
     -webkit-backdrop-filter: blur(var(--sitenav-blur));
     backdrop-filter: blur(var(--sitenav-blur));
     margin-inline-start: var(--s2-spacing-85);
