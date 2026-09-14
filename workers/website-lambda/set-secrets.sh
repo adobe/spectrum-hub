@@ -3,7 +3,8 @@
 # (optionally) grant the Lambda execution role permission to read them.
 #
 # The Lambda never stores SESSION_SECRET / IMS_CLIENT_SECRET in plaintext env
-# (Adobe AWS Security Standard). env.<target>.json carries only the non-secret
+# (Adobe AWS Security Standard). The target's env file - env.json for prod,
+# env.stage.json for stage (matching deploy.sh) - carries only the non-secret
 # ids (SESSION_SECRET_ID / IMS_CLIENT_SECRET_ID); lib/secrets.js fetches the
 # values at runtime. This script manages the values behind those ids. See
 # SECRETS.md for the console equivalent and the full walkthrough.
@@ -42,6 +43,10 @@ case "$TARGET" in
   prod|stage) ;;
   *) echo "ERROR: TARGET must be 'prod' or 'stage' (got '$TARGET')." >&2; exit 1 ;;
 esac
+
+# The env file deploy.sh reads for this target: prod uses env.json, stage uses
+# env.stage.json (mirror deploy.sh so the guidance below points at the real file).
+if [ "$TARGET" = prod ]; then ENV_FILE_NAME="env.json"; else ENV_FILE_NAME="env.${TARGET}.json"; fi
 
 # Secret names are namespaced by target so prod and stage never collide, and a
 # single IAM policy can wildcard the whole "spectrum-hub/<target>/" prefix.
@@ -121,7 +126,7 @@ fi
 
 cat <<EOF
 
-Done. Put these ids in env.${TARGET}.json (and remove any plaintext
+Done. Put these ids in ${ENV_FILE_NAME} (and remove any plaintext
 SESSION_SECRET / IMS_CLIENT_SECRET), then redeploy with TARGET=${TARGET} ./deploy.sh:
 
   "SESSION_SECRET_ID": "${SESSION_SECRET_NAME}",

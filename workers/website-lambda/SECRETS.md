@@ -4,7 +4,8 @@ The proxy's two secrets — `SESSION_SECRET` (HMAC key for the session cookie) a
 `IMS_CLIENT_SECRET` (the confidential DA service credential) — must **not** live
 in the Lambda's plaintext environment (Adobe AWS Security Standard §3.5.8.5).
 
-Instead, `env.<target>.json` carries only non-secret **ids**, and the function
+Instead, the target's env file — **`env.json` for prod, `env.stage.json` for stage**
+(matching `deploy.sh`) — carries only non-secret **ids**, and the function
 resolves the values at runtime from AWS Secrets Manager:
 
 | Plain name          | Env var (the id)          | Secret it points at                     |
@@ -47,8 +48,8 @@ TARGET=stage IMS_ONLY=1 ./set-secrets.sh       # rotate only the IMS client secr
 To supply values non-interactively (e.g. from your own secret store), set
 `SESSION_SECRET_VALUE` / `IMS_CLIENT_SECRET_VALUE` in the environment first.
 
-The script prints the exact `*_SECRET_ID` lines to add to `env.<target>.json`.
-Then wire them up and deploy (Option C below).
+The script prints the exact `*_SECRET_ID` lines to add to that env file (`env.json`
+for prod, `env.stage.json` for stage). Then wire them up and deploy (Option C below).
 
 > IAM changes are account-wide, so `GRANT_ROLE=1` is opt-in. If you can't change
 > IAM, run the script without it and have someone attach the policy from Option B.
@@ -99,8 +100,9 @@ For an immediate cutover (compromise), redeploy to force fresh cold starts.
 
 ## Option C — wire up env and deploy (both options)
 
-1. Edit `env.<target>.json`: **remove** the plaintext `SESSION_SECRET` and
-   `IMS_CLIENT_SECRET` entries and **add** the ids:
+1. Edit the target's env file (`env.json` for prod, `env.stage.json` for stage):
+   **remove** the plaintext `SESSION_SECRET` and `IMS_CLIENT_SECRET` entries and
+   **add** the ids:
 
    ```json
    "SESSION_SECRET_ID": "spectrum-hub/stage/session-secret",
