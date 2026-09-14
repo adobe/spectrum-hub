@@ -148,29 +148,10 @@
   .playground-code {
     inline-size: 100%;
     position: relative;
-    overflow: hidden;
-    max-block-size: 6rem;
+    overflow: scroll;
+    max-block-size: 200px;
     margin-block-end: var(--s2-spacing-200);
-
-    &::after {
-      position: absolute;
-
-      /* Purely decorative fade — never intercept clicks meant for the copy button. */
-      pointer-events: none;
-      content: '';
-      inset: 0;
-      block-size: 100%;
-      inline-size: 100%;
-      background: linear-gradient(to bottom, transparent, var(--s2-gray-25));
-    }
-  }
-
-  &.is-expanded .playground-code {
-    max-block-size: none;
-
-    &::after {
-      background: none;
-    }
+    border-radius: 24px;
   }
 
   pre {
@@ -178,7 +159,6 @@
     padding: var(--s2-spacing-300);
     padding-inline-end: var(--s2-spacing-1000);
     background-color: var(--s2-gray-75);
-    border-radius: 24px;
     overflow-x: auto;
     font-size: var(--s2-component-s-regular-font-size);
     line-height: 1.6;
