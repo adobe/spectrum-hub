@@ -172,6 +172,8 @@
   [aria-expanded="true"] + .level-2-menu {
     visibility: visible;
     pointer-events: auto;
+    padding-inline: var(--s2-spacing-400);
+    transition-delay: 0s, 150ms, 0s;
 
     > * {
       opacity: 1;
@@ -247,10 +249,14 @@
 
   .level-2-menu {
     box-sizing: border-box;
-    transition: border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+    transition:
+      padding-inline var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease),
+      border-radius var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms,
+      visibility 0s linear var(--sitenav-layout-transition-duration);
     width: var(--sitenav-level-2-width);
     max-height: calc(100dvh - var(--sh-header-height) - var(--s2-spacing-400));
-    padding: calc(var(--s2-spacing-400) - 8px) var(--s2-spacing-400);
+    padding-block: calc(var(--s2-spacing-400) - 8px);
+    padding-inline: 0;
     background-color: var(--s2-gray-25);
 
     /* #sitenav's box is the rail plus its inline-start margin, so 100%/0 land on the
@@ -276,7 +282,15 @@
     > * {
       display: block;
       opacity: 0;
-      transition: opacity var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease) 150ms;
+      transition: opacity var(--sitenav-layout-transition-duration) var(--sitenav-layout-transition-ease);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+
+      > * {
+        transition: none;
+      }
     }
 
     /* focus ring for level-2 */
@@ -548,13 +562,7 @@
   }
 
   &:not([is-expanded]) {
-    --sitenav-corner-radius: var(--s2-corner-radius-850);
     --expand-panel-width: 5px;
-
-    /* Only the top level gets the 20px corner radius, second-level menu remains 32px */
-    .level-2-menu {
-      --sitenav-corner-radius: var(--s2-corner-radius-950);
-    }
 
     .sitenav-expand-btn:hover {
       --expand-panel-width: 1.5px;

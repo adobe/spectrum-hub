@@ -122,6 +122,61 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
   `);
 });
 
+test(`${block.name} level-2 menu remains visible until its collapse transition finishes`, async ({ page, isMobile }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'transition timing is covered once in desktop Chromium');
+  await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
+
+  const toggle = page.getByRole('button', { name: 'Foundations', exact: true });
+  const menu = page.locator(`#${await toggle.getAttribute('aria-controls')}`);
+
+  await toggle.click();
+  await expect.poll(() => menu.evaluate((el) => getComputedStyle(el).width)).toBe('264px');
+
+  await toggle.click();
+  const collapsing = await menu.evaluate((el) => {
+    const transitions = [
+      ...document.documentElement.getAnimations(),
+      ...el.getAnimations(),
+    ];
+    transitions.forEach((transition) => {
+      transition.pause();
+      transition.currentTime = 150;
+    });
+
+    const styles = getComputedStyle(el);
+    return {
+      visibility: styles.visibility,
+      width: Number.parseFloat(styles.width),
+    };
+  });
+  expect(collapsing.visibility).toBe('visible');
+  expect(collapsing.width).toBeGreaterThan(0);
+  expect(collapsing.width).toBeLessThan(264);
+
+  await menu.evaluate((el) => {
+    [
+      ...document.documentElement.getAnimations(),
+      ...el.getAnimations(),
+    ].forEach((transition) => transition.finish());
+  });
+
+  await expect.poll(() => menu.evaluate((el) => {
+    const styles = getComputedStyle(el);
+    return {
+      paddingInlineStart: styles.paddingInlineStart,
+      paddingInlineEnd: styles.paddingInlineEnd,
+      visibility: styles.visibility,
+      width: styles.width,
+    };
+  })).toEqual({
+    paddingInlineStart: '0px',
+    paddingInlineEnd: '0px',
+    visibility: 'hidden',
+    width: '0px',
+  });
+});
+
 test(`${block.name} block with a level-3 item expanded has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
   await gotoBlock(page, levelThreeBlock);
   await waitForNavReady(page, isMobile);
