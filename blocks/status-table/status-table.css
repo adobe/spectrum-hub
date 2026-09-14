@@ -159,15 +159,11 @@
 
   /* secondary guidance line beneath the badge — hidden until the "Show details" toggle */
   .status-table-secondary {
-    display: none;
+    display: block;
     margin-block-start: var(--s2-spacing-50);
     color: var(--s2-gray-600);
     font-size: var(--s2-component-s-regular-font-size);
     line-height: var(--s2-component-s-regular-line-height);
-  }
-
-  &.status-table-show-details .status-table-secondary {
-    display: block;
   }
 
   /* rows filtered out by search, and cells in columns toggled off, drop out entirely.

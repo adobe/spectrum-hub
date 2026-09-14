@@ -584,7 +584,6 @@ const buildToolbar = async (index, table, el, announce) => {
   const toggleAndExportWrapper = document.createElement('div');
   toggleAndExportWrapper.className = 'status-table-toolbar-wrapper';
   toggleAndExportWrapper.append(
-    buildDetailsToggle(el),
     // TODO: uncomment when filters are ready for post-V1
     // buildColumnFilter(columns, table, announce)
     await buildExportButton(index),
