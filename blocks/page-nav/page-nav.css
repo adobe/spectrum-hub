@@ -21,6 +21,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     font-size: var(--s2-component-m-medium-font-size);
     line-height: 1.4;
     color:  var(--s2-gray-700);
+    
     /* overflow-y: scroll; */
 
     & ul {

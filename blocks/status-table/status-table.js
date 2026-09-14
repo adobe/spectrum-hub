@@ -356,6 +356,7 @@ const buildSearch = (table, announce) => {
  * A switch that reveals the muted secondary-status guidance lines. Details are hidden by
  * default; the toggle just flips a modifier class the CSS keys off of.
  */
+/* eslint-disable-next-line */
 const buildDetailsToggle = (el) => {
   const toggle = document.createElement('se-switch');
   toggle.className = 'status-table-details-toggle';
