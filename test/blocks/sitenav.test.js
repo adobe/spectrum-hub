@@ -539,11 +539,36 @@ describe('sitenav block', () => {
       expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
     });
 
+    // Authors moved from the short forms ("RSP"/"SWC") to the full product names.
+    // Both must resolve to the same URL segment, since the prefix comes from the
+    // implementation id rather than the authored text.
+    it('marks a Components item that follows a full implementation name', () => {
+      const ul = buildImplList('Spectrum Web Components');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc');
+    });
+
+    it('marks a Components item that follows "React Spectrum" with the rsp prefix', () => {
+      const ul = buildImplList('React Spectrum');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/rsp');
+    });
+
     // The parent heading is authored with natural spacing ("Design only"), not
     // pre-hyphenated — decorateLevel normalizes spaces to hyphens to match the
     // "design-only" URL segment, the same way "RSP"/"SWC" already lowercase directly.
     it('marks a Components item that follows "Design only" with its prefix', () => {
       const ul = buildImplList('Design only');
+      decorateLevel(ul, 2);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+    });
+
+    // "Figma" is the design-only shortLabel, so it maps to the same prefix.
+    it('marks a Components item that follows "Figma" with the design-only prefix', () => {
+      const ul = buildImplList('Figma');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
       expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');

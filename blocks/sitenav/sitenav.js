@@ -5,6 +5,7 @@ import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
+import { IMPLEMENTATIONS } from '../../scripts/utils/implementations.js';
 
 const { log } = getConfig();
 
@@ -12,14 +13,22 @@ loadStyle(import.meta.url.replace('js', 'css'));
 
 const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
-const INDEX_BASED_PARENT_NAMES = ['rsp', 'swc', 'design-only'];
 const INDEX_BASED_NAV = [
-  { prefix: '/web/rsp', count: 0 },
-  { prefix: '/web/swc', count: 0 },
-  { prefix: '/web/design-only', count: 0 },
+  ...IMPLEMENTATIONS.map((impl) => ({ prefix: `/web/${impl.id}`, count: 0 })),
+  // ios/android aren't in the implementations registry yet — see implementations.js.
   { prefix: '/mobile/ios', count: 0 },
   { prefix: '/mobile/android', count: 0 },
 ];
+
+// Authored labels and URL segments both normalize through this, so "React Spectrum",
+// "RSP", and "design-only" all resolve to the same implementation.
+const navSlug = (text) => text.trim().toLowerCase().replace(/\s+/g, '-');
+
+const findImplementationByLabel = (text) => {
+  const slug = navSlug(text);
+  return IMPLEMENTATIONS.find((impl) => [impl.label, impl.shortLabel, impl.id]
+    .some((name) => navSlug(name) === slug));
+};
 
 export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
   ul.classList.add(`level-${depth}-list`);
@@ -58,13 +67,14 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       btn.setAttribute('aria-label', labelText);
     } else {
       if (labelText === 'Components') {
-        // Normalized to match a URL segment (e.g. "Design only" -> "design-only") so nav
-        // content can use natural spacing rather than being authored pre-hyphenated.
+        // Authors title the parent however reads best; the prefix always comes from
+        // the implementation id, which is the URL segment.
         // A "Components" item authored first in its list has no sibling to read a
         // prefix from; without the guard the whole nav dies on the null.
-        const prevLiLabel = li.previousElementSibling?.textContent.trim().toLowerCase().replace(/\s+/g, '-');
-        if (INDEX_BASED_PARENT_NAMES.some((name) => name === prevLiLabel)) {
-          label.setAttribute('index-based-nav-prefix', `/web/${prevLiLabel}`);
+        const prevLiText = li.previousElementSibling?.textContent;
+        const impl = prevLiText ? findImplementationByLabel(prevLiText) : null;
+        if (impl) {
+          label.setAttribute('index-based-nav-prefix', `/web/${impl.id}`);
         }
       }
 
