@@ -261,7 +261,7 @@
   --s2-heading-size-xxl: 40px;
   --s2-heading-size-xxxl: 58px;
   --s2-heading-size-xxxxl: 73px;
-  --s2-heading-font-weight: 500;
+  --s2-heading-font-weight: 600;
   --s2-heading-line-height: 1.2;
   --s2-heading-margin-top-multiplier: 0.8889;
   --s2-heading-margin-bottom-multiplier: 0.25;
@@ -586,7 +586,6 @@ div[data-status],
       }
     }
 
-
     /* all other pages */
     scrollbar-gutter: stable;
 
@@ -594,6 +593,10 @@ div[data-status],
       &:not(:has(.page-hero)) {
         padding-block: 80px;
         border-block-end: 1px solid rgb(from var(--s2-gray-1000) r g b / 8%);
+      }
+
+      .default-content > h2 {
+        margin-block-end: var(--s2-spacing-300);
       }
     }
 
