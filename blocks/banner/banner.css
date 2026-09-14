@@ -33,7 +33,7 @@
     > div:first-child {
       display: flex;
       gap: 8px;
-      align-items: flex-start;
+      align-items: center;
       background: light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
       border: 1px solid light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
       -webkit-backdrop-filter: blur(12px);
@@ -46,7 +46,6 @@
       }
 
       @media (width >= 900px) {
-        align-items: center;
         background: unset;
         border: none;
         border-radius: 0;
