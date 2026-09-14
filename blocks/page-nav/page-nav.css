@@ -45,6 +45,7 @@ from the DOM and the accessibility tree (see page-nav.js). */
     text-decoration: none;
     position: relative;
     outline: none;
+    font-weight: 400;
 
     &::before,
     &::after {
