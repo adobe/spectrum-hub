@@ -457,7 +457,7 @@ div[data-status],
   }
 
   html.spectrum-edge {
-    --se-body-color: var(--s2-gray-700);
+    --se-body-color: var(--s2-gray-600);
     --se-smaller-heading-color: var(--s2-gray-800);
     --se-larger-heading-color: var(--s2-gray-1000);
 
