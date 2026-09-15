@@ -19,6 +19,10 @@ import { fileURLToPath } from 'node:url';
 // without being added here.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = join(ROOT, '.github/workflows');
+const EXTRACTION_WORKFLOWS = [
+  'extract-rsp-properties.yml',
+  'extract-swc-properties.yml',
+];
 
 function workflowFiles() {
   return readdirSync(WORKFLOWS).filter((file) => /\.ya?ml$/.test(file));
@@ -57,6 +61,37 @@ describe('workflow file references resolve', () => {
       const scripts = referencesIn(source, /(?:^|\s)node\s+([\w./-]+\.[cm]?js)\b/, (m) => [m[1]]);
       const missing = scripts.filter((path) => !existsSync(join(ROOT, path)));
       assert.deepEqual(missing, [], `${file} runs scripts that do not exist`);
+    });
+  }
+});
+
+describe('extraction workflow PR lifecycle', () => {
+  for (const file of EXTRACTION_WORKFLOWS) {
+    const source = readFileSync(join(WORKFLOWS, file), 'utf8');
+    const workflowName = file.replace(/\.ya?ml$/, '');
+
+    it(`${file}: checks out the default branch`, () => {
+      assert.match(
+        source,
+        /uses:\s+actions\/checkout@v4[\s\S]*?with:[\s\S]*?ref:\s+\$\{\{\s+github\.event\.repository\.default_branch\s+\}\}/,
+        `${file} does not check out the default branch`,
+      );
+    });
+
+    it(`${file}: exposes the default branch in env`, () => {
+      assert.match(
+        source,
+        /env:[\s\S]*?DEFAULT_BRANCH:\s+\$\{\{\s+github\.event\.repository\.default_branch\s+\}\}/,
+        `${file} does not expose the default branch in env`,
+      );
+    });
+
+    it(`${file}: uses a non-canceling workflow concurrency group`, () => {
+      assert.match(
+        source,
+        new RegExp(String.raw`concurrency:[\s\S]*?group:\s+${workflowName}[\s\S]*?cancel-in-progress:\s+false`),
+        `${file} does not lock runs to its workflow-specific concurrency group`,
+      );
     });
   }
 });
