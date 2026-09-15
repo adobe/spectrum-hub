@@ -1,4 +1,4 @@
-name: Update Component Properties
+name: Update SWC Component Properties
 
 on:
   schedule:
