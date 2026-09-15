@@ -10,8 +10,16 @@ const component = {
   ariaRoot: '.test-container',
 };
 
-test(`${component.name} component in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+async function gotoDialog(page) {
   await gotoBlock(page, component);
+  await page.waitForFunction(() => {
+    const dialog = document.querySelector('se-dialog')?.shadowRoot?.querySelector('dialog');
+    return dialog && getComputedStyle(dialog).opacity === '1';
+  });
+}
+
+test(`${component.name} component in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+  await gotoDialog(page);
 
   const results = await makeAxeBuilder()
     .disableRules(component.disableRules ?? [])
@@ -25,7 +33,7 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   // single run — check the project by name to actually run this once, not twice.
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, component);
+  await gotoDialog(page);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
     - dialog:
@@ -41,7 +49,7 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
 test(`${component.name} component in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, component);
+  await gotoDialog(page);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])
