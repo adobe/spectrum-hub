@@ -40,6 +40,81 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   `);
 });
 
+test(`${component.name} picker stays below the select and scrolls internally`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Native picker placement is Chromium-specific; only the chromium project needs to run it');
+
+  await gotoBlock(page, component);
+
+  const select = page.getByRole('combobox', { name: 'Size' });
+
+  await select.evaluate((selectEl) => {
+    const { host } = selectEl.getRootNode();
+    host.style.position = 'fixed';
+    host.style.inset = 'auto 16px 48px auto';
+    host.style.zIndex = '1';
+
+    for (let index = 0; index < 20; index += 1) {
+      const option = document.createElement('option');
+      option.value = `extra-${index + 1}`;
+      option.textContent = `Extra option ${index + 1}`;
+      selectEl.append(option);
+    }
+  });
+
+  await select.click();
+
+  const pickerStyles = await select.evaluate((selectEl) => {
+    const styles = getComputedStyle(selectEl, '::picker(select)');
+
+    return {
+      maxBlockSize: styles.maxBlockSize,
+      overflowY: styles.overflowY,
+      positionArea: styles.positionArea,
+      positionTryFallbacks: styles.positionTryFallbacks,
+    };
+  });
+
+  expect(pickerStyles).toEqual({
+    maxBlockSize: 'stretch',
+    overflowY: 'auto',
+    positionArea: 'self-end span-self-end',
+    positionTryFallbacks: 'none',
+  });
+
+  const getOptionRects = () => select.evaluate((selectEl) => {
+    const selectRect = selectEl.getBoundingClientRect();
+    const firstOption = selectEl.options[0];
+    const lastOption = selectEl.options[selectEl.options.length - 1];
+
+    const toRect = (option) => {
+      const rect = option.getBoundingClientRect();
+
+      return {
+        bottom: rect.bottom,
+        top: rect.top,
+      };
+    };
+
+    return {
+      firstOption: toRect(firstOption),
+      lastOption: toRect(lastOption),
+      selectBottom: selectRect.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  const initialRects = await getOptionRects();
+  expect(initialRects.firstOption.top).toBeGreaterThanOrEqual(initialRects.selectBottom);
+  expect(initialRects.lastOption.bottom).toBeGreaterThan(initialRects.viewportHeight);
+
+  await page.keyboard.press('End');
+
+  const afterEndRects = await getOptionRects();
+  expect(afterEndRects.firstOption.top).toBeLessThan(initialRects.firstOption.top);
+  expect(afterEndRects.lastOption.top).toBeGreaterThan(afterEndRects.selectBottom);
+  expect(afterEndRects.lastOption.bottom).toBeLessThanOrEqual(afterEndRects.viewportHeight);
+});
+
 test(`${component.name} component in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 

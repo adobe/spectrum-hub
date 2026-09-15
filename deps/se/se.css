@@ -258,6 +258,10 @@ svg.icon {
     border-radius: var(--s2-corner-radius-700);
     padding: 8px;
     margin-block: 6px;
+    position-area: self-block-end span-self-inline-end;
+    position-try-fallbacks: none;
+    max-block-size: stretch;
+    overflow-y: auto;
     opacity: 1;
     translate: 0 0;
     box-shadow: var(--s2-elevated-shadow);
