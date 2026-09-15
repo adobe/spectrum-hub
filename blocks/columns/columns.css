@@ -98,11 +98,6 @@
 
     &:has(p, h2, h3, h4, h5, h6) {
       max-inline-size: 80ch;
-      gap: var(--s2-spacing-100);
-    }
-
-    &:has(h1) {
-      gap: var(--s2-spacing-300);
     }
   }
 
