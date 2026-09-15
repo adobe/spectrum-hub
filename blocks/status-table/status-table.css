@@ -159,15 +159,11 @@
 
   /* secondary guidance line beneath the badge — hidden until the "Show details" toggle */
   .status-table-secondary {
-    display: none;
+    display: block;
     margin-block-start: var(--s2-spacing-50);
     color: var(--s2-gray-600);
     font-size: var(--s2-component-s-regular-font-size);
     line-height: var(--s2-component-s-regular-line-height);
-  }
-
-  &.status-table-show-details .status-table-secondary {
-    display: block;
   }
 
   /* rows filtered out by search, and cells in columns toggled off, drop out entirely.
@@ -229,7 +225,7 @@
     thead th {
       text-align: start;
       font-weight: var(--s2-component-m-bold-font-weight);
-      color: var(--s2-body-color);
+      color: var(--s2-gray-700);
       padding: var(--s2-spacing-200) var(--s2-spacing-300);
       border: none;
       background-color: light-dark(rgb(from var(--s2-gray-25) r g b / 70%), rgb(from var(--s2-gray-1000) r g b / 12%));
@@ -293,7 +289,7 @@
   }
 
   .status-table-card-definition {
-    color: var(--s2-body-color);
+    color: var(--s2-gray-700);
     font-size: var(--s2-component-s-regular-font-size);
     line-height: var(--s2-component-s-regular-line-height);
   }

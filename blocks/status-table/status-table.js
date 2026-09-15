@@ -356,6 +356,7 @@ const buildSearch = (table, announce) => {
  * A switch that reveals the muted secondary-status guidance lines. Details are hidden by
  * default; the toggle just flips a modifier class the CSS keys off of.
  */
+/* eslint-disable-next-line */
 const buildDetailsToggle = (el) => {
   const toggle = document.createElement('se-switch');
   toggle.className = 'status-table-details-toggle';
@@ -584,7 +585,6 @@ const buildToolbar = async (index, table, el, announce) => {
   const toggleAndExportWrapper = document.createElement('div');
   toggleAndExportWrapper.className = 'status-table-toolbar-wrapper';
   toggleAndExportWrapper.append(
-    buildDetailsToggle(el),
     // TODO: uncomment when filters are ready for post-V1
     // buildColumnFilter(columns, table, announce)
     await buildExportButton(index),

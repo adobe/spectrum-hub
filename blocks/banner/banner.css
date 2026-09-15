@@ -5,30 +5,76 @@
   justify-content: center;
   font-size: var(--s2-body-size-s);
   margin-block: var(--s2-spacing-400);
+  margin-inline: auto;
 
   /* Row */
   > div {
     flex: 0 1 auto;
     display: flex;
-    gap: 32px;
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    background: light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
-    border: 1px solid light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
-
+    flex-direction: column;
+    gap: var(--s2-spacing-300);
+    
     /* --s2-blue-1000, not -900: -900 composited against the tinted background only
-       reaches ~4.32:1, short of the 4.5:1 minimum for normal text (WCAG 1.4.3 AA). */
+    reaches ~4.32:1, short of the 4.5:1 minimum for normal text (WCAG 1.4.3 AA). */
     color: light-dark(var(--s2-blue-1000), var(--s2-banner-blue));
-    border-radius: 100px;
     align-items: center;
-    padding: var(--s2-spacing-100) var(--s2-spacing-100) var(--s2-spacing-100) var(--s2-spacing-300);
     box-sizing: border-box;
+    
+    @media (width >= 600px) {
+      flex-direction: row;
+      gap: var(--s2-spacing-500);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      background: light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
+      border: 1px solid light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
+      border-radius: 100px;
+      padding: var(--s2-spacing-200) var(--s2-spacing-300) var(--s2-spacing-200);
+    }
+    
+    @media (width >= 900px) {
+      padding: var(--s2-spacing-100) var(--s2-spacing-200);
+    }
+
+    @media (width >= 1200px) {
+      padding: var(--s2-spacing-100) var(--s2-spacing-100) var(--s2-spacing-100) var(--s2-spacing-300);
+    }
 
     /* Column */
-    > div {
+    > div:first-child {
       display: flex;
       gap: 8px;
       align-items: center;
+      background: light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
+      border: 1px solid light-dark(rgb(21 107 255 / 8%), rgb(21 107 255 / 15%));
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border-radius: 100px;
+      box-sizing: border-box;
+      padding: var(--s2-spacing-300);
+      max-inline-size: 340px; /* so the text wraps but without any flexible spacing you might see with a text-wrap property */
+      margin-inline: auto;
+      
+      @media (width >= 600px) {
+        background: unset;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        backdrop-filter: unset;
+        -webkit-backdrop-filter: unset;
+        max-inline-size: 296px;
+      }
+
+      @media (width >= 1200px) {
+        max-inline-size: unset;
+      }
+
+      .icon {
+        flex-shrink: 0;
+      }
+    }
+    
+    > .btn-group {
+      flex-shrink: 0;
     }
 
     /* if no cta, style it as such */

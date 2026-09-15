@@ -16,7 +16,7 @@
 
   /* light-scheme gets a shadow, dark-scheme doesn't */
   .light-scheme & {
-    box-shadow: 0 1px 6px 0 rgb(from var(--s2-gray-1000) r g b / 12%);
+    box-shadow: 0 20px 20px 0 rgb(from var(--s2-gray-1000) r g b / 12%);
   }
 
   &:has(.card-link:hover) {

@@ -236,6 +236,8 @@ svg.icon {
   select,
   select::picker(select) {
     appearance: base-select;
+    color: var(--s2-gray-800);
+
   }
 
   select::picker-icon {
@@ -252,7 +254,6 @@ svg.icon {
 
   select::picker(select) {
     background-color: var(--se-select-picker-background-color);
-    color: var(--s2-gray-1000);
     border: none;
     border-radius: var(--s2-corner-radius-700);
     padding: 8px;

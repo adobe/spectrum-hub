@@ -106,71 +106,13 @@
   flex-direction: column;
   align-items: center;
 
-  .playground-expand {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s2-spacing-100);
-    font-size: var(--s2-component-m-regular-font-size);
-    font-weight: var(--s2-component-m-bold-font-weight);
-    color: var(--s2-body-color);
-    cursor: pointer;
-    user-select: none;
-    padding-inline: var(--s2-spacing-200);
-    padding-block: 5px 6px;
-    background-color: var(--s2-gray-100);
-    border: none;
-    border-radius: var(--s2-corner-radius-500);
-
-    &::before {
-      content: '';
-      display: inline-block;
-      mask-image: url('/img/icons/s2-icon-chevrondown-20-n.svg');
-      background-color: currentcolor;
-      mask-repeat: no-repeat;
-      mask-position: center;
-      mask-size: contain;
-      inline-size: 20px;
-      block-size: 20px;
-      transition: transform 0.15s ease;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--s2-blue-800);
-      outline-offset: 2px;
-      border-radius: 2px;
-    }
-  }
-
-  &.is-expanded .playground-expand::before {
-    transform: rotate(180deg);
-  }
-
   .playground-code {
     inline-size: 100%;
     position: relative;
-    overflow: hidden;
-    max-block-size: 6rem;
+    overflow: scroll;
+    max-block-size: 200px;
     margin-block-end: var(--s2-spacing-200);
-
-    &::after {
-      position: absolute;
-
-      /* Purely decorative fade — never intercept clicks meant for the copy button. */
-      pointer-events: none;
-      content: '';
-      inset: 0;
-      block-size: 100%;
-      inline-size: 100%;
-      background: linear-gradient(to bottom, transparent, var(--s2-gray-25));
-    }
-  }
-
-  &.is-expanded .playground-code {
-    max-block-size: none;
-
-    &::after {
-      background: none;
-    }
+    border-radius: 24px;
   }
 
   pre {
@@ -178,7 +120,6 @@
     padding: var(--s2-spacing-300);
     padding-inline-end: var(--s2-spacing-1000);
     background-color: var(--s2-gray-75);
-    border-radius: 24px;
     overflow-x: auto;
     font-size: var(--s2-component-s-regular-font-size);
     line-height: 1.6;

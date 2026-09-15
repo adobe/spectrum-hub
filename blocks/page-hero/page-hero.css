@@ -17,14 +17,12 @@
   }
 
   p {
-    margin: 0;
+    margin-block: 0 calc(var(--s2-spacing-300) - var(--s2-spacing-200));
     color: var(--s2-gray-700);
     max-inline-size: 80ch;
   }
 
   .breadcrumbs {
-    padding-block-end: var(--s2-spacing-300);
-
     /* Reserve space during load */
     &:empty::after { content: "\00a0"; }
   }

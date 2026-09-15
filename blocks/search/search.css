@@ -19,6 +19,8 @@ viewport edges instead of the anchor. */
 }
 
 .results-popover {
+  --search-popover-elevated-shadow: 0 40px 40px 10px rgb(0 0 0 / 6%);
+  
   display: block;
   pointer-events: none;
   position: fixed;
@@ -27,7 +29,7 @@ viewport edges instead of the anchor. */
   position-try-fallbacks: --results-popover-fullwidth;
   border: none;
   border-radius: var(--s2-corner-radius-800);
-  box-shadow: var(--s2-elevated-shadow);
+  box-shadow: var(--search-popover-elevated-shadow);
   margin-block-start: var(--s2-spacing-100);
   padding: var(--s2-spacing-300);
   width: 380px;
@@ -85,7 +87,7 @@ viewport edges instead of the anchor. */
       padding: var(--s2-spacing-300);
       border-radius: 12px;
       min-height: 72px;
-      color: var(--se-body-color);
+      color: var(--s2-gray-700);
       box-sizing: border-box;
       width: 100%;
 
