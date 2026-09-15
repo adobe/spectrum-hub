@@ -11,6 +11,14 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Each suite reports as its own check leg, so a failure names the culprit
+    # instead of hiding behind one aggregated exit code. fail-fast: false keeps
+    # every leg running even when one fails.
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [unit, extractions, indexer, 'links:unit']
+    name: test (${{ matrix.suite }})
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -25,4 +33,4 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: npm run test:${{ matrix.suite }}

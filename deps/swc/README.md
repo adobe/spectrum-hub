@@ -87,7 +87,7 @@ npm run test:extractions
 
 **In GitHub Actions:** The `Update Component Properties` workflow runs on a daily schedule and on manual dispatch. It first regenerates the allow list (`discover-components.js`), then extracts properties (`extract-cem-components.js`), both against the published CEM from the CDN, and commits any changes to `components.json` and `data/`. Newly published components flow in automatically.
 
-Extraction tests live under `test/extractions/` and run with the repo's Node test runner (`npm run test:extractions`), which is also part of `npm test` in CI.
+Extraction tests live under `test/extractions/` and run with the repo's Node test runner (`npm run test:extractions`). It's one of several `test:*` scripts (alongside `test:indexer` and `test:links:unit`) that make up `npm test` in CI.
 
 ## `components.json` schema
 
