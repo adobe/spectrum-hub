@@ -335,6 +335,8 @@ svg.icon {
 
   input[type="checkbox"] {
     flex-shrink: 0;
+    min-block-size: 16px;
+    min-inline-size: 16px;
     margin: 0;
   }
 
