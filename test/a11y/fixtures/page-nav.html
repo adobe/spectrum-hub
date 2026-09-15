@@ -6,16 +6,33 @@
   <title>Page-nav block fixture</title>
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/blocks/page-nav/page-nav.css">
+  <style>
+    .fixture-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 1;
+      block-size: var(--sh-header-height);
+      background: var(--se-body-background-color);
+    }
+
+    .fixture-spacer {
+      block-size: 100vh;
+    }
+  </style>
 </head>
 <body>
+  <header class="fixture-header"></header>
   <main id="main-content">
     <h1>Component overview</h1>
     <h2>Usage guidelines</h2>
     <p>Guidance on when and how to use this component in your designs.</p>
+    <div class="fixture-spacer" aria-hidden="true"></div>
     <h2>Accessibility</h2>
     <p>Notes on keyboard navigation, ARIA patterns, and screen reader behaviour.</p>
+    <div class="fixture-spacer" aria-hidden="true"></div>
     <h2>API reference</h2>
     <p>Properties, events, and slots exposed by the component.</p>
+    <div class="fixture-spacer" aria-hidden="true"></div>
   </main>
   <script type="module">
     // page-nav.js has no default export and no init(el) — it's a self-executing

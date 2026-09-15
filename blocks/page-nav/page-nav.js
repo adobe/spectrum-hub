@@ -1,4 +1,3 @@
-import { getSvgRef } from '../../scripts/utils/svg.js';
 import { getMetadata } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
@@ -21,7 +20,7 @@ export function shouldRenderWidget(widget, isComponentPage, isPrivate) {
   return isComponentPage || GLOBAL_WIDGETS.has(widget.name);
 }
 
-function makeWidgetElement(tag, name, label, icon) {
+function makeWidgetElement(tag, name, label, icon, getSvgRef) {
   const widgetEl = document.createElement(tag);
   widgetEl.className = 'action-button action-button-quiet';
   widgetEl.dataset.widget = name;
@@ -50,18 +49,31 @@ async function decorateSeeInFigmaWidget(a) {
 
 const WIDGETS = [
   {
-    name: 'copy-markdown', tag: 'button', label: 'Copy markdown', icon: 'copy', decorate: decorateCopyMarkdown,
+    name: 'copy-markdown',
+    tag: 'button',
+    label: 'Copy markdown',
+    icon: 'copy',
+    decorate: decorateCopyMarkdown,
   },
   {
-    name: 'go-to-impl', tag: 'a', label: 'Go to implementation', icon: 'openin', decorate: decorateGoToImplWidget,
+    name: 'go-to-impl',
+    tag: 'a',
+    label: 'Go to implementation',
+    icon: 'openin',
+    decorate: decorateGoToImplWidget,
   },
   {
-    name: 'see-in-figma', tag: 'a', label: 'See in Figma', icon: 'vectordraw', decorate: decorateSeeInFigmaWidget, private: true,
+    name: 'see-in-figma',
+    tag: 'a',
+    label: 'See in Figma',
+    icon: 'vectordraw',
+    decorate: decorateSeeInFigmaWidget,
+    private: true,
   },
 ];
 
 // Builds and decorates the URL-appropriate widget buttons/links and appends
-// them below the nav's table of contents. Widgets that decorate themselves away
+// them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
   const isPrivate = isPrivatePage();
@@ -72,9 +84,10 @@ async function renderWidgets(el) {
 
   const group = document.createElement('div');
   group.className = 'page-nav-widgets';
+  const { getSvgRef } = await import('../../scripts/utils/svg.js');
 
   const elements = candidates.map(
-    ({ tag, name, label, icon }) => makeWidgetElement(tag, name, label, icon),
+    ({ tag, name, label, icon }) => makeWidgetElement(tag, name, label, icon, getSvgRef),
   );
   group.append(...elements);
 
@@ -92,9 +105,49 @@ function slugify(text) {
     .replace(/^-|-$/g, '');
 }
 
+function prepareHeading(heading, usedIds, normalizeSize = false) {
+  const authoredId = normalizeSize
+    ? heading.id.replace(/^size-[a-z0-9]+-/, '')
+    : heading.id;
+  const base = authoredId || slugify(heading.textContent);
+  let id = base;
+  let suffix = 2;
+  while (usedIds.has(id)) {
+    id = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  heading.id = id;
+  heading.tabIndex = -1;
+  heading.classList.add('page-nav-target');
+  usedIds.add(id);
+}
+
+const SCROLL_KEYS = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+  ' ',
+]);
+
+function isEditableTarget(target) {
+  return target instanceof Element
+    && (target.isContentEditable
+      || target.closest('input, textarea, select, button, [contenteditable]:not([contenteditable="false"])'));
+}
+
 // Keeps each link's aria-current in sync with the heading the visitor is reading.
 function watchScrollSpy(headings, linkById) {
   let activeId = null;
+  // A click (or the initial-hash scroll) can itself cause a heading to cross
+  // the observer's band — most visibly when the target undershoots (a last
+  // heading too close to the page's end) and an earlier heading is left
+  // sitting in the band instead. Without this, the observer's own async
+  // reaction to that scroll fires right after and steals the highlight back.
+  // Suppressed until the visitor actually takes over scrolling themselves.
+  let suppressed = false;
 
   const setActive = (id) => {
     if (id === activeId) {
@@ -102,6 +155,7 @@ function watchScrollSpy(headings, linkById) {
     }
     if (activeId && linkById.get(activeId)) {
       linkById.get(activeId).removeAttribute('aria-current');
+      linkById.get(activeId).classList.remove('is-current');
     }
     activeId = id;
     if (id && linkById.get(id)) {
@@ -121,127 +175,191 @@ function watchScrollSpy(headings, linkById) {
   // event for the heading scrolling away
   const visible = new Set();
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (e.isIntersecting) {
-        visible.add(e.target);
-      } else {
-        visible.delete(e.target);
-      }
-    });
-    if (!visible.size) {
+  let observer;
+  const onScrollIntent = (event) => {
+    if (event.type === 'keydown'
+      && (!SCROLL_KEYS.has(event.key) || isEditableTarget(event.target))) {
       return;
     }
-    const topmost = [...visible].sort(
-      (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top,
-    )[0];
-    setActive(topmost.id);
-  }, { rootMargin });
+    suppressed = false;
+  };
+  const start = () => {
+    if (observer) {
+      return;
+    }
+    observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          visible.add(e.target);
+        } else {
+          visible.delete(e.target);
+        }
+      });
+      if (suppressed || !visible.size) {
+        return;
+      }
+      const topmost = [...visible].sort(
+        (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+      )[0];
+      setActive(topmost.id);
+    }, { rootMargin });
+    headings.forEach((heading) => observer.observe(heading));
+    window.addEventListener('wheel', onScrollIntent, { passive: true });
+    window.addEventListener('touchstart', onScrollIntent, { passive: true });
+    window.addEventListener('keydown', onScrollIntent);
+  };
+  const stop = () => {
+    if (!observer) {
+      return;
+    }
+    observer.disconnect();
+    observer = undefined;
+    visible.clear();
+    window.removeEventListener('wheel', onScrollIntent);
+    window.removeEventListener('touchstart', onScrollIntent);
+    window.removeEventListener('keydown', onScrollIntent);
+  };
 
-  headings.forEach((h) => observer.observe(h));
+  return {
+    syncActive: () => {
+      if (activeId && linkById.has(activeId)) {
+        linkById.get(activeId).setAttribute('aria-current', 'location');
+      }
+    },
+    setActive,
+    start,
+    stop,
+    suppress: () => { suppressed = true; },
+    resume: () => { suppressed = false; },
+  };
+}
+
+function navigateToHeading(heading) {
+  heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+  heading.focus({ preventScroll: true });
 }
 
 (() => {
-  const pageNav = document.createElement('nav');
-  pageNav.className = 'page-nav';
-  pageNav.setAttribute('aria-label', 'On this page');
-  document.body.append(pageNav);
-
-  const headings = [...document.querySelectorAll('main h2')].filter(
-    (h) => !pageNav.contains(h),
-  );
+  const headings = [...document.querySelectorAll('main h2')];
   if (!headings.length) {
     return;
   }
-  pageNav.dataset.pageNav = 'ready';
 
-  // Assign ids and make headings focusable. Tabindex="-1" is set
-  // on every heading so clicking a page-nav link moves focus to the target
-  const usedIds = new Set();
-  headings.forEach((h) => {
-    if (h.id) {
-      // Strip an authored `size-*-` modifier
-      h.id = h.id.replace(/^size-[a-z0-9]+-/, '');
-    } else {
-      const base = slugify(h.textContent);
-      let id = base;
-      let suffix = 2;
-      while (usedIds.has(id) || document.getElementById(id)) {
-        id = `${base}-${suffix}`;
-        suffix += 1;
-      }
-      h.id = id;
-    }
-    usedIds.add(h.id);
-    h.setAttribute('tabindex', '-1');
-    // .page-nav-target opts the heading into scroll-margin compensation
-    // so anchor scrolls clear the sticky header/sitenav
-    h.classList.add('page-nav-target');
-  });
-
-  // The page's h1 acts as the "top" of the page for the back-to-top link.
-  // Same id/tabindex/class treatment as the h2 targets so anchor scroll,
-  // focus, and scroll-margin all behave the same way.
   const h1 = document.querySelector('main h1');
-  if (h1) {
-    if (!h1.id) {
-      const base = slugify(h1.textContent);
-      let id = base;
-      let suffix = 2;
-      while (usedIds.has(id) || document.getElementById(id)) {
-        id = `${base}-${suffix}`;
-        suffix += 1;
-      }
-      h1.id = id;
-    }
-    usedIds.add(h1.id);
-    h1.setAttribute('tabindex', '-1');
-    h1.classList.add('page-nav-target');
-  }
+  const targets = [...document.querySelectorAll('main h1, main h2')];
+  const targetSet = new Set(targets);
+  const usedIds = new Set(
+    [...document.querySelectorAll('[id]')]
+      .filter((element) => !targetSet.has(element))
+      .map((element) => element.id),
+  );
+  targets.forEach((heading) => prepareHeading(heading, usedIds, heading.tagName === 'H2'));
 
-  const list = document.createElement('ul');
   const linkById = new Map();
-  headings.forEach((h) => {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.href = `#${h.id}`;
-    a.textContent = h.textContent;
-    li.append(a);
-    list.append(li);
-    linkById.set(h.id, a);
-  });
-
-  // TODO: Revisit the back-to-top items after the section links.
-  // if (h1) {
-  //   const topLi = document.createElement('li');
-  //   const topLink = document.createElement('a');
-  //   topLink.href = `#${h1.id}`;
-  //   topLink.textContent = 'Back to top';
-  //   topLi.append(topLink);
-  //   list.append(topLi);
-  // }
-
-  pageNav.append(list);
-
-  // URL-scoped widgets (copy markdown / see-in-figma / go-to-impl)
-  // sit below the table of contents.
-  renderWidgets(pageNav);
-
-  // The nav is a desktop-only side rail (see detail template grid at >=900px).
-  // Below that it is removed from the DOM and the accessibility tree entirely: a
-  // comment placeholder holds its slot so the <nav> can be restored in place when
-  // the viewport widens again.
-  const desktopMql = window.matchMedia('(width >= 900px)');
+  const desktopMql = window.matchMedia('(width >= 1200px)');
   const placeholder = document.createComment('page-nav');
+  document.body.append(placeholder);
+  const scrollSpy = watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+  const {
+    setActive,
+    syncActive,
+    suppress,
+    resume,
+  } = scrollSpy;
+
+  const lastId = headings[headings.length - 1].id;
+  // Resolved against our own collected headings rather than a document-wide
+  // getElementById: some other element elsewhere on the page (e.g. the sitenav,
+  // which slugifies its own category names into ids the same way) can happen to
+  // share the same id, and getElementById would silently return that instead.
+  const targetById = new Map((h1 ? [...headings, h1] : headings).map((h) => [h.id, h]));
+
+  let pageNav;
+  let widgetsStarted = false;
+  const buildPageNav = () => {
+    if (pageNav) {
+      return pageNav;
+    }
+    pageNav = document.createElement('nav');
+    pageNav.className = 'page-nav';
+    pageNav.setAttribute('aria-label', 'On this page');
+    pageNav.dataset.pageNav = 'ready';
+    const list = document.createElement('ul');
+    headings.forEach((heading) => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = `#${heading.id}`;
+      link.textContent = heading.textContent;
+      link.addEventListener('click', (event) => {
+        if (event.defaultPrevented || event.button !== 0
+          || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+        event.preventDefault();
+        suppress();
+        setActive(heading.id);
+        if (heading.id === lastId) {
+          link.classList.add('is-current');
+        }
+        window.history.pushState(null, '', `#${heading.id}`);
+        navigateToHeading(heading);
+      });
+      li.append(link);
+      list.append(li);
+      linkById.set(heading.id, link);
+    });
+    pageNav.append(list);
+    syncActive();
+    return pageNav;
+  };
+
   const syncPresence = () => {
-    if (desktopMql.matches && placeholder.parentNode) {
-      placeholder.replaceWith(pageNav);
-    } else if (!desktopMql.matches && pageNav.parentNode) {
+    if (desktopMql.matches) {
+      const nav = buildPageNav();
+      if (placeholder.parentNode) {
+        placeholder.replaceWith(nav);
+      }
+      scrollSpy.start();
+      if (!widgetsStarted) {
+        widgetsStarted = true;
+        renderWidgets(nav);
+      }
+    } else if (pageNav?.parentNode) {
+      scrollSpy.stop();
       pageNav.replaceWith(placeholder);
     }
   };
   syncPresence();
   desktopMql.addEventListener('change', syncPresence);
 
-  watchScrollSpy(h1 ? [...headings, h1] : headings, linkById);
+  // history.pushState (used above) doesn't scroll on its own, so back/forward
+  // through page-nav's own pushes needs its own handler to keep matching the
+  // native-anchor behavior this replaced.
+  window.addEventListener('popstate', () => {
+    const id = window.location.hash.slice(1);
+    const heading = targetById.get(id);
+    if (!heading) {
+      setActive(null);
+      resume();
+      return;
+    }
+    suppress();
+    setActive(linkById.has(id) ? id : null);
+    navigateToHeading(heading);
+  });
+
+  // A heading's id is often assigned above (slugified from its text) rather than
+  // authored in the source, so the browser's one-time, load-time fragment
+  // scroll can silently no-op. Handle a resolved hash through the same
+  // image-settled path as page-nav links.
+  const hashId = window.location.hash ? window.location.hash.slice(1) : null;
+  const initialTarget = hashId ? targetById.get(hashId) : null;
+  if (initialTarget) {
+    suppress();
+    setActive(initialTarget.id);
+    if (window.localStorage.getItem('lazyhash') === initialTarget.id) {
+      window.localStorage.removeItem('lazyhash');
+    }
+    navigateToHeading(initialTarget);
+  }
 })();
