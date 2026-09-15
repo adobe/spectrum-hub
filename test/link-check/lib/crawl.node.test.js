@@ -24,6 +24,14 @@ describe('classifyLink', () => {
     assert.deepEqual(classifyLink('#usage', PAGE, ORIGIN), { kind: 'hash', id: 'usage' });
   });
 
+  it('decodes a percent-encoded hash id so it can match a real DOM id', () => {
+    assert.deepEqual(classifyLink('#usage%20notes', PAGE, ORIGIN), { kind: 'hash', id: 'usage notes' });
+  });
+
+  it('falls back to the raw hash id when the escape sequence is malformed', () => {
+    assert.deepEqual(classifyLink('#100%', PAGE, ORIGIN), { kind: 'hash', id: '100%' });
+  });
+
   it('resolves a relative internal link against its source page', () => {
     assert.deepEqual(
       classifyLink('typography', PAGE, ORIGIN),
@@ -42,6 +50,20 @@ describe('classifyLink', () => {
     assert.deepEqual(
       classifyLink('/foundations/color#usage', PAGE, ORIGIN),
       { kind: 'internal', url: `${ORIGIN}/foundations/color` },
+    );
+  });
+
+  it('collapses a trailing slash on an internal link so /foo and /foo/ dedup', () => {
+    assert.deepEqual(
+      classifyLink('/foundations/color/', PAGE, ORIGIN),
+      { kind: 'internal', url: `${ORIGIN}/foundations/color` },
+    );
+  });
+
+  it('keeps a trailing slash on an external link, where it may be significant', () => {
+    assert.deepEqual(
+      classifyLink('https://example.com/path/', PAGE, ORIGIN),
+      { kind: 'external', url: 'https://example.com/path/' },
     );
   });
 
@@ -64,5 +86,13 @@ describe('normalizeUrl', () => {
 
   it('strips a hash fragment', () => {
     assert.equal(normalizeUrl('/foo#bar', ORIGIN), `${ORIGIN}/foo`);
+  });
+
+  it('collapses a trailing slash', () => {
+    assert.equal(normalizeUrl('/foo/', ORIGIN), `${ORIGIN}/foo`);
+  });
+
+  it('keeps the bare root path intact', () => {
+    assert.equal(normalizeUrl('/', ORIGIN), `${ORIGIN}/`);
   });
 });

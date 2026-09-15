@@ -30,19 +30,30 @@ const REPORT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.
  * suspicious to some WAFs than Playwright's own default (w3.org 200s the
  * default UA on both verbs but 403s a spoofed desktop-Chrome string), so the
  * default is the safer choice across sites, not just the honest one.
+ *
+ * A single retry absorbs transient network errors and 5xx blips (common against
+ * rate-limited third parties) so a one-off hiccup doesn't get reported as a
+ * broken link; a genuinely-down target still fails both attempts.
  * @param {import('@playwright/test').APIRequestContext} request
  * @param {string} url
+ * @param {number} retries remaining retry attempts for transient failures
  * @returns {Promise<{ok: boolean, status: number|string, reason?: string}>}
  */
-async function checkLinkStatus(request, url) {
+async function checkLinkStatus(request, url, retries = 1) {
   const options = { timeout: REQUEST_TIMEOUT };
   try {
     let response = await request.head(url, options);
     if (!response.ok()) {
       response = await request.get(url, options);
     }
+    if (!response.ok() && response.status() >= 500 && retries > 0) {
+      return await checkLinkStatus(request, url, retries - 1);
+    }
     return { ok: response.ok(), status: response.status() };
   } catch (err) {
+    if (retries > 0) {
+      return checkLinkStatus(request, url, retries - 1);
+    }
     return { ok: false, status: 'error', reason: err.message };
   }
 }
@@ -103,7 +114,6 @@ test('site navigation has no broken links', async ({ page, request, baseURL }, t
     sourcePage: '(start)', href: start, text: '', kind: 'internal',
   }]]]);
   const broken = [];
-  let linksChecked = 0;
 
   function recordOccurrence(url, occurrence) {
     if (!occurrences.has(url)) {
@@ -118,7 +128,6 @@ test('site navigation has no broken links', async ({ page, request, baseURL }, t
     if (link.kind === 'skip') {
       return;
     }
-    linksChecked += 1;
 
     if (link.kind === 'invalid') {
       broken.push({
@@ -183,15 +192,29 @@ test('site navigation has no broken links', async ({ page, request, baseURL }, t
 
   broken.push(...await validateLinks(request, occurrences));
 
-  const stats = { pagesVisited: visited.size, linksChecked, truncated: queue.length > 0 };
-  const markdown = toMarkdown(broken, stats);
+  // Internal breakage (our own pages, hash targets, malformed hrefs) is what the
+  // run gates on; external failures are reported for visibility but don't fail it,
+  // so third-party flakiness can't redden a scheduled crawl. `occurrences` holds
+  // every unique internal/external URL that got an HTTP check.
+  const internal = broken.filter((row) => row.kind !== 'external');
+  const external = broken.filter((row) => row.kind === 'external');
+  const stats = {
+    pagesVisited: visited.size,
+    linksChecked: occurrences.size,
+    truncated: queue.length > 0,
+  };
+  const markdown = toMarkdown({ internal, external }, stats);
 
   fs.mkdirSync(REPORT_DIR, { recursive: true });
   fs.writeFileSync(path.join(REPORT_DIR, 'report.md'), markdown);
-  fs.writeFileSync(path.join(REPORT_DIR, 'report.json'), JSON.stringify({ stats, broken }, null, 2));
+  fs.writeFileSync(
+    path.join(REPORT_DIR, 'report.json'),
+    JSON.stringify({ stats, internal, external }, null, 2),
+  );
   await testInfo.attach('broken-links-report.md', { body: markdown, contentType: 'text/markdown' });
 
   // Soft: every page in the crawl still gets checked and reported even once one
-  // link is found broken — the assertion only fails the test at the very end.
-  expect.soft(broken, markdown).toEqual([]);
+  // link is found broken — the assertion only fails the test at the very end, and
+  // only on internal breakage.
+  expect.soft(internal, markdown).toEqual([]);
 });

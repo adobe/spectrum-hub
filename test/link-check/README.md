@@ -2,6 +2,16 @@
 
 A [Playwright](https://playwright.dev/) crawl that walks the site's navigation and reports every broken link it finds, rather than stopping at the first one. It's on-demand/scheduled (see [`.github/workflows/link-check.yml`](../../.github/workflows/link-check.yml)), not a PR gate — a full-site crawl is slower and more prone to third-party flakiness than the per-block checks in [`test/a11y/`](../a11y/).
 
+## Why this exists (prior art)
+
+No Adobe/EDS platform feature does an automated, whole-site link crawl for us:
+
+- **AEM's built-in Link Checker** validates links in content stored *in AEM*, and does not cover EDS document-based authoring (our source is documents, not AEM).
+- **AEM Sites Optimizer / SpaceCat** offers `broken-internal-links` / `broken-backlinks` audits for EDS, but internal-link detection is RUM-based ("if no one clicks the link, it won't be found"), runs weekly, and is an entitlement-gated product — not a proactive crawl in this repo's CI.
+- **Milo's Preflight** does per-page link checks, but only interactively (launched from the sidekick, one page at a time) and its full status validation depends on the VPN-gated internal "Spidy" service.
+
+This crawl fills that gap: proactive, whole-site, runs in our own CI on a schedule. Its render-based discovery and HEAD→GET status pattern mirror what Milo's Preflight does per page.
+
 ## How it works
 
 The crawl is split into two independent passes:
@@ -10,6 +20,8 @@ The crawl is split into two independent passes:
 2. **Validation** — once discovery finishes (or hits the page cap), every unique internal/external URL found is checked with a parallel `request.head()` → `request.get()` fallback (via [`mapWithConcurrency`](../../tools/indexer/aem-client.js), reused from the Algolia indexer), not by re-rendering it. This is what makes the crawl fast — status checks are cheap HTTP requests, not browser navigations.
 
 A broken link doesn't stop the run: the whole crawl uses a single `expect.soft()` at the end, so every page still gets visited and every link still gets checked even after the first failure. A Markdown + JSON report is written to `test-results/link-check/` and attached to the Playwright HTML report either way.
+
+**Internal vs external breakage.** The report splits broken links into two sections, and the run only *fails* on internal breakage — our own pages, hash targets, and malformed hrefs. External failures (a third-party WAF hiccup, a rate limit, a transient 5xx) are listed for visibility but don't redden a scheduled run, since they aren't our content to fix and would otherwise bury real internal problems. Status checks also retry once on a network error or 5xx to absorb one-off blips.
 
 ## Known false positives to watch for
 
