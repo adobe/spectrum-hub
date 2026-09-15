@@ -47,8 +47,6 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
         - listitem: Experimental Available for exploration and testing, but not recommended for production use.
         - listitem: Not available Not currently available or applicable for this implementation or design library.
       - button "Search components"
-      - switch "Show details"
-      - text: Show details
       - button "Download CSV"
       - table "Component availability":
         - rowgroup:
@@ -90,8 +88,6 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
         - listitem: Experimental Available for exploration and testing, but not recommended for production use.
         - listitem: Not available Not currently available or applicable for this implementation or design library.
       - button "Search components"
-      - switch "Show details"
-      - text: Show details
       - button "Download CSV"
       - table "Component availability":
         - rowgroup:
