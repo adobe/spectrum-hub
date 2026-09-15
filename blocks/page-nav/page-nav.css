@@ -22,7 +22,10 @@ from the DOM and the accessibility tree (see page-nav.js). */
     line-height: 1.4;
     color:  var(--s2-gray-700);
     
-    /* overflow-y: scroll; */
+    /* TODO: why is overflow-y commented out? Without overflow-y: scroll, some of the page navs are so long that
+    on short desktop screens, the page nav gets cut off and you can't scroll. But with it on, it forces the overflow-x
+    to hidden, which also then cuts off the individual link focus rings. Opting for fixing the focus rings for now.
+    overflow-y: scroll; */
 
     & ul {
       grid-column: 2;
