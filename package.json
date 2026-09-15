@@ -36,6 +36,7 @@
     "@adobe/aem-cli": "^16.20.9",
     "@adobe/eslint-config-helix": "^3.0.17",
     "@axe-core/playwright": "^4.11.3",
+    "@changesets/cli": "^3.0.3",
     "@esm-bundle/chai": "4.3.4-fix.0",
     "@playwright/test": "^1.60.0",
     "@web/dev-server-import-maps": "^0.3.0",
