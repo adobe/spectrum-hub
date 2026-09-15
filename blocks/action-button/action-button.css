@@ -13,7 +13,7 @@
   background-color: var(--s2-gray-100);
   border: none;
   transition: background-color 0.2s ease-in-out;
-  color: inherit;
+  color: var(--s2-gray-800);
   text-decoration: none;
   cursor: pointer;
   outline: none;
