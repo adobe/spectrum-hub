@@ -23,6 +23,7 @@ env:
 jobs:
   update-properties:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -64,12 +65,37 @@ jobs:
             git diff --staged --stat
           fi
 
-      # The PR this opens gets no `pull_request` checks of its own (GitHub does not run
-      # workflows for PRs opened with GITHUB_TOKEN), so the extraction is validated here
-      # instead. A run that produces a catalog the suite rejects fails loudly rather than
-      # opening a PR that merely looks green.
+      - name: Close stale PR and remove bot branch when output is unchanged
+        if: steps.stage.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          existing=$(gh pr list \
+            --head "$BRANCH" \
+            --base "$DEFAULT_BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh pr close "$existing" --comment "Closing because the latest extraction matches \`$DEFAULT_BRANCH\`."
+          fi
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+            git push origin --delete "$BRANCH"
+          else
+            branch_status=$?
+            if [ "$branch_status" -ne 2 ]; then
+              echo "git ls-remote failed for $BRANCH with status $branch_status" >&2
+              exit "$branch_status"
+            fi
+          fi
+
       - name: Verify the extraction before proposing it
         if: steps.stage.outputs.changed == 'true'
+        # The PR this opens gets no `pull_request` checks of its own (GitHub does not run
+        # workflows for PRs opened with GITHUB_TOKEN), so the extraction is validated here
+        # instead. A run that produces a catalog the suite rejects fails loudly rather than
+        # opening a PR that merely looks green.
         run: |
           npm run lint:js
           npm run test:extractions
@@ -101,13 +127,18 @@ jobs:
           # PR, or make follow-up fixes on a branch of your own.
           git push --force origin "$BRANCH"
 
-          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          existing=$(gh pr list \
+            --head "$BRANCH" \
+            --base "$DEFAULT_BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             gh pr edit "$existing" --body-file "$RUNNER_TEMP/pr-body.md"
             echo "Updated existing PR #$existing"
           else
             gh pr create \
-              --base main \
+              --base "$DEFAULT_BRANCH" \
               --head "$BRANCH" \
               --title "chore: update React Spectrum component properties" \
               --body-file "$RUNNER_TEMP/pr-body.md"
