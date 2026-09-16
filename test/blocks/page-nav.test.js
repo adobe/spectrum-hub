@@ -1,7 +1,22 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { isComponentPath, shouldRenderWidget, isPrivatePage } from '../../blocks/page-nav/page-nav.js';
+import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
+import { setConfig } from '../../scripts/ak.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+
+const SAFE_CONFIG = {
+  hostnames: ['authorkit.dev'],
+  components: [],
+  locales: { '': { lang: 'en' } },
+};
+
+const setSessionHint = () => {
+  document.cookie = `spectrum_session_active=${Date.now() + 2 * 60 * 60 * 1000}; path=/`;
+};
+
+const clearSessionHint = () => {
+  document.cookie = 'spectrum_session_active=; path=/; max-age=0';
+};
 
 function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two'] } = {}) {
   const main = document.createElement('main');
@@ -50,6 +65,22 @@ function waitForEl(root, selector, timeout = 2000) {
       setTimeout(check, 10);
     };
     check();
+  });
+}
+
+function waitFor(check, timeout = 2000) {
+  return new Promise((resolve, reject) => {
+    const start = performance.now();
+    const poll = () => {
+      if (check()) {
+        resolve();
+      } else if (performance.now() - start > timeout) {
+        reject(new Error('timed out waiting for condition'));
+      } else {
+        setTimeout(poll, 10);
+      }
+    };
+    poll();
   });
 }
 
@@ -108,10 +139,17 @@ describe('page-nav block', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    setConfig(SAFE_CONFIG);
+    clearSessionHint();
+    delete window.adobeIMS;
+    delete window.adobeid;
   });
 
   afterEach(() => {
     sandbox.restore();
+    clearSessionHint();
+    delete window.adobeIMS;
+    delete window.adobeid;
     document.body.innerHTML = '';
   });
 
@@ -717,55 +755,33 @@ describe('page-nav block', () => {
     });
   });
 
-  describe('shouldRenderWidget — which widgets survive the URL/audience filter', () => {
+  describe('shouldRenderWidget — which widgets survive the URL filter', () => {
     const copyMarkdown = { name: 'copy-markdown' };
     const goToImpl = { name: 'go-to-impl' };
     const seeInFigma = { name: 'see-in-figma', private: true };
 
     it('renders a global widget (copy-markdown) on a non-component page', () => {
-      expect(shouldRenderWidget(copyMarkdown, false, false)).to.be.true;
+      expect(shouldRenderWidget(copyMarkdown, false)).to.be.true;
     });
 
     it('renders a global widget on a component page too', () => {
-      expect(shouldRenderWidget(copyMarkdown, true, false)).to.be.true;
+      expect(shouldRenderWidget(copyMarkdown, true)).to.be.true;
     });
 
     it('hides a non-global widget on a non-component page', () => {
-      expect(shouldRenderWidget(goToImpl, false, false)).to.be.false;
+      expect(shouldRenderWidget(goToImpl, false)).to.be.false;
     });
 
     it('renders a non-global widget on a component page', () => {
-      expect(shouldRenderWidget(goToImpl, true, false)).to.be.true;
+      expect(shouldRenderWidget(goToImpl, true)).to.be.true;
     });
 
-    it('hides a private widget on a public component page', () => {
-      expect(shouldRenderWidget(seeInFigma, true, false)).to.be.false;
+    it('offers a private widget for audience gating on a component page', () => {
+      expect(shouldRenderWidget(seeInFigma, true)).to.be.true;
     });
 
-    it('renders a private widget on a private component page', () => {
-      expect(shouldRenderWidget(seeInFigma, true, true)).to.be.true;
-    });
-
-    it('still requires the URL gate for a private widget on a private page', () => {
-      expect(shouldRenderWidget(seeInFigma, false, true)).to.be.false;
-    });
-  });
-
-  describe('isPrivatePage — reads the audience meta', () => {
-    afterEach(() => {
-      document.head.querySelectorAll('meta[name="audience"]').forEach((m) => m.remove());
-    });
-
-    it('is true when the page declares audience=private', () => {
-      const meta = document.createElement('meta');
-      meta.name = 'audience';
-      meta.content = 'private';
-      document.head.append(meta);
-      expect(isPrivatePage()).to.be.true;
-    });
-
-    it('is false with no audience meta', () => {
-      expect(isPrivatePage()).to.be.false;
+    it('still requires the URL gate for a private widget', () => {
+      expect(shouldRenderWidget(seeInFigma, false)).to.be.false;
     });
   });
 
@@ -789,19 +805,10 @@ describe('page-nav block', () => {
 
     afterEach(() => {
       window.history.pushState({}, '', originalUrl);
-      document.head.querySelectorAll('meta[name="audience"]').forEach((m) => m.remove());
     });
 
-    // see-in-figma is a private widget, so it only renders on a private page.
-    const markPrivate = () => {
-      const meta = document.createElement('meta');
-      meta.name = 'audience';
-      meta.content = 'private';
-      document.head.append(meta);
-    };
-
-    it('renders all three decorated widgets, above the TOC, on a private component page', async () => {
-      markPrivate();
+    it('renders all three decorated widgets off-CDN without authentication', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
       const group = await waitForEl(el, '.page-nav-widgets');
@@ -834,7 +841,7 @@ describe('page-nav block', () => {
     });
 
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
-      markPrivate();
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
       fetchStub.resolves({ ok: true, json: async () => ({ web: {} }) });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
@@ -844,16 +851,32 @@ describe('page-nav block', () => {
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
     });
 
-    it('hides the private see-in-figma widget on a public component page', async () => {
+    it('hides see-in-figma from an anonymous visitor on CDN', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const el = await loadPageNav();
       const group = await waitForEl(el, '.page-nav-widgets');
 
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
-      // see-in-figma is never a candidate on a public page, so its Figma lookup
-      // never fires.
       expect(fetchStub.called).to.be.false;
+    });
+
+    it('renders see-in-figma for a visitor with an active session on CDN', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      setSessionHint();
+      window.adobeIMS = {
+        getAccessToken: () => ({ token: 'test-token' }),
+        getProfile: async () => ({ email: 'developer@example.com' }),
+      };
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+
+      const el = await loadPageNav();
+      await waitFor(() => window.adobeid?.onReady);
+      await window.adobeid.onReady();
+      const group = await waitForEl(el, '.page-nav-widgets');
+
+      expect(group.querySelector('[data-widget="see-in-figma"]')).to.not.be.null;
     });
   });
 });

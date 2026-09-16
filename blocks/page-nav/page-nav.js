@@ -1,4 +1,4 @@
-import { getMetadata } from '../../scripts/ak.js';
+import { removeForAudience } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -7,16 +7,7 @@ export function isComponentPath(pathname) {
   return pathname.split('/').includes('components');
 }
 
-// A page is "private" when it carries <meta name="audience" content="private">.
-export function isPrivatePage() {
-  return getMetadata('audience') === 'private';
-}
-
-export function shouldRenderWidget(widget, isComponentPage, isPrivate) {
-  // A private widget is only offered on a private page. The backend does not
-  // strip it at runtime, so this client check is the gate that keeps it out of
-  // the public view.
-  if (widget.private && !isPrivate) { return false; }
+export function shouldRenderWidget(widget, isComponentPage) {
   return isComponentPage || GLOBAL_WIDGETS.has(widget.name);
 }
 
@@ -76,9 +67,8 @@ const WIDGETS = [
 // them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
-  const isPrivate = isPrivatePage();
   const candidates = WIDGETS.filter(
-    (widget) => shouldRenderWidget(widget, isComponentPage, isPrivate),
+    (widget) => shouldRenderWidget(widget, isComponentPage),
   );
   if (!candidates.length) { return; }
 
@@ -91,7 +81,16 @@ async function renderWidgets(el) {
   );
   group.append(...elements);
 
-  await Promise.all(candidates.map(({ decorate }, i) => decorate(elements[i])));
+  await Promise.all(candidates.map(({ private: isPrivate }, i) => (
+    isPrivate ? removeForAudience({ privateEl: elements[i] }) : undefined
+  )));
+
+  const survivingWidgets = candidates
+    .map((widget, i) => ({ ...widget, element: elements[i] }))
+    .filter(({ element }) => group.contains(element));
+  await Promise.all(
+    survivingWidgets.map(({ decorate, element }) => decorate(element)),
+  );
 
   if (!group.children.length) { return; }
   el.append(group);
