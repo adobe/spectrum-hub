@@ -339,13 +339,10 @@ svg.icon {
     display: grid;
     place-content: center;
     flex-shrink: 0;
-<<<<<<< Updated upstream
     min-block-size: 16px;
     min-inline-size: 16px;
-=======
     block-size: 16px;
     inline-size: 16px;
->>>>>>> Stashed changes
     margin: 0;
     background-color: var(--s2-gray-25);
     border: 2px solid var(--s2-gray-800);
