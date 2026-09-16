@@ -258,6 +258,10 @@ svg.icon {
     border-radius: var(--s2-corner-radius-700);
     padding: 8px;
     margin-block: 6px;
+    position-area: self-block-end span-self-inline-end;
+    position-try-fallbacks: none;
+    max-block-size: stretch;
+    overflow-y: auto;
     opacity: 1;
     translate: 0 0;
     box-shadow: var(--s2-elevated-shadow);
@@ -328,10 +332,46 @@ svg.icon {
   flex-wrap: wrap;
   align-items: center;
   gap: 0 8px;
+  min-block-size: var(--s2-component-s-height);
 
   input[type="checkbox"] {
+    appearance: none;
+    display: grid;
+    place-content: center;
     flex-shrink: 0;
+    min-block-size: 16px;
+    min-inline-size: 16px;
+    block-size: 16px;
+    inline-size: 16px;
     margin: 0;
+    background-color: var(--s2-gray-25);
+    border: 2px solid var(--s2-gray-800);
+    border-radius: var(--s2-corner-radius-100);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+
+    &::before {
+      content: "";
+      block-size: 10px;
+      inline-size: 10px;
+      background-color: var(--s2-gray-25);
+      mask: url('/img/icons/s2-icon-checkmark-20-n.svg') center / 12px no-repeat;
+      transform: scale(0);
+    }
+
+    &:checked {
+      background-color: var(--s2-gray-900);
+      border-color: var(--s2-gray-900);
+
+      &::before {
+        transform: scale(1);
+      }
+    }
+
+    &:focus-visible {
+      outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+      outline-offset: 2px;
+    }
   }
 
   input[type="checkbox"].has-error {
