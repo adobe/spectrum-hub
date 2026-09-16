@@ -137,11 +137,6 @@ setConfig({ components: [], hostnames: [], linkBlocks: [] });
 - `test/a11y/custom-components/<name>.spec.js` is identical in shape to a block spec, with `ariaRoot: '.test-container'` (there's no single `.${name}` class to default to, since a fixture holds multiple instances).
 - `test/a11y/coverage.spec.js` parses `customElements.define(...)` calls out of `deps/se/se.js` and fails if a registered element has no matching spec — a new element can't ship without a11y coverage.
 
-Direct testing of these components surfaced real, pre-existing bugs that incidental block-level coverage had missed — left failing and documented rather than fixed as part of adding the tests:
-
-- `se-checkbox`: native checkbox renders at 12–13px, below the WCAG 2.2 AA 2.5.8 Target Size minimum (24px).
-- `se-dialog`/`se-button`: insufficient button contrast (down to ~2.25:1, need 4.5:1) in both light and dark mode — not dark-mode-specific as first suspected.
-
 ## CI policy
 
 `a11y.yml` fails the job on any violation, but it isn't a required check yet — merges aren't blocked.
