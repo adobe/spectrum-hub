@@ -11,6 +11,8 @@
   container-name: columns;
 
   @media (width >= 1200px) {
+    --columns-gap: 56px;
+
     max-inline-size: unset;
   }
 
@@ -167,7 +169,7 @@
     .col {
       display: flex;
       flex-direction: column;
-      gap: var(--s2-spacing-300);
+      gap: var(--s2-spacing-100);
       box-sizing: border-box;
       text-wrap-style: pretty;
 
@@ -230,6 +232,7 @@
           block-size: auto;
           object-fit: cover;
           aspect-ratio: auto;
+          border-radius: var(--image-corner-radius);
 
           /* Hides the browser's native broken-image glyph/alt text */
           &.img-error {
@@ -259,7 +262,7 @@
       align-items: center;
     }
 
-    &.centered .row:first-child {
+    &.centered .row:not(:last-child) {
       margin-block-end: var(--columns-gap);
     }
 
@@ -271,10 +274,22 @@
 
 /* grid-layout: uniform rows (all-image or all-text, never mixed within a row). */
 .columns.grid-layout {
+  border: 1px solid red;
+
+  &.extra-small {
+    --image-size: 80px;
+  }
+
+  &.small {
+    border: 1px solid blue;
+
+    --image-size: 316px;
+  }
+
   .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-    gap: 56px var(--columns-gap);
+    gap: var(--columns-gap);
   }
   
   .grid-column {
@@ -285,20 +300,30 @@
   
   .col {
     /* override the margins on the homepage/marketing template */
-    > p {
+    > p, h1, h2, h3, h4, h5, h6 {
       margin-inline: 0;
+      margin-block: 0 var(--s2-spacing-100);
+    }
+
+    &:has(img, picture) img,
+    &:has(img, picture) picture {
+      max-inline-size: var(--image-size, 100%);
     }
   }
 }
 
-.columns:has(> .row:only-child > .col:only-child) .row {
+.columns:not(.grid-layout, .centered) > .row:has(> .col:only-child) {
   grid-template-columns: 1fr;
 
-  .col:has(img, picture) {
+  > .col:only-child {
+    grid-column: 1 / -1;
+  }
+
+  > .col:only-child:has(img, picture) {
     --image-size: 100%;
   }
 
-  .col:not(:has(img, picture)) {
+  > .col:only-child:not(:has(img, picture)) {
     max-inline-size: 80ch;
   }
 }

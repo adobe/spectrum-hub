@@ -83,6 +83,33 @@ test('grid-layout adds flexible 300px tracks as space becomes available', async 
   expect(new Set(positions.wide.map(({ y }) => y)).size).toBe(1);
 });
 
+test('a sole medium column uses one explicit grid track', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'the computed grid assertion only needs one browser');
+
+  await gotoBlock(page, {
+    path: '/test/a11y/fixtures/columns-grid.html',
+    readySelector: '.single-surviving-column .col',
+  });
+
+  const layout = await page.locator('.single-surviving-column').evaluate((columns) => {
+    columns.style.inlineSize = '1160px';
+    const row = columns.querySelector('.row');
+    const col = row.querySelector('.col');
+
+    return {
+      columnCount: row.children.length,
+      tracks: getComputedStyle(row).gridTemplateColumns,
+      gridColumn: getComputedStyle(col).gridColumn,
+    };
+  });
+
+  expect(layout).toEqual({
+    columnCount: 1,
+    tracks: '1160px',
+    gridColumn: '1 / -1',
+  });
+});
+
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
   await gotoBlock(page, block);
 
