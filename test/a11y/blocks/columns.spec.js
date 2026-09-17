@@ -103,6 +103,10 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - figure:
       - img "First column illustration"
+      - paragraph:
+        - text: First image caption with
+        - link "more details"
+        - text: .
     - heading "Feature one" [level=3]
     - paragraph: Describe the first feature clearly and concisely.
     - figure:

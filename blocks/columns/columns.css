@@ -193,42 +193,48 @@
 
     .col-image {
       display: flex;
+      flex-direction: column;
+      gap: var(--s2-spacing-300);
       margin: 0;
-      min-inline-size: minmax(100%, var(--image-size));
-      block-size: auto;
-      max-inline-size: var(--image-size);
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      box-sizing: border-box;
 
-      /* Only shows once the img itself reports it can't render (see
-      watchImageError in columns.js) */
-      &:has(img.img-error) {
-        background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
-      }
-
-      picture {
+      .col-image-media {
         display: flex;
-        align-self: stretch;
-        flex: 1;
-        inline-size: 100%;
-        block-size: 100%;
-        box-sizing: border-box;
-      }
-
-      img {
-        display: block;
-        box-sizing: border-box;
-        inline-size: var(--image-size);
+        min-inline-size: minmax(100%, var(--image-size));
         block-size: auto;
-        object-fit: cover;
-        aspect-ratio: auto;
+        max-inline-size: var(--image-size);
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-sizing: border-box;
         border-radius: var(--image-corner-radius);
 
-        /* Hides the browser's native broken-image glyph/alt text */
-        &.img-error {
-          opacity: 0;
+        /* Only shows once the img itself reports it can't render (see
+        watchImageError in columns.js) */
+        &:has(img.img-error) {
+          background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
+        }
+
+        picture {
+          display: flex;
+          align-self: stretch;
+          flex: 1;
+          inline-size: 100%;
+          block-size: 100%;
+          box-sizing: border-box;
+        }
+
+        img {
+          display: block;
+          box-sizing: border-box;
+          inline-size: var(--image-size);
+          block-size: auto;
+          object-fit: cover;
+          aspect-ratio: auto;
+
+          /* Hides the browser's native broken-image glyph/alt text */
+          &.img-error {
+            opacity: 0;
+          }
         }
       }
     }
@@ -255,6 +261,11 @@
 
     &.centered .row:first-child {
       margin-block-end: var(--columns-gap);
+    }
+
+    &.centered .col-caption {
+      margin-inline: auto;
+      text-align: center;
     }
 }
 
