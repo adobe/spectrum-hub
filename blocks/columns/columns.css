@@ -258,50 +258,24 @@
     }
 }
 
-/* grid-layout: uniform rows (all-image or all-text, never mixed within a row).
-Small screens: single-column grid with CSS order grouping same-position cols together.
-Large screens: N-column grid driven by container queries on the inner grid wrapper. */
+/* grid-layout: uniform rows (all-image or all-text, never mixed within a row). */
 .columns.grid-layout {
   .grid-container {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--columns-gap);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 56px var(--columns-gap);
   }
   
-  .row {
-    display: contents;
+  .grid-column {
+    display: grid;
+    grid-row: span var(--grid-row-count);
+    grid-template-rows: subgrid;
   }
   
   .col {
-    margin-block-end: calc(56px - var(--columns-gap));
-
     /* override the margins on the homepage/marketing template */
     > p {
       margin-inline: 0;
-    }
-  }
-  
-  &.grid-layout-2 {
-    @container columns (width >= 800px) {
-      .grid-container {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .col {
-        grid-row: var(--row-idx);
-      }
-    }
-  }
-
-  &.grid-layout-3 {
-    @container columns (width >= 1000px) {
-      .grid-container {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .col {
-        grid-row: var(--row-idx);
-      }
     }
   }
 }

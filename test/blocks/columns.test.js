@@ -362,15 +362,25 @@ describe('columns block', () => {
       expect(el.classList.contains('grid-layout-3')).to.be.true;
     });
 
-    it('sets order on cells so same-position cols group together on mobile', () => {
+    it('groups same-position cells into logical grid columns', () => {
       el = makeEl(THREE_UP_MIXED_ROWS);
       init(el);
-      const [row1, row2] = el.querySelectorAll('.row');
-      // 2 rows total: order = colIndex * 2 + rowIndex
-      expect(row1.children[0].style.order).to.equal('0'); // col0, row0
-      expect(row2.children[0].style.order).to.equal('1'); // col0, row1
-      expect(row1.children[1].style.order).to.equal('2'); // col1, row0
-      expect(row2.children[1].style.order).to.equal('3'); // col1, row1
+      const groups = [...el.querySelectorAll('.grid-column')];
+      expect(groups.length).to.equal(3);
+      expect(groups.map((group) => [...group.children].map((cell) => cell.textContent.trim())))
+        .to.deep.equal([
+          ['', 'Title AContent A'],
+          ['', 'Title BContent B'],
+          ['', 'Title CContent C'],
+        ]);
+      groups.forEach((group) => {
+        expect(group.style.getPropertyValue('--grid-row-count')).to.equal('2');
+        [...group.children].forEach((cell) => {
+          expect(cell.style.order).to.equal('');
+          expect(cell.style.getPropertyValue('--row-idx')).to.equal('');
+        });
+      });
+      expect(el.querySelectorAll('.row').length).to.equal(0);
     });
 
     it('does not add "grid-layout" when a row mixes image and text columns', () => {
@@ -474,7 +484,9 @@ describe('columns block', () => {
     it('does not pair a caption row with a multi-image row', () => {
       el = makeEl(MULTI_IMAGE_ROW_WITH_TRAILING_ROW);
       init(el);
-      expect(el.querySelectorAll('.row').length).to.equal(2);
+      expect(el.querySelectorAll('.grid-column').length).to.equal(2);
+      expect(el.querySelectorAll('.grid-column > .col').length).to.equal(3);
+      expect(el.textContent).to.include('caption a');
       expect(el.querySelector('figcaption')).to.not.exist;
     });
 

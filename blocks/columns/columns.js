@@ -125,14 +125,18 @@ function applyGridLayout(el, rows) {
   if (hasImageTextRow) { return; }
   const maxCols = Math.max(...multiColRows.map((r) => r.children.length));
 
-  // On small screens, rows are transparent (display: contents) so cols become direct grid items.
-  // Set order so col-N from every row groups together visually.
-  // Formula: colIndex * rows.length + rowIndex keeps each column's items consecutive.
-  rows.forEach((row, rowIndex) => {
+  const gridColumns = Array.from({ length: maxCols }, () => {
+    const gridColumn = document.createElement('div');
+    gridColumn.className = 'grid-column';
+    gridColumn.style.setProperty('--grid-row-count', rows.length);
+    return gridColumn;
+  });
+
+  rows.forEach((row) => {
     [...row.children].forEach((col, colIndex) => {
-      col.style.order = colIndex * rows.length + rowIndex;
-      col.style.setProperty('--row-idx', rowIndex + 1);
+      gridColumns[colIndex].append(col);
     });
+    row.remove();
   });
 
   // Wrap rows in grid-container so @container queries on .columns can target a descendant —
@@ -140,7 +144,9 @@ function applyGridLayout(el, rows) {
   const gridContainer = document.createElement('div');
   gridContainer.className = 'grid-container';
   el.append(gridContainer);
-  rows.forEach((row) => gridContainer.append(row));
+  gridColumns.filter((gridColumn) => gridColumn.children.length).forEach((gridColumn) => {
+    gridContainer.append(gridColumn);
+  });
 
   el.classList.add('grid-layout', `grid-layout-${maxCols}`);
 }
