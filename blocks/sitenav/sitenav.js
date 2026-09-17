@@ -30,6 +30,41 @@ const findImplementationByLabel = (text) => {
     .some((name) => navSlug(name) === slug));
 };
 
+const level2SwapCleanups = new WeakMap();
+
+const startLevel2Swap = (list, outgoingButton, incomingButton) => {
+  level2SwapCleanups.get(list)?.();
+
+  const outgoingMenu = document.getElementById(outgoingButton.getAttribute('aria-controls'));
+  const incomingMenu = document.getElementById(incomingButton.getAttribute('aria-controls'));
+  if (incomingMenu) {
+    incomingMenu.inert = false;
+    incomingMenu.classList.remove('is-hidden-after-switch');
+  }
+
+  if (!outgoingMenu?.firstElementChild
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+
+  const outgoingContent = outgoingMenu.firstElementChild;
+  outgoingMenu.inert = true;
+  list.classList.add('is-switching-level-2');
+  outgoingMenu.classList.add('is-switching-out');
+
+  const cleanup = (event) => {
+    if (event?.type === 'transitionend' && event.propertyName !== 'opacity') { return; }
+
+    outgoingContent.removeEventListener('transitionend', cleanup);
+    outgoingContent.removeEventListener('transitioncancel', cleanup);
+    outgoingMenu.classList.add('is-hidden-after-switch');
+    outgoingMenu.classList.remove('is-switching-out');
+    list.classList.remove('is-switching-level-2');
+    level2SwapCleanups.delete(list);
+  };
+  outgoingContent.addEventListener('transitionend', cleanup);
+  outgoingContent.addEventListener('transitioncancel', cleanup);
+  level2SwapCleanups.set(list, cleanup);
+};
+
 export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
   ul.classList.add(`level-${depth}-list`);
 
@@ -89,6 +124,22 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
 
     btn.addEventListener('click', () => {
       if (depth === 1) {
+        const openSibling = listItems
+          .map((item) => item.querySelector(':scope > button[aria-expanded="true"]'))
+          .find(Boolean);
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+        if (openSibling && openSibling !== btn && !isOpen) {
+          startLevel2Swap(ul, openSibling, btn);
+        } else {
+          level2SwapCleanups.get(ul)?.();
+          const menu = document.getElementById(btn.getAttribute('aria-controls'));
+          if (menu) {
+            menu.inert = false;
+            menu.classList.remove('is-hidden-after-switch');
+          }
+        }
+
         listItems.forEach((item) => {
           if (item !== li) {
             item.querySelector(':scope > button')?.setAttribute('aria-expanded', false);
@@ -360,6 +411,8 @@ export const isMobileViewport = () => window.matchMedia('(width < 900px)').match
 // Escape and clicking outside behave the same way
 // regardless of how deep the sitenav is currently open.
 export const closeSitenav = (sitenav) => {
+  const level1List = sitenav.querySelector('.level-1-list');
+  level2SwapCleanups.get(level1List)?.();
   sitenav.querySelector('.level-1-button[aria-expanded="true"]')
     ?.setAttribute('aria-expanded', 'false');
   sitenav.removeAttribute('is-open');
@@ -368,7 +421,7 @@ export const closeSitenav = (sitenav) => {
 
 const getFocusableEls = (container) => [...container.querySelectorAll(
   'a[href], button:not([disabled]), [tabindex]',
-)].filter((el) => isFocusable(el) && el.tabIndex > -1);
+)].filter((el) => !el.closest('[inert]') && isFocusable(el) && el.tabIndex > -1);
 
 const isToggle = (el) => el.tagName === 'BUTTON' && el.hasAttribute('aria-expanded');
 const isOpen = (btn) => btn.getAttribute('aria-expanded') === 'true';
@@ -389,7 +442,10 @@ export const setupRovingTabindex = (sitenav, navList) => rovingTabindex(sitenav,
   // Only what's inside the open flyout. focusableIn already drops the hidden ones, and
   // level-1 buttons are siblings of .level-2-menu rather than descendants, so they are
   // never members and keep their natural tabindex.
-  items: () => focusableIn(navList).filter((el) => el.closest('.level-2-menu')),
+  items: () => focusableIn(navList).filter((el) => {
+    const menu = el.closest('.level-2-menu');
+    return menu && !menu.inert;
+  }),
   // Landing on "you are here" beats landing on the top of the tree.
   initial: (list) => list.find((el) => el.classList.contains('is-current-page')) ?? list[0],
   keys: {

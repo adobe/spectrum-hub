@@ -187,6 +187,11 @@
     }
   }
 
+  .level-2-menu.is-hidden-after-switch {
+    visibility: hidden;
+    transition: none;
+  }
+
   ul.level-1-list {
     margin: 0;
     padding: 0;
@@ -203,6 +208,33 @@
 
     @media (prefers-reduced-motion: reduce) {
       transition: none;
+    }
+
+    &.is-switching-level-2 {
+      .level-2-menu {
+        transition:
+          border-radius
+          var(--sitenav-layout-transition-duration)
+          var(--sitenav-layout-transition-ease)
+          150ms;
+      }
+
+      .level-2-menu > * {
+        transition:
+          opacity
+          var(--sitenav-children-transition-duration)
+          var(--sitenav-children-transition-ease);
+      }
+
+      .level-2-menu.is-switching-out {
+        visibility: visible;
+        padding-inline: var(--s2-spacing-400);
+        background-color: transparent;
+        background-image: none;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
     }
   }
 
