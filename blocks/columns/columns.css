@@ -1,6 +1,6 @@
 /* These columns represent the "Core layout blocks" */
 .columns {
-  --columns-gap: 56px;
+  --columns-gap: 32px;
   --image-corner-radius: 32px;
   --grid-column-span-image: 1 / 1;
   --grid-column-span-text: 1 / 1;
@@ -24,38 +24,83 @@
   }
 
 
-@media (width >= 600px) {
-  /* extra-small */
-  &.extra-small {
-    --grid-column-span-image: 1 / 4;
-    --grid-column-span-text: 4 / 13;
-  }
+@container columns (width >= 600px) {
+  --columns-gap: 56px;
 
-  &.extra-small.image-right {
-    --grid-column-span-text: 1 / 10;
-    --grid-column-span-image: 10 / 13;
-  }
+  .row {
+    /* extra-small */
+    .columns.extra-small & {
+      --grid-column-span-image: 1 / 4;
+      --grid-column-span-text: 4 / 13;
+    }
 
-  /* small */
-  &.small {
-    --grid-column-span-image: 1 / 5;
-    --grid-column-span-text: 5 / 13;
-  }
-
-  &.small.image-right {
-    --grid-column-span-text: 1 / 9;
-    --grid-column-span-image: 9 / 13;
-  }
-
-  /* medium */
-  &.medium {
-    --grid-column-span-image: 1 / 7;
-    --grid-column-span-text: 7 / 13;
-  }
-
-  &.medium.image-right {
-    --grid-column-span-text: 1 / 7;
-    --grid-column-span-image: 7 / 13;
+    .columns.extra-small.image-right & {
+      --grid-column-span-text: 1 / 10;
+      --grid-column-span-image: 10 / 13;
+    }
+  
+    .columns.extra-small.centered & {
+      --grid-column-span-image: 6 / 8;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    .columns.extra-small.align-start & {
+      --grid-column-span-image: 1 / 4;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    /* small */
+    .columns.small & {
+      --grid-column-span-image: 1 / 5;
+      --grid-column-span-text: 5 / 13;
+    }
+  
+    .columns.small.image-right & {
+      --grid-column-span-text: 1 / 9;
+      --grid-column-span-image: 9 / 13;
+    }
+  
+     .columns.small.centered & {
+      --grid-column-span-image: 5 / 9;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    .columns.small.align-start & {
+      --grid-column-span-image: 1 / 5;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    /* medium */
+    .columns.medium & {
+      --grid-column-span-image: 1 / 7;
+      --grid-column-span-text: 7 / 13;
+    }
+  
+    .columns.medium.image-right & {
+      --grid-column-span-text: 1 / 7;
+      --grid-column-span-image: 7 / 13;
+    }
+  
+    .columns.medium.centered & {
+      --grid-column-span-image: 4 / 10;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    .columns.medium.align-start & {
+      --grid-column-span-image: 1 / 7;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    /* large */
+    .columns.large.centered & {
+      --grid-column-span-image: 1 / 13;
+      --grid-column-span-text: 1 / 13;
+    }
+  
+    .columns.large.align-start & {
+      --grid-column-span-image: 1 / 13;
+      --grid-column-span-text: 1 / 13;
+    }
   }
 }
 
@@ -107,96 +152,6 @@
     }
   }
 
-  .row {
-    border: 1px solid red;
-    display: grid;
-    grid-template-columns: 1fr;
-    align-items: start;
-    gap: var(--columns-gap);
-
-    @media (width >= 600px) {
-      grid-template-columns: repeat(12, 1fr);
-    } 
-  }
-
-  .col {
-    border: 1px solid blue;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s2-spacing-300);
-    box-sizing: border-box;
-    text-wrap-style: pretty;
-
-    p, h1, h2, h3, h4, h5, h6 {
-      margin-block: 0;
-      max-inline-size: 80ch;
-    }
-
-    &:has(p, h2, h3, h4, h5, h6) {
-      max-inline-size: 80ch;
-      grid-column: var(--grid-column-span-text);
-    }
-
-    &:has(img, picture) {
-      grid-column: var(--grid-column-span-image);
-    }
-  }
-
-  .col-image {
-    display: flex;
-    margin: 0;
-    border-radius: var(--image-corner-radius);
-    min-inline-size: minmax(100%, var(--image-size));
-    block-size: auto;
-    max-inline-size: var(--image-size);
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    box-sizing: border-box;
-
-    /* Only shows once the img itself reports it can't render (see
-    watchImageError in columns.js) */
-    &:has(img.img-error) {
-      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
-    }
-
-    picture {
-      display: flex;
-      align-self: stretch;
-      flex: 1;
-      inline-size: 100%;
-      block-size: 100%;
-      box-sizing: border-box;
-    }
-
-    img {
-      display: block;
-      box-sizing: border-box;
-      inline-size: var(--image-size);
-      block-size: auto;
-      object-fit: cover;
-      aspect-ratio: auto;
-
-      /* Hides the browser's native broken-image glyph/alt text */
-      &.img-error {
-        opacity: 0;
-      }
-    }
-  }
-
-  .col-caption {
-    margin: 0;
-    font-size: var(--s2-body-size-s, 14px);
-    color: var(--se-body-color);
-    max-inline-size: 80ch;
-    text-align: start;
-    text-wrap: balance;
-  }
-
-  .col:not(:has(img, picture)) {
-    max-inline-size: 80ch;
-  }
-
   &.gap-xs {
     --columns-gap: var(--s2-spacing-100);
   }
@@ -245,9 +200,93 @@
     }
   }
 
+  .row {
+    border: 1px solid red;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: var(--columns-gap);
+
+    @container columns (width >= 600px) {
+      grid-template-columns: repeat(12, 1fr);
+    } 
+  }
+
+  .col {
+    border: 1px solid blue;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2-spacing-300);
+    box-sizing: border-box;
+    text-wrap-style: pretty;
+
+    p, h1, h2, h3, h4, h5, h6 {
+      margin-block: 0;
+      max-inline-size: 80ch;
+    }
+
+    &:has(p, h2, h3, h4, h5, h6) {
+      grid-column: var(--grid-column-span-text);
+    }
+
+    &:has(img, picture) {
+      grid-column: var(--grid-column-span-image);
+    }
+  }
+
+  .col-image {
+    display: flex;
+    margin: 0;
+    min-inline-size: minmax(100%, var(--image-size));
+    block-size: auto;
+    max-inline-size: var(--image-size);
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    /* Only shows once the img itself reports it can't render (see
+    watchImageError in columns.js) */
+    &:has(img.img-error) {
+      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
+    }
+
+    picture {
+      display: flex;
+      align-self: stretch;
+      flex: 1;
+      inline-size: 100%;
+      block-size: 100%;
+      box-sizing: border-box;
+    }
+
+    img {
+      display: block;
+      box-sizing: border-box;
+      inline-size: var(--image-size);
+      block-size: auto;
+      object-fit: cover;
+      aspect-ratio: auto;
+      border-radius: var(--image-corner-radius);
+
+      /* Hides the browser's native broken-image glyph/alt text */
+      &.img-error {
+        opacity: 0;
+      }
+    }
+  }
+
+  .col-caption {
+    margin: 0;
+    font-size: var(--s2-body-size-s, 14px);
+    color: var(--se-body-color);
+    max-inline-size: 80ch;
+    text-align: start;
+    text-wrap: balance;
+  }
+
   /* Centered columns */
   &.centered {
-    gap: var(--columns-gap);
     align-items: center;
     text-align: center;
     grid-template-columns: 1fr;
@@ -255,6 +294,10 @@
 
   &.centered .col {
     align-items: center;
+  }
+
+  &.centered .row:first-child {
+    margin-block-end: var(--columns-gap);
   }
 
   &.image-right {
@@ -275,13 +318,13 @@
   }
 
   /* start-aligned, stacked/vertical columns */
-  &.align-start {
+  /* &.align-start {
     --columns-gap: var(--s2-spacing-600);
 
     .row {
       align-items: start;
     }
-  }
+  } */
 }
 
 /* grid-layout: uniform rows (all-image or all-text, never mixed within a row).
