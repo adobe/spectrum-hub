@@ -12,11 +12,15 @@
 
   @media (width >= 1200px) {
     --columns-gap: 56px;
-
+    
     max-inline-size: unset;
   }
 
   &:not(.grid-layout) {
+    &:not(.centered) > .row + .row {
+      margin-block-start: var(--columns-gap);
+    }
+
     /* for columns that are the last child of a section */
     .section > .block-content > &:last-child {
       margin-block-end: 0;
@@ -274,15 +278,11 @@
 
 /* grid-layout: uniform rows (all-image or all-text, never mixed within a row). */
 .columns.grid-layout {
-  border: 1px solid red;
-
   &.extra-small {
     --image-size: 80px;
   }
 
   &.small {
-    border: 1px solid blue;
-
     --image-size: 316px;
   }
 
@@ -312,18 +312,21 @@
   }
 }
 
-.columns:not(.grid-layout, .centered) > .row:has(> .col:only-child) {
-  grid-template-columns: 1fr;
+.columns:not(.grid-layout, .centered, :has(> .row > .col:nth-child(2))) {
+  > .row:has(> .col:only-child) {
+    grid-template-columns: 1fr;
 
-  > .col:only-child {
-    grid-column: 1 / -1;
-  }
+    > .col:only-child {
+      grid-column: 1 / -1;
+    }
 
-  > .col:only-child:has(img, picture) {
+    > .col:only-child:not(:has(img, picture)) {
+      max-inline-size: 80ch;
+    }
+}
+
+/* mixed content within a row */
+  &:not(.centered) > .row:has(> .col:only-child) > .col:only-child:has(img, picture) {
     --image-size: 100%;
-  }
-
-  > .col:only-child:not(:has(img, picture)) {
-    max-inline-size: 80ch;
   }
 }

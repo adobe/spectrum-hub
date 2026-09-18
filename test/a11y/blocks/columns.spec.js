@@ -110,6 +110,58 @@ test('a sole medium column uses one explicit grid track', async ({ page }, testI
   });
 });
 
+test('a single-cell row keeps the spans established by a multi-column sibling row', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'the computed grid assertion only needs one browser');
+
+  await gotoBlock(page, {
+    path: '/test/a11y/fixtures/columns-grid.html',
+    readySelector: '.mixed-row-columns .row-2 .col',
+  });
+
+  const layout = await page.locator('.mixed-row-columns').evaluate((columns) => {
+    columns.style.inlineSize = '1160px';
+    return [...columns.querySelectorAll('.row')].map((row) => ({
+      columnCount: row.children.length,
+      tracks: getComputedStyle(row).gridTemplateColumns,
+      cells: [...row.children].map((col) => getComputedStyle(col).gridColumn),
+    }));
+  });
+
+  expect(layout[0].columnCount).toBe(2);
+  expect(layout[0].cells).toEqual(['1 / 7', '7 / 13']);
+  expect(layout[1].columnCount).toBe(1);
+  expect(layout[1].tracks.split(' ')).toHaveLength(12);
+  expect(layout[1].cells).toEqual(['1 / 7']);
+});
+
+test('adjacent non-grid rows use the authored columns gap', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'the computed spacing assertion only needs one browser');
+
+  await gotoBlock(page, {
+    path: '/test/a11y/fixtures/columns-grid.html',
+    readySelector: '.mixed-row-columns .row-2',
+  });
+
+  const spacing = await page.locator('.mixed-row-columns').evaluate((columns) => {
+    columns.classList.add('gap-xs');
+    const [firstRow, secondRow] = columns.querySelectorAll('.row');
+    const firstRect = firstRow.getBoundingClientRect();
+    const secondRect = secondRow.getBoundingClientRect();
+
+    return {
+      actual: Math.round(secondRect.top - firstRect.bottom),
+      resolvedGap: Number.parseFloat(getComputedStyle(columns).getPropertyValue('--columns-gap')),
+      authoredGap: Number.parseFloat(getComputedStyle(columns).getPropertyValue('--columns-gap-override')),
+    };
+  });
+
+  expect(spacing).toEqual({
+    actual: 8,
+    resolvedGap: 8,
+    authoredGap: 8,
+  });
+});
+
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
   await gotoBlock(page, block);
 
