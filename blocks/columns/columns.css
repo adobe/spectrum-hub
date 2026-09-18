@@ -16,6 +16,11 @@
     max-inline-size: unset;
   }
 
+  /* for columns that are the first child of a section, but not a sibling to default-content or a grid */
+  .section > :not(.default-content ~ .block-content) > &:first-child {
+      margin-block-start: 0;
+    }
+
   &:not(.grid-layout) {
     &:not(.centered) > .row + .row {
       margin-block-start: var(--columns-gap);
@@ -28,7 +33,8 @@
 
     /* for columns that are the first child of a section, but not a sibling to default-content */
     .section > :not(.default-content ~ .block-content) > &:first-child {
-      margin-block-start: 0;  }
+      margin-block-start: 0;
+    }
 
 
     @container columns (width >= 800px) {
