@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Columns layout fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/columns/columns.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="columns-wrapper">
+        <div class="columns">
+          <div>
+            <div>Image A</div>
+            <div>Image B</div>
+            <div>Image C</div>
+          </div>
+          <div>
+            <div>Text A</div>
+            <div>Text B</div>
+            <div>Text C</div>
+          </div>
+        </div>
+        <div class="columns medium single-surviving-column">
+          <div>
+            <div>
+              <h3>Content volume expectation</h3>
+              <p>Content remains in one explicit grid track.</p>
+            </div>
+          </div>
+        </div>
+        <div class="columns medium mixed-row-columns">
+          <div>
+            <div>
+              <picture>
+                <img
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  alt="Nested components example"
+                >
+              </picture>
+            </div>
+            <div>
+              <h4>Nested components</h4>
+              <p>Text content</p>
+            </div>
+          </div>
+          <div>
+            <div>
+              <picture>
+                <img
+                  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                  alt="Dropdown field example"
+                >
+              </picture>
+            </div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/columns/columns.js';
+
+    document.querySelectorAll('.columns').forEach(init);
+  </script>
+</body>
+</html>

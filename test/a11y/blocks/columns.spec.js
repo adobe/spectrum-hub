@@ -162,6 +162,24 @@ test('adjacent non-grid rows use the authored columns gap', async ({ page }, tes
   });
 });
 
+test('mixed columns rows preserve their expected accessibility-tree order', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
+  await gotoBlock(page, {
+    path: '/test/a11y/fixtures/columns-grid.html',
+    readySelector: '.mixed-row-columns .row-2',
+  });
+
+  await expect(page.locator('.mixed-row-columns')).toMatchAriaSnapshot(`
+    - figure:
+      - img "Nested components example"
+    - heading "Nested components" [level=4]
+    - paragraph: Text content
+    - figure:
+      - img "Dropdown field example"
+  `);
+});
+
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
   await gotoBlock(page, block);
 
