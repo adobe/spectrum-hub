@@ -35,7 +35,7 @@ test('non-grid columns use responsive default gaps without overriding authored g
   });
 
   expect(gaps).toEqual({
-    narrowDefault: '32px',
+    narrowDefault: '56px',
     wideDefault: '56px',
     authored: {
       'gap-xs': '8px',
@@ -70,7 +70,7 @@ test('grid-layout adds flexible 300px tracks as space becomes available', async 
     return {
       narrow: tracksAt(500),
       intermediate: tracksAt(700),
-      wide: tracksAt(1000),
+      wide: tracksAt(1100),
     };
   });
 

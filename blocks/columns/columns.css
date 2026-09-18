@@ -11,7 +11,7 @@
   container-name: columns;
 
   @media (width >= 1200px) {
-    --columns-gap: 56px;
+    --columns-gap: var(--columns-gap-override, 56px);
     
     max-inline-size: unset;
   }
