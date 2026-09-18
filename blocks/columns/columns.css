@@ -185,6 +185,10 @@
       &:has(p, h2, h3, h4, h5, h6) {
         grid-column: var(--grid-column-span-text);
       }
+      
+      &:has(h1) h1 {
+        padding-block-end: var(--s2-spacing-100); /* adds extra padding below h1 */
+      }
 
       &:has(img, picture) {
         grid-column: var(--grid-column-span-image);
