@@ -49,6 +49,10 @@ export function yesNoToBoolean(value) {
   return value;
 }
 
+function optionValue(value, options) {
+  return options.find((option) => String(option) === String(value)) ?? value;
+}
+
 // Collapses a burst of calls (e.g. every keystroke in a textfield control)
 // into a single trailing call once `delayMs` has passed since the last one.
 export function debounce(fn, delayMs) {
@@ -169,6 +173,7 @@ function buildSnippetElement(
   hasRealLabelTarget,
   resolveAttribute,
   attributeTarget = el,
+  formatAttributeValue = (value) => value,
 ) {
   if (fragmentRoot) {
     [...fragmentRoot.attributes].forEach((attr) => el.setAttribute(attr.name, attr.value));
@@ -182,7 +187,10 @@ function buildSnippetElement(
     // reflecting it. Compared via isUnsetOption so a new sentinel can't slip through.
     const isUnset = value === undefined || value === '' || value === 'no' || isUnsetOption(value);
     if ((TEXT_KEYS.has(prop) && !isRealLabelProp) || attribute === null || isUnset) { return; }
-    attributeTarget.setAttribute(attribute, value === 'yes' ? '' : value);
+    attributeTarget.setAttribute(
+      attribute,
+      value === 'yes' ? '' : formatAttributeValue(value),
+    );
   });
 
   applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget);
@@ -242,6 +250,7 @@ export function buildRspSnippet(
     hasRealLabelProp,
     (prop) => prop,
     trigger && propsOwner(routeName) ? trigger : el,
+    (value) => (typeof value === 'number' ? `{${value}}` : value),
   );
 
   if (shape === 'none') { return serializeElement(el, 0, true); }
@@ -503,17 +512,16 @@ function buildControlDescriptors(
       propRows,
       // eslint-disable-next-line no-console
       (message) => console.warn(`Playground (${component}): ${message}`),
+      component,
     );
     if (!descriptor) { return acc; }
     // defaultOverride leads because it encodes a constraint between two properties
     // (ColorSlider's channel must suit colorSpace), which a per-prop catalog default
     // cannot express — see DEFAULT_OVERRIDES in playground-data.js.
     let rawDefault = descriptor.defaultOverride
+      ?? snippetDefault(property, descriptor.attribute, fragmentRoot)
       ?? parseDefault(findProp(property, propRows)?.default)
-      ?? descriptor.options[0]
-      // Last of the real sources, so a picker keeps its catalog default: by here the
-      // only properties still unresolved are the freeform ones, which have no options.
-      ?? snippetDefault(property, descriptor.attribute, fragmentRoot);
+      ?? descriptor.options[0];
     // A textfield with no authored default would otherwise start empty —
     // populate it with a placeholder label instead.
     if (descriptor.controlType === 'textfield' && rawDefault === undefined) {
@@ -523,7 +531,7 @@ function buildControlDescriptors(
     // convention used for boolean-ish picker/segmentedControl options.
     const defaultValue = FREEFORM_CONTROLS.has(descriptor.controlType)
       ? rawDefault
-      : booleanStringToYesNo(rawDefault);
+      : booleanStringToYesNo(optionValue(rawDefault, descriptor.options));
     currentProps[property] = {
       value: defaultValue, attribute: descriptor.attribute, controlType: descriptor.controlType,
     };
@@ -611,8 +619,9 @@ function buildControlsPanel(descriptors, currentProps, onControlChange) {
   }) => {
     if (!options.length && !FREEFORM_CONTROLS.has(controlType)) { return; }
     const control = buildControl(controlType, property, options, defaultValue, (value) => {
-      currentProps[property].value = value;
-      onControlChange(property, attribute, value, controlType);
+      const typedValue = FREEFORM_CONTROLS.has(controlType) ? value : optionValue(value, options);
+      currentProps[property].value = typedValue;
+      onControlChange(property, attribute, typedValue, controlType);
     });
     controlsPanel.appendChild(control);
   });

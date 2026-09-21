@@ -7,7 +7,12 @@
  * its rules simply never match — no behavior difference from splitting
  * this out of each shell's own <style> block.
  */
-*, *::before, *::after { box-sizing: border-box; }
+html,
+body,
+#mount,
+#image-viewer {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;

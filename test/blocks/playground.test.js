@@ -1010,6 +1010,89 @@ describe('playground block — init()', () => {
     )).to.be.true;
   });
 
+  it('preserves numeric picker values for RSP props', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'avatar-group', Properties: 'size' }],
+      controls: [{ Property: 'size', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'size', type: '16 | 24 | 40', kind: 'enum', values: [16, 24, 40], default: '24',
+        }],
+      },
+      markup: '<AvatarGroup><Avatar alt="A" /></AvatarGroup>',
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'avatar-group' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const iframe = rspEl.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'preview-ready' },
+      source: iframe.contentWindow,
+    }));
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'size', attribute: null, value: 24,
+      }),
+      '*',
+    )).to.be.true;
+    postMessageSpy.resetHistory();
+
+    const picker = rspEl.querySelector('.playground-control se-select');
+    await picker.updateComplete;
+    const native = picker.shadowRoot.querySelector('select');
+    native.value = '40';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'size', attribute: null, value: 40,
+      }),
+      '*',
+    )).to.be.true;
+    expect(rspEl.querySelector('pre').textContent).to.include('size={40}');
+  });
+
+  it('offers documented numeric presets for the open-ended Avatar size prop', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'avatar', Properties: 'size' }],
+      controls: [{ Property: 'size', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'size',
+          type: '16 | 24 | 40 | number & {} | string',
+          kind: 'unknown',
+          values: [],
+          default: '24',
+        }],
+      },
+      markup: '<Avatar alt="User avatar" />',
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'avatar' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const iframe = rspEl.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const picker = rspEl.querySelector('.playground-control se-select');
+    expect(picker).to.exist;
+    await picker.updateComplete;
+    const native = picker.shadowRoot.querySelector('select');
+    native.value = '40';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'size', attribute: null, value: 40,
+      }),
+      '*',
+    )).to.be.true;
+    expect(rspEl.querySelector('pre').textContent).to.include('size={40}');
+  });
+
   it('renders a copy-code button inside the disclosure', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
@@ -1700,20 +1783,48 @@ describe('playground block — a snippet fragment seeds its text controls', () =
     expect(el.querySelector('.playground-control se-input').value).to.equal('Label');
   });
 
-  // Regression guard, not new behavior: a picker's catalog default already wins, and a
-  // fragment-authored attribute must not start displacing it.
-  it("keeps a picker's catalog default over the fragment's authored attribute", async () => {
+  it("seeds a picker from the fragment's authored attribute", async () => {
     const el = await renderWith({
-      components: [{ Component: 'Button', Properties: 'variant' }],
+      components: [{ Component: 'alert-dialog', Properties: 'variant' }],
       controls: [{ Property: 'variant', control: 'picker' }],
       rsp: {
         props: [{
-          property: 'variant', type: "'primary' | 'accent'", kind: 'enum', values: ['primary', 'accent'], default: "'primary'",
+          property: 'variant',
+          type: "'confirmation' | 'destructive'",
+          kind: 'enum',
+          values: ['confirmation', 'destructive'],
+          default: "'confirmation'",
         }],
       },
-      markup: '<Button variant="accent">Save</Button>',
-    }, { implementation: 'rsp', component: 'button' });
+      markup: '<AlertDialog variant="destructive">Delete this conversation?</AlertDialog>',
+    }, { implementation: 'rsp', component: 'alert-dialog' });
 
-    expect(el.querySelector('.playground-control se-select').value).to.equal('primary');
+    expect(el.querySelector('.playground-control se-select').value).to.equal('destructive');
+    expect(el.querySelector('pre').textContent).to.include('variant="destructive"');
+  });
+});
+
+describe('playground preview shell styles', () => {
+  it('does not impose border-box sizing on rendered component descendants', async () => {
+    const iframe = document.createElement('iframe');
+    iframe.srcdoc = `
+      <link rel="stylesheet" href="/blocks/playground/preview-shell.css">
+      <body>
+        <div id="mount">
+          <div id="rendered-component"></div>
+        </div>
+      </body>
+    `;
+    document.body.append(iframe);
+    await new Promise((resolve) => {
+      iframe.addEventListener('load', resolve, { once: true });
+    });
+
+    const { contentDocument } = iframe;
+    expect(contentDocument.defaultView.getComputedStyle(contentDocument.body).boxSizing)
+      .to.equal('border-box');
+    expect(contentDocument.defaultView.getComputedStyle(
+      contentDocument.getElementById('rendered-component'),
+    ).boxSizing).to.equal('content-box');
   });
 });
