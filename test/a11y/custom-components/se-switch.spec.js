@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 
 const component = {
   name: 'se-switch',
@@ -10,7 +11,7 @@ const component = {
 };
 
 test(`${component.name} component in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, component);
+  await gotoFixture(page, component);
 
   const results = await makeAxeBuilder()
     .disableRules(component.disableRules ?? [])
@@ -24,7 +25,7 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   // single run — check the project by name to actually run this once, not twice.
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, component);
+  await gotoFixture(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
     - switch "Notifications"
@@ -37,7 +38,7 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
 test(`${component.name} component in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, component);
+  await gotoFixture(page, component);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])
