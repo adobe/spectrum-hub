@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 
 const component = {
   name: 'se-dialog',
@@ -11,7 +12,7 @@ const component = {
 };
 
 async function gotoDialog(page) {
-  await gotoBlock(page, component);
+  await gotoFixture(page, component);
   await page.waitForFunction(() => {
     const dialog = document.querySelector('se-dialog')?.shadowRoot?.querySelector('dialog');
     return dialog && getComputedStyle(dialog).opacity === '1';

@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 import {
   navAreasFragment, sitenavIndex, navAreasFragmentWithLevel3, sitenavIndexWithLevel3,
 } from '../mocks.js';
@@ -72,7 +73,7 @@ async function revealLevelThreeButton(page) {
 }
 
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
   await waitForNavReady(page, isMobile);
 
   const results = await makeAxeBuilder()
@@ -88,7 +89,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   // sitenav-trigger-btn is present, so desktop and mobile need their own snapshots
   // and both projects have to actually run instead of one standing in for the other.
   test.skip(testInfo.project.name !== 'chromium', 'covered separately by the mobile accessibility tree test below');
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
   await waitForNavReady(page, isMobile);
 
   await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
@@ -105,7 +106,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 
 test(`${block.name} block matches its expected accessibility tree on mobile`, async ({ page, isMobile }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome', 'only Mobile Chrome renders the sitenav-trigger-btn tree being asserted here');
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
   await waitForNavReady(page, isMobile);
 
   await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
@@ -124,7 +125,7 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
 
 test(`${block.name} level-2 menu remains visible until its collapse transition finishes`, async ({ page, isMobile }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'transition timing is covered once in desktop Chromium');
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
   await waitForNavReady(page, isMobile);
 
   const toggle = page.getByRole('button', { name: 'Foundations', exact: true });
@@ -178,7 +179,7 @@ test(`${block.name} level-2 menu remains visible until its collapse transition f
 });
 
 test(`${block.name} block with a level-3 item expanded has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
-  await gotoBlock(page, levelThreeBlock);
+  await gotoFixture(page, levelThreeBlock);
   await waitForNavReady(page, isMobile);
   await revealLevelThreeButton(page);
   await page.getByRole('button', { name: 'Spacing', exact: true }).click();
@@ -191,7 +192,7 @@ test(`${block.name} block with a level-3 item expanded has no WCAG 2.2 AA violat
 });
 
 test(`${block.name} block toggles the level-3 button's own aria-expanded state and reveals its level-4 link`, async ({ page, isMobile }) => {
-  await gotoBlock(page, levelThreeBlock);
+  await gotoFixture(page, levelThreeBlock);
   await waitForNavReady(page, isMobile);
   await revealLevelThreeButton(page);
 
@@ -212,7 +213,7 @@ test(`${block.name} block matches its expected accessibility tree with a level-3
   // single run — check the project by name to actually run this once, not twice.
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, levelThreeBlock);
+  await gotoFixture(page, levelThreeBlock);
   await waitForNavReady(page, isMobile);
   await revealLevelThreeButton(page);
   await page.getByRole('button', { name: 'Spacing', exact: true }).click();
@@ -226,7 +227,7 @@ test(`${block.name} block matches its expected accessibility tree with a level-3
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page, isMobile }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
   await waitForNavReady(page, isMobile);
 
   const results = await new AxeBuilder({ page })

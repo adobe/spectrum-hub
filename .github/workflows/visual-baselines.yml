@@ -1,0 +1,40 @@
+name: Update visual baselines
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: visual-baselines-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baselines:
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify visual test metadata
+        run: npm run test:visual:unit
+
+      - name: Generate visual baselines
+        run: npx playwright test --config=playwright.visual.config.js --update-snapshots
+
+      - name: Upload visual baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-${{ github.sha }}
+          path: test/visual/**/*-snapshots/*.png
+          if-no-files-found: error
+          retention-days: 30

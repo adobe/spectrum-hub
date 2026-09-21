@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 
 const block = {
   name: 'page-nav',
@@ -76,7 +77,7 @@ test(`${block.name} clears the fixed header and avoids hidden desktop work`, asy
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
   test.skip(isMobile, 'page-nav is fully removed below 1200px by design — see test/blocks/page-nav.test.js');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await makeAxeBuilder()
     .disableRules(block.disableRules ?? [])
@@ -91,7 +92,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   // means we never hit the below-1200px removal case, so no isMobile skip is needed here.
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - navigation "On this page":
@@ -116,7 +117,7 @@ test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ 
 
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])

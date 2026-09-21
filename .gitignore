@@ -15,6 +15,7 @@ helix-importer-ui
 .cursor
 playwright-report/
 playwright-report-links/
+playwright-report-visual/
 test-results/
 
 

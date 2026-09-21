@@ -107,6 +107,14 @@ Design specs and implementation plans live in [`.ai/docs/`](./docs/):
 
 The Superpowers plugin skills (`brainstorming`, `writing-plans`, `subagent-driven-development`, `executing-plans`, `requesting-code-review`) default to `docs/superpowers/specs/` and `docs/superpowers/plans/`. In this repository those paths are **overridden** by the convention above — write specs and plans to `.ai/docs/` instead, and do not create a `docs/superpowers/` directory. See [`AGENTS.md`](../AGENTS.md) for the instruction agents load at session start.
 
+## Visual regression tests
+
+The Playwright visual regression suite covers supported HTML fixtures and representative page states across desktop and mobile viewports in light and dark color schemes. See [`test/visual/README.md`](../test/visual/README.md) for local commands, deterministic test authoring, Ubuntu baseline generation, review guidance, and stabilization policy.
+
+- [`playwright.visual.config.js`](../playwright.visual.config.js) defines visual projects, output paths, and the strict screenshot defaults.
+- [`test/visual/coverage.node.test.js`](../test/visual/coverage.node.test.js) requires every supported HTML fixture to have VRT coverage or a reasoned exemption when the fixture cannot produce meaningful visual rendering.
+- Every new supported HTML fixture must add a visual spec or a reasoned no-rendering exemption.
+
 ## Using rules and skills across tools and IDEs
 
 Canonical content lives in **`.ai/`** (this directory). Tool-specific directories (`.cursor/`, `.claude/`) are thin adapters that point back here via symlinks — edit files in `.ai/`, never in the adapter directories.

@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
-import { statusIndex, svgIcon } from '../mocks.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
+import { statusIndex, statusTableQueryIndex, svgIcon } from '../mocks.js';
 
 const block = {
   name: 'status-table',
@@ -14,6 +15,11 @@ const block = {
       body: statusIndex,
     },
     {
+      url: '**/query-index.json*',
+      contentType: 'application/json',
+      body: statusTableQueryIndex,
+    },
+    {
       url: '**/*.svg',
       contentType: 'image/svg+xml',
       body: svgIcon,
@@ -22,7 +28,7 @@ const block = {
 };
 
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await makeAxeBuilder()
     .disableRules(block.disableRules ?? [])
@@ -38,7 +44,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   // mobile need their own snapshots, and both projects have to actually run.
   test.skip(testInfo.project.name !== 'chromium', 'covered separately by the mobile accessibility tree test below');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - region "Component availability":
@@ -76,7 +82,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 test(`${block.name} block matches its expected accessibility tree on mobile`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome', 'only Mobile Chrome renders the stacked layout tree being asserted here');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   // The stacked layout repeats each column header inside its cell as a visible
   // .status-table-cell-label. Those are aria-hidden, so they must NOT show up here —
@@ -114,7 +120,7 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
 test(`${block.name} sort headers are exposed exactly when the thead is on screen`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'this test drives its own viewports; one project run is enough');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   // 800px is the case a 900px viewport media query got wrong: the container query has
   // already restored the thead at 650px, so the headers are visible and clickable —
@@ -148,7 +154,7 @@ test(`${block.name} sort headers are exposed exactly when the thead is on screen
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])
