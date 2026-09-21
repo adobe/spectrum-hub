@@ -10,7 +10,7 @@
 
 **Design spec:** `.ai/docs/specs/2026-09-17-playwright-visual-regression-testing-design.md`
 
-**Implementation reconciliation:** `page-nav` uses a bespoke four-project test because its component is intentionally absent at mobile widths; the mobile scenarios initialize it at desktop width, restore the mobile viewport, assert that the navigation is hidden, and capture that absence. The planned `columns-grid` case was not added because `columns-grid.html` does not exist on `main`; the coverage test will require a visual spec if that fixture is introduced.
+**Implementation reconciliation:** `page-nav` uses a bespoke four-project test because its component is intentionally absent at mobile widths; the mobile scenarios initialize it at desktop width, restore the mobile viewport, assert that the navigation is hidden, and capture that absence. The `columns-grid` fixture added on `main` has its own visual case and is enforced by the fixture coverage test.
 
 ---
 

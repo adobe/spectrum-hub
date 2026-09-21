@@ -17,6 +17,7 @@ export default {
     '!test/extractions/**',
     '!test/indexer/**',
     '!test/link-check/**',
+    '!test/visual/**',
   ],
   nodeResolve: true,
   port: 2000,
