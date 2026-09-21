@@ -14,6 +14,10 @@ import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.j
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
 import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
+import {
+  collectFragmentTagNames,
+  resolveExternalComponent,
+} from '../../deps/rsp/playground/build-composite-element.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -253,7 +257,16 @@ export function buildRspSnippet(
     (value) => (typeof value === 'number' ? `{${value}}` : value),
   );
 
-  if (shape === 'none') { return serializeElement(el, 0, true); }
+  const withImports = (snippet) => {
+    if (!fragmentRoot) { return snippet; }
+    const imports = collectFragmentTagNames(fragmentRoot)
+      .map((tagName) => [tagName, resolveExternalComponent(tagName)])
+      .filter(([, external]) => external)
+      .map(([tagName, external]) => `import ${tagName} from '${external.specifier}';`);
+    return imports.length ? `${imports.join('\n')}\n\n${snippet}` : snippet;
+  };
+
+  if (shape === 'none') { return withImports(serializeElement(el, 0, true)); }
 
   const triggerButton = xmlDoc.createElement('Button');
   triggerButton.textContent = overlayTrigger.triggerLabel;
@@ -261,11 +274,11 @@ export function buildRspSnippet(
   if (shape === 'sibling') {
     triggerButton.setAttribute('onPress', `{() => ${overlayTrigger.queueExport}.info('${overlayTrigger.toastMessage}')}`);
     triggerButton.setAttribute('variant', 'accent');
-    return [serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n');
+    return withImports([serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n'));
   }
 
   trigger.append(triggerButton, el);
-  return serializeElement(trigger, 0, true);
+  return withImports(serializeElement(trigger, 0, true));
 }
 
 // --- Code disclosure --------------------------------------------------------

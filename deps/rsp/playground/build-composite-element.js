@@ -1,6 +1,17 @@
 // Both functions take any element-shaped object (tagName, attributes,
 // children, textContent) — a real parsed DOM Element satisfies this directly.
 
+const EXTERNAL_COMPONENTS = Object.freeze({
+  ImageIllustration: {
+    specifier: '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+    exportName: 'default',
+  },
+});
+
+export function resolveExternalComponent(tagName) {
+  return EXTERNAL_COMPONENTS[tagName] ?? null;
+}
+
 // So the caller knows which @react-spectrum/s2 sub-component exports to
 // request from esm.sh (which tree-shakes to exactly what's asked for).
 export function collectFragmentTagNames(root) {

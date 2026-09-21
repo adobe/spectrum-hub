@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { collectFragmentTagNames, buildCompositeElement } from '../../deps/rsp/playground/build-composite-element.js';
+import * as composite from '../../deps/rsp/playground/build-composite-element.js';
+
+const { collectFragmentTagNames, buildCompositeElement } = composite;
 
 // Plain object matching the shape of a real parsed DOM Element (tagName,
 // attributes, children, textContent) — a real Element satisfies this
@@ -18,6 +20,14 @@ function makeNode(tagName, attrs = {}, children = [], text = '') {
 }
 
 describe('collectFragmentTagNames', () => {
+  it('resolves the public module for an illustration component', () => {
+    assert.equal(typeof composite.resolveExternalComponent, 'function');
+    assert.deepEqual(composite.resolveExternalComponent('ImageIllustration'), {
+      specifier: '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+      exportName: 'default',
+    });
+  });
+
   it('collects the root tag and every descendant tag', () => {
     const tree = makeNode('Tabs', {}, [
       makeNode('TabList', {}, [

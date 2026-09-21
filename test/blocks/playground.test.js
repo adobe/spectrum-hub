@@ -610,6 +610,15 @@ describe('composite snippet fragments — real committed files', () => {
     expect(snippet.includes('<Button\n')).to.be.true;
   });
 
+  it('includes the public illustration import used by the illustrated-message snippet', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/illustrated-message.jsx')).text();
+    const snippet = buildRspSnippet('IllustratedMessage', {}, markup);
+    expect(snippet.startsWith(
+      "import ImageIllustration from '@react-spectrum/s2/illustrations/gradient/generic1/Image';\n\n",
+    )).to.be.true;
+    expect(snippet.includes('<ImageIllustration />')).to.be.true;
+  });
+
   it('renders the real RSP divider JSX snippet self-closing', async () => {
     const markup = await (await fetch('/deps/rsp/playground/snippets/divider.jsx')).text();
     expect(buildRspSnippet('Divider', {}, markup)).to.equal('<Divider />');
