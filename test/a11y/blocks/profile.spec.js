@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 import {
   imsScript, imsScriptSignedIn, ioProfile,
 } from '../mocks.js';
@@ -48,7 +49,7 @@ const signedInBlock = {
 };
 
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await makeAxeBuilder()
     .disableRules(block.disableRules ?? [])
@@ -62,7 +63,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   // single run — check the project by name to actually run this once, not twice.
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - button "Sign in"
@@ -72,7 +73,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])
@@ -87,7 +88,7 @@ test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ 
 });
 
 test(`${signedInBlock.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, signedInBlock);
+  await gotoFixture(page, signedInBlock);
 
   const results = await makeAxeBuilder()
     .disableRules(signedInBlock.disableRules ?? [])
@@ -99,7 +100,7 @@ test(`${signedInBlock.name} block in light/default mode has no WCAG 2.2 AA viola
 test(`${signedInBlock.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, signedInBlock);
+  await gotoFixture(page, signedInBlock);
 
   await expect(page.locator(signedInBlock.ariaRoot)).toMatchAriaSnapshot(`
     - button "Account menu, Jane Doe"
@@ -107,7 +108,7 @@ test(`${signedInBlock.name} block matches its expected accessibility tree`, asyn
 });
 
 test(`${signedInBlock.name} account popover has no WCAG 2.2 AA violations once opened`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, signedInBlock);
+  await gotoFixture(page, signedInBlock);
 
   // The popover's contents (profile details + sign-out) are display:none until
   // opened, so a scan against the closed state alone would silently skip them.
@@ -131,7 +132,7 @@ test(`${signedInBlock.name} account popover has no WCAG 2.2 AA violations once o
 test(`${signedInBlock.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, signedInBlock);
+  await gotoFixture(page, signedInBlock);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])
