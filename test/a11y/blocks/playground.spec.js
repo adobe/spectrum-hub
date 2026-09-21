@@ -63,7 +63,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
     - text: isDisabled
     - button "Copy code"
     - status
-    - text: <swc-button> Button </swc-button>
+    - text: <swc-button size="m"> Get started </swc-button>
   `);
 });
 
