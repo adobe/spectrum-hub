@@ -1,12 +1,3 @@
-<!-- Dev-authored fragment for code disclosure + live RSP preview (see divider.jsx).
-     Image has no `children` prop (renders src/alt as a real <img>, like Avatar),
-     so this fragment supplies real props instead of initRsp()'s generic
-     `{ children: 'Image' }` fallback, which Image silently ignores.
-     src is a static snapshot of @react-spectrum/s2's real
-     illustrations/gradient/generic1/Image illustration, baked in as a
-     data-URI (own copy, independent of avatar.jsx's) rather than a live
-     import — self-contained inline SVG, no CSS/runtime dependency either
-     way, so a static copy loses nothing over importing it live. -->
 <Image
   alt="Placeholder image"
   width="64"

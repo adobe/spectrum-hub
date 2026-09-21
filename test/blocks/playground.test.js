@@ -610,6 +610,31 @@ describe('composite snippet fragments — real committed files', () => {
     expect(snippet.includes('<Button\n')).to.be.true;
   });
 
+  it('includes the public illustration import used by the illustrated-message snippet', async () => {
+    const markup = await (await fetch('/deps/rsp/playground/snippets/illustrated-message.jsx')).text();
+    const snippet = buildRspSnippet('IllustratedMessage', {}, markup);
+    expect(snippet.startsWith(
+      "import ImageIllustration from '@react-spectrum/s2/illustrations/gradient/generic1/Image';\n\n",
+    )).to.be.true;
+    expect(snippet.includes('<ImageIllustration />')).to.be.true;
+  });
+
+  it('serializes authored numeric RSP props as JSX expressions', async () => {
+    const cases = [
+      ['action-bar', 'ActionBar', 'selectedItemCount={224}'],
+      ['avatar', 'Avatar', 'size={24}'],
+      ['card', 'Card', 'width={64}'],
+      ['meter', 'Meter', 'value={90}'],
+      ['progress-bar', 'ProgressBar', 'value={60}'],
+      ['progress-circle', 'ProgressCircle', 'value={35}'],
+      ['slider', 'Slider', 'defaultValue={50}'],
+    ];
+    for (const [file, component, expression] of cases) {
+      const markup = await (await fetch(`/deps/rsp/playground/snippets/${file}.jsx`)).text();
+      expect(buildRspSnippet(component, {}, markup), file).to.include(expression);
+    }
+  });
+
   it('renders the real RSP divider JSX snippet self-closing', async () => {
     const markup = await (await fetch('/deps/rsp/playground/snippets/divider.jsx')).text();
     expect(buildRspSnippet('Divider', {}, markup)).to.equal('<Divider />');
@@ -707,6 +732,10 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
     if (url.includes('sheet=controls')) { return jsonResponse({ data: controlsSheet }); }
     if (url.includes('/deps/rsp/data/')) { return jsonResponse(rspBody); }
     if (url.includes('/deps/swc/data/')) { return jsonResponse(swcBody); }
+    // 404 unless a test opts in — the default fixtures have no snippet fragment.
+    if (url.includes('/snippets/') && overrides.markup) {
+      return new Response(overrides.markup, { status: 200 });
+    }
     return new Response('', { status: 404 });
   });
 }
@@ -1006,6 +1035,89 @@ describe('playground block — init()', () => {
     )).to.be.true;
   });
 
+  it('preserves numeric picker values for RSP props', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'avatar-group', Properties: 'size' }],
+      controls: [{ Property: 'size', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'size', type: '16 | 24 | 40', kind: 'enum', values: [16, 24, 40], default: '24',
+        }],
+      },
+      markup: '<AvatarGroup><Avatar alt="A" /></AvatarGroup>',
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'avatar-group' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const iframe = rspEl.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'preview-ready' },
+      source: iframe.contentWindow,
+    }));
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'size', attribute: null, value: 24,
+      }),
+      '*',
+    )).to.be.true;
+    postMessageSpy.resetHistory();
+
+    const picker = rspEl.querySelector('.playground-control se-select');
+    await picker.updateComplete;
+    const native = picker.shadowRoot.querySelector('select');
+    native.value = '40';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'size', attribute: null, value: 40,
+      }),
+      '*',
+    )).to.be.true;
+    expect(rspEl.querySelector('pre').textContent).to.include('size={40}');
+  });
+
+  it('offers documented numeric presets for the open-ended Avatar size prop', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'avatar', Properties: 'size' }],
+      controls: [{ Property: 'size', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'size',
+          type: '16 | 24 | 40 | number & {} | string',
+          kind: 'unknown',
+          values: [],
+          default: '24',
+        }],
+      },
+      markup: '<Avatar alt="User avatar" />',
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'avatar' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const iframe = rspEl.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const picker = rspEl.querySelector('.playground-control se-select');
+    expect(picker).to.exist;
+    await picker.updateComplete;
+    const native = picker.shadowRoot.querySelector('select');
+    native.value = '40';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update', property: 'size', attribute: null, value: 40,
+      }),
+      '*',
+    )).to.be.true;
+    expect(rspEl.querySelector('pre').textContent).to.include('size={40}');
+  });
+
   it('renders a copy-code button inside the disclosure', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
@@ -1126,7 +1238,40 @@ describe('playground block — init()', () => {
     const input = el.querySelector('.playground-control se-input');
     expect(input).to.exist;
     expect(input.type).to.equal('range');
-    expect(input.value).to.equal('50');
+    expect(input.value).to.equal(50);
+  });
+
+  it('preserves numeric RSP slider values after control changes', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'progress-bar', Properties: 'value' }],
+      controls: [{ Property: 'value', control: 'slider' }],
+      rsp: {
+        props: [{
+          property: 'value', type: 'number', kind: 'number', values: [], default: '0',
+        }],
+      },
+      markup: '<ProgressBar aria-label="Loading" value="{60}" />',
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'progress-bar' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const iframe = rspEl.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const input = rspEl.querySelector('.playground-control se-input');
+    input.value = '75';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update',
+        property: 'value',
+        value: 75,
+      }),
+      '*',
+    )).to.be.true;
+    expect(rspEl.querySelector('pre').textContent).to.include('value={75}');
   });
 
   it('renders se-segmentedcontrol with a radio per option for a segmentedControl control', async () => {
@@ -1602,5 +1747,175 @@ describe('the unset sentinel never reaches a snippet', () => {
     const rounding = { rounding: { value: 'default', attribute: 'rounding' } };
     expect(buildSwcSnippet('swc-swatch', rounding, '')).to.include('rounding="default"');
     expect(buildRspSnippet('ColorSwatchPicker', rounding, '', false, 'swatch-group')).to.include('rounding="default"');
+  });
+});
+
+// A snippet fragment is dev-authored for one exact component, so its own values beat the
+// generic "Label" placeholder as a text control's starting value. Without this a text
+// control started at "Label" and then overwrote the very text the fragment authored.
+describe('playground block — a snippet fragment seeds its text controls', () => {
+  let sandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(console, 'warn');
+    document.body.innerHTML = '';
+    clearFetchCache();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
+  function renderWith(overrides, meta) {
+    stubPlaygroundFetch(sandbox, overrides);
+    const el = makeMetaEl(meta);
+    document.body.append(el);
+    return init(el).then(() => el);
+  }
+
+  it("seeds a text control from an HTML fragment's own text", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'text' }],
+      controls: [{ Property: 'text', control: 'textfield' }],
+      swc: [],
+      markup: '<swc-button>Button</swc-button>',
+    }, { implementation: 'swc', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Button');
+  });
+
+  it("seeds a text control from an HTML fragment's authored attribute", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'progress-circle', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      swc: [{
+        property: 'label', attribute: 'label', type: 'string', kind: 'unknown', values: [],
+      }],
+      markup: '<swc-progress-circle label="Loading"></swc-progress-circle>',
+    }, { implementation: 'swc', component: 'progress-circle' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Loading');
+  });
+
+  it("seeds a text control from a JSX fragment's own text", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'children' }],
+      controls: [{ Property: 'children', control: 'textfield' }],
+      rsp: { props: [] },
+      markup: '<Button>Save changes</Button>',
+    }, { implementation: 'rsp', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Save changes');
+  });
+
+  it('stops the control from overwriting the text the fragment authored', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'text' }],
+      controls: [{ Property: 'text', control: 'textfield' }],
+      swc: [],
+      markup: '<swc-button>Button</swc-button>',
+    }, { implementation: 'swc', component: 'button' });
+
+    expect(el.querySelector('pre').textContent).to.equal('<swc-button>Button</swc-button>');
+  });
+
+  it('ignores a composite fragment\'s text, which belongs to its subcomponents', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'radio-group', Properties: 'label' }],
+      controls: [{ Property: 'label', control: 'textfield' }],
+      rsp: { props: [] },
+      markup: '<RadioGroup><Radio value="a">Standard</Radio></RadioGroup>',
+    }, { implementation: 'rsp', component: 'radio-group' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Label');
+  });
+
+  it('still falls back to "Label" when there is no fragment at all', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'Button', Properties: 'text' }],
+      controls: [{ Property: 'text', control: 'textfield' }],
+      swc: [],
+    }, { implementation: 'swc', component: 'button' });
+
+    expect(el.querySelector('.playground-control se-input').value).to.equal('Label');
+  });
+
+  it("seeds a picker from the fragment's authored attribute", async () => {
+    const el = await renderWith({
+      components: [{ Component: 'alert-dialog', Properties: 'variant' }],
+      controls: [{ Property: 'variant', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'variant',
+          type: "'confirmation' | 'destructive'",
+          kind: 'enum',
+          values: ['confirmation', 'destructive'],
+          default: "'confirmation'",
+        }],
+      },
+      markup: '<AlertDialog variant="destructive">Delete this conversation?</AlertDialog>',
+    }, { implementation: 'rsp', component: 'alert-dialog' });
+
+    expect(el.querySelector('.playground-control se-select').value).to.equal('destructive');
+    expect(el.querySelector('pre').textContent).to.include('variant="destructive"');
+  });
+
+  it('seeds a boolean control from JSX shorthand and sends true to the preview', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'progress-circle', Properties: 'isIndeterminate' }],
+      controls: [{ Property: 'isIndeterminate', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'isIndeterminate',
+          type: 'boolean',
+          kind: 'boolean',
+          values: [],
+        }],
+      },
+      markup: '<ProgressCircle aria-label="Loading" isIndeterminate="" />',
+    }, { implementation: 'rsp', component: 'progress-circle' });
+
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    expect(el.querySelector('.playground-control se-select').value).to.equal('yes');
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'preview-ready' },
+      source: iframe.contentWindow,
+    }));
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update',
+        property: 'isIndeterminate',
+        value: true,
+      }),
+      '*',
+    )).to.be.true;
+  });
+});
+
+describe('playground preview shell styles', () => {
+  it('does not impose border-box sizing on rendered component descendants', async () => {
+    const iframe = document.createElement('iframe');
+    iframe.srcdoc = `
+      <link rel="stylesheet" href="/blocks/playground/preview-shell.css">
+      <body>
+        <div id="mount">
+          <div id="rendered-component"></div>
+        </div>
+      </body>
+    `;
+    document.body.append(iframe);
+    await new Promise((resolve) => {
+      iframe.addEventListener('load', resolve, { once: true });
+    });
+
+    const { contentDocument } = iframe;
+    expect(contentDocument.defaultView.getComputedStyle(contentDocument.body).boxSizing)
+      .to.equal('border-box');
+    expect(contentDocument.defaultView.getComputedStyle(
+      contentDocument.getElementById('rendered-component'),
+    ).boxSizing).to.equal('content-box');
   });
 });

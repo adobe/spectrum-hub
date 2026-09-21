@@ -27,10 +27,9 @@
     const mount = document.getElementById('mount');
     const { component, implementation } = resolvePreviewParams();
 
-    // Per-component markup lives in snippets/<component>.html (bare
-    // web-component HTML, no shell boilerplate). Adding a component is a
-    // one-file markup edit. Fetched once by the parent block (playground.js)
-    // and handed over via requestMarkup() rather than fetched again here.
+    // Component snippets provide the authored markup used by both the code
+    // disclosure and live preview. requestMarkup() reuses the parent block's fetch.
+    //
     // Loaded from a raw CDN (not esm.sh) since swc.css's relative @import of
     // tokens.css only resolves when served verbatim. Loaded here (not
     // statically in <head>) so its unscoped `:root { font-size }` rule only

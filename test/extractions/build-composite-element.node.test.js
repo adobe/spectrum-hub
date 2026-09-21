@@ -1,6 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { collectFragmentTagNames, buildCompositeElement } from '../../deps/rsp/playground/build-composite-element.js';
+import * as composite from '../../deps/rsp/playground/build-composite-element.js';
+
+const { collectFragmentTagNames, buildCompositeElement } = composite;
 
 // Plain object matching the shape of a real parsed DOM Element (tagName,
 // attributes, children, textContent) — a real Element satisfies this
@@ -18,6 +20,39 @@ function makeNode(tagName, attrs = {}, children = [], text = '') {
 }
 
 describe('collectFragmentTagNames', () => {
+  it('resolves the public module for an illustration component', () => {
+    assert.equal(typeof composite.resolveExternalComponent, 'function');
+    assert.deepEqual(composite.resolveExternalComponent('ImageIllustration'), {
+      specifier: '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+      exportName: 'default',
+    });
+  });
+
+  it('uses public subpaths instead of the package root for illustration routes', () => {
+    assert.deepEqual(
+      composite.buildRspImportSpecifiers('IllustratedMessage', ['ImageIllustration']),
+      [
+        '@react-spectrum/s2/IllustratedMessage',
+        '@react-spectrum/s2/Provider',
+        '@react-spectrum/s2/ButtonGroup',
+        '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+      ],
+    );
+    assert.deepEqual(
+      composite.buildRspImportSpecifiers('DropZone', ['ImageIllustration']),
+      [
+        '@react-spectrum/s2/DropZone',
+        '@react-spectrum/s2/Provider',
+        '@react-spectrum/s2/ButtonGroup',
+        '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+      ],
+    );
+  });
+
+  it('keeps the bundled package-root path for routes without external components', () => {
+    assert.deepEqual(composite.buildRspImportSpecifiers('Button', []), []);
+  });
+
   it('collects the root tag and every descendant tag', () => {
     const tree = makeNode('Tabs', {}, [
       makeNode('TabList', {}, [
@@ -85,5 +120,15 @@ describe('buildCompositeElement', () => {
     const node = makeNode('AccordionItem', { isQuiet: '' }, [], 'x');
     const el = buildCompositeElement(node, { AccordionItem: 'ITEM' }, fakeCreateElement);
     assert.equal(el.props.isQuiet, true);
+  });
+
+  it('parses explicit numeric JSX expressions as numbers', () => {
+    const node = makeNode('Avatar', { size: '{24}' });
+    const el = buildCompositeElement(node, { Avatar: 'AVATAR' }, fakeCreateElement);
+    assert.equal(el.props.size, 24);
+  });
+
+  it('leaves numeric-looking string attributes as strings', () => {
+    assert.equal(composite.parseRspAttributeValue('24'), '24');
   });
 });

@@ -217,7 +217,13 @@ function resolveUnsetOption(property, isOptional) {
  */
 const DEFAULT_OVERRIDES = { channel: 'alpha' };
 
-export function resolveControl(property, implementation, controlsMap, propRows, onSkip) {
+// Avatar accepts arbitrary numbers and `<number>lh` values in addition to these
+// documented presets, so its mixed type cannot produce a closed `values` list.
+const OPTION_OVERRIDES = new Map([
+  ['rsp:avatar:size', [16, 20, 24, 28, 32, 36, 40, 44, 48, 56, 64, 80, 96, 112]],
+]);
+
+export function resolveControl(property, implementation, controlsMap, propRows, onSkip, component) {
   const row = findProp(property, propRows);
   const controlEntry = controlsMap.get(property);
   const controlType = controlEntry?.control ?? 'picker';
@@ -256,7 +262,8 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
     // falls back to the controls sheet's curated options — the same role the sheet
     // plays for "icon" above.
     const derived = resolvePickerOptions(property, propRows);
-    options = derived.length ? derived : (controlEntry?.options ?? []);
+    const optionOverride = OPTION_OVERRIDES.get(`${implementation}:${component}:${property}`);
+    options = derived.length ? derived : (optionOverride ?? controlEntry?.options ?? []);
   }
   // RSP props are not DOM attributes, so only SWC rows carry one.
   const attribute = isIcon ? null : (row?.attribute ?? null);
@@ -273,6 +280,10 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
   // shape it has always had instead of gaining an undefined key.
   const defaultOverride = DEFAULT_OVERRIDES[property];
   return {
-    controlType, options, attribute, ...(defaultOverride && { defaultOverride }),
+    controlType,
+    options,
+    attribute,
+    ...(row?.kind === 'number' && { valueKind: 'number' }),
+    ...(defaultOverride && { defaultOverride }),
   };
 }

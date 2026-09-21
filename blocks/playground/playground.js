@@ -14,6 +14,11 @@ import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.j
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
 import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
+import {
+  collectFragmentTagNames,
+  parseRspAttributeValue,
+  resolveExternalComponent,
+} from '../../deps/rsp/playground/build-composite-element.js';
 import '../../deps/se/se.js';
 
 // --- Pure helpers ------------------------------------
@@ -38,8 +43,8 @@ export function parseDefault(raw) {
 }
 
 export function booleanStringToYesNo(raw) {
-  if (raw === 'true') { return 'yes'; }
-  if (raw === 'false') { return 'no'; }
+  if (raw === true || raw === 'true') { return 'yes'; }
+  if (raw === false || raw === 'false') { return 'no'; }
   return raw;
 }
 
@@ -47,6 +52,16 @@ export function yesNoToBoolean(value) {
   if (value === 'yes') { return true; }
   if (value === 'no') { return false; }
   return value;
+}
+
+function optionValue(value, options) {
+  return options.find((option) => String(option) === String(value)) ?? value;
+}
+
+function numericValue(value, valueKind) {
+  if (valueKind !== 'number' || value === '') { return value; }
+  const number = Number(value);
+  return Number.isNaN(number) ? value : number;
 }
 
 // Collapses a burst of calls (e.g. every keystroke in a textfield control)
@@ -144,6 +159,20 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
   el.textContent = textEntry?.[1]?.value ?? fragmentRoot?.textContent ?? 'Label';
 }
 
+// The snippet fragment is dev-authored for one exact component, so its own value is a
+// better starting point for a control than the generic 'Label' placeholder — and without
+// it the control's placeholder overwrote the very text the fragment authored.
+function snippetDefault(property, attribute, fragmentRoot, parseValue = (value) => value) {
+  if (!fragmentRoot) { return undefined; }
+  // `attribute` is the SWC name for this prop; RSP has none and uses the prop as-authored.
+  const authored = fragmentRoot.getAttribute(attribute ?? property);
+  if (authored !== null) { return parseValue(authored); }
+  // Flat text only: a fragment with element children is a composite whose text belongs to
+  // its subcomponents, the same distinction applySnippetChildren makes above.
+  if (!TEXT_KEYS.has(property) || fragmentRoot.children.length) { return undefined; }
+  return fragmentRoot.textContent.trim() || undefined;
+}
+
 // `attributeTarget` is where controlled props land, which is not always `el`: a route
 // whose props are declared on its trigger (propsOwner in overlay-triggers.js) serializes
 // them onto the wrapper. Text and children always belong to `el` — they are the route's
@@ -155,6 +184,7 @@ function buildSnippetElement(
   hasRealLabelTarget,
   resolveAttribute,
   attributeTarget = el,
+  formatAttributeValue = (value) => value,
 ) {
   if (fragmentRoot) {
     [...fragmentRoot.attributes].forEach((attr) => el.setAttribute(attr.name, attr.value));
@@ -168,7 +198,10 @@ function buildSnippetElement(
     // reflecting it. Compared via isUnsetOption so a new sentinel can't slip through.
     const isUnset = value === undefined || value === '' || value === 'no' || isUnsetOption(value);
     if ((TEXT_KEYS.has(prop) && !isRealLabelProp) || attribute === null || isUnset) { return; }
-    attributeTarget.setAttribute(attribute, value === 'yes' ? '' : value);
+    attributeTarget.setAttribute(
+      attribute,
+      value === 'yes' ? '' : formatAttributeValue(value),
+    );
   });
 
   applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget);
@@ -228,9 +261,19 @@ export function buildRspSnippet(
     hasRealLabelProp,
     (prop) => prop,
     trigger && propsOwner(routeName) ? trigger : el,
+    (value) => (typeof value === 'number' ? `{${value}}` : value),
   );
 
-  if (shape === 'none') { return serializeElement(el, 0, true); }
+  const withImports = (snippet) => {
+    if (!fragmentRoot) { return snippet; }
+    const imports = collectFragmentTagNames(fragmentRoot)
+      .map((tagName) => [tagName, resolveExternalComponent(tagName)])
+      .filter(([, external]) => external)
+      .map(([tagName, external]) => `import ${tagName} from '${external.specifier}';`);
+    return imports.length ? `${imports.join('\n')}\n\n${snippet}` : snippet;
+  };
+
+  if (shape === 'none') { return withImports(serializeElement(el, 0, true)); }
 
   const triggerButton = xmlDoc.createElement('Button');
   triggerButton.textContent = overlayTrigger.triggerLabel;
@@ -238,11 +281,11 @@ export function buildRspSnippet(
   if (shape === 'sibling') {
     triggerButton.setAttribute('onPress', `{() => ${overlayTrigger.queueExport}.info('${overlayTrigger.toastMessage}')}`);
     triggerButton.setAttribute('variant', 'accent');
-    return [serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n');
+    return withImports([serializeElement(triggerButton), serializeElement(el, 0, true)].join('\n'));
   }
 
   trigger.append(triggerButton, el);
-  return serializeElement(trigger, 0, true);
+  return withImports(serializeElement(trigger, 0, true));
 }
 
 // --- Code disclosure --------------------------------------------------------
@@ -479,6 +522,7 @@ function buildControlDescriptors(
   controlsMap,
   propRows,
   currentProps,
+  fragmentRoot,
 ) {
   return authoredProps.reduce((acc, property) => {
     const descriptor = resolveControl(
@@ -488,12 +532,19 @@ function buildControlDescriptors(
       propRows,
       // eslint-disable-next-line no-console
       (message) => console.warn(`Playground (${component}): ${message}`),
+      component,
     );
     if (!descriptor) { return acc; }
     // defaultOverride leads because it encodes a constraint between two properties
     // (ColorSlider's channel must suit colorSpace), which a per-prop catalog default
     // cannot express — see DEFAULT_OVERRIDES in playground-data.js.
     let rawDefault = descriptor.defaultOverride
+      ?? snippetDefault(
+        property,
+        descriptor.attribute,
+        fragmentRoot,
+        implementation === 'rsp' ? parseRspAttributeValue : undefined,
+      )
       ?? parseDefault(findProp(property, propRows)?.default)
       ?? descriptor.options[0];
     // A textfield with no authored default would otherwise start empty —
@@ -503,9 +554,10 @@ function buildControlDescriptors(
     }
     // Freeform controls (textfield, slider) hold real values, not the yes/no
     // convention used for boolean-ish picker/segmentedControl options.
+    const typedDefault = numericValue(rawDefault, descriptor.valueKind);
     const defaultValue = FREEFORM_CONTROLS.has(descriptor.controlType)
-      ? rawDefault
-      : booleanStringToYesNo(rawDefault);
+      ? typedDefault
+      : booleanStringToYesNo(optionValue(typedDefault, descriptor.options));
     currentProps[property] = {
       value: defaultValue, attribute: descriptor.attribute, controlType: descriptor.controlType,
     };
@@ -589,12 +641,16 @@ function buildControlsPanel(descriptors, currentProps, onControlChange) {
   controlsPanel.setAttribute('aria-label', 'Component controls');
 
   descriptors.forEach(({
-    property, controlType, options, defaultValue, attribute,
+    property, controlType, options, defaultValue, attribute, valueKind,
   }) => {
     if (!options.length && !FREEFORM_CONTROLS.has(controlType)) { return; }
     const control = buildControl(controlType, property, options, defaultValue, (value) => {
-      currentProps[property].value = value;
-      onControlChange(property, attribute, value, controlType);
+      const typedValue = numericValue(
+        FREEFORM_CONTROLS.has(controlType) ? value : optionValue(value, options),
+        valueKind,
+      );
+      currentProps[property].value = typedValue;
+      onControlChange(property, attribute, typedValue, controlType);
     });
     controlsPanel.appendChild(control);
   });
@@ -679,6 +735,14 @@ export default async function init(el) {
   };
   const buildSnippet = SNIPPET_BUILDERS[implementation] ?? SNIPPET_BUILDERS.swc;
 
+  // Keyed the same way, and for the same reason: HTML parsing would lowercase RSP's
+  // JSX tag and prop names, so each implementation reads the fragment with its own parser.
+  const FRAGMENT_PARSERS = {
+    rsp: () => parseXmlFragmentRoot(snippetMarkup),
+    swc: () => parseHtmlFragmentRoot(snippetMarkup, previewName).fragmentRoot,
+  };
+  const fragmentRoot = (FRAGMENT_PARSERS[implementation] ?? FRAGMENT_PARSERS.swc)();
+
   const controlsMap = buildControlsMap(controlsSheet);
   const authoredProps = getComponentProperties(
     component,
@@ -696,6 +760,7 @@ export default async function init(el) {
     controlsMap,
     propRows,
     currentProps,
+    fragmentRoot,
   );
 
   // Each implementation's shell (previewShellPath, resolved above) reads
