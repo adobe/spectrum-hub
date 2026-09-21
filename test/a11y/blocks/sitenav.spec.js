@@ -178,6 +178,86 @@ test(`${block.name} level-2 menu remains visible until its collapse transition f
   });
 });
 
+test(`${block.name} crossfades content without collapsing when switching level-2 menus`, async ({ page, isMobile }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'transition timing is covered once in desktop Chromium');
+  await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
+
+  const firstToggle = page.getByRole('button', { name: 'Getting started', exact: true });
+  const nextToggle = page.getByRole('button', { name: 'Foundations', exact: true });
+  const firstMenu = page.locator(`#${await firstToggle.getAttribute('aria-controls')}`);
+  const nextMenu = page.locator(`#${await nextToggle.getAttribute('aria-controls')}`);
+
+  await firstToggle.click();
+  await expect.poll(() => firstMenu.evaluate((el) => getComputedStyle(el).width)).toBe('264px');
+
+  const expandedPadding = await firstMenu.evaluate((el) => getComputedStyle(el).paddingInlineStart);
+  await nextToggle.click();
+
+  const switching = await page.evaluate(({ firstMenuId, nextMenuId }) => {
+    const first = document.getElementById(firstMenuId);
+    const next = document.getElementById(nextMenuId);
+    [...first.getAnimations({ subtree: true }), ...next.getAnimations({ subtree: true })]
+      .forEach((transition) => {
+        transition.pause();
+        transition.currentTime = 80;
+      });
+
+    const firstStyles = getComputedStyle(first);
+    const nextStyles = getComputedStyle(next);
+    return {
+      first: {
+        backdropFilter: firstStyles.backdropFilter,
+        backgroundColor: firstStyles.backgroundColor,
+        backgroundImage: firstStyles.backgroundImage,
+        boxShadow: firstStyles.boxShadow,
+        inert: first.inert,
+        opacity: Number.parseFloat(getComputedStyle(first.firstElementChild).opacity),
+        paddingInlineStart: firstStyles.paddingInlineStart,
+        pointerEvents: firstStyles.pointerEvents,
+        width: firstStyles.width,
+      },
+      next: {
+        inert: next.inert,
+        opacity: Number.parseFloat(getComputedStyle(next.firstElementChild).opacity),
+        paddingInlineStart: nextStyles.paddingInlineStart,
+        pointerEvents: nextStyles.pointerEvents,
+        width: nextStyles.width,
+      },
+    };
+  }, {
+    firstMenuId: await firstMenu.getAttribute('id'),
+    nextMenuId: await nextMenu.getAttribute('id'),
+  });
+
+  expect(switching.first.width).toBe('264px');
+  expect(switching.next.width).toBe('264px');
+  expect(switching.first.paddingInlineStart).toBe(expandedPadding);
+  expect(switching.next.paddingInlineStart).toBe(expandedPadding);
+  expect(switching.first.inert).toBe(true);
+  expect(switching.next.inert).toBe(false);
+  expect(switching.first.pointerEvents).toBe('none');
+  expect(switching.next.pointerEvents).toBe('auto');
+  expect(switching.first.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  expect(switching.first.backgroundImage).toBe('none');
+  expect(switching.first.boxShadow).toBe('none');
+  expect(switching.first.backdropFilter).toBe('none');
+  expect(switching.first.opacity).toBeGreaterThan(0);
+  expect(switching.first.opacity).toBeLessThan(1);
+  expect(switching.next.opacity).toBeGreaterThan(0);
+  expect(switching.next.opacity).toBeLessThan(1);
+
+  await nextMenu.evaluate((el) => {
+    [...el.parentElement.parentElement.getAnimations({ subtree: true })]
+      .forEach((transition) => transition.finish());
+  });
+
+  await expect(firstMenu).not.toBeVisible();
+  await expect(nextMenu).toBeVisible();
+  await expect(nextToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(nextMenu.locator('[tabindex="0"]')).toHaveCount(1);
+});
+
 test(`${block.name} block with a level-3 item expanded has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder, isMobile }) => {
   await gotoFixture(page, levelThreeBlock);
   await waitForNavReady(page, isMobile);

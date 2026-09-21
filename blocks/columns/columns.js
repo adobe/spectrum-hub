@@ -12,77 +12,49 @@ function watchImageError(media) {
   img?.addEventListener('error', () => img.classList.add('img-error'), { once: true });
 }
 
+function getMediaContainer(media) {
+  const parent = media.parentElement;
+  return parent?.matches('p') && !parent.textContent.trim() && parent.children.length === 1
+    ? parent
+    : media;
+}
+
+function hasMeaningfulContent(nodes) {
+  return nodes.some((node) => node.nodeType === Node.ELEMENT_NODE
+    || (node.nodeType === Node.TEXT_NODE && node.textContent.trim()));
+}
+
 /* The fixed-size image crop box lives on this wrapper (not .col directly) so a
  * caption can sit below it without being clipped by the box's own overflow. */
 function wrapColumnImage(col) {
   const media = col.querySelector('picture, img');
-  if (!media || col.querySelector('.col-image')) { return null; }
+  if (!media) { return null; }
+  const existingFigure = col.querySelector('.col-image');
+  if (existingFigure) { return existingFigure; }
+
+  const mediaContainer = getMediaContainer(media);
+  const captionNodes = [];
+  for (let node = mediaContainer.nextSibling; node; node = node.nextSibling) {
+    captionNodes.push(node);
+  }
+
   const figure = document.createElement('figure');
   figure.className = 'col-image';
-  media.replaceWith(figure);
-  figure.append(media);
+  const mediaFrame = document.createElement('div');
+  mediaFrame.className = 'col-image-media';
+  mediaContainer.replaceWith(figure);
+  mediaFrame.append(media);
+  figure.append(mediaFrame);
+
+  if (hasMeaningfulContent(captionNodes)) {
+    const figcaption = document.createElement('figcaption');
+    figcaption.className = 'col-caption';
+    figcaption.append(...captionNodes);
+    figure.append(figcaption);
+  }
+
   watchImageError(media);
   return figure;
-}
-
-/* A caption row mirrors the image row's shape. If the image row is "singleCol" (no other populated
- * column), that shape is ambiguous with plain content, so we check for a second row before
- * we know the first one was just content and apply the caption. */
-function extractCaptions(el) {
-  let lastImageRow = null;
-  let pendingCaptionRow = null;
-  let foundSecondRow = false;
-
-  const applyCaption = (imageRow, imgIndex, captionRow) => {
-    const figure = wrapColumnImage(imageRow.children[imgIndex]);
-    if (figure) {
-      const figcaption = document.createElement('figcaption');
-      figcaption.className = 'col-caption';
-      figcaption.textContent = captionRow.children[imgIndex].textContent.trim();
-      figure.after(figcaption);
-    }
-    captionRow.remove();
-  };
-
-  const flushPending = (imageRow, imgIndex) => {
-    if (foundSecondRow) {
-      applyCaption(imageRow, imgIndex, pendingCaptionRow);
-    }
-    pendingCaptionRow = null;
-    foundSecondRow = false;
-  };
-
-  for (const row of [...el.children]) {
-    const cols = [...row.children];
-    const { row: imageRow, imgIndex, singleCol } = lastImageRow ?? {};
-    const captionCol = imageRow && cols.length === imageRow.children.length ? cols[imgIndex] : null;
-    const isCaptionRow = captionCol
-      && captionCol.textContent.trim()
-      && !captionCol.querySelector('picture, img')
-      && cols.every((c, i) => i === imgIndex || isEmptyCol(c));
-
-    if (isCaptionRow && singleCol) {
-      if (pendingCaptionRow) { foundSecondRow = true; }
-      pendingCaptionRow = row;
-    } else if (isCaptionRow) {
-      applyCaption(imageRow, imgIndex, row);
-      lastImageRow = null;
-    } else {
-      flushPending(imageRow, imgIndex);
-      const imageCols = cols.filter((c) => c.querySelector('picture, img'));
-      if (imageCols.length === 1) {
-        const newImgIndex = cols.indexOf(imageCols[0]);
-        lastImageRow = {
-          row,
-          imgIndex: newImgIndex,
-          singleCol: cols.every((c, i) => i === newImgIndex || isEmptyCol(c)),
-        };
-      } else {
-        lastImageRow = null;
-      }
-    }
-  }
-  flushPending(lastImageRow?.row, lastImageRow?.imgIndex);
 }
 
 function decorateCols(cols) {
@@ -125,14 +97,18 @@ function applyGridLayout(el, rows) {
   if (hasImageTextRow) { return; }
   const maxCols = Math.max(...multiColRows.map((r) => r.children.length));
 
-  // On small screens, rows are transparent (display: contents) so cols become direct grid items.
-  // Set order so col-N from every row groups together visually.
-  // Formula: colIndex * rows.length + rowIndex keeps each column's items consecutive.
-  rows.forEach((row, rowIndex) => {
+  const gridColumns = Array.from({ length: maxCols }, () => {
+    const gridColumn = document.createElement('div');
+    gridColumn.className = 'grid-column';
+    gridColumn.style.setProperty('--grid-row-count', rows.length);
+    return gridColumn;
+  });
+
+  rows.forEach((row) => {
     [...row.children].forEach((col, colIndex) => {
-      col.style.order = colIndex * rows.length + rowIndex;
-      col.style.setProperty('--row-idx', rowIndex + 1);
+      gridColumns[colIndex].append(col);
     });
+    row.remove();
   });
 
   // Wrap rows in grid-container so @container queries on .columns can target a descendant —
@@ -140,15 +116,14 @@ function applyGridLayout(el, rows) {
   const gridContainer = document.createElement('div');
   gridContainer.className = 'grid-container';
   el.append(gridContainer);
-  rows.forEach((row) => gridContainer.append(row));
+  gridColumns.filter((gridColumn) => gridColumn.children.length).forEach((gridColumn) => {
+    gridContainer.append(gridColumn);
+  });
 
   el.classList.add('grid-layout', `grid-layout-${maxCols}`);
 }
 
 export default function init(el) {
-  // Pair caption rows with their image
-  extractCaptions(el);
-
   for (const row of [...el.children]) {
     for (const col of [...row.children]) {
       if (isEmptyCol(col)) {

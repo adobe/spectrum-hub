@@ -13,6 +13,7 @@ helix-importer-ui
 .wrangler
 .claude
 .cursor
+.worktrees/
 playwright-report/
 playwright-report-links/
 playwright-report-visual/

@@ -1493,6 +1493,40 @@ describe('sitenav block', () => {
         const supportMenu = buttonNamed(navList, 'Support').parentElement.querySelector('.level-2-menu');
         expect(tabbable(supportMenu).length).to.equal(1);
       });
+
+      it('clears a canceled level-2 switch before another menu opens', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        const web = buttonNamed(navList, 'Web');
+        const support = buttonNamed(navList, 'Support');
+        openWeb(navList);
+        support.click();
+        web.click();
+
+        const supportMenu = support.parentElement.querySelector('.level-2-menu');
+        supportMenu.firstElementChild.dispatchEvent(new TransitionEvent('transitioncancel', {
+          propertyName: 'opacity',
+        }));
+
+        expect(navList.classList.contains('is-switching-level-2')).to.be.false;
+        expect(supportMenu.classList.contains('is-switching-out')).to.be.false;
+        expect(supportMenu.classList.contains('is-hidden-after-switch')).to.be.true;
+        expect(web.parentElement.querySelector('.level-2-menu').inert).to.be.false;
+      });
+
+      it('clears a level-2 switch when the sitenav closes', () => {
+        const { sitenav, navList } = buildTree();
+        setupRovingTabindex(sitenav, navList);
+        openWeb(navList);
+        buttonNamed(navList, 'Support').click();
+
+        closeSitenav(sitenav);
+
+        const webMenu = buttonNamed(navList, 'Web').parentElement.querySelector('.level-2-menu');
+        expect(navList.classList.contains('is-switching-level-2')).to.be.false;
+        expect(webMenu.classList.contains('is-switching-out')).to.be.false;
+        expect(webMenu.classList.contains('is-hidden-after-switch')).to.be.true;
+      });
     });
   });
 

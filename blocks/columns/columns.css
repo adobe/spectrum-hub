@@ -1,10 +1,9 @@
 /* These columns represent the "Core layout blocks" */
 .columns {
-  --columns-gap: 56px;
+  --columns-gap: var(--columns-gap-override, 32px);
   --image-corner-radius: 32px;
-  --xs-image-size: 80px;
-  --s-image-size: 316px;
-  --m-image-size: 502px;
+  --grid-column-span-image: 1 / 1;
+  --grid-column-span-text: 1 / 1;
 
   inline-size: 100%;
   margin-block: var(--s2-spacing-600) var(--s2-spacing-500);
@@ -12,285 +11,336 @@
   container-name: columns;
 
   @media (width >= 1200px) {
+    --columns-gap: var(--columns-gap-override, 56px);
+    
     max-inline-size: unset;
- }
-
-  .section > .block-content > &:last-child {
-    margin-block-end: 0;
   }
 
-  /* for columns that are the first child of a section, but not a sibling to default-content */
+  /* for columns that are the first child of a section, but not a sibling to default-content or a grid */
   .section > :not(.default-content ~ .block-content) > &:first-child {
-    margin-block-start: 0;
-  }
-
-  /* extra-small */
-  &:not(.small, .medium, .large) {
-    --image-size: var(--xs-image-size);
-  }
-
-  /* small, medium, large, and single-column rows */
-  &.small,
-  &.medium,
-  &.large {
-    --image-size: var(--s-image-size);
-  }
-  
-  @media (width >= 600px) {
-    &.medium {
-      --image-size: var(--m-image-size);
+      margin-block-start: 0;
     }
 
-    /* large & image-only */
-    &.large,
-    &.centered > .row:only-child {
-      --image-size: 100%;
+  &:not(.grid-layout) {
+    &:not(.centered) > .row + .row {
+      margin-block-start: var(--columns-gap);
     }
 
-    &:not(.small, .medium, .large, .align-start, .centered, .grid-layout) > .row {
+    /* for columns that are the last child of a section */
+    .section > .block-content > &:last-child {
+      margin-block-end: 0;
+    }
+
+    /* for columns that are the first child of a section, but not a sibling to default-content */
+    .section > :not(.default-content ~ .block-content) > &:first-child {
+      margin-block-start: 0;
+    }
+
+
+    @container columns (width >= 800px) {
+      .row {
+        /* extra-small */
+        .columns.extra-small & {
+          --grid-column-span-image: 1 / 4;
+          --grid-column-span-text: 4 / 13;
+        }
+
+        .columns.extra-small.image-right & {
+          --grid-column-span-text: 1 / 10;
+          --grid-column-span-image: 10 / 13;
+        }
+      
+        .columns.extra-small.centered & {
+          --grid-column-span-image: 6 / 8;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        .columns.extra-small.align-start & {
+          --grid-column-span-image: 1 / 4;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        /* small */
+        .columns.small & {
+          --grid-column-span-image: 1 / 5;
+          --grid-column-span-text: 5 / 13;
+        }
+      
+        .columns.small.image-right & {
+          --grid-column-span-text: 1 / 9;
+          --grid-column-span-image: 9 / 13;
+        }
+      
+        .columns.small.centered & {
+          --grid-column-span-image: 5 / 9;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        .columns.small.align-start & {
+          --grid-column-span-image: 1 / 5;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        /* medium */
+        .columns.medium & {
+          --grid-column-span-image: 1 / 7;
+          --grid-column-span-text: 7 / 13;
+        }
+      
+        .columns.medium.image-right & {
+          --grid-column-span-text: 1 / 7;
+          --grid-column-span-image: 7 / 13;
+        }
+      
+        .columns.medium.centered & {
+          --grid-column-span-image: 4 / 10;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        .columns.medium.align-start & {
+          --grid-column-span-image: 1 / 7;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        /* large */
+        .columns.large.centered & {
+          --grid-column-span-image: 1 / 13;
+          --grid-column-span-text: 1 / 13;
+        }
+      
+        .columns.large.align-start & {
+          --grid-column-span-image: 1 / 13;
+          --grid-column-span-text: 1 / 13;
+        }
+      }
+    }
+
+    &.gap-xs {
+      --columns-gap-override: var(--s2-spacing-100);
+    }
+
+    &.gap-s {
+      --columns-gap-override: var(--s2-spacing-200);
+    }
+
+    &.gap-m {
+      --columns-gap-override: var(--s2-spacing-300);
+    }
+
+    &.gap-l {
+      --columns-gap-override: var(--s2-spacing-400);
+    }
+
+    &.gap-xl {
+      --columns-gap-override: var(--s2-spacing-500);
+    }
+
+    &.gap-xxl {
+      --columns-gap-override: var(--s2-spacing-600);
+    }
+
+    &.image-cover {
+      .cover-row {
+        .cover-content {
+          padding: var(--s2-spacing-600);
+        }
+
+        .cover-image {
+          position: relative;
+          padding-block-end: 100%;
+
+          picture {
+            position: absolute;
+            inset: 0;
+          }
+
+          img {
+            object-fit: cover;
+            inline-size: 100%;
+            block-size: 100%;
+          }
+        }
+      }
+    }
+
+    .row {
       display: grid;
+      grid-template-columns: 1fr;
+      align-items: start;
+      gap: var(--columns-gap);
+
+      @container columns (width >= 800px) {
+        --columns-gap: var(--columns-gap-override, 56px);
+
+        grid-template-columns: repeat(12, 1fr);
+      } 
     }
 
-    /* xs/default will snap to the 2-column layout at 600px (except for when the image is on the right */
-    &:not(.small, .medium, .large, .image-right, .centered, .grid-layout) > .row {
-      grid-template-columns: var(--image-size) auto;
-    }
-
-    @container columns (width > 530px) {
-      /* small layout will snap to the 2-column layout when the .columns container is 530px AFTER the viewport is past 600px wide */
-      &.small:not(.align-start, .image-right, .centered, .grid-layout) > .row {
-        display: grid;
-        grid-template-columns: var(--image-size) auto;
-      }
-    }
-  }
-
-  @media (width >= 900px) {
-    @container columns (width > 725px) {
-      /* medium and large snap to their 2-column layout when the .columns container is 725px AFTER the viewport is past 1200px wide */
-      &.medium:not(.align-start, .image-right, .centered) > .row,
-      &.large:not(.align-start, .centered) > .row {
-        display: grid;
-        align-items: start;
-        grid-template-columns: var(--image-size) auto;
-      }
-    }
-  }
-
-  .row {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: var(--columns-gap);
-  }
-
-  .col {
-    flex-direction: column;
-    display: flex;
-    gap: var(--s2-spacing-300);
-    box-sizing: border-box;
-    text-wrap-style: pretty;
-
-    p, h1, h2, h3, h4, h5, h6 {
-      margin-block: 0;
-      max-inline-size: 80ch;
-    }
-
-    &:has(p, h2, h3, h4, h5, h6) {
-      max-inline-size: 80ch;
-    }
-  }
-
-  .col-image {
-    display: flex;
-    margin: 0;
-    border-radius: var(--image-corner-radius);
-    min-inline-size: minmax(100%, var(--image-size));
-    block-size: auto;
-    max-inline-size: var(--image-size);
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    box-sizing: border-box;
-
-    /* Only shows once the img itself reports it can't render (see
-    watchImageError in columns.js) */
-    &:has(img.img-error) {
-      background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
-    }
-
-    picture {
+    .col {
       display: flex;
-      align-self: stretch;
-      flex: 1;
-      inline-size: 100%;
+      flex-direction: column;
+      gap: var(--s2-spacing-100);
+      box-sizing: border-box;
+      text-wrap-style: pretty;
+
+      p, h1, h2, h3, h4, h5, h6 {
+        margin-block: 0;
+        max-inline-size: 80ch;
+      }
+
+      &:has(p, h2, h3, h4, h5, h6) {
+        grid-column: var(--grid-column-span-text);
+      }
+      
+      &:has(h1) h1 {
+        padding-block-end: var(--s2-spacing-100); /* adds extra padding below h1 */
+      }
+
+      &:has(img, picture) {
+        grid-column: var(--grid-column-span-image);
+      }
+
+      &:has(img, picture) > p {
+        grid-column: var(--grid-column-span-image);
+      }
+    }
+    
+    &.text-align-center .col:has(p, h2, h3, h4, h5, h6) {
+      justify-content: center;
       block-size: 100%;
-      box-sizing: border-box;
-    }
-
-    img {
-      display: block;
-      box-sizing: border-box;
-      inline-size: var(--image-size);
-      block-size: auto;
-      object-fit: cover;
-      aspect-ratio: auto;
-
-      /* Hides the browser's native broken-image glyph/alt text */
-      &.img-error {
-        opacity: 0;
-      }
     }
   }
 
-  .col-caption {
-    margin: 0;
-    font-size: var(--s2-body-size-s, 14px);
-    color: var(--se-body-color);
-    max-inline-size: 80ch;
-    text-align: start;
-    text-wrap: balance;
-  }
+    .col-image {
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2-spacing-300);
+      margin: 0;
 
-  .col:not(:has(img, picture)) {
-    max-inline-size: 80ch;
-  }
+      .col-image-media {
+        display: flex;
+        min-inline-size: minmax(100%, var(--image-size));
+        block-size: auto;
+        max-inline-size: var(--image-size);
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-sizing: border-box;
+        border-radius: var(--image-corner-radius);
 
-  &.gap-xs {
-    --columns-gap: var(--s2-spacing-100);
-  }
-
-  &.gap-s {
-    --columns-gap: var(--s2-spacing-200);
-  }
-
-  &.gap-m {
-    --columns-gap: var(--s2-spacing-300);
-  }
-
-  &.gap-l {
-    --columns-gap: var(--s2-spacing-400);
-  }
-
-  &.gap-xl {
-    --columns-gap: var(--s2-spacing-500);
-  }
-
-  &.gap-xxl {
-    --columns-gap: var(--s2-spacing-600);
-  }
-
-  &.image-cover {
-    .cover-row {
-      .cover-content {
-        padding: var(--s2-spacing-600);
-      }
-
-      .cover-image {
-        position: relative;
-        padding-block-end: 100%;
+        /* Only shows once the img itself reports it can't render (see
+        watchImageError in columns.js) */
+        &:has(img.img-error) {
+          background: var(--s2-gray-500) url('/img/icons/s2-icon-image-20-n.svg') no-repeat center / contain;
+        }
 
         picture {
-          position: absolute;
-          inset: 0;
+          display: flex;
+          align-self: stretch;
+          flex: 1;
+          inline-size: 100%;
+          block-size: 100%;
+          box-sizing: border-box;
         }
 
         img {
+          display: block;
+          box-sizing: border-box;
+          inline-size: var(--image-size);
+          block-size: auto;
           object-fit: cover;
-          inline-size: 100%;
-          block-size: 100%;
+          aspect-ratio: auto;
+          border-radius: var(--image-corner-radius);
+
+          /* Hides the browser's native broken-image glyph/alt text */
+          &.img-error {
+            opacity: 0;
+          }
         }
       }
     }
-  }
 
-  /* Centered columns */
-  &.centered {
-    display: flex;
-    flex-direction: column;
-    gap: var(--columns-gap);
-    align-items: center;
-    text-align: center;
-  }
-
-  &.centered .col {
-    align-items: center;
-  }
-
-  &.image-right {
-    @media (width >= 600px) {
-      /* image-right flips the column sizing */
-      &:not(.medium, .large, .centered) .row {
-        display: grid;
-        grid-template-columns: auto var(--image-size);
-      }
+    .col-caption {
+      margin: 0;
+      font-size: var(--s2-body-size-s, 14px);
+      color: var(--se-body-color);
+      max-inline-size: 80ch;
+      text-align: start;
+      text-wrap: balance;
     }
 
-    @container columns (width >= 900px) {
-      &.medium:not(.centered) .row {
-        display: grid;
-        grid-template-columns: auto var(--image-size);
-      }
+    /* Centered columns */
+    &.centered {
+      align-items: center;
+      text-align: center;
+      grid-template-columns: 1fr;
     }
-  }
 
-  /* start-aligned, stacked/vertical columns */
-  &.align-start {
-    --columns-gap: var(--s2-spacing-600);
-
-    .row {
-      align-items: start;
+    &.centered .col {
+      align-items: center;
     }
-  }
+
+    &.centered .row:not(:last-child) {
+      margin-block-end: var(--columns-gap);
+    }
+
+    &.centered .col-caption {
+      margin-inline: auto;
+      text-align: center;
+    }
 }
 
-/* grid-layout: uniform rows (all-image or all-text, never mixed within a row).
-Small screens: single-column grid with CSS order grouping same-position cols together.
-Large screens: N-column grid driven by container queries on the inner grid wrapper. */
+/* grid-layout: uniform rows (all-image or all-text, never mixed within a row). */
 .columns.grid-layout {
+  &.extra-small {
+    --image-size: 80px;
+  }
+
+  &.small {
+    --image-size: 316px;
+  }
+
   .grid-container {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     gap: var(--columns-gap);
   }
   
-  .row {
-    display: contents;
+  .grid-column {
+    display: grid;
+    grid-row: span var(--grid-row-count);
+    grid-template-rows: subgrid;
   }
   
   .col {
-    margin-block-end: calc(56px - var(--columns-gap)); /* we want a total of 56px between images and their text, so include any authored gap value. */
-  }
-  
-  &.grid-layout-2 {
-    @container columns (width >= 800px) {
-      .grid-container {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .col {
-        grid-row: var(--row-idx);
-      }
+    /* override the margins on the homepage/marketing template */
+    > p, h1, h2, h3, h4, h5, h6 {
+      margin-inline: 0;
+      margin-block: 0 var(--s2-spacing-100);
     }
-  }
 
-  &.grid-layout-3 {
-    @container columns (width >= 1000px) {
-      .grid-container {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .col {
-        grid-row: var(--row-idx);
-      }
+    &:has(img, picture) img,
+    &:has(img, picture) picture {
+      max-inline-size: var(--image-size, 100%);
     }
   }
 }
 
-.columns:has(> .row:only-child > .col:only-child) .row {
-  grid-template-columns: 1fr;
+.columns:not(.grid-layout, .centered, :has(> .row > .col:nth-child(2))) {
+  > .row:has(> .col:only-child) {
+    grid-template-columns: 1fr;
 
-  .col:has(img, picture) {
+    > .col:only-child {
+      grid-column: 1 / -1;
+    }
+
+    > .col:only-child:not(:has(img, picture)) {
+      max-inline-size: 80ch;
+    }
+}
+
+/* mixed content within a row */
+  &:not(.centered) > .row:has(> .col:only-child) > .col:only-child:has(img, picture) {
     --image-size: 100%;
   }
 }
