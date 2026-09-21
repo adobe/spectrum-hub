@@ -180,7 +180,7 @@ test(`${block.name} level-2 menu remains visible until its collapse transition f
 
 test(`${block.name} crossfades content without collapsing when switching level-2 menus`, async ({ page, isMobile }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'transition timing is covered once in desktop Chromium');
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
   await waitForNavReady(page, isMobile);
 
   const firstToggle = page.getByRole('button', { name: 'Getting started', exact: true });
