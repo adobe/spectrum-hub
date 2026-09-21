@@ -280,6 +280,10 @@ export function resolveControl(property, implementation, controlsMap, propRows, 
   // shape it has always had instead of gaining an undefined key.
   const defaultOverride = DEFAULT_OVERRIDES[property];
   return {
-    controlType, options, attribute, ...(defaultOverride && { defaultOverride }),
+    controlType,
+    options,
+    attribute,
+    ...(row?.kind === 'number' && { valueKind: 'number' }),
+    ...(defaultOverride && { defaultOverride }),
   };
 }

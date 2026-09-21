@@ -1,1 +1,1 @@
-<Slider label="Opacity" defaultValue="50" />
+<Slider label="Opacity" defaultValue="{50}" />

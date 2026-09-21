@@ -1,1 +1,1 @@
-<ProgressBar value="60" label="Loading…" valueLabel="60%"/>
+<ProgressBar value="{60}" label="Loading…" valueLabel="60%"/>

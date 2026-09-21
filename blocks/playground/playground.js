@@ -16,6 +16,7 @@ import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-c
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import {
   collectFragmentTagNames,
+  parseRspAttributeValue,
   resolveExternalComponent,
 } from '../../deps/rsp/playground/build-composite-element.js';
 import '../../deps/se/se.js';
@@ -42,8 +43,8 @@ export function parseDefault(raw) {
 }
 
 export function booleanStringToYesNo(raw) {
-  if (raw === 'true') { return 'yes'; }
-  if (raw === 'false') { return 'no'; }
+  if (raw === true || raw === 'true') { return 'yes'; }
+  if (raw === false || raw === 'false') { return 'no'; }
   return raw;
 }
 
@@ -55,6 +56,12 @@ export function yesNoToBoolean(value) {
 
 function optionValue(value, options) {
   return options.find((option) => String(option) === String(value)) ?? value;
+}
+
+function numericValue(value, valueKind) {
+  if (valueKind !== 'number' || value === '') { return value; }
+  const number = Number(value);
+  return Number.isNaN(number) ? value : number;
 }
 
 // Collapses a burst of calls (e.g. every keystroke in a textfield control)
@@ -155,11 +162,11 @@ function applySnippetChildren(el, currentProps, fragmentRoot, hasRealLabelTarget
 // The snippet fragment is dev-authored for one exact component, so its own value is a
 // better starting point for a control than the generic 'Label' placeholder — and without
 // it the control's placeholder overwrote the very text the fragment authored.
-function snippetDefault(property, attribute, fragmentRoot) {
+function snippetDefault(property, attribute, fragmentRoot, parseValue = (value) => value) {
   if (!fragmentRoot) { return undefined; }
   // `attribute` is the SWC name for this prop; RSP has none and uses the prop as-authored.
   const authored = fragmentRoot.getAttribute(attribute ?? property);
-  if (authored !== null) { return authored; }
+  if (authored !== null) { return parseValue(authored); }
   // Flat text only: a fragment with element children is a composite whose text belongs to
   // its subcomponents, the same distinction applySnippetChildren makes above.
   if (!TEXT_KEYS.has(property) || fragmentRoot.children.length) { return undefined; }
@@ -532,7 +539,12 @@ function buildControlDescriptors(
     // (ColorSlider's channel must suit colorSpace), which a per-prop catalog default
     // cannot express — see DEFAULT_OVERRIDES in playground-data.js.
     let rawDefault = descriptor.defaultOverride
-      ?? snippetDefault(property, descriptor.attribute, fragmentRoot)
+      ?? snippetDefault(
+        property,
+        descriptor.attribute,
+        fragmentRoot,
+        implementation === 'rsp' ? parseRspAttributeValue : undefined,
+      )
       ?? parseDefault(findProp(property, propRows)?.default)
       ?? descriptor.options[0];
     // A textfield with no authored default would otherwise start empty —
@@ -542,9 +554,10 @@ function buildControlDescriptors(
     }
     // Freeform controls (textfield, slider) hold real values, not the yes/no
     // convention used for boolean-ish picker/segmentedControl options.
+    const typedDefault = numericValue(rawDefault, descriptor.valueKind);
     const defaultValue = FREEFORM_CONTROLS.has(descriptor.controlType)
-      ? rawDefault
-      : booleanStringToYesNo(optionValue(rawDefault, descriptor.options));
+      ? typedDefault
+      : booleanStringToYesNo(optionValue(typedDefault, descriptor.options));
     currentProps[property] = {
       value: defaultValue, attribute: descriptor.attribute, controlType: descriptor.controlType,
     };
@@ -628,11 +641,14 @@ function buildControlsPanel(descriptors, currentProps, onControlChange) {
   controlsPanel.setAttribute('aria-label', 'Component controls');
 
   descriptors.forEach(({
-    property, controlType, options, defaultValue, attribute,
+    property, controlType, options, defaultValue, attribute, valueKind,
   }) => {
     if (!options.length && !FREEFORM_CONTROLS.has(controlType)) { return; }
     const control = buildControl(controlType, property, options, defaultValue, (value) => {
-      const typedValue = FREEFORM_CONTROLS.has(controlType) ? value : optionValue(value, options);
+      const typedValue = numericValue(
+        FREEFORM_CONTROLS.has(controlType) ? value : optionValue(value, options),
+        valueKind,
+      );
       currentProps[property].value = typedValue;
       onControlChange(property, attribute, typedValue, controlType);
     });

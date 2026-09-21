@@ -619,6 +619,22 @@ describe('composite snippet fragments — real committed files', () => {
     expect(snippet.includes('<ImageIllustration />')).to.be.true;
   });
 
+  it('serializes authored numeric RSP props as JSX expressions', async () => {
+    const cases = [
+      ['action-bar', 'ActionBar', 'selectedItemCount={224}'],
+      ['avatar', 'Avatar', 'size={24}'],
+      ['card', 'Card', 'width={64}'],
+      ['meter', 'Meter', 'value={90}'],
+      ['progress-bar', 'ProgressBar', 'value={60}'],
+      ['progress-circle', 'ProgressCircle', 'value={35}'],
+      ['slider', 'Slider', 'defaultValue={50}'],
+    ];
+    for (const [file, component, expression] of cases) {
+      const markup = await (await fetch(`/deps/rsp/playground/snippets/${file}.jsx`)).text();
+      expect(buildRspSnippet(component, {}, markup), file).to.include(expression);
+    }
+  });
+
   it('renders the real RSP divider JSX snippet self-closing', async () => {
     const markup = await (await fetch('/deps/rsp/playground/snippets/divider.jsx')).text();
     expect(buildRspSnippet('Divider', {}, markup)).to.equal('<Divider />');
@@ -1222,7 +1238,40 @@ describe('playground block — init()', () => {
     const input = el.querySelector('.playground-control se-input');
     expect(input).to.exist;
     expect(input.type).to.equal('range');
-    expect(input.value).to.equal('50');
+    expect(input.value).to.equal(50);
+  });
+
+  it('preserves numeric RSP slider values after control changes', async () => {
+    stubPlaygroundFetch(sandbox, {
+      components: [{ Component: 'progress-bar', Properties: 'value' }],
+      controls: [{ Property: 'value', control: 'slider' }],
+      rsp: {
+        props: [{
+          property: 'value', type: 'number', kind: 'number', values: [], default: '0',
+        }],
+      },
+      markup: '<ProgressBar aria-label="Loading" value="{60}" />',
+    });
+    const rspEl = makeMetaEl({ implementation: 'rsp', component: 'progress-bar' });
+    document.body.append(rspEl);
+    await init(rspEl);
+
+    const iframe = rspEl.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const input = rspEl.querySelector('.playground-control se-input');
+    input.value = '75';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await waitPastDisclosureDebounce();
+
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update',
+        property: 'value',
+        value: 75,
+      }),
+      '*',
+    )).to.be.true;
+    expect(rspEl.querySelector('pre').textContent).to.include('value={75}');
   });
 
   it('renders se-segmentedcontrol with a radio per option for a segmentedControl control', async () => {
@@ -1810,6 +1859,39 @@ describe('playground block — a snippet fragment seeds its text controls', () =
 
     expect(el.querySelector('.playground-control se-select').value).to.equal('destructive');
     expect(el.querySelector('pre').textContent).to.include('variant="destructive"');
+  });
+
+  it('seeds a boolean control from JSX shorthand and sends true to the preview', async () => {
+    const el = await renderWith({
+      components: [{ Component: 'progress-circle', Properties: 'isIndeterminate' }],
+      controls: [{ Property: 'isIndeterminate', control: 'picker' }],
+      rsp: {
+        props: [{
+          property: 'isIndeterminate',
+          type: 'boolean',
+          kind: 'boolean',
+          values: [],
+        }],
+      },
+      markup: '<ProgressCircle aria-label="Loading" isIndeterminate="" />',
+    }, { implementation: 'rsp', component: 'progress-circle' });
+
+    const iframe = el.querySelector('iframe');
+    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    expect(el.querySelector('.playground-control se-select').value).to.equal('yes');
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'preview-ready' },
+      source: iframe.contentWindow,
+    }));
+    expect(postMessageSpy.calledWith(
+      sinon.match({
+        type: 'prop-update',
+        property: 'isIndeterminate',
+        value: true,
+      }),
+      '*',
+    )).to.be.true;
   });
 });
 
