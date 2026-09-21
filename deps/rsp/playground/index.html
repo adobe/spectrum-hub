@@ -32,9 +32,9 @@
     // React version pinned via esm.sh's `?deps=` param so the app's React and
     // RSP's internal React are the same module instance.
 
-    // XML (case-sensitive) parsing so PascalCase tags like `TabList` round-trip.
-    // The parent block (playground.js) already fetched this fragment for the
-    // code disclosure — requestMarkup() gets it from there instead of a second fetch.
+    // Component snippets provide the authored markup used by both the code
+    // disclosure and live preview. requestMarkup() reuses the parent block's fetch.
+    // XML (case-sensitive) parsing keeps PascalCase tags like `TabList` intact.
     async function fetchCompositeRoot() {
       const markup = await requestMarkup();
       if (!markup) { return null; }

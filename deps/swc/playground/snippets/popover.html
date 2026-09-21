@@ -1,6 +1,34 @@
-<!-- swc-popover anchors to a real trigger via `for="id"`, no wrapper element —
-     it wires its own click-to-toggle. accessible-label is required (the surface is a dialog). -->
+<!-- Anchors through `for`; `accessible-label` names the dialog surface. -->
 <swc-button id="popover-trigger">Open popover</swc-button>
-<swc-popover for="popover-trigger" accessible-label="More information">
-  Popover content goes here.
+<swc-popover
+  modal
+  accessible-label="Account settings"
+  placement="bottom"
+  offset="8"
+  should-flip
+  for="popover-trigger"
+>
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span class="swc-Title swc-Title--sizeS">Jess Lee</span>
+        <span class="swc-Detail swc-Detail--sizeS">Product designer</span>
+      </div>
+    </div>
+    <swc-divider size="s" style="inline-size:100%"></swc-divider>
+    <p class="swc-Body swc-Body--sizeS">
+      Manage your profile, notification preferences, and connected apps.
+    </p>
+    <swc-button-group align="end" size="s">
+      <swc-button
+        variant="secondary"
+        fill-style="outline"
+        size="s"
+        onclick="this.closest('swc-popover').open = false"
+      >
+        Dismiss
+      </swc-button>
+      <swc-button variant="accent" size="s">Open settings</swc-button>
+    </swc-button-group>
+  </div>
 </swc-popover>
