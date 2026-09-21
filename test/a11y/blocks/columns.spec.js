@@ -12,7 +12,7 @@ const block = {
 test('non-grid columns use responsive default gaps without overriding authored gaps', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'this test drives its own container widths');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const gaps = await page.evaluate(() => {
     const columns = document.createElement('div');
@@ -52,7 +52,7 @@ test('non-grid columns use responsive default gaps without overriding authored g
 test('grid-layout adds flexible 300px tracks as space becomes available', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'this test drives its own container widths');
 
-  await gotoBlock(page, {
+  await gotoFixture(page, {
     path: '/test/a11y/fixtures/columns-grid.html',
     readySelector: '.grid-column',
   });
@@ -87,7 +87,7 @@ test('grid-layout adds flexible 300px tracks as space becomes available', async 
 test('a sole medium column uses one explicit grid track', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'the computed grid assertion only needs one browser');
 
-  await gotoBlock(page, {
+  await gotoFixture(page, {
     path: '/test/a11y/fixtures/columns-grid.html',
     readySelector: '.single-surviving-column .col',
   });
@@ -114,7 +114,7 @@ test('a sole medium column uses one explicit grid track', async ({ page }, testI
 test('a single-cell row keeps the spans established by a multi-column sibling row', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'the computed grid assertion only needs one browser');
 
-  await gotoBlock(page, {
+  await gotoFixture(page, {
     path: '/test/a11y/fixtures/columns-grid.html',
     readySelector: '.mixed-row-columns .row-2 .col',
   });
@@ -138,7 +138,7 @@ test('a single-cell row keeps the spans established by a multi-column sibling ro
 test('adjacent non-grid rows use the authored columns gap', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'the computed spacing assertion only needs one browser');
 
-  await gotoBlock(page, {
+  await gotoFixture(page, {
     path: '/test/a11y/fixtures/columns-grid.html',
     readySelector: '.mixed-row-columns .row-2',
   });
@@ -166,7 +166,7 @@ test('adjacent non-grid rows use the authored columns gap', async ({ page }, tes
 test('mixed columns rows preserve their expected accessibility-tree order', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, {
+  await gotoFixture(page, {
     path: '/test/a11y/fixtures/columns-grid.html',
     readySelector: '.mixed-row-columns .row-2',
   });
