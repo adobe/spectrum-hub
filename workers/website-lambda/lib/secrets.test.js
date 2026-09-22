@@ -65,6 +65,13 @@ describe('resolveSecrets', () => {
     expect(env.IMS_CLIENT_SECRET).toBe('the-ims-secret');
   });
 
+  it('resolves the ORIGIN_AUTHENTICATION token id (token-based Site Authentication)', async () => {
+    h.sendImpl = okFor({ 'stage/origin-auth': 'hlx_the-origin-token' });
+    const env = { ORIGIN_AUTHENTICATION_ID: 'stage/origin-auth' };
+    await resolveSecrets(env);
+    expect(env.ORIGIN_AUTHENTICATION).toBe('hlx_the-origin-token');
+  });
+
   it('migration: only fetches the id that is set, leaves the other plaintext in place', async () => {
     h.sendImpl = okFor({ 'prod/session': 'fetched-session' });
     const env = { SESSION_SECRET_ID: 'prod/session', IMS_CLIENT_SECRET: 'legacy-plaintext-ims' };

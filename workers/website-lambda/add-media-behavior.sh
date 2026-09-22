@@ -151,7 +151,7 @@ aws cloudfront get-distribution-config --profile "$PROFILE" --region us-east-1 \
 ETAG="$(python3 -c "import json;print(json.load(open('$WORK/get.json'))['ETag'])")"
 
 REVERT="$REVERT" AEM_ORIGIN_DOMAIN="$AEM_ORIGIN_DOMAIN" MEDIA_CACHE_POLICY_ID="$MEDIA_CACHE_POLICY_ID" \
-FORWARDED_HOST="$FORWARDED_HOST" STRIP_FN_ARN="$STRIP_FN_ARN" \
+FORWARDED_HOST="$FORWARDED_HOST" STRIP_FN_ARN="$STRIP_FN_ARN" ORIGIN_AUTHENTICATION="$ORIGIN_AUTHENTICATION" \
 python3 - "$WORK/get.json" "$WORK/cfg.json" <<'PY'
 import copy, json, os, sys
 
@@ -161,6 +161,7 @@ domain = os.environ["AEM_ORIGIN_DOMAIN"]
 policy = os.environ["MEDIA_CACHE_POLICY_ID"]
 fwd_host = os.environ.get("FORWARDED_HOST", "").strip()
 strip_fn = os.environ.get("STRIP_FN_ARN", "").strip()
+origin_auth = os.environ.get("ORIGIN_AUTHENTICATION", "").strip()
 
 ORIGIN_ID = "aem-media-origin"
 PATTERN = "*/media_*"
@@ -194,6 +195,11 @@ media_headers = [
 ]
 if fwd_host:
     media_headers.append({"HeaderName": "X-Forwarded-Host", "HeaderValue": fwd_host})
+# Media bypasses the Lambda, so token-based Site Authentication needs the origin
+# token here too (a literal header - CloudFront custom headers can't reference
+# Secrets Manager). Set ORIGIN_AUTHENTICATION to the `hlx_…` site token to enable.
+if origin_auth:
+    media_headers.append({"HeaderName": "Authorization", "HeaderValue": f"token {origin_auth}"})
 
 origin = {
     "Id": ORIGIN_ID,

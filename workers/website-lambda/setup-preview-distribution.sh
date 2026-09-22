@@ -174,9 +174,17 @@ MEDIA_HEADERS_QTY=2
 MEDIA_HEADERS_ITEMS='            { "HeaderName": "X-BYO-CDN-Type", "HeaderValue": "cloudfront" },
             { "HeaderName": "X-Push-Invalidation", "HeaderValue": "enabled" }'
 if [ -n "$FORWARDED_HOST" ]; then
-  MEDIA_HEADERS_QTY=3
+  MEDIA_HEADERS_QTY=$((MEDIA_HEADERS_QTY + 1))
   MEDIA_HEADERS_ITEMS="$MEDIA_HEADERS_ITEMS,
             { \"HeaderName\": \"X-Forwarded-Host\", \"HeaderValue\": \"$FORWARDED_HOST\" }"
+fi
+# Media bypasses the Lambda, so token-based Site Authentication needs the origin
+# token here too (as a literal header - CloudFront custom headers can't reference
+# Secrets Manager). Set ORIGIN_AUTHENTICATION to the `hlx_…` site token to enable.
+if [ -n "$ORIGIN_AUTHENTICATION" ]; then
+  MEDIA_HEADERS_QTY=$((MEDIA_HEADERS_QTY + 1))
+  MEDIA_HEADERS_ITEMS="$MEDIA_HEADERS_ITEMS,
+            { \"HeaderName\": \"Authorization\", \"HeaderValue\": \"token $ORIGIN_AUTHENTICATION\" }"
 fi
 MEDIA_FN_ASSOC="\"FunctionAssociations\": { \"Quantity\": 1, \"Items\": [ { \"EventType\": \"viewer-response\", \"FunctionARN\": \"$STRIP_FN_ARN\" } ] },"
 
