@@ -104,8 +104,11 @@ function slugify(text) {
     .replace(/^-|-$/g, '');
 }
 
-function prepareHeading(heading, usedIds) {
-  const base = heading.id || slugify(heading.textContent);
+function prepareHeading(heading, usedIds, normalizeSize = false) {
+  const authoredId = normalizeSize
+    ? heading.id.replace(/^size-[a-z0-9]+-/, '')
+    : heading.id;
+  const base = authoredId || slugify(heading.textContent);
   let id = base;
   let suffix = 2;
   while (usedIds.has(id)) {
@@ -249,7 +252,10 @@ function navigateToHeading(heading) {
       .filter((element) => !targetSet.has(element))
       .map((element) => element.id),
   );
-  targets.forEach((heading) => prepareHeading(heading, usedIds));
+  // Later sections may not have reached loadIcons before page-nav snapshots their ids.
+  targets.forEach((heading) => (
+    prepareHeading(heading, usedIds, /^H[1-2]$/.test(heading.tagName))
+  ));
 
   const linkById = new Map();
   const desktopMql = window.matchMedia('(width >= 1200px)');
