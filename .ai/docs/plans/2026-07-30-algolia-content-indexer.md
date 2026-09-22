@@ -925,7 +925,7 @@ Expected: FAIL — `Cannot find module '.../indexer/config.js'`.
  * code therefore runs in both places without branching.
  */
 
-export const DEFAULT_SITE_ORIGIN = 'https://main--spectrum-hub--adobe.aem.live';
+export const DEFAULT_SITE_ORIGIN = 'https://spectrum.adobe.com';
 
 const REQUIRED = ['ALGOLIA_APP_ID', 'ALGOLIA_WRITE_API_KEY', 'ALGOLIA_INDEX_NAME'];
 

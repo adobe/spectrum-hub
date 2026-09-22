@@ -33,7 +33,7 @@ function decodeHashId(raw) {
  * already-absolute forms of the same target collapse to one entry for dedup.
  * @param {string|null} href raw attribute value; may be relative, absolute, hash-only, or empty
  * @param {string} sourceUrl absolute URL of the page the link was found on
- * @param {string} siteOrigin the crawl's own origin, e.g. `https://main--spectrum-hub--adobe.aem.live`
+ * @param {string} siteOrigin the crawl's own origin, e.g. `https://spectrum.adobe.com`
  * @returns {{kind: 'skip'}
  *   | {kind: 'invalid', href: string}
  *   | {kind: 'hash', id: string}

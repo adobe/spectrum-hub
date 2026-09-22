@@ -310,7 +310,7 @@ block.
 | `ALGOLIA_APP_ID` | Yes | — |
 | `ALGOLIA_WRITE_API_KEY` | Yes | — |
 | `ALGOLIA_INDEX_NAME` | Yes | None. Must be explicit, so a missing variable cannot wipe the wrong index. |
-| `SITE_ORIGIN` | No | `https://main--spectrum-hub--adobe.aem.live` |
+| `SITE_ORIGIN` | No | `https://spectrum.adobe.com` |
 | `INDEXER_CONCURRENCY` | No | `3`. The origin rate-limits bursts, so this is tunable without a code change. |
 
 `config.js` loads `.env` with `process.loadEnvFile()` inside a `try`/`catch`, matching the convention

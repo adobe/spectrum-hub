@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Set LINKCHECK_BASE_URL to crawl a deployed site (e.g. a branch preview or
-// https://main--spectrum-hub--adobe.aem.live) instead of a local aem up server.
+// https://spectrum.adobe.com) instead of a local aem up server.
 const deployedURL = process.env.LINKCHECK_BASE_URL;
 
 export default defineConfig({

@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { classifyLink, normalizeUrl } from './crawl.js';
 
-const ORIGIN = 'https://main--spectrum-hub--adobe.aem.live';
+const ORIGIN = 'https://spectrum.adobe.com';
 const PAGE = `${ORIGIN}/foundations/color`;
 
 describe('classifyLink', () => {
