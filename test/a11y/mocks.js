@@ -51,6 +51,18 @@ export const sitenavIndexWithLevel3 = JSON.stringify({
   ],
 });
 
+// The public cache stores the filtered root list before sitenav decorates it.
+// Keep its index normalized exactly as sitenav-cache.js writes it.
+export const cachedSitenavList = `<ul>
+  <li><p>Getting started</p><ul><li><a href="/getting-started">Getting started</a></li></ul></li>
+  <li><p>Foundations</p><ul><li><a href="/foundations">Foundations</a></li></ul></li>
+</ul>`;
+
+export const cachedSitenavIndexRows = [
+  { path: '/foundations', title: 'Foundations' },
+  { path: '/getting-started', title: 'Getting started' },
+];
+
 // start/end bracket all dates so the current event is always "found"
 export const scheduleJson = JSON.stringify({
   data: [
@@ -104,10 +116,7 @@ export const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" id="icon" viewBo
 
 // The site-nav fragment blocks/search's nav-areas.js falls back to fetching when no
 // already-decorated #sitenav is present in the document.
-export const navAreasFragment = `<body><header></header><main><div><ul>
-  <li><p>Getting started</p><ul><li><a href="/getting-started">Getting started</a></li></ul></li>
-  <li><p>Foundations</p><ul><li><a href="/foundations">Foundations</a></li></ul></li>
-</ul></div></main></body>`;
+export const navAreasFragment = `<body><header></header><main><div>${cachedSitenavList}</div></main></body>`;
 
 // A four-level-deep variant of navAreasFragment, used only by sitenav.spec.js's level-3
 // expand-behavior coverage — kept separate so search.spec.js's snapshot (which expects

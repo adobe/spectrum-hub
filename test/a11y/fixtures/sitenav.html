@@ -8,11 +8,24 @@
   <link rel="stylesheet" href="/blocks/sitenav/sitenav.css">
 </head>
 <body>
-  <main id="main-content"></main>
+  <main id="main-content">
+    <article aria-labelledby="fixture-heading">
+      <h1 id="fixture-heading">Sitenav fixture content</h1>
+      <p>Representative page content used to verify that navigation updates preserve the main layout.</p>
+    </article>
+  </main>
   <script type="module">
     // sitenav.js is a self-executing block that fetches its nav data and inserts its own #sitenav element as
     // a sibling before <main>.
-    import '/blocks/sitenav/sitenav.js';
+    import { setConfig } from '/scripts/ak.js';
+
+    setConfig({ cdnEnv: true, components: [], hostnames: [], linkBlocks: [] });
+    if (new URLSearchParams(window.location.search).has('delay-sitenav')) {
+      await new Promise((resolve) => {
+        window.addEventListener('sitenav-fixture-release', resolve, { once: true });
+      });
+    }
+    await import('/blocks/sitenav/sitenav.js');
   </script>
 </body>
 </html>

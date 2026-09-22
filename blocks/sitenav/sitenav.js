@@ -1,24 +1,35 @@
 import {
   loadStyle, loadArea, toClassName, getConfig, getMetadata, checkIms,
 } from '../../scripts/ak.js';
-import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
+import { getSvgRef } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
 import '../../deps/components/swc-tooltip/dist/index.js';
 import { IMPLEMENTATIONS } from '../../scripts/utils/implementations.js';
+import {
+  isValidIndexRows,
+  readPublicNavCache,
+  removePublicNavCache,
+  sameNavSource,
+  writePublicNavCache,
+} from './sitenav-cache.js';
 
 const { log } = getConfig();
 
 loadStyle(import.meta.url.replace('js', 'css'));
 
-const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
+const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav.plain.html';
+const QUERY_INDEX_PATH = '/query-index.json?compact=true';
+const ANONYMOUS_FRESH_INIT = { credentials: 'omit', cache: 'no-store' };
 const DEF_SITE_NAME = 'Spectrum Hub';
 const INDEX_BASED_NAV = [
-  ...IMPLEMENTATIONS.map((impl) => ({ prefix: `/web/${impl.id}`, count: 0 })),
+  ...IMPLEMENTATIONS.map((impl) => ({ prefix: `/web/${impl.id}` })),
   // ios/android aren't in the implementations registry yet — see implementations.js.
-  { prefix: '/mobile/ios', count: 0 },
-  { prefix: '/mobile/android', count: 0 },
+  { prefix: '/mobile/ios' },
+  { prefix: '/mobile/android' },
 ];
+const createIndexBasedNavState = () => INDEX_BASED_NAV
+  .map((entry) => ({ ...entry, count: 0 }));
 
 // Authored labels and URL segments both normalize through this, so "React Spectrum",
 // "RSP", and "design-only" all resolve to the same implementation.
@@ -202,16 +213,132 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
 // are removed so a parent with visible children is never dropped; the page gate
 // already 404s these paths, so this is purely to avoid dead links. Fail-open:
 // with no index (fetch failed) nothing is hidden.
-export const filterNavByIndex = (ul, index) => {
+export const filterNavByIndex = (ul, index, {
+  hostnames = getConfig().hostnames ?? [],
+} = {}) => {
   if (!index) { return; }
   const known = new Set(index.map((entry) => entry.path));
-  ul.querySelectorAll('a[href^="/"]').forEach((a) => {
-    if (known.has(a.pathname)) { return; }
+  ul.querySelectorAll('a[href]').forEach((a) => {
+    const authoredHref = a.getAttribute('href');
+    const url = new URL(authoredHref, window.location.href);
+    const isRootRelative = authoredHref.startsWith('/') && !authoredHref.startsWith('//');
+    const isAbsolute = /^(?:[a-z][a-z\d+.-]*:)?\/\//i.test(authoredHref);
+    const isKnownHost = url.hostname === window.location.hostname
+      || hostnames.includes(url.hostname);
+    if ((!isRootRelative && !(isAbsolute && isKnownHost)) || known.has(url.pathname)) { return; }
     const li = a.closest('li');
     // Skip parents: a list item that contains a nested list may hold visible
     // children even when its own link is private/unindexed.
     if (!li || li.querySelector('ul')) { return; }
     li.remove();
+  });
+};
+
+const getUsableRootList = (container) => {
+  const rootLists = [...container.querySelectorAll('ul')]
+    .filter((list) => !list.parentElement.closest('ul'));
+  if (rootLists.length !== 1 || !rootLists[0].querySelector(':scope > li')) { return null; }
+  return rootLists[0];
+};
+
+const normalizeIconPlaceholders = (root) => {
+  root.querySelectorAll('.icon').forEach((icon) => {
+    const placeholder = document.createElement('span');
+    placeholder.className = icon.getAttribute('class');
+    icon.replaceWith(placeholder);
+  });
+};
+
+const upgradeIconPlaceholders = (root) => {
+  root.querySelectorAll('span.icon').forEach((icon) => {
+    const sizeClass = [...icon.classList].find((name) => name.startsWith('icon-size-'));
+    if (sizeClass) {
+      const prefix = icon.parentElement.nodeName.startsWith('H') ? 'heading' : 'text';
+      icon.parentElement.classList.add(sizeClass.replace('icon', prefix));
+      icon.remove();
+      return;
+    }
+
+    const nameClass = [...icon.classList]
+      .find((name) => name.startsWith('icon-') && !name.startsWith('icon-size-'));
+    if (!nameClass) {
+      icon.remove();
+      return;
+    }
+    icon.replaceWith(getSvgRef(nameClass.substring(5), icon.className));
+  });
+};
+
+export const parseNavSource = async (html, index, {
+  anonymous = true,
+  cdnEnv = getConfig().cdnEnv,
+  hostnames = getConfig().hostnames ?? [],
+} = {}) => {
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  let ul;
+
+  if (cdnEnv) {
+    const area = dom.querySelector('main') ?? dom.body;
+    area.querySelectorAll(anonymous ? '.audience-private' : '.audience-public')
+      .forEach((el) => el.remove());
+    ul = getUsableRootList(area);
+    if (!ul) { return null; }
+  } else {
+    const area = document.createElement('main');
+    area.append(...dom.body.childNodes);
+    await loadArea({ area });
+    ul = getUsableRootList(area)?.cloneNode(true);
+    if (!ul) { return null; }
+  }
+  normalizeIconPlaceholders(ul);
+  if (Array.isArray(index)) { filterNavByIndex(ul, index, { hostnames }); }
+
+  return {
+    filteredListHtml: ul.outerHTML,
+    indexRows: index,
+  };
+};
+
+const fetchText = async (path, init, fetchImpl = fetch) => {
+  const response = await fetchImpl(path, init);
+  if (!response.ok) { return null; }
+  return response.text();
+};
+
+const fetchIndex = async (path, init, fetchImpl = fetch) => {
+  const response = await fetchImpl(path, init);
+  if (!response.ok) { return null; }
+  const json = await response.json();
+  return isValidIndexRows(json.data) ? json.data : null;
+};
+
+export const fetchNavSource = async ({
+  anonymous,
+  indexCacheEligible = anonymous,
+  config = getConfig(),
+  fetchImpl = fetch,
+  fragmentPromise,
+  requestInit,
+} = {}) => {
+  const [html, index] = await Promise.all([
+    (fragmentPromise ?? fetchText(DEF_SITE_NAV_PATH, requestInit, fetchImpl)).catch((error) => {
+      config.log?.('Could not fetch sitenav fragment', error);
+      return null;
+    }),
+    fetchIndex(
+      QUERY_INDEX_PATH,
+      requestInit ?? (indexCacheEligible ? undefined : { cache: 'no-store' }),
+      fetchImpl,
+    ).catch((error) => {
+      config.log?.('Could not fetch sitenav query index', error);
+      return null;
+    }),
+  ]);
+  if (html === null) { return null; }
+  return parseNavSource(html, index, {
+    anonymous,
+    cdnEnv: config.cdnEnv,
+    hostnames: config.hostnames,
   });
 };
 
@@ -241,7 +368,7 @@ export const removeEmptyMenus = (navList) => {
   while (pruneOnce() > 0) { /* repeat until no more empty lists remain */ }
 };
 
-export const decorateIndexBasedNav = (navList, index) => {
+export const decorateIndexBasedNav = (navList, index, state = createIndexBasedNavState()) => {
   // Sorting the whole index up front
   // A titleless row would become <a href="..."></a> — a link with no accessible name.
   // The nav is index-driven, so bad data must not be able to produce one.
@@ -249,7 +376,7 @@ export const decorateIndexBasedNav = (navList, index) => {
     .filter((entry) => entry.title?.trim())
     .sort((a, b) => a.title.localeCompare(b.title));
   sortedIndex.forEach((entry) => {
-    const parentPrefix = INDEX_BASED_NAV.find((top) => entry.path.startsWith(`${top.prefix}/`));
+    const parentPrefix = state.find((top) => entry.path.startsWith(`${top.prefix}/`));
     if (!parentPrefix) { return; }
     const parentLabel = navList.querySelector(`[index-based-nav-prefix^="${parentPrefix.prefix}"]`);
     if (!parentLabel) {
@@ -279,30 +406,17 @@ export const decorateIndexBasedNav = (navList, index) => {
 
     lvl3Ul.append(li);
   });
+  return state;
 };
 
-export const decorateBadges = () => {
-  INDEX_BASED_NAV.forEach((parentPrefix) => {
+export const decorateBadges = (state) => {
+  state.forEach((parentPrefix) => {
     if (!parentPrefix.count) { return; }
     const badge = document.createElement('span');
     badge.classList.add('count-badge');
     badge.textContent = parentPrefix.count;
     parentPrefix.label.after(badge);
   });
-};
-
-const fetchRes = async (path, init) => {
-  const resp = await fetch(path, init);
-  if (!resp.ok) { return null; }
-  if (path.includes('.json')) {
-    const json = await resp.json();
-    return json.data;
-  }
-  const html = await resp.text();
-  const dom = new DOMParser().parseFromString(html, 'text/html');
-  const main = dom.querySelector('main');
-  await loadArea({ area: main });
-  return dom.querySelector('ul') ?? document.createElement('ul');
 };
 
 export const getSiteNav = () => {
@@ -383,7 +497,7 @@ export const restoreMenuScroll = (currentLink) => {
 // scroll doesn't bubble, so this listens in the capture phase rather than per flyout.
 // Trailing-edge only: a scroll fires dozens of events and each save is a synchronous
 // serialise plus write.
-export const setupScrollMemory = (sitenav) => {
+export const setupScrollMemory = (sitenav, { signal } = {}) => {
   let timer;
   let pending;
 
@@ -399,11 +513,17 @@ export const setupScrollMemory = (sitenav) => {
     pending = { id: target.id, top: target.scrollTop };
     clearTimeout(timer);
     timer = setTimeout(flush, SCROLL_SAVE_DELAY);
-  }, true);
+  }, { capture: true, signal });
 
   // Scrolling and clicking a link inside the debounce window would otherwise lose the
   // last move. pagehide rather than beforeunload, which would cost the bfcache.
-  window.addEventListener('pagehide', flush);
+  window.addEventListener('pagehide', flush, { signal });
+  signal?.addEventListener('abort', () => {
+    clearTimeout(timer);
+    pending = null;
+  }, { once: true });
+
+  return { flush };
 };
 
 export const isMobileViewport = () => window.matchMedia('(width < 900px)').matches;
@@ -438,7 +558,7 @@ const parentToggleOf = (el) => el
 // then step in, Left to close it or go back out to the level-1 button.
 // Scoped to the rail, not the list: below 900px the list is display:none until the
 // trigger opens it, so the group starts empty and has to re-sync on that click.
-export const setupRovingTabindex = (sitenav, navList) => rovingTabindex(sitenav, {
+export const setupRovingTabindex = (sitenav, navList, { signal } = {}) => rovingTabindex(sitenav, {
   // Only what's inside the open flyout. focusableIn already drops the hidden ones, and
   // level-1 buttons are siblings of .level-2-menu rather than descendants, so they are
   // never members and keep their natural tabindex.
@@ -467,6 +587,7 @@ export const setupRovingTabindex = (sitenav, navList) => rovingTabindex(sitenav,
       return parentToggleOf(el) ?? false;
     },
   },
+  signal,
 });
 
 // Level-1 buttons only need a tooltip while the rail is collapsed
@@ -502,15 +623,14 @@ export const syncLevel1Tooltips = (sitenav) => {
 // name too — aria-label is kept in sync rather than duplicating the copy.
 const EXPAND_BTN_LABELS = { expanded: 'Collapse navigation', collapsed: 'Expand navigation' };
 
-export const getExpandButton = async (sitenav) => {
+export const getExpandButton = (sitenav) => {
   const btn = document.createElement('button');
   btn.id = 'sitenav-expand-btn';
   btn.classList.add('sitenav-expand-btn');
   btn.setAttribute('aria-expanded', String(sitenav.hasAttribute('is-expanded')));
   btn.setAttribute('aria-controls', sitenav.id);
 
-  const svg = await fetchSvgEl('/img/icons/s2-icon-expandright-20-n.svg');
-  btn.append(svg);
+  btn.append(getSvgRef('expandright', 'icon', 20));
 
   const tooltip = document.createElement('swc-tooltip');
   tooltip.setAttribute('for', btn.id);
@@ -539,15 +659,14 @@ export const getExpandButton = async (sitenav) => {
 
 // Mobile-only: sitenav-expand-btn is hidden below 900px (see CSS), and this
 // fixed, viewport-pinned trigger takes its place.
-export const getTriggerButton = async (sitenav) => {
+export const getTriggerButton = (sitenav) => {
   const btn = document.createElement('button');
   btn.classList.add('sitenav-trigger-btn');
   btn.setAttribute('aria-label', 'Toggle site navigation');
   btn.setAttribute('aria-expanded', 'false');
   btn.setAttribute('aria-controls', sitenav.id);
 
-  const svg = await fetchSvgEl('/img/icons/s2-icon-appsall-20-n.svg');
-  btn.append(svg);
+  btn.append(getSvgRef('appsall', 'icon', 20));
 
   btn.addEventListener('click', () => {
     if (sitenav.hasAttribute('is-open')) {
@@ -561,31 +680,60 @@ export const getTriggerButton = async (sitenav) => {
   return btn;
 };
 
+export const buildSitenav = (source) => {
+  const dom = new DOMParser().parseFromString(source.filteredListHtml, 'text/html');
+  const ul = getUsableRootList(dom.body);
+  if (!ul) { return null; }
+
+  upgradeIconPlaceholders(ul);
+  const { sitenav, nav } = getSiteNav();
+  const navList = decorateLevel(ul, 1);
+  removeEmptyMenus(navList);
+
+  const indexNavState = createIndexBasedNavState();
+  if (Array.isArray(source.indexRows)) {
+    decorateIndexBasedNav(navList, source.indexRows, indexNavState);
+  }
+  decorateBadges(indexNavState);
+  const currentLink = findCurrentPageInNav(navList);
+
+  const expandBtn = getExpandButton(sitenav);
+  const triggerBtn = getTriggerButton(sitenav);
+  nav.append(navList, expandBtn);
+  sitenav.append(triggerBtn);
+  return {
+    sitenav,
+    navList,
+    currentLink,
+    buttons: [expandBtn, triggerBtn],
+  };
+};
+
 // On small screens, tapping/clicking anywhere outside the fixed overlay
 // closes it — the desktop rail has no such dismiss affordance since it's
 // in-flow rather than floating over the rest of the page.
-export const setupOutsideClose = (sitenav) => {
+export const setupOutsideClose = (sitenav, { signal } = {}) => {
   document.addEventListener('click', (e) => {
     if (!sitenav.hasAttribute('is-open')) { return; }
     if (!isMobileViewport()) { return; }
     if (sitenav.contains(e.target)) { return; }
 
     closeSitenav(sitenav);
-  });
+  }, { signal });
 };
 
 // Reuses the level-1 button's own click handler (built in decorateLevel)
 // rather than duplicating its sibling-collapsing logic here.
-export const setupSearchIntegration = (navList) => {
+export const setupSearchIntegration = (navList, { signal } = {}) => {
   document.addEventListener(SEARCH_EXPAND_EVENT, (e) => {
     const menuId = toClassName(e.detail.label);
     navList.querySelector(`.level-1-button[aria-controls="sitenav-menu-${menuId}"]`)?.click();
-  });
+  }, { signal });
 };
 
 // Escape and clicking outside behave the same way regardless of which button
 // (expand or trigger) opened the sitenav.
-export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
+export const setupSitenavKeyboardHandling = (sitenav, buttons, { signal } = {}) => {
   document.addEventListener('keydown', (e) => {
     if (!sitenav.hasAttribute('is-open')) { return; }
 
@@ -612,73 +760,299 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
         first.focus();
       }
     }
+  }, { signal });
+};
+
+const controlledMenu = (sitenav, button) => {
+  const id = button?.getAttribute('aria-controls');
+  if (!id) { return null; }
+  return [...sitenav.querySelectorAll('[id]')].find((el) => el.id === id) ?? null;
+};
+
+const isUsableDisclosure = (sitenav, button) => {
+  const menu = controlledMenu(sitenav, button);
+  return menu && menu.querySelector('a[href], button');
+};
+
+const focusIdentity = (el) => {
+  if (!el) { return null; }
+  if (el.classList.contains('sitenav-trigger-btn')) { return { type: 'trigger' }; }
+  if (el.classList.contains('sitenav-expand-btn')) { return { type: 'expand' }; }
+  if (el.id) { return { type: 'id', value: el.id }; }
+  if (el.matches('a[href]')) { return { type: 'href', value: el.getAttribute('href') }; }
+  const controls = el.getAttribute('aria-controls');
+  if (controls) { return { type: 'controls', value: controls }; }
+  return null;
+};
+
+const findByIdentity = (sitenav, identity) => {
+  if (!identity) { return null; }
+  if (identity.type === 'trigger') {
+    return sitenav.querySelector('.sitenav-trigger-btn');
+  }
+  if (identity.type === 'expand') {
+    return sitenav.querySelector('.sitenav-expand-btn');
+  }
+  if (identity.type === 'id') {
+    return [...sitenav.querySelectorAll('[id]')]
+      .find((el) => el.id === identity.value) ?? null;
+  }
+  if (identity.type === 'href') {
+    return [...sitenav.querySelectorAll('a[href]')]
+      .find((el) => el.getAttribute('href') === identity.value) ?? null;
+  }
+  if (identity.type === 'controls') {
+    return [...sitenav.querySelectorAll('[aria-controls]')]
+      .find((el) => el.getAttribute('aria-controls') === identity.value) ?? null;
+  }
+  return null;
+};
+
+const captureUiState = (built) => {
+  const focused = built.sitenav.contains(document.activeElement) ? document.activeElement : null;
+  const parentDisclosures = [];
+  let item = focused?.closest('li');
+  while (item && built.sitenav.contains(item)) {
+    const button = item.querySelector(':scope > button[aria-controls]');
+    if (button) { parentDisclosures.push(focusIdentity(button)); }
+    item = item.parentElement?.closest('li');
+  }
+
+  return {
+    expanded: built.sitenav.hasAttribute('is-expanded'),
+    open: built.sitenav.hasAttribute('is-open'),
+    disclosures: [...built.navList.querySelectorAll('button[aria-controls]')]
+      .map((button) => ({
+        identity: focusIdentity(button),
+        expanded: button.getAttribute('aria-expanded'),
+      })),
+    focus: focusIdentity(focused),
+    parentDisclosures,
+  };
+};
+
+const restoreExpandedState = (built, expanded) => {
+  built.sitenav.toggleAttribute('is-expanded', expanded);
+  const expandButton = built.sitenav.querySelector('.sitenav-expand-btn');
+  if (!expandButton) { return; }
+  const label = expanded ? EXPAND_BTN_LABELS.expanded : EXPAND_BTN_LABELS.collapsed;
+  expandButton.setAttribute('aria-expanded', String(expanded));
+  expandButton.setAttribute('aria-label', label);
+  built.sitenav.querySelector(`swc-tooltip[for="${expandButton.id}"]`)?.replaceChildren(label);
+  syncLevel1Tooltips(built.sitenav);
+};
+
+const openAncestorDisclosures = (sitenav, el) => {
+  const ancestors = [];
+  let item = el.closest('li');
+  while (item && sitenav.contains(item)) {
+    const button = item.querySelector(':scope > button[aria-controls]');
+    if (button && button !== el) { ancestors.push(button); }
+    item = item.parentElement?.closest('li');
+  }
+  ancestors.reverse().forEach((button) => {
+    if (!isOpen(button) && isUsableDisclosure(sitenav, button)) { button.click(); }
   });
 };
 
-(async () => {
-  // Build the nav element
-  const { sitenav, nav } = getSiteNav();
+const restoreUiState = (built, state) => {
+  restoreExpandedState(built, state.expanded);
 
-  // Fetch the curated nav fragment and the query index in parallel. Both are
-  // root-relative so they hit this origin's worker, which audience-filters the
-  // index and honours ?compact=true (projecting to the path/title columns the
-  // nav needs, ~90% smaller).
+  state.disclosures.forEach(({ identity, expanded }) => {
+    const button = findByIdentity(built.sitenav, identity);
+    if (isUsableDisclosure(built.sitenav, button)) {
+      button.setAttribute('aria-expanded', expanded);
+    }
+  });
+
+  built.sitenav.toggleAttribute('is-open', state.open);
+  built.sitenav.querySelector('.sitenav-trigger-btn')
+    ?.setAttribute('aria-expanded', String(state.open));
+
+  if (!state.focus) { return; }
+  const exact = findByIdentity(built.sitenav, state.focus);
+  if (exact) {
+    openAncestorDisclosures(built.sitenav, exact);
+    exact.focus();
+    if (document.activeElement === exact) { return; }
+  }
+  const parent = state.parentDisclosures
+    .map((identity) => findByIdentity(built.sitenav, identity))
+    .find((button) => isUsableDisclosure(built.sitenav, button));
+  if (parent) {
+    parent.focus();
+    if (document.activeElement === parent) { return; }
+  }
+  const fallback = built.buttons.find((button) => button.checkVisibility({
+    visibilityProperty: true,
+  })) ?? built.buttons[0] ?? built.buttons[1];
+  fallback?.focus();
+};
+
+const restoreActiveScroll = (built) => {
+  if (!restoreMenuScroll(built.currentLink)) {
+    built.currentLink?.scrollIntoView({ block: 'nearest' });
+  }
+};
+
+export const createSitenavController = (main) => {
+  let activeEntry = null;
+
+  const activate = (built, { syncTooltips = true } = {}) => {
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    setupSitenavKeyboardHandling(built.sitenav, built.buttons, { signal });
+    setupOutsideClose(built.sitenav, { signal });
+    setupSearchIntegration(built.navList, { signal });
+    if (syncTooltips) { syncLevel1Tooltips(built.sitenav); }
+    const roving = setupRovingTabindex(built.sitenav, built.navList, { signal });
+    const scrollMemory = setupScrollMemory(built.sitenav, { signal });
+    return {
+      built, abortController, roving, scrollMemory,
+    };
+  };
+
+  const controller = {
+    mount(built) {
+      if (activeEntry) { return controller.replace(built); }
+      main.before(built.sitenav);
+      activeEntry = activate(built);
+      restoreActiveScroll(built);
+      return built;
+    },
+    replace(built) {
+      if (!activeEntry) { return controller.mount(built); }
+      const state = captureUiState(activeEntry.built);
+      activeEntry.scrollMemory.flush();
+      activeEntry.abortController.abort();
+      activeEntry.built.sitenav.replaceWith(built.sitenav);
+      activeEntry = activate(built, { syncTooltips: false });
+      restoreUiState(built, state);
+      activeEntry.roving.sync();
+      restoreActiveScroll(built);
+      return built;
+    },
+    get active() {
+      return activeEntry?.built ?? null;
+    },
+  };
+
+  return controller;
+};
+
+export const initSitenav = async ({
+  config = getConfig(),
+  storage,
+  fetchImpl = fetch,
+  checkSession = checkIms,
+  now = Date.now(),
+  build = buildSitenav,
+} = {}) => {
+  const main = document.querySelector('main');
+  if (!main) { return null; }
+  const controller = createSitenavController(main);
+  let activeSource = null;
+  let activePriority = 0;
+  let resolvedStorage = null;
+
+  const mountBuilt = (built, source, priority) => {
+    if (!built || priority < activePriority) { return false; }
+    if (activeSource && sameNavSource(activeSource, source)) {
+      activePriority = priority;
+      activeSource = source;
+      return true;
+    }
+    if (controller.active) {
+      controller.replace(built);
+    } else {
+      controller.mount(built);
+    }
+    activePriority = priority;
+    activeSource = source;
+    return true;
+  };
+
+  const sessionPromise = Promise.resolve().then(() => checkSession());
+  const fragmentPromise = fetchText(DEF_SITE_NAV_PATH, undefined, fetchImpl).catch((error) => {
+    config.log?.('Could not fetch sitenav fragment', error);
+    return null;
+  });
+  const cachedTask = (async () => {
+    if (!config.cdnEnv) { return false; }
+    resolvedStorage = storage;
+    if (resolvedStorage === undefined) {
+      try {
+        resolvedStorage = globalThis.localStorage;
+      } catch {
+        resolvedStorage = null;
+      }
+    }
+    const cachedSource = readPublicNavCache({ storage: resolvedStorage, now });
+    if (!cachedSource) { return false; }
+    const cachedBuilt = await build(cachedSource);
+    if (!cachedBuilt) {
+      removePublicNavCache(resolvedStorage);
+      config.log?.('Could not build cached sitenav');
+      return false;
+    }
+    return mountBuilt(cachedBuilt, cachedSource, 1);
+  })();
+
+  // The curated nav fragment is public and starts independently of IMS. The
+  // query index waits for IMS because its browser-cache policy is audience
+  // dependent. Both are root-relative so they hit this origin's worker, which
+  // audience-filters the index and honours ?compact=true (projecting to the
+  // path/title columns the nav needs, ~90% smaller).
   //
   // The anonymous index is cacheable (public, max-age) and the browser HTTP
   // cache is cookie-blind, so a signed-in viewer must bypass it - otherwise it
   // reuses the cached anonymous index and shows no private items until the TTL
   // lapses. Anonymous viewers keep the cache (nothing private to miss).
-  const { anonymous } = await checkIms();
-  const [ul, index] = await Promise.all([
-    fetchRes(DEF_SITE_NAV_PATH),
-    fetchRes('/query-index.json?compact=true', anonymous ? undefined : { cache: 'no-store' }),
-  ]);
-  if (!ul) { return; }
-
-  // Drop links to pages this visitor can't see before decorating the tree.
-  filterNavByIndex(ul, index);
-
-  const navList = decorateLevel(ul, 1);
-
-  // Drop any parent (at any depth) left with an empty flyout after audience filtering.
-  removeEmptyMenus(navList);
-
-  // Build the desktop expand button and its mobile trigger-button counterpart
-  const expandBtn = await getExpandButton(sitenav);
-  const triggerBtn = await getTriggerButton(sitenav);
-  setupSitenavKeyboardHandling(sitenav, [expandBtn, triggerBtn]);
-  setupOutsideClose(sitenav);
-  setupSearchIntegration(navList);
-
-  // Stitch index-based nav post DOM injection (reuses the index fetched above)
-  if (index) { decorateIndexBasedNav(navList, index); }
-
-  // decorate the badge counts
-  decorateBadges();
-
-  // Find current page
-  const currentLink = findCurrentPageInNav(navList);
-
-  // Append it all. triggerBtn is a sibling of nav (not nested inside it) so
-  // that hiding nav below 900px doesn't take the mobile trigger down with it.
-  nav.append(navList, expandBtn);
-  sitenav.append(triggerBtn);
-
-  // Seed level-1 tooltips for the rail's default (collapsed) state
-  syncLevel1Tooltips(sitenav);
-
-  const main = document.querySelector('main');
-  if (!main) { return; }
-  main.before(sitenav);
-
-  // After insertion: the visibility checks it depends on only mean anything for
-  // elements that are actually in the document.
-  setupRovingTabindex(sitenav, navList);
-
-  // Prefer where this reader last left the flyout; fall back to just revealing the
-  // current page when there's nothing to restore or the saved offset would hide it.
-  setupScrollMemory(sitenav);
-  if (!restoreMenuScroll(currentLink)) {
-    currentLink?.scrollIntoView({ block: 'nearest' });
+  let audienceAnonymous = true;
+  let indexCacheEligible = false;
+  let persistenceEligible = false;
+  let sessionFailed = false;
+  try {
+    const session = await sessionPromise;
+    audienceAnonymous = session.anonymous;
+    indexCacheEligible = session.anonymous;
+    persistenceEligible = true;
+  } catch (error) {
+    sessionFailed = true;
+    config.log?.('Could not check IMS session', error);
   }
-})();
+  const source = await fetchNavSource({
+    anonymous: audienceAnonymous,
+    indexCacheEligible,
+    config,
+    fetchImpl,
+    fragmentPromise: sessionFailed ? undefined : fragmentPromise,
+    requestInit: sessionFailed ? ANONYMOUS_FRESH_INIT : undefined,
+  });
+  if (!source || source.indexRows === null) {
+    await cachedTask;
+    if (!source || controller.active || sessionFailed) { return controller.active; }
+  }
+
+  const built = await build(source);
+  if (!built) {
+    await cachedTask;
+    return controller.active;
+  }
+  mountBuilt(built, source, 2);
+
+  if (config.cdnEnv) {
+    writePublicNavCache(source, {
+      storage: resolvedStorage,
+      now,
+      enabled: persistenceEligible,
+      anonymous: audienceAnonymous,
+    });
+  }
+  await cachedTask;
+  return controller.active;
+};
+
+initSitenav().catch((error) => {
+  getConfig().log?.('Could not initialize sitenav', error);
+});
