@@ -191,8 +191,10 @@ class SHSearch extends LitElement {
     this._close();
   }
 
-  _selectNavArea(area) {
-    document.dispatchEvent(new CustomEvent(SEARCH_EXPAND_EVENT, { detail: { label: area.label } }));
+  _selectNavArea(area, sourceEvent) {
+    document.dispatchEvent(new CustomEvent(SEARCH_EXPAND_EVENT, {
+      detail: { label: area.label, sourceEvent },
+    }));
     this._close();
   }
 
@@ -243,7 +245,7 @@ class SHSearch extends LitElement {
           role="option"
           aria-selected=${isActive}
           tabindex="-1"
-          @click=${() => this._selectNavArea(area)}>
+          @click=${(e) => this._selectNavArea(area, e)}>
           <div class="result-text">
             <p class="hit-title">${area.label}</p>
             ${area.description ? html`<p class="hit-description">${area.description}</p>` : nothing}

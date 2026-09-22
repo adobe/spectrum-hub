@@ -579,7 +579,18 @@ export const setupOutsideClose = (sitenav) => {
 export const setupSearchIntegration = (navList) => {
   document.addEventListener(SEARCH_EXPAND_EVENT, (e) => {
     const menuId = toClassName(e.detail.label);
-    navList.querySelector(`.level-1-button[aria-controls="sitenav-menu-${menuId}"]`)?.click();
+    const button = navList.querySelector(`.level-1-button[aria-controls="sitenav-menu-${menuId}"]`);
+    if (!button) { return; }
+
+    const sitenav = navList.closest('#sitenav');
+    if (isMobileViewport() && sitenav) {
+      e.detail.sourceEvent?.stopPropagation();
+      sitenav.setAttribute('is-open', '');
+      sitenav.querySelector('.sitenav-trigger-btn')?.setAttribute('aria-expanded', 'true');
+    }
+    if (button.getAttribute('aria-expanded') !== 'true') {
+      button.click();
+    }
   });
 };
 

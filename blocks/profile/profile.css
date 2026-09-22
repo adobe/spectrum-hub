@@ -1,6 +1,12 @@
 :host {
   --s2-avatar-100: var(--s2-component-s-height);
 
+  flex-shrink: 0;
+
+  se-button {
+    white-space: nowrap;
+  }
+
   button {
     font-family: unset;
   }

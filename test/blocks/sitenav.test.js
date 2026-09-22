@@ -1664,9 +1664,16 @@ describe('sitenav block', () => {
   });
 
   describe('setupSearchIntegration', () => {
+    let sitenav;
     let navList;
+    let trigger;
 
     beforeEach(() => {
+      sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      trigger = document.createElement('button');
+      trigger.className = 'sitenav-trigger-btn';
+      trigger.setAttribute('aria-expanded', 'false');
       navList = buildNavList(`
         <ul>
           <li><p>Getting started</p><ul><li><a href="/a">a</a></li></ul></li>
@@ -1674,25 +1681,74 @@ describe('sitenav block', () => {
         </ul>
       `);
       decorateLevel(navList, 1);
-      document.body.append(navList);
+      sitenav.append(trigger, navList);
+      document.body.append(sitenav);
       setupSearchIntegration(navList);
     });
 
-    afterEach(() => navList.remove());
+    afterEach(() => sitenav.remove());
 
-    it('expands the level-1 button matching the dispatched label', () => {
+    it('opens the mobile sitenav before expanding the matching level-1 button', () => {
+      stubMatchMedia(sandbox, true);
       document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Foundations' } }));
+
+      const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('keeps the mobile sitenav open when an outside pointer click selects an area', () => {
+      stubMatchMedia(sandbox, true);
+      setupOutsideClose(sitenav);
+      const outside = document.createElement('button');
+      outside.addEventListener('click', (sourceEvent) => {
+        document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+          detail: { label: 'Foundations', sourceEvent },
+        }));
+      });
+      document.body.append(outside);
+
+      outside.click();
+
+      const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('expands the matching level-1 button without opening the desktop sitenav', () => {
+      stubMatchMedia(sandbox, false);
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Foundations' } }));
+
+      const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('leaves an already-expanded matching level-1 button expanded', () => {
+      stubMatchMedia(sandbox, false);
+      const event = () => new CustomEvent('sitenav:expand-level1', {
+        detail: { label: 'Foundations' },
+      });
+
+      document.dispatchEvent(event());
+      document.dispatchEvent(event());
 
       const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
       expect(btn.getAttribute('aria-expanded')).to.equal('true');
     });
 
     it('does nothing when no level-1 button matches the label', () => {
+      stubMatchMedia(sandbox, true);
       document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Nonexistent' } }));
 
       const anyExpanded = [...navList.querySelectorAll('.level-1-button')]
         .some((btn) => btn.getAttribute('aria-expanded') === 'true');
       expect(anyExpanded).to.be.false;
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
     });
   });
 });
