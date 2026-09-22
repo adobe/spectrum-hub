@@ -384,8 +384,13 @@ function loadIcons(el) {
   const svgs = icons.reduce((acc, icon) => {
     const lastClass = Array.from(icon.classList).pop();
     if (lastClass.startsWith('icon-size-')) {
-      const prefix = icon.parentElement.nodeName.startsWith('H') ? 'heading' : 'text';
-      icon.parentElement.classList.add(lastClass.replace('icon', prefix));
+      const parent = icon.parentElement;
+      const isHeading = /^H[1-6]$/.test(parent.nodeName);
+      const prefix = isHeading ? 'heading' : 'text';
+      parent.classList.add(lastClass.replace('icon', prefix));
+      if (isHeading) {
+        parent.id = parent.id.replace(/^size-[a-z0-9]+-/, '');
+      }
       icon.remove();
     } else {
       acc.push(icon);

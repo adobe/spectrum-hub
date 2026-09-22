@@ -350,5 +350,59 @@ describe('ak.js', () => {
       await loadArea({ area });
       expect(area.querySelector('[data-status]')).to.be.null;
     });
+
+    it('removes the size prefix from an icon-sized h1 id', async () => {
+      const area = document.createElement('div');
+      area.innerHTML = `
+        <div>
+          <h1 id="size-xl-overview">
+            <span class="icon icon-size-xl"></span>
+            Overview
+          </h1>
+        </div>
+      `;
+
+      await loadArea({ area });
+
+      const heading = area.querySelector('h1');
+      expect(heading.id).to.equal('overview');
+      expect(heading.classList.contains('heading-size-xl')).to.be.true;
+    });
+
+    it('removes the size prefix from an icon-sized h3 id', async () => {
+      const area = document.createElement('div');
+      area.innerHTML = `
+        <div>
+          <h3 id="size-m-details">
+            <span class="icon icon-size-m"></span>
+            Details
+          </h3>
+        </div>
+      `;
+
+      await loadArea({ area });
+
+      const heading = area.querySelector('h3');
+      expect(heading.id).to.equal('details');
+      expect(heading.classList.contains('heading-size-m')).to.be.true;
+    });
+
+    it('does not normalize a non-heading id for text size syntax', async () => {
+      const area = document.createElement('div');
+      area.innerHTML = `
+        <div>
+          <p id="size-m-summary">
+            <span class="icon icon-size-m"></span>
+            Summary
+          </p>
+        </div>
+      `;
+
+      await loadArea({ area });
+
+      const paragraph = area.querySelector('p');
+      expect(paragraph.id).to.equal('size-m-summary');
+      expect(paragraph.classList.contains('text-size-m')).to.be.true;
+    });
   });
 });
