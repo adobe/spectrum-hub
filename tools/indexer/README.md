@@ -24,7 +24,7 @@ Two optional variables tune the run:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `SITE_ORIGIN` | `https://main--spectrum-hub--adobe.aem.live` | Where content is read from. |
+| `SITE_ORIGIN` | `https://spectrum.adobe.com` | Where content is read from. |
 | `INDEXER_CONCURRENCY` | `3` | Page fetches in flight. The origin rate-limits bursts: a full run at 16 draws HTTP 429 widely and aborts, while 3 completes clean in about six seconds. Raise it only if the origin's limits change. |
 
 ```bash
