@@ -8,7 +8,7 @@ on:
       base_url:
         description: 'Site to crawl (defaults to production)'
         type: string
-        default: 'https://main--spectrum-hub--adobe.aem.live'
+        default: 'https://spectrum.adobe.com'
 
 # One crawl at a time; a full-site crawl can run long and there's no benefit to
 # overlapping runs against the same target.
@@ -39,7 +39,7 @@ jobs:
       - name: Crawl site for broken navigation
         run: npx playwright test --config=playwright.link-check.config.js
         env:
-          LINKCHECK_BASE_URL: ${{ inputs.base_url || 'https://main--spectrum-hub--adobe.aem.live' }}
+          LINKCHECK_BASE_URL: ${{ inputs.base_url || 'https://spectrum.adobe.com' }}
 
       - name: Upload link check report
         if: always()
