@@ -19,11 +19,17 @@
 #   TARGET=stage ./set-secrets.sh                 # rotate both (generate session, prompt IMS)
 #   TARGET=stage SESSION_ONLY=1 ./set-secrets.sh  # only the session secret
 #   TARGET=stage IMS_ONLY=1 ./set-secrets.sh      # only the IMS client secret
+#   TARGET=stage ORIGIN_ONLY=1 ./set-secrets.sh   # only the aem.page/live origin token
 #   TARGET=prod  GRANT_ROLE=1 ./set-secrets.sh    # also attach the IAM read policy
+#
+# The origin token backs token-based Site Authentication (ORIGIN_AUTHENTICATION_ID
+# in the env file); it is opt-in (ORIGIN_ONLY=1) and not part of the default
+# "rotate both", since not every deployment enables origin auth.
 #
 # Value sources (optional; interactive fallbacks otherwise):
 #   SESSION_SECRET_VALUE   - use this instead of generating one (openssl rand)
 #   IMS_CLIENT_SECRET_VALUE- use this instead of prompting
+#   ORIGIN_AUTHENTICATION_VALUE - the `hlx_…` site token (else hidden prompt)
 #   GRANT_ROLE=1           - also put the GetSecretValue policy on the role
 #   ROLE_NAME              - execution role (default: read from the function)
 set -euo pipefail
@@ -53,6 +59,7 @@ if [ "$TARGET" = prod ]; then ENV_FILE_NAME="env.json"; else ENV_FILE_NAME="env.
 PREFIX="spectrum-hub/${TARGET}"
 SESSION_SECRET_NAME="${SESSION_SECRET_NAME:-$PREFIX/session-secret}"
 IMS_CLIENT_SECRET_NAME="${IMS_CLIENT_SECRET_NAME:-$PREFIX/ims-client-secret}"
+ORIGIN_AUTH_SECRET_NAME="${ORIGIN_AUTH_SECRET_NAME:-$PREFIX/origin-auth}"
 
 aws_sm() { aws secretsmanager "$@" --profile "$PROFILE" --region "$REGION"; }
 
@@ -76,9 +83,14 @@ upsert_secret() {
   fi
 }
 
-do_session=1; do_ims=1
-[ "${IMS_ONLY:-0}" = "1" ] && do_session=0
-[ "${SESSION_ONLY:-0}" = "1" ] && do_ims=0
+do_session=1; do_ims=1; do_origin=0
+# ORIGIN_ONLY narrows to just the origin token (the others are left untouched).
+if [ "${ORIGIN_ONLY:-0}" = "1" ]; then
+  do_session=0; do_ims=0; do_origin=1
+else
+  [ "${IMS_ONLY:-0}" = "1" ] && do_session=0
+  [ "${SESSION_ONLY:-0}" = "1" ] && do_ims=0
+fi
 
 if [ "$do_session" = "1" ]; then
   # SESSION_SECRET is an HMAC key with no external dependency, so a fresh random
@@ -102,6 +114,18 @@ if [ "$do_ims" = "1" ]; then
   [ -z "$ims_value" ] && { echo "ERROR: IMS_CLIENT_SECRET value is empty." >&2; exit 1; }
   echo "Storing $IMS_CLIENT_SECRET_NAME ..."
   upsert_secret "$IMS_CLIENT_SECRET_NAME" "$ims_value"
+fi
+
+if [ "$do_origin" = "1" ]; then
+  # The origin token is minted by AEM (admin.hlx.page .../secrets.json, value
+  # starts with hlx_) - it cannot be generated here. Provide it via env or prompt.
+  origin_value="${ORIGIN_AUTHENTICATION_VALUE:-}"
+  if [ -z "$origin_value" ]; then
+    read -rs -p "Enter ORIGIN_AUTHENTICATION (hlx_ site token) for $TARGET (input hidden): " origin_value; echo
+  fi
+  [ -z "$origin_value" ] && { echo "ERROR: ORIGIN_AUTHENTICATION value is empty." >&2; exit 1; }
+  echo "Storing $ORIGIN_AUTH_SECRET_NAME ..."
+  upsert_secret "$ORIGIN_AUTH_SECRET_NAME" "$origin_value"
 fi
 
 # Optional: grant the Lambda execution role permission to read this target's
@@ -131,6 +155,7 @@ SESSION_SECRET / IMS_CLIENT_SECRET), then redeploy with TARGET=${TARGET} ./deplo
 
   "SESSION_SECRET_ID": "${SESSION_SECRET_NAME}",
   "IMS_CLIENT_SECRET_ID": "${IMS_CLIENT_SECRET_NAME}",
+  "ORIGIN_AUTHENTICATION_ID": "${ORIGIN_AUTH_SECRET_NAME}",  # only if origin auth is enabled
 
 If you did not pass GRANT_ROLE=1, grant the execution role
 secretsmanager:GetSecretValue on arn:aws:secretsmanager:${REGION}:<account>:secret:${PREFIX}/*

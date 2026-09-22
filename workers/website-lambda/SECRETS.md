@@ -8,10 +8,20 @@ Instead, the target's env file — **`env.json` for prod, `env.stage.json` for s
 (matching `deploy.sh`) — carries only non-secret **ids**, and the function
 resolves the values at runtime from AWS Secrets Manager:
 
-| Plain name          | Env var (the id)          | Secret it points at                     |
-| ------------------- | ------------------------- | --------------------------------------- |
-| `SESSION_SECRET`    | `SESSION_SECRET_ID`       | `spectrum-hub/<target>/session-secret`    |
-| `IMS_CLIENT_SECRET` | `IMS_CLIENT_SECRET_ID`    | `spectrum-hub/<target>/ims-client-secret` |
+| Plain name             | Env var (the id)           | Secret it points at                       |
+| ---------------------- | -------------------------- | ----------------------------------------- |
+| `SESSION_SECRET`       | `SESSION_SECRET_ID`        | `spectrum-hub/<target>/session-secret`      |
+| `IMS_CLIENT_SECRET`    | `IMS_CLIENT_SECRET_ID`     | `spectrum-hub/<target>/ims-client-secret`   |
+| `ORIGIN_AUTHENTICATION` | `ORIGIN_AUTHENTICATION_ID` | `spectrum-hub/<target>/origin-auth`         |
+
+`ORIGIN_AUTHENTICATION` is the AEM origin token (`hlx_…`) for token-based Site
+Authentication; it is only set on targets whose origin is locked (stage/aem.page
+today). `formatRequest` in [`index.js`](./index.js) sends it upstream as
+`Authorization: token <value>`. Create/rotate it with
+`TARGET=stage ORIGIN_ONLY=1 ./set-secrets.sh`. Media (`*/media_*`) bypasses the
+Lambda, so the same token must also be set as an `Authorization` origin header on
+the media CloudFront behavior — see [`README.md`](./README.md) and
+[`add-media-behavior.sh`](./add-media-behavior.sh) (`ORIGIN_AUTHENTICATION=…`).
 
 On the first request on a cold container, [`lib/secrets.js`](./lib/secrets.js)
 `resolveSecrets()` fetches each configured id (via the execution role) and

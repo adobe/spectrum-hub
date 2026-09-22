@@ -147,9 +147,15 @@ sends media back through the Lambda. Modelled on Adobe's
 
 Deliberate choices: **no** origin-request policy on the media behavior (so
 `spectrum_session` is never forwarded to the public origin), and **no** cache-tag
-push invalidation (immutable media never needs it). If the site ever enables
-token-based origin auth, set `ORIGIN_AUTHENTICATION` (Lambda path) and add an
-`Authorization: token hlx_…` header to the media origin.
+push invalidation (immutable media never needs it). Because media bypasses the
+Lambda, token-based origin auth needs the token in **both** places: the Lambda
+path resolves `ORIGIN_AUTHENTICATION` from Secrets Manager
+(`ORIGIN_AUTHENTICATION_ID` in the env file — see [`SECRETS.md`](./SECRETS.md)),
+and the media behavior carries a literal `Authorization: token hlx_…` origin
+header. Pass the token to `add-media-behavior.sh` to add it:
+`ORIGIN_AUTHENTICATION=hlx_… DIST_ID=<stage-dist> AEM_HOST_SUFFIX=aem.page ./add-media-behavior.sh`
+(CloudFront origin custom headers can't reference Secrets Manager, so this value
+lives in the distribution config).
 
 ## Content caching (the default/Lambda behavior)
 

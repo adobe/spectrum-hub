@@ -26,6 +26,9 @@
 const SECRET_ENV = {
   SESSION_SECRET: 'SESSION_SECRET_ID',
   IMS_CLIENT_SECRET: 'IMS_CLIENT_SECRET_ID',
+  // The aem.page/aem.live origin token (`hlx_…`) for token-based Site
+  // Authentication - formatRequest emits it as `Authorization: token <value>`.
+  ORIGIN_AUTHENTICATION: 'ORIGIN_AUTHENTICATION_ID',
 };
 
 export const SECRET_TTL_MS = 10 * 60 * 1000;
