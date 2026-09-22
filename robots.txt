@@ -4,4 +4,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://docs.da.live/sitemap.xml
+Sitemap: https://spectrum.adobe.com/sitemap.xml
