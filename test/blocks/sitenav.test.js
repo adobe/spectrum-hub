@@ -1,9 +1,10 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
+import { getConfig, setConfig } from '../../scripts/ak.js';
 
-// sitenav.js runs a top-level IIFE that fetches nav content immediately on
+// sitenav.js calls initSitenav at module scope and fetches nav content immediately on
 // import. Stub fetch first so that hits a controlled 404 (short-circuiting
-// the IIFE cleanly) instead of the network.
+// initialization cleanly) instead of the network.
 const bootstrapFetchStub = sinon.stub(window, 'fetch').resolves(new Response('', { status: 404 }));
 
 const {
@@ -11,8 +12,10 @@ const {
   isMobileViewport, setupOutsideClose, setupSitenavKeyboardHandling, setupSearchIntegration,
   syncLevel1Tooltips, decorateIndexBasedNav, decorateBadges, filterNavByIndex,
   findCurrentPageInNav, removeEmptyMenus, setupRovingTabindex,
-  restoreMenuScroll, setupScrollMemory,
+  restoreMenuScroll, setupScrollMemory, parseNavSource, buildSitenav, fetchNavSource,
+  createSitenavController, initSitenav,
 } = await import('../../blocks/sitenav/sitenav.js');
+const { CACHE_KEY, CACHE_VERSION } = await import('../../blocks/sitenav/sitenav-cache.js');
 
 bootstrapFetchStub.restore();
 
@@ -41,13 +44,6 @@ function stubMatchMedia(sandbox, matches) {
   };
   sandbox.stub(window, 'matchMedia').returns(mql);
   return mql;
-}
-
-function stubIconFetch(sandbox) {
-  return sandbox.stub(window, 'fetch').resolves(new Response('<svg></svg>', {
-    status: 200,
-    headers: { 'Content-Type': 'image/svg+xml' },
-  }));
 }
 
 function setMeta(name, content) {
@@ -624,8 +620,8 @@ describe('sitenav block', () => {
         { path: '/web/rsp/components/action-button', title: 'Action button' },
       ];
 
-      decorateIndexBasedNav(navList, index);
-      decorateBadges();
+      const state = decorateIndexBasedNav(navList, index);
+      decorateBadges(state);
 
       const label = navList.querySelector('[index-based-nav-prefix="/web/design-only"]');
       const badge = label.nextElementSibling;
@@ -675,6 +671,219 @@ describe('sitenav block', () => {
       expect(paths(ul)).to.deep.equal(['/a']);
     });
 
+    describe('parseNavSource', () => {
+      it('returns a canonical anonymous-filtered pre-decoration list', async () => {
+        const source = await parseNavSource(`
+          <main>
+            <ul>
+              <li><span class="icon icon-home"></span><a href="/public">Public</a></li>
+              <li class="audience-private"><a href="/private">Private</a></li>
+            </ul>
+          </main>
+        `, [{ path: '/public', title: 'Public' }], {
+          anonymous: true,
+          cdnEnv: true,
+        });
+
+        expect(source.filteredListHtml).to.include('span class="icon icon-home"');
+        expect(source.filteredListHtml).to.not.include('/private');
+        expect(source.indexRows).to.deep.equal([{ path: '/public', title: 'Public' }]);
+      });
+
+      it('removes the public duplicate for an authenticated visitor', async () => {
+        const source = await parseNavSource(`
+          <main>
+            <ul>
+              <li class="audience-public"><a href="/shared">Public</a></li>
+              <li class="audience-private"><a href="/shared">Private</a></li>
+            </ul>
+          </main>
+        `, [{ path: '/shared', title: 'Shared' }], {
+          anonymous: false,
+          cdnEnv: true,
+        });
+
+        expect(source.filteredListHtml).to.not.include('>Public<');
+        expect(source.filteredListHtml).to.include('>Private<');
+      });
+
+      it('removes audience-gated wrappers before selecting the root list', async () => {
+        const source = await parseNavSource(`
+          <main>
+            <div class="audience-public">
+              <ul><li><a href="/public">Public</a></li></ul>
+            </div>
+            <div class="audience-private">
+              <ul><li><a href="/private">Private</a></li></ul>
+            </div>
+          </main>
+        `, [{ path: '/public', title: 'Public' }], {
+          anonymous: true,
+          cdnEnv: true,
+        });
+
+        expect(source.filteredListHtml).to.include('>Public<');
+        expect(source.filteredListHtml).to.not.include('>Private<');
+      });
+
+      it('rejects responses without exactly one usable root list', async () => {
+        expect(await parseNavSource('<main><p>No list</p></main>', [], {
+          cdnEnv: true,
+        })).to.be.null;
+        expect(await parseNavSource('<main><ul></ul><ul><li>Two</li></ul></main>', [], {
+          cdnEnv: true,
+        })).to.be.null;
+        expect(await parseNavSource('<main><ul></ul></main>', [], {
+          cdnEnv: true,
+        })).to.be.null;
+      });
+
+      it('uses configured hostnames when filtering canonical source links', async () => {
+        const source = await parseNavSource(`
+          <main>
+            <ul>
+              <li><a href="https://spectrum.adobe.com/private">Private</a></li>
+              <li><a href="https://example.com/external">External</a></li>
+            </ul>
+          </main>
+        `, [], {
+          anonymous: true,
+          cdnEnv: true,
+          hostnames: ['spectrum.adobe.com'],
+        });
+
+        expect(source.filteredListHtml).to.not.include('spectrum.adobe.com/private');
+        expect(source.filteredListHtml).to.include('example.com/external');
+      });
+
+      it('uses a synthetic main so off-CDN bare markup keeps preview audience behavior', async () => {
+        const config = getConfig();
+        setConfig({ ...config, cdnEnv: false });
+        try {
+          const source = await parseNavSource(`
+            <ul>
+              <li class="audience-public"><a href="/public">Public</a></li>
+              <li class="audience-private"><a href="/private">Private</a></li>
+              <li><a href="/unknown">Unknown</a></li>
+            </ul>
+          `, [
+            { path: '/public', title: 'Public' },
+            { path: '/private', title: 'Private' },
+          ], { cdnEnv: false });
+
+          expect(source.filteredListHtml).to.not.include('>Public<');
+          expect(source.filteredListHtml).to.include('>Private<');
+          expect(source.filteredListHtml).to.not.include('/unknown');
+          expect(source.indexRows).to.deep.equal([
+            { path: '/public', title: 'Public' },
+            { path: '/private', title: 'Private' },
+          ]);
+        } finally {
+          setConfig(config);
+        }
+      });
+
+      it('normalizes already-converted off-CDN SVG icons to canonical placeholders', async () => {
+        const config = getConfig();
+        setConfig({ ...config, cdnEnv: false });
+        try {
+          const source = await parseNavSource(`
+            <ul>
+              <li>
+                <svg class="icon icon-home"><use href="/img/icons/s2-icon-home-20-n.svg#icon"></use></svg>
+                <a href="/public">Public</a>
+              </li>
+            </ul>
+          `, [{ path: '/public', title: 'Public' }], { cdnEnv: false });
+
+          expect(source.filteredListHtml).to.include('<span class="icon icon-home"></span>');
+          expect(source.filteredListHtml).to.not.include('<svg');
+        } finally {
+          setConfig(config);
+        }
+      });
+
+      it('fails open for a null index but filters local leaves for a successful empty index', async () => {
+        const html = '<main><ul><li><a href="/unknown">Unknown</a></li></ul></main>';
+
+        const failed = await parseNavSource(html, null, { cdnEnv: true });
+        const empty = await parseNavSource(html, [], { cdnEnv: true });
+
+        expect(failed.filteredListHtml).to.include('/unknown');
+        expect(failed.indexRows).to.be.null;
+        expect(empty.filteredListHtml).to.not.include('/unknown');
+        expect(empty.indexRows).to.deep.equal([]);
+      });
+
+      it('fetches plain nav text and an authenticated compact index through focused requests', async () => {
+        const fetchImpl = sandbox.stub();
+        fetchImpl.onFirstCall().resolves(new Response(
+          '<main><ul><li><a href="/public">Public</a></li></ul></main>',
+          { status: 200 },
+        ));
+        fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({
+          data: [{ path: '/public', title: 'Public' }],
+        }), { status: 200 }));
+
+        const source = await fetchNavSource({
+          anonymous: false,
+          config: { cdnEnv: true, hostnames: [] },
+          fetchImpl,
+        });
+
+        expect(fetchImpl.firstCall.args).to.deep.equal([
+          '/fragments/nav/site-nav.plain.html',
+          undefined,
+        ]);
+        expect(fetchImpl.secondCall.args).to.deep.equal([
+          '/query-index.json?compact=true',
+          { cache: 'no-store' },
+        ]);
+        expect(source.indexRows).to.deep.equal([{ path: '/public', title: 'Public' }]);
+      });
+
+      it('represents an index request failure as null and keeps authored links', async () => {
+        const fetchImpl = sandbox.stub();
+        fetchImpl.onFirstCall().resolves(new Response(
+          '<main><ul><li><a href="/public">Public</a></li></ul></main>',
+          { status: 200 },
+        ));
+        fetchImpl.onSecondCall().rejects(new Error('index unavailable'));
+
+        const source = await fetchNavSource({
+          anonymous: true,
+          config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+          fetchImpl,
+        });
+
+        expect(source.indexRows).to.be.null;
+        expect(source.filteredListHtml).to.include('/public');
+      });
+
+      it('treats a mixed valid and malformed successful index payload as a failed index', async () => {
+        const fetchImpl = sandbox.stub();
+        fetchImpl.onFirstCall().resolves(new Response(
+          '<main><ul><li><a href="/public">Public</a></li></ul></main>',
+          { status: 200 },
+        ));
+        fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({
+          data: [
+            { path: '/public', title: 'Public' },
+            { path: '/malformed', title: null },
+          ],
+        }), { status: 200 }));
+
+        const source = await fetchNavSource({
+          anonymous: true,
+          config: { cdnEnv: true, hostnames: [] },
+          fetchImpl,
+        });
+
+        expect(source.indexRows).to.be.null;
+        expect(source.filteredListHtml).to.include('/public');
+      });
+    });
+
     it('keeps a leaf whose path is in the index', () => {
       const ul = buildNavList('<ul><li><a href="/a">A</a></li></ul>');
       filterNavByIndex(ul, [{ path: '/a' }]);
@@ -719,10 +928,136 @@ describe('sitenav block', () => {
       expect(ul.querySelector('a[href="https://example.com"]')).to.not.be.null;
     });
 
+    it('filters same-site and configured-host absolute links but leaves external origins', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li><a href="https://${window.location.hostname}/same-host-private">Same host</a></li>
+          <li><a href="https://spectrum.adobe.com/configured-private">Configured</a></li>
+          <li><a href="https://example.com/external">External</a></li>
+        </ul>
+      `);
+
+      filterNavByIndex(ul, [], { hostnames: ['spectrum.adobe.com'] });
+
+      expect(paths(ul)).to.deep.equal(['https://example.com/external']);
+    });
+
+    it('leaves document-relative authored links untouched', () => {
+      const ul = buildNavList('<ul><li><a href="relative-page">Relative</a></li></ul>');
+
+      filterNavByIndex(ul, []);
+
+      expect(paths(ul)).to.deep.equal(['relative-page']);
+    });
+
     it('is a no-op (fail-open) when the index is missing', () => {
       const ul = buildNavList('<ul><li><a href="/secret">Secret</a></li></ul>');
       filterNavByIndex(ul, null);
       expect(paths(ul)).to.deep.equal(['/secret']);
+    });
+  });
+
+  describe('buildSitenav', () => {
+    const repeatableSource = {
+      filteredListHtml: `
+        <ul>
+          <li>
+            <p>Web</p>
+            <ul>
+              <li><p>SWC</p></li>
+              <li>
+                <p>Components</p>
+                <ul><li>[auto-generated]</li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `,
+      indexRows: [{ path: '/web/swc/components/button', title: 'Button' }],
+    };
+
+    it('builds the same source twice with independent badge counts and markup', () => {
+      const first = buildSitenav(repeatableSource);
+      const second = buildSitenav(repeatableSource);
+
+      expect(first.navList.querySelector('.count-badge').textContent).to.equal('1');
+      expect(second.navList.querySelector('.count-badge').textContent).to.equal('1');
+      expect(second.navList.outerHTML).to.equal(first.navList.outerHTML);
+    });
+
+    it('upgrades icon placeholders synchronously and preserves icon-size classes', () => {
+      const built = buildSitenav({
+        filteredListHtml: `
+          <ul>
+            <li><a href="/home"><span class="icon icon-home"></span>Home</a></li>
+            <li><a href="/sized"><span class="icon icon-size-300"></span>Sized</a></li>
+          </ul>
+        `,
+        indexRows: null,
+      });
+
+      const icon = built.navList.querySelector('svg.icon-home');
+      expect(icon).to.not.be.null;
+      expect(icon.querySelector('use').getAttribute('href')).to.include('s2-icon-home-20-n.svg#icon');
+      expect(built.navList.querySelector('span.icon')).to.be.null;
+      expect(built.navList.querySelector('a.text-size-300')).to.not.be.null;
+    });
+
+    it('creates both controls synchronously without fetching SVG documents', () => {
+      const fetchSpy = sandbox.spy(window, 'fetch');
+
+      const built = buildSitenav({
+        filteredListHtml: '<ul><li><a href="/public">Public</a></li></ul>',
+        indexRows: null,
+      });
+
+      expect(built.sitenav.querySelector('.sitenav-expand-btn')).to.not.be.null;
+      expect(built.sitenav.querySelector('.sitenav-trigger-btn')).to.not.be.null;
+      expect(built.buttons.length).to.equal(2);
+      expect(built.buttons[0].querySelector('use').getAttribute('href'))
+        .to.include('s2-icon-expandright-20-n.svg#icon');
+      expect(built.buttons[1].querySelector('use').getAttribute('href'))
+        .to.include('s2-icon-appsall-20-n.svg#icon');
+      expect(fetchSpy.called).to.be.false;
+    });
+
+    it('does not attach document or window listeners while detached', () => {
+      const documentSpy = sandbox.spy(document, 'addEventListener');
+      const windowSpy = sandbox.spy(window, 'addEventListener');
+
+      buildSitenav({
+        filteredListHtml: '<ul><li><a href="/public">Public</a></li></ul>',
+        indexRows: null,
+      });
+
+      expect(documentSpy.called).to.be.false;
+      expect(windowSpy.called).to.be.false;
+    });
+
+    it('computes current-page state independently for each build', () => {
+      const originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      const source = {
+        filteredListHtml: `
+          <ul>
+            <li><a href="/first">First</a></li>
+            <li><a href="/second">Second</a></li>
+          </ul>
+        `,
+        indexRows: null,
+      };
+      try {
+        window.history.pushState({}, '', '/first');
+        const first = buildSitenav(source);
+        window.history.pushState({}, '', '/second');
+        const second = buildSitenav(source);
+
+        expect(first.currentLink.textContent).to.equal('First');
+        expect(first.navList.querySelectorAll('[aria-current="page"]').length).to.equal(1);
+        expect(second.currentLink.textContent).to.equal('Second');
+        expect(second.navList.querySelectorAll('[aria-current="page"]').length).to.equal(1);
+      } finally {
+        window.history.pushState({}, '', originalUrl);
+      }
     });
   });
 
@@ -947,43 +1282,40 @@ describe('sitenav block', () => {
   });
 
   describe('getExpandButton — accessible name and state', () => {
-    it('has an accessible label, aria-controls, and starts collapsed', async () => {
+    it('has an accessible label, aria-controls, and starts collapsed', () => {
       stubMatchMedia(sandbox, false);
-      stubIconFetch(sandbox);
       const sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       document.body.append(sitenav);
 
-      const btn = await getExpandButton(sitenav);
+      const btn = getExpandButton(sitenav);
 
       expect(btn.getAttribute('aria-label')).to.equal('Expand navigation');
       expect(btn.getAttribute('aria-expanded')).to.equal('false');
       expect(btn.getAttribute('aria-controls')).to.equal('sitenav');
     });
 
-    it('renders a tooltip mirroring the aria-label, associated by id', async () => {
+    it('renders a tooltip mirroring the aria-label, associated by id', () => {
       stubMatchMedia(sandbox, false);
-      stubIconFetch(sandbox);
       const sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       document.body.append(sitenav);
 
-      const btn = await getExpandButton(sitenav);
+      const btn = getExpandButton(sitenav);
 
       const tooltip = sitenav.querySelector('swc-tooltip');
       expect(tooltip.getAttribute('for')).to.equal(btn.id);
       expect(tooltip.textContent).to.equal('Expand navigation');
     });
 
-    it('starts expanded when the sitenav already carries is-expanded', async () => {
+    it('starts expanded when the sitenav already carries is-expanded', () => {
       stubMatchMedia(sandbox, false);
-      stubIconFetch(sandbox);
       const sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       sitenav.setAttribute('is-expanded', '');
       document.body.append(sitenav);
 
-      const btn = await getExpandButton(sitenav);
+      const btn = getExpandButton(sitenav);
 
       expect(btn.getAttribute('aria-label')).to.equal('Collapse navigation');
       expect(btn.getAttribute('aria-expanded')).to.equal('true');
@@ -997,14 +1329,13 @@ describe('sitenav block', () => {
     let btn;
     let main;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       stubMatchMedia(sandbox, false);
-      stubIconFetch(sandbox);
       sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       main = document.createElement('main');
       document.body.append(main, sitenav);
-      btn = await getExpandButton(sitenav);
+      btn = getExpandButton(sitenav);
       sitenav.append(btn);
     });
 
@@ -1040,13 +1371,12 @@ describe('sitenav block', () => {
     let sitenav;
     let trigger;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       stubMatchMedia(sandbox, true);
-      stubIconFetch(sandbox);
       sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       document.body.append(sitenav);
-      trigger = await getTriggerButton(sitenav);
+      trigger = getTriggerButton(sitenav);
       sitenav.append(trigger);
     });
 
@@ -1133,12 +1463,11 @@ describe('sitenav block', () => {
     let sitenav;
     let btn;
 
-    beforeEach(async () => {
-      stubIconFetch(sandbox);
+    beforeEach(() => {
       sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       document.body.append(sitenav);
-      btn = await getExpandButton(sitenav);
+      btn = getExpandButton(sitenav);
       sitenav.append(btn);
       setupSitenavKeyboardHandling(sitenav, [btn]);
     });
@@ -1210,12 +1539,11 @@ describe('sitenav block', () => {
     let btn;
     let navLink;
 
-    beforeEach(async () => {
-      stubIconFetch(sandbox);
+    beforeEach(() => {
       sitenav = document.createElement('div');
       sitenav.id = 'sitenav';
       document.body.append(sitenav);
-      btn = await getExpandButton(sitenav);
+      btn = getExpandButton(sitenav);
       sitenav.append(btn);
       navLink = document.createElement('a');
       navLink.href = '/foo';
@@ -1598,10 +1926,29 @@ describe('sitenav block', () => {
     });
 
     describe('setupScrollMemory', () => {
+      let abortControllers;
+
+      const setupTestScrollMemory = (sitenav) => {
+        const abortController = new AbortController();
+        abortControllers.push(abortController);
+        return {
+          abortController,
+          memory: setupScrollMemory(sitenav, { signal: abortController.signal }),
+        };
+      };
+
+      beforeEach(() => {
+        abortControllers = [];
+      });
+
+      afterEach(() => {
+        abortControllers.forEach((controller) => controller.abort());
+      });
+
       it('records the flyout position under its own id', async () => {
         const clock = sandbox.useFakeTimers();
         const { sitenav, menu } = buildScrollingMenu();
-        setupScrollMemory(sitenav);
+        setupTestScrollMemory(sitenav);
         menu.scrollTop = 140;
         menu.dispatchEvent(new Event('scroll'));
         await clock.tickAsync(300);
@@ -1616,7 +1963,7 @@ describe('sitenav block', () => {
         // Spy the instance, not Storage.prototype — localStorage shares that prototype.
         const spy = sandbox.spy(sessionStorage, 'setItem');
         const { sitenav, menu } = buildScrollingMenu();
-        setupScrollMemory(sitenav);
+        setupTestScrollMemory(sitenav);
         [20, 40, 60].forEach((top) => {
           menu.scrollTop = top;
           menu.dispatchEvent(new Event('scroll'));
@@ -1632,7 +1979,7 @@ describe('sitenav block', () => {
         const { sitenav } = buildScrollingMenu();
         const other = document.createElement('div');
         sitenav.append(other);
-        setupScrollMemory(sitenav);
+        setupTestScrollMemory(sitenav);
         other.dispatchEvent(new Event('scroll'));
         await clock.tickAsync(300);
         expect(saved()).to.be.null;
@@ -1642,10 +1989,28 @@ describe('sitenav block', () => {
       it('flushes a pending position when the page goes away', () => {
         sandbox.useFakeTimers();
         const { sitenav, menu } = buildScrollingMenu();
-        setupScrollMemory(sitenav);
+        setupTestScrollMemory(sitenav);
         menu.scrollTop = 90;
         menu.dispatchEvent(new Event('scroll'));
         expect(saved()).to.be.null;
+        window.dispatchEvent(new Event('pagehide'));
+        expect(saved()).to.deep.equal({ id: 'web', top: 90 });
+      });
+
+      it('exposes a flush and cancels pending writes when aborted', async () => {
+        const clock = sandbox.useFakeTimers({ shouldClearNativeTimers: true });
+        const { sitenav, menu } = buildScrollingMenu();
+        const { abortController, memory } = setupTestScrollMemory(sitenav);
+        menu.scrollTop = 90;
+        menu.dispatchEvent(new Event('scroll'));
+
+        memory.flush();
+        expect(saved()).to.deep.equal({ id: 'web', top: 90 });
+
+        menu.scrollTop = 180;
+        menu.dispatchEvent(new Event('scroll'));
+        abortController.abort();
+        await clock.tickAsync(300);
         window.dispatchEvent(new Event('pagehide'));
         expect(saved()).to.deep.equal({ id: 'web', top: 90 });
       });
@@ -1654,7 +2019,7 @@ describe('sitenav block', () => {
         const clock = sandbox.useFakeTimers();
         const { sitenav, menu } = buildScrollingMenu();
         sandbox.stub(sessionStorage, 'setItem').throws(new Error('denied'));
-        setupScrollMemory(sitenav);
+        setupTestScrollMemory(sitenav);
         menu.dispatchEvent(new Event('scroll'));
         await clock.tickAsync(300);
         // reaching here without an unhandled throw is the assertion
@@ -1693,6 +2058,842 @@ describe('sitenav block', () => {
       const anyExpanded = [...navList.querySelectorAll('.level-1-button')]
         .some((btn) => btn.getAttribute('aria-expanded') === 'true');
       expect(anyExpanded).to.be.false;
+    });
+  });
+
+  describe('createSitenavController', () => {
+    const source = ({
+      includeCurrent = true,
+      includeBranch = true,
+      includeChild = true,
+    } = {}) => ({
+      filteredListHtml: `
+        <ul>
+          ${includeBranch ? `
+            <li><p>Web</p>
+              <ul>
+                ${includeChild ? `
+                  <li><p>Components</p>
+                    <ul>
+                      ${includeCurrent ? '<li><a href="/current">Current</a></li>' : ''}
+                      <li><a href="/survives">Survives</a></li>
+                    </ul>
+                  </li>
+                ` : '<li><a href="/web-overview">Web overview</a></li>'}
+              </ul>
+            </li>
+          ` : ''}
+          <li><p>Support</p><ul><li><a href="/support">Support home</a></li></ul></li>
+        </ul>
+      `,
+      indexRows: null,
+    });
+
+    const makeController = (options) => {
+      stubMatchMedia(sandbox, false);
+      const main = document.createElement('main');
+      document.body.append(main);
+      return {
+        main,
+        controller: createSitenavController(main),
+        built: buildSitenav(source(options)),
+      };
+    };
+
+    const buttonFor = (built, menuId) => built.navList
+      .querySelector(`[aria-controls="${menuId}"]`);
+    const settleTooltips = (built) => Promise.all(
+      [...built.sitenav.querySelectorAll('swc-tooltip')]
+        .map((tooltip) => tooltip.updateComplete),
+    );
+
+    it('mounts one active nav and replacement leaves only new global listeners effective', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      const newBuilt = buildSitenav(source());
+      controller.replace(newBuilt);
+
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+        detail: { label: 'Support' },
+      }));
+
+      expect(document.querySelectorAll('#sitenav').length).to.equal(1);
+      expect(controller.active).to.equal(newBuilt);
+      expect(buttonFor(newBuilt, 'sitenav-menu-support').getAttribute('aria-expanded')).to.equal('true');
+      expect(buttonFor(oldBuilt, 'sitenav-menu-support').getAttribute('aria-expanded')).to.equal('false');
+    });
+
+    it('preserves expanded rail state and synchronized expand control copy', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[0].click();
+      const newBuilt = buildSitenav(source());
+
+      controller.replace(newBuilt);
+
+      expect(newBuilt.sitenav.hasAttribute('is-expanded')).to.be.true;
+      expect(newBuilt.buttons[0].getAttribute('aria-expanded')).to.equal('true');
+      expect(newBuilt.buttons[0].getAttribute('aria-label')).to.equal('Collapse navigation');
+      expect(newBuilt.sitenav.querySelector(`swc-tooltip[for="${newBuilt.buttons[0].id}"]`).textContent)
+        .to.equal('Collapse navigation');
+      expect(newBuilt.sitenav.querySelector('.level-1-button + .level-2-menu + swc-tooltip')).to.be.null;
+    });
+
+    it('preserves only disclosures that still control non-empty menus', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[1].click();
+      buttonFor(oldBuilt, 'sitenav-menu-web').click();
+      buttonFor(oldBuilt, 'sitenav-menu-components').click();
+      const newBuilt = buildSitenav(source({ includeCurrent: false }));
+
+      controller.replace(newBuilt);
+
+      expect(buttonFor(newBuilt, 'sitenav-menu-web').getAttribute('aria-expanded')).to.equal('true');
+      expect(buttonFor(newBuilt, 'sitenav-menu-components').getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('preserves the open mobile overlay and trigger state', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[1].click();
+      const newBuilt = buildSitenav(source());
+
+      controller.replace(newBuilt);
+
+      expect(newBuilt.sitenav.hasAttribute('is-open')).to.be.true;
+      expect(newBuilt.buttons[1].getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('restores focus to the mobile trigger after replacement', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.sitenav.querySelector('.sitenav-trigger-btn').focus();
+      const newBuilt = buildSitenav(source());
+
+      controller.replace(newBuilt);
+
+      expectFocus(
+        newBuilt.sitenav.querySelector('.sitenav-trigger-btn'),
+        'the replacement mobile trigger',
+      );
+      expect(document.activeElement).to.not.equal(
+        newBuilt.sitenav.querySelector('.sitenav-expand-btn'),
+      );
+      expect(document.activeElement).to.not.equal(document.body);
+    });
+
+    it('restores focus to a surviving link', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[1].click();
+      buttonFor(oldBuilt, 'sitenav-menu-web').click();
+      buttonFor(oldBuilt, 'sitenav-menu-components').click();
+      oldBuilt.navList.querySelector('a[href="/survives"]').focus();
+      const newBuilt = buildSitenav(source());
+
+      controller.replace(newBuilt);
+
+      expectFocus(newBuilt.navList.querySelector('a[href="/survives"]'), 'the surviving link');
+    });
+
+    it("opens a surviving link's new disclosure path before restoring focus", async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[1].click();
+      buttonFor(oldBuilt, 'sitenav-menu-web').click();
+      buttonFor(oldBuilt, 'sitenav-menu-components').click();
+      oldBuilt.navList.querySelector('a[href="/survives"]').focus();
+      const newBuilt = buildSitenav({
+        filteredListHtml: `
+          <ul>
+            <li><p>Web</p><ul><li><a href="/web-overview">Web overview</a></li></ul></li>
+            <li><p>Support</p>
+              <ul>
+                <li><p>Guides</p>
+                  <ul><li><a href="/survives">Survives</a></li></ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        `,
+        indexRows: null,
+      });
+
+      expectFocus(oldBuilt.navList.querySelector('a[href="/survives"]'), 'the original surviving link');
+      controller.replace(newBuilt);
+
+      expect(buttonFor(newBuilt, 'sitenav-menu-web').getAttribute('aria-expanded')).to.equal('false');
+      expect(buttonFor(newBuilt, 'sitenav-menu-support').getAttribute('aria-expanded')).to.equal('true');
+      expect(buttonFor(newBuilt, 'sitenav-menu-guides').getAttribute('aria-expanded')).to.equal('true');
+      expectFocus(newBuilt.navList.querySelector('a[href="/survives"]'), 'the moved surviving link');
+    });
+
+    it('falls focus back to the nearest surviving parent disclosure', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[1].click();
+      buttonFor(oldBuilt, 'sitenav-menu-web').click();
+      buttonFor(oldBuilt, 'sitenav-menu-components').click();
+      oldBuilt.navList.querySelector('a[href="/current"]').focus();
+      const newBuilt = buildSitenav(source({ includeCurrent: false }));
+
+      controller.replace(newBuilt);
+
+      expectFocus(
+        buttonFor(newBuilt, 'sitenav-menu-components'),
+        'the nearest surviving parent disclosure',
+      );
+    });
+
+    it('falls focus back to a visible nav control when the branch is removed', async () => {
+      const { controller, built: oldBuilt } = makeController();
+      controller.mount(oldBuilt);
+      await settleTooltips(oldBuilt);
+      oldBuilt.buttons[1].click();
+      buttonFor(oldBuilt, 'sitenav-menu-web').click();
+      buttonFor(oldBuilt, 'sitenav-menu-components').click();
+      oldBuilt.navList.querySelector('a[href="/current"]').focus();
+      const newBuilt = buildSitenav(source({ includeBranch: false }));
+
+      controller.replace(newBuilt);
+
+      const visibleControl = newBuilt.buttons.find((button) => button.checkVisibility({
+        visibilityProperty: true,
+      }));
+      expectFocus(visibleControl, 'the visible sitenav control');
+    });
+
+    it('flushes and boundedly restores pending level-2 scroll before replacement', async () => {
+      const originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      window.history.pushState({}, '', '/current');
+      try {
+        const { controller, built: oldBuilt } = makeController();
+        controller.mount(oldBuilt);
+        await settleTooltips(oldBuilt);
+        const oldMenu = oldBuilt.navList.querySelector('#sitenav-menu-web');
+        Object.defineProperty(oldMenu, 'scrollTop', { value: 0, writable: true });
+        oldMenu.scrollTop = 40;
+        oldMenu.dispatchEvent(new Event('scroll'));
+        const newBuilt = buildSitenav(source());
+        const newMenu = newBuilt.navList.querySelector('#sitenav-menu-web');
+        Object.defineProperty(newMenu, 'scrollTop', { value: 0, writable: true });
+        const current = newBuilt.currentLink;
+        sandbox.stub(newMenu, 'getBoundingClientRect').returns({
+          top: 0, bottom: 100, left: 0, right: 100, width: 100, height: 100,
+        });
+        sandbox.stub(current, 'getBoundingClientRect').returns({
+          top: 20, bottom: 40, left: 0, right: 100, width: 100, height: 20,
+        });
+
+        controller.replace(newBuilt);
+
+        expect(JSON.parse(sessionStorage.getItem('sitenav-scroll'))).to.deep.equal({
+          id: 'sitenav-menu-web',
+          top: 40,
+        });
+        expect(newMenu.scrollTop).to.equal(40);
+
+        window.dispatchEvent(new Event('pagehide'));
+        sessionStorage.clear();
+        oldMenu.scrollTop = 80;
+        oldMenu.dispatchEvent(new Event('scroll'));
+        window.dispatchEvent(new Event('pagehide'));
+        expect(sessionStorage.getItem('sitenav-scroll')).to.be.null;
+      } finally {
+        window.history.pushState({}, '', originalUrl);
+      }
+    });
+  });
+
+  describe('initSitenav', () => {
+    const navHtml = (href, label = href) => `
+      <main><ul><li><a href="${href}">${label}</a></li></ul></main>
+    `;
+    const source = (href) => ({
+      filteredListHtml: `<ul><li><a href="${href}">${href}</a></li></ul>`,
+      indexRows: [{ path: href, title: href }],
+    });
+    const deferred = () => {
+      let resolve;
+      let reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+      return { promise, resolve, reject };
+    };
+    const makeStorage = (snapshot = null) => ({
+      getItem: sandbox.stub().withArgs(CACHE_KEY).returns(
+        snapshot ? JSON.stringify(snapshot) : null,
+      ),
+      setItem: sandbox.stub(),
+      removeItem: sandbox.stub(),
+    });
+    const stubFresh = (fetchImpl, href, index = [{ path: href, title: href }]) => {
+      fetchImpl.onFirstCall().resolves(new Response(navHtml(href), { status: 200 }));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({ data: index }), {
+        status: 200,
+      }));
+    };
+
+    beforeEach(() => {
+      stubMatchMedia(sandbox, false);
+      document.body.innerHTML = '<main></main>';
+    });
+
+    it('mounts cached navigation and starts only the fragment while session remains pending', async () => {
+      const session = deferred();
+      const fragment = deferred();
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().returns(fragment.promise);
+      const checkSession = sandbox.stub().returns(session.promise);
+
+      const initialized = initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession,
+        now: 200,
+      });
+      await Promise.resolve();
+
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/cached');
+      expect(checkSession.calledOnce).to.equal(true);
+      expect(fetchImpl.calledOnceWithExactly(
+        '/fragments/nav/site-nav.plain.html',
+        undefined,
+      )).to.equal(true);
+
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({
+        data: [{ path: '/fresh', title: '/fresh' }],
+      }), { status: 200 }));
+      session.resolve({ anonymous: true });
+      fragment.resolve(new Response(navHtml('/fresh'), { status: 200 }));
+      await initialized;
+
+      expect(fetchImpl.secondCall.args).to.deep.equal([
+        '/query-index.json?compact=true',
+        undefined,
+      ]);
+    });
+
+    it('discards the initial credentialed fragment and anonymously refetches both inputs when IMS rejects', async () => {
+      const storage = makeStorage();
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(`
+        <main><ul>
+          <li><a href="/credentialed-private">Credentialed private label</a></li>
+        </ul></main>
+      `, { status: 200 }));
+      fetchImpl.onSecondCall().resolves(new Response(`
+        <main><ul>
+          <li class="audience-public"><a href="/shared">Public label</a></li>
+          <li class="audience-private"><a href="/shared">Private label</a></li>
+        </ul></main>
+      `, { status: 200 }));
+      fetchImpl.onThirdCall().resolves(new Response(JSON.stringify({
+        data: [{ path: '/shared', title: 'Shared' }],
+      }), { status: 200 }));
+      const imsError = new Error('IMS unavailable');
+      const config = { cdnEnv: true, hostnames: [], log: sandbox.stub() };
+      const checkSession = sandbox.stub().rejects(imsError);
+
+      await initSitenav({
+        config,
+        storage,
+        fetchImpl,
+        checkSession,
+        now: 200,
+      });
+
+      expect(checkSession.calledOnce).to.equal(true);
+      expect(fetchImpl.firstCall.args).to.deep.equal([
+        '/fragments/nav/site-nav.plain.html',
+        undefined,
+      ]);
+      expect(fetchImpl.secondCall.args).to.deep.equal([
+        '/fragments/nav/site-nav.plain.html',
+        { credentials: 'omit', cache: 'no-store' },
+      ]);
+      expect(fetchImpl.thirdCall.args).to.deep.equal([
+        '/query-index.json?compact=true',
+        { credentials: 'omit', cache: 'no-store' },
+      ]);
+      expect(document.querySelector('#sitenav').textContent).to.include('Public label');
+      expect(document.querySelector('#sitenav').textContent).to.not.include('Private label');
+      expect(document.querySelector('#sitenav').textContent)
+        .to.not.include('Credentialed private label');
+      expect(storage.setItem.called).to.equal(false);
+      expect(config.log.calledWith('Could not check IMS session', imsError)).to.equal(true);
+    });
+
+    it('does not render the credentialed fragment when the anonymous retry fails without a cache', async () => {
+      const storage = makeStorage();
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(`
+        <main><ul>
+          <li><a href="/credentialed-private">Credentialed private label</a></li>
+        </ul></main>
+      `, { status: 200 }));
+      fetchImpl.onSecondCall().rejects(new Error('anonymous fragment unavailable'));
+      fetchImpl.onThirdCall().rejects(new Error('anonymous index unavailable'));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().rejects(new Error('IMS unavailable')),
+        now: 200,
+      });
+
+      expect(fetchImpl.secondCall.args).to.deep.equal([
+        '/fragments/nav/site-nav.plain.html',
+        { credentials: 'omit', cache: 'no-store' },
+      ]);
+      expect(fetchImpl.thirdCall.args).to.deep.equal([
+        '/query-index.json?compact=true',
+        { credentials: 'omit', cache: 'no-store' },
+      ]);
+      expect(document.querySelector('#sitenav')).to.equal(null);
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('retains safe cached navigation when the anonymous retry fails after IMS rejection', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(
+        navHtml('/credentialed-private'),
+        { status: 200 },
+      ));
+      fetchImpl.onSecondCall().rejects(new Error('anonymous fragment unavailable'));
+      fetchImpl.onThirdCall().rejects(new Error('anonymous index unavailable'));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().rejects(new Error('IMS unavailable')),
+        now: 200,
+      });
+
+      expect(fetchImpl.secondCall.args).to.deep.equal([
+        '/fragments/nav/site-nav.plain.html',
+        { credentials: 'omit', cache: 'no-store' },
+      ]);
+      expect(fetchImpl.thirdCall.args).to.deep.equal([
+        '/query-index.json?compact=true',
+        { credentials: 'omit', cache: 'no-store' },
+      ]);
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/cached');
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('does not acquire, read, or write local storage off CDN', async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+      const getter = sandbox.stub().throws(new DOMException('denied', 'SecurityError'));
+      Object.defineProperty(globalThis, 'localStorage', { configurable: true, get: getter });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(navHtml('/preview'), { status: 200 }));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({
+        data: [{ path: '/preview', title: '/preview' }],
+      }), { status: 200 }));
+
+      try {
+        await initSitenav({
+          config: { cdnEnv: false, hostnames: [], log: sandbox.stub() },
+          fetchImpl,
+          checkSession: sandbox.stub().resolves({ anonymous: true }),
+          now: 200,
+        });
+        expect(getter.called).to.equal(false);
+        expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/preview');
+      } finally {
+        Object.defineProperty(globalThis, 'localStorage', descriptor);
+      }
+    });
+
+    it('lets fresh navigation win when a cached build finishes late', async () => {
+      const cachedSource = {
+        filteredListHtml: '<ul><li><p>Cached</p><ul><li><a href="/cached">Cached</a></li></ul></li></ul>',
+        indexRows: [{ path: '/cached', title: 'Cached' }],
+      };
+      const freshSource = {
+        filteredListHtml: '<ul><li><p>Support</p><ul><li><a href="/fresh">Fresh</a></li></ul></li></ul>',
+        indexRows: [{ path: '/fresh', title: 'Fresh' }],
+      };
+      const cachedBuild = deferred();
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...cachedSource,
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(
+        `<main>${freshSource.filteredListHtml}</main>`,
+        { status: 200 },
+      ));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({
+        data: freshSource.indexRows,
+      }), { status: 200 }));
+      const checkSession = sandbox.stub().resolves({ anonymous: true });
+      const build = sandbox.stub().callsFake((candidate) => (
+        candidate.filteredListHtml.includes('/cached')
+          ? cachedBuild.promise
+          : buildSitenav(candidate)
+      ));
+
+      const initialized = initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession,
+        now: 200,
+        build,
+      });
+      await Promise.resolve();
+      expect(checkSession.calledOnce).to.equal(true);
+
+      while (build.callCount < 2) {
+        await new Promise((resolve) => { setTimeout(resolve, 0); });
+      }
+      const freshNav = document.querySelector('#sitenav');
+      expect(freshNav.querySelector('a').getAttribute('href')).to.equal('/fresh');
+
+      const lateCached = buildSitenav(cachedSource);
+      cachedBuild.resolve(lateCached);
+      await initialized;
+
+      expect(document.querySelector('#sitenav')).to.equal(freshNav);
+      expect(document.querySelectorAll('#sitenav').length).to.equal(1);
+      expect(lateCached.sitenav.isConnected).to.equal(false);
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+        detail: { label: 'Support' },
+      }));
+      expect(freshNav.querySelector('.level-1-button').getAttribute('aria-expanded')).to.equal('true');
+      expect(lateCached.sitenav.querySelector('.level-1-button').getAttribute('aria-expanded'))
+        .to.equal('false');
+    });
+
+    it('removes an unbuildable cached snapshot and continues with fresh navigation', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        filteredListHtml: '<p>not a list</p>',
+        indexRows: [],
+      });
+      const fetchImpl = sandbox.stub();
+      stubFresh(fetchImpl, '/fresh');
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(storage.removeItem.calledOnceWithExactly(CACHE_KEY)).to.equal(true);
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/fresh');
+    });
+
+    it('retains the cached node and refreshes savedAt for unchanged anonymous source', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/same'),
+      });
+      const session = deferred();
+      const fetchImpl = sandbox.stub();
+      stubFresh(fetchImpl, '/same');
+      const initialized = initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().returns(session.promise),
+        now: 321,
+      });
+      await Promise.resolve();
+      const cachedNode = document.querySelector('#sitenav');
+
+      session.resolve({ anonymous: true });
+      await initialized;
+
+      expect(document.querySelector('#sitenav')).to.equal(cachedNode);
+      expect(storage.setItem.calledOnce).to.equal(true);
+      const saved = JSON.parse(storage.setItem.firstCall.args[1]);
+      expect(Number.isFinite(saved.savedAt)).to.equal(true);
+      expect(saved.savedAt).to.equal(321);
+    });
+
+    it('replaces changed anonymous navigation once and writes the fresh source', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const session = deferred();
+      const fetchImpl = sandbox.stub();
+      stubFresh(fetchImpl, '/fresh');
+      const initialized = initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().returns(session.promise),
+        now: 400,
+      });
+      await Promise.resolve();
+      const cachedNode = document.querySelector('#sitenav');
+      const replace = sandbox.spy(cachedNode, 'replaceWith');
+
+      session.resolve({ anonymous: true });
+      await initialized;
+
+      expect(replace.calledOnce).to.equal(true);
+      expect(document.querySelector('#sitenav')).to.not.equal(cachedNode);
+      expect(document.querySelectorAll('#sitenav').length).to.equal(1);
+      expect(storage.setItem.calledOnce).to.equal(true);
+    });
+
+    [
+      ['changed', '/cached', '/fresh', true],
+      ['unchanged', '/same', '/same', false],
+    ].forEach(([description, cachedHref, freshHref, replaces]) => {
+      it(`${description} authenticated navigation ${replaces ? 'replaces' : 'retains'} the node without writing`, async () => {
+        const storage = makeStorage({
+          version: CACHE_VERSION,
+          savedAt: 100,
+          ...source(cachedHref),
+        });
+        const session = deferred();
+        const fetchImpl = sandbox.stub();
+        stubFresh(fetchImpl, freshHref);
+        const initialized = initSitenav({
+          config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+          storage,
+          fetchImpl,
+          checkSession: sandbox.stub().returns(session.promise),
+          now: 400,
+        });
+        await Promise.resolve();
+        const cachedNode = document.querySelector('#sitenav');
+
+        session.resolve({ anonymous: false });
+        await initialized;
+
+        expect(document.querySelector('#sitenav') === cachedNode).to.equal(!replaces);
+        expect(storage.setItem.called).to.equal(false);
+      });
+    });
+
+    it('keeps cached navigation without overwriting it when the fragment fails', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response('', { status: 404 }));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+      }));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/cached');
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('keeps cached navigation without overwriting it when the index fails', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(navHtml('/authored'), { status: 200 }));
+      fetchImpl.onSecondCall().rejects(new Error('index unavailable'));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/cached');
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('keeps cached navigation and does not persist a mixed valid and malformed index', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(navHtml('/fresh'), { status: 200 }));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({
+        data: [
+          { path: '/fresh', title: 'Fresh' },
+          { path: '/malformed', title: null },
+        ],
+      }), { status: 200 }));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/cached');
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('omits navigation when no cache exists and the fragment fails', async () => {
+      const storage = makeStorage();
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response('', { status: 404 }));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+      }));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav')).to.equal(null);
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('keeps cached navigation when the fragment request rejects', async () => {
+      const storage = makeStorage({
+        version: CACHE_VERSION,
+        savedAt: 100,
+        ...source('/cached'),
+      });
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().rejects(new Error('fragment unavailable'));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+      }));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/cached');
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('renders authored unfiltered navigation without caching when no index is available', async () => {
+      const storage = makeStorage();
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(`
+        <main><ul>
+          <li><a href="/unknown">Unknown authored link</a></li>
+          <li><p>SWC</p></li>
+          <li><p>Components</p><ul><li>[auto-generated]</li></ul></li>
+        </ul></main>
+      `, { status: 200 }));
+      fetchImpl.onSecondCall().rejects(new Error('index unavailable'));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav a[href="/unknown"]')).to.not.equal(null);
+      expect(document.querySelectorAll('#sitenav a').length).to.equal(1);
+      expect(storage.setItem.called).to.equal(false);
+    });
+
+    it('treats a successful empty index as complete and filters unknown links', async () => {
+      const storage = makeStorage();
+      const fetchImpl = sandbox.stub();
+      fetchImpl.onFirstCall().resolves(new Response(`
+        <main><ul>
+          <li><a href="/unknown">Unknown</a></li>
+          <li><a href="https://example.com/external">External</a></li>
+        </ul></main>
+      `, { status: 200 }));
+      fetchImpl.onSecondCall().resolves(new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+      }));
+
+      await initSitenav({
+        config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+        storage,
+        fetchImpl,
+        checkSession: sandbox.stub().resolves({ anonymous: true }),
+        now: 200,
+      });
+
+      expect(document.querySelector('#sitenav a[href="/unknown"]')).to.equal(null);
+      expect(document.querySelector('#sitenav a[href="https://example.com/external"]'))
+        .to.not.equal(null);
+      expect(storage.setItem.calledOnce).to.equal(true);
+    });
+
+    it('does not reject when acquiring local storage throws', async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        get() {
+          throw new DOMException('denied', 'SecurityError');
+        },
+      });
+      const fetchImpl = sandbox.stub();
+      stubFresh(fetchImpl, '/fresh');
+
+      try {
+        await initSitenav({
+          config: { cdnEnv: true, hostnames: [], log: sandbox.stub() },
+          fetchImpl,
+          checkSession: sandbox.stub().resolves({ anonymous: true }),
+          now: 200,
+        });
+        expect(document.querySelector('#sitenav a').getAttribute('href')).to.equal('/fresh');
+      } finally {
+        Object.defineProperty(globalThis, 'localStorage', descriptor);
+      }
     });
   });
 });

@@ -2,8 +2,16 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
 import { gotoBlock, formatViolations } from '../block-a11y.js';
 import {
-  navAreasFragment, sitenavIndex, navAreasFragmentWithLevel3, sitenavIndexWithLevel3,
+  cachedSitenavIndexRows,
+  cachedSitenavList,
+  navAreasFragment,
+  navAreasFragmentWithLevel3,
+  sitenavIndex,
+  sitenavIndexWithLevel3,
+  svgIcon,
 } from '../mocks.js';
+
+const CACHE_KEY = 'spectrum-hub:sitenav:public:v1';
 
 const block = {
   name: 'sitenav',
@@ -12,7 +20,7 @@ const block = {
   ariaRoot: '#sitenav',
   routes: [
     {
-      url: '**/fragments/nav/site-nav',
+      url: '**/fragments/nav/site-nav.plain.html',
       contentType: 'text/html',
       body: navAreasFragment,
     },
@@ -23,6 +31,11 @@ const block = {
       url: '**/query-index.json*',
       contentType: 'application/json',
       body: sitenavIndex,
+    },
+    {
+      url: '**/*.svg',
+      contentType: 'image/svg+xml',
+      body: svgIcon,
     },
   ],
 };
@@ -35,7 +48,7 @@ const levelThreeBlock = {
   ...block,
   routes: [
     {
-      url: '**/fragments/nav/site-nav',
+      url: '**/fragments/nav/site-nav.plain.html',
       contentType: 'text/html',
       body: navAreasFragmentWithLevel3,
     },
@@ -47,8 +60,163 @@ const levelThreeBlock = {
       contentType: 'application/json',
       body: sitenavIndexWithLevel3,
     },
+    {
+      url: '**/*.svg',
+      contentType: 'image/svg+xml',
+      body: svgIcon,
+    },
   ],
 };
+
+const changedSitenavList = cachedSitenavList.replace(
+  /<\/ul>$/,
+  '  <li><p>Components</p><ul><li><a href="/components">Components</a></li></ul></li>\n</ul>',
+);
+const changedNavAreasFragment = `<body><header></header><main><div>${changedSitenavList}</div></main></body>`;
+const changedSitenavIndex = JSON.stringify({
+  data: [
+    ...cachedSitenavIndexRows,
+    { path: '/components', title: 'Components' },
+  ],
+});
+
+async function seedPublicSitenavCache(
+  page,
+  filteredListHtml = cachedSitenavList,
+  indexRows = cachedSitenavIndexRows,
+) {
+  await page.addInitScript(({ key, list, rows }) => {
+    localStorage.removeItem(key);
+    localStorage.setItem(key, JSON.stringify({
+      version: 1,
+      savedAt: Date.now(),
+      filteredListHtml: list,
+      indexRows: rows,
+    }));
+  }, {
+    key: CACHE_KEY,
+    list: filteredListHtml,
+    rows: indexRows,
+  });
+}
+
+async function delayFreshSitenav(page, {
+  fragment = navAreasFragment,
+  index = sitenavIndex,
+} = {}) {
+  let release;
+  let startedCount = 0;
+  let markStarted;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const started = new Promise((resolve) => { markStarted = resolve; });
+  const waitForRelease = async (route, response) => {
+    startedCount += 1;
+    if (startedCount === 2) { markStarted(); }
+    await gate;
+    await route.fulfill(response);
+  };
+
+  await page.route('**/fragments/nav/site-nav.plain.html', (route) => waitForRelease(route, {
+    contentType: 'text/html',
+    body: fragment,
+  }));
+  await page.route('**/query-index.json*', (route) => waitForRelease(route, {
+    contentType: 'application/json',
+    body: index,
+  }));
+  await page.route('**/*.svg', (route) => route.fulfill({
+    contentType: 'image/svg+xml',
+    body: svgIcon,
+  }));
+
+  return {
+    started,
+    release,
+  };
+}
+
+async function nextRenderedFrame(page) {
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+}
+
+async function observeSitenavLayoutShifts(page) {
+  await page.addInitScript(() => {
+    window.sitenavLayoutShifts = [];
+    const serializeRect = ({
+      x, y, width, height, top, right, bottom, left,
+    }) => ({
+      x, y, width, height, top, right, bottom, left,
+    });
+    const identifyNode = (node) => {
+      if (!(node instanceof Element)) {
+        return null;
+      }
+      const describe = (element) => {
+        const id = element.id ? `#${element.id}` : '';
+        const classes = [...element.classList].map((name) => `.${name}`).join('');
+        return `${element.localName}${id}${classes}`;
+      };
+      const layoutRoot = node.closest('main#main-content, #sitenav');
+      return layoutRoot && layoutRoot !== node
+        ? `${describe(layoutRoot)} ${describe(node)}`
+        : describe(node);
+    };
+    new PerformanceObserver((list) => {
+      list.getEntries()
+        .filter((entry) => !entry.hadRecentInput)
+        .forEach((entry) => window.sitenavLayoutShifts.push({
+          value: entry.value,
+          sources: entry.sources.map((source) => ({
+            node: identifyNode(source.node),
+            previousRect: serializeRect(source.previousRect),
+            currentRect: serializeRect(source.currentRect),
+          })),
+        }));
+    }).observe({ type: 'layout-shift', buffered: true });
+  });
+}
+
+async function readRelevantLayoutShifts(page) {
+  await nextRenderedFrame(page);
+  return page.evaluate(() => window.sitenavLayoutShifts.filter(
+    (entry) => entry.sources.some(({ node }) => node?.startsWith('main#main-content')
+      || node?.startsWith('div#sitenav')),
+  ));
+}
+
+async function captureLayoutBounds(page) {
+  return {
+    main: await page.locator('main').boundingBox(),
+    sitenav: await page.locator('#sitenav').boundingBox(),
+  };
+}
+
+function expectStableBounds(before, after) {
+  expect(after.main.x).toBe(before.main.x);
+  expect(after.main.y).toBe(before.main.y);
+  expect(after.main.width).toBe(before.main.width);
+  expect(after.sitenav.x).toBe(before.sitenav.x);
+  expect(after.sitenav.y).toBe(before.sitenav.y);
+  expect(after.sitenav.width).toBe(before.sitenav.width);
+}
+
+function expectStableMainBounds(before, after) {
+  expect(after.x).toBe(before.x);
+  expect(after.y).toBe(before.y);
+  expect(after.width).toBe(before.width);
+}
+
+async function releaseFreshAndWait(page, delayed) {
+  const responses = Promise.all([
+    page.waitForResponse((response) => response.url().includes('/fragments/nav/site-nav.plain.html')),
+    page.waitForResponse((response) => response.url().includes('/query-index.json?compact=true')),
+  ]);
+  delayed.release();
+  await responses;
+  await nextRenderedFrame(page);
+}
 
 // Below 900px the rail collapses behind a hamburger trigger (see sitenav.css) and only
 // opens on click — on mobile projects, open it first so the scan covers the real
@@ -319,4 +487,257 @@ test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ 
   });
 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test(`${block.name} cached navigation is interactive while fresh navigation is pending`, async ({ page, isMobile }) => {
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page, {
+    fragment: changedNavAreasFragment,
+    index: changedSitenavIndex,
+  });
+
+  try {
+    await page.goto(block.path);
+    await delayed.started;
+    await waitForNavReady(page, isMobile);
+
+    const foundations = page.getByRole('button', { name: 'Foundations', exact: true });
+    await foundations.click();
+    await expect(foundations).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('link', { name: 'Foundations', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Components', exact: true })).toHaveCount(0);
+
+    await releaseFreshAndWait(page, delayed);
+
+    await expect(page.getByRole('button', { name: 'Components', exact: true })).toBeVisible();
+    await expect(page.locator('#sitenav')).toHaveCount(1);
+  } finally {
+    delayed.release();
+  }
+});
+
+test(`${block.name} replaces changed cached navigation atomically`, async ({ page }) => {
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page, {
+    fragment: changedNavAreasFragment,
+    index: changedSitenavIndex,
+  });
+
+  try {
+    await page.goto(block.path);
+    await delayed.started;
+    await page.waitForSelector('#sitenav .level-1-list', { state: 'attached' });
+    await page.evaluate(() => {
+      window.sitenavReplacementRecords = [];
+      const observer = new MutationObserver((records) => {
+        records.forEach((record) => {
+          const addedSitenav = [...record.addedNodes].filter((node) => node.id === 'sitenav').length;
+          const removedSitenav = [...record.removedNodes].filter((node) => node.id === 'sitenav').length;
+          if (addedSitenav || removedSitenav) {
+            window.sitenavReplacementRecords.push({
+              addedSitenav,
+              removedSitenav,
+              navCount: document.querySelectorAll('#sitenav').length,
+            });
+          }
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+
+    await releaseFreshAndWait(page, delayed);
+    await expect(page.locator('.level-1-button', { hasText: 'Components' })).toHaveCount(1);
+
+    expect(await page.evaluate(() => window.sitenavReplacementRecords)).toEqual([{
+      addedSitenav: 1,
+      removedSitenav: 1,
+      navCount: 1,
+    }]);
+    await expect(page.locator('#sitenav')).toHaveCount(1);
+  } finally {
+    delayed.release();
+  }
+});
+
+test(`${block.name} preserves rail, disclosure, and focus state across fresh replacement`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'the expanded rail is desktop-only');
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page, {
+    fragment: changedNavAreasFragment,
+    index: changedSitenavIndex,
+  });
+
+  try {
+    await page.goto(block.path);
+    await delayed.started;
+    await page.waitForSelector('#sitenav .level-1-list', { state: 'attached' });
+
+    await page.getByRole('button', { name: 'Expand navigation', exact: true }).click();
+    const disclosure = page.getByRole('button', { name: 'Foundations', exact: true });
+    await disclosure.click();
+    const survivingLink = page.getByRole('link', { name: 'Foundations', exact: true });
+    await survivingLink.focus();
+    await expect(survivingLink).toBeFocused();
+
+    await releaseFreshAndWait(page, delayed);
+    await expect(page.getByRole('button', { name: 'Components', exact: true })).toBeVisible();
+
+    await expect(page.locator('#sitenav')).toHaveAttribute('is-expanded', '');
+    await expect(page.getByRole('button', { name: 'Foundations', exact: true }))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('link', { name: 'Foundations', exact: true })).toBeFocused();
+  } finally {
+    delayed.release();
+  }
+});
+
+test(`${block.name} retains the cached DOM node when fresh navigation is unchanged`, async ({ page }) => {
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page);
+
+  try {
+    await page.goto(block.path);
+    await delayed.started;
+    await page.waitForSelector('#sitenav .level-1-list', { state: 'attached' });
+    await page.evaluate(() => { window.originalSitenav = document.querySelector('#sitenav'); });
+
+    await releaseFreshAndWait(page, delayed);
+
+    expect(await page.evaluate(() => window.originalSitenav === document.querySelector('#sitenav'))).toBe(true);
+    await expect(page.locator('#sitenav')).toHaveCount(1);
+  } finally {
+    delayed.release();
+  }
+});
+
+test(`${block.name} cached path has no WCAG violations and matches its accessibility tree`, async ({
+  page,
+  makeAxeBuilder,
+  isMobile,
+}, testInfo) => {
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page);
+
+  try {
+    await page.goto(block.path);
+    await delayed.started;
+    await waitForNavReady(page, isMobile);
+
+    const results = await makeAxeBuilder()
+      .disableRules(block.disableRules ?? [])
+      .analyze();
+    expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+
+    const expectedTree = testInfo.project.name === 'Mobile Chrome' ? `
+      - navigation "Spectrum Hub":
+        - list:
+          - listitem:
+            - button "Getting started"
+          - listitem:
+            - button "Foundations"
+        - button "Expand navigation":
+          - img
+      - button "Toggle site navigation" [expanded]:
+        - img
+    ` : `
+      - navigation "Spectrum Hub":
+        - list:
+          - listitem:
+            - button "Getting started"
+          - listitem:
+            - button "Foundations"
+        - button "Expand navigation":
+          - img
+    `;
+    await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(expectedTree);
+  } finally {
+    delayed.release();
+  }
+});
+
+test(`${block.name} fresh replacement does not shift the desktop main layout`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'desktop rail layout is covered in Chromium');
+  await observeSitenavLayoutShifts(page);
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page, {
+    fragment: changedNavAreasFragment,
+    index: changedSitenavIndex,
+  });
+
+  try {
+    const navigation = page.goto(`${block.path}?delay-sitenav`);
+    await page.waitForSelector('main#main-content');
+    await nextRenderedFrame(page);
+    const initialMainBounds = await page.locator('main').boundingBox();
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('sitenav-fixture-release'));
+    });
+    await navigation;
+    await delayed.started;
+    await page.waitForSelector('#sitenav .level-1-list');
+    await nextRenderedFrame(page);
+    const cachedBounds = await captureLayoutBounds(page);
+    expectStableMainBounds(initialMainBounds, cachedBounds.main);
+    const cachedInsertionShifts = await readRelevantLayoutShifts(page);
+    expect(
+      cachedInsertionShifts,
+      `cached insertion shifted the fixture layout:\n${JSON.stringify(cachedInsertionShifts, null, 2)}`,
+    ).toEqual([]);
+    await page.evaluate(() => { window.sitenavLayoutShifts = []; });
+
+    await releaseFreshAndWait(page, delayed);
+    await expect(page.getByRole('button', { name: 'Components', exact: true })).toBeVisible();
+    const freshBounds = await captureLayoutBounds(page);
+    expectStableBounds(cachedBounds, freshBounds);
+
+    const replacementShifts = await readRelevantLayoutShifts(page);
+    expect(
+      replacementShifts,
+      `fresh replacement shifted the cached layout:\n${JSON.stringify(replacementShifts, null, 2)}`,
+    ).toEqual([]);
+  } finally {
+    delayed.release();
+  }
+});
+
+test(`${block.name} mobile overlay does not reserve or move the main grid track`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Mobile Chrome', 'fixed overlay behavior is mobile-only');
+  await observeSitenavLayoutShifts(page);
+  await seedPublicSitenavCache(page);
+  const delayed = await delayFreshSitenav(page, {
+    fragment: changedNavAreasFragment,
+    index: changedSitenavIndex,
+  });
+
+  try {
+    await page.goto(block.path);
+    await delayed.started;
+    await page.waitForSelector('.sitenav-trigger-btn');
+    const cachedBounds = await captureLayoutBounds(page);
+
+    await page.getByRole('button', { name: 'Toggle site navigation', exact: true }).click();
+    await expect(page.locator('#sitenav')).toHaveAttribute('is-open', '');
+    const openBounds = await captureLayoutBounds(page);
+
+    expect(openBounds.main.x).toBe(cachedBounds.main.x);
+    expect(openBounds.main.y).toBe(cachedBounds.main.y);
+    expect(openBounds.main.width).toBe(cachedBounds.main.width);
+
+    await page.evaluate(() => { window.sitenavLayoutShifts = []; });
+    await releaseFreshAndWait(page, delayed);
+    await expect(page.getByRole('button', { name: 'Components', exact: true })).toBeVisible();
+    const freshBounds = await captureLayoutBounds(page);
+
+    expect(freshBounds.main.x).toBe(cachedBounds.main.x);
+    expect(freshBounds.main.y).toBe(cachedBounds.main.y);
+    expect(freshBounds.main.width).toBe(cachedBounds.main.width);
+
+    const replacementShifts = await readRelevantLayoutShifts(page);
+    expect(
+      replacementShifts,
+      `mobile fresh replacement shifted the main track:\n${JSON.stringify(replacementShifts, null, 2)}`,
+    ).toEqual([]);
+  } finally {
+    delayed.release();
+  }
 });
