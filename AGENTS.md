@@ -49,6 +49,12 @@ The project runs axe-core WCAG 2.2 AA scans plus a Playwright `toMatchAriaSnapsh
 - **Creating a new block or template?** The [`create-new-block`](./.ai/skills/create-new-block/SKILL.md) skill's "Accessibility tests" step walks through the fixture + spec files it needs.
 - **Changing an existing block, or the test conventions themselves?** See [`test/a11y/README.md`](./test/a11y/README.md) — fixture-markup gotchas, the accessibility-tree snapshot pattern, route-mocking, what to update when a block's behavior changes, and the known-issues list.
 
+## Visual regression tests
+
+The Playwright visual regression suite covers supported HTML fixtures and representative page states across desktop and mobile viewports in light and dark color schemes. [`playwright.visual.config.js`](./playwright.visual.config.js) defines the projects and strict screenshot defaults. [`test/visual/coverage.node.test.js`](./test/visual/coverage.node.test.js) enforces fixture coverage.
+
+See [`test/visual/README.md`](./test/visual/README.md) for local commands, deterministic authoring, Ubuntu baseline generation, and review guidance. Every new supported HTML fixture must add a visual spec or a reasoned no-rendering exemption when the fixture cannot produce meaningful visual rendering. Keep `.ai/` as the canonical location for project AI rules and skills.
+
 ## IDE-specific folders
 
 Some editors load extra project config from their own directories (for example `.cursor/` and `.claude/`). Those locations are thin adapters that symlink back to `.ai/`. **`.ai/` remains the portable source of truth** for rules and skills documented here. If instructions conflict, prefer **`.ai/README.md`** and the files under **`.ai/rules/`** and **`.ai/skills/`**.

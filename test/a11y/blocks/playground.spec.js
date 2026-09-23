@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 import {
   playgroundComponentsSheet, playgroundControlsSheet, playgroundRspProps, playgroundSwcProps,
 } from '../mocks.js';
@@ -41,7 +42,7 @@ const block = {
 };
 
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await makeAxeBuilder()
     .disableRules(block.disableRules ?? [])
@@ -55,7 +56,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   // single run — check the project by name to actually run this once, not twice.
   test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - iframe
@@ -74,7 +75,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 // on a debounce, so a control change has two asynchronous consequences and neither is
 // visible to an axe scan of the initial render.
 test(`${block.name} block stays accessible after a control interaction`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const toggle = page.getByRole('switch', { name: 'isDisabled' });
   const snippet = page.locator('.playground pre');
@@ -109,7 +110,7 @@ test(`${block.name} block stays accessible after a control interaction`, async (
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])

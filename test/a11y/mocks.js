@@ -18,6 +18,19 @@ export const headerFragment = `<main>
   </div>
 </main>`;
 
+// Header shape used by real pages: the search action must be authored in the fragment so
+// action-button decoration can expose the same "Expand search" control as production.
+export const pageHeaderFragment = `<main>
+  <div><p><a href="/" title="Spectrum Hub homepage">Spectrum Hub</a></p></div>
+  <div>
+    <ul>
+      <li><a href="/tools/widgets/action-button#search" title="style:quiet | label:hide"><span class="icon icon-search"></span>Expand search</a></li>
+      <li><a href="/tools/widgets/action-button#scheme" title="style:quiet | label:hide"><span class="icon icon-contrast"></span>Change color scheme</a></li>
+      <li><a href="/tools/widgets/profile">Sign in</a></li>
+    </ul>
+  </div>
+</main>`;
+
 export const footerFragment = `<main>
   <div>
     <p><a href="/about">About</a></p>
@@ -70,6 +83,8 @@ export const eventFragment = `<main>
   </div>
 </main>`;
 
+export const youtubeEmbed = '<html><body></body></html>';
+
 // The per-component status slice component-status/page-hero fetch (deps/status/<slug>.json).
 export const statusSlice = JSON.stringify({
   web: { swc: { status: 'available' }, figma: { status: 'experimental' } },
@@ -98,6 +113,12 @@ export const statusIndex = JSON.stringify({
   ],
 });
 
+export const statusTableQueryIndex = JSON.stringify({
+  data: [
+    { path: '/web/swc/components/button' },
+  ],
+});
+
 // A generic icon body for any *.svg fetch (status-table's export-button icon has no
 // static file checked in — it's generated at build/deploy time).
 export const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" id="icon" viewBox="0 0 20 20"><path d="M2 2h16v16H2z"/></svg>';
@@ -108,6 +129,8 @@ export const navAreasFragment = `<body><header></header><main><div><ul>
   <li><p>Getting started</p><ul><li><a href="/getting-started">Getting started</a></li></ul></li>
   <li><p>Foundations</p><ul><li><a href="/foundations">Foundations</a></li></ul></li>
 </ul></div></main></body>`;
+
+export const searchResponse = JSON.stringify({ hits: [] });
 
 // A four-level-deep variant of navAreasFragment, used only by sitenav.spec.js's level-3
 // expand-behavior coverage — kept separate so search.spec.js's snapshot (which expects

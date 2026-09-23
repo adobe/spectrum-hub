@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
-import { gotoBlock, formatViolations } from '../block-a11y.js';
+import { formatViolations } from '../block-a11y.js';
+import { gotoFixture } from '../../playwright/fixture.js';
 import { scheduleJson, eventFragment } from '../mocks.js';
 
 const block = {
@@ -26,7 +27,7 @@ const block = {
 // rendered structure isn't deterministic, so there's no stable root to snapshot yet.
 // Revisit once that bug is fixed.
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await makeAxeBuilder()
     .disableRules(block.disableRules ?? [])
@@ -38,7 +39,7 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
 test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
 
-  await gotoBlock(page, block);
+  await gotoFixture(page, block);
 
   const results = await new AxeBuilder({ page })
     .withRules(['color-contrast'])

@@ -16,6 +16,7 @@ helix-importer-ui
 .worktrees/
 playwright-report/
 playwright-report-links/
+playwright-report-visual/
 test-results/
 
 
