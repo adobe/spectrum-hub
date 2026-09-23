@@ -27,6 +27,11 @@ const block = {
   ],
 };
 
+const searchIntegrationBlock = {
+  ...block,
+  path: '/test/a11y/fixtures/sitenav-search.html',
+};
+
 // Four levels deep (Foundations > Layout and structure > Spacing > Scale) so a
 // level-3-button (with its own chevron, per decorateLevel's depth === 2 || depth === 3
 // rule) actually exists to expand — see mocks.js for why this needs its own fragment/index
@@ -121,6 +126,33 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
       - img
   `);
 });
+
+for (const activationKey of ['Enter', 'Space']) {
+  test(`${block.name} expands the keyboard-selected search option after ${activationKey}`, async ({ page, isMobile }) => {
+    await gotoBlock(page, searchIntegrationBlock);
+    await page.waitForSelector('#sitenav .level-1-list', { state: 'attached' });
+
+    const searchAction = page.getByRole('button', { name: 'Search', exact: true });
+    await page.keyboard.press('Tab');
+    await expect(searchAction).toBeFocused();
+    await page.keyboard.press(activationKey);
+
+    const searchInput = page.locator('sh-search se-input input');
+    await expect(searchInput).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('option', { name: /Foundations/ }))
+      .toHaveAttribute('aria-selected', 'true');
+    await page.keyboard.press('Enter');
+
+    await expect(page.getByRole('button', { name: 'Getting started', exact: true }))
+      .toHaveAttribute('aria-expanded', 'false');
+    await expect(page.getByRole('button', { name: 'Foundations', exact: true }))
+      .toHaveAttribute('aria-expanded', 'true');
+    if (isMobile) {
+      await expect(page.locator('#sitenav')).toHaveAttribute('is-open', '');
+    }
+  });
+}
 
 test(`${block.name} level-2 menu remains visible until its collapse transition finishes`, async ({ page, isMobile }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'transition timing is covered once in desktop Chromium');

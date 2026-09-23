@@ -107,6 +107,9 @@ class SEInput extends SEFormElement {
   handleKeyDown(event) {
     if (event.key !== 'Enter') return;
 
+    // The owning combobox handles Enter when one of its options is active.
+    if (this.activeDescendantElement) return;
+
     if (!this.form) return;
 
     const submitEvent = new SubmitEvent('submit', { bubbles: false, cancelable: true });

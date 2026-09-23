@@ -253,10 +253,10 @@ describe('sh-search', () => {
       const spy = sinon.spy();
       document.addEventListener('sitenav:expand-level1', spy);
 
-      const seInput = el.shadowRoot.querySelector('se-input');
-      seInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }));
+      const input = el.shadowRoot.querySelector('se-input').shadowRoot.querySelector('input');
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }));
       await el.updateComplete;
-      seInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
 
       expect(spy.calledOnce).to.be.true;
       expect(spy.firstCall.args[0].detail.label).to.equal('Foundations');
