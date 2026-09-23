@@ -1,4 +1,4 @@
-import { removeForAudience } from '../../scripts/ak.js';
+import { normalizeHeadingId, removeForAudience } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -106,7 +106,7 @@ function slugify(text) {
 
 function prepareHeading(heading, usedIds, normalizeSize = false) {
   const authoredId = normalizeSize
-    ? heading.id.replace(/^size-[a-z0-9]+-/, '')
+    ? normalizeHeadingId(heading.id)
     : heading.id;
   const base = authoredId || slugify(heading.textContent);
   let id = base;

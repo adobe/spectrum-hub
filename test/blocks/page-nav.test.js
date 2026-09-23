@@ -286,6 +286,25 @@ describe('page-nav block', () => {
   });
 
   describe('scroll spy keeps the active link in sync with the visible heading', () => {
+    it('maps a trailing-size heading to its normalized link id', async () => {
+      stubMatchMedia(sandbox, true);
+      const io = stubIntersectionObserver(sandbox);
+      const main = document.createElement('main');
+      main.innerHTML = `
+        <h1>Page</h1>
+        <h2 id="heading-5-size-xl">Heading 5</h2>
+      `;
+      document.body.append(main);
+
+      const el = await loadPageNav();
+      const heading = main.querySelector('h2');
+      const link = el.querySelector('a[href="#heading-5"]');
+
+      expect(link).to.not.be.null;
+      io.trigger([{ target: heading, isIntersecting: true }]);
+      expect(link.getAttribute('aria-current')).to.equal('location');
+    });
+
     // Regression: the observer only reports headings whose intersection
     // *changed*. When the page is at the top, both the h1 and the first section
     // sit inside the active band, so clicking the first link scrolls the h1 out
@@ -665,6 +684,19 @@ describe('page-nav block', () => {
       document.body.append(main);
       await loadPageNav();
       expect(document.querySelector('main h2').id).to.equal('multi-word-heading');
+    });
+
+    it('strips a trailing size modifier from an existing id', async () => {
+      const main = document.createElement('main');
+      const h1 = document.createElement('h1');
+      h1.textContent = 'Page';
+      const h2 = document.createElement('h2');
+      h2.id = 'heading-5-size-xl';
+      h2.textContent = 'Heading 5';
+      main.append(h1, h2);
+      document.body.append(main);
+      await loadPageNav();
+      expect(document.querySelector('main h2').id).to.equal('heading-5');
     });
 
     it('does not touch an id that merely starts with "size" but has no modifier prefix', async () => {

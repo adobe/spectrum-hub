@@ -378,6 +378,12 @@ function decorateLinks(el) {
   }, []);
 }
 
+export function normalizeHeadingId(id) {
+  return id
+    .replace(/^size-[a-z0-9]+-/, '')
+    .replace(/-size-[a-z0-9]+$/, '');
+}
+
 function loadIcons(el) {
   const icons = [...el.querySelectorAll('span.icon')];
   if (!icons.length) { return; }
@@ -389,7 +395,7 @@ function loadIcons(el) {
       const prefix = isHeading ? 'heading' : 'text';
       parent.classList.add(lastClass.replace('icon', prefix));
       if (isHeading) {
-        parent.id = parent.id.replace(/^size-[a-z0-9]+-/, '');
+        parent.id = normalizeHeadingId(parent.id);
       }
       icon.remove();
     } else {

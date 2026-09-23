@@ -11,6 +11,7 @@ import {
   decorateLink,
   loadArea,
   decorateAudience,
+  normalizeHeadingId,
 } from '../../scripts/ak.js';
 
 // Minimal config that won't throw inside decorateLink / loadBlock
@@ -35,6 +36,29 @@ describe('ak.js', () => {
   afterEach(() => {
     sandbox.restore();
     window.history.pushState({}, '', originalHref);
+  });
+
+  describe('normalizeHeadingId', () => {
+    it('removes a leading size modifier', () => {
+      expect(normalizeHeadingId('size-xl-heading')).to.equal('heading');
+    });
+
+    it('removes a trailing size modifier', () => {
+      expect(normalizeHeadingId('heading-size-xl')).to.equal('heading');
+    });
+
+    it('removes size modifiers from both boundaries', () => {
+      expect(normalizeHeadingId('size-xl-heading-size-m')).to.equal('heading');
+    });
+
+    it('preserves a size modifier in the middle', () => {
+      expect(normalizeHeadingId('heading-size-xl-details'))
+        .to.equal('heading-size-xl-details');
+    });
+
+    it('preserves similar text that is not a size modifier', () => {
+      expect(normalizeHeadingId('sizeable-heading')).to.equal('sizeable-heading');
+    });
   });
 
   describe('getMetadata', () => {
@@ -373,7 +397,7 @@ describe('ak.js', () => {
       const area = document.createElement('div');
       area.innerHTML = `
         <div>
-          <h3 id="size-m-details">
+          <h3 id="details-size-m">
             <span class="icon icon-size-m"></span>
             Details
           </h3>
