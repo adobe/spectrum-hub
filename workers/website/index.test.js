@@ -174,7 +174,7 @@ describe('routing the /auth/ namespace', () => {
     expect(fetchFromAem).toHaveBeenCalledTimes(1);
     expect(createSession).not.toHaveBeenCalled();
     const { request, cache } = fetchFromAem.mock.calls[0][0];
-    expect(new URL(request.url).hostname).toBe('main--spectrum-hub--adobe.aem.live');
+    expect(new URL(request.url).hostname).toBe('spectrum.adobe.com');
     expect(cache).toBe(false);
   });
 
