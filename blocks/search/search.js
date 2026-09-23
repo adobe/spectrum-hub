@@ -2,7 +2,10 @@ import { LitElement, html, nothing } from 'lit';
 import { getConfig } from '../../scripts/ak.js';
 import loadStyle from '../../scripts/utils/styles.js';
 import { fetchNavAreas } from './nav-areas.js';
-import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
+import {
+  SEARCH_ANNOUNCE_EVENT,
+  SEARCH_EXPAND_EVENT,
+} from '../../scripts/utils/nav-events.js';
 import '../../deps/se/se.js';
 
 const { codeBase } = getConfig();
@@ -16,6 +19,13 @@ const APP_ID = '464UXSQJQC';
 const SEARCH_KEY = '271461afa0e340546d112204c7520c1e';
 const INDEX_NAME = 'spectrum-docs-public';
 const DEBOUNCE_MS = 250;
+const SEARCH_INSTRUCTIONS = 'Type to search, or use the Up and Down Arrow keys to navigate. '
+  + 'Press Enter to select.';
+
+function needsSafariAnnouncements() {
+  return navigator.vendor === 'Apple Computer, Inc.'
+    && navigator.userAgent.includes('Safari');
+}
 
 /**
  * Follows the WAI-ARIA APG editable combobox with list autocomplete pattern
@@ -38,6 +48,8 @@ class SHSearch extends LitElement {
     this.navAreasLoaded = false;
     this.activeIndex = -1;
     this._debounceTimeout = null;
+    this._inputFocused = false;
+    this._openingAnnounced = false;
     this._handleOutsideClick = this._handleOutsideClick.bind(this);
   }
 
@@ -65,15 +77,20 @@ class SHSearch extends LitElement {
   firstUpdated() {
     // Set once; the listbox element never changes.
     this._input.controlsElement = this.shadowRoot.querySelector('#listbox');
+    this._input.descriptionElement = this.shadowRoot.querySelector('#search-instructions');
     this._popover.showPopover();
     // This element was just inserted; focusing immediately outruns the
     // browser posting its a11y tree, so screen readers don't follow. Wait
     // a full paint (double rAF) before moving focus.
-    requestAnimationFrame(() => requestAnimationFrame(() => this._input.focus()));
+    requestAnimationFrame(() => requestAnimationFrame(async () => {
+      await this._input.focus();
+      this._inputFocused = true;
+      this._announceOpening();
+    }));
   }
 
   willUpdate(changed) {
-    if (changed.has('results') || changed.has('navAreas')) {
+    if (changed.has('query') || changed.has('results') || changed.has('navAreas')) {
       this.activeIndex = this._currentItems.length > 0 ? 0 : -1;
     }
   }
@@ -91,13 +108,20 @@ class SHSearch extends LitElement {
   }
 
   updated(changed) {
-    if (changed.has('activeIndex')) {
+    if (changed.has('activeIndex')
+      || changed.has('query')
+      || changed.has('results')
+      || changed.has('navAreas')) {
       const active = this.activeIndex > -1
         ? this.shadowRoot.querySelector(`#result-${this.activeIndex}`)
         : null;
       active?.scrollIntoView({ block: 'nearest' });
       // Element ref, not an id — see SEInput in deps/se/se.js.
-      this._input.activeDescendantElement = active;
+      this._input.setActiveDescendantElement(active);
+    }
+
+    if (changed.has('navAreas') && this._inputFocused) {
+      this._announceOpening();
     }
   }
 
@@ -128,11 +152,17 @@ class SHSearch extends LitElement {
       this.results = [];
       return;
     }
-    this.results = await this._search(query);
+    const results = await this._search(query);
+    if (query === this.query.trim()) {
+      this.results = results;
+    }
   }
 
   _handleInput(e) {
     this.query = e.target.value;
+    this.results = [];
+    this.activeIndex = -1;
+    this._input.setActiveDescendantElement(null);
     clearTimeout(this._debounceTimeout);
     this._debounceTimeout = setTimeout(() => this._runSearch(), DEBOUNCE_MS);
   }
@@ -150,19 +180,21 @@ class SHSearch extends LitElement {
       case 'ArrowDown':
         if (!items.length) { return; }
         e.preventDefault();
-        this._setActive((this.activeIndex + 1) % items.length);
+        this._setActive((this.activeIndex + 1) % items.length, items);
         break;
       case 'ArrowUp':
         if (!items.length) { return; }
         e.preventDefault();
-        this._setActive((this.activeIndex - 1 + items.length) % items.length);
+        this._setActive((this.activeIndex - 1 + items.length) % items.length, items);
         break;
-      case 'Enter':
-        if (this.activeIndex > -1) {
+      case 'Enter': {
+        const item = items[this.activeIndex];
+        if (item) {
           e.preventDefault();
-          this._select(items[this.activeIndex]);
+          this._select(item, e);
         }
         break;
+      }
       case 'Escape':
         e.preventDefault();
         this._close();
@@ -172,13 +204,37 @@ class SHSearch extends LitElement {
     }
   }
 
-  _setActive(index) {
+  _setActive(index, items = this._currentItems) {
     this.activeIndex = index;
+    this._announce(this._itemLabel(items[index]));
   }
 
-  _select(item) {
+  _itemLabel(item) {
+    if (!item) { return ''; }
+    return this._isNavView ? item.label : item.title || item.objectID;
+  }
+
+  _announce(message) {
+    if (!message || !needsSafariAnnouncements()) { return false; }
+    this.dispatchEvent(new CustomEvent(SEARCH_ANNOUNCE_EVENT, {
+      detail: { message },
+    }));
+    return true;
+  }
+
+  _announceOpening() {
+    if (this._openingAnnounced || !this.navAreasLoaded) { return; }
+    const firstItem = this._currentItems[0];
+    const firstItemLabel = this._itemLabel(firstItem);
+    const message = firstItemLabel
+      ? `${SEARCH_INSTRUCTIONS} ${firstItemLabel}.`
+      : SEARCH_INSTRUCTIONS;
+    this._openingAnnounced = this._announce(message);
+  }
+
+  _select(item, sourceEvent) {
     if (this._isNavView) {
-      this._selectNavArea(item);
+      this._selectNavArea(item, sourceEvent);
     } else {
       this._selectHit(item);
     }
@@ -286,6 +342,9 @@ class SHSearch extends LitElement {
   render() {
     return html`
       <form class="search-form" @submit=${this._handleSubmit}>
+        <p id="search-instructions" class="search-instructions">
+          ${SEARCH_INSTRUCTIONS}
+        </p>
         <se-input
           type="search"
           id="search-input"

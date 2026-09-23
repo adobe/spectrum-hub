@@ -10,6 +10,15 @@
   }
 }
 
+.search-instructions {
+  clip-path: inset(50%);
+  block-size: 1px;
+  inline-size: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+}
+
 /* When the default 380px-wide, right-anchored placement would overflow the
 viewport (narrow screens), fall back to a full-width sheet pinned to the
 viewport edges instead of the anchor. */

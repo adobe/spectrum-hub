@@ -108,6 +108,69 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   `);
 });
 
+test(`${block.name} collapsed rail tooltips label their buttons without describing them`, async ({ page, isMobile }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'desktop tooltip relationships are covered once in Chromium');
+  await gotoBlock(page, block);
+  await waitForNavReady(page, isMobile);
+
+  const foundations = page.locator(
+    '.level-1-button[aria-controls="sitenav-menu-foundations"]',
+  );
+  const foundationsTooltip = page.locator(
+    'swc-tooltip[for="sitenav-level-1-tooltip-foundations"]',
+  );
+
+  await foundations.focus();
+  await expect.poll(() => foundationsTooltip.evaluate((tooltip) => tooltip.open)).toBe(true);
+  await foundationsTooltip.evaluate((tooltip) => tooltip.updateComplete);
+
+  const foundationsRelationships = await foundations.evaluate((button) => {
+    const tooltip = document.querySelector(`swc-tooltip[for="${button.id}"]`);
+    return {
+      described: (button.ariaDescribedByElements ?? []).includes(tooltip),
+      labelCount: (button.ariaLabelledByElements ?? [])
+        .filter((element) => element === tooltip).length,
+    };
+  });
+  expect(foundationsRelationships).toEqual({ described: false, labelCount: 1 });
+  await expect(page.getByRole('button', { name: 'Foundations', exact: true })).toBeFocused();
+
+  const expandButton = page.locator('#sitenav-expand-btn');
+  const expandTooltip = page.locator('swc-tooltip[for="sitenav-expand-btn"]');
+
+  await expandButton.focus();
+  await expect.poll(() => expandTooltip.evaluate((tooltip) => tooltip.open)).toBe(true);
+  await expandTooltip.evaluate((tooltip) => tooltip.updateComplete);
+
+  const expandRelationships = await expandButton.evaluate((button) => {
+    const tooltip = document.querySelector(`swc-tooltip[for="${button.id}"]`);
+    return {
+      described: (button.ariaDescribedByElements ?? []).includes(tooltip),
+      labelCount: (button.ariaLabelledByElements ?? [])
+        .filter((element) => element === tooltip).length,
+      label: button.getAttribute('aria-label'),
+    };
+  });
+  expect(expandRelationships).toEqual({
+    described: false,
+    labelCount: 1,
+    label: 'Expand navigation',
+  });
+  await expect(page.getByRole('button', { name: 'Expand navigation', exact: true }))
+    .toBeFocused();
+
+  await expect(page.locator(block.ariaRoot)).toMatchAriaSnapshot(`
+    - navigation "Spectrum Hub":
+      - list:
+        - listitem:
+          - button "Getting started"
+        - listitem:
+          - button "Foundations"
+      - button "Expand navigation":
+        - img
+  `);
+});
+
 test(`${block.name} block matches its expected accessibility tree on mobile`, async ({ page, isMobile }, testInfo) => {
   test.skip(testInfo.project.name !== 'Mobile Chrome', 'only Mobile Chrome renders the sitenav-trigger-btn tree being asserted here');
   await gotoBlock(page, block);
@@ -140,14 +203,21 @@ for (const activationKey of ['Enter', 'Space']) {
     const searchInput = page.locator('sh-search se-input input');
     await expect(searchInput).toBeFocused();
     await page.keyboard.press('ArrowDown');
-    await expect(page.getByRole('option', { name: /Foundations/ }))
-      .toHaveAttribute('aria-selected', 'true');
+    const foundationsOption = page.getByRole('option', { name: /Foundations/ });
+    await expect(foundationsOption).toHaveAttribute('aria-selected', 'true');
+    const foundationsOptionElement = await foundationsOption.elementHandle();
+    const activeDescendantMatchesFoundations = await searchInput.evaluate(
+      (input, option) => input.ariaActiveDescendantElement === option,
+      foundationsOptionElement,
+    );
+    expect(activeDescendantMatchesFoundations).toBe(true);
     await page.keyboard.press('Enter');
 
     await expect(page.getByRole('button', { name: 'Getting started', exact: true }))
       .toHaveAttribute('aria-expanded', 'false');
-    await expect(page.getByRole('button', { name: 'Foundations', exact: true }))
-      .toHaveAttribute('aria-expanded', 'true');
+    const foundations = page.getByRole('button', { name: 'Foundations', exact: true });
+    await expect(foundations).toHaveAttribute('aria-expanded', 'true');
+    await expect(foundations).toBeFocused();
     if (isMobile) {
       await expect(page.locator('#sitenav')).toHaveAttribute('is-open', '');
     }

@@ -491,6 +491,7 @@ export const syncLevel1Tooltips = (sitenav) => {
     tooltip.setAttribute('for', btn.id);
     tooltip.setAttribute('placement', 'end');
     tooltip.setAttribute('delay', '200');
+    tooltip.setAttribute('labeling', '');
     tooltip.textContent = labelText;
     // swc-tooltip doesn't need DOM adjacency to its trigger — it positions via the Popover API
     // using the for/id link
@@ -516,6 +517,7 @@ export const getExpandButton = async (sitenav) => {
   tooltip.setAttribute('for', btn.id);
   tooltip.setAttribute('placement', 'end');
   tooltip.setAttribute('delay', '200');
+  tooltip.setAttribute('labeling', '');
   sitenav.append(tooltip);
 
   const syncLabel = () => {
@@ -590,6 +592,9 @@ export const setupSearchIntegration = (navList) => {
     }
     if (button.getAttribute('aria-expanded') !== 'true') {
       button.click();
+    }
+    if (e.detail.sourceEvent instanceof KeyboardEvent) {
+      queueMicrotask(() => button.focus());
     }
   });
 };

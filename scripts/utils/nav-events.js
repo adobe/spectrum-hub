@@ -5,3 +5,4 @@
 // intentionally has no sitenav. This module has no side effects, so both
 // can depend on it safely.
 export const SEARCH_EXPAND_EVENT = 'sitenav:expand-level1';
+export const SEARCH_ANNOUNCE_EVENT = 'search:announce';

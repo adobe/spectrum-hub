@@ -73,8 +73,16 @@ class SEInput extends SEFormElement {
     'aria-expanded': { type: String },
     'aria-autocomplete': { type: String },
     controlsElement: { attribute: false },
+    descriptionElement: { attribute: false },
     activeDescendantElement: { attribute: false },
   };
+
+  setActiveDescendantElement(element) {
+    this.activeDescendantElement = element;
+    if (this.input) {
+      this.input.ariaActiveDescendantElement = element;
+    }
+  }
 
   async focus() {
     this._programmaticFocus = true;
@@ -157,6 +165,7 @@ class SEInput extends SEFormElement {
             aria-expanded=${this['aria-expanded'] || nothing}
             aria-autocomplete=${this['aria-autocomplete'] || nothing}
             .ariaControlsElements=${this.controlsElement ? [this.controlsElement] : []}
+            .ariaDescribedByElements=${this.descriptionElement ? [this.descriptionElement] : []}
             .ariaActiveDescendantElement=${this.activeDescendantElement ?? null}
             name=${this.name}
             id=${this._idHash}
