@@ -19,7 +19,7 @@ async function loadLocalizedEvent(event) {
   const path = localized?.pathname || url.pathname;
 
   try {
-    const fragment = await loadFragment(path);
+    const { fragment } = await loadFragment(path);
     return fragment;
   } catch {
     config.log(`Error fetching ${path} fragment`);
