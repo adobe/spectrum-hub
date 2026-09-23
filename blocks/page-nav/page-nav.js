@@ -1,4 +1,4 @@
-import { removeForAudience } from '../../scripts/ak.js';
+import { normalizeHeadingId, removeForAudience } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -106,7 +106,7 @@ function slugify(text) {
 
 function prepareHeading(heading, usedIds, normalizeSize = false) {
   const authoredId = normalizeSize
-    ? heading.id.replace(/^size-[a-z0-9]+-/, '')
+    ? normalizeHeadingId(heading.id)
     : heading.id;
   const base = authoredId || slugify(heading.textContent);
   let id = base;
@@ -252,7 +252,10 @@ function navigateToHeading(heading) {
       .filter((element) => !targetSet.has(element))
       .map((element) => element.id),
   );
-  targets.forEach((heading) => prepareHeading(heading, usedIds, heading.tagName === 'H2'));
+  // Later sections may not have reached loadIcons before page-nav snapshots their ids.
+  targets.forEach((heading) => (
+    prepareHeading(heading, usedIds, /^H[1-2]$/.test(heading.tagName))
+  ));
 
   const linkById = new Map();
   const desktopMql = window.matchMedia('(width >= 1200px)');

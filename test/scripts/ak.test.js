@@ -11,6 +11,7 @@ import {
   decorateLink,
   loadArea,
   decorateAudience,
+  normalizeHeadingId,
 } from '../../scripts/ak.js';
 
 // Minimal config that won't throw inside decorateLink / loadBlock
@@ -35,6 +36,29 @@ describe('ak.js', () => {
   afterEach(() => {
     sandbox.restore();
     window.history.pushState({}, '', originalHref);
+  });
+
+  describe('normalizeHeadingId', () => {
+    it('removes a leading size modifier', () => {
+      expect(normalizeHeadingId('size-xl-heading')).to.equal('heading');
+    });
+
+    it('removes a trailing size modifier', () => {
+      expect(normalizeHeadingId('heading-size-xl')).to.equal('heading');
+    });
+
+    it('removes size modifiers from both boundaries', () => {
+      expect(normalizeHeadingId('size-xl-heading-size-m')).to.equal('heading');
+    });
+
+    it('preserves a size modifier in the middle', () => {
+      expect(normalizeHeadingId('heading-size-xl-details'))
+        .to.equal('heading-size-xl-details');
+    });
+
+    it('preserves similar text that is not a size modifier', () => {
+      expect(normalizeHeadingId('sizeable-heading')).to.equal('sizeable-heading');
+    });
   });
 
   describe('getMetadata', () => {
@@ -349,6 +373,60 @@ describe('ak.js', () => {
       area.innerHTML = '<div>Section</div>';
       await loadArea({ area });
       expect(area.querySelector('[data-status]')).to.be.null;
+    });
+
+    it('removes the size prefix from an icon-sized h1 id', async () => {
+      const area = document.createElement('div');
+      area.innerHTML = `
+        <div>
+          <h1 id="size-xl-overview">
+            <span class="icon icon-size-xl"></span>
+            Overview
+          </h1>
+        </div>
+      `;
+
+      await loadArea({ area });
+
+      const heading = area.querySelector('h1');
+      expect(heading.id).to.equal('overview');
+      expect(heading.classList.contains('heading-size-xl')).to.be.true;
+    });
+
+    it('removes the size prefix from an icon-sized h3 id', async () => {
+      const area = document.createElement('div');
+      area.innerHTML = `
+        <div>
+          <h3 id="details-size-m">
+            <span class="icon icon-size-m"></span>
+            Details
+          </h3>
+        </div>
+      `;
+
+      await loadArea({ area });
+
+      const heading = area.querySelector('h3');
+      expect(heading.id).to.equal('details');
+      expect(heading.classList.contains('heading-size-m')).to.be.true;
+    });
+
+    it('does not normalize a non-heading id for text size syntax', async () => {
+      const area = document.createElement('div');
+      area.innerHTML = `
+        <div>
+          <p id="size-m-summary">
+            <span class="icon icon-size-m"></span>
+            Summary
+          </p>
+        </div>
+      `;
+
+      await loadArea({ area });
+
+      const paragraph = area.querySelector('p');
+      expect(paragraph.id).to.equal('size-m-summary');
+      expect(paragraph.classList.contains('text-size-m')).to.be.true;
     });
   });
 });

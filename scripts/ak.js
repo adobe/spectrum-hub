@@ -378,14 +378,25 @@ function decorateLinks(el) {
   }, []);
 }
 
+export function normalizeHeadingId(id) {
+  return id
+    .replace(/^size-[a-z0-9]+-/, '')
+    .replace(/-size-[a-z0-9]+$/, '');
+}
+
 function loadIcons(el) {
   const icons = [...el.querySelectorAll('span.icon')];
   if (!icons.length) { return; }
   const svgs = icons.reduce((acc, icon) => {
     const lastClass = Array.from(icon.classList).pop();
     if (lastClass.startsWith('icon-size-')) {
-      const prefix = icon.parentElement.nodeName.startsWith('H') ? 'heading' : 'text';
-      icon.parentElement.classList.add(lastClass.replace('icon', prefix));
+      const parent = icon.parentElement;
+      const isHeading = /^H[1-6]$/.test(parent.nodeName);
+      const prefix = isHeading ? 'heading' : 'text';
+      parent.classList.add(lastClass.replace('icon', prefix));
+      if (isHeading) {
+        parent.id = normalizeHeadingId(parent.id);
+      }
       icon.remove();
     } else {
       acc.push(icon);
