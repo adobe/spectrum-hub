@@ -44,7 +44,8 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - combobox "Search" [expanded]:
-      - combobox "Search" [expanded]
+      - combobox "Search" [expanded]:
+        - /description: Type to search, or use the Up and Down Arrow keys to navigate. Press Enter to select.
       - button "Clear search"
     - listbox "Navigation areas":
       - option "Getting started Introduction, principles, and how to begin" [selected]:

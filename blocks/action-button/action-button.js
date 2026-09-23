@@ -1,4 +1,5 @@
 import { getScheme, getConfig, setScheme } from '../../scripts/ak.js';
+import { SEARCH_ANNOUNCE_EVENT } from '../../scripts/utils/nav-events.js';
 import { setColorScheme as setSectionScheme } from '../section-metadata/section-metadata.js';
 
 const { log } = getConfig();
@@ -18,10 +19,28 @@ function handleColorScheme() {
 
 const handleSearch = async (e) => {
   await loadSearch();
+  const status = document.createElement('div');
+  status.className = 'visually-hidden';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.setAttribute('aria-atomic', 'true');
+
   const shSearch = document.createElement('sh-search');
   const btn = e.target.closest('.action-button');
-  btn.insertAdjacentElement('beforebegin', shSearch);
+  btn.before(status, shSearch);
+
+  let announcementTimeout;
+  shSearch.addEventListener(SEARCH_ANNOUNCE_EVENT, ({ detail }) => {
+    status.textContent = '';
+    clearTimeout(announcementTimeout);
+    announcementTimeout = setTimeout(() => {
+      status.textContent = detail.message;
+    }, 0);
+  });
+
   shSearch.addEventListener('clear', () => {
+    clearTimeout(announcementTimeout);
+    status.remove();
     shSearch.remove();
     btn.focus();
   });

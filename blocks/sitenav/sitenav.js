@@ -491,6 +491,7 @@ export const syncLevel1Tooltips = (sitenav) => {
     tooltip.setAttribute('for', btn.id);
     tooltip.setAttribute('placement', 'end');
     tooltip.setAttribute('delay', '200');
+    tooltip.setAttribute('labeling', '');
     tooltip.textContent = labelText;
     // swc-tooltip doesn't need DOM adjacency to its trigger — it positions via the Popover API
     // using the for/id link
@@ -516,6 +517,7 @@ export const getExpandButton = async (sitenav) => {
   tooltip.setAttribute('for', btn.id);
   tooltip.setAttribute('placement', 'end');
   tooltip.setAttribute('delay', '200');
+  tooltip.setAttribute('labeling', '');
   sitenav.append(tooltip);
 
   const syncLabel = () => {
@@ -579,7 +581,21 @@ export const setupOutsideClose = (sitenav) => {
 export const setupSearchIntegration = (navList) => {
   document.addEventListener(SEARCH_EXPAND_EVENT, (e) => {
     const menuId = toClassName(e.detail.label);
-    navList.querySelector(`.level-1-button[aria-controls="sitenav-menu-${menuId}"]`)?.click();
+    const button = navList.querySelector(`.level-1-button[aria-controls="sitenav-menu-${menuId}"]`);
+    if (!button) { return; }
+
+    const sitenav = navList.closest('#sitenav');
+    if (isMobileViewport() && sitenav) {
+      e.detail.sourceEvent?.stopPropagation();
+      sitenav.setAttribute('is-open', '');
+      sitenav.querySelector('.sitenav-trigger-btn')?.setAttribute('aria-expanded', 'true');
+    }
+    if (button.getAttribute('aria-expanded') !== 'true') {
+      button.click();
+    }
+    if (e.detail.sourceEvent instanceof KeyboardEvent) {
+      queueMicrotask(() => button.focus());
+    }
   });
 };
 

@@ -3,6 +3,7 @@ import sinon from 'sinon';
 
 import '../../blocks/search/search.js';
 import { resetNavAreasCacheForTests } from '../../blocks/search/nav-areas.js';
+import { SEARCH_ANNOUNCE_EVENT } from '../../scripts/utils/nav-events.js';
 
 const NAV_HTML = `<body><header></header><main><div><ul>
   <li><p>Getting started</p><ul><li><a href="/a">a</a></li></ul></li>
@@ -99,6 +100,17 @@ describe('sh-search', () => {
       expect(controlsElements.length === 1 && controlsElements[0] === listbox).to.be.true;
     });
 
+    it('describes the native input with search usage instructions', async () => {
+      const el = await mountSearch(sandbox);
+      const input = realInput(el);
+      const instruction = el.shadowRoot.querySelector('#search-instructions');
+
+      expect(instruction.textContent.trim()).to.equal(
+        'Type to search, or use the Up and Down Arrow keys to navigate. Press Enter to select.',
+      );
+      expect(input.ariaDescribedByElements).to.deep.equal([instruction]);
+    });
+
     it('points aria-activedescendant at the active option via an element reference', async () => {
       const el = await mountSearch(sandbox);
       const input = realInput(el);
@@ -106,16 +118,42 @@ describe('sh-search', () => {
       expect(input.ariaActiveDescendantElement === active).to.be.true;
     });
 
-    it('moves aria-activedescendant when the active option changes', async () => {
+    it('synchronously reflects the first ArrowDown option on the native input', async () => {
       const el = await mountSearch(sandbox);
-      el.shadowRoot.querySelector('se-input').dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }),
-      );
+      const seInput = el.shadowRoot.querySelector('se-input');
+      const input = realInput(el);
+      sandbox.stub(seInput, 'requestUpdate');
+
+      input.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        bubbles: true,
+        composed: true,
+      }));
       await el.updateComplete;
 
+      const foundations = el.shadowRoot.querySelector('#result-1');
+      expect(foundations.getAttribute('aria-selected')).to.equal('true');
+      expect(input.ariaActiveDescendantElement).to.equal(foundations);
+    });
+
+    it('submits the search form on Enter when no option is active', async () => {
+      const el = await mountSearchWithFailedFetch(sandbox);
       const input = realInput(el);
-      const active = el.shadowRoot.querySelector('#result-1');
-      expect(input.ariaActiveDescendantElement === active).to.be.true;
+      const form = el.shadowRoot.querySelector('form');
+      const submitSpy = sinon.spy();
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitSpy(event);
+      });
+
+      expect(input.ariaActiveDescendantElement === null).to.be.true;
+      input.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        composed: true,
+      }));
+
+      expect(submitSpy.calledOnce).to.be.true;
     });
   });
 
@@ -144,6 +182,37 @@ describe('sh-search', () => {
       expect(document.activeElement === el).to.be.true;
       expect(el.shadowRoot.activeElement === seInput).to.be.true;
       expect(seInput.shadowRoot.activeElement === realInput).to.be.true;
+    });
+  });
+
+  describe('Safari announcements', () => {
+    let clock;
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers({ toFake: ['requestAnimationFrame'] });
+      sandbox.stub(navigator, 'vendor').value('Apple Computer, Inc.');
+      sandbox.stub(navigator, 'userAgent').value(
+        'Mozilla/5.0 Version/18.0 Safari/605.1.15',
+      );
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+
+    it('announces usage guidance and the first option after focusing', async () => {
+      const el = await mountSearch(sandbox);
+      const announcementSpy = sinon.spy();
+      el.addEventListener(SEARCH_ANNOUNCE_EVENT, announcementSpy);
+
+      await clock.nextAsync();
+      await clock.nextAsync();
+
+      expect(announcementSpy.calledOnce).to.be.true;
+      expect(announcementSpy.firstCall.args[0].detail.message).to.equal(
+        'Type to search, or use the Up and Down Arrow keys to navigate. '
+        + 'Press Enter to select. Getting started.',
+      );
     });
   });
 
@@ -209,6 +278,33 @@ describe('sh-search', () => {
       const options = [...el.shadowRoot.querySelectorAll('[role="option"]')];
       expect(options.map((o) => o.getAttribute('aria-selected'))).to.deep.equal(['true', 'false']);
     });
+
+    it('announces the newly active option after every arrow key in Safari', async () => {
+      sandbox.stub(navigator, 'vendor').value('Apple Computer, Inc.');
+      sandbox.stub(navigator, 'userAgent').value(
+        'Mozilla/5.0 Version/18.0 Safari/605.1.15',
+      );
+      const el = await mountSearch(sandbox);
+      const announcementSpy = sinon.spy();
+      el.addEventListener(SEARCH_ANNOUNCE_EVENT, announcementSpy);
+
+      await dispatchKey(el, 'ArrowDown');
+      await dispatchKey(el, 'ArrowUp');
+
+      expect(announcementSpy.callCount).to.equal(2);
+      expect(announcementSpy.firstCall.args[0].detail.message).to.equal('Foundations');
+      expect(announcementSpy.secondCall.args[0].detail.message).to.equal('Getting started');
+    });
+
+    it('does not add live announcements when active-descendant speech is supported', async () => {
+      const el = await mountSearch(sandbox);
+      const announcementSpy = sinon.spy();
+      el.addEventListener(SEARCH_ANNOUNCE_EVENT, announcementSpy);
+
+      await dispatchKey(el, 'ArrowDown');
+
+      expect(announcementSpy.called).to.be.false;
+    });
   });
 
   describe('nav areas fail to load', () => {
@@ -253,18 +349,62 @@ describe('sh-search', () => {
       const spy = sinon.spy();
       document.addEventListener('sitenav:expand-level1', spy);
 
-      const seInput = el.shadowRoot.querySelector('se-input');
-      seInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }));
+      const input = el.shadowRoot.querySelector('se-input').shadowRoot.querySelector('input');
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, composed: true }));
       await el.updateComplete;
-      seInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        composed: true,
+      });
+      input.dispatchEvent(enterEvent);
 
       expect(spy.calledOnce).to.be.true;
       expect(spy.firstCall.args[0].detail.label).to.equal('Foundations');
+      expect(spy.firstCall.args[0].detail.sourceEvent === enterEvent).to.be.true;
       document.removeEventListener('sitenav:expand-level1', spy);
     });
   });
 
   describe('typing', () => {
+    it('submits safely when Enter is pressed before typed results arrive', async () => {
+      const el = await mountSearch(sandbox);
+      const runSearch = sandbox.stub(el, '_runSearch').resolves();
+      const input = el.shadowRoot.querySelector('se-input').shadowRoot.querySelector('input');
+      const clearSpy = sinon.spy();
+      el.addEventListener('clear', clearSpy);
+
+      input.value = 'button';
+      input.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+
+      expect(input.ariaActiveDescendantElement === null).to.be.true;
+      expect(() => input.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        composed: true,
+      }))).not.to.throw();
+      expect(runSearch.calledOnce).to.be.true;
+      expect(clearSpy.called).to.be.false;
+    });
+
+    it('ignores a search response after the query changes', async () => {
+      const el = await mountSearch(sandbox);
+      let resolveSearch;
+      sandbox.stub(el, '_search').returns(new Promise((resolve) => {
+        resolveSearch = resolve;
+      }));
+      el.query = 'but';
+      const staleSearch = el._runSearch();
+
+      const currentResults = [{ objectID: '/button', title: 'Button', url: '/button' }];
+      el.query = 'button';
+      el.results = currentResults;
+      resolveSearch([{ objectID: '/but', title: 'Stale result', url: '/but' }]);
+      await staleSearch;
+
+      expect(el.results).to.equal(currentResults);
+    });
+
     it('switches to results view once a query is entered', async () => {
       const el = await mountSearch(sandbox);
       el.query = 'button';

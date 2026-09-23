@@ -26,6 +26,17 @@ describe('se-profile', () => {
       expect(signIn.textContent.trim()).to.equal('Sign in');
       expect(el.shadowRoot.querySelector('#avatar-button') === null).to.be.true;
     });
+
+    it('does not shrink the profile host', async () => {
+      const el = await mountProfile();
+      expect(getComputedStyle(el).flexShrink).to.equal('0');
+    });
+
+    it('does not wrap the Sign in button label', async () => {
+      const el = await mountProfile();
+      const signIn = el.shadowRoot.querySelector('se-button');
+      expect(getComputedStyle(signIn).whiteSpace).to.equal('nowrap');
+    });
   });
 
   describe('signed in', () => {

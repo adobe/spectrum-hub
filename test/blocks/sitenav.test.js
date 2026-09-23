@@ -413,7 +413,9 @@ describe('sitenav block', () => {
       expect(tooltip.getAttribute('for')).to.equal(btn.id);
       expect(tooltip.getAttribute('placement')).to.equal('end');
       expect(tooltip.getAttribute('delay')).to.equal('200');
+      expect(tooltip.hasAttribute('labeling')).to.be.true;
       expect(tooltip.textContent).to.equal('Foundations');
+      expect(btn.textContent.trim()).to.equal('Foundations');
     });
 
     it('removes the tooltip once the rail is expanded', async () => {
@@ -972,7 +974,11 @@ describe('sitenav block', () => {
 
       const tooltip = sitenav.querySelector('swc-tooltip');
       expect(tooltip.getAttribute('for')).to.equal(btn.id);
+      expect(tooltip.getAttribute('placement')).to.equal('end');
+      expect(tooltip.getAttribute('delay')).to.equal('200');
+      expect(tooltip.hasAttribute('labeling')).to.be.true;
       expect(tooltip.textContent).to.equal('Expand navigation');
+      expect(btn.getAttribute('aria-label')).to.equal('Expand navigation');
     });
 
     it('starts expanded when the sitenav already carries is-expanded', async () => {
@@ -1664,9 +1670,16 @@ describe('sitenav block', () => {
   });
 
   describe('setupSearchIntegration', () => {
+    let sitenav;
     let navList;
+    let trigger;
 
     beforeEach(() => {
+      sitenav = document.createElement('div');
+      sitenav.id = 'sitenav';
+      trigger = document.createElement('button');
+      trigger.className = 'sitenav-trigger-btn';
+      trigger.setAttribute('aria-expanded', 'false');
       navList = buildNavList(`
         <ul>
           <li><p>Getting started</p><ul><li><a href="/a">a</a></li></ul></li>
@@ -1674,25 +1687,129 @@ describe('sitenav block', () => {
         </ul>
       `);
       decorateLevel(navList, 1);
-      document.body.append(navList);
+      sitenav.append(trigger, navList);
+      document.body.append(sitenav);
       setupSearchIntegration(navList);
     });
 
-    afterEach(() => navList.remove());
+    afterEach(() => sitenav.remove());
 
-    it('expands the level-1 button matching the dispatched label', () => {
+    it('opens the mobile sitenav before expanding the matching level-1 button', () => {
+      stubMatchMedia(sandbox, true);
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Foundations' } }));
+
+      const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('keeps the mobile sitenav open when an outside pointer click selects an area', () => {
+      stubMatchMedia(sandbox, true);
+      setupOutsideClose(sitenav);
+      const outside = document.createElement('button');
+      outside.addEventListener('click', (sourceEvent) => {
+        document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+          detail: { label: 'Foundations', sourceEvent },
+        }));
+      });
+      document.body.append(outside);
+
+      outside.click();
+
+      const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
+      expect(sitenav.hasAttribute('is-open')).to.be.true;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('true');
+      expect(btn.getAttribute('aria-expanded')).to.equal('true');
+    });
+
+    it('expands the matching level-1 button without opening the desktop sitenav', () => {
+      stubMatchMedia(sandbox, false);
       document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Foundations' } }));
 
       const btn = navList.querySelector('.level-1-button[aria-controls="sitenav-menu-foundations"]');
       expect(btn.getAttribute('aria-expanded')).to.equal('true');
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
     });
 
-    it('does nothing when no level-1 button matches the label', () => {
-      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', { detail: { label: 'Nonexistent' } }));
+    it('focuses the expanded level-1 button after keyboard selection', async () => {
+      stubMatchMedia(sandbox, false);
+      const searchButton = document.createElement('button');
+      document.body.append(searchButton);
+      const sourceEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+
+      document.addEventListener('sitenav:expand-level1', () => {
+        searchButton.focus();
+      }, { once: true });
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+        detail: { label: 'Foundations', sourceEvent },
+      }));
+      await Promise.resolve();
+
+      const foundations = navList.querySelector(
+        '.level-1-button[aria-controls="sitenav-menu-foundations"]',
+      );
+      expect(foundations.getAttribute('aria-expanded')).to.equal('true');
+      expectFocus(foundations, 'the expanded Foundations button');
+      searchButton.remove();
+    });
+
+    it('does not move focus into sitenav after pointer selection', async () => {
+      stubMatchMedia(sandbox, false);
+      const searchButton = document.createElement('button');
+      document.body.append(searchButton);
+      searchButton.focus();
+      const sourceEvent = new MouseEvent('click');
+
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+        detail: { label: 'Foundations', sourceEvent },
+      }));
+      await Promise.resolve();
+
+      expectFocus(searchButton, 'the existing pointer focus target');
+      searchButton.remove();
+    });
+
+    it('leaves an already-expanded matching level-1 button expanded and focuses it', async () => {
+      stubMatchMedia(sandbox, false);
+      const foundations = navList.querySelector(
+        '.level-1-button[aria-controls="sitenav-menu-foundations"]',
+      );
+      foundations.click();
+
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+        detail: {
+          label: 'Foundations',
+          sourceEvent: new KeyboardEvent('keydown', { key: 'Enter' }),
+        },
+      }));
+      await Promise.resolve();
+
+      expect(foundations.getAttribute('aria-expanded')).to.equal('true');
+      expectFocus(foundations, 'the already-expanded Foundations button');
+    });
+
+    it('does nothing when no level-1 button matches the label', async () => {
+      stubMatchMedia(sandbox, true);
+      const searchButton = document.createElement('button');
+      document.body.append(searchButton);
+      searchButton.focus();
+      document.dispatchEvent(new CustomEvent('sitenav:expand-level1', {
+        detail: {
+          label: 'Nonexistent',
+          sourceEvent: new KeyboardEvent('keydown', { key: 'Enter' }),
+        },
+      }));
+      await Promise.resolve();
 
       const anyExpanded = [...navList.querySelectorAll('.level-1-button')]
         .some((btn) => btn.getAttribute('aria-expanded') === 'true');
       expect(anyExpanded).to.be.false;
+      expect(sitenav.hasAttribute('is-open')).to.be.false;
+      expect(trigger.getAttribute('aria-expanded')).to.equal('false');
+      expectFocus(searchButton, 'the existing focus target');
+      searchButton.remove();
     });
   });
 });

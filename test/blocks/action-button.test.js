@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { setConfig } from '../../scripts/ak.js';
+import { SEARCH_ANNOUNCE_EVENT } from '../../scripts/utils/nav-events.js';
 
 // action-button.js binds `const { log } = getConfig()` at module-load time.
 // Call setConfig with a stub first, then dynamically import the module so the
@@ -202,7 +203,7 @@ describe('action-button block', () => {
     });
   });
 
-  describe('#search — focus on close', () => {
+  describe('#search', () => {
     before(async () => {
       // Warms the search block's module graph (and its two CSS fetches) once,
       // outside the timed test below.
@@ -230,6 +231,52 @@ describe('action-button block', () => {
       shSearch.dispatchEvent(new CustomEvent('clear'));
 
       expect(document.activeElement).to.equal(button);
+    });
+
+    it('creates a light-DOM status region before search opens', async () => {
+      const a = makeAnchor({ href: '/tools/widgets/search' });
+      a.classList.add('action-button');
+      document.body.append(a);
+      actionButton(a);
+      document.body.querySelector('button').click();
+
+      const shSearch = await waitForSearchElement();
+      const status = shSearch.previousElementSibling;
+      expect(status.getAttribute('role')).to.equal('status');
+      expect(status.getAttribute('aria-live')).to.equal('polite');
+      expect(status.getAttribute('aria-atomic')).to.equal('true');
+      expect(status.classList.contains('visually-hidden')).to.be.true;
+    });
+
+    it('writes search announcements to the light-DOM status region', async () => {
+      const a = makeAnchor({ href: '/tools/widgets/search' });
+      a.classList.add('action-button');
+      document.body.append(a);
+      actionButton(a);
+      document.body.querySelector('button').click();
+
+      const shSearch = await waitForSearchElement();
+      const status = shSearch.previousElementSibling;
+      shSearch.dispatchEvent(new CustomEvent(SEARCH_ANNOUNCE_EVENT, {
+        detail: { message: 'Foundations' },
+      }));
+      await new Promise((resolve) => { setTimeout(resolve); });
+
+      expect(status.textContent).to.equal('Foundations');
+    });
+
+    it('removes the status region when search closes', async () => {
+      const a = makeAnchor({ href: '/tools/widgets/search' });
+      a.classList.add('action-button');
+      document.body.append(a);
+      actionButton(a);
+      document.body.querySelector('button').click();
+
+      const shSearch = await waitForSearchElement();
+      const status = shSearch.previousElementSibling;
+      shSearch.dispatchEvent(new CustomEvent('clear'));
+
+      expect(status.isConnected).to.be.false;
     });
   });
 });

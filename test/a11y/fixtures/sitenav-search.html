@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitenav search integration fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/sitenav/sitenav.css">
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+</head>
+<body>
+  <a class="action-button" href="/tools/widgets/search">Search</a>
+  <main id="main-content"></main>
+  <script type="module">
+    import initActionButton from '/blocks/action-button/action-button.js';
+    import '/blocks/sitenav/sitenav.js';
+
+    document.querySelectorAll('.action-button').forEach(initActionButton);
+  </script>
+</body>
+</html>
