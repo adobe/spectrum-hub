@@ -135,4 +135,17 @@ describe('cdnUrlsForCanonicalPath', () => {
       ],
     );
   });
+
+  it('pins S2 declaration URLs when a package version is supplied', () => {
+    assert.deepEqual(
+      cdnUrlsForCanonicalPath(
+        '@react-spectrum/s2/dist/types/src/Button.d.ts',
+        { '@react-spectrum/s2': '1.7.1' },
+      ),
+      [
+        'https://unpkg.com/@react-spectrum/s2@1.7.1/dist/types/src/Button.d.ts',
+        'https://cdn.jsdelivr.net/npm/@react-spectrum/s2@1.7.1/dist/types/src/Button.d.ts',
+      ],
+    );
+  });
 });

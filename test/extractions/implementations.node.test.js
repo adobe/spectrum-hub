@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   getPlaygroundConfig,
   IMPLEMENTATIONS,
+  PLAYGROUND_RUNTIME_SOURCES,
   ALL_OPTION,
   getImplementationById,
   getOtherImplementations,
@@ -65,7 +66,8 @@ describe('getOtherImplementations', () => {
 describe('getPlaygroundConfig', () => {
   it('returns the shell, snippet location and tag pattern for a web implementation', () => {
     assert.deepEqual(getPlaygroundConfig('swc'), {
-      shell: 'deps/swc/playground/index.html',
+      shell: 'blocks/playground/preview/index.html',
+      adapter: 'deps/swc/playground/swc-preview.js',
       snippetDir: 'deps/swc/playground/snippets',
       snippetExt: 'html',
       tagPattern: 'swc-{slug}',
@@ -74,19 +76,40 @@ describe('getPlaygroundConfig', () => {
     assert.equal(getPlaygroundConfig('rsp').tagPattern, '{Pascal}');
   });
 
-  // ios/android are not in this registry yet and design-only never renders a preview.
-  // Both must degrade to the generic shell rather than throwing.
-  it('returns null for an implementation with no playground', () => {
+  it('uses the image adapter for preview-only native implementations', () => {
+    assert.equal(getPlaygroundConfig('ios').adapter, 'blocks/playground/preview/image-preview.js');
+    assert.equal(getPlaygroundConfig('android').adapter, 'blocks/playground/preview/image-preview.js');
+  });
+
+  it('returns null for an unsupported implementation', () => {
     assert.equal(getPlaygroundConfig('design-only'), null);
-    assert.equal(getPlaygroundConfig('ios'), null);
     assert.equal(getPlaygroundConfig(undefined), null);
   });
 
   it('gives every configured implementation a complete config', () => {
     for (const impl of IMPLEMENTATIONS.filter((i) => i.playground)) {
-      const { shell, snippetDir, snippetExt, tagPattern } = impl.playground;
-      assert.ok(shell && snippetDir && snippetExt && tagPattern, impl.id);
+      const {
+        shell, adapter, snippetDir, snippetExt, tagPattern,
+      } = impl.playground;
+      assert.ok(shell && adapter && snippetDir && snippetExt && tagPattern, impl.id);
       assert.match(tagPattern, /\{(Pascal|slug)\}/, `${impl.id} tagPattern must interpolate`);
     }
+  });
+});
+
+describe('PLAYGROUND_RUNTIME_SOURCES', () => {
+  it('provides package-neutral fallback discovery data for every configured source', () => {
+    assert.deepEqual(PLAYGROUND_RUNTIME_SOURCES.s2, {
+      packageName: '@react-spectrum/s2',
+      metadataUrl: 'https://esm.sh/@react-spectrum/s2/package.json',
+      listingUrl: 'https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@{version}/flat',
+      externalModules: {
+        ImageIllustration: {
+          specifier: '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+          exportName: 'default',
+        },
+      },
+    });
+    assert.equal(getPlaygroundConfig('rsp').runtimeSource, 's2');
   });
 });

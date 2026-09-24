@@ -124,9 +124,15 @@ export function resolveSpecifier(specifier, fromCanonicalPath) {
 }
 
 /** unpkg first, jsdelivr fallback — same order/pattern as the rest of this pipeline. */
-export function cdnUrlsForCanonicalPath(canonicalPath) {
+export function cdnUrlsForCanonicalPath(canonicalPath, packageVersions = {}) {
+  const packageName = Object.keys(packageVersions)
+    .filter((name) => canonicalPath === name || canonicalPath.startsWith(`${name}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  const versionedPath = packageName
+    ? `${packageName}@${packageVersions[packageName]}${canonicalPath.slice(packageName.length)}`
+    : canonicalPath;
   return [
-    `https://unpkg.com/${canonicalPath}`,
-    `https://cdn.jsdelivr.net/npm/${canonicalPath}`,
+    `https://unpkg.com/${versionedPath}`,
+    `https://cdn.jsdelivr.net/npm/${versionedPath}`,
   ];
 }
