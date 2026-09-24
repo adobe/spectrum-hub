@@ -169,3 +169,53 @@ export const playgroundSwcProps = JSON.stringify([{
   optional: false,
   default: 'false',
 }]);
+
+export const playgroundMultipleComponentsSheet = JSON.stringify({
+  data: [
+    { Component: 'Button', Properties: '' },
+    { Component: 'Badge', Properties: '' },
+  ],
+});
+export const playgroundEmptyControlsSheet = JSON.stringify({ data: [] });
+export const playgroundEmptyRspProps = JSON.stringify({ props: [] });
+export const playgroundRspRuntimePackage = JSON.stringify({
+  version: '1.0.0-test',
+  peerDependencies: { react: '^19.0.0' },
+});
+export const playgroundRspPackageListing = JSON.stringify({
+  files: [
+    { name: '/page.css' },
+    { name: '/dist/private/Button.css' },
+    { name: '/dist/private/Badge.css' },
+  ],
+});
+export const playgroundRspRuntimeManifest = JSON.stringify({
+  schemaVersion: 1,
+  sources: {
+    s2: {
+      packageName: '@react-spectrum/s2',
+      packageVersion: '1.0.0-test',
+      reactVersion: '19.0.0',
+      imports: {
+        react: 'https://esm.sh/react@19.0.0',
+        reactDom: 'https://esm.sh/react-dom@19.0.0/client',
+      },
+      allStyles: [
+        '/page.css',
+        '/dist/private/Badge.css',
+        '/dist/private/Button.css',
+      ],
+      exports: {
+        Badge: {
+          modules: [],
+          styles: ['/page.css', '/dist/private/Badge.css'],
+        },
+        Button: {
+          modules: [],
+          styles: ['/page.css', '/dist/private/Button.css'],
+        },
+      },
+      externalModules: {},
+    },
+  },
+});

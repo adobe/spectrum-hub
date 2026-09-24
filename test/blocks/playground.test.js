@@ -7,10 +7,14 @@ import init, {
   parseDefault,
   buildSwcSnippet,
   buildRspSnippet,
+  buildPlaygroundModel,
+  buildRspRuntime,
+  resolveRspRuntime,
   debounce,
   resolveComponentMeta,
 } from '../../blocks/playground/playground.js';
 import { clearFetchCache } from '../../blocks/playground/playground-data.js';
+import { playgroundCoordinator } from '../../blocks/playground/playground-coordinator.js';
 import { setConfig } from '../../scripts/ak.js';
 
 // Minimal DOM-like helpers — just enough structure for the pure-function tests.
@@ -26,6 +30,120 @@ function makeRow(key, value, href = null) {
 function makeEl(rows) {
   return { children: rows };
 }
+
+describe('buildRspRuntime', () => {
+  const source = {
+    packageName: '@example/components',
+    packageVersion: '1.2.3',
+    imports: {
+      react: 'https://cdn.example/react',
+      reactDom: 'https://cdn.example/react-dom/client',
+    },
+    allStyles: ['/all.css'],
+    exports: {
+      Button: {
+        modules: [{ exportName: 'Button', url: 'https://cdn.example/button.js' }],
+        styles: ['/button.css'],
+      },
+      ButtonGroup: {
+        modules: [{ exportName: 'ButtonGroup', url: 'https://cdn.example/group.js' }],
+        styles: ['/group.css', '/button.css'],
+      },
+      Tooltip: {
+        modules: [{ exportName: 'Tooltip', url: 'https://cdn.example/tooltip.js' }],
+        styles: ['/tooltip.css'],
+      },
+      TooltipTrigger: {
+        modules: [{ exportName: 'TooltipTrigger', url: 'https://cdn.example/trigger.js' }],
+        styles: ['/tooltip.css'],
+      },
+    },
+    externalModules: {
+      ImageIllustration: {
+        modules: [{ exportName: 'default', url: 'https://cdn.example/image.js' }],
+        styles: ['/image.css'],
+      },
+    },
+  };
+
+  it('unions root, composite, overlay, dependency, and external requirements', () => {
+    const runtime = buildRspRuntime({
+      component: 'tooltip',
+      componentTitle: 'Tooltip',
+      runtimeSource: 's2',
+      snippetMarkup: '<Tooltip><ButtonGroup><ImageIllustration /></ButtonGroup></Tooltip>',
+    }, { schemaVersion: 1, sources: { s2: source } });
+
+    expect(runtime.imports).to.deep.equal(source.imports);
+    expect(runtime.modules.flatMap((module) => (
+      module.exports?.map(({ exportName }) => exportName) ?? [module.exportName]
+    )).sort()).to.deep.equal([
+      'Button',
+      'ButtonGroup',
+      'Provider',
+      'Text',
+      'Tooltip',
+      'TooltipTrigger',
+      'default',
+    ]);
+    expect(runtime.styles).to.deep.equal([
+      'https://esm.sh/@example/components@1.2.3/button.css',
+      'https://esm.sh/@example/components@1.2.3/group.css',
+      'https://esm.sh/@example/components@1.2.3/image.css',
+      'https://esm.sh/@example/components@1.2.3/tooltip.css',
+    ]);
+  });
+
+  it('uses all source styles when a requested route export is absent', () => {
+    const runtime = buildRspRuntime({
+      component: 'missing',
+      componentTitle: 'Missing',
+      runtimeSource: 's2',
+      snippetMarkup: '<Missing />',
+    }, { schemaVersion: 1, sources: { s2: source } });
+
+    expect(runtime.styles).to.deep.equal([
+      'https://esm.sh/@example/components@1.2.3/all.css',
+    ]);
+  });
+
+  it('uses the manifest without package discovery on the normal path', async () => {
+    const json = sinon.stub().resolves({ schemaVersion: 1, sources: { s2: source } });
+    await resolveRspRuntime({
+      component: 'button',
+      componentTitle: 'Button',
+      runtimeSource: 's2',
+      snippetMarkup: '<Button />',
+    }, { json, manifestUrl: '/runtime.json' });
+
+    expect(json.calledOnceWith('/runtime.json')).to.be.true;
+  });
+
+  it('recovers from an invalid manifest with package discovery', async () => {
+    const json = sinon.stub();
+    json.onFirstCall().resolves({ schemaVersion: 0 });
+    json.onSecondCall().resolves({
+      version: '1.7.1',
+      peerDependencies: { react: '^19.0.0' },
+    });
+    json.onThirdCall().resolves({
+      files: [{ name: '/page.css' }, { name: '/dist/private/Button.css' }],
+    });
+    const runtime = await resolveRspRuntime({
+      component: 'button',
+      componentTitle: 'Button',
+      runtimeSource: 's2',
+      snippetMarkup: '<Button />',
+    }, { json, manifestUrl: '/runtime.json' });
+
+    expect(json.callCount).to.equal(3);
+    expect(runtime.diagnostic.recovered).to.be.true;
+    expect(runtime.styles).to.deep.equal([
+      'https://esm.sh/@react-spectrum/s2@1.7.1/page.css',
+      'https://esm.sh/@react-spectrum/s2@1.7.1/dist/private/Button.css',
+    ]);
+  });
+});
 
 // --- parseBlockMetadata -----------------------------------------------------
 
@@ -673,6 +791,27 @@ function waitPastDisclosureDebounce() {
   return new Promise((resolve) => { setTimeout(resolve, 250); });
 }
 
+function waitForCoordinator() {
+  return new Promise((resolve) => { setTimeout(resolve, 0); });
+}
+
+async function waitForPreviewInit(postMessageSpy) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const message = postMessageSpy.args
+      .map(([value]) => value)
+      .find(({ type }) => type === 'preview-init');
+    if (message) { return message; }
+    // eslint-disable-next-line no-await-in-loop
+    await waitForCoordinator();
+  }
+  return null;
+}
+
+function clearPlaygroundCaches() {
+  clearFetchCache();
+  playgroundCoordinator.clearResources();
+}
+
 function makeMetaEl(rows) {
   const el = document.createElement('div');
   Object.entries(rows).forEach(([key, value]) => {
@@ -728,6 +867,22 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
 
   return sandbox.stub(window, 'fetch').callsFake(async (input) => {
     const url = String(input);
+    if (url.includes('/deps/rsp/playground/runtime-manifest.json')) {
+      return jsonResponse({
+        schemaVersion: 1,
+        sources: {
+          s2: {
+            packageName: '@react-spectrum/s2',
+            packageVersion: '1.7.1',
+            reactVersion: '19',
+            imports: { react: 'react', reactDom: 'react-dom' },
+            allStyles: [],
+            exports: {},
+            externalModules: {},
+          },
+        },
+      });
+    }
     if (url.includes('sheet=components')) { return jsonResponse({ data: componentsSheet }); }
     if (url.includes('sheet=controls')) { return jsonResponse({ data: controlsSheet }); }
     if (url.includes('/deps/rsp/data/')) { return jsonResponse(rspBody); }
@@ -739,6 +894,76 @@ function stubPlaygroundFetch(sandbox, overrides = {}) {
     return new Response('', { status: 404 });
   });
 }
+
+describe('buildPlaygroundModel', () => {
+  it('builds a serializable typed RSP model from snippet and catalog inputs', () => {
+    const model = buildPlaygroundModel({
+      component: 'avatar',
+      implementation: 'rsp',
+      componentMeta: {
+        componentTitle: 'Avatar',
+        propsTitle: 'Avatar',
+        previewName: 'Avatar',
+        previewShellPath: 'blocks/playground/preview/index.html',
+      },
+      componentsSheet: [{ component: 'avatar', properties: 'size' }],
+      controlsSheet: [{ property: 'size', control: 'slider' }],
+      propRows: [{
+        property: 'size', kind: 'number', values: [], default: '24',
+      }],
+      snippetMarkup: '<Avatar size="{16}" />',
+    });
+
+    expect(model.adapter).to.equal('rsp');
+    expect(model.runtimeSource).to.equal('s2');
+    expect(model.values).to.deep.equal({ size: 16 });
+    expect(model.descriptors[0]).to.include({
+      property: 'size',
+      valueKind: 'number',
+      target: 'route-prop',
+      defaultValue: 16,
+    });
+    expect(() => structuredClone(model)).to.not.throw();
+  });
+
+  it('classifies trigger-owned and SWC attribute targets explicitly', () => {
+    const tooltip = buildPlaygroundModel({
+      component: 'tooltip',
+      implementation: 'rsp',
+      componentMeta: {
+        componentTitle: 'Tooltip',
+        propsTitle: 'TooltipTrigger',
+        previewName: 'Tooltip',
+        previewShellPath: 'blocks/playground/preview/index.html',
+      },
+      componentsSheet: [{ component: 'tooltip', properties: 'placement' }],
+      controlsSheet: [{ property: 'placement', control: 'picker' }],
+      propRows: [{
+        property: 'placement', kind: 'enum', values: ['top'], default: "'top'",
+      }],
+      snippetMarkup: '<Tooltip>Help</Tooltip>',
+    });
+    const swc = buildPlaygroundModel({
+      component: 'button',
+      implementation: 'swc',
+      componentMeta: {
+        componentTitle: 'Button',
+        propsTitle: 'Button',
+        previewName: 'swc-button',
+        previewShellPath: 'blocks/playground/preview/index.html',
+      },
+      componentsSheet: [{ component: 'button', properties: 'isDisabled' }],
+      controlsSheet: [{ property: 'isDisabled', control: 'switch' }],
+      propRows: [{
+        property: 'disabled', attribute: 'disabled', kind: 'boolean', values: [],
+      }],
+      snippetMarkup: '<swc-button>Button</swc-button>',
+    });
+
+    expect(tooltip.descriptors[0].target).to.equal('owner-prop');
+    expect(swc.descriptors[0].target).to.equal('attribute');
+  });
+});
 
 describe('playground block — init()', () => {
   let sandbox;
@@ -757,7 +982,7 @@ describe('playground block — init()', () => {
     // Every test below hits the same URLs (same codeBase + mostly the same
     // component) with its own per-test mocked responses — without this, a
     // test would get a previous test's cached response instead of its own.
-    clearFetchCache();
+    clearPlaygroundCaches();
   });
 
   afterEach(() => {
@@ -772,6 +997,22 @@ describe('playground block — init()', () => {
     expect(document.body.contains(bareEl)).to.be.false;
   });
 
+  it('attaches the iframe before workbook, catalog, and snippet requests resolve', async () => {
+    let releaseWorkbook;
+    const workbook = new Promise((resolve) => { releaseWorkbook = resolve; });
+    sandbox.stub(window, 'fetch').callsFake(async (input) => {
+      const url = String(input);
+      if (url.includes('sheet=')) { return workbook; }
+      return new Response('', { status: 404 });
+    });
+
+    const initializing = init(el);
+    expect(el.querySelector('iframe')).to.exist;
+
+    releaseWorkbook(jsonResponse({ data: [] }));
+    await initializing;
+  });
+
   it('logs and removes the block when data fetching fails', async () => {
     sandbox.stub(window, 'fetch').resolves(new Response('', { status: 500 }));
     await init(el);
@@ -779,35 +1020,46 @@ describe('playground block — init()', () => {
     expect(document.body.contains(el)).to.be.false;
   });
 
-  it('builds the iframe src pointing at the SWC shell with query params for swc', async () => {
+  it('routes SWC through the shared shell with only a frame identifier', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
     const iframe = el.querySelector('iframe');
-    expect(iframe.src).to.include('/deps/swc/playground/index.html');
-    expect(iframe.src).to.include('component=button');
-    expect(iframe.src).to.include('implementation=swc');
+    const url = new URL(iframe.src);
+    expect(url.pathname).to.equal('/blocks/playground/preview/index.html');
+    expect([...url.searchParams.keys()]).to.deep.equal(['frame']);
   });
 
-  it('builds the iframe src pointing at the RSP shell with query params for rsp', async () => {
+  it('routes RSP through the shared shell with only a frame identifier', async () => {
     stubPlaygroundFetch(sandbox);
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'button' });
     document.body.append(rspEl);
     await init(rspEl);
     const iframe = rspEl.querySelector('iframe');
-    expect(iframe.src).to.include('/deps/rsp/playground/index.html');
-    expect(iframe.src).to.include('component=button');
-    expect(iframe.src).to.include('implementation=rsp');
+    const url = new URL(iframe.src);
+    expect(url.pathname).to.equal('/blocks/playground/preview/index.html');
+    expect([...url.searchParams.keys()]).to.deep.equal(['frame']);
   });
 
-  it('falls back to the generic shell for an implementation that is neither rsp nor swc', async () => {
+  it('routes an explicit native implementation to the image adapter', async () => {
     stubPlaygroundFetch(sandbox);
+    const frameWindow = new MessageChannel().port1;
+    const postMessageSpy = sandbox.stub(frameWindow, 'postMessage');
+    sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => frameWindow);
     const iosEl = makeMetaEl({ implementation: 'ios', component: 'button' });
     document.body.append(iosEl);
     await init(iosEl);
     const iframe = iosEl.querySelector('iframe');
-    expect(iframe.src).to.include('/blocks/playground/index.html');
-    expect(iframe.src).to.include('component=button');
-    expect(iframe.src).to.include('implementation=ios');
+    const frameId = new URL(iframe.src).searchParams.get('frame');
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'shell-ready', frameId },
+      source: frameWindow,
+    }));
+    const initMessage = await waitForPreviewInit(postMessageSpy);
+    expect(initMessage).to.include({
+      type: 'preview-init',
+      frameId,
+      adapterUrl: 'http://localhost:2000/blocks/playground/preview/image-preview.js',
+    });
   });
 
   // IMPL_COMPONENT_NAMES's `export` field (deps/impl-component-names.js) resolves a
@@ -846,6 +1098,23 @@ describe('playground block — init()', () => {
     await init(el);
     const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
     expect(urls.some((url) => url.includes('/deps/swc/data/'))).to.be.true;
+  });
+
+  it('shares workbook, catalog, and snippet requests across matching playgrounds', async () => {
+    const fetchStub = stubPlaygroundFetch(sandbox, {
+      markup: '<swc-button>Get started</swc-button>',
+    });
+    const second = makeMetaEl({ implementation: 'swc', component: 'button' });
+    document.body.append(second);
+
+    await Promise.all([init(el), init(second)]);
+
+    const urls = fetchStub.getCalls().map((call) => String(call.args[0]));
+    const count = (part) => urls.filter((url) => url.includes(part)).length;
+    expect(count('sheet=components')).to.equal(1);
+    expect(count('sheet=controls')).to.equal(1);
+    expect(count('/deps/swc/data/swc-button.json')).to.equal(1);
+    expect(count('/deps/swc/playground/snippets/button.html')).to.equal(1);
   });
 
   it('uses the PascalCase RSP-style code disclosure for rsp implementation', async () => {
@@ -919,11 +1188,6 @@ describe('playground block — init()', () => {
     expect(pre.textContent.includes(' disabled')).to.be.true;
   });
 
-  // The iframe's own document does an async fetch (per-component markup) before
-  // it registers its prop-update listener, so the outer iframe's `load` event
-  // fires well before that listener exists. Sending on `load` alone silently
-  // drops the very first batch of prop values (including e.g. a textfield's
-  // default label) — the iframe must explicitly signal readiness instead.
   it('does not send prop updates to the iframe on load alone', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
@@ -933,25 +1197,25 @@ describe('playground block — init()', () => {
     expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'prop-update')).to.be.false;
   });
 
-  it('sends the current prop values once the iframe signals it is ready', async () => {
-    stubPlaygroundFetch(sandbox);
+  it('sends the complete model once the shared shell signals readiness', async () => {
+    stubPlaygroundFetch(sandbox, { markup: '<swc-button>Label</swc-button>' });
+    const frameWindow = new MessageChannel().port1;
+    const postMessageSpy = sandbox.stub(frameWindow, 'postMessage');
+    sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => frameWindow);
     await init(el);
     const iframe = el.querySelector('iframe');
-    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
-    iframe.dispatchEvent(new Event('load'));
+    const frameId = new URL(iframe.src).searchParams.get('frame');
     window.dispatchEvent(new MessageEvent('message', {
-      data: { type: 'preview-ready' },
-      source: iframe.contentWindow,
+      data: { type: 'shell-ready', frameId },
+      source: frameWindow,
     }));
-    expect(postMessageSpy.calledWith(
-      sinon.match({
-        type: 'prop-update', property: 'isDisabled', attribute: 'disabled', value: false,
-      }),
-      '*',
-    )).to.be.true;
+    const initMessage = await waitForPreviewInit(postMessageSpy);
+    expect(initMessage).to.include({ type: 'preview-init', frameId });
+    expect(initMessage.model.values).to.include({ isDisabled: false });
+    expect(initMessage.model.snippetMarkup).to.equal('<swc-button>Label</swc-button>');
   });
 
-  it('ignores a preview-ready message from an unrelated frame', async () => {
+  it('ignores a shell-ready message from an unrelated frame', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
     const iframe = el.querySelector('iframe');
@@ -959,17 +1223,17 @@ describe('playground block — init()', () => {
     const otherFrame = document.createElement('iframe');
     document.body.append(otherFrame);
     window.dispatchEvent(new MessageEvent('message', {
-      data: { type: 'preview-ready' },
+      data: {
+        type: 'shell-ready',
+        frameId: new URL(iframe.src).searchParams.get('frame'),
+      },
       source: otherFrame.contentWindow,
     }));
     otherFrame.remove();
-    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'prop-update')).to.be.false;
+    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'preview-init')).to.be.false;
   });
 
-  // The shell used to re-fetch snippets/<component>.html itself; it now asks the
-  // block for the copy already fetched by fetchPlaygroundInputs, over the same
-  // postMessage channel as preview-ready, so the file is only ever fetched once.
-  it('answers the iframe\'s markup-request with the already-fetched snippet markup', async () => {
+  it('includes the already-fetched snippet in preview initialization', async () => {
     sandbox.stub(window, 'fetch').callsFake(async (input) => {
       const url = String(input);
       if (url.includes('sheet=components')) {
@@ -991,18 +1255,24 @@ describe('playground block — init()', () => {
     });
     await init(el);
     const iframe = el.querySelector('iframe');
+    const frameId = new URL(iframe.src).searchParams.get('frame');
     const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
     window.dispatchEvent(new MessageEvent('message', {
-      data: { type: 'markup-request' },
+      data: { type: 'shell-ready', frameId },
       source: iframe.contentWindow,
     }));
+    await waitForCoordinator();
     expect(postMessageSpy.calledWith(
-      { type: 'markup-response', markup: '<swc-button>Label</swc-button>' },
+      sinon.match({
+        type: 'preview-init',
+        frameId,
+        model: sinon.match({ snippetMarkup: '<swc-button>Label</swc-button>' }),
+      }),
       '*',
     )).to.be.true;
   });
 
-  it('ignores a markup-request from an unrelated frame', async () => {
+  it('ignores a mismatched frame identifier', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);
     const iframe = el.querySelector('iframe');
@@ -1010,11 +1280,11 @@ describe('playground block — init()', () => {
     const otherFrame = document.createElement('iframe');
     document.body.append(otherFrame);
     window.dispatchEvent(new MessageEvent('message', {
-      data: { type: 'markup-request' },
-      source: otherFrame.contentWindow,
+      data: { type: 'shell-ready', frameId: 'not-this-frame' },
+      source: iframe.contentWindow,
     }));
     otherFrame.remove();
-    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'markup-response')).to.be.false;
+    expect(postMessageSpy.getCalls().some((c) => c.args[0]?.type === 'preview-init')).to.be.false;
   });
 
   it('posts an updated prop value to the iframe when a control changes', async () => {
@@ -1046,22 +1316,21 @@ describe('playground block — init()', () => {
       },
       markup: '<AvatarGroup><Avatar alt="A" /></AvatarGroup>',
     });
+    const frameWindow = new MessageChannel().port1;
+    const postMessageSpy = sandbox.stub(frameWindow, 'postMessage');
+    sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => frameWindow);
     const rspEl = makeMetaEl({ implementation: 'rsp', component: 'avatar-group' });
     document.body.append(rspEl);
     await init(rspEl);
 
     const iframe = rspEl.querySelector('iframe');
-    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const frameId = new URL(iframe.src).searchParams.get('frame');
     window.dispatchEvent(new MessageEvent('message', {
-      data: { type: 'preview-ready' },
-      source: iframe.contentWindow,
+      data: { type: 'shell-ready', frameId },
+      source: frameWindow,
     }));
-    expect(postMessageSpy.calledWith(
-      sinon.match({
-        type: 'prop-update', property: 'size', attribute: null, value: 24,
-      }),
-      '*',
-    )).to.be.true;
+    const initMessage = await waitForPreviewInit(postMessageSpy);
+    expect(initMessage.model.values).to.include({ size: 24 });
     postMessageSpy.resetHistory();
 
     const picker = rspEl.querySelector('.playground-control se-select');
@@ -1545,7 +1814,7 @@ describe('playground block — a component with no controls', () => {
     sandbox = sinon.createSandbox();
     sandbox.stub(console, 'warn');
     document.body.innerHTML = '';
-    clearFetchCache();
+    clearPlaygroundCaches();
   });
 
   afterEach(() => {
@@ -1596,7 +1865,7 @@ describe('playground block — a route whose props live on its trigger', () => {
     sandbox = sinon.createSandbox();
     sandbox.stub(console, 'warn');
     document.body.innerHTML = '';
-    clearFetchCache();
+    clearPlaygroundCaches();
   });
 
   afterEach(() => { sandbox.restore(); });
@@ -1692,26 +1961,31 @@ describe('resolveComponentMeta', () => {
     const meta = resolveComponentMeta('action-button', 'rsp', BASE);
     expect(meta.componentTitle).to.equal('ActionButton');
     expect(meta.previewName).to.equal('ActionButton');
-    expect(meta.previewShellPath).to.equal('deps/rsp/playground/index.html');
+    expect(meta.previewShellPath).to.equal('blocks/playground/preview/index.html');
+    expect(meta.adapterUrl).to.equal('deps/rsp/playground/rsp-preview.js');
     expect(meta.markupUrl).to.equal(`${BASE}/deps/rsp/playground/snippets/action-button.jsx`);
   });
 
   it('routes an swc component through the swc shell and html snippet', () => {
     const meta = resolveComponentMeta('action-button', 'swc', BASE);
     expect(meta.previewName).to.equal('swc-action-button');
-    expect(meta.previewShellPath).to.equal('deps/swc/playground/index.html');
+    expect(meta.previewShellPath).to.equal('blocks/playground/preview/index.html');
+    expect(meta.adapterUrl).to.equal('deps/swc/playground/swc-preview.js');
     expect(meta.markupUrl).to.equal(`${BASE}/deps/swc/playground/snippets/action-button.html`);
   });
 
-  // ios/android have no registry entry, no catalog and no snippets — the generic
-  // image-viewer shell needs none of them, so markupUrl is null rather than a bogus URL.
-  it('falls back to the generic shell for an implementation with no playground', () => {
-    for (const impl of ['ios', 'android', 'nonsense']) {
+  it('routes explicit native implementations to the image adapter', () => {
+    for (const impl of ['ios', 'android']) {
       const meta = resolveComponentMeta('button', impl, BASE);
-      expect(meta.previewShellPath, impl).to.equal('blocks/playground/index.html');
+      expect(meta.previewShellPath, impl).to.equal('blocks/playground/preview/index.html');
+      expect(meta.adapterUrl, impl).to.equal('blocks/playground/preview/image-preview.js');
       expect(meta.markupUrl, impl).to.equal(null);
       expect(meta.componentTitle, impl).to.equal('Button');
     }
+  });
+
+  it('rejects an unsupported implementation', () => {
+    expect(resolveComponentMeta('button', 'nonsense', BASE)).to.equal(null);
   });
 });
 
@@ -1760,7 +2034,7 @@ describe('playground block — a snippet fragment seeds its text controls', () =
     sandbox = sinon.createSandbox();
     sandbox.stub(console, 'warn');
     document.body.innerHTML = '';
-    clearFetchCache();
+    clearPlaygroundCaches();
   });
 
   afterEach(() => {
@@ -1862,6 +2136,9 @@ describe('playground block — a snippet fragment seeds its text controls', () =
   });
 
   it('seeds a boolean control from JSX shorthand and sends true to the preview', async () => {
+    const frameWindow = new MessageChannel().port1;
+    const postMessageSpy = sandbox.stub(frameWindow, 'postMessage');
+    sandbox.stub(HTMLIFrameElement.prototype, 'contentWindow').get(() => frameWindow);
     const el = await renderWith({
       components: [{ Component: 'progress-circle', Properties: 'isIndeterminate' }],
       controls: [{ Property: 'isIndeterminate', control: 'picker' }],
@@ -1877,21 +2154,15 @@ describe('playground block — a snippet fragment seeds its text controls', () =
     }, { implementation: 'rsp', component: 'progress-circle' });
 
     const iframe = el.querySelector('iframe');
-    const postMessageSpy = sandbox.stub(iframe.contentWindow, 'postMessage');
+    const frameId = new URL(iframe.src).searchParams.get('frame');
     expect(el.querySelector('.playground-control se-select').value).to.equal('yes');
 
     window.dispatchEvent(new MessageEvent('message', {
-      data: { type: 'preview-ready' },
-      source: iframe.contentWindow,
+      data: { type: 'shell-ready', frameId },
+      source: frameWindow,
     }));
-    expect(postMessageSpy.calledWith(
-      sinon.match({
-        type: 'prop-update',
-        property: 'isIndeterminate',
-        value: true,
-      }),
-      '*',
-    )).to.be.true;
+    const initMessage = await waitForPreviewInit(postMessageSpy);
+    expect(initMessage.model.values).to.include({ isIndeterminate: true });
   });
 });
 

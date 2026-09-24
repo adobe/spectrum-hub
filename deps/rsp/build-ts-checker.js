@@ -39,9 +39,9 @@ export function extractImportSpecifiers(source) {
   return [...specifiers];
 }
 
-async function fetchWithFallback(canonicalPath, fetchImpl) {
+async function fetchWithFallback(canonicalPath, fetchImpl, packageVersions) {
   let lastErr;
-  for (const url of cdnUrlsForCanonicalPath(canonicalPath)) {
+  for (const url of cdnUrlsForCanonicalPath(canonicalPath, packageVersions)) {
     try {
       const res = await fetchImpl(url);
       if (res.ok) return res.text();
@@ -64,7 +64,12 @@ async function fetchWithFallback(canonicalPath, fetchImpl) {
  * per component — those are identical across every component's crawl. Passed in AND returned;
  * already-cached entries (including prior failures) are never re-fetched.
  */
-export async function crawl(entryCanonicalPaths, { fetchImpl = fetch, concurrency = 20, cache } = {}) {
+export async function crawl(
+  entryCanonicalPaths,
+  {
+    fetchImpl = fetch, concurrency = 20, cache, packageVersions = {},
+  } = {},
+) {
   const fileCache = cache ?? new Map();
   const queued = new Set(fileCache.keys());
   let queue = entryCanonicalPaths.filter((p) => !queued.has(p));
@@ -77,7 +82,7 @@ export async function crawl(entryCanonicalPaths, { fetchImpl = fetch, concurrenc
     // eslint-disable-next-line no-await-in-loop
     const results = await Promise.all(batch.map(async (canonicalPath) => {
       try {
-        return [canonicalPath, await fetchWithFallback(canonicalPath, fetchImpl)];
+        return [canonicalPath, await fetchWithFallback(canonicalPath, fetchImpl, packageVersions)];
       } catch (err) {
         console.warn(`  Warning: could not fetch ${canonicalPath}: ${err.message}`);
         return [canonicalPath, null];

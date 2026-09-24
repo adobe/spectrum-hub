@@ -33,7 +33,7 @@ const block = {
     },
     {
       // avoid a real cross-origin CDN fetch inside the live-preview iframe
-      url: '**/deps/swc/playground/index.html**',
+      url: '**/blocks/playground/preview/index.html**',
       contentType: 'text/html',
       body: '<html><body></body></html>',
     },
@@ -67,7 +67,90 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
   `);
 });
 
-// The three checks above are static — they scan the block as first rendered and never
+test('multiple playgrounds retain isolated controls, focus, and preview status', async ({
+  page,
+  makeAxeBuilder,
+}) => {
+  await page.route('**/playground-data.json?sheet=components', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      data: [
+        { Component: 'Button', Properties: 'isDisabled' },
+        { Component: 'Badge', Properties: 'fixed' },
+      ],
+    }),
+  }));
+  await page.route('**/playground-data.json?sheet=controls', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      data: [
+        { Property: 'isDisabled', control: 'switch' },
+        { Property: 'fixed', control: 'switch' },
+      ],
+    }),
+  }));
+  await page.route('**/deps/swc/data/swc-button.json', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: playgroundSwcProps,
+  }));
+  await page.route('**/deps/swc/data/swc-badge.json', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([{
+      property: 'fixed',
+      attribute: 'fixed',
+      type: 'boolean',
+      kind: 'boolean',
+      values: [],
+      optional: true,
+      default: 'false',
+    }]),
+  }));
+  await page.route('**/deps/swc/playground/snippets/button.html', (route) => route.fulfill({
+    contentType: 'text/html',
+    body: '<swc-button>Button</swc-button>',
+  }));
+  await page.route('**/deps/swc/playground/snippets/badge.html', (route) => route.fulfill({
+    contentType: 'text/html',
+    body: '<swc-badge>Badge</swc-badge>',
+  }));
+  await page.route('**/blocks/playground/preview/index.html**', (route) => route.fulfill({
+    contentType: 'text/html',
+    body: '<html><body></body></html>',
+  }));
+  await page.goto('/test/a11y/fixtures/playground-interactions.html');
+
+  const playgrounds = page.locator('.playground');
+  await expect(playgrounds).toHaveCount(2);
+  await expect(playgrounds.nth(0).getByLabel('Button component controls')).toBeVisible();
+  await expect(playgrounds.nth(1).getByLabel('Badge component controls')).toBeVisible();
+
+  const buttonSwitch = playgrounds.nth(0).getByRole('switch');
+  const badgeSwitch = playgrounds.nth(1).getByRole('switch');
+  await buttonSwitch.click();
+  await expect(buttonSwitch).toBeFocused();
+  await expect(badgeSwitch).not.toBeChecked();
+
+  const firstFrame = page.frames().find((frame) => frame.url().includes('frame=playground-'));
+  await firstFrame.evaluate(() => {
+    const frameId = new URLSearchParams(location.search).get('frame');
+    parent.postMessage({
+      type: 'preview-error',
+      frameId,
+      message: 'Adapter failed',
+    }, '*');
+  });
+  await expect(
+    playgrounds.nth(0).locator('.playground-preview [role="status"]'),
+  ).toContainText('Preview unavailable');
+  await expect(playgrounds.nth(0).getByRole('switch')).toBeVisible();
+  await expect(playgrounds.nth(0).locator('pre')).toBeVisible();
+  await expect(playgrounds.nth(1).locator('.playground-preview [role="status"]')).toBeEmpty();
+
+  const results = await makeAxeBuilder().analyze();
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+// The initial checks are static — they scan the block as first rendered and never
 // touch a control, so nothing covered the state a user is actually in once they start
 // changing props. That state is where this block's accessibility is least obvious: the
 // preview is a separate document updated by postMessage, and the code snippet is rebuilt

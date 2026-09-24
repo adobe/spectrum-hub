@@ -149,6 +149,24 @@ describe('buildProgram — transitive cross-file extends resolution', () => {
 });
 
 describe('crawl', () => {
+  it('pins S2 declaration fetches to the supplied runtime-manifest version', async () => {
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(url);
+      return { ok: true, text: async () => 'export interface ButtonProps {}' };
+    };
+
+    await crawl(['@react-spectrum/s2/dist/types/src/Button.d.ts'], {
+      fetchImpl,
+      packageVersions: { '@react-spectrum/s2': '1.7.1' },
+    });
+
+    assert.equal(
+      calls[0],
+      'https://unpkg.com/@react-spectrum/s2@1.7.1/dist/types/src/Button.d.ts',
+    );
+  });
+
   it('discovers and fetches every file reachable via import/export specifiers', async () => {
     const { fetchImpl } = makeMockFetch({
       'pkg/dist/types/src/A.d.ts': "import { B } from './B';\nexport interface A extends B {}",

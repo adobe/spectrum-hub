@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiple playground blocks fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/playground/playground.css">
+  <script type="importmap">
+    { "imports": { "lit": "/deps/lit/dist/index.js" } }
+  </script>
+  <script>
+    window.playgroundPerformanceMarks = [];
+    window.addEventListener('message', (event) => {
+      if (!['shell-ready', 'preview-init', 'preview-mounted'].includes(event.data?.type)) return;
+      window.playgroundPerformanceMarks.push({
+        type: event.data.type,
+        time: performance.now(),
+      });
+    });
+  </script>
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="playground">
+        <div><div>implementation</div><div>rsp</div></div>
+        <div><div>component</div><div>button</div></div>
+      </div>
+      <div class="playground">
+        <div><div>implementation</div><div>rsp</div></div>
+        <div><div>component</div><div>badge</div></div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/playground/playground.js';
+    await Promise.all([...document.querySelectorAll('.playground')].map(init));
+  </script>
+</body>
+</html>

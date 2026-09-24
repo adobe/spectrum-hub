@@ -24,6 +24,34 @@ const EXTRACTION_WORKFLOWS = [
   'extract-swc-properties.yml',
 ];
 
+describe('RSP runtime manifest workflow', () => {
+  const extraction = readFileSync(join(WORKFLOWS, 'extract-rsp-properties.yml'), 'utf8');
+  const pullRequestTests = readFileSync(join(WORKFLOWS, 'test.yml'), 'utf8');
+
+  it('locks discovery and extraction to one generated runtime version', () => {
+    const resolve = extraction.indexOf('run: node deps/rsp/generate-playground-runtime-manifest.js\n');
+    const discover = extraction.indexOf('run: node deps/rsp/discover-components.js');
+    const locked = extraction.indexOf('run: node deps/rsp/generate-playground-runtime-manifest.js --locked');
+    const extract = extraction.indexOf('run: node deps/rsp/extract-props.js');
+
+    assert.ok(resolve >= 0, 'runtime versions must be resolved');
+    assert.ok(resolve < discover, 'runtime version resolution must precede discovery');
+    assert.ok(discover < locked, 'the final manifest must use the discovered roster');
+    assert.ok(locked < extract, 'property extraction must use the final locked manifest');
+  });
+
+  it('stages the generated runtime manifest', () => {
+    assert.match(extraction, /git add[^\n]*deps\/rsp\/playground\/runtime-manifest\.json/);
+  });
+
+  it('checks committed manifest drift in pull requests', () => {
+    assert.match(
+      pullRequestTests,
+      /generate-playground-runtime-manifest\.js --check/,
+    );
+  });
+});
+
 function workflowFiles() {
   return readdirSync(WORKFLOWS).filter((file) => /\.ya?ml$/.test(file));
 }

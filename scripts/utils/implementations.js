@@ -11,16 +11,32 @@
  * has no extraction directory or status-model source — it's Figma-only.
  */
 
+export const PLAYGROUND_RUNTIME_SOURCES = Object.freeze({
+  s2: Object.freeze({
+    packageName: '@react-spectrum/s2',
+    metadataUrl: 'https://esm.sh/@react-spectrum/s2/package.json',
+    listingUrl: 'https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@{version}/flat',
+    externalModules: Object.freeze({
+      ImageIllustration: Object.freeze({
+        specifier: '@react-spectrum/s2/illustrations/gradient/generic1/Image',
+        exportName: 'default',
+      }),
+    }),
+  }),
+});
+
 export const IMPLEMENTATIONS = [
   {
     id: 'rsp',
     label: 'React Spectrum',
     shortLabel: 'RSP',
     playground: {
-      shell: 'deps/rsp/playground/index.html',
+      shell: 'blocks/playground/preview/index.html',
+      adapter: 'deps/rsp/playground/rsp-preview.js',
       snippetDir: 'deps/rsp/playground/snippets',
       snippetExt: 'jsx',
       tagPattern: '{Pascal}',
+      runtimeSource: 's2',
     },
   },
   {
@@ -28,7 +44,8 @@ export const IMPLEMENTATIONS = [
     label: 'Spectrum Web Components',
     shortLabel: 'SWC',
     playground: {
-      shell: 'deps/swc/playground/index.html',
+      shell: 'blocks/playground/preview/index.html',
+      adapter: 'deps/swc/playground/swc-preview.js',
       snippetDir: 'deps/swc/playground/snippets',
       snippetExt: 'html',
       tagPattern: 'swc-{slug}',
@@ -36,6 +53,19 @@ export const IMPLEMENTATIONS = [
   },
   { id: 'design-only', label: 'Design only', shortLabel: 'Figma' },
 ];
+
+const IMAGE_PLAYGROUND = Object.freeze({
+  shell: 'blocks/playground/preview/index.html',
+  adapter: 'blocks/playground/preview/image-preview.js',
+  snippetDir: null,
+  snippetExt: null,
+  tagPattern: '{Pascal}',
+});
+
+const PREVIEW_ONLY_IMPLEMENTATIONS = Object.freeze({
+  ios: IMAGE_PLAYGROUND,
+  android: IMAGE_PLAYGROUND,
+});
 
 /**
  * The combined, all-implementations view option. This is a picker/view concept,
@@ -74,5 +104,5 @@ export function getOtherImplementations(currentId) {
  * @returns {{ shell: string, snippetDir: string, snippetExt: string, tagPattern: string } | null}
  */
 export function getPlaygroundConfig(id) {
-  return getImplementationById(id)?.playground ?? null;
+  return getImplementationById(id)?.playground ?? PREVIEW_ONLY_IMPLEMENTATIONS[id] ?? null;
 }

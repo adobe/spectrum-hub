@@ -5,13 +5,16 @@ import {
   buildControlsMap,
   resolveControl,
   findProp,
-  cachedFetch,
   FREEFORM_CONTROLS,
   TEXT_KEYS,
 } from './playground-data.js';
+import { playgroundCoordinator } from './playground-coordinator.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
-import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
+import {
+  getPlaygroundConfig,
+  PLAYGROUND_RUNTIME_SOURCES,
+} from '../../scripts/utils/implementations.js';
 import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-control-options.js';
 import { OVERLAY_TRIGGERS, overlayShape, propsOwner } from '../../deps/rsp/playground/overlay-triggers.js';
 import {
@@ -429,27 +432,15 @@ function buildControl(controlType, property, options, currentValue, onChange) {
 // Shared via cachedFetch (playground-data.js) — more than one playground
 // block on a page commonly requests the same per-component prop-data or
 // markup fragment (e.g. two variants of the same component).
-function fetchOrThrow(url, readBody) {
-  return cachedFetch(url, async () => {
-    const resp = await fetch(url);
-    if (!resp.ok) { throw new Error(`Failed to fetch ${url}: ${resp.status}`); }
-    return readBody(resp);
-  });
-}
-
 function fetchJson(url) {
-  return fetchOrThrow(url, (resp) => resp.json());
+  return playgroundCoordinator.json(url);
 }
 
 function fetchText(url) {
-  return fetchOrThrow(url, (resp) => resp.text());
+  return playgroundCoordinator.text(url);
 }
 
 // --- Block wiring helpers (each a distinct job init() delegates to) --------
-
-// The block's own shell: an image viewer for an implementation with no live
-// preview (ios/android). It needs no snippet and no prop catalog.
-const GENERIC_SHELL = 'blocks/playground/index.html';
 
 /**
  * Where this component's preview comes from, resolved entirely from
@@ -467,22 +458,19 @@ export function resolveComponentMeta(component, implementation, base) {
   // every route but tooltip, whose props RSP declares on TooltipTrigger.
   const propsTitle = propsOwner(component) ?? componentTitle;
   const config = getPlaygroundConfig(implementation);
-  if (!config) {
-    return {
-      componentTitle,
-      propsTitle,
-      previewName: componentTitle,
-      markupUrl: null,
-      previewShellPath: GENERIC_SHELL,
-    };
-  }
+  if (!config) { return null; }
   return {
     componentTitle,
     propsTitle,
+    adapter: implementation === 'rsp' || implementation === 'swc' ? implementation : 'image',
+    adapterUrl: config.adapter,
+    runtimeSource: config.runtimeSource ?? null,
     previewName: config.tagPattern
       .replace('{Pascal}', componentTitle)
       .replace('{slug}', component),
-    markupUrl: `${base}/${config.snippetDir}/${component}.${config.snippetExt}`,
+    markupUrl: config.snippetDir
+      ? `${base}/${config.snippetDir}/${component}.${config.snippetExt}`
+      : null,
     previewShellPath: config.shell,
   };
 }
@@ -499,7 +487,7 @@ async function fetchPlaygroundInputs(base, componentMeta, component, impl, sprea
     swc: `${base}/deps/swc/data/swc-${component}.json`,
   }[impl];
   const [{ componentsSheet, controlsSheet }, propRows, snippetMarkup] = await Promise.all([
-    fetchPlaygroundSheets(spreadsheetUrl),
+    fetchPlaygroundSheets(spreadsheetUrl, playgroundCoordinator),
     // No catalog is a normal state, not a failure: ios/android ship none, and a leaf
     // component may have no data file. `d.props ?? d` absorbs the one remaining shape
     // difference between the catalogs — rsp wraps its rows, swc is a bare array.
@@ -566,68 +554,249 @@ function buildControlDescriptors(
   }, []);
 }
 
-function createPreviewIframe(iframeUrl, title) {
+function descriptorTarget(property, implementation, descriptor, componentMeta, hasRealLabelProp) {
+  if (property === 'icon') { return 'icon'; }
+  if (TEXT_KEYS.has(property)) {
+    return property === 'label' && hasRealLabelProp ? 'label' : 'content';
+  }
+  if (componentMeta.propsTitle !== componentMeta.componentTitle) { return 'owner-prop'; }
+  if (implementation === 'swc' && descriptor.attribute) { return 'attribute'; }
+  return 'route-prop';
+}
+
+export function buildPlaygroundModel({
+  component,
+  implementation,
+  componentMeta,
+  componentsSheet,
+  controlsSheet,
+  propRows,
+  snippetMarkup,
+}) {
+  const hasRealLabelProp = implementation === 'rsp' && hasLabelProp(propRows);
+  const fragmentRoot = implementation === 'rsp'
+    ? parseXmlFragmentRoot(snippetMarkup)
+    : parseHtmlFragmentRoot(snippetMarkup, componentMeta.previewName).fragmentRoot;
+  const controlsMap = buildControlsMap(controlsSheet);
+  const authoredProps = getComponentProperties(
+    component,
+    implementation,
+    componentsSheet,
+    // eslint-disable-next-line no-console
+    (message) => console.warn(`Playground (${component}): ${message}`),
+  );
+  const currentProps = {};
+  const descriptors = buildControlDescriptors(
+    component,
+    implementation,
+    authoredProps,
+    controlsMap,
+    propRows,
+    currentProps,
+    fragmentRoot,
+  ).map((descriptor) => ({
+    ...descriptor,
+    target: descriptorTarget(
+      descriptor.property,
+      implementation,
+      descriptor,
+      componentMeta,
+      hasRealLabelProp,
+    ),
+  }));
+  return {
+    component,
+    implementation,
+    adapter: componentMeta.adapter ?? (
+      implementation === 'rsp' || implementation === 'swc' ? implementation : 'image'
+    ),
+    adapterUrl: componentMeta.adapterUrl ?? null,
+    runtimeSource: componentMeta.runtimeSource
+      ?? getPlaygroundConfig(implementation)?.runtimeSource
+      ?? null,
+    componentTitle: componentMeta.componentTitle,
+    propsTitle: componentMeta.propsTitle,
+    previewName: componentMeta.previewName,
+    previewShellPath: componentMeta.previewShellPath,
+    snippetMarkup,
+    hasRealLabelProp,
+    descriptors,
+    currentProps,
+    values: Object.fromEntries(
+      Object.entries(currentProps)
+        .map(([property, value]) => [property, yesNoToBoolean(value.value)]),
+    ),
+  };
+}
+
+function uniqueBy(values, key) {
+  return [...new Map(values.map((value) => [key(value), value])).values()];
+}
+
+function runtimeModule(source, exportName) {
+  const deps = `react@${source.reactVersion},react-dom@${source.reactVersion}`;
+  return {
+    exportName,
+    url: `https://esm.sh/${source.packageName}@${source.packageVersion}`
+      + `?bundle&exports=${exportName}&deps=${deps}`,
+  };
+}
+
+function runtimeBundleModule(source, exportNames) {
+  const deps = `react@${source.reactVersion},react-dom@${source.reactVersion}`;
+  const names = [...new Set(exportNames)].sort((a, b) => a.localeCompare(b));
+  return {
+    exports: names.map((exportName) => ({ exportName, name: exportName })),
+    url: `https://esm.sh/${source.packageName}@${source.packageVersion}`
+      + `?bundle&exports=${names.join(',')}&deps=${deps}`,
+  };
+}
+
+function rspRuntimeRequirements(model, externalModules = {}) {
+  const fragmentRoot = parseXmlFragmentRoot(model.snippetMarkup);
+  const fragmentTags = fragmentRoot ? collectFragmentTagNames(fragmentRoot) : [];
+  const externalTags = fragmentTags.filter((tagName) => externalModules[tagName]);
+  const componentExports = fragmentTags.filter((tagName) => !externalModules[tagName]);
+  const overlay = OVERLAY_TRIGGERS[model.component];
+  if (overlayShape(model.component) !== 'none') {
+    componentExports.push(overlay.trigger ?? overlay.queueExport, 'Button');
+  }
+  componentExports.push(model.componentTitle);
+  return {
+    componentExports: [...new Set(componentExports.filter(Boolean))],
+    externalTags: [...new Set(externalTags)],
+  };
+}
+
+export function buildRspRuntime(model, manifest) {
+  if (manifest?.schemaVersion !== 1) {
+    throw new Error('Unsupported playground runtime manifest schema.');
+  }
+  const source = manifest.sources?.[model.runtimeSource];
+  if (!source?.packageName || !source.packageVersion || !source.imports || !source.exports) {
+    throw new Error(`Invalid playground runtime source "${model.runtimeSource}".`);
+  }
+  const { componentExports, externalTags } = rspRuntimeRequirements(
+    model,
+    source.externalModules,
+  );
+
+  let missingExport = false;
+  const exportEntries = componentExports.map((exportName) => {
+    const entry = source.exports[exportName];
+    if (!entry) {
+      missingExport = true;
+      return { modules: [runtimeModule(source, exportName)], styles: [] };
+    }
+    return entry;
+  });
+  const externalEntries = externalTags.map((tagName) => source.externalModules[tagName]);
+  const externalModuleEntries = externalEntries.flatMap(
+    (entry, index) => entry.modules.map((module) => ({
+      ...module,
+      name: externalTags[index],
+    })),
+  );
+  const rootModule = runtimeBundleModule(source, [
+    ...componentExports,
+    'Provider',
+    'Text',
+  ]);
+  const modules = uniqueBy(
+    [rootModule, ...externalModuleEntries],
+    ({ url }) => url,
+  ).sort((a, b) => a.url.localeCompare(b.url));
+  const stylePaths = missingExport
+    ? source.allStyles
+    : uniqueBy(
+      [...exportEntries, ...externalEntries].flatMap((entry) => entry.styles),
+      (path) => path,
+    ).sort((a, b) => a.localeCompare(b));
+  const styleBase = `https://esm.sh/${source.packageName}@${source.packageVersion}`;
+
+  return {
+    imports: source.imports,
+    modules,
+    styles: stylePaths.map((path) => `${styleBase}${path}`),
+  };
+}
+
+export async function resolveRspRuntime(model, {
+  json = (url) => playgroundCoordinator.json(url),
+  manifestUrl = '/deps/rsp/playground/runtime-manifest.json',
+} = {}) {
+  try {
+    const manifest = await json(manifestUrl);
+    return buildRspRuntime(model, manifest);
+  } catch (manifestError) {
+    const config = PLAYGROUND_RUNTIME_SOURCES[model.runtimeSource];
+    if (!config) {
+      throw new Error(
+        `No fallback configuration for runtime source "${model.runtimeSource}".`,
+        { cause: manifestError },
+      );
+    }
+    const metadata = await json(config.metadataUrl);
+    if (!metadata?.version) { throw new Error('Runtime package metadata has no version.'); }
+    const listingUrl = config.listingUrl.replace('{version}', metadata.version);
+    const listing = await json(listingUrl);
+    const packageFiles = listing.files?.map(({ name }) => name) ?? [];
+    const { resolveStylesheetHrefs } = await import(
+      '../../deps/rsp/playground/resolve-stylesheet-hrefs.js'
+    );
+    const source = {
+      packageName: config.packageName,
+      packageVersion: metadata.version,
+      reactVersion: String(metadata.peerDependencies?.react ?? '19').replace(/^[^0-9]*/, ''),
+    };
+    const externalModules = config.externalModules ?? {};
+    const { componentExports, externalTags } = rspRuntimeRequirements(model, externalModules);
+    const modules = [runtimeBundleModule(source, [
+      ...componentExports,
+      'Provider',
+      'Text',
+    ])];
+    externalTags.forEach((tagName) => {
+      const external = externalModules[tagName];
+      const versioned = external.specifier.replace(
+        config.packageName,
+        `${config.packageName}@${metadata.version}`,
+      );
+      modules.push({
+        exportName: external.exportName,
+        name: tagName,
+        url: `https://esm.sh/${versioned}?deps=react@${source.reactVersion},`
+          + `react-dom@${source.reactVersion}`,
+      });
+    });
+    return {
+      imports: {
+        react: `https://esm.sh/react@${source.reactVersion}`,
+        reactDom: `https://esm.sh/react-dom@${source.reactVersion}/client`,
+      },
+      modules: uniqueBy(
+        modules,
+        ({ url }) => url,
+      ).sort((a, b) => a.url.localeCompare(b.url)),
+      styles: resolveStylesheetHrefs(
+        config.packageName,
+        metadata.version,
+        model.componentTitle,
+        packageFiles,
+      ),
+      diagnostic: {
+        recovered: true,
+        message: `Runtime manifest unavailable: ${manifestError.message}`,
+      },
+    };
+  }
+}
+
+function createPreviewIframe(title) {
   const iframe = document.createElement('iframe');
-  iframe.src = iframeUrl;
   iframe.title = title;
   iframe.setAttribute('loading', 'lazy');
   return iframe;
-}
-
-function wireIframeMessaging(iframe, currentProps, snippetMarkup) {
-  function postPropUpdate(property, attribute, value, controlType) {
-    // Don't clobber the preview's own default with "no value to contribute".
-    if (value === undefined) { return; }
-    const normalized = FREEFORM_CONTROLS.has(controlType) ? value : yesNoToBoolean(value);
-    iframe.contentWindow?.postMessage({ type: 'prop-update', property, attribute, value: normalized }, '*');
-  }
-
-  function sendAllProps() {
-    Object.entries(currentProps).forEach(([property, { value, attribute, controlType }]) => {
-      postPropUpdate(property, attribute, value, controlType);
-    });
-  }
-
-  function getForcedScheme() {
-    const { classList } = document.body;
-    if (classList.contains('dark-scheme')) { return 'dark'; }
-    if (classList.contains('light-scheme')) { return 'light'; }
-    return null;
-  }
-
-  function postThemeUpdate() {
-    iframe.contentWindow?.postMessage({ type: 'theme-update', scheme: getForcedScheme() }, '*');
-  }
-
-  // The iframe's own document does an async fetch (per-component markup) and/or
-  // network load (esm.sh for rsp) before it registers its prop-update listener,
-  // so the outer iframe's `load` event fires well before that listener exists —
-  // sending on `load` alone would silently drop the first batch of prop values.
-  // The iframe explicitly signals readiness once it's actually listening.
-  window.addEventListener('message', (event) => {
-    if (event.source !== iframe.contentWindow) { return; }
-    if (event.data?.type !== 'preview-ready') { return; }
-    sendAllProps();
-  });
-
-  // Answers the shell's markup-request with the fragment already fetched by
-  // fetchPlaygroundInputs, instead of the shell fetching the same file again.
-  window.addEventListener('message', (event) => {
-    if (event.source !== iframe.contentWindow) { return; }
-    if (event.data?.type !== 'markup-request') { return; }
-    iframe.contentWindow?.postMessage({ type: 'markup-response', markup: snippetMarkup }, '*');
-  });
-
-  iframe.addEventListener('load', () => {
-    postThemeUpdate();
-  });
-
-  // The site's light/dark toggle (blocks/action-button) swaps a class on
-  // document.body without a page reload, so keep the iframe in sync live.
-  new MutationObserver(postThemeUpdate)
-    .observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-  return postPropUpdate;
 }
 
 // onControlChange fires after currentProps is already updated — the caller
@@ -635,10 +804,10 @@ function wireIframeMessaging(iframe, currentProps, snippetMarkup) {
 // Returns null when nothing rendered: a component can legitimately have no
 // controls (swc's link is utility CSS classes, not a component API), and an
 // empty panel would still hold its column and label a region with nothing in it.
-function buildControlsPanel(descriptors, currentProps, onControlChange) {
+function buildControlsPanel(descriptors, currentProps, onControlChange, label) {
   const controlsPanel = document.createElement('div');
   controlsPanel.classList.add('playground-controls');
-  controlsPanel.setAttribute('aria-label', 'Component controls');
+  controlsPanel.setAttribute('aria-label', `${label} component controls`);
 
   descriptors.forEach(({
     property, controlType, options, defaultValue, attribute, valueKind,
@@ -688,6 +857,7 @@ function buildCodeDisclosure(pre) {
 
 // How long a control's changes must pause before the code disclosure rebuilds.
 const DISCLOSURE_DEBOUNCE_MS = 200;
+let nextFrameId = 0;
 
 export default async function init(el) {
   const config = getConfig();
@@ -703,28 +873,85 @@ export default async function init(el) {
   const base = config.codeBase;
   const sheetUrl = meta.spreadsheet ?? `${base}/playground-data.json`;
   const componentMeta = resolveComponentMeta(component, implementation, base);
-  const { componentTitle, previewName, previewShellPath } = componentMeta;
+  if (!componentMeta) {
+    config.log(`sandbox block: unsupported implementation "${implementation}"`, el);
+    el.remove();
+    return;
+  }
+  const {
+    componentTitle, previewName, previewShellPath, adapterUrl,
+  } = componentMeta;
+  nextFrameId += 1;
+  const frameId = `playground-${nextFrameId}`;
+  const iframeUrl = `${base}/${previewShellPath}?frame=${encodeURIComponent(frameId)}`;
+  const iframe = createPreviewIframe(`${componentTitle} component preview`);
+  const inputsPromise = fetchPlaygroundInputs(
+    base,
+    componentMeta,
+    component,
+    implementation,
+    sheetUrl,
+  );
+  const modelPromise = inputsPromise.then((inputs) => buildPlaygroundModel({
+    component,
+    implementation,
+    componentMeta,
+    ...inputs,
+  }));
+  const runtimePromise = modelPromise.then((resolved) => (
+    implementation === 'rsp'
+      ? resolveRspRuntime(resolved, {
+        manifestUrl: `${base}/deps/rsp/playground/runtime-manifest.json`,
+      })
+      : null
+  ));
+  const previewInitPromise = Promise.all([modelPromise, runtimePromise])
+    .then(([resolved, runtime]) => ({
+      model: resolved,
+      runtime,
+      adapterUrl: `${base}/${adapterUrl}`,
+    }));
+  previewInitPromise.catch(() => {});
+  const previewState = {
+    frameId,
+    initPromise: previewInitPromise,
+  };
+  const unregister = playgroundCoordinator.register(iframe, previewState);
+  iframe.src = iframeUrl;
+  const postPropUpdate = (property, attribute, value, controlType) => {
+    playgroundCoordinator.update(iframe, {
+      property, attribute, value, controlType,
+    });
+  };
+  const previewArea = document.createElement('div');
+  previewArea.classList.add('playground-preview');
+  const previewStatus = document.createElement('div');
+  previewStatus.className = 'visually-hidden';
+  previewStatus.setAttribute('role', 'status');
+  previewState.onError = (error) => {
+    config.log('sandbox block: preview initialization failed', error);
+    previewStatus.textContent = `Preview unavailable: ${error.message}`;
+  };
+  previewArea.appendChild(iframe);
+  previewArea.appendChild(previewStatus);
+  const layout = document.createElement('div');
+  layout.classList.add('playground-layout');
+  layout.append(previewArea);
+  el.replaceChildren(layout);
 
-  let componentsSheet;
-  let controlsSheet;
-  let propRows;
-  let snippetMarkup;
-
+  let model;
   try {
-    ({
-      componentsSheet, controlsSheet, propRows, snippetMarkup,
-    } = await fetchPlaygroundInputs(base, componentMeta, component, implementation, sheetUrl));
+    model = await modelPromise;
   } catch (err) {
     config.log('sandbox block: data fetch failed', err);
+    unregister();
     el.remove();
     return;
   }
 
-  // Whether THIS component's own RSP data documents a real "label" prop
-  // (e.g. Meter, AvatarGroup) — see buildRspSnippet's hasRealLabelProp param
-  // and apply-rsp-prop.js's matching resolveRspPropKey for the live-preview
-  // side of this same decision.
-  const hasRealLabelProp = implementation === 'rsp' && hasLabelProp(propRows);
+  const {
+    snippetMarkup, hasRealLabelProp, currentProps, descriptors,
+  } = model;
 
   // The one thing that cannot live in the registry as data. Keyed by id rather than
   // branched on, and defaulting to the markup serializer an implementation with no
@@ -734,42 +961,6 @@ export default async function init(el) {
     swc: (name, props) => buildSwcSnippet(name, props, snippetMarkup),
   };
   const buildSnippet = SNIPPET_BUILDERS[implementation] ?? SNIPPET_BUILDERS.swc;
-
-  // Keyed the same way, and for the same reason: HTML parsing would lowercase RSP's
-  // JSX tag and prop names, so each implementation reads the fragment with its own parser.
-  const FRAGMENT_PARSERS = {
-    rsp: () => parseXmlFragmentRoot(snippetMarkup),
-    swc: () => parseHtmlFragmentRoot(snippetMarkup, previewName).fragmentRoot,
-  };
-  const fragmentRoot = (FRAGMENT_PARSERS[implementation] ?? FRAGMENT_PARSERS.swc)();
-
-  const controlsMap = buildControlsMap(controlsSheet);
-  const authoredProps = getComponentProperties(
-    component,
-    implementation,
-    componentsSheet,
-    // eslint-disable-next-line no-console
-    (message) => console.warn(`Playground (${component}): ${message}`),
-  );
-
-  const currentProps = {};
-  const descriptors = buildControlDescriptors(
-    component,
-    implementation,
-    authoredProps,
-    controlsMap,
-    propRows,
-    currentProps,
-    fragmentRoot,
-  );
-
-  // Each implementation's shell (previewShellPath, resolved above) reads
-  // ?component & ?implementation from the URL. For swc it fetches the matching
-  // markup fragment (deps/swc/playground/snippets/<component>.html); for rsp it
-  // loads from esm.sh; for ios/android it shows the image viewer.
-  const iframeUrl = `${base}/${previewShellPath}?component=${encodeURIComponent(component)}&implementation=${encodeURIComponent(implementation)}`;
-  const iframe = createPreviewIframe(iframeUrl, `${componentTitle} component preview`);
-  const postPropUpdate = wireIframeMessaging(iframe, currentProps, snippetMarkup);
 
   const pre = document.createElement('pre');
   updateDisclosure(pre, buildSnippet, previewName, currentProps);
@@ -790,18 +981,13 @@ export default async function init(el) {
       postPropUpdate(property, attribute, value, controlType);
       debouncedUpdateDisclosure();
     },
+    componentTitle,
   );
 
   const disclosure = buildCodeDisclosure(pre);
 
-  const previewArea = document.createElement('div');
-  previewArea.classList.add('playground-preview');
-  previewArea.appendChild(iframe);
-
-  const layout = document.createElement('div');
-  layout.classList.add('playground-layout');
   // With no controls the preview is the only flex child and fills the row.
-  layout.append(...[previewArea, controlsPanel].filter(Boolean));
+  if (controlsPanel) { layout.append(controlsPanel); }
 
-  el.replaceChildren(layout, disclosure);
+  el.append(disclosure);
 }

@@ -17,6 +17,34 @@ Four independent sources, merged in `init()`:
 
 The division matters: **the workbook is the allow-list, the catalog is the vocabulary.** Button's RSP catalog holds 42 props; its page shows 8. Letting the catalog decide which controls exist would put every `aria-*` and `onKeyDown` on the page, and would leave ios/android — which have no catalog at all — with nothing.
 
+## Runtime ownership and preview protocol
+
+The parent page builds one serializable model per playground. It owns workbook, catalog, snippet, and runtime-manifest requests through one page-level coordinator. The coordinator caches in-flight and settled requests by URL, evicts rejected requests, installs one message listener, and installs one theme observer for the page.
+
+The model keeps values typed. Numeric JSX expressions remain numbers, and boolean shorthand remains boolean when sent to a preview. Defaults resolve in this order:
+
+1. Cross-property safety override.
+2. Snippet-authored value.
+3. Catalog default.
+4. First control option.
+5. Placeholder when no earlier source contributes a value.
+
+All implementations use [`blocks/playground/preview/index.html`](../../blocks/playground/preview/index.html). Its inline bootstrap imports only the adapter named in `preview-init`: RSP, SWC, or image. The protocol is:
+
+| Message | Direction | Purpose |
+| --- | --- | --- |
+| `shell-ready` | frame → parent | Requests the frame's complete initialization payload. |
+| `preview-init` | parent → frame | Supplies the model, adapter URL, and implementation-specific runtime data. |
+| `prop-update` | parent → frame | Updates one typed property after initialization. |
+| `theme-update` | parent → frame | Applies the current forced color scheme. |
+| `preview-mounted` | frame → parent | Records the first successful mount. |
+| `preview-diagnostic` | frame → parent | Reports a recovered failure, such as manifest fallback. |
+| `preview-error` | frame → parent | Reports a fatal load, parse, mount, or update failure. |
+
+Every message carries a frame identifier and is also matched by `event.source`. Updates that arrive before initialization remain ordered; only the latest pre-initialization theme matters. A preview error is shown inside the affected block without removing its controls or code disclosure.
+
+RSP runtime data comes from the generated [`runtime-manifest.json`](../rsp/playground/runtime-manifest.json). The parent unions concrete module descriptors and stylesheet paths for the route, composite children, overlays, and external modules. Normal operation loads selected styles. A missing export entry uses the source's committed `allStyles`; a missing or invalid manifest alone invokes package metadata and flat-listing discovery as a recovered fallback. Each frame still imports its own selected adapter and runtime modules because iframe isolation gives every preview its own document and component registry.
+
 ## Rules the consumer follows
 
 **Exactly one catalog is fetched: the page's own.** `fetchPlaygroundInputs` gates on `implementation`. Fetching both used to guarantee a 404 on every RSP page, and it is what let one implementation's option lists appear on the other's controls — SWC's Button offered `premium` and `genai`, which SWC does not implement. One catalog makes that impossible by construction rather than by a guard that can regress.

@@ -1,11 +1,7 @@
 /*
- * Shared by every preview shell (deps/rsp/playground/index.html,
- * deps/swc/playground/index.html, and this block's own generic shell for
- * ios/android) — the same base layout, forced-scheme handling, and
- * mount/image-viewer boxes regardless of which one loads. A shell that
- * doesn't use one of #mount/#image-viewer just never renders that id, so
- * its rules simply never match — no behavior difference from splitting
- * this out of each shell's own <style> block.
+ * Shared by the legacy documents and blocks/playground/preview/index.html.
+ * The shared shell selects one adapter, so unused mount/image-viewer rules
+ * remain inert.
  */
 html,
 body,
@@ -51,6 +47,12 @@ body:has([static-color="white"]) { background: rgb(17 17 17); }
   align-items: center;
   justify-content: center;
   width: min(90vw, 400px);
+}
+
+swc-divider { inline-size: 200px; }
+swc-divider[vertical] {
+  inline-size: auto;
+  block-size: 200px;
 }
 
 /* Image viewer — ios / android */
