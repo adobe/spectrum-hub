@@ -104,6 +104,30 @@ describe('sitenav block', () => {
       const { sitenav } = getSiteNav();
       expect(sitenav.hasAttribute('is-expanded')).to.be.true;
     });
+
+    // The template default only decides the rail for a reader who has never touched
+    // the expand button. Once they have, that choice outranks it on every page.
+    it('starts expanded on a non-marketing page when the reader left the rail open', () => {
+      setMeta('template', 'component');
+      sessionStorage.setItem('sitenav-expanded', 'true');
+      const { sitenav } = getSiteNav();
+      expect(sitenav.hasAttribute('is-expanded')).to.be.true;
+    });
+
+    it('starts collapsed on a marketing page when the reader left the rail closed', () => {
+      setMeta('template', 'marketing');
+      sessionStorage.setItem('sitenav-expanded', 'false');
+      const { sitenav } = getSiteNav();
+      expect(sitenav.hasAttribute('is-expanded')).to.be.false;
+    });
+
+    // Landing on a marketing page is not a choice, so it must not seed storage and
+    // silently flip the rail open on every other page.
+    it('does not persist the marketing default', () => {
+      setMeta('template', 'marketing');
+      getSiteNav();
+      expect(sessionStorage.getItem('sitenav-expanded')).to.be.null;
+    });
   });
 
   describe('decorateLevel — accessible name for icon-only toggle buttons', () => {
@@ -1039,6 +1063,16 @@ describe('sitenav block', () => {
     it('does not open the mobile tray — the rail width is a separate state', () => {
       btn.click();
       expect(sitenav.hasAttribute('is-open')).to.be.false;
+    });
+
+    // The rail's width is the one piece of sitenav state a reader sets deliberately,
+    // so it rides along to the next page instead of resetting on every navigation.
+    it('records the choice so the next page opens the same way', () => {
+      btn.click();
+      expect(sessionStorage.getItem('sitenav-expanded')).to.equal('true');
+
+      btn.click();
+      expect(sessionStorage.getItem('sitenav-expanded')).to.equal('false');
     });
   });
 
