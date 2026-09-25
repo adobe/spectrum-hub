@@ -11,10 +11,6 @@
  */
 
 /* --- Fonts --- */
-.tk-adobe-clean-spectrum-vf {
-  font-family: adobe-clean-spectrum-vf, sans-serif;
-}
-
 @font-face {
   font-family: adobe-clean;
   src: url("fonts/adobe-clean-regular.woff2") format("woff2");
@@ -347,7 +343,7 @@
   --s2-spacing-85: 6px;
 
   /* fonts */
-  --s2-font-family: adobe-clean-spectrum-vf, "Adobe Clean Spectrum VF", adobe-clean, 'Adobe Clean', 'Trebuchet MS', sans-serif;
+  --s2-font-family: adobe-clean-spectrum-vf, 'Adobe Clean Spectrum VF', adobe-clean, 'Adobe Clean', 'Trebuchet MS', sans-serif;
   --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif;
 
   /* se etc conveniences */
