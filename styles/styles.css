@@ -21,6 +21,24 @@
 }
 
 @font-face {
+  font-family: adobe-clean-spectrum-vf;
+  src: url("https://use.typekit.net/af/c0f469/0000000000000000775c5863/31/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n1&v=3") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: adobe-clean-spectrum-vf;
+  src: url("https://use.typekit.net/af/c690fb/0000000000000000775c5862/31/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=i1&v=3") format("woff2");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 100 900;
+  font-stretch: normal;
+}
+
+@font-face {
   font-family: adobe-clean;
   src: url("fonts/adobe-clean-italic.woff2") format("woff2");
   font-display: swap;
