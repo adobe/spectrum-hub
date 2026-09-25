@@ -305,15 +305,21 @@ const fetchRes = async (path, init) => {
   return dom.querySelector('ul') ?? document.createElement('ul');
 };
 
+// Written only when explicitly toggled to maintain state between pages.
+const EXPANDED_KEY = 'sitenav-expanded';
+
 export const getSiteNav = () => {
-  const template = getMetadata('template');
+  const stored = sessionStorage.getItem(EXPANDED_KEY);
 
   const sitenav = document.createElement('div');
   sitenav.id = 'sitenav';
 
-  if (template === 'marketing') {
-    sitenav.toggleAttribute('is-expanded', true);
-  }
+  // A deliberate choice outranks a template's default on every page;
+  // the default only speaks for a reader who hasn't made a choice.
+  const isExpanded = stored === null
+    ? getMetadata('template') === 'marketing'
+    : stored === 'true';
+  sitenav.toggleAttribute('is-expanded', isExpanded);
 
   const nav = document.createElement('nav');
   nav.setAttribute('aria-label', DEF_SITE_NAME);
@@ -531,6 +537,7 @@ export const getExpandButton = async (sitenav) => {
 
   btn.addEventListener('click', () => {
     const isExpanded = sitenav.toggleAttribute('is-expanded');
+    sessionStorage.setItem(EXPANDED_KEY, String(isExpanded));
     btn.setAttribute('aria-expanded', String(isExpanded));
     syncLabel();
     syncLevel1Tooltips(sitenav);
