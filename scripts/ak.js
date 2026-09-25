@@ -494,7 +494,6 @@ function decorateDoc() {
 }
 
 async function loadSession() {
-  loadStyle('https://use.typekit.net/ydd8fff.css');
   sessionStorage.setItem('session', true);
   document.body.classList.add('session');
   const header = document.querySelector('header');
