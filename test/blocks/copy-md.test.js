@@ -188,6 +188,16 @@ describe('copy-md block', () => {
       expect(clipboardStub.calledOnceWith('MARKDOWN(<h1>Title</h1>)')).to.be.true;
     });
 
+    it('ignores persistent data-status attributes that do not track section decoration', async () => {
+      setMain('<h1>Title</h1><span data-status="available">Available</span>');
+      makeCopyButton().click();
+      await clock.tickAsync(0);
+      expect(fetchStub.called).to.be.false;
+      expect(clipboardStub.calledOnceWith(
+        'MARKDOWN(<h1>Title</h1><span data-status="available">Available</span>)',
+      )).to.be.true;
+    });
+
     it('registers the GFM plugin on the Turndown instance', async () => {
       setMain('<h1>Title</h1>');
       makeCopyButton().click();
@@ -220,10 +230,11 @@ describe('copy-md block', () => {
     });
 
     it('waits for in-flight sections before reading <main>', async () => {
-      setMain('<h1>Loaded</h1>');
+      const main = setMain('<h1>Loaded</h1>');
       const section = document.createElement('div');
+      section.className = 'section';
       section.dataset.status = 'decorated';
-      document.body.append(section);
+      main.append(section);
 
       makeCopyButton().click();
       await clock.tickAsync(0);
@@ -231,15 +242,18 @@ describe('copy-md block', () => {
 
       delete section.dataset.status;
       await clock.tickAsync(100);
-      expect(clipboardStub.calledOnceWith('MARKDOWN(<h1>Loaded</h1>)')).to.be.true;
+      expect(clipboardStub.calledOnceWith(
+        'MARKDOWN(<h1>Loaded</h1><div class="section"></div>)',
+      )).to.be.true;
     });
 
     it('falls back to the .md fetch (and disconnects its observer) if a section never finishes decorating', async () => {
       const disconnectSpy = sinon.spy(MutationObserver.prototype, 'disconnect');
-      setMain('<h1>Loaded</h1>');
+      const main = setMain('<h1>Loaded</h1>');
       const section = document.createElement('div');
+      section.className = 'section';
       section.dataset.status = 'decorated'; // intentionally never cleared
-      document.body.append(section);
+      main.append(section);
 
       makeCopyButton().click();
       await clock.tickAsync(0);
