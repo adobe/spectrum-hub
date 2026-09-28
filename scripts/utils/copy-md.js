@@ -26,18 +26,18 @@ function setCopiedIcon(button, copied) {
 }
 
 const DECORATION_TIMEOUT = 8000;
+const DECORATING_SECTION_SELECTOR = '.section[data-status="decorated"]';
 
-// watch for data-status="decorated" attribute to
-// change and only re-check once it is removed.
-function whenPageDecorated() {
+// Wait for sections in the content being copied to finish decorating.
+function whenPageDecorated(main) {
   return new Promise((resolve, reject) => {
-    if (!document.querySelector('[data-status]')) {
+    if (!main.querySelector(DECORATING_SECTION_SELECTOR)) {
       resolve();
       return;
     }
     let timer;
     const observer = new MutationObserver(() => {
-      if (!document.querySelector('[data-status]')) {
+      if (!main.querySelector(DECORATING_SECTION_SELECTOR)) {
         observer.disconnect();
         clearTimeout(timer);
         resolve();
@@ -47,7 +47,7 @@ function whenPageDecorated() {
       observer.disconnect();
       reject(new Error('Timed out waiting for the page to finish decorating'));
     }, DECORATION_TIMEOUT);
-    observer.observe(document.body, {
+    observer.observe(main, {
       attributes: true,
       attributeFilter: ['data-status'],
       subtree: true,
@@ -62,9 +62,9 @@ export const turndownLoader = {
 
 // Converts the live, fully-decorated <main> to MD
 async function pageMarkdown() {
-  await whenPageDecorated();
   const main = document.querySelector('main');
   if (!main) { throw new Error('No main content found'); }
+  await whenPageDecorated(main);
   const clone = main.cloneNode(true);
   clone.querySelectorAll('[data-widget]').forEach((el) => el.remove());
 
