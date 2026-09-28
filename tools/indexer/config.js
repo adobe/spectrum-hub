@@ -15,7 +15,7 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const DEFAULT_SITE_ORIGIN = 'https://spectrum.adobe.com';
+export const DEFAULT_SITE_ORIGIN = 'https://main--spectrum-hub--adobe.aem.live';
 
 /**
  * Page fetches in flight. The origin rate-limits a burst: at 8 the full 155-page
