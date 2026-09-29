@@ -47,6 +47,9 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
       - paragraph:
         - link "Terms of Use":
           - /url: /terms
+      - paragraph:
+        - link "Cookie preferences":
+          - /url: https://www.adobe.com/privacy/cookies.html
       - paragraph: /© \\d+ Adobe\\. All rights reserved\\./
   `);
 });

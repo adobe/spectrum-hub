@@ -53,6 +53,20 @@ describe('footer block', () => {
       await init(el);
       expect(el.children.length).to.equal(0);
     });
+
+    it('decorates the authored Adobe privacy fallback link without changing its href', async () => {
+      const privacyURL = 'https://www.adobe.com/privacy/cookies.html';
+      stubFetch(sandbox, makeFragmentHTML().replace(
+        'Legal links',
+        `Legal links <a href="${privacyURL}">Your Privacy Choices</a>`,
+      ));
+
+      await init(el);
+
+      const privacyLink = el.querySelector(`a[href="${privacyURL}"]`);
+      expect(privacyLink.dataset.fedsAction).to.equal('open-adchoices-modal');
+      expect(privacyLink.href).to.equal(privacyURL);
+    });
   });
 
   describe('footer structure after init', () => {

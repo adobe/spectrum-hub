@@ -26,6 +26,7 @@ export const footerFragment = `<main>
   <div>
     <p><a href="/privacy">Privacy Policy</a></p>
     <p><a href="/terms">Terms of Use</a></p>
+    <p><a href="https://www.adobe.com/privacy/cookies.html">Cookie preferences</a></p>
   </div>
   <div>
     <p>© 2026 Adobe. All rights reserved.</p>
