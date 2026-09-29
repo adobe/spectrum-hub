@@ -77,6 +77,12 @@ svg.icon {
         justify-content: center;
         align-items: center;
         cursor: pointer;
+
+        &:focus-visible {
+          outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+          outline-offset: calc(-1 * var(--s2-spacing-50));
+          border-radius: 100%;
+        }
       }
 
       .icon-search {
