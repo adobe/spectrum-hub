@@ -944,7 +944,7 @@ describe('playground block — init()', () => {
     clock.tick(100);
     native.value = 'no';
     native.dispatchEvent(new Event('change', { bubbles: true }));
-    clock.tick(599);
+    clock.tick(1499);
     expect(status.textContent).to.equal('');
     clock.tick(1);
     expect(status.textContent).to.equal('Component preview updated: isDisabled is now no.');
