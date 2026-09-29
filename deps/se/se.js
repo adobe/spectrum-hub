@@ -356,7 +356,7 @@ class SESelect extends SEFormElement {
             ?disabled=${this.disabled}
             class="${this.error ? 'has-error' : ''}">
           </select>
-          <svg viewBox="0 0 20 20"><use href="/img/icons/s2-icon-chevrondown-20-n.svg#icon"></use></svg>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><use href="/img/icons/s2-icon-chevrondown-20-n.svg#icon"></use></svg>
         </div>
         ${this.error ? html`<p class="se-inputfield-error-text">${this.error}</p>` : nothing}
       </div>
