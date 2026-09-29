@@ -84,6 +84,7 @@
   margin: -1px 0 0;
   font-size: 14px;
   cursor: pointer;
+  outline: none;
 }
 
 .se-profile-btn::before {
@@ -95,7 +96,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-.se-profile-btn::after {
+.se-profile-btn:not(.se-profile-btn-signout)::after {
   position: absolute;
   inset: auto 24px 0;
   content: "";
@@ -104,18 +105,21 @@
   transition: all 0.2s ease-in-out;
 }
 
-.se-profile-btn:hover {
+.se-profile-btn:hover,
+.se-profile-btn:focus-visible {
   color: var(--s2-blue-900);
   background: var(--s2-blue-200);
   z-index: 2;
 }
 
-.se-profile-btn:hover::before {
+.se-profile-btn:hover::before,
+.se-profile-btn:focus-visible::before {
   inset: 0 0 auto;
   background: var(--s2-blue-900);
 }
 
-.se-profile-btn:hover::after {
+.se-profile-btn:hover::after,
+.se-profile-btn:focus-visible::after {
   inset: auto 0 0;
   background: var(--s2-blue-900);
 }
@@ -176,5 +180,4 @@
   border: none;
   padding: 24px;
   transition: all 0.2s ease-in-out;
-  margin: -1px 0;
 }
