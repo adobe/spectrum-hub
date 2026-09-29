@@ -469,6 +469,14 @@ describe('status-table block', () => {
       expect(input.hasAttribute('hide-label')).to.be.true;
     });
 
+    it('associates the search input with filtering instructions', () => {
+      const input = el.querySelector('.status-table-search');
+      const instruction = el.querySelector('.status-table-search-instructions');
+
+      expect(instruction.textContent).to.equal('Type to filter components.');
+      expect(input.descriptionElement).to.equal(instruction);
+    });
+
     it('filters rows to those whose component name matches the query', () => {
       const input = el.querySelector('.status-table-search');
       input.value = 'color';
@@ -497,15 +505,46 @@ describe('status-table block', () => {
       expect(hidden).to.have.length(0);
     });
 
-    it('announces the matching component count in the live region', () => {
+    it('announces the filtered component count after typing pauses', () => {
+      const clock = sandbox.useFakeTimers();
       const input = el.querySelector('.status-table-search');
       const region = el.querySelector('[role="status"]');
       input.value = 'color';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('3 components');
+      expect(region.textContent).to.equal('');
+      clock.tick(299);
+      expect(region.textContent).to.equal('');
+      clock.tick(1);
+      expect(region.textContent).to.equal('Table filtered to 3 components.');
+    });
+
+    it('restarts the announcement delay when typing continues', () => {
+      const clock = sandbox.useFakeTimers();
+      const input = el.querySelector('.status-table-search');
+      const region = el.querySelector('[role="status"]');
+      input.value = 'button';
+      input.dispatchEvent(new Event('input'));
+      clock.tick(200);
+      input.value = 'color';
+      input.dispatchEvent(new Event('input'));
+      clock.tick(299);
+      expect(region.textContent).to.equal('');
+      clock.tick(1);
+      expect(region.textContent).to.equal('Table filtered to 3 components.');
+    });
+
+    it('announces when clearing the search resets the table', () => {
+      const clock = sandbox.useFakeTimers();
+      const input = el.querySelector('.status-table-search');
+      const region = el.querySelector('[role="status"]');
+      input.value = 'color';
+      input.dispatchEvent(new Event('input'));
+      clock.tick(300);
       input.value = '';
       input.dispatchEvent(new Event('input'));
-      expect(region.textContent).to.equal('8 components');
+      expect(region.textContent).to.equal('');
+      clock.tick(300);
+      expect(region.textContent).to.equal('Table reset. 8 components.');
     });
   });
 

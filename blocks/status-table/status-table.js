@@ -9,6 +9,7 @@ import { toSlug } from '../../scripts/utils/component-path.js';
 const config = getConfig();
 
 const CSV_FILENAME = 'component-status.csv';
+const SEARCH_ANNOUNCEMENT_DELAY = 300;
 
 // The block binds to the build-time combined index (deps/build-status-index.js). Authors
 // may point it at a different index by dropping a JSON link in the block; otherwise it
@@ -317,6 +318,12 @@ const buildSearch = (table, announce) => {
   input.setAttribute('hide-label', '');
   input.setAttribute('placeholder', 'Search components…');
 
+  const instructions = document.createElement('p');
+  instructions.className = 'status-table-search-instructions visually-hidden';
+  instructions.textContent = 'Type to filter components.';
+  input.descriptionElement = instructions;
+
+  let announcementTimeout;
   const filter = (query) => {
     let visible = 0;
     for (const row of table.querySelectorAll('tbody tr')) {
@@ -324,8 +331,11 @@ const buildSearch = (table, announce) => {
       row.hidden = query !== '' && !name.includes(query);
       if (!row.hidden) { visible += 1; }
     }
-    // report the result count so screen-reader users hear the filtered total without moving focus.
-    announce(`${visible} component${visible === 1 ? '' : 's'}`);
+    const count = `${visible} component${visible === 1 ? '' : 's'}`;
+    const message = query ? `Table filtered to ${count}.` : `Table reset. ${count}.`;
+    clearTimeout(announcementTimeout);
+    announce('');
+    announcementTimeout = setTimeout(() => announce(message), SEARCH_ANNOUNCEMENT_DELAY);
   };
 
   const open = async () => {
@@ -348,7 +358,7 @@ const buildSearch = (table, announce) => {
   // for to collapse the header search back down to its icon button.
   input.addEventListener('clear', close);
 
-  wrap.append(toggle, input);
+  wrap.append(toggle, input, instructions);
   return wrap;
 };
 
