@@ -32,11 +32,9 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
       - option "Small" [selected]
       - option "Medium"
       - option "Large"
-    - img
     - text: Disabled picker
     - combobox "Disabled picker" [disabled]:
       - option "Small" [selected]
-    - img
   `);
 });
 

@@ -77,6 +77,12 @@ svg.icon {
         justify-content: center;
         align-items: center;
         cursor: pointer;
+
+        &:focus-visible {
+          outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+          outline-offset: calc(-1 * var(--s2-spacing-50));
+          border-radius: 100%;
+        }
       }
 
       .icon-search {
@@ -182,16 +188,47 @@ svg.icon {
     height: 3px;
   }
 
+  /* Webkit and Firefox */
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 4px;
+    background: var(--s2-gray-300);
+  }
+
+  input[type="range"]:focus-visible::-webkit-slider-runnable-track {
+    background: var(--s2-blue-900);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 4px;
+    background: var(--s2-gray-300);
+  }
+
+  input[type="range"]:focus-visible::-moz-range-track {
+    background: var(--s2-blue-900);
+  }
+
   input[type="range"]::-webkit-slider-thumb {
     position: relative;
     appearance: none;
     border: 2px solid var(--s2-gray-800);
-    margin-top: 2px;
+    margin-top: -8px;
     background: #fff;
     width: 20px;
     height: 20px;
     border-radius: 10px;
     z-index: 1;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    appearance: none;
+    box-sizing: border-box;
+    border: 2px solid var(--s2-gray-800);
+    background: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
   }
 
   input[type="search"] {

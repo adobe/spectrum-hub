@@ -43,6 +43,7 @@ export function decorateGoToImpl(a, span) {
     return;
   }
   a.href = target.href;
+  a.setAttribute('aria-label', `Go to ${target.label}. Opens ${upstreamName ?? slug} in a new tab.`);
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   span.textContent = `Go to ${target.label}`;

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from '../axe-test.js';
 import { gotoBlock, formatViolations } from '../block-a11y.js';
-import { statusIndex, svgIcon } from '../mocks.js';
+import { statusIndex, statusQueryIndex, svgIcon } from '../mocks.js';
 
 const block = {
   name: 'status-table',
@@ -12,6 +12,11 @@ const block = {
       url: '**/deps/status-index.json',
       contentType: 'application/json',
       body: statusIndex,
+    },
+    {
+      url: '**/query-index.json',
+      contentType: 'application/json',
+      body: statusQueryIndex,
     },
     {
       url: '**/*.svg',
@@ -47,6 +52,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
         - listitem: Experimental Available for exploration and testing, but not recommended for production use.
         - listitem: Not available Not currently available or applicable for this implementation or design library.
       - button "Search components"
+      - paragraph: Type to filter components.
       - button "Download CSV"
       - table "Component availability":
         - rowgroup:
@@ -64,11 +70,14 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
             - cell "Button, Available in Spectrum Web Components":
               - link "Button, Available in Spectrum Web Components":
                 - /url: /web/swc/components/button
-                - text: ""
-          - row "Calendar Not available Experimental":
+                - text: Available
+          - row "Calendar Not available Calendar, Experimental in Spectrum Web Components":
             - rowheader "Calendar"
             - cell "Not available"
-            - cell "Experimental"
+            - cell "Calendar, Experimental in Spectrum Web Components":
+              - link "Calendar, Experimental in Spectrum Web Components":
+                - /url: /web/swc/components/calendar
+                - text: Experimental
       - status: Sorted by Component, ascending
   `);
 });
@@ -88,6 +97,7 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
         - listitem: Experimental Available for exploration and testing, but not recommended for production use.
         - listitem: Not available Not currently available or applicable for this implementation or design library.
       - button "Search components"
+      - paragraph: Type to filter components.
       - button "Download CSV"
       - table "Component availability":
         - rowgroup:
@@ -102,12 +112,36 @@ test(`${block.name} block matches its expected accessibility tree on mobile`, as
             - cell "Button, Available in Spectrum Web Components":
               - link "Button, Available in Spectrum Web Components":
                 - /url: /web/swc/components/button
-                - text: ""
-          - row "Calendar Not available Experimental":
+                - text: Available
+          - row "Calendar Not available Calendar, Experimental in Spectrum Web Components":
             - rowheader "Calendar"
             - cell "Not available"
-            - cell "Experimental"
+            - cell "Calendar, Experimental in Spectrum Web Components":
+              - link "Calendar, Experimental in Spectrum Web Components":
+                - /url: /web/swc/components/calendar
+                - text: Experimental
       - status: Sorted by Component, ascending
+  `);
+});
+
+test(`${block.name} search exposes instructions and filtered-table feedback`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'the search accessibility tree is viewport-agnostic; one project run is enough');
+
+  await gotoBlock(page, block);
+
+  await page.getByRole('button', { name: 'Search components' }).click();
+  const search = page.getByRole('searchbox', { name: 'Search components' });
+  await expect(search).toMatchAriaSnapshot(`
+    - searchbox "Search components":
+      - /placeholder: Search components…
+      - /description: Type to filter components.
+  `);
+
+  await search.fill('calendar');
+  const status = page.getByRole('status');
+  await expect(status).toHaveText('Table filtered to 1 component.');
+  await expect(status).toMatchAriaSnapshot(`
+    - status: Table filtered to 1 component.
   `);
 });
 
