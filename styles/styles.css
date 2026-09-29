@@ -395,9 +395,6 @@
 }
 
 /* --- View transitions --- */
-
-/* Opt in to native cross-document view transitions for same-origin
-navigation. No-op in browsers without support (progressive enhancement). */
 @view-transition {
   navigation: auto;
 }
@@ -565,7 +562,7 @@ div[data-status],
     &:has(meta[name="template"][content="status-table"]) {
       --pagenav-track-width: 0;
     }
-    
+
     @media (width >= 900px) {
       &:has(meta[name="template"][content="status-table"]) {
         --pagenav-track-width: var(--pagenav-inline-end-margin);
