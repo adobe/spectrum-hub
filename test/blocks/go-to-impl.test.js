@@ -78,16 +78,18 @@ describe('go-to-impl block', () => {
       expect(a.getAttribute('href')).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
       );
+      expect(a.getAttribute('aria-label')).to.equal('Go to SWC. Opens action-button in a new tab.');
       expect(a.target).to.equal('_blank');
       expect(a.rel).to.equal('noopener noreferrer');
     });
 
-    it('sets the RSP label and a PascalCase deep-link', () => {
-      window.history.pushState({}, '', '/web/rsp/components/action-button');
+    it('uses the RSP upstream name in the deep-link and accessible label', () => {
+      window.history.pushState({}, '', '/web/rsp/components/action-group');
       const a = makeAnchor();
       decorateGoToImpl(a, a.querySelector('span'));
       expect(a.querySelector('span').textContent).to.equal('Go to RSP');
-      expect(a.getAttribute('href')).to.equal('https://react-spectrum.adobe.com/ActionButton.html');
+      expect(a.getAttribute('href')).to.equal('https://react-spectrum.adobe.com/ActionButtonGroup.html');
+      expect(a.getAttribute('aria-label')).to.equal('Go to RSP. Opens ActionButtonGroup in a new tab.');
     });
 
     it('deep-links to the primary component when the current impl carries an alias', () => {
@@ -98,6 +100,7 @@ describe('go-to-impl block', () => {
       expect(a.getAttribute('href')).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/components-color-handle--docs',
       );
+      expect(a.getAttribute('aria-label')).to.equal('Go to SWC. Opens ColorHandle in a new tab.');
     });
 
     it('ignores another impl\'s alias — only the current impl\'s entry applies', () => {
