@@ -919,6 +919,37 @@ describe('playground block — init()', () => {
     expect(pre.textContent.includes(' disabled')).to.be.true;
   });
 
+  it('renders a polite live region for preview updates', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const status = el.querySelector('.playground-preview-status');
+
+    expect(status.getAttribute('role')).to.equal('status');
+    expect(status.getAttribute('aria-live')).to.equal('polite');
+    expect(status.getAttribute('aria-atomic')).to.equal('true');
+    expect(status.classList.contains('visually-hidden')).to.be.true;
+  });
+
+  it('announces the latest preview update after control changes pause', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const picker = el.querySelector('.playground-control se-select');
+    await picker.updateComplete;
+    const native = picker.shadowRoot.querySelector('select');
+    const status = el.querySelector('.playground-preview-status');
+    const clock = sandbox.useFakeTimers();
+
+    native.value = 'yes';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    clock.tick(100);
+    native.value = 'no';
+    native.dispatchEvent(new Event('change', { bubbles: true }));
+    clock.tick(599);
+    expect(status.textContent).to.equal('');
+    clock.tick(1);
+    expect(status.textContent).to.equal('Component preview updated: isDisabled is now no.');
+  });
+
   // The iframe's own document does an async fetch (per-component markup) before
   // it registers its prop-update listener, so the outer iframe's `load` event
   // fires well before that listener exists. Sending on `load` alone silently
