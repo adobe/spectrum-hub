@@ -98,6 +98,14 @@ export const statusIndex = JSON.stringify({
   ],
 });
 
+// Published component pages used by status-table to decide which status cells link.
+export const statusQueryIndex = JSON.stringify({
+  data: [
+    { path: '/web/swc/components/button', title: 'Button' },
+    { path: '/web/swc/components/calendar', title: 'Calendar' },
+  ],
+});
+
 // A generic icon body for any *.svg fetch (status-table's export-button icon has no
 // static file checked in — it's generated at build/deploy time).
 export const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" id="icon" viewBox="0 0 20 20"><path d="M2 2h16v16H2z"/></svg>';
