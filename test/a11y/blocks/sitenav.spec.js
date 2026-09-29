@@ -3,6 +3,7 @@ import { test, expect } from '../axe-test.js';
 import { gotoBlock, formatViolations } from '../block-a11y.js';
 import {
   navAreasFragment, sitenavIndex, navAreasFragmentWithLevel3, sitenavIndexWithLevel3,
+  svgIcon,
 } from '../mocks.js';
 
 const block = {
@@ -23,6 +24,11 @@ const block = {
       url: '**/query-index.json*',
       contentType: 'application/json',
       body: sitenavIndex,
+    },
+    {
+      url: '**/*.svg',
+      contentType: 'image/svg+xml',
+      body: svgIcon,
     },
   ],
 };
@@ -51,6 +57,11 @@ const levelThreeBlock = {
       url: '**/query-index.json*',
       contentType: 'application/json',
       body: sitenavIndexWithLevel3,
+    },
+    {
+      url: '**/*.svg',
+      contentType: 'image/svg+xml',
+      body: svgIcon,
     },
   ],
 };
