@@ -31,6 +31,10 @@ export async function decorateSeeInFigma(a, span) {
     return;
   }
   a.href = href;
+  a.setAttribute(
+    'aria-label',
+    `See in Figma. Opens ${componentData.web?.figma?.figmaPageSource ?? componentSlug} in a new tab.`,
+  );
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
   span.textContent = 'See in Figma';
