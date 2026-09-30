@@ -48,23 +48,32 @@ const env = process.env;
 // (ANON_CACHE_MAX_AGE, seconds; default 300). Set it to 0 to disable anonymous
 // edge caching entirely (no-store) so publishes show immediately - suitable for a
 // low-traffic preview; anything non-numeric/negative falls back to the default.
-const ANON_CACHE_MAX_AGE = (() => {
-  const n = Number(env.ANON_CACHE_MAX_AGE);
-  return Number.isInteger(n) && n >= 0 ? n : 300;
-})();
+const parseMaxAge = (value, fallback) => {
+  const n = Number(value);
+  return value !== undefined && value !== '' && Number.isInteger(n) && n >= 0 ? n : fallback;
+};
+const ANON_CACHE_MAX_AGE = parseMaxAge(env.ANON_CACHE_MAX_AGE, 300);
 
-// Cache-Control for a post-filter content response: a short shared TTL for
-// anonymous (the body is the public, audience-stripped view, and CloudFront's
-// cache key includes spectrum_session so it can never reach an authenticated
-// viewer), or no-store when ANON_CACHE_MAX_AGE is 0 (live, instant publishes);
-// no-store for authenticated/private. The AEM ETag is deliberately left in place
-// so CloudFront's post-TTL revalidation is a cheap conditional 304, not a full
+// Shared-cache (CloudFront) TTL for the same anonymous content, sent as
+// s-maxage so it can outlive the browser's max-age. Defaults to
+// ANON_CACHE_MAX_AGE; raise it (e.g. to days) once AEM push invalidation is
+// configured for the distribution, since a publish then purges the edge copy.
+const ANON_EDGE_MAX_AGE = parseMaxAge(env.ANON_EDGE_MAX_AGE, ANON_CACHE_MAX_AGE);
+
+// Cache-Control for a post-filter content response: a shared TTL for anonymous
+// (the body is the public, audience-stripped view, and CloudFront's cache key
+// includes spectrum_session so it can never reach an authenticated viewer), or
+// no-store when both TTLs are 0 (live, instant publishes); no-store for
+// authenticated/private. The AEM ETag is deliberately left in place so
+// CloudFront's post-TTL revalidation is a cheap conditional 304, not a full
 // re-fetch + re-filter. NB: the ETag tracks the AEM page, not this filtering
 // code - a change to the filtering/gating logic won't bust already cached bodies
 // until the page itself changes, so run a manual CloudFront invalidation when
 // deploying such a change (see README "Content caching").
 const setContentCacheControl = (resp, authed) => {
-  const anon = ANON_CACHE_MAX_AGE === 0 ? 'no-store' : `public, max-age=${ANON_CACHE_MAX_AGE}`;
+  const anon = (ANON_CACHE_MAX_AGE === 0 && ANON_EDGE_MAX_AGE === 0)
+    ? 'no-store'
+    : `public, max-age=${ANON_CACHE_MAX_AGE}, s-maxage=${ANON_EDGE_MAX_AGE}`;
   resp.headers.set('cache-control', authed ? 'private, no-store' : anon);
   resp.headers.delete('age');
 };
@@ -116,17 +125,12 @@ const ROUTES = [
     match: isAuthPath,
     handler: handleAuth,
   },
-  // Default AEM handler should be last.
-  //
-  // cache is false: AEM's edge sends a long CDN-Cache-Control TTL (days)
-  // meant to be purged by push-invalidation when content changes. This port
-  // does no caching of its own - CloudFront in front of the Function URL is
-  // where any edge caching belongs - so it always fetches fresh and lets the
-  // CDN policy decide what to store.
+  // Default AEM handler should be last. This port does no caching of its own -
+  // Node's fetch has no HTTP cache - so every call reaches AEM; CloudFront in
+  // front of the Function URL is where edge caching happens.
   {
     match: () => true,
     handler: fetchFromAem,
-    cache: false,
     proxy: true,
   },
 ];
@@ -336,9 +340,16 @@ const route = async (req) => {
   const savedSearch = formatSearchParams(url);
   const request = await formatRequest(req, url);
 
-  const resp = await matched.handler({
-    url, env, request, cache: matched.cache, savedSearch,
-  });
+  // An authenticated browser may still hold the anonymous copy of this URL
+  // (e.g. from before sign-in), so its If-None-Match / If-Modified-Since can
+  // match. A 304 would tell it to keep showing that anonymous body. Always
+  // answer authenticated requests with a full, per-viewer body instead.
+  if (authed) {
+    request.headers.delete('if-none-match');
+    request.headers.delete('if-modified-since');
+  }
+
+  const resp = await matched.handler({ request, savedSearch });
 
   // The query-index JSON is the one 'filter' path: strip audience:private rows
   // (and the audience column) for anonymous visitors and honour ?compact=true
