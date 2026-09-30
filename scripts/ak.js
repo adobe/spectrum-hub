@@ -218,11 +218,12 @@ export const toClassName = (name) => (typeof name === 'string'
     .replace(/^-|-$/g, '')
   : '');
 
-function decoratePictures(el) {
+function decoratePictures(el, isDoc) {
   const pngSelect = '.png?width=2000&format=webply&optimize=medium';
   const pngReplace = '.png?width=2000&format=png';
+  const parent = isDoc ? el.querySelector('main') : el;
 
-  const pics = el.querySelectorAll('picture:has([loading])');
+  const pics = parent.querySelectorAll('picture:has([loading])');
   for (const pic of pics) {
     const desktopPngSrc = pic.querySelector(`[srcset*="${pngSelect}"]`);
     if (desktopPngSrc) {
@@ -515,7 +516,7 @@ export async function loadArea({ area } = { area: document }) {
   // origin).
   await decorateAudience(area);
   removeEmptySections(area, isDoc);
-  decoratePictures(area);
+  decoratePictures(area, isDoc);
   const sections = decorateSections(area, isDoc);
   if (isDoc && isSession) { loadSession(); }
   for (const [idx, section] of sections.entries()) {

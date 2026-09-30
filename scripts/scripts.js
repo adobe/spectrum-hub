@@ -91,7 +91,7 @@ const decorateArea = ({ area = document }) => {
 
   // If doc, do not allow decorating background
   const select = area === document
-    ? 'main img:not([src*=".svg"])'
+    ? 'main > div:first-child img:not([src*=".svg"])'
     : 'img:not([src*=".svg"])';
   eagerLoad(area, select);
 };
