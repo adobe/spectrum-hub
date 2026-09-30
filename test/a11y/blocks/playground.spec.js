@@ -59,8 +59,9 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 
   await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
     - iframe
-    - switch "isDisabled"
-    - text: isDisabled
+    - group "Component controls":
+      - switch "isDisabled"
+      - text: isDisabled
     - button "Copy code"
     - status
     - text: <swc-button size="m"> Get started </swc-button>
