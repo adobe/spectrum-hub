@@ -2,6 +2,7 @@ import {
   describe, it, expect, vi, beforeAll, beforeEach, afterEach,
 } from 'vitest';
 import { signToken } from './lib/session.js';
+import { GATE_ETAG_SUFFIX } from './lib/etag.js';
 
 const SECRET = 'test-secret';
 let handler;
@@ -64,10 +65,19 @@ describe('conditional request headers', () => {
     expect(sent.headers.get('if-modified-since')).toBeNull();
   });
 
-  it('forwards them for anonymous requests (cheap edge revalidation)', async () => {
+  it('drops an ungated tag and If-Modified-Since for anonymous requests', async () => {
     await handler(event('/', { headers: conditional }));
     const sent = upstream.mock.calls[0][0];
+    expect(sent.headers.get('if-none-match')).toBeNull();
+    expect(sent.headers.get('if-modified-since')).toBeNull();
+  });
+
+  it('forwards a gated tag, unsuffixed, for anonymous requests (cheap edge revalidation)', async () => {
+    await handler(event('/', {
+      headers: { ...conditional, 'if-none-match': `W/"abc${GATE_ETAG_SUFFIX}"` },
+    }));
+    const sent = upstream.mock.calls[0][0];
     expect(sent.headers.get('if-none-match')).toBe('W/"abc"');
-    expect(sent.headers.get('if-modified-since')).toBe(conditional['if-modified-since']);
+    expect(sent.headers.get('if-modified-since')).toBeNull();
   });
 });

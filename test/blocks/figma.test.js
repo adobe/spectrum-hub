@@ -57,6 +57,9 @@ describe('figma block', () => {
       );
       expect(a.target).to.equal('_blank');
       expect(a.rel).to.equal('noopener noreferrer');
+      expect(a.getAttribute('aria-label')).to.equal(
+        'See in Figma. Opens action-button in a new tab.',
+      );
       expect(a.querySelector('span').textContent).to.equal('See in Figma');
     });
 
@@ -72,6 +75,9 @@ describe('figma block', () => {
       await decorateSeeInFigma(a, a.querySelector('span'));
       expect(a.getAttribute('href')).to.equal(
         'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=10196-3411&m=dev',
+      );
+      expect(a.getAttribute('aria-label')).to.equal(
+        'See in Figma. Opens Date and time field in a new tab.',
       );
     });
 

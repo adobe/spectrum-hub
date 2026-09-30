@@ -688,6 +688,8 @@ function buildCodeDisclosure(pre) {
 
 // How long a control's changes must pause before the code disclosure rebuilds.
 const DISCLOSURE_DEBOUNCE_MS = 200;
+// VoiceOver's word echo can supersede a polite announcement that fires too soon after typing.
+const PREVIEW_ANNOUNCEMENT_DEBOUNCE_MS = 1500;
 
 export default async function init(el) {
   const config = getConfig();
@@ -774,6 +776,12 @@ export default async function init(el) {
   const pre = document.createElement('pre');
   updateDisclosure(pre, buildSnippet, previewName, currentProps);
 
+  const previewStatus = document.createElement('div');
+  previewStatus.className = 'playground-preview-status visually-hidden';
+  previewStatus.setAttribute('role', 'status');
+  previewStatus.setAttribute('aria-live', 'polite');
+  previewStatus.setAttribute('aria-atomic', 'true');
+
   // The live preview (postPropUpdate) stays synchronous for instant visual
   // feedback; only the code-snippet rebuild — a full re-clone + re-serialize
   // of the fragment on every call — is debounced, so a burst of keystrokes in
@@ -782,13 +790,22 @@ export default async function init(el) {
     () => updateDisclosure(pre, buildSnippet, previewName, currentProps),
     DISCLOSURE_DEBOUNCE_MS,
   );
+  const debouncedAnnouncePreviewUpdate = debounce(
+    (property, value) => {
+      const displayValue = value === '' ? 'empty' : optionLabel(value);
+      previewStatus.textContent = `Component preview updated: ${property} is now ${displayValue}.`;
+    },
+    PREVIEW_ANNOUNCEMENT_DEBOUNCE_MS,
+  );
 
   const controlsPanel = buildControlsPanel(
     descriptors,
     currentProps,
     (property, attribute, value, controlType) => {
       postPropUpdate(property, attribute, value, controlType);
+      previewStatus.textContent = '';
       debouncedUpdateDisclosure();
+      debouncedAnnouncePreviewUpdate(property, value);
     },
   );
 
@@ -803,5 +820,5 @@ export default async function init(el) {
   // With no controls the preview is the only flex child and fills the row.
   layout.append(...[previewArea, controlsPanel].filter(Boolean));
 
-  el.replaceChildren(layout, disclosure);
+  el.replaceChildren(layout, disclosure, previewStatus);
 }

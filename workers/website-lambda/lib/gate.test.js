@@ -33,6 +33,10 @@ describe('classifyPublicPath', () => {
     expect(classifyPublicPath('/query-index.json')).toBe('filter');
   });
 
+  it('classifies /sitemap.xml as filter (private URLs stripped for anon)', () => {
+    expect(classifyPublicPath('/sitemap.xml')).toBe('filter');
+  });
+
   it('gates the site root and /404.html when they are not in the allow-exact list', () => {
     // PUBLIC_ALLOW_EXACT is currently empty (site-wide public-path review in
     // progress), so these page-like paths fall through to the 'gate' verdict.
@@ -49,7 +53,7 @@ describe('classifyPublicPath', () => {
 
   it('defaults non-page, non-listed resources to allow (json/xml/other)', () => {
     expect(classifyPublicPath('/data/other.json')).toBe('allow');
-    expect(classifyPublicPath('/sitemap.xml')).toBe('allow');
+    expect(classifyPublicPath('/other/feed.xml')).toBe('allow');
     expect(classifyPublicPath('/not/scripts/app.js')).toBe('allow');
   });
 });

@@ -3,7 +3,7 @@
 AWS Lambda (Function URL) port of the `../website` Cloudflare Worker. It sits
 behind CloudFront, proxies the AEM/Edge Delivery origin, and enforces per-viewer
 access rules: gating private pages, stripping `audience-*` content blocks, and
-filtering `query-index.json`. See [`index.js`](./index.js) for the pipeline and
+filtering `query-index.json` and `sitemap.xml`. See [`index.js`](./index.js) for the pipeline and
 [`lib/gate.js`](./lib/gate.js) for the access policy.
 
 ## Runtime environment
@@ -30,9 +30,9 @@ Set these on the Lambda (they are read from `process.env`):
 - `AEM_HOST_SUFFIX` — the AEM tier to proxy: `aem.live` (published, the default) or `aem.page`
   (preview). The stage Lambda (`spectrum-stage-lambda-proxy`) sets this to `aem.page`; prod leaves it
   unset.
-- `ANON_CACHE_MAX_AGE` — browser TTL (`max-age`, seconds, default 300) for anonymous HTML and
-  `/query-index.json`. When both this and `ANON_EDGE_MAX_AGE` are `0`, anonymous responses are
-  `no-store` — used on stage, which caches nothing.
+- `ANON_CACHE_MAX_AGE` — browser TTL (`max-age`, seconds, default 300) for anonymous HTML,
+  `/query-index.json`, and `/sitemap.xml`. When both this and `ANON_EDGE_MAX_AGE` are `0`,
+  anonymous responses are `no-store` — used on stage, which caches nothing.
 - `ANON_EDGE_MAX_AGE` — CloudFront TTL (`s-maxage`, seconds) for the same responses. Defaults to
   `ANON_CACHE_MAX_AGE`. Prod sets it to `86400`, since a publish purges the
   CloudFront copy through push invalidation (see "Content caching").
@@ -81,6 +81,11 @@ else goes straight from CloudFront to AEM.
 | `*/media_*`, `/media_*` | AEM | `spectrum-media` | `CachingDisabled` + `spectrum-media-query` |
 | `*.js`, `*.mjs`, `*.css`, `*.svg`, `*.ico`, `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp`, `*.avif`, `*.woff`, `*.woff2`, `*.ttf`, `*.otf`, `*.xml`, `*.txt` | AEM | `spectrum-assets` | `CachingDisabled` |
 | Default (HTML, JSON, anything else) | Lambda | `spectrum-content` | `CachingDisabled` |
+
+`*.xml` also matches `/sitemap.xml`, which must reach the Lambda to be filtered.
+Add an exact `/sitemap.xml` behavior ahead of `*.xml` with
+[`add-sitemap-behavior.sh`](./add-sitemap-behavior.sh) (see "Keep `/sitemap.xml`
+on the Lambda").
 
 [`set-content-caching.sh`](./set-content-caching.sh) manages all of this. It's
 idempotent, so rerun it after changing the extension list or a policy:
@@ -185,11 +190,35 @@ header. Pass the token to `add-media-behavior.sh` to add it:
 (CloudFront origin custom headers can't reference Secrets Manager, so this value
 lives in the distribution config).
 
+### Keep `/sitemap.xml` on the Lambda
+
+A distribution that also sends whole file types straight to AEM (extension
+behaviors such as `*.xml`, `*.txt`, or `*.js` targeting `aem-media-origin`)
+catches `/sitemap.xml` with `*.xml`. The sitemap then skips the Lambda: private
+pages stay listed and preview URLs keep their `main--…aem.page` host.
+[`add-sitemap-behavior.sh`](./add-sitemap-behavior.sh) fixes this by adding an
+exact `/sitemap.xml` behavior, cloned from the default (Lambda) behavior, ahead
+of every other pattern. CloudFront uses the first matching behavior, so other
+`.xml` files still go straight to AEM. The script is idempotent and supports
+`DRY_RUN=1` and `REVERT=1`:
+
+```bash
+DRY_RUN=1 DIST_ID=<dist-id> ./add-sitemap-behavior.sh   # preview the behavior order
+DIST_ID=<dist-id> ./add-sitemap-behavior.sh
+```
+
+Once the distribution is deployed, invalidate `/sitemap.xml`.
+[`set-content-caching.sh`](./set-content-caching.sh) adds a `*.xml` behavior, so
+run this script after it. The behavior copies the default behavior's cache
+policy at the time it runs, so rerun it whenever `set-content-caching.sh`
+changes that policy (for example, switching between `NO_CACHE=1` and cached).
+A distribution with no extension behaviors doesn't need this.
+
 ## Content caching (the default/Lambda behavior)
 
-HTML and JSON can differ by viewer: private pages, `audience-*` blocks, and the
-private rows of `/query-index.json`. The `spectrum-content` policy keeps them
-apart:
+HTML and JSON can differ by viewer: private pages, `audience-*` blocks, the
+private rows of `/query-index.json`, and the private entries of `/sitemap.xml`.
+The `spectrum-content` policy keeps them apart:
 
 - **Cache key:** the `spectrum_session` cookie, plus the query params the Lambda
   uses (`compact`, `limit`, `offset`, `sheet`). Anonymous viewers (no cookie)
@@ -198,13 +227,24 @@ apart:
 - **TTL:** the policy follows the Lambda's `Cache-Control` (`DefaultTTL 0`), so a
   response caches only when the Lambda allows it.
 
+`/sitemap.xml` URLs in `<loc>` and alternate links are rewritten from AEM
+origins to the environment's public origin for all viewers. For anonymous
+viewers, `<url>` entries are also removed when the query index marks the path
+`audience: private` or the gate denies it (`PRIVATE_DENY_*`). The sitemap
+carries no audience data, so the Lambda reads the full query index from AEM for
+each anonymous sitemap request. A private page that isn't in the query index
+can't be detected and stays listed (the page itself still 404s). Fails closed:
+if the index can't be read, or the sitemap isn't a `<urlset>`, anonymous callers
+get a `404`. A sitemap index (`<sitemapindex>`) is not supported; its child
+sitemaps would need their own entries in `PUBLIC_FILTER_PATHS`.
+
 What the Lambda sends:
 
 | Response | `Cache-Control` | Cached by CloudFront |
 | --- | --- | --- |
-| Anonymous HTML and `/query-index.json` | `public, max-age=<ANON_CACHE_MAX_AGE>, s-maxage=<ANON_EDGE_MAX_AGE>` | Yes, one shared copy |
-| Authenticated HTML and JSON | `private, no-store` | No |
-| Gate 404s and failed query-index filtering | `no-store` | No |
+| Anonymous HTML, `/query-index.json`, and `/sitemap.xml` | `public, max-age=<ANON_CACHE_MAX_AGE>, s-maxage=<ANON_EDGE_MAX_AGE>` | Yes, one shared copy |
+| Authenticated HTML, JSON, and `/sitemap.xml` | `private, no-store` | No |
+| Gate 404s and failed query-index or sitemap filtering | `no-store` | No |
 | Redirects that carry the viewer's query string | `no-store` | No |
 
 For authenticated requests the Lambda removes `If-None-Match` and
@@ -212,14 +252,34 @@ For authenticated requests the Lambda removes `If-None-Match` and
 copy of a page from before sign-in; without this, AEM could answer `304` and the
 browser would keep showing that copy.
 
-Anonymous responses keep AEM's `ETag`, so revalidation after the TTL is a cheap
-`304` instead of a full fetch and filter.
+Assets keep AEM's **ETag**, so CloudFront's post-TTL revalidation is a cheap
+conditional `304`. Anonymous pages and the anonymous `/query-index.json` get a
+**gated ETag** instead ([lib/etag.js](./lib/etag.js)): AEM's tag with a
+`--gate-v<N>` suffix, and no `Last-Modified`. On revalidation the Lambda forwards
+only tags carrying the current suffix (suffix stripped) and never
+`If-Modified-Since`, so a `304` only ever confirms a copy this gate version
+produced. Any other conditional — a copy cached before the gate existed, under an
+older gate version, or an existence probe for a private page — is dropped, AEM
+returns a full `200`, and the gate runs again. An anonymous `304` that arrives
+without a gated tag being forwarded is turned into a `404` (fail closed).
+`Range`/`If-Range` are stripped for pages and the filtered paths, and an
+anonymous page answered with any other 2xx (e.g. a `206` slice) is a `404`: only
+a whole `200` body can be gated.
+Revalidation stays cheap for current copies. The filtered anonymous sitemap drops
+its `ETag` and `Last-Modified` entirely and always fetches a full `200`, because
+its validators track the sitemap alone, not the query index that decides which
+entries are removed.
 
-> ⚠️ **Invalidate after changing filtering or gating code.** The `ETag` tracks the
-> AEM page, not the Lambda code. If you change `filterAudienceBlocks`,
-> `isPrivateHtml`, or the gate without the page changing, cached anonymous
-> copies keep revalidating as unchanged. For a security-relevant change, run
-> `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"`.
+> ⚠️ **Bump `GATE_ETAG_VERSION` on filtering-logic deploys.** AEM's ETag tracks
+> the page, not this Lambda's filtering/gating code. When you change
+> `filterAudienceBlocks` / `isPrivateHtml` / the gate / the query-index filter,
+> increment `GATE_ETAG_VERSION` in [lib/etag.js](./lib/etag.js). Every cached
+> anonymous copy then fails revalidation and is re-fetched and re-filtered, with
+> no CloudFront invalidation needed. Clients and edges that still hold a fresh
+> copy keep it until its TTL expires (`s-maxage` at the edge — a day on prod);
+> for a security-relevant fix, also run
+> `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` (this
+> uses your role's permission, so it works in the klam-federated account).
 
 > ⚠️ **Test for leaks before changing prod.** With a real `spectrum_session`
 > cookie, confirm that anonymous pages and `/query-index.json` return

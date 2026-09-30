@@ -20,6 +20,14 @@ const TEXT_ONLY = `
   </div>
 `;
 
+const WITH_ICON = `
+  <div>
+    <div>
+      <p><span class="icon icon-info"><svg></svg></span>New release available.</p>
+    </div>
+  </div>
+`;
+
 describe('banner block', () => {
   afterEach(() => {
     document.body.innerHTML = '';
@@ -52,5 +60,11 @@ describe('banner block', () => {
     const el = makeEl(WITH_BUTTON);
     await init(el);
     expect(document.head.querySelector('link[href$="/deps/se/buttons.css"]')).to.not.be.null;
+  });
+
+  it('hides decorative icons from assistive technology', async () => {
+    const el = makeEl(WITH_ICON);
+    await init(el);
+    expect(el.querySelector('.icon').getAttribute('aria-hidden')).to.equal('true');
   });
 });
