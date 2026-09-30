@@ -37,12 +37,14 @@ import { createSession, deleteSession } from './handlers/auth.js';
 import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
 import { classifyPublicPath, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
 import { filterAudienceBlocks } from './lib/audience.js';
-import { filterPrivateEntries, compactEntries } from './lib/query-index.js';
+import { filterPrivateEntries, compactEntries, collectPrivatePaths } from './lib/query-index.js';
+import { filterSitemap } from './lib/sitemap.js';
 import { resolveSecrets } from './lib/secrets.js';
 
 const env = process.env;
 
-// Anonymous, cacheable content (public HTML and the filtered query index) gets a
+// Anonymous, cacheable content (public HTML and the filtered query index and
+// sitemap) gets a
 // short shared TTL so a publish becomes visible within a few minutes without push
 // invalidation; authenticated/private responses stay no-store. Env-overridable
 // (ANON_CACHE_MAX_AGE, seconds; default 300). Set it to 0 to disable anonymous
@@ -252,6 +254,68 @@ const transformQueryIndex = async (resp, { removePrivate, compact }) => {
   return new Response(JSON.stringify(json), resp);
 };
 
+// Page size (and a page-count cap) for reading the whole query index when
+// building the sitemap's private-path set.
+const INDEX_PAGE_LIMIT = 1000;
+const INDEX_MAX_PAGES = 50;
+
+// The set of paths the query index marks audience:private, read straight from
+// AEM (unfiltered) and paginated until complete. Returns null on any failure -
+// a non-200, a non-JSON body, an unrecognized shape, a truncated multi-sheet
+// index, or a network error - so the caller fails closed.
+const loadPrivatePaths = async (req, url) => {
+  try {
+    const paths = new Set();
+    let offset = 0;
+    for (let page = 0; page < INDEX_MAX_PAGES; page += 1) {
+      const indexUrl = new URL('/query-index.json', url);
+      indexUrl.searchParams.set('limit', String(INDEX_PAGE_LIMIT));
+      indexUrl.searchParams.set('offset', String(offset));
+      indexUrl.searchParams.sort();
+      const indexReq = new Request(indexUrl, { headers: req.headers });
+      // Always read a full body: a 304 would leave nothing to collect.
+      indexReq.headers.delete('if-none-match');
+      indexReq.headers.delete('if-modified-since');
+      const indexAemReq = await formatRequest(indexReq, indexUrl);
+      const resp = await fetchFromAem({ request: indexAemReq, cache: false });
+      if (resp.status !== 200) { return null; }
+      const json = await resp.json();
+      const result = collectPrivatePaths(json);
+      if (!result) { return null; }
+      result.paths.forEach((path) => paths.add(path));
+      if (result.complete) { return paths; }
+      // Only a single-sheet index can be paged here; an empty page would loop.
+      if (!Array.isArray(json.data) || json.data.length === 0) { return null; }
+      offset += json.data.length;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+// Post-fetch transform for sitemap.xml (anonymous only): drop every <url> whose
+// path the query index marks audience:private or the gate denies outright, so
+// an anonymous crawler never learns a private page's URL. Fails closed: a
+// non-200, an unreadable private-path set, or a body that is not a <urlset> is
+// a 404. The ETag / Last-Modified are dropped because they track the sitemap
+// alone, not the query index the filter also depends on - a conditional 304
+// could otherwise pin a body filtered against a stale private set.
+const transformSitemap = async (resp, privatePathsPromise) => {
+  if (resp.status === 304) { return resp; }
+  if (resp.status !== 200) { return notFound(); }
+  const [xml, privatePaths] = await Promise.all([resp.text(), privatePathsPromise]);
+  if (!privatePaths) { return notFound(); }
+  const isPrivatePath = (pathname) => privatePaths.has(pathname)
+    || classifyPublicPath(pathname) === 'deny';
+  const filtered = filterSitemap(xml, isPrivatePath);
+  if (filtered === null) { return notFound(); }
+  const out = new Response(filtered, resp);
+  out.headers.delete('etag');
+  out.headers.delete('last-modified');
+  return out;
+};
+
 const formatRequest = async (request, url) => {
   const aemUrl = new URL(url.href);
 
@@ -336,19 +400,28 @@ const route = async (req) => {
   const savedSearch = formatSearchParams(url);
   const request = await formatRequest(req, url);
 
+  // An anonymous sitemap needs the query index's private paths too; start that
+  // read now so it runs alongside the sitemap fetch.
+  const sitemapFilter = !authed && url.pathname === '/sitemap.xml';
+  const privatePathsPromise = sitemapFilter ? loadPrivatePaths(req, url) : null;
+
   const resp = await matched.handler({
     url, env, request, cache: matched.cache, savedSearch,
   });
 
-  // The query-index JSON is the one 'filter' path: strip audience:private rows
+  // The 'filter' paths. The query-index JSON: strip audience:private rows
   // (and the audience column) for anonymous visitors and honour ?compact=true
-  // for either audience. Authed + non-compact is served untouched (the full
-  // index). The anonymous (filtered) response is cacheable with a short shared
-  // TTL; the authenticated full index carries private rows and stays no-store.
+  // for either audience. The sitemap: drop private URLs for anonymous visitors.
+  // Authed callers get the index (unless compact) and the sitemap untouched.
+  // The anonymous (filtered) response is cacheable with a short shared TTL;
+  // the authenticated full view carries private entries and stays no-store.
   if (PUBLIC_FILTER_PATHS.includes(url.pathname)) {
-    const out = (!authed || compact)
-      ? await transformQueryIndex(resp, { removePrivate: !authed, compact })
-      : resp;
+    let out = resp;
+    if (sitemapFilter) {
+      out = await transformSitemap(resp, privatePathsPromise);
+    } else if (url.pathname === '/query-index.json' && (!authed || compact)) {
+      out = await transformQueryIndex(resp, { removePrivate: !authed, compact });
+    }
     if (out.status === 200 || out.status === 304) {
       setContentCacheControl(out, authed);
     } else {

@@ -3,7 +3,7 @@
 AWS Lambda (Function URL) port of the `../website` Cloudflare Worker. It sits
 behind CloudFront, proxies the AEM/Edge Delivery origin, and enforces per-viewer
 access rules: gating private pages, stripping `audience-*` content blocks, and
-filtering `query-index.json`. See [`index.js`](./index.js) for the pipeline and
+filtering `query-index.json` and `sitemap.xml`. See [`index.js`](./index.js) for the pipeline and
 [`lib/gate.js`](./lib/gate.js) for the access policy.
 
 ## Runtime environment
@@ -30,7 +30,8 @@ Set these on the Lambda (they are read from `process.env`):
 - `AEM_HOST_SUFFIX` — the AEM tier to proxy: `aem.live` (published, the default) or `aem.page`
   (preview). The stage Lambda (`spectrum-stage-lambda-proxy`) sets this to `aem.page`; prod leaves it
   unset.
-- `ANON_CACHE_MAX_AGE` — TTL (seconds, default 300) for edge-cached anonymous HTML / query-index.
+- `ANON_CACHE_MAX_AGE` — TTL (seconds, default 300) for edge-cached anonymous HTML / query-index /
+  sitemap.
   Bounds how long a publish takes to show up when edge caching is on (see "Content caching").
   Set to `0` to disable anonymous edge caching (`no-store`), so publishes show immediately — used on
   the low-traffic, VPN-only preview.
@@ -77,6 +78,15 @@ Most responses this Lambda returns depend on **who is asking** (the
 - `audience-public` / `audience-private` blocks → stripped per audience.
 - `/query-index.json` → `audience: private` rows removed for anonymous; the
   `?compact=true` variant projects each row to `path`/`title` only.
+- `/sitemap.xml` → for anonymous, `<url>` entries removed when the query index
+  marks the path `audience: private` or the gate denies it (`PRIVATE_DENY_*`).
+  The sitemap carries no audience data, so the Lambda reads the full query index
+  from AEM for each anonymous sitemap request. A private page that isn't in the
+  query index can't be detected and stays listed (the page itself still 404s).
+  Fails closed: if the index can't be read, or the sitemap isn't a `<urlset>`,
+  anonymous callers get a `404`. A sitemap index (`<sitemapindex>`) is not
+  supported; its child sitemaps would need their own entries in
+  `PUBLIC_FILTER_PATHS`.
 
 So the same URL legitimately returns different bodies. If CloudFront ever caches
 these responses, its **cache key must distinguish them**, or it can serve one
@@ -177,20 +187,22 @@ requests (unique cookie) get their own, and their viewer-varying responses are
   `max-age … must-revalidate` and cache at the edge. An authenticated `/drafts/`
   asset (anon gets a `no-store` 404) caches under the **cookie** key, never
   reaching anon.
-- **Anonymous HTML and `/query-index.json`** ([index.js](./index.js)
-  `processHtmlResponse` / query-index transform via `setContentCacheControl`) get
+- **Anonymous HTML, `/query-index.json`, and `/sitemap.xml`** ([index.js](./index.js)
+  `processHtmlResponse` / query-index and sitemap transforms via `setContentCacheControl`) get
   a **short shared TTL** — `public, max-age=<ANON_CACHE_MAX_AGE>` (default 300s,
   env-overridable) — so a publish shows up within a few minutes **without push
   invalidation**. `isPrivateHtml` has already 404'd private pages, so the anon body
   is the public, audience-stripped view. Setting `ANON_CACHE_MAX_AGE=0` makes this
   `no-store` instead: every anonymous request goes live to the Lambda, so publishes
   are instant, at the cost of edge caching — the choice for the low-traffic preview.
-- **Authenticated HTML / the full query index** stay `private, no-store`, and
+- **Authenticated HTML / the full query index / the full sitemap** stay `private, no-store`, and
   **gate 404s** stay `no-store` (no negative caching).
 
 Assets and anon content keep AEM's **ETag**, so CloudFront's post-TTL revalidation
 is a cheap conditional `304` (skips the fetch/filter/re-encode) rather than a full
-re-fetch.
+re-fetch. The exception is the filtered anonymous sitemap: its `ETag` and
+`Last-Modified` are dropped, because they track the sitemap alone, not the
+query index that decides which entries are removed.
 
 > ⚠️ **ETag caveat — invalidate on filtering-logic deploys.** The ETag tracks the
 > AEM page, not this Lambda's filtering/gating code. If you change

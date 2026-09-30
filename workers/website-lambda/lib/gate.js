@@ -52,12 +52,14 @@ export const PUBLIC_ALLOW_PREFIX = [
   // '/robots.txt',
 ];
 
-// JSON resources served to an anonymous visitor only after a content filter.
-// Classified 'filter' here; index.js proxies them and strips the private rows
-// (see transformQueryIndex / lib/query-index.js) instead of serving them raw.
-// Only /query-index.json needs it today.
+// Data resources served to an anonymous visitor only after a content filter.
+// Classified 'filter' here; index.js proxies them and strips the private
+// entries instead of serving them raw: the query index's private rows (see
+// transformQueryIndex / lib/query-index.js) and the sitemap's private URLs
+// (see transformSitemap / lib/sitemap.js).
 export const PUBLIC_FILTER_PATHS = [
   '/query-index.json',
+  '/sitemap.xml',
 ];
 
 // Media is always public, matched loosely by "/media_" anywhere in the path -

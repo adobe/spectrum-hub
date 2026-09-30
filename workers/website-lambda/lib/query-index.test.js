@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterPrivateEntries, compactEntries } from './query-index.js';
+import { filterPrivateEntries, compactEntries, collectPrivatePaths } from './query-index.js';
 
 const index = (...data) => ({
   total: data.length,
@@ -124,5 +124,40 @@ describe('filterPrivateEntries + compactEntries composed', () => {
       { path: '/b', title: 'b' },
     ]);
     expect(out.columns).toEqual(['path', 'title']);
+  });
+});
+
+describe('collectPrivatePaths', () => {
+  it('returns the paths of audience:private rows', () => {
+    const out = collectPrivatePaths(index(row('/a'), row('/secret', 'private'), row('/x', 'private')));
+    expect([...out.paths]).toEqual(['/secret', '/x']);
+    expect(out.complete).toBe(true);
+  });
+
+  it('ignores malformed rows and rows without a string path', () => {
+    const out = collectPrivatePaths(index(null, 'nope', { audience: 'private' }, row('/s', 'private')));
+    expect([...out.paths]).toEqual(['/s']);
+  });
+
+  it('reports incomplete when total exceeds offset + rows on this page', () => {
+    const page = { ...index(row('/a'), row('/s', 'private')), total: 5, offset: 0 };
+    expect(collectPrivatePaths(page).complete).toBe(false);
+    expect(collectPrivatePaths({ ...page, offset: 3 }).complete).toBe(true);
+  });
+
+  it('collects across every sheet of a multi-sheet payload', () => {
+    const out = collectPrivatePaths({
+      ':names': ['pages', 'posts'],
+      pages: index(row('/a'), row('/s1', 'private')),
+      posts: index(row('/s2', 'private')),
+    });
+    expect([...out.paths].sort()).toEqual(['/s1', '/s2']);
+    expect(out.complete).toBe(true);
+  });
+
+  it('returns null for shapes that are not a recognizable index', () => {
+    expect(collectPrivatePaths(null)).toBe(null);
+    expect(collectPrivatePaths({ foo: 1 })).toBe(null);
+    expect(collectPrivatePaths({ ':names': ['x'], x: { note: 'no data' } })).toBe(null);
   });
 });
