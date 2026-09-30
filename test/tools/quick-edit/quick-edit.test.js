@@ -1,5 +1,7 @@
 import { expect } from '@esm-bundle/chai';
-import { resolveOrigin } from '../../../tools/quick-edit/quick-edit.js';
+
+document.body.innerHTML = '<main></main>';
+const { resolveOrigin } = await import('../../../tools/quick-edit/quick-edit.js');
 
 describe('quick-edit resolveOrigin (input allowlist)', () => {
   it('defaults to da.live when the ref is missing or "on"', () => {
