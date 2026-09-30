@@ -77,6 +77,7 @@ else goes straight from CloudFront to AEM.
 
 | Behavior (in order) | Origin | Cache policy (prod) | Cache policy (stage) |
 | --- | --- | --- | --- |
+| `/.rum/*`, `/.optel/*` (all methods) | AEM | `CachingDisabled` + `spectrum-rum` | `CachingDisabled` + `spectrum-rum` |
 | `*/media_*`, `/media_*` | AEM | `spectrum-media` | `CachingDisabled` + `spectrum-media-query` |
 | `*.js`, `*.mjs`, `*.css`, `*.svg`, `*.ico`, `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp`, `*.avif`, `*.woff`, `*.woff2`, `*.ttf`, `*.otf`, `*.xml`, `*.txt` | AEM | `spectrum-assets` | `CachingDisabled` |
 | Default (HTML, JSON, anything else) | Lambda | `spectrum-content` | `CachingDisabled` |
@@ -104,6 +105,13 @@ so the script adds a `/media_*` copy before the asset behaviors. Without it,
 original. On stage, `CachingDisabled` forwards no query strings, so both media
 behaviors also use the `spectrum-media-query` origin request policy, which
 forwards only the image parameters.
+
+RUM beacons (`/.rum/*`, `/.optel/*`) go straight to AEM too, uncached and with
+POST allowed. Through the Lambda they'd fail with a 403: the function URL
+rejects POSTs without an `x-amz-content-sha256` body hash, and `sendBeacon`
+can't send one. The `spectrum-rum` origin request policy forwards
+`content-type`, `user-agent`, `referer`, `origin` and the query string, but no
+cookies.
 
 Assets skip the Lambda gate. A non-HTML file under `/drafts/` (for example,
 `/drafts/diagram.svg`) is public. HTML and JSON under `/drafts/` still go through

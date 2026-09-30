@@ -19,6 +19,10 @@
 #      behavior would drop the image query params (width, format, ...).
 #      Under NO_CACHE, both media behaviors also get the "spectrum-media-query"
 #      origin request policy, since CachingDisabled forwards no query strings.
+#      RUM (/.rum/*, /.optel/*) also goes straight to AEM, uncached with all
+#      methods allowed: the Lambda's function URL rejects POSTs that lack an
+#      x-amz-content-sha256 body hash, and sendBeacon can't send one. The
+#      "spectrum-rum" origin request policy forwards no cookies.
 #   3. Origin Shield on both origins, so edge locations share one regional cache.
 #   4. Cache tags (x-amz-meta-cache-tag), for AEM push invalidation by tag. After
 #      first enabling them, invalidate "/*" once: objects cached before that carry
@@ -71,6 +75,11 @@ MEDIA_PATH_PATTERN="*/media_*"
 # (/media_<sha>.png); this second media behavior covers them.
 ROOT_MEDIA_PATH_PATTERN="/media_*"
 MEDIA_ORIGIN_REQUEST_POLICY_NAME="${MEDIA_ORIGIN_REQUEST_POLICY_NAME:-spectrum-media-query}"
+# RUM beacons (sendBeacon POSTs) go straight to AEM: the Lambda's function URL
+# rejects POSTs without an x-amz-content-sha256 body hash, which sendBeacon
+# can't send.
+RUM_PATH_PATTERNS="/.rum/* /.optel/*"
+RUM_ORIGIN_REQUEST_POLICY_NAME="${RUM_ORIGIN_REQUEST_POLICY_NAME:-spectrum-rum}"
 # Managed CachingDisabled.
 CACHING_DISABLED_ID="4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 REVERT="${REVERT:-}"
@@ -104,26 +113,12 @@ ensure_cache_policy() {
   printf '%s' "$id"
 }
 
-# Create-or-update the origin request policy that forwards only the image
-# query params to AEM, echoing its id. Media needs it under NO_CACHE, because
-# CachingDisabled forwards no query strings and AEM would return the full-size
-# original.
-ensure_media_origin_request_policy() {
-  local id etag cfgfile="$WORK/media-orp.json"
-  cat > "$cfgfile" <<JSON
-{
-  "Name": "$MEDIA_ORIGIN_REQUEST_POLICY_NAME",
-  "Comment": "Forward AEM image-optimization query params (for uncached media)",
-  "HeadersConfig": { "HeaderBehavior": "none" },
-  "CookiesConfig": { "CookieBehavior": "none" },
-  "QueryStringsConfig": {
-    "QueryStringBehavior": "whitelist",
-    "QueryStrings": { "Quantity": 5, "Items": ["optimize", "width", "format", "height", "quality"] }
-  }
-}
-JSON
+# Create-or-update a custom origin request policy from a JSON config file,
+# echoing its id. Looked up by name, so re-running updates it in place.
+ensure_origin_request_policy() {
+  local name="$1" cfgfile="$2" id etag
   id="$(aws cloudfront list-origin-request-policies --type custom --profile "$PROFILE" --region us-east-1 \
-    --query "OriginRequestPolicyList.Items[?OriginRequestPolicy.OriginRequestPolicyConfig.Name=='$MEDIA_ORIGIN_REQUEST_POLICY_NAME'].OriginRequestPolicy.Id | [0]" \
+    --query "OriginRequestPolicyList.Items[?OriginRequestPolicy.OriginRequestPolicyConfig.Name=='$name'].OriginRequestPolicy.Id | [0]" \
     --output text 2>/dev/null || true)"
   if [ -z "$id" ] || [ "$id" = "None" ]; then
     id="$(aws cloudfront create-origin-request-policy --profile "$PROFILE" --region us-east-1 \
@@ -139,10 +134,44 @@ JSON
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
+# Media under NO_CACHE: CachingDisabled forwards no query strings, so AEM would
+# return the full-size original. Forward only the image params.
+cat > "$WORK/media-orp.json" <<JSON
+{
+  "Name": "$MEDIA_ORIGIN_REQUEST_POLICY_NAME",
+  "Comment": "Forward AEM image-optimization query params (for uncached media)",
+  "HeadersConfig": { "HeaderBehavior": "none" },
+  "CookiesConfig": { "CookieBehavior": "none" },
+  "QueryStringsConfig": {
+    "QueryStringBehavior": "whitelist",
+    "QueryStrings": { "Quantity": 5, "Items": ["optimize", "width", "format", "height", "quality"] }
+  }
+}
+JSON
+# RUM: forward what the collector reads (body type, user agent, referer, query),
+# but never cookies, so spectrum_session doesn't leave our domain.
+cat > "$WORK/rum-orp.json" <<JSON
+{
+  "Name": "$RUM_ORIGIN_REQUEST_POLICY_NAME",
+  "Comment": "RUM beacons to AEM: forward content-type, user-agent, referer, origin and query; no cookies",
+  "HeadersConfig": {
+    "HeaderBehavior": "whitelist",
+    "Headers": { "Quantity": 4, "Items": ["content-type", "user-agent", "referer", "origin"] }
+  },
+  "CookiesConfig": { "CookieBehavior": "none" },
+  "QueryStringsConfig": { "QueryStringBehavior": "all" }
+}
+JSON
+
 CONTENT_POLICY_ID=""
 ASSET_POLICY_ID=""
 MEDIA_POLICY_ID=""
 MEDIA_ORP_ID=""
+RUM_ORP_ID=""
+if [ -z "$REVERT" ]; then
+  RUM_ORP_ID="$(ensure_origin_request_policy "$RUM_ORIGIN_REQUEST_POLICY_NAME" "$WORK/rum-orp.json")"
+  echo "RUM origin request policy: $RUM_ORP_ID"
+fi
 if [ -n "$REVERT" ]; then
   echo "Reverting distribution $DIST_ID: assets back through the Lambda, default on CachingDisabled"
 elif [ -n "$NO_CACHE" ]; then
@@ -150,7 +179,7 @@ elif [ -n "$NO_CACHE" ]; then
   CONTENT_POLICY_ID="$CACHING_DISABLED_ID"
   ASSET_POLICY_ID="$CACHING_DISABLED_ID"
   MEDIA_POLICY_ID="$CACHING_DISABLED_ID"
-  MEDIA_ORP_ID="$(ensure_media_origin_request_policy)"
+  MEDIA_ORP_ID="$(ensure_origin_request_policy "$MEDIA_ORIGIN_REQUEST_POLICY_NAME" "$WORK/media-orp.json")"
   echo "Media origin request policy: $MEDIA_ORP_ID"
 else
   # Content: DefaultTTL 0 => nothing caches unless the Lambda says so, so its
@@ -208,6 +237,7 @@ ETAG="$(python3 -c "import json;print(json.load(open('$WORK/get.json'))['ETag'])
 REVERT="$REVERT" NO_CACHE="$NO_CACHE" CACHING_DISABLED_ID="$CACHING_DISABLED_ID" \
 CONTENT_POLICY_ID="$CONTENT_POLICY_ID" ASSET_POLICY_ID="$ASSET_POLICY_ID" MEDIA_POLICY_ID="$MEDIA_POLICY_ID" \
 MEDIA_ORP_ID="$MEDIA_ORP_ID" ROOT_MEDIA_PATH_PATTERN="$ROOT_MEDIA_PATH_PATTERN" \
+RUM_ORP_ID="$RUM_ORP_ID" RUM_PATH_PATTERNS="$RUM_PATH_PATTERNS" \
 ASSET_EXTENSIONS="$ASSET_EXTENSIONS" LAMBDA_SHIELD_REGION="$LAMBDA_SHIELD_REGION" AEM_SHIELD_REGION="$AEM_SHIELD_REGION" \
 LAMBDA_ORIGIN_ID="$LAMBDA_ORIGIN_ID" AEM_ORIGIN_ID="$AEM_ORIGIN_ID" MEDIA_PATH_PATTERN="$MEDIA_PATH_PATTERN" \
 python3 - "$WORK/get.json" "$WORK/cfg.json" <<'PY'
@@ -241,10 +271,26 @@ if media is not None and not revert:
 #    and append the assets, so media keeps precedence over *.png etc.
 ours = re.compile(r"^\*\.[A-Za-z0-9]+$")
 origins = {e["LAMBDA_ORIGIN_ID"], e["AEM_ORIGIN_ID"]}
+rum_patterns = e["RUM_PATH_PATTERNS"].split()
 items = [b for b in items if not (
     b["TargetOriginId"] in origins
-    and (ours.match(b["PathPattern"]) or b["PathPattern"] == e["ROOT_MEDIA_PATH_PATTERN"]))]
+    and (ours.match(b["PathPattern"])
+         or b["PathPattern"] in rum_patterns
+         or b["PathPattern"] == e["ROOT_MEDIA_PATH_PATTERN"]))]
 if not revert:
+    # RUM first, so /.rum/**/*.js doesn't fall to the *.js behavior. Uncached,
+    # and every method allowed so sendBeacon's POST reaches AEM.
+    for i, pattern in enumerate(rum_patterns):
+        b = copy.deepcopy(media)
+        b["PathPattern"] = pattern
+        b["CachePolicyId"] = e["CACHING_DISABLED_ID"]
+        b["OriginRequestPolicyId"] = e["RUM_ORP_ID"]
+        b["AllowedMethods"] = {
+            "Quantity": 7,
+            "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+            "CachedMethods": {"Quantity": 2, "Items": ["GET", "HEAD"]},
+        }
+        items.insert(i, b)
     root_media = copy.deepcopy(media)
     root_media["PathPattern"] = e["ROOT_MEDIA_PATH_PATTERN"]
     items.insert(items.index(media) + 1, root_media)
