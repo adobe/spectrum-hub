@@ -276,6 +276,10 @@
       grid-template-columns: 1fr;
     }
 
+    &.centered:has(.row:only-child):has(.col:only-child) .row {
+      grid-template-columns: 1fr;
+    }
+
     &.centered .col {
       align-items: center;
     }

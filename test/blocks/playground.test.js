@@ -883,6 +883,15 @@ describe('playground block — init()', () => {
     expect(labels).to.deep.equal(['isDisabled']);
   });
 
+  it('groups the component controls under an accessible name', async () => {
+    stubPlaygroundFetch(sandbox);
+    await init(el);
+    const controls = el.querySelector('.playground-controls');
+
+    expect(controls.getAttribute('role')).to.equal('group');
+    expect(controls.getAttribute('aria-label')).to.equal('Component controls');
+  });
+
   it('warns with a plain-English reason when a property is missing from the implementation data', async () => {
     stubPlaygroundFetch(sandbox);
     await init(el);

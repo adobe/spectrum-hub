@@ -1,5 +1,7 @@
 import { expect } from '@esm-bundle/chai';
-import { loadPage } from '../../scripts/scripts.js';
+
+document.body.innerHTML = '<main></main>';
+const { loadPage } = await import('../../scripts/scripts.js');
 
 describe('scripts.js', () => {
   describe('loadPage — bootstrap', () => {
@@ -14,7 +16,7 @@ describe('scripts.js', () => {
 
   describe('decorateArea — eager image loading', () => {
     before(async () => {
-      document.body.innerHTML = '<main><img src="test.jpg" loading="lazy"></main>';
+      document.body.innerHTML = '<main><div><img src="test.jpg" loading="lazy"></div></main>';
       await loadPage();
     });
 
@@ -31,8 +33,10 @@ describe('scripts.js', () => {
     it('skips SVG images and eager-loads the first non-SVG image instead', async () => {
       document.body.innerHTML = `
         <main>
-          <img src="icon.svg" loading="lazy">
-          <img src="hero.jpg" loading="lazy">
+          <div>
+            <img src="icon.svg" loading="lazy">
+            <img src="hero.jpg" loading="lazy">
+          </div>
         </main>
       `;
       await loadPage();

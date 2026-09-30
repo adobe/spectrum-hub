@@ -638,6 +638,7 @@ function wireIframeMessaging(iframe, currentProps, snippetMarkup) {
 function buildControlsPanel(descriptors, currentProps, onControlChange) {
   const controlsPanel = document.createElement('div');
   controlsPanel.classList.add('playground-controls');
+  controlsPanel.setAttribute('role', 'group');
   controlsPanel.setAttribute('aria-label', 'Component controls');
 
   descriptors.forEach(({
