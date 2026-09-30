@@ -169,6 +169,27 @@ header. Pass the token to `add-media-behavior.sh` to add it:
 (CloudFront origin custom headers can't reference Secrets Manager, so this value
 lives in the distribution config).
 
+### Keep `/sitemap.xml` on the Lambda
+
+A distribution that also sends whole file types straight to AEM (extension
+behaviors such as `*.xml`, `*.txt`, or `*.js` targeting `aem-media-origin`)
+catches `/sitemap.xml` with `*.xml`. The sitemap then skips the Lambda: private
+pages stay listed and preview URLs keep their `main--…aem.page` host.
+[`add-sitemap-behavior.sh`](./add-sitemap-behavior.sh) fixes this by adding an
+exact `/sitemap.xml` behavior, cloned from the default (Lambda) behavior, ahead
+of every other pattern. CloudFront uses the first matching behavior, so other
+`.xml` files still go straight to AEM. The script is idempotent and supports
+`DRY_RUN=1` and `REVERT=1`:
+
+```bash
+DRY_RUN=1 DIST_ID=<dist-id> ./add-sitemap-behavior.sh   # preview the behavior order
+DIST_ID=<dist-id> ./add-sitemap-behavior.sh
+```
+
+Once the distribution is deployed, invalidate `/sitemap.xml`. Distributions
+created by `setup-preview-distribution.sh` have no extension behaviors, so they
+don't need this.
+
 ## Content caching (the default/Lambda behavior)
 
 The default behavior (HTML, `/query-index.json`, static assets) proxies the
