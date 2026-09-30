@@ -295,8 +295,11 @@ const loadPrivatePaths = async (req, url) => {
 };
 
 // Rewrite authenticated sitemap URLs to the public origin without filtering
-// private entries. Unsupported sitemap formats pass through unchanged.
+// private entries. Unsupported sitemap formats pass through unchanged. A 304 is
+// unexpected because sitemap conditionals are stripped before the AEM request;
+// fail closed rather than let CloudFront retain a stale, untransformed body.
 const rewriteSitemapResponse = async (resp, publicOrigin) => {
+  if (resp.status === 304) { return notFound(); }
   if (resp.status !== 200 || !publicOrigin) { return resp; }
   const xml = await resp.text();
   const rewritten = rewriteSitemapHosts(xml, publicOrigin);
@@ -315,7 +318,6 @@ const rewriteSitemapResponse = async (resp, publicOrigin) => {
 // body that is not a <urlset> is a 404. Validators are dropped because the
 // output depends on the query index and public origin, not only the AEM body.
 const transformSitemap = async (resp, privatePathsPromise, publicOrigin) => {
-  if (resp.status === 304) { return resp; }
   if (resp.status !== 200) { return notFound(); }
   const [xml, privatePaths] = await Promise.all([resp.text(), privatePathsPromise]);
   if (!privatePaths) { return notFound(); }
@@ -415,9 +417,17 @@ const route = async (req) => {
   const savedSearch = formatSearchParams(url);
   const request = await formatRequest(req, url);
 
+  const isSitemap = url.pathname === '/sitemap.xml';
+  if (isSitemap) {
+    // AEM's sitemap validators describe its untransformed body. Forwarding an
+    // old CloudFront conditional can produce a 304 that preserves a cached body
+    // from before filtering or host rewriting, so always fetch a full 200.
+    request.headers.delete('if-none-match');
+    request.headers.delete('if-modified-since');
+  }
+
   // An anonymous sitemap needs the query index's private paths too; start that
   // read now so it runs alongside the sitemap fetch.
-  const isSitemap = url.pathname === '/sitemap.xml';
   const sitemapFilter = !authed && isSitemap;
   const privatePathsPromise = sitemapFilter ? loadPrivatePaths(req, url) : null;
   const sitemapPublicOrigin = isSitemap && !env.ORIGIN
