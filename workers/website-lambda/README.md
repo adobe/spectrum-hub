@@ -120,6 +120,25 @@ the Lambda and stay private.
 The script also turns on Origin Shield for both origins (off with `NO_CACHE=1`),
 so CloudFront edge locations share one regional cache in front of each origin.
 
+### Alias host redirect
+
+Prod also answers on `s2.spectrum.adobe.com`. A viewer-request CloudFront
+Function ([`cloudfront-functions/canonical-host.js`](./cloudfront-functions/canonical-host.js))
+301s it to `https://spectrum.adobe.com`, keeping the path and query string. It
+runs before the cache, so these requests never reach the Lambda or AEM.
+[`set-canonical-host-redirect.sh`](./set-canonical-host-redirect.sh) publishes
+the function and attaches it to every behavior:
+
+```bash
+DIST_ID=E3VFWCMFUVXVV ./set-canonical-host-redirect.sh
+# undo: detach it everywhere
+REMOVE=1 DIST_ID=E3VFWCMFUVXVV ./set-canonical-host-redirect.sh
+```
+
+`set-content-caching.sh` clones its behaviors from `*/media_*`, so they keep the
+function when it's re-run. Re-run this script after adding behaviors any other
+way.
+
 ## Media offload (hybrid BYO-CDN)
 
 Immutable, content-hashed media (`media_<sha>.<ext>`) is public, so it is served
