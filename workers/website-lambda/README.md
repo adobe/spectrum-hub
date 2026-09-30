@@ -77,7 +77,7 @@ else goes straight from CloudFront to AEM.
 
 | Behavior (in order) | Origin | Cache policy (prod) | Cache policy (stage) |
 | --- | --- | --- | --- |
-| `*/media_*` | AEM | `spectrum-media` | `CachingDisabled` |
+| `*/media_*`, `/media_*` | AEM | `spectrum-media` | `CachingDisabled` + `spectrum-media-query` |
 | `*.js`, `*.mjs`, `*.css`, `*.svg`, `*.ico`, `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp`, `*.avif`, `*.woff`, `*.woff2`, `*.ttf`, `*.otf`, `*.xml`, `*.txt` | AEM | `spectrum-assets` | `CachingDisabled` |
 | Default (HTML, JSON, anything else) | Lambda | `spectrum-content` | `CachingDisabled` |
 
@@ -97,6 +97,13 @@ The asset behaviors are cloned from the `*/media_*` behavior, so they share its
 AEM origin headers (including `Authorization`) and the `spectrum-strip-headers`
 function. Run [`add-media-behavior.sh`](./add-media-behavior.sh) first on a new
 distribution.
+
+CloudFront doesn't match root-level images (`/media_<sha>.png`) to `*/media_*`,
+so the script adds a `/media_*` copy before the asset behaviors. Without it,
+`*.png` would catch them, drop `width` and `format`, and serve the full-size
+original. On stage, `CachingDisabled` forwards no query strings, so both media
+behaviors also use the `spectrum-media-query` origin request policy, which
+forwards only the image parameters.
 
 Assets skip the Lambda gate. A non-HTML file under `/drafts/` (for example,
 `/drafts/diagram.svg`) is public. HTML and JSON under `/drafts/` still go through

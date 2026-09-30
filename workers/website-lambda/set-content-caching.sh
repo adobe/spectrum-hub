@@ -14,6 +14,11 @@
 #      "spectrum-assets" cache policy with no cookie and no query strings shares
 #      one edge copy across all viewers. Assets skip the Lambda gate, so e.g.
 #      /drafts/foo.svg is public; HTML/JSON under /drafts/ still go through it.
+#      A "/media_*" clone of the media behavior sits before them: CloudFront
+#      doesn't match root-level /media_<sha>.png to "*/media_*", and the *.png
+#      behavior would drop the image query params (width, format, ...).
+#      Under NO_CACHE, both media behaviors also get the "spectrum-media-query"
+#      origin request policy, since CachingDisabled forwards no query strings.
 #   3. Origin Shield on both origins, so edge locations share one regional cache.
 #   4. Cache tags (x-amz-meta-cache-tag), for AEM push invalidation by tag. After
 #      first enabling them, invalidate "/*" once: objects cached before that carry
@@ -62,6 +67,10 @@ AEM_SHIELD_REGION="${AEM_SHIELD_REGION:-us-east-1}"
 LAMBDA_ORIGIN_ID="${LAMBDA_ORIGIN_ID:-website-lambda-function-url}"
 AEM_ORIGIN_ID="${AEM_ORIGIN_ID:-aem-media-origin}"
 MEDIA_PATH_PATTERN="*/media_*"
+# CloudFront reads "*/media_*" as "/*/media_*", so it misses root-level images
+# (/media_<sha>.png); this second media behavior covers them.
+ROOT_MEDIA_PATH_PATTERN="/media_*"
+MEDIA_ORIGIN_REQUEST_POLICY_NAME="${MEDIA_ORIGIN_REQUEST_POLICY_NAME:-spectrum-media-query}"
 # Managed CachingDisabled.
 CACHING_DISABLED_ID="4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 REVERT="${REVERT:-}"
@@ -95,12 +104,45 @@ ensure_cache_policy() {
   printf '%s' "$id"
 }
 
+# Create-or-update the origin request policy that forwards only the image
+# query params to AEM, echoing its id. Media needs it under NO_CACHE, because
+# CachingDisabled forwards no query strings and AEM would return the full-size
+# original.
+ensure_media_origin_request_policy() {
+  local id etag cfgfile="$WORK/media-orp.json"
+  cat > "$cfgfile" <<JSON
+{
+  "Name": "$MEDIA_ORIGIN_REQUEST_POLICY_NAME",
+  "Comment": "Forward AEM image-optimization query params (for uncached media)",
+  "HeadersConfig": { "HeaderBehavior": "none" },
+  "CookiesConfig": { "CookieBehavior": "none" },
+  "QueryStringsConfig": {
+    "QueryStringBehavior": "whitelist",
+    "QueryStrings": { "Quantity": 5, "Items": ["optimize", "width", "format", "height", "quality"] }
+  }
+}
+JSON
+  id="$(aws cloudfront list-origin-request-policies --type custom --profile "$PROFILE" --region us-east-1 \
+    --query "OriginRequestPolicyList.Items[?OriginRequestPolicy.OriginRequestPolicyConfig.Name=='$MEDIA_ORIGIN_REQUEST_POLICY_NAME'].OriginRequestPolicy.Id | [0]" \
+    --output text 2>/dev/null || true)"
+  if [ -z "$id" ] || [ "$id" = "None" ]; then
+    id="$(aws cloudfront create-origin-request-policy --profile "$PROFILE" --region us-east-1 \
+      --origin-request-policy-config "file://$cfgfile" --query 'OriginRequestPolicy.Id' --output text)"
+  else
+    etag="$(aws cloudfront get-origin-request-policy --id "$id" --profile "$PROFILE" --region us-east-1 --query ETag --output text)"
+    aws cloudfront update-origin-request-policy --id "$id" --if-match "$etag" --profile "$PROFILE" --region us-east-1 \
+      --origin-request-policy-config "file://$cfgfile" >/dev/null
+  fi
+  printf '%s' "$id"
+}
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 CONTENT_POLICY_ID=""
 ASSET_POLICY_ID=""
 MEDIA_POLICY_ID=""
+MEDIA_ORP_ID=""
 if [ -n "$REVERT" ]; then
   echo "Reverting distribution $DIST_ID: assets back through the Lambda, default on CachingDisabled"
 elif [ -n "$NO_CACHE" ]; then
@@ -108,6 +150,8 @@ elif [ -n "$NO_CACHE" ]; then
   CONTENT_POLICY_ID="$CACHING_DISABLED_ID"
   ASSET_POLICY_ID="$CACHING_DISABLED_ID"
   MEDIA_POLICY_ID="$CACHING_DISABLED_ID"
+  MEDIA_ORP_ID="$(ensure_media_origin_request_policy)"
+  echo "Media origin request policy: $MEDIA_ORP_ID"
 else
   # Content: DefaultTTL 0 => nothing caches unless the Lambda says so, so its
   # no-store responses are never cached.
@@ -163,6 +207,7 @@ ETAG="$(python3 -c "import json;print(json.load(open('$WORK/get.json'))['ETag'])
 
 REVERT="$REVERT" NO_CACHE="$NO_CACHE" CACHING_DISABLED_ID="$CACHING_DISABLED_ID" \
 CONTENT_POLICY_ID="$CONTENT_POLICY_ID" ASSET_POLICY_ID="$ASSET_POLICY_ID" MEDIA_POLICY_ID="$MEDIA_POLICY_ID" \
+MEDIA_ORP_ID="$MEDIA_ORP_ID" ROOT_MEDIA_PATH_PATTERN="$ROOT_MEDIA_PATH_PATTERN" \
 ASSET_EXTENSIONS="$ASSET_EXTENSIONS" LAMBDA_SHIELD_REGION="$LAMBDA_SHIELD_REGION" AEM_SHIELD_REGION="$AEM_SHIELD_REGION" \
 LAMBDA_ORIGIN_ID="$LAMBDA_ORIGIN_ID" AEM_ORIGIN_ID="$AEM_ORIGIN_ID" MEDIA_PATH_PATTERN="$MEDIA_PATH_PATTERN" \
 python3 - "$WORK/get.json" "$WORK/cfg.json" <<'PY'
@@ -181,22 +226,35 @@ items = cfg.get("CacheBehaviors", {}).get("Items") or []
 media = next((b for b in items if b["PathPattern"] == e["MEDIA_PATH_PATTERN"]), None)
 if media is None and not revert:
     sys.exit(f"no {e['MEDIA_PATH_PATTERN']} behavior; run add-media-behavior.sh first")
-if media is not None and not revert and e["MEDIA_POLICY_ID"]:
-    media["CachePolicyId"] = e["MEDIA_POLICY_ID"]
+if media is not None and not revert:
+    if e["MEDIA_POLICY_ID"]:
+        media["CachePolicyId"] = e["MEDIA_POLICY_ID"]
+    # Uncached media needs the image params forwarded; cached media gets them
+    # from the cache policy.
+    if e["MEDIA_ORP_ID"]:
+        media["OriginRequestPolicyId"] = e["MEDIA_ORP_ID"]
+    else:
+        media.pop("OriginRequestPolicyId", None)
 
-# 2. Asset behaviors. Drop any "*.<ext>" behaviors this script added before
-#    (to either origin), then append the current set after */media_*, so media
-#    keeps precedence for media_<sha>.png etc.
+# 2. Root media + asset behaviors. Drop the ones this script added before (to
+#    either origin), then insert the root media behavior right after */media_*
+#    and append the assets, so media keeps precedence over *.png etc.
 ours = re.compile(r"^\*\.[A-Za-z0-9]+$")
 origins = {e["LAMBDA_ORIGIN_ID"], e["AEM_ORIGIN_ID"]}
-items = [b for b in items if not (b["TargetOriginId"] in origins and ours.match(b["PathPattern"]))]
+items = [b for b in items if not (
+    b["TargetOriginId"] in origins
+    and (ours.match(b["PathPattern"]) or b["PathPattern"] == e["ROOT_MEDIA_PATH_PATTERN"]))]
 if not revert:
+    root_media = copy.deepcopy(media)
+    root_media["PathPattern"] = e["ROOT_MEDIA_PATH_PATTERN"]
+    items.insert(items.index(media) + 1, root_media)
     for ext in e["ASSET_EXTENSIONS"].split():
         # Clone the media behavior: same AEM origin, origin headers, no
         # origin-request policy (cookie never forwarded), strip-headers function.
         b = copy.deepcopy(media)
         b["PathPattern"] = f"*.{ext}"
         b["CachePolicyId"] = e["ASSET_POLICY_ID"]
+        b.pop("OriginRequestPolicyId", None)
         items.append(b)
 cfg["CacheBehaviors"] = {"Quantity": len(items), "Items": items} if items else {"Quantity": 0}
 
