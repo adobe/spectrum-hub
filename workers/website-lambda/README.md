@@ -221,22 +221,30 @@ requests (unique cookie) get their own, and their viewer-varying responses are
 - **Authenticated HTML / the full query index / the full sitemap** stay `private, no-store`, and
   **gate 404s** stay `no-store` (no negative caching).
 
-Assets and anon content keep AEM's **ETag**, so CloudFront's post-TTL revalidation
-is a cheap conditional `304` (skips the fetch/filter/re-encode) rather than a full
-re-fetch. The exception is the filtered anonymous sitemap: its `ETag` and
-`Last-Modified` are dropped, because they track the sitemap alone, not the
-query index that decides which entries are removed.
+Assets keep AEM's **ETag**, so CloudFront's post-TTL revalidation is a cheap
+conditional `304`. Anonymous pages and the anonymous `/query-index.json` get a
+**gated ETag** instead ([lib/etag.js](./lib/etag.js)): AEM's tag with a
+`--gate-v<N>` suffix, and no `Last-Modified`. On revalidation the Lambda forwards
+only tags carrying the current suffix (suffix stripped) and never
+`If-Modified-Since`, so a `304` only ever confirms a copy this gate version
+produced. Any other conditional — a copy cached before the gate existed, under an
+older gate version, or an existence probe for a private page — is dropped, AEM
+returns a full `200`, and the gate runs again. An anonymous `304` that arrives
+without a gated tag being forwarded is turned into a `404` (fail closed).
+Revalidation stays cheap for current copies. The filtered anonymous sitemap drops
+its `ETag` and `Last-Modified` entirely and always fetches a full `200`, because
+its validators track the sitemap alone, not the query index that decides which
+entries are removed.
 
-> ⚠️ **ETag caveat — invalidate on filtering-logic deploys.** The ETag tracks the
-> AEM page, not this Lambda's filtering/gating code. If you change
-> `filterAudienceBlocks` / `isPrivateHtml` / the gate without the page content
-> changing, already-cached anonymous bodies keep `304`'ing (serving the old
-> filtered output) until the page next changes. For a benign change that's fine
-> (bounded by the short TTL); for a **security-relevant** change (something that
-> should now be stripped/gated) you **must** run a one-off invalidation:
-> `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` — this
-> uses your role's permission, not a standing IAM user, so it works in the
-> klam-federated account.
+> ⚠️ **Bump `GATE_ETAG_VERSION` on filtering-logic deploys.** AEM's ETag tracks
+> the page, not this Lambda's filtering/gating code. When you change
+> `filterAudienceBlocks` / `isPrivateHtml` / the gate / the query-index filter,
+> increment `GATE_ETAG_VERSION` in [lib/etag.js](./lib/etag.js). Every cached
+> anonymous copy then fails revalidation and is re-fetched and re-filtered, with
+> no CloudFront invalidation needed. Clients and edges that still hold a fresh
+> copy keep it until the short TTL expires; for an urgent security fix, also run
+> `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` (this
+> uses your role's permission, so it works in the klam-federated account).
 
 > ⚠️ **Leak test before prod (mandatory).** With a real `spectrum_session` cookie:
 > an anonymous public page + `/query-index.json` cache (repeat = `X-Cache: Hit`)

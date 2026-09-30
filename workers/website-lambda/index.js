@@ -35,10 +35,11 @@
 import { fetchFromAem } from './handlers/aem.js';
 import { createSession, deleteSession } from './handlers/auth.js';
 import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
-import { classifyPublicPath, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
+import { classifyPublicPath, isPageLike, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
 import { filterAudienceBlocks } from './lib/audience.js';
 import { filterPrivateEntries, compactEntries, collectPrivatePaths } from './lib/query-index.js';
 import { filterSitemap, rewriteSitemapHosts } from './lib/sitemap.js';
+import { toGatedEtag, toUpstreamIfNoneMatch } from './lib/etag.js';
 import { resolveSecrets } from './lib/secrets.js';
 
 const env = process.env;
@@ -59,16 +60,30 @@ const ANON_CACHE_MAX_AGE = (() => {
 // anonymous (the body is the public, audience-stripped view, and CloudFront's
 // cache key includes spectrum_session so it can never reach an authenticated
 // viewer), or no-store when ANON_CACHE_MAX_AGE is 0 (live, instant publishes);
-// no-store for authenticated/private. The AEM ETag is deliberately left in place
-// so CloudFront's post-TTL revalidation is a cheap conditional 304, not a full
-// re-fetch + re-filter. NB: the ETag tracks the AEM page, not this filtering
-// code - a change to the filtering/gating logic won't bust already cached bodies
-// until the page itself changes, so run a manual CloudFront invalidation when
-// deploying such a change (see README "Content caching").
+// no-store for authenticated/private. Anonymous responses carry a gated ETag
+// (see markGated / lib/etag.js) so CloudFront's post-TTL revalidation is still a
+// cheap conditional 304, but only for a copy the current gate produced. Bump
+// GATE_ETAG_VERSION in lib/etag.js when the filtering/gating logic changes so
+// already cached bodies are re-fetched and re-filtered (see README "Content
+// caching").
 const setContentCacheControl = (resp, authed) => {
   const anon = ANON_CACHE_MAX_AGE === 0 ? 'no-store' : `public, max-age=${ANON_CACHE_MAX_AGE}`;
   resp.headers.set('cache-control', authed ? 'private, no-store' : anon);
   resp.headers.delete('age');
+};
+
+// Replace AEM's validators on an anonymous filtered response with a gated ETag,
+// so a later If-None-Match is only forwarded upstream for a copy this gate
+// version produced (lib/etag.js). Last-Modified is dropped: If-Modified-Since
+// is never forwarded for these responses, so it would only cost a round trip.
+const markGated = (resp) => {
+  const gated = toGatedEtag(resp.headers.get('etag'));
+  if (gated) {
+    resp.headers.set('etag', gated);
+  } else {
+    resp.headers.delete('etag');
+  }
+  resp.headers.delete('last-modified');
 };
 
 // no-store: many 404s here are gate decisions that vary by viewer (a private
@@ -203,18 +218,20 @@ const isAuthenticated = async (request) => {
 //   2. Audience blocks: content blocks the viewer must not see are stripped
 //      (audience-private for anonymous, audience-public for authenticated) so
 //      private markup never leaves the edge.
-// Non-HTML/non-200 responses (assets, redirects, 304, the AEM 404 for a missing
+// Non-HTML/non-200 responses (assets, redirects, the AEM 404 for a missing
 // page) pass through untouched without reading the body. content-length and
 // content-encoding are stripped in toLambdaResponse, so re-wrapping the
-// already-read body here stays consistent.
-const processHtmlResponse = async (resp, authed, pageLike) => {
+// already-read body here stays consistent. `anonPage` marks an anonymous
+// page-like request, whose filtered response gets a gated ETag.
+const processHtmlResponse = async (resp, authed, anonPage) => {
   const contentType = resp.headers.get('content-type') || '';
-  // Revalidation of a cached anonymous page: a 304 carries no body to filter,
-  // but its Cache-Control must still be the short anon TTL (not AEM's longer one)
-  // so the refreshed edge entry keeps its short lifetime. Only for page-like
-  // paths - asset 304s pass through untouched with AEM's own Cache-Control.
-  if (resp.status === 304 && pageLike) {
+  // Revalidation of a cached anonymous page. route() only forwards a gated
+  // If-None-Match (a tag this gate version issued), so this 304 confirms a copy
+  // that already passed the gate. It keeps the short anon TTL (not AEM's longer
+  // one) and the gated tag. Asset 304s pass through with AEM's own headers.
+  if (resp.status === 304 && anonPage) {
     setContentCacheControl(resp, authed);
+    markGated(resp);
     return resp;
   }
   if (resp.status !== 200 || !contentType.includes('text/html')) { return resp; }
@@ -225,6 +242,7 @@ const processHtmlResponse = async (resp, authed, pageLike) => {
   // Filtered per viewer: anonymous gets the public view (short shared TTL),
   // authenticated stays no-store. The cookie-keyed cache keeps them separate.
   setContentCacheControl(out, authed);
+  if (anonPage) { markGated(out); }
   return out;
 };
 
@@ -426,6 +444,26 @@ const route = async (req) => {
     request.headers.delete('if-modified-since');
   }
 
+  // Anonymous pages and the anonymous query index are filtered, so a 304 from
+  // AEM is only safe when it confirms a copy the current gate produced. Forward
+  // only If-None-Match tags this gate version issued (lib/etag.js) and never
+  // If-Modified-Since. Anything else - a copy cached before the gate existed or
+  // under an older gate version, a probe for whether a private page exists -
+  // gets a full body that the gate checks again.
+  const anonPage = !authed && isPageLike(url.pathname);
+  const anonGated = anonPage || (!authed && url.pathname === '/query-index.json');
+  let gatedConditional = false;
+  if (anonGated) {
+    request.headers.delete('if-modified-since');
+    const upstreamTag = toUpstreamIfNoneMatch(request.headers.get('if-none-match'));
+    if (upstreamTag) {
+      request.headers.set('if-none-match', upstreamTag);
+      gatedConditional = true;
+    } else {
+      request.headers.delete('if-none-match');
+    }
+  }
+
   // An anonymous sitemap needs the query index's private paths too; start that
   // read now so it runs alongside the sitemap fetch.
   const sitemapFilter = !authed && isSitemap;
@@ -437,6 +475,10 @@ const route = async (req) => {
   const resp = await matched.handler({
     url, env, request, cache: matched.cache, savedSearch,
   });
+
+  // A 304 with no gated tag forwarded can't be verified against the gate: fail
+  // closed rather than confirm a copy the client should not have.
+  if (anonGated && resp.status === 304 && !gatedConditional) { return notFound(); }
 
   // The 'filter' paths. The query-index JSON: strip audience:private rows
   // (and the audience column) for anonymous visitors and honour ?compact=true
@@ -455,6 +497,7 @@ const route = async (req) => {
     }
     if (out.status === 200 || out.status === 304) {
       setContentCacheControl(out, authed);
+      if (anonGated) { markGated(out); }
     } else {
       // Fail-closed 404 / upstream error: never cache.
       out.headers.set('cache-control', 'no-store');
@@ -465,10 +508,10 @@ const route = async (req) => {
 
   // Every other proxied HTML page is processed - not just 'gate' pages - so
   // allow-listed content (e.g. the homepage, which carries audience blocks) is
-  // filtered too. processHtmlResponse no-ops on non-HTML responses. `pageLike`
-  // (anonymous 'gate' verdict) tells it a bodiless 304 is a page revalidation
-  // that still needs the short anon TTL, vs an asset 304 (leave AEM's TTL).
-  return processHtmlResponse(resp, authed, verdict === 'gate');
+  // filtered too. processHtmlResponse no-ops on non-HTML responses. `anonPage`
+  // tells it a bodiless 304 is a gated page revalidation that keeps the short
+  // anon TTL and gated tag, vs an asset 304 (leave AEM's headers).
+  return processHtmlResponse(resp, authed, anonPage);
 };
 
 /*

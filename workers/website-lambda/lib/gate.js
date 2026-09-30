@@ -78,7 +78,7 @@ const getExtension = (pathname) => {
 // A "page" is an extensionless path or an .html path - the responses that can
 // carry the <meta name="audience"> gate. Everything else (json, xml, ...) is
 // data, served by the default-allow fallthrough unless explicitly private.
-const isPageLike = (pathname) => {
+export const isPageLike = (pathname) => {
   const ext = getExtension(pathname);
   return ext === '' || ext === 'html';
 };
