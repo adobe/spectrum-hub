@@ -38,7 +38,7 @@ import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
 import { classifyPublicPath, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
 import { filterAudienceBlocks } from './lib/audience.js';
 import { filterPrivateEntries, compactEntries, collectPrivatePaths } from './lib/query-index.js';
-import { filterSitemap } from './lib/sitemap.js';
+import { filterSitemap, rewriteSitemapHosts } from './lib/sitemap.js';
 import { resolveSecrets } from './lib/secrets.js';
 
 const env = process.env;
@@ -294,14 +294,27 @@ const loadPrivatePaths = async (req, url) => {
   }
 };
 
-// Post-fetch transform for sitemap.xml (anonymous only): drop every <url> whose
-// path the query index marks audience:private or the gate denies outright, so
-// an anonymous crawler never learns a private page's URL. Fails closed: a
-// non-200, an unreadable private-path set, or a body that is not a <urlset> is
-// a 404. The ETag / Last-Modified are dropped because they track the sitemap
-// alone, not the query index the filter also depends on - a conditional 304
-// could otherwise pin a body filtered against a stale private set.
-const transformSitemap = async (resp, privatePathsPromise) => {
+// Rewrite authenticated sitemap URLs to the public origin without filtering
+// private entries. Unsupported sitemap formats pass through unchanged.
+const rewriteSitemapResponse = async (resp, publicOrigin) => {
+  if (resp.status !== 200 || !publicOrigin) { return resp; }
+  const xml = await resp.text();
+  const rewritten = rewriteSitemapHosts(xml, publicOrigin);
+  const out = new Response(rewritten, resp);
+  if (rewritten !== xml) {
+    out.headers.delete('content-length');
+    out.headers.delete('etag');
+    out.headers.delete('last-modified');
+  }
+  return out;
+};
+
+// For anonymous callers, drop every <url> whose path the query index marks
+// audience:private or the gate denies outright, then rewrite AEM origins to the
+// public origin. Fails closed: a non-200, an unreadable private-path set, or a
+// body that is not a <urlset> is a 404. Validators are dropped because the
+// output depends on the query index and public origin, not only the AEM body.
+const transformSitemap = async (resp, privatePathsPromise, publicOrigin) => {
   if (resp.status === 304) { return resp; }
   if (resp.status !== 200) { return notFound(); }
   const [xml, privatePaths] = await Promise.all([resp.text(), privatePathsPromise]);
@@ -310,7 +323,9 @@ const transformSitemap = async (resp, privatePathsPromise) => {
     || classifyPublicPath(pathname) === 'deny';
   const filtered = filterSitemap(xml, isPrivatePath);
   if (filtered === null) { return notFound(); }
-  const out = new Response(filtered, resp);
+  const rewritten = publicOrigin ? rewriteSitemapHosts(filtered, publicOrigin) : filtered;
+  const out = new Response(rewritten, resp);
+  out.headers.delete('content-length');
   out.headers.delete('etag');
   out.headers.delete('last-modified');
   return out;
@@ -402,8 +417,12 @@ const route = async (req) => {
 
   // An anonymous sitemap needs the query index's private paths too; start that
   // read now so it runs alongside the sitemap fetch.
-  const sitemapFilter = !authed && url.pathname === '/sitemap.xml';
+  const isSitemap = url.pathname === '/sitemap.xml';
+  const sitemapFilter = !authed && isSitemap;
   const privatePathsPromise = sitemapFilter ? loadPrivatePaths(req, url) : null;
+  const sitemapPublicOrigin = isSitemap && !env.ORIGIN
+    ? `${url.protocol}//${url.host}`
+    : null;
 
   const resp = await matched.handler({
     url, env, request, cache: matched.cache, savedSearch,
@@ -411,14 +430,16 @@ const route = async (req) => {
 
   // The 'filter' paths. The query-index JSON: strip audience:private rows
   // (and the audience column) for anonymous visitors and honour ?compact=true
-  // for either audience. The sitemap: drop private URLs for anonymous visitors.
-  // Authed callers get the index (unless compact) and the sitemap untouched.
-  // The anonymous (filtered) response is cacheable with a short shared TTL;
-  // the authenticated full view carries private entries and stays no-store.
+  // for either audience. Sitemap URLs are rewritten from AEM origins to the
+  // environment's public origin; anonymous visitors also lose private entries.
+  // The anonymous response is cacheable with a short shared TTL; the
+  // authenticated full view carries private entries and stays no-store.
   if (PUBLIC_FILTER_PATHS.includes(url.pathname)) {
     let out = resp;
-    if (sitemapFilter) {
-      out = await transformSitemap(resp, privatePathsPromise);
+    if (isSitemap) {
+      out = authed
+        ? await rewriteSitemapResponse(resp, sitemapPublicOrigin)
+        : await transformSitemap(resp, privatePathsPromise, sitemapPublicOrigin);
     } else if (url.pathname === '/query-index.json' && (!authed || compact)) {
       out = await transformQueryIndex(resp, { removePrivate: !authed, compact });
     }

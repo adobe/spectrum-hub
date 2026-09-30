@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterSitemap } from './sitemap.js';
+import { filterSitemap, rewriteSitemapHosts } from './sitemap.js';
 
 const entry = (path, extra = '') => `  <url>
     <loc>https://spectrum.adobe.com${path}</loc>
@@ -73,5 +73,66 @@ describe('filterSitemap', () => {
     expect(filterSitemap(index, () => false)).toBe(null);
     expect(filterSitemap('not xml', () => false)).toBe(null);
     expect(filterSitemap(null, () => false)).toBe(null);
+  });
+});
+
+describe('rewriteSitemapHosts', () => {
+  it('rewrites aem.page and aem.live origins to the public origin', () => {
+    const xml = sitemap(
+      entry('/preview').replace(
+        'https://spectrum.adobe.com',
+        'https://main--spectrum-hub--adobe.aem.page',
+      ),
+      entry('/published').replace(
+        'https://spectrum.adobe.com',
+        'https://main--spectrum-hub--adobe.aem.live',
+      ),
+    );
+
+    const out = rewriteSitemapHosts(xml, 'https://preview.spectrum.adobe.com');
+
+    expect(out).toContain('https://preview.spectrum.adobe.com/preview');
+    expect(out).toContain('https://preview.spectrum.adobe.com/published');
+    expect(out).not.toContain('.aem.page');
+    expect(out).not.toContain('.aem.live');
+  });
+
+  it('leaves non-AEM origins unchanged', () => {
+    const xml = sitemap(entry('/production'));
+    expect(rewriteSitemapHosts(xml, 'https://preview.spectrum.adobe.com')).toBe(xml);
+  });
+
+  it('leaves non-urlset bodies unchanged', () => {
+    const xml = [
+      '<sitemapindex><loc>',
+      'https://main--spectrum-hub--adobe.aem.page/index.xml',
+      '</loc></sitemapindex>',
+    ].join('');
+    expect(rewriteSitemapHosts(xml, 'https://preview.spectrum.adobe.com')).toBe(xml);
+  });
+
+  it('rewrites alternate links', () => {
+    const alternates = `
+    <xhtml:link rel="alternate" hreflang="de" href="https://main--spectrum-hub--adobe.aem.page/de/"/>`;
+    const xml = sitemap(entry('/en/', alternates).replace(
+      'https://spectrum.adobe.com',
+      'https://main--spectrum-hub--adobe.aem.page',
+    ));
+
+    const out = rewriteSitemapHosts(xml, 'https://preview.spectrum.adobe.com');
+
+    expect(out).toContain('<loc>https://preview.spectrum.adobe.com/en/</loc>');
+    expect(out).toContain('href="https://preview.spectrum.adobe.com/de/"');
+  });
+
+  it('preserves paths, queries, hashes, percent encoding, and XML entities', () => {
+    const xml = sitemap(entry('/caf%C3%A9?q=one&amp;lang=en#details').replace(
+      'https://spectrum.adobe.com',
+      'https://main--spectrum-hub--adobe.aem.page',
+    ));
+
+    expect(rewriteSitemapHosts(xml, 'https://preview.spectrum.adobe.com')).toContain(
+      '<loc>https://preview.spectrum.adobe.com/caf%C3%A9?q=one&amp;lang=en#details</loc>',
+    );
   });
 });

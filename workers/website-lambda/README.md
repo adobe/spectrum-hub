@@ -78,11 +78,13 @@ Most responses this Lambda returns depend on **who is asking** (the
 - `audience-public` / `audience-private` blocks → stripped per audience.
 - `/query-index.json` → `audience: private` rows removed for anonymous; the
   `?compact=true` variant projects each row to `path`/`title` only.
-- `/sitemap.xml` → for anonymous, `<url>` entries removed when the query index
-  marks the path `audience: private` or the gate denies it (`PRIVATE_DENY_*`).
-  The sitemap carries no audience data, so the Lambda reads the full query index
-  from AEM for each anonymous sitemap request. A private page that isn't in the
-  query index can't be detected and stays listed (the page itself still 404s).
+- `/sitemap.xml` → AEM-origin URLs in `<loc>` and alternate links are rewritten
+  to the environment's public origin for all viewers. For anonymous viewers,
+  `<url>` entries are also removed when the query index marks the path
+  `audience: private` or the gate denies it (`PRIVATE_DENY_*`). The sitemap
+  carries no audience data, so the Lambda reads the full query index from AEM
+  for each anonymous sitemap request. A private page that isn't in the query
+  index can't be detected and stays listed (the page itself still 404s).
   Fails closed: if the index can't be read, or the sitemap isn't a `<urlset>`,
   anonymous callers get a `404`. A sitemap index (`<sitemapindex>`) is not
   supported; its child sitemaps would need their own entries in
