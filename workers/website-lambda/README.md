@@ -231,6 +231,9 @@ produced. Any other conditional — a copy cached before the gate existed, under
 older gate version, or an existence probe for a private page — is dropped, AEM
 returns a full `200`, and the gate runs again. An anonymous `304` that arrives
 without a gated tag being forwarded is turned into a `404` (fail closed).
+`Range`/`If-Range` are stripped for pages and the filtered paths, and an
+anonymous page answered with any other 2xx (e.g. a `206` slice) is a `404`: only
+a whole `200` body can be gated.
 Revalidation stays cheap for current copies. The filtered anonymous sitemap drops
 its `ETag` and `Last-Modified` entirely and always fetches a full `200`, because
 its validators track the sitemap alone, not the query index that decides which

@@ -234,6 +234,9 @@ const processHtmlResponse = async (resp, authed, anonPage) => {
     markGated(resp);
     return resp;
   }
+  // Only a full 200 body can be gated. Any other success (e.g. a 206 slice)
+  // would skip the private-page check, so fail closed for anonymous pages.
+  if (anonPage && resp.status > 200 && resp.status < 300) { return notFound(); }
   if (resp.status !== 200 || !contentType.includes('text/html')) { return resp; }
   const body = await resp.text();
   if (!authed && isPrivateHtml(body)) { return notFound(); }
@@ -452,6 +455,13 @@ const route = async (req) => {
   // gets a full body that the gate checks again.
   const anonPage = !authed && isPageLike(url.pathname);
   const anonGated = anonPage || (!authed && url.pathname === '/query-index.json');
+  if (isPageLike(url.pathname) || PUBLIC_FILTER_PATHS.includes(url.pathname)) {
+    // Filtering needs the whole document. A Range request would come back as a
+    // 206 slice that skips the gate - and CloudFront could cache it for
+    // everyone - so always ask AEM for the full body.
+    request.headers.delete('range');
+    request.headers.delete('if-range');
+  }
   let gatedConditional = false;
   if (anonGated) {
     request.headers.delete('if-modified-since');
