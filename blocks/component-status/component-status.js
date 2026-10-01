@@ -20,6 +20,7 @@ import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
 import { figmaNodeUrl } from '../../scripts/utils/figma.js';
 import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
 import { fetchComponentSlice } from '../../scripts/utils/component-slice.js';
+import { getConfig, removeForAudience } from '../../scripts/ak.js';
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -129,7 +130,23 @@ export default async function init(el) {
     return;
   }
 
+  const fragment = document.createDocumentFragment();
+  fragment.append(...pills);
+  const designPill = fragment.querySelector('[data-kind="design"]');
+  try {
+    await removeForAudience({ privateEl: designPill });
+  } catch (error) {
+    getConfig().log(error);
+    designPill?.remove();
+  }
+  const visiblePills = [...fragment.children];
+
+  if (!visiblePills.length) {
+    el.remove();
+    return;
+  }
+
   el.setAttribute('role', 'group');
   el.setAttribute('aria-label', 'Component status');
-  el.replaceChildren(...pills);
+  el.replaceChildren(...visiblePills);
 }
