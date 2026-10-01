@@ -128,6 +128,11 @@ describe('buildCompositeElement', () => {
     assert.equal(el.props.size, 24);
   });
 
+  it('parses explicit numeric JSX expressions on root component props', () => {
+    const node = makeNode('ActionBar', { selectedItemCount: '{224}' });
+    assert.deepEqual(composite.buildRspProps(node), { selectedItemCount: 224 });
+  });
+
   it('leaves numeric-looking string attributes as strings', () => {
     assert.equal(composite.parseRspAttributeValue('24'), '24');
   });
