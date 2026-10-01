@@ -37,6 +37,20 @@
     "since": "2.0.0-beta.3"
   },
   {
+    "attribute": "size",
+    "property": "size",
+    "type": "\"s\" | \"m\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m"
+    ],
+    "optional": false,
+    "default": "'m'",
+    "description": "Size of the prompt field.",
+    "since": "2.0.0-beta.3"
+  },
+  {
     "attribute": "loader",
     "property": "loader",
     "type": "PixelLoaderIconName | PixelLoaderPresetName",
@@ -45,6 +59,17 @@
     "optional": false,
     "default": "'aiLogo'",
     "description": "Status loader artwork: a single icon name (static), or a preset name (`cc`, `dc`, `exp`, `analyze`, `mega`) that cycles a themed sequence. Routed to the loader's icon/preset in `_renderStatusIcon`.",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "animate-loader",
+    "property": "animateLoader",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Animates the status loader while generating; otherwise it stays static. Has no visible effect unless `generating` is also `true`.",
     "since": "2.0.0-beta.3"
   },
   {

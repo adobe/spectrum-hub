@@ -57,6 +57,7 @@
   "SideNavItem",
   "SideNavItemContent",
   "SideNavItemLink",
-  "InfieldButton"
+  "InfieldButton",
+  "Asset"
 ]
 

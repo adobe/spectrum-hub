@@ -1,30 +1,105 @@
 [
   {
-    "attribute": "variant",
-    "property": "variant",
-    "type": "\"file\" | \"folder\"",
-    "kind": "enum",
-    "values": [
-      "file",
-      "folder"
-    ],
-    "optional": false,
-    "description": "The variant of the asset. When not provided, slot content is rendered (e.g., an image).",
-    "inheritedFrom": "AssetBase",
-    "status": "internal",
-    "since": "2.0.0-beta.1"
-  },
-  {
-    "attribute": "label",
-    "property": "label",
+    "attribute": "aspect-ratio",
+    "property": "aspectRatio",
     "type": "string",
     "kind": "text",
     "values": [],
     "optional": false,
-    "default": "''",
-    "description": "Accessible label for the asset’s file or folder variant.",
+    "description": "The aspect ratio to apply to the asset, in CSS `<ratio>` syntax (e.g.\n`\"16/9\"`), plus the `square` keyword. `:`-separated ratios (e.g.\n`\"16:9\"`) are normalized to `/`. Falls through to an ancestor-supplied\ndefault, else `auto`, when unset. Has no effect when both `width` and\n`height` are also set.",
     "inheritedFrom": "AssetBase",
-    "status": "internal",
-    "since": "2.0.0-beta.1"
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "width",
+    "property": "width",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "An explicit width, as a CSS `<length-percentage>` (e.g. `\"100px\"`,\n`\"90%\"`). An alternative to `aspectRatio` for sizing the asset.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "height",
+    "property": "height",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "An explicit height, as a CSS `<length-percentage>` (e.g. `\"100px\"`,\n`\"90%\"`). An alternative to `aspectRatio` for sizing the asset.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "fit",
+    "property": "fit",
+    "type": "\"cover\" | \"contain\"",
+    "kind": "enum",
+    "values": [
+      "cover",
+      "contain"
+    ],
+    "optional": false,
+    "default": "'cover'",
+    "description": "How slotted image/SVG content fits within the asset's box.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "decorative",
+    "property": "decorative",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Marks the asset as decorative, removing it from the accessibility tree\n(`aria-hidden=\"true\"` on the host) regardless of slotted content or\n`accessibleLabel`.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "accessible-label",
+    "property": "accessibleLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "A fallback accessible name, applied to the slotted `<img>` or `<svg>`\nonly when it doesn't already carry its own accessible name.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "background",
+    "property": "background",
+    "type": "\"transparent\" | \"solid\" | \"checkerboard\"",
+    "kind": "enum",
+    "values": [
+      "transparent",
+      "solid",
+      "checkerboard"
+    ],
+    "optional": false,
+    "default": "'transparent'",
+    "description": "The background shown behind slotted content: `transparent` (no\nbackground), a `solid` color, or an opacity `checkerboard`.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "load-state",
+    "property": "loadState",
+    "type": "\"loading\" | \"loaded\" | \"error\"",
+    "kind": "enum",
+    "values": [
+      "loading",
+      "loaded",
+      "error"
+    ],
+    "optional": false,
+    "default": "'loading'",
+    "description": "The load status of the slotted `<img>`: `'loading'` while its request is\nin flight, `'loaded'` on success, `'error'` on failure. Immediately\n`'loaded'` for a slotted `<svg>` or no slotted content, since there's\nnothing asynchronous to wait for. Set internally by Asset; a consumer\ninfluences it only by changing what's slotted, not by setting it\ndirectly.",
+    "inheritedFrom": "AssetBase",
+    "since": "2.0.0-beta.4"
   }
 ]
