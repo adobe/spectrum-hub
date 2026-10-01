@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import normalizeHeadingId from './utils/heading-id.js';
+
 const LOG = async (ex, el) => (await import('./utils/error.js')).default(ex, el);
 
 export function getMetadata(name) {
@@ -379,11 +381,7 @@ function decorateLinks(el) {
   }, []);
 }
 
-export function normalizeHeadingId(id) {
-  return id
-    .replace(/^size-[a-z0-9]+-/, '')
-    .replace(/-size-[a-z0-9]+$/, '');
-}
+export { normalizeHeadingId };
 
 function loadIcons(el) {
   const icons = [...el.querySelectorAll('span.icon')];
