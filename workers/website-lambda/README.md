@@ -284,6 +284,15 @@ safe to re-run. It has three phases:
   preview distribution, and **disable IPv6** on that distribution
   (`KEEP_IPV6=1` keeps IPv6 on).
 
+Blocked viewers see [`vpn-required.html`](./vpn-required.html), which tells them
+to connect to Adobe VPN, instead of CloudFront's generic `403` page. `ENFORCE=1`
+uploads it as a WAF custom response body and sends it with a `403` and
+`Cache-Control: no-store`, so the page doesn't stick around after the viewer
+connects. To change the message, edit the file and re-run `ENFORCE=1`. Keep the
+page self-contained (inline CSS, no images or scripts from the preview host,
+since those requests are blocked too) and under WAF's 4 KB limit; the script
+checks the size before calling AWS.
+
 The CIDRs come from the IT-Network egress list,
 `git.corp.adobe.com/IT-Network/egress/blob/master/nets.json` — the source of
 truth for Adobe corporate egress. Download it (corp git needs your credentials,
@@ -309,7 +318,8 @@ Notes:
   over it. Use `KEEP_IPV6=1` (with IPv6 ranges in the source) to keep it on.
 - **True client IP:** WAF matches the viewer's source IP — the VPN egress IP for
   your users — so no forwarded-header setup is needed.
-- **Overrides:** `IPSET_NAME`, `WEB_ACL_NAME`, `DIST_DOMAIN`, `KEEP_IPV6`.
+- **Overrides:** `IPSET_NAME`, `WEB_ACL_NAME`, `DIST_DOMAIN`, `KEEP_IPV6`,
+  `BLOCK_PAGE`.
 - **To lift the restriction:** clear the distribution's `WebACLId` (and re-enable
   IPv6 if you turned it off).
 - **Cost:** about $5/month per Web ACL, plus $1/rule and per-request charges.

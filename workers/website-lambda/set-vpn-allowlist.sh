@@ -8,6 +8,9 @@
 #                       associate it with the preview distribution, and disable
 #                       IPv6 on that distribution (KEEP_IPV6=1 to keep IPv6 on)
 #
+# Blocked viewers get vpn-required.html (a WAF custom response body, 4 KB max)
+# with a 403 and Cache-Control: no-store, instead of CloudFront's generic page.
+#
 # Source of truth for the CIDRs is the IT-Network egress list:
 #   https://git.corp.adobe.com/IT-Network/egress/blob/master/nets.json
 # Download it (it needs your corp git credentials, so this script does NOT fetch
@@ -27,7 +30,8 @@
 #   ENFORCE=1 ./set-vpn-allowlist.sh                                       # (re)apply Web ACL only
 #
 # Overrides: IPSET_NAME (default adobe-vpn-egress), WEB_ACL_NAME (preview-vpn-only),
-#   DIST_DOMAIN (d92hudyyqakb6.cloudfront.net), KEEP_IPV6=1.
+#   DIST_DOMAIN (d92hudyyqakb6.cloudfront.net), KEEP_IPV6=1,
+#   BLOCK_PAGE (./vpn-required.html).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,6 +48,7 @@ DIST_DOMAIN="${DIST_DOMAIN:-d92hudyyqakb6.cloudfront.net}"
 APPLY="${APPLY:-0}"
 ENFORCE="${ENFORCE:-0}"
 KEEP_IPV6="${KEEP_IPV6:-0}"
+BLOCK_PAGE="${BLOCK_PAGE:-$SCRIPT_DIR/vpn-required.html}"
 
 aws_waf() { aws wafv2 "$@" --scope "$SCOPE" --region "$REGION" --profile "$PROFILE"; }
 
@@ -140,7 +145,29 @@ fi
 # --- ENFORCE: Web ACL + association + IPv6 toggle -----------------------------
 
 enforce_webacl() {
-  local v4_arn v6_arn acl_id acl_arn lock rules_file vis
+  local v4_arn v6_arn acl_id acl_arn lock rules_file vis bodies_file action_file
+  # Build the block page response first, so a missing or oversized page fails
+  # before any AWS call.
+  bodies_file="$(mktemp)"; action_file="$(mktemp)"
+  python3 - "$BLOCK_PAGE" "$bodies_file" "$action_file" <<'PY' || { rm -f "$bodies_file" "$action_file"; exit 1; }
+import json, sys
+page, bodies_out, action_out = sys.argv[1:4]
+try:
+    html = open(page, encoding="utf-8").read()
+except OSError as e:
+    sys.exit(f"ERROR: can't read block page {page}: {e}")
+size = len(html.encode("utf-8"))
+if size > 4096:
+    sys.exit(f"ERROR: {page} is {size} bytes; WAF custom response bodies max out at 4096.")
+json.dump({"vpn-required": {"ContentType": "TEXT_HTML", "Content": html}}, open(bodies_out, "w"))
+json.dump({"Block": {"CustomResponse": {
+    "ResponseCode": 403,
+    "CustomResponseBodyKey": "vpn-required",
+    # Don't let a browser keep showing the block page after the viewer connects to VPN.
+    "ResponseHeaders": [{"Name": "Cache-Control", "Value": "no-store"}],
+}}}, open(action_out, "w"))
+PY
+
   v4_arn="$(aws_waf list-ip-sets --query "IPSets[?Name=='$IPSET_NAME'].ARN | [0]" --output text)"
   if [ -z "$v4_arn" ] || [ "$v4_arn" = "None" ]; then
     echo "ERROR: IP set '$IPSET_NAME' not found. Run APPLY=1 (with NETS_FILE) first." >&2
@@ -165,17 +192,19 @@ enforce_webacl() {
   if [ -z "$acl_id" ] || [ "$acl_id" = "None" ]; then
     acl_arn="$(aws_waf create-web-acl --name "$WEB_ACL_NAME" \
       --description "Allow only Adobe corporate VPN egress to the preview site" \
-      --default-action Block={} --rules "file://$rules_file" --visibility-config "$vis" \
+      --default-action "file://$action_file" --custom-response-bodies "file://$bodies_file" \
+      --rules "file://$rules_file" --visibility-config "$vis" \
       --query 'Summary.ARN' --output text)"
     echo "  created web ACL $WEB_ACL_NAME -> $acl_arn"
   else
     lock="$(aws_waf get-web-acl --name "$WEB_ACL_NAME" --id "$acl_id" --query 'LockToken' --output text)"
     aws_waf update-web-acl --name "$WEB_ACL_NAME" --id "$acl_id" --lock-token "$lock" \
-      --default-action Block={} --rules "file://$rules_file" --visibility-config "$vis" >/dev/null
+      --default-action "file://$action_file" --custom-response-bodies "file://$bodies_file" \
+      --rules "file://$rules_file" --visibility-config "$vis" >/dev/null
     acl_arn="$(aws_waf list-web-acls --query "WebACLs[?Name=='$WEB_ACL_NAME'].ARN | [0]" --output text)"
     echo "  updated web ACL $WEB_ACL_NAME -> $acl_arn"
   fi
-  rm -f "$rules_file"
+  rm -f "$rules_file" "$bodies_file" "$action_file"
 
   # Associate with the preview distribution and (by default) disable IPv6 - both
   # are one distribution-config update.
