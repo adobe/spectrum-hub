@@ -30,11 +30,12 @@ Set these on the Lambda (they are read from `process.env`):
 - `AEM_HOST_SUFFIX` — the AEM tier to proxy: `aem.live` (published, the default) or `aem.page`
   (preview). The stage Lambda (`spectrum-stage-lambda-proxy`) sets this to `aem.page`; prod leaves it
   unset.
-- `ANON_CACHE_MAX_AGE` — TTL (seconds, default 300) for edge-cached anonymous HTML / query-index /
-  sitemap.
-  Bounds how long a publish takes to show up when edge caching is on (see "Content caching").
-  Set to `0` to disable anonymous edge caching (`no-store`), so publishes show immediately — used on
-  the low-traffic, VPN-only preview.
+- `ANON_CACHE_MAX_AGE` — browser TTL (`max-age`, seconds, default 300) for anonymous HTML,
+  `/query-index.json`, and `/sitemap.xml`. When both this and `ANON_EDGE_MAX_AGE` are `0`,
+  anonymous responses are `no-store` — used on stage, which caches nothing.
+- `ANON_EDGE_MAX_AGE` — CloudFront TTL (`s-maxage`, seconds) for the same responses. Defaults to
+  `ANON_CACHE_MAX_AGE`. Prod sets it to `86400`, since a publish purges the
+  CloudFront copy through push invalidation (see "Content caching").
 - Optional: `ORIGIN` (dev origin override), `ORIGIN_AUTHENTICATION`, `IMS_ENV`, `SESSION_MAX_AGE_MS`,
   `PUSH_INVALIDATION`.
 
@@ -69,59 +70,79 @@ dynamically — the `nodejs22.x` runtime provides AWS SDK v3, so it is not bundl
 ever lacks it, the dynamic import degrades to fail-closed instead of crashing init; the fallback is
 to `npm i` it and include `node_modules` in the deploy zip.
 
-## CloudFront caching — responses vary by viewer
+## CloudFront routing
 
-Most responses this Lambda returns depend on **who is asking** (the
-`spectrum_session` cookie) and, for the query index, on a **query string**:
+Only HTML and JSON vary by viewer, so only they go through the Lambda. Everything
+else goes straight from CloudFront to AEM.
 
-- Private pages → `404` for anonymous, served for authenticated.
-- `audience-public` / `audience-private` blocks → stripped per audience.
-- `/query-index.json` → `audience: private` rows removed for anonymous; the
-  `?compact=true` variant projects each row to `path`/`title` only.
-- `/sitemap.xml` → AEM-origin URLs in `<loc>` and alternate links are rewritten
-  to the environment's public origin for all viewers. For anonymous viewers,
-  `<url>` entries are also removed when the query index marks the path
-  `audience: private` or the gate denies it (`PRIVATE_DENY_*`). The sitemap
-  carries no audience data, so the Lambda reads the full query index from AEM
-  for each anonymous sitemap request. A private page that isn't in the query
-  index can't be detected and stays listed (the page itself still 404s).
-  Fails closed: if the index can't be read, or the sitemap isn't a `<urlset>`,
-  anonymous callers get a `404`. A sitemap index (`<sitemapindex>`) is not
-  supported; its child sitemaps would need their own entries in
-  `PUBLIC_FILTER_PATHS`.
+| Behavior (in order) | Origin | Cache policy (prod) | Cache policy (stage) |
+| --- | --- | --- | --- |
+| `/.rum/*`, `/.optel/*` (all methods) | AEM | `CachingDisabled` + `spectrum-rum` | `CachingDisabled` + `spectrum-rum` |
+| `*/media_*`, `/media_*` | AEM | `spectrum-media` | `CachingDisabled` + `spectrum-media-query` |
+| `*.js`, `*.mjs`, `*.css`, `*.svg`, `*.ico`, `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.webp`, `*.avif`, `*.woff`, `*.woff2`, `*.ttf`, `*.otf`, `*.xml`, `*.txt` | AEM | `spectrum-assets` | `CachingDisabled` |
+| Default (HTML, JSON, anything else) | Lambda | `spectrum-content` | `CachingDisabled` |
 
-So the same URL legitimately returns different bodies. If CloudFront ever caches
-these responses, its **cache key must distinguish them**, or it can serve one
-viewer's response to another — e.g. an authenticated (unfiltered) body to an
-anonymous visitor, which is a content leak.
+`*.xml` also matches `/sitemap.xml`, which must reach the Lambda to be filtered.
+Add an exact `/sitemap.xml` behavior ahead of `*.xml` with
+[`add-sitemap-behavior.sh`](./add-sitemap-behavior.sh) (see "Keep `/sitemap.xml`
+on the Lambda").
 
-### Current setup: caching disabled (nothing to do)
+[`set-content-caching.sh`](./set-content-caching.sh) manages all of this. It's
+idempotent, so rerun it after changing the extension list or a policy:
 
-[`setup-preview-distribution.sh`](./setup-preview-distribution.sh) attaches two
-AWS managed policies to the behavior:
+```bash
+# prod
+DIST_ID=E3VFWCMFUVXVV ./set-content-caching.sh
+# stage: cache nothing (AEM push invalidation only covers main--*.aem.live)
+NO_CACHE=1 DIST_ID=E2RMZZGQ0O3SJ1 ./set-content-caching.sh
+# undo: assets back through the Lambda, default behavior on CachingDisabled
+REVERT=1 DIST_ID=<id> ./set-content-caching.sh
+```
 
-- Cache policy `4135ea2d-6df8-44a3-9df3-4b5a84be39ad` = **`CachingDisabled`** —
-  CloudFront caches nothing, so there is no cache key to get wrong.
-- Origin request policy `b689b0a8-53d0-40ab-baf2-68738e2966ac` =
-  **`AllViewerExceptHostHeader`** — forwards all query strings and cookies (so
-  the Lambda receives both `compact` and `spectrum_session`).
+The asset behaviors are cloned from the `*/media_*` behavior, so they share its
+AEM origin headers (including `Authorization`) and the `spectrum-strip-headers`
+function. Run [`add-media-behavior.sh`](./add-media-behavior.sh) first on a new
+distribution.
 
-Under this configuration every request runs the Lambda fresh and there is
-nothing to configure. **Verify the production distribution mirrors it.**
+CloudFront doesn't match root-level images (`/media_<sha>.png`) to `*/media_*`,
+so the script adds a `/media_*` copy before the asset behaviors. Without it,
+`*.png` would catch them, drop `width` and `format`, and serve the full-size
+original. On stage, `CachingDisabled` forwards no query strings, so both media
+behaviors also use the `spectrum-media-query` origin request policy, which
+forwards only the image parameters.
 
-### If you enable edge caching on this behavior
+RUM beacons (`/.rum/*`, `/.optel/*`) go straight to AEM too, uncached and with
+POST allowed. Through the Lambda they'd fail with a 403: the function URL
+rejects POSTs without an `x-amz-content-sha256` body hash, and `sendBeacon`
+can't send one. The `spectrum-rum` origin request policy forwards
+`content-type`, `user-agent`, `referer`, `origin` and the query string, but no
+cookies.
 
-Swapping in a cache policy with a TTL means the **cache key must include**:
+Assets skip the Lambda gate. A non-HTML file under `/drafts/` (for example,
+`/drafts/diagram.svg`) is public. HTML and JSON under `/drafts/` still go through
+the Lambda and stay private.
 
-1. Cookie **`spectrum_session`** — separates anonymous from authenticated
-   responses (required for every filtered path, not just the query index).
-2. Query string **`compact`** — separates `/query-index.json` from
-   `/query-index.json?compact=true`.
+The script also turns on Origin Shield for both origins (off with `NO_CACHE=1`),
+so CloudFront edge locations share one regional cache in front of each origin.
 
-Keep the origin-request policy forwarding both to the Lambda (the worker reads
-`compact` from the incoming request and the cookie for auth). Given the whole
-purpose of this Lambda is per-viewer filtering, prefer leaving **`CachingDisabled`**
-here and let AEM's own edge/TTL cache genuinely public, cacheable assets.
+### Alias host redirect
+
+Prod also answers on `s2.spectrum.adobe.com`. A viewer-request CloudFront
+Function ([`cloudfront-functions/canonical-host.js`](./cloudfront-functions/canonical-host.js))
+301s it to `https://spectrum.adobe.com`, keeping the path and query string. It
+runs before the cache, so these requests never reach the Lambda or AEM.
+[`set-canonical-host-redirect.sh`](./set-canonical-host-redirect.sh) publishes
+the function and attaches it to every behavior:
+
+```bash
+DIST_ID=E3VFWCMFUVXVV ./set-canonical-host-redirect.sh
+# undo: detach it everywhere
+REMOVE=1 DIST_ID=E3VFWCMFUVXVV ./set-canonical-host-redirect.sh
+```
+
+`set-content-caching.sh` clones its behaviors from `*/media_*`, so they keep the
+function when it's re-run. Re-run this script after adding behaviors any other
+way.
 
 ## Media offload (hybrid BYO-CDN)
 
@@ -186,40 +207,50 @@ DRY_RUN=1 DIST_ID=<dist-id> ./add-sitemap-behavior.sh   # preview the behavior o
 DIST_ID=<dist-id> ./add-sitemap-behavior.sh
 ```
 
-Once the distribution is deployed, invalidate `/sitemap.xml`. Distributions
-created by `setup-preview-distribution.sh` have no extension behaviors, so they
-don't need this.
+Once the distribution is deployed, invalidate `/sitemap.xml`.
+[`set-content-caching.sh`](./set-content-caching.sh) adds a `*.xml` behavior, so
+run this script after it. The behavior copies the default behavior's cache
+policy at the time it runs, so rerun it whenever `set-content-caching.sh`
+changes that policy (for example, switching between `NO_CACHE=1` and cached).
+A distribution with no extension behaviors doesn't need this.
 
 ## Content caching (the default/Lambda behavior)
 
-The default behavior (HTML, `/query-index.json`, static assets) proxies the
-Lambda. It uses a custom **`spectrum-content`** cache policy (created by
-[`set-content-caching.sh`](./set-content-caching.sh) / baked into
-`setup-preview-distribution.sh`) instead of `CachingDisabled`. The policy honours
-AEM's `Cache-Control` (`DefaultTTL 0` ⇒ nothing caches unless AEM says so) and
-**keys the cache on the `spectrum_session` cookie** (+ all query strings). Run
-`set-content-caching.sh` on a distribution to enable it; `REVERT=1` puts the
-behavior back on `CachingDisabled`.
+HTML and JSON can differ by viewer: private pages, `audience-*` blocks, the
+private rows of `/query-index.json`, and the private entries of `/sitemap.xml`.
+The `spectrum-content` policy keeps them apart:
 
-**What caches, and how it's kept safe.** The `spectrum_session` cache key is what
-makes this safe: anonymous requests (no cookie) share one entry; authenticated
-requests (unique cookie) get their own, and their viewer-varying responses are
-`no-store` so they're never cached at all.
+- **Cache key:** the `spectrum_session` cookie, plus the query params the Lambda
+  uses (`compact`, `limit`, `offset`, `sheet`). Anonymous viewers (no cookie)
+  share one entry. Other query strings are still forwarded but don't create new
+  entries.
+- **TTL:** the policy follows the Lambda's `Cache-Control` (`DefaultTTL 0`), so a
+  response caches only when the Lambda allows it.
 
-- **Assets** (js/css/svg/fragments — public, path-determined) keep AEM's
-  `max-age … must-revalidate` and cache at the edge. An authenticated `/drafts/`
-  asset (anon gets a `no-store` 404) caches under the **cookie** key, never
-  reaching anon.
-- **Anonymous HTML, `/query-index.json`, and `/sitemap.xml`** ([index.js](./index.js)
-  `processHtmlResponse` / query-index and sitemap transforms via `setContentCacheControl`) get
-  a **short shared TTL** — `public, max-age=<ANON_CACHE_MAX_AGE>` (default 300s,
-  env-overridable) — so a publish shows up within a few minutes **without push
-  invalidation**. `isPrivateHtml` has already 404'd private pages, so the anon body
-  is the public, audience-stripped view. Setting `ANON_CACHE_MAX_AGE=0` makes this
-  `no-store` instead: every anonymous request goes live to the Lambda, so publishes
-  are instant, at the cost of edge caching — the choice for the low-traffic preview.
-- **Authenticated HTML / the full query index / the full sitemap** stay `private, no-store`, and
-  **gate 404s** stay `no-store` (no negative caching).
+`/sitemap.xml` URLs in `<loc>` and alternate links are rewritten from AEM
+origins to the environment's public origin for all viewers. For anonymous
+viewers, `<url>` entries are also removed when the query index marks the path
+`audience: private` or the gate denies it (`PRIVATE_DENY_*`). The sitemap
+carries no audience data, so the Lambda reads the full query index from AEM for
+each anonymous sitemap request. A private page that isn't in the query index
+can't be detected and stays listed (the page itself still 404s). Fails closed:
+if the index can't be read, or the sitemap isn't a `<urlset>`, anonymous callers
+get a `404`. A sitemap index (`<sitemapindex>`) is not supported; its child
+sitemaps would need their own entries in `PUBLIC_FILTER_PATHS`.
+
+What the Lambda sends:
+
+| Response | `Cache-Control` | Cached by CloudFront |
+| --- | --- | --- |
+| Anonymous HTML, `/query-index.json`, and `/sitemap.xml` | `public, max-age=<ANON_CACHE_MAX_AGE>, s-maxage=<ANON_EDGE_MAX_AGE>` | Yes, one shared copy |
+| Authenticated HTML, JSON, and `/sitemap.xml` | `private, no-store` | No |
+| Gate 404s and failed query-index or sitemap filtering | `no-store` | No |
+| Redirects that carry the viewer's query string | `no-store` | No |
+
+For authenticated requests the Lambda removes `If-None-Match` and
+`If-Modified-Since` before calling AEM. A browser can still hold the anonymous
+copy of a page from before sign-in; without this, AEM could answer `304` and the
+browser would keep showing that copy.
 
 Assets keep AEM's **ETag**, so CloudFront's post-TTL revalidation is a cheap
 conditional `304`. Anonymous pages and the anonymous `/query-index.json` get a
@@ -245,27 +276,44 @@ entries are removed.
 > increment `GATE_ETAG_VERSION` in [lib/etag.js](./lib/etag.js). Every cached
 > anonymous copy then fails revalidation and is re-fetched and re-filtered, with
 > no CloudFront invalidation needed. Clients and edges that still hold a fresh
-> copy keep it until the short TTL expires; for an urgent security fix, also run
+> copy keep it until its TTL expires (`s-maxage` at the edge — a day on prod);
+> for a security-relevant fix, also run
 > `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` (this
 > uses your role's permission, so it works in the klam-federated account).
 
-> ⚠️ **Leak test before prod (mandatory).** With a real `spectrum_session` cookie:
-> an anonymous public page + `/query-index.json` cache (repeat = `X-Cache: Hit`)
-> with `audience-private` content stripped; the **authenticated** fetch of the same
-> URL is `no-store` and never a `Hit`; a private page is `404` for anon and real
-> content for authed, neither served to the other. If any authed request returns a
-> `Hit`, or any anon request returns private content, revert
-> (`REVERT=1 … ./set-content-caching.sh`).
+> ⚠️ **Test for leaks before changing prod.** With a real `spectrum_session`
+> cookie, confirm that anonymous pages and `/query-index.json` return
+> `X-Cache: Hit` on repeat with private content removed, that authenticated
+> requests are never a `Hit`, and that a private page is a `404` for anonymous
+> viewers and real content for authenticated ones.
 
-Future option (not needed with the short TTL): a standing push-invalidation
-credential (IAM `cloudfront:CreateInvalidation` + config-service
-`POST …/cdn/prod.json`,
-[guide](https://www.aem.live/docs/setup-byo-cdn-push-invalidation-for-cloudfront))
-would let you raise the TTL and purge instantly on publish — but the
-klam-federated account doesn't permit those long-lived keys, and the short TTL
-makes them unnecessary. Hardening option: add `Vary: Cookie` to the anonymous
-response so cookie-blind browser/proxy caches can't serve it to a signed-in
-viewer (CloudFront already keys on the cookie).
+### Known gaps
+
+- **Browser copies after sign-in.** Anonymous responses have a browser
+  `max-age`. After sign-in, the page reloads and is fetched fresh, but
+  subresources the page fetches (such as `/query-index.json`) can come from the
+  browser's anonymous copy until it expires. Sending `max-age=0` to browsers
+  (with `s-maxage` for CloudFront) and `Vary: Cookie` would close this.
+- **Authenticated HTML and JSON aren't cached.** Sharing one cached copy across
+  signed-in viewers would need CloudFront to verify the session cookie, which
+  means storing `SESSION_SECRET` outside Secrets Manager.
+
+### Push invalidation
+
+With [AEM push invalidation](https://www.aem.live/docs/setup-byo-cdn-push-invalidation-for-cloudfront),
+a publish purges CloudFront, so `ANON_EDGE_MAX_AGE` can be raised well above the
+default. It only covers `main--*.aem.live`, so it doesn't apply to stage. Prod
+(`E3VFWCMFUVXVV`) has it set up:
+
+- Cache tags are on (`CacheTagConfig`, header `x-amz-meta-cache-tag`), set by
+  `set-content-caching.sh`, so AEM can purge by tag instead of purging
+  everything. Both the Lambda and AEM asset responses carry the header.
+- AEM calls CloudFront as the IAM user `invalidator` (group `Invalidator`),
+  which `adobe.design` also uses. To check that publishes reach CloudFront,
+  look in CloudTrail for `CreateInvalidation` events from `invalidator`.
+- The `cdn.prod` config (`host`, `type: cloudfront`, `distributionId`,
+  `accessKeyId`, `secretAccessKey`, `tagInvalidationEnabled: true`) is posted
+  to the AEM config service.
 
 ## Access allowlist (Adobe VPN only)
 

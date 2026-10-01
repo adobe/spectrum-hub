@@ -51,23 +51,32 @@ const env = process.env;
 // (ANON_CACHE_MAX_AGE, seconds; default 300). Set it to 0 to disable anonymous
 // edge caching entirely (no-store) so publishes show immediately - suitable for a
 // low-traffic preview; anything non-numeric/negative falls back to the default.
-const ANON_CACHE_MAX_AGE = (() => {
-  const n = Number(env.ANON_CACHE_MAX_AGE);
-  return Number.isInteger(n) && n >= 0 ? n : 300;
-})();
+const parseMaxAge = (value, fallback) => {
+  const n = Number(value);
+  return value !== undefined && value !== '' && Number.isInteger(n) && n >= 0 ? n : fallback;
+};
+const ANON_CACHE_MAX_AGE = parseMaxAge(env.ANON_CACHE_MAX_AGE, 300);
 
-// Cache-Control for a post-filter content response: a short shared TTL for
-// anonymous (the body is the public, audience-stripped view, and CloudFront's
-// cache key includes spectrum_session so it can never reach an authenticated
-// viewer), or no-store when ANON_CACHE_MAX_AGE is 0 (live, instant publishes);
-// no-store for authenticated/private. Anonymous responses carry a gated ETag
-// (see markGated / lib/etag.js) so CloudFront's post-TTL revalidation is still a
-// cheap conditional 304, but only for a copy the current gate produced. Bump
+// Shared-cache (CloudFront) TTL for the same anonymous content, sent as
+// s-maxage so it can outlive the browser's max-age. Defaults to
+// ANON_CACHE_MAX_AGE; raise it (e.g. to days) once AEM push invalidation is
+// configured for the distribution, since a publish then purges the edge copy.
+const ANON_EDGE_MAX_AGE = parseMaxAge(env.ANON_EDGE_MAX_AGE, ANON_CACHE_MAX_AGE);
+
+// Cache-Control for a post-filter content response: a shared TTL for anonymous
+// (the body is the public, audience-stripped view, and CloudFront's cache key
+// includes spectrum_session so it can never reach an authenticated viewer), or
+// no-store when both TTLs are 0 (live, instant publishes); no-store for
+// authenticated/private. Anonymous responses carry a gated ETag (see markGated /
+// lib/etag.js) so CloudFront's post-TTL revalidation is still a cheap
+// conditional 304, but only for a copy the current gate produced. Bump
 // GATE_ETAG_VERSION in lib/etag.js when the filtering/gating logic changes so
 // already cached bodies are re-fetched and re-filtered (see README "Content
 // caching").
 const setContentCacheControl = (resp, authed) => {
-  const anon = ANON_CACHE_MAX_AGE === 0 ? 'no-store' : `public, max-age=${ANON_CACHE_MAX_AGE}`;
+  const anon = (ANON_CACHE_MAX_AGE === 0 && ANON_EDGE_MAX_AGE === 0)
+    ? 'no-store'
+    : `public, max-age=${ANON_CACHE_MAX_AGE}, s-maxage=${ANON_EDGE_MAX_AGE}`;
   resp.headers.set('cache-control', authed ? 'private, no-store' : anon);
   resp.headers.delete('age');
 };
@@ -133,17 +142,12 @@ const ROUTES = [
     match: isAuthPath,
     handler: handleAuth,
   },
-  // Default AEM handler should be last.
-  //
-  // cache is false: AEM's edge sends a long CDN-Cache-Control TTL (days)
-  // meant to be purged by push-invalidation when content changes. This port
-  // does no caching of its own - CloudFront in front of the Function URL is
-  // where any edge caching belongs - so it always fetches fresh and lets the
-  // CDN policy decide what to store.
+  // Default AEM handler should be last. This port does no caching of its own -
+  // Node's fetch has no HTTP cache - so every call reaches AEM; CloudFront in
+  // front of the Function URL is where edge caching happens.
   {
     match: () => true,
     handler: fetchFromAem,
-    cache: false,
     proxy: true,
   },
 ];
@@ -298,7 +302,7 @@ const loadPrivatePaths = async (req, url) => {
       indexReq.headers.delete('if-none-match');
       indexReq.headers.delete('if-modified-since');
       const indexAemReq = await formatRequest(indexReq, indexUrl);
-      const resp = await fetchFromAem({ request: indexAemReq, cache: false });
+      const resp = await fetchFromAem({ request: indexAemReq });
       if (resp.status !== 200) { return null; }
       const json = await resp.json();
       const result = collectPrivatePaths(json);
@@ -438,11 +442,16 @@ const route = async (req) => {
   const savedSearch = formatSearchParams(url);
   const request = await formatRequest(req, url);
 
+  // An authenticated browser may still hold the anonymous copy of this URL
+  // (e.g. from before sign-in), so its If-None-Match / If-Modified-Since can
+  // match. A 304 would tell it to keep showing that anonymous body. Always
+  // answer authenticated requests with a full, per-viewer body instead.
+  // Likewise for the sitemap: AEM's sitemap validators describe its
+  // untransformed body. Forwarding an old CloudFront conditional can produce a
+  // 304 that preserves a cached body from before filtering or host rewriting,
+  // so always fetch a full 200.
   const isSitemap = url.pathname === '/sitemap.xml';
-  if (isSitemap) {
-    // AEM's sitemap validators describe its untransformed body. Forwarding an
-    // old CloudFront conditional can produce a 304 that preserves a cached body
-    // from before filtering or host rewriting, so always fetch a full 200.
+  if (authed || isSitemap) {
     request.headers.delete('if-none-match');
     request.headers.delete('if-modified-since');
   }
@@ -482,9 +491,7 @@ const route = async (req) => {
     ? `${url.protocol}//${url.host}`
     : null;
 
-  const resp = await matched.handler({
-    url, env, request, cache: matched.cache, savedSearch,
-  });
+  const resp = await matched.handler({ request, savedSearch });
 
   // A 304 with no gated tag forwarded can't be verified against the gate: fail
   // closed rather than confirm a copy the client should not have.
