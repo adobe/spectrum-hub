@@ -50,6 +50,39 @@ export const filterPrivateEntries = (json) => {
   return null;
 };
 
+// Collect the paths of audience:private rows from one page of an index, for
+// callers (the sitemap filter) that need to know *which* paths are private
+// rather than a filtered index. Returns { paths, complete } where `complete`
+// is false when a sheet reports more rows (`total`) than this page carries -
+// the caller must fetch the rest (single sheet) or fail closed. Returns null
+// for a shape that is not a recognizable index.
+export const collectPrivatePaths = (json) => {
+  if (!json || typeof json !== 'object') { return null; }
+  let sheets;
+  if (Array.isArray(json.data)) {
+    sheets = [json];
+  } else if (Array.isArray(json[':names'])) {
+    sheets = json[':names'].map((name) => json[name]).filter((s) => s && Array.isArray(s.data));
+    if (sheets.length === 0) { return null; }
+  } else {
+    return null;
+  }
+  const paths = new Set();
+  let complete = true;
+  for (const sheet of sheets) {
+    for (const row of sheet.data) {
+      if (row && typeof row === 'object' && row.audience === 'private' && typeof row.path === 'string') {
+        paths.add(row.path);
+      }
+    }
+    const offset = Number(sheet.offset) || 0;
+    if (Number.isInteger(sheet.total) && offset + sheet.data.length < sheet.total) {
+      complete = false;
+    }
+  }
+  return { paths, complete };
+};
+
 // Project every row down to just the columns the site nav needs (path + title),
 // shrinking the payload ~90%. Opt-in (index.js only applies it for
 // ?compact=true) so the default index keeps its full column set for other

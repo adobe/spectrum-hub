@@ -3,6 +3,7 @@ import { expect } from '@esm-bundle/chai';
 // Set query param before importing scripts module so the dapreview IIFE fires
 const originalUrl = window.location.href;
 window.history.pushState({}, '', '?dapreview=true');
+document.body.innerHTML = '<main></main>';
 
 // Now import - module will see the dapreview param and trigger the da.js dynamic import
 await import('../../scripts/scripts.js');
