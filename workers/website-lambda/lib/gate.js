@@ -8,8 +8,13 @@
  * is served unless the page itself opts into privacy. A page opts in with
  * <meta name="audience" content="private"> in its <head>; because that lives in
  * the fetched HTML, index.js applies it *after* proxying (see isPrivateHtml,
- * used by index.js's gateByMeta). Whole paths/prefixes can also be marked
- * private up front here, with no fetch, via PRIVATE_DENY_EXACT/PREFIX.
+ * used by index.js's processHtmlResponse). Whole paths/prefixes can also be
+ * marked private up front here, with no fetch, via PRIVATE_DENY_EXACT/PREFIX.
+ *
+ * AEM also serves every page as head-less variants - `<page>.plain.html` (body
+ * markup only) and `<page>.md` (Markdown) - which carry no <head> to scan. For
+ * those, getCanonicalPagePath maps the variant back to its page, and index.js
+ * decides privacy from the canonical page's HTML before serving the variant.
  */
 
 // Paths that are private up front, before any fetch - an anonymous visitor
@@ -75,18 +80,39 @@ const getExtension = (pathname) => {
   return (basename === '' || pos < 1) ? '' : basename.slice(pos + 1).toLowerCase();
 };
 
-// A "page" is an extensionless path or an .html path - the responses that can
-// carry the <meta name="audience"> gate. Everything else (json, xml, ...) is
-// data, served by the default-allow fallthrough unless explicitly private.
+// Head-less page variants AEM serves alongside every page. Neither carries the
+// page's <head> metadata, so privacy must be read from the canonical page.
+// Matched case-sensitively: AEM only serves the lowercase forms (anything else
+// is an AEM 404), and the canonical lookup must target the same page AEM would.
+const PAGE_VARIANT_SUFFIXES = ['.plain.html', '.md'];
+
+// Canonical page path for a head-less page variant, or null when the path is
+// not one. `/a/b.plain.html` -> `/a/b`, `/a/b.md` -> `/a/b`, and a folder index
+// (`/index.md`, `/a/index.plain.html`) -> the folder (`/`, `/a/`), which is how
+// AEM addresses index pages.
+export const getCanonicalPagePath = (pathname) => {
+  const suffix = PAGE_VARIANT_SUFFIXES.find((s) => pathname.endsWith(s));
+  if (!suffix) { return null; }
+  const base = pathname.slice(0, -suffix.length);
+  if (base === '' || base.endsWith('/')) { return base || '/'; }
+  if (base === '/index' || base.endsWith('/index')) { return base.slice(0, -'index'.length); }
+  return base;
+};
+
+// A "page" is an extensionless path, an .html path, or a page variant (.md) -
+// the responses that render a page and so must honour its audience gate.
+// Everything else (json, xml, ...) is data, served by the default-allow
+// fallthrough unless explicitly private.
 export const isPageLike = (pathname) => {
   const ext = getExtension(pathname);
-  return ext === '' || ext === 'html';
+  return ext === '' || ext === 'html' || getCanonicalPagePath(pathname) !== null;
 };
 
 // Verdict for an anonymous visitor:
 //   'allow'  - serve as-is (no meta parse)
 //   'filter' - JSON proxied, then private rows stripped before serving
 //   'gate'   - page-like: proxy, then 404 only if the HTML opts into privacy
+//              (for a .plain.html/.md variant, the canonical page's HTML)
 //   'deny'   - 404 up front, indistinguishable from a path that does not exist
 // Order matters: an explicitly-private path is denied before any allow/gate.
 export const classifyPublicPath = (pathname) => {
@@ -111,8 +137,10 @@ const getMetaAttr = (tag, name) => {
 };
 
 // True when the page opts into privacy via <meta name="audience"
-// content="private"> in its <head>. Pure - index.js's gateByMeta reads the
-// proxied HTML and calls this. The scan is scoped to the <head> so a stray
+// content="private"> in its <head>. Pure - index.js reads the proxied HTML (or,
+// for a head-less variant, the canonical page's HTML) and calls this. Never
+// call it on a .plain.html body: with no <head> it would scan the whole body
+// and miss the page's metadata. The scan is scoped to the <head> so a stray
 // example of the tag in body content can't gate the page; attribute order,
 // quoting, and case are all tolerated.
 export const isPrivateHtml = (html) => {

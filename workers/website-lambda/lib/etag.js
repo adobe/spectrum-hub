@@ -18,7 +18,7 @@
  * no CloudFront invalidation needed.
  */
 
-export const GATE_ETAG_VERSION = 1;
+export const GATE_ETAG_VERSION = 2;
 export const GATE_ETAG_SUFFIX = `--gate-v${GATE_ETAG_VERSION}`;
 
 const ENTITY_TAG = /^(W\/)?"([^"]*)"$/;

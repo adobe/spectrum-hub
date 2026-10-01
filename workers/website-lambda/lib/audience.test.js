@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterAudienceBlocks, hasAudienceBlocks } from './audience.js';
+import { filterAudienceBlocks, filterAudienceMarkdown, hasAudienceBlocks } from './audience.js';
 
 // A block is `main > div (section) > div[class]` in the served HTML. Build a
 // section from block markup strings so tests read close to real pages.
@@ -84,5 +84,134 @@ describe('filterAudienceBlocks', () => {
     const out = filterAudienceBlocks(page(PRIVATE, PLAIN), false);
     expect(out.startsWith('<!doctype html>')).toBe(true);
     expect(out).toContain('<head><title>t</title></head>');
+  });
+});
+
+describe('filterAudienceBlocks on .plain.html markup', () => {
+  // The .plain.html variant is the sections without the document or <main>.
+  const plain = (...blocks) => `\n<div>\n${blocks.join('\n')}\n</div>\n`;
+
+  it('removes audience-private blocks for anonymous viewers', () => {
+    const out = filterAudienceBlocks(plain(PUBLIC, PRIVATE, PLAIN), false);
+    expect(out).toContain('public banner');
+    expect(out).toContain('shared');
+    expect(out).not.toContain('private banner');
+  });
+
+  it('removes audience-public blocks for authenticated viewers', () => {
+    const out = filterAudienceBlocks(plain(PUBLIC, PRIVATE), true);
+    expect(out).toContain('private banner');
+    expect(out).not.toContain('public banner');
+  });
+
+  it('ignores audience classes nested deeper than block level', () => {
+    const nested = '<div class="columns"><div><div class="audience-private">inner</div></div></div>';
+    const html = plain(nested);
+    expect(filterAudienceBlocks(html, false)).toBe(html);
+  });
+});
+
+describe('filterAudienceMarkdown', () => {
+  // AEM renders each block in the .md variant as a grid table headed
+  // `Name (variants)`.
+  const table = (header, ...rows) => {
+    const width = Math.max(header.length, ...rows.map((r) => r.length)) + 2;
+    const border = `+${'-'.repeat(width)}+`;
+    const row = (text) => `| ${text.padEnd(width - 2)} |`;
+    return [border, row(header), border, ...rows.map(row), border].join('\n');
+  };
+  const doc = (...parts) => `${parts.join('\n\n')}\n`;
+
+  const MD_PUBLIC = table('Banner (audience public)', 'public banner');
+  const MD_PRIVATE = table('Banner (audience private)', 'private banner');
+  const MD_PLAIN = table('Columns (large)', 'shared');
+
+  it('removes audience-private tables for anonymous viewers', () => {
+    const out = filterAudienceMarkdown(doc('# Title', MD_PUBLIC, MD_PRIVATE, MD_PLAIN), false);
+    expect(out).toContain('public banner');
+    expect(out).toContain('shared');
+    expect(out).toContain('# Title');
+    expect(out).not.toContain('private banner');
+    expect(out).toBe(doc('# Title', MD_PUBLIC, MD_PLAIN));
+  });
+
+  it('removes audience-public tables for authenticated viewers', () => {
+    const out = filterAudienceMarkdown(doc(MD_PUBLIC, MD_PRIVATE), true);
+    expect(out).toContain('private banner');
+    expect(out).not.toContain('public banner');
+  });
+
+  it('matches the audience variant among others, hyphenated or spaced, any case', () => {
+    for (const header of ['Columns (centered, audience private)', 'Columns (Audience-Private, large)']) {
+      const out = filterAudienceMarkdown(doc(table(header, 'hidden'), '# Kept'), false);
+      expect(out).not.toContain('hidden');
+      expect(out).toContain('# Kept');
+    }
+  });
+
+  it('removes every row of a multi-line block, including nested tables', () => {
+    const nested = [
+      '+--------------------------------+',
+      '| Columns (audience private)     |',
+      '+---------------+----------------+',
+      '| cell one      | +------------+ |',
+      '|               | | inner      | |',
+      '|               | +------------+ |',
+      '+---------------+----------------+',
+    ].join('\n');
+    const out = filterAudienceMarkdown(doc(nested, 'After'), false);
+    expect(out).toBe(doc('After'));
+  });
+
+  it('matches headers that keep the author\'s inline formatting', () => {
+    for (const header of [
+      '**Cards (audience private)**',
+      'Cards **(audience private)**',
+      '*Cards (audience-private)*',
+      'Cards (audience\\-private)',
+      'Cards (`audience private`)',
+    ]) {
+      const out = filterAudienceMarkdown(doc(table(header, 'hidden'), '# Kept'), false);
+      expect(out, header).not.toContain('hidden');
+      expect(out, header).toContain('# Kept');
+    }
+  });
+
+  it('drops reference definitions used only by removed blocks', () => {
+    const md = doc(
+      table('Columns (audience private)', '![][image0] ![][image1]'),
+      table('Columns', '![][image1]'),
+      '[image0]: https://example.com/media_aaa.png#width=1&height=1 "private title"',
+      '[image1]: https://example.com/media_bbb.png#width=1&height=1',
+    );
+    const out = filterAudienceMarkdown(md, false);
+    expect(out).not.toContain('media_aaa');
+    expect(out).not.toContain('private title');
+    expect(out).toContain('[image1]: https://example.com/media_bbb.png');
+    expect(out).toBe(doc(
+      table('Columns', '![][image1]'),
+      '[image1]: https://example.com/media_bbb.png#width=1&height=1',
+    ));
+  });
+
+  it('keeps reference definitions when nothing is removed', () => {
+    const md = doc(MD_PUBLIC, '![][image0]', '[image0]: https://example.com/media_aaa.png');
+    expect(filterAudienceMarkdown(md, false)).toBe(md);
+  });
+
+  it('leaves prose that mentions the audience class untouched', () => {
+    const md = doc('Add `audience private` to a block to hide it.', MD_PLAIN);
+    expect(filterAudienceMarkdown(md, false)).toBe(md);
+  });
+
+  it('does not treat a metadata row as a block variant', () => {
+    const md = doc('# Title', table('Metadata', 'audience | public'));
+    expect(filterAudienceMarkdown(md, true)).toBe(md);
+  });
+
+  it('returns non-strings and audience-free markdown unchanged', () => {
+    expect(filterAudienceMarkdown(undefined, false)).toBeUndefined();
+    const md = doc('# Title', MD_PLAIN);
+    expect(filterAudienceMarkdown(md, false)).toBe(md);
   });
 });

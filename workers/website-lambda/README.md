@@ -70,9 +70,32 @@ dynamically — the `nodejs22.x` runtime provides AWS SDK v3, so it is not bundl
 ever lacks it, the dynamic import degrades to fail-closed instead of crashing init; the fallback is
 to `npm i` it and include `node_modules` in the deploy zip.
 
+## Page variants (`.plain.html` and `.md`)
+
+AEM serves every page in two head-less variants as well: `<page>.plain.html`
+(body markup only) and `<page>.md` (Markdown). Neither includes the page's
+`<head>`, so the `<meta name="audience" content="private">` check can't run on
+the variant itself. For anonymous visitors the Lambda handles them as follows:
+
+1. [`lib/gate.js`](./lib/gate.js) `getCanonicalPagePath` maps the variant to its
+   page (`/a/b.plain.html` → `/a/b`, `/index.md` → `/`, `/a/index.md` → `/a/`).
+2. Before proxying the variant, [`index.js`](./index.js) `isPublicCanonicalPage`
+   fetches that page from AEM and runs `isPrivateHtml` on it. The lookup fails
+   closed: a private page, a non-`200` or redirect, a non-HTML response, or a
+   fetch error returns `404`, and the variant is never fetched.
+3. A public variant is then served with its audience blocks stripped:
+   `filterAudienceBlocks` handles `.plain.html` markup (no `<main>` wrapper), and
+   `filterAudienceMarkdown` removes `Name (audience private)` block tables from
+   `.md`.
+
+Authenticated requests skip the canonical lookup. For anonymous requests it
+adds one origin fetch per variant request that reaches the Lambda; the result is
+cached like any other anonymous page (see "Content caching"). Both variants fall
+under the default CloudFront behavior, so they always reach the Lambda.
+
 ## CloudFront routing
 
-Only HTML and JSON vary by viewer, so only they go through the Lambda. Everything
+Only HTML, Markdown (`.md`), and JSON vary by viewer, so only they go through the Lambda. Everything
 else goes straight from CloudFront to AEM.
 
 | Behavior (in order) | Origin | Cache policy (prod) | Cache policy (stage) |

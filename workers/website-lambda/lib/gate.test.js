@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   classifyPublicPath,
+  getCanonicalPagePath,
   isPrivateHtml,
   PUBLIC_ALLOW_PREFIX,
   PRIVATE_DENY_EXACT,
@@ -49,6 +50,11 @@ describe('classifyPublicPath', () => {
     expect(classifyPublicPath('/index.html')).toBe('gate');
     expect(classifyPublicPath('/foo.plain.html')).toBe('gate');
     expect(classifyPublicPath('/some/section/')).toBe('gate');
+  });
+
+  it('gates the .md page variant instead of default-allowing it', () => {
+    expect(classifyPublicPath('/foo.md')).toBe('gate');
+    expect(classifyPublicPath('/index.md')).toBe('gate');
   });
 
   it('defaults non-page, non-listed resources to allow (json/xml/other)', () => {
@@ -126,5 +132,37 @@ describe('isPrivateHtml', () => {
     expect(isPrivateHtml('')).toBe(false);
     expect(isPrivateHtml(null)).toBe(false);
     expect(isPrivateHtml(undefined)).toBe(false);
+  });
+});
+
+describe('getCanonicalPagePath', () => {
+  it('maps .plain.html and .md variants to their page', () => {
+    expect(getCanonicalPagePath('/support/developer-overview.plain.html')).toBe('/support/developer-overview');
+    expect(getCanonicalPagePath('/support/developer-overview.md')).toBe('/support/developer-overview');
+  });
+
+  it('maps folder index variants to the folder', () => {
+    expect(getCanonicalPagePath('/index.plain.html')).toBe('/');
+    expect(getCanonicalPagePath('/index.md')).toBe('/');
+    expect(getCanonicalPagePath('/support/index.plain.html')).toBe('/support/');
+    expect(getCanonicalPagePath('/support/index.md')).toBe('/support/');
+  });
+
+  it('maps bare-suffix paths to the enclosing folder', () => {
+    expect(getCanonicalPagePath('/.md')).toBe('/');
+    expect(getCanonicalPagePath('/support/.plain.html')).toBe('/support/');
+  });
+
+  it('does not treat a name merely ending in "index" as a folder index', () => {
+    expect(getCanonicalPagePath('/reindex.md')).toBe('/reindex');
+    expect(getCanonicalPagePath('/a/reindex.plain.html')).toBe('/a/reindex');
+  });
+
+  it('returns null for anything that is not a page variant', () => {
+    expect(getCanonicalPagePath('/support/developer-overview')).toBeNull();
+    expect(getCanonicalPagePath('/support/developer-overview.html')).toBeNull();
+    expect(getCanonicalPagePath('/query-index.json')).toBeNull();
+    expect(getCanonicalPagePath('/foo.plain.html/')).toBeNull();
+    expect(getCanonicalPagePath('/foo.mdx')).toBeNull();
   });
 });
