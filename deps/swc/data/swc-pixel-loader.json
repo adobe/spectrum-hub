@@ -2,7 +2,7 @@
   {
     "attribute": "icon",
     "property": "icon",
-    "type": "\"folder\" | \"aiLogo\" | \"brush\" | \"eye\" | \"hourglass\" | \"mag\" | \"crop\" | \"flower\" | \"image\" | \"lasso\" | \"page\" | \"wand\" | \"bargraph\" | \"trefoil\" | \"dial\" | \"arrow\" | \"cloud\" | \"comment\" | \"filter\" | \"microphone\" | \"pencil\" | \"potion\" | \"slider\" | \"timeline\" | \"eyedrop\" | \"adobeA\" | \"adobeD\" | \"adobeO\" | \"adobeB\" | \"adobeE\"",
+    "type": "\"aiLogo\" | \"brush\" | \"eye\" | \"hourglass\" | \"mag\" | \"crop\" | \"flower\" | \"image\" | \"lasso\" | \"page\" | \"wand\" | \"bargraph\" | \"trefoil\" | \"dial\" | \"folder\" | \"arrow\" | \"cloud\" | \"comment\" | \"filter\" | \"microphone\" | \"pencil\" | \"potion\" | \"slider\" | \"timeline\" | \"eyedrop\" | \"adobeA\" | \"adobeD\" | \"adobeO\" | \"adobeB\" | \"adobeE\"",
     "kind": "enum",
     "values": [
       "aiLogo",
