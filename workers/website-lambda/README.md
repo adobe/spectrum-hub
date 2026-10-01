@@ -68,12 +68,35 @@ dynamically — the `nodejs22.x` runtime provides AWS SDK v3, so it is not bundl
 ever lacks it, the dynamic import degrades to fail-closed instead of crashing init; the fallback is
 to `npm i` it and include `node_modules` in the deploy zip.
 
+## Page variants (`.plain.html` and `.md`)
+
+AEM serves every page in two head-less variants as well: `<page>.plain.html`
+(body markup only) and `<page>.md` (Markdown). Neither includes the page's
+`<head>`, so the `<meta name="audience" content="private">` check can't run on
+the variant itself. For anonymous visitors the Lambda handles them as follows:
+
+1. [`lib/gate.js`](./lib/gate.js) `getCanonicalPagePath` maps the variant to its
+   page (`/a/b.plain.html` → `/a/b`, `/index.md` → `/`, `/a/index.md` → `/a/`).
+2. Before proxying the variant, [`index.js`](./index.js) `isPublicCanonicalPage`
+   fetches that page from AEM and runs `isPrivateHtml` on it. The lookup fails
+   closed: a private page, a non-`200` or redirect, a non-HTML response, or a
+   fetch error returns `404`, and the variant is never fetched.
+3. A public variant is then served with its audience blocks stripped:
+   `filterAudienceBlocks` handles `.plain.html` markup (no `<main>` wrapper), and
+   `filterAudienceMarkdown` removes `Name (audience private)` block tables from
+   `.md`.
+
+Authenticated requests skip the canonical lookup. For anonymous requests it
+adds one origin fetch per variant request that reaches the Lambda; the result is
+edge-cached for `ANON_CACHE_MAX_AGE` like any other anonymous page.
+
 ## CloudFront caching — responses vary by viewer
 
 Most responses this Lambda returns depend on **who is asking** (the
 `spectrum_session` cookie) and, for the query index, on a **query string**:
 
-- Private pages → `404` for anonymous, served for authenticated.
+- Private pages → `404` for anonymous, served for authenticated (including
+  their `.plain.html` / `.md` variants — see "Page variants" above).
 - `audience-public` / `audience-private` blocks → stripped per audience.
 - `/query-index.json` → `audience: private` rows removed for anonymous; the
   `?compact=true` variant projects each row to `path`/`title` only.
@@ -181,7 +204,8 @@ requests (unique cookie) get their own, and their viewer-varying responses are
   `processHtmlResponse` / query-index transform via `setContentCacheControl`) get
   a **short shared TTL** — `public, max-age=<ANON_CACHE_MAX_AGE>` (default 300s,
   env-overridable) — so a publish shows up within a few minutes **without push
-  invalidation**. `isPrivateHtml` has already 404'd private pages, so the anon body
+  invalidation**. `isPrivateHtml` has already 404'd private pages (and, via the
+  canonical-page check, their `.plain.html` / `.md` variants), so the anon body
   is the public, audience-stripped view. Setting `ANON_CACHE_MAX_AGE=0` makes this
   `no-store` instead: every anonymous request goes live to the Lambda, so publishes
   are instant, at the cost of edge caching — the choice for the low-traffic preview.
@@ -207,7 +231,8 @@ re-fetch.
 > an anonymous public page + `/query-index.json` cache (repeat = `X-Cache: Hit`)
 > with `audience-private` content stripped; the **authenticated** fetch of the same
 > URL is `no-store` and never a `Hit`; a private page is `404` for anon and real
-> content for authed, neither served to the other. If any authed request returns a
+> content for authed, neither served to the other; the same private page's
+> `.plain.html` and `.md` are `404` for anon. If any authed request returns a
 > `Hit`, or any anon request returns private content, revert
 > (`REVERT=1 … ./set-content-caching.sh`).
 

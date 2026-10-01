@@ -35,8 +35,10 @@
 import { fetchFromAem } from './handlers/aem.js';
 import { createSession, deleteSession } from './handlers/auth.js';
 import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
-import { classifyPublicPath, isPrivateHtml, PUBLIC_FILTER_PATHS } from './lib/gate.js';
-import { filterAudienceBlocks } from './lib/audience.js';
+import {
+  classifyPublicPath, getCanonicalPagePath, isPrivateHtml, PUBLIC_FILTER_PATHS,
+} from './lib/gate.js';
+import { filterAudienceBlocks, filterAudienceMarkdown } from './lib/audience.js';
 import { filterPrivateEntries, compactEntries } from './lib/query-index.js';
 import { resolveSecrets } from './lib/secrets.js';
 
@@ -192,20 +194,22 @@ const isAuthenticated = async (request) => {
   return (await readSession(cookie, env.SESSION_SECRET, Date.now())) !== null;
 };
 
-// Post-fetch processing of a proxied HTML page, in two passes that both need
-// the body (which lives in the HTML and so can only be inspected after
-// proxying):
+// Post-fetch processing of a proxied page, in two passes that both need the
+// body (which lives in the HTML and so can only be inspected after proxying):
 //   1. Meta gate (anonymous only): a page that opts into privacy with
 //      <meta name="audience" content="private"> becomes a 404, indistinguishable
-//      from a path that does not exist. Authenticated viewers see it.
+//      from a path that does not exist. Authenticated viewers see it. Skipped
+//      for head-less variants (`variant`): a .plain.html body has no <head> to
+//      scan, so route() has already gated it on the canonical page instead.
 //   2. Audience blocks: content blocks the viewer must not see are stripped
 //      (audience-private for anonymous, audience-public for authenticated) so
-//      private markup never leaves the edge.
-// Non-HTML/non-200 responses (assets, redirects, 304, the AEM 404 for a missing
-// page) pass through untouched without reading the body. content-length and
-// content-encoding are stripped in toLambdaResponse, so re-wrapping the
-// already-read body here stays consistent.
-const processHtmlResponse = async (resp, authed, pageLike) => {
+//      private markup never leaves the edge - from HTML (full page or
+//      .plain.html) and from the .md variant's Markdown alike.
+// Non-HTML/Markdown or non-200 responses (assets, redirects, 304, the AEM 404
+// for a missing page) pass through untouched without reading the body.
+// content-length and content-encoding are stripped in toLambdaResponse, so
+// re-wrapping the already-read body here stays consistent.
+const processHtmlResponse = async (resp, authed, pageLike, variant = false) => {
   const contentType = resp.headers.get('content-type') || '';
   // Revalidation of a cached anonymous page: a 304 carries no body to filter,
   // but its Cache-Control must still be the short anon TTL (not AEM's longer one)
@@ -215,15 +219,48 @@ const processHtmlResponse = async (resp, authed, pageLike) => {
     setContentCacheControl(resp, authed);
     return resp;
   }
-  if (resp.status !== 200 || !contentType.includes('text/html')) { return resp; }
+  const isHtml = contentType.includes('text/html');
+  const isMarkdown = contentType.includes('text/markdown');
+  if (resp.status !== 200 || !(isHtml || isMarkdown)) { return resp; }
   const body = await resp.text();
-  if (!authed && isPrivateHtml(body)) { return notFound(); }
-  const filtered = filterAudienceBlocks(body, authed);
+  if (!authed && !variant && isPrivateHtml(body)) { return notFound(); }
+  const filtered = isMarkdown
+    ? filterAudienceMarkdown(body, authed)
+    : filterAudienceBlocks(body, authed);
   const out = new Response(filtered, resp);
   // Filtered per viewer: anonymous gets the public view (short shared TTL),
   // authenticated stays no-store. The cookie-keyed cache keeps them separate.
   setContentCacheControl(out, authed);
   return out;
+};
+
+// Privacy check for a head-less page variant (.plain.html / .md): neither body
+// carries the page's <head>, so the audience meta is read from the canonical
+// page instead. GETs the canonical path from AEM through the same upstream
+// setup as the variant (origin, credential, no cookies), dropping conditional
+// headers so a revalidation can't turn it into a bodiless 304, and not
+// following redirects. Fails closed: only a 200 HTML canonical page without
+// the private meta clears the variant; private, missing, redirected, non-HTML,
+// or a fetch error all answer false, and the caller 404s.
+const isPublicCanonicalPage = async (req, url, canonicalPath) => {
+  try {
+    const canonicalUrl = new URL(url.href);
+    canonicalUrl.pathname = canonicalPath;
+    canonicalUrl.search = '';
+    const headers = new Headers(req.headers);
+    for (const name of ['if-none-match', 'if-modified-since', 'if-match', 'if-unmodified-since', 'if-range', 'range']) {
+      headers.delete(name);
+    }
+    const base = new Request(canonicalUrl, { method: 'GET', headers });
+    const upstream = await formatRequest(base, canonicalUrl);
+    const resp = await fetch(upstream, { cache: 'no-store', redirect: 'manual' });
+    if (resp.status !== 200) { return false; }
+    if (!(resp.headers.get('content-type') || '').includes('text/html')) { return false; }
+    return !isPrivateHtml(await resp.text());
+  } catch (err) {
+    console.error('website-lambda: canonical privacy check failed; denying variant:', err);
+    return false;
+  }
 };
 
 // Post-fetch transform for the query-index JSON: for anonymous visitors strip
@@ -326,6 +363,18 @@ const route = async (req) => {
   const verdict = authed ? 'allow' : classifyPublicPath(url.pathname);
   if (verdict === 'deny') { return notFound(); }
 
+  // Head-less page variants (.plain.html / .md) carry no <head>, so the meta
+  // gate can't run on their body. For an anonymous visitor, settle privacy on
+  // the canonical page *before* proxying the variant; a private (or
+  // unverifiable) page is a 404 and the variant is never fetched. Runs for
+  // every method, so a HEAD can't probe a private page either.
+  const canonicalPath = getCanonicalPagePath(url.pathname);
+  const variant = canonicalPath !== null;
+  if (!authed && verdict === 'gate' && variant
+    && !(await isPublicCanonicalPage(req, url, canonicalPath))) {
+    return notFound();
+  }
+
   // Read the compact opt-in before formatSearchParams strips it (it keeps only
   // limit/offset/sheet for JSON) - the query-index transform below reads it.
   const compact = url.searchParams.get('compact') === 'true';
@@ -361,10 +410,10 @@ const route = async (req) => {
 
   // Every other proxied HTML page is processed - not just 'gate' pages - so
   // allow-listed content (e.g. the homepage, which carries audience blocks) is
-  // filtered too. processHtmlResponse no-ops on non-HTML responses. `pageLike`
+  // filtered too. processHtmlResponse no-ops on anything but HTML/Markdown. `pageLike`
   // (anonymous 'gate' verdict) tells it a bodiless 304 is a page revalidation
   // that still needs the short anon TTL, vs an asset 304 (leave AEM's TTL).
-  return processHtmlResponse(resp, authed, verdict === 'gate');
+  return processHtmlResponse(resp, authed, verdict === 'gate', variant);
 };
 
 /*
