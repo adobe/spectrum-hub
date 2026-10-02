@@ -693,7 +693,6 @@ div[data-status],
         position: fixed;
         inset: 0;
         z-index: -1;
-        background-color: var(--se-body-background-color);
 
         img {
           opacity: 0;
