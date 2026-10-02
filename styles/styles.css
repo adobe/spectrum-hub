@@ -350,7 +350,7 @@
   /* se etc conveniences */
   --se-adobe-corporate-color: rgb(235 16 0);
   --se-corner-radius-50: 1px;
-  --se-body-background-color: light-dark(#fff, #000);
+  --se-body-background-color: light-dark(#f7f7f7, #000);
   --se-border-width-200: 2px;
   --se-focus-indicator-width: 2px;
   --se-component-m-height: 32px;
@@ -693,6 +693,7 @@ div[data-status],
         position: fixed;
         inset: 0;
         z-index: -1;
+        background-color: var(--se-body-background-color);
 
         img {
           opacity: 0;
