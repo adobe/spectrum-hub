@@ -1,5 +1,38 @@
 import { expect } from '@esm-bundle/chai';
-import { resolveContext, buildPills } from '../../blocks/component-status/component-status.js';
+import sinon from 'sinon';
+import init, { resolveContext, buildPills } from '../../blocks/component-status/component-status.js';
+import { setConfig } from '../../scripts/ak.js';
+import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+
+const SAFE_CONFIG = {
+  hostnames: ['authorkit.dev'],
+  components: [],
+  locales: { '': { lang: 'en' } },
+};
+
+const setSessionHint = () => {
+  document.cookie = `spectrum_session_active=${Date.now() + 2 * 60 * 60 * 1000}; path=/`;
+};
+
+const clearSessionHint = () => {
+  document.cookie = 'spectrum_session_active=; path=/; max-age=0';
+};
+
+function waitFor(predicate, timeout = 2000) {
+  return new Promise((resolve, reject) => {
+    const start = performance.now();
+    const check = () => {
+      if (predicate()) {
+        resolve();
+      } else if (performance.now() - start > timeout) {
+        reject(new Error('timed out waiting for condition'));
+      } else {
+        setTimeout(check, 10);
+      }
+    };
+    check();
+  });
+}
 
 describe('component-status block', () => {
   describe('resolveContext', () => {
@@ -104,6 +137,141 @@ describe('component-status block', () => {
       const pills = buildPills('/web/design-only/components/alert-banner', componentData);
 
       expect(pills).to.have.lengthOf(2);
+    });
+  });
+
+  describe('init', () => {
+    let sandbox;
+    let originalUrl;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      document.body.innerHTML = '';
+      resetComponentSliceCacheForTests();
+      clearSessionHint();
+      setConfig(SAFE_CONFIG);
+      delete window.adobeIMS;
+      delete window.adobeid;
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+      sandbox.stub(window, 'fetch').callsFake(async (url) => {
+        if (!url.toString().includes('/deps/status/action-button.json')) {
+          return { ok: false };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            web: {
+              rsp: { status: 'available' },
+              figma: { status: 'available' },
+            },
+            figmaPageId: '123:456',
+          }),
+        };
+      });
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      clearSessionHint();
+      window.history.pushState({}, '', originalUrl);
+      delete window.adobeIMS;
+      delete window.adobeid;
+      document.body.innerHTML = '';
+    });
+
+    it('removes the Design pill for an anonymous CDN visitor', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      const el = document.createElement('div');
+
+      await init(el);
+
+      expect(el.querySelector('[data-kind="dev"]')).to.exist;
+      expect(el.querySelector('[data-kind="design"]') === null).to.be.true;
+    });
+
+    it('keeps the Design pill for an authenticated CDN visitor', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      setSessionHint();
+      window.adobeIMS = {
+        getAccessToken: () => ({ token: 'test-token' }),
+        getProfile: async () => ({ email: 'developer@example.com' }),
+      };
+      const el = document.createElement('div');
+
+      const initPromise = init(el);
+      await waitFor(() => window.adobeid?.onReady);
+      await window.adobeid.onReady();
+      await initPromise;
+
+      expect(el.querySelector('[data-kind="design"]')).to.exist;
+    });
+
+    it('renders only Code and logs when IMS readiness fails for an active CDN session', async function test() {
+      this.timeout(5000);
+      setSessionHint();
+      const frame = document.createElement('iframe');
+      frame.src = '/test/a11y/fixtures/action-button.html';
+      document.body.append(frame);
+      await new Promise((resolve) => {
+        frame.addEventListener('load', resolve, { once: true });
+      });
+
+      frame.contentWindow.history.pushState(
+        {},
+        '',
+        '/web/rsp/components/action-button#access_token=test',
+      );
+      frame.contentWindow.fetch = async () => ({
+        ok: true,
+        json: async () => ({
+          web: {
+            rsp: { status: 'available' },
+            figma: { status: 'available' },
+          },
+          figmaPageId: '123:456',
+        }),
+      });
+      const setup = frame.contentDocument.createElement('script');
+      setup.type = 'module';
+      setup.textContent = `
+        window.__authFailureReady = (async () => {
+          const [{ setConfig }, { default: init }] = await Promise.all([
+            import('/scripts/ak.js'),
+            import('/blocks/component-status/component-status.js'),
+          ]);
+          setConfig({
+            hostnames: ['authorkit.dev'],
+            components: [],
+            locales: { '': { lang: 'en' } },
+            cdnEnv: true,
+            log: (...args) => { window.__authFailureLog = args; },
+          });
+          window.__authFailureEl = document.createElement('div');
+          window.__authFailureInit = init(window.__authFailureEl);
+        })();
+      `;
+      frame.contentDocument.body.append(setup);
+
+      await waitFor(() => frame.contentWindow.__authFailureReady);
+      await frame.contentWindow.__authFailureReady;
+      await waitFor(() => frame.contentWindow.adobeid?.onError);
+      const failure = new frame.contentWindow.Error('IMS failed');
+      frame.contentWindow.adobeid.onError(failure);
+      await frame.contentWindow.__authFailureInit;
+
+      expect(frame.contentWindow.__authFailureEl.querySelector('[data-kind="dev"]')).to.exist;
+      expect(frame.contentWindow.__authFailureEl.querySelector('[data-kind="design"]')).to.be.null;
+      expect(frame.contentWindow.__authFailureLog).to.deep.equal([failure]);
+    });
+
+    it('keeps the Design pill off-CDN without authentication', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      const el = document.createElement('div');
+
+      await init(el);
+
+      expect(el.querySelector('[data-kind="design"]')).to.exist;
     });
   });
 });
