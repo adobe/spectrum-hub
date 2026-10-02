@@ -40,6 +40,21 @@ describe('splitSections', () => {
     assert.deepEqual(splitSections(el).map((s) => s.anchor), ['one', '']);
   });
 
+  it('normalizes boundary size modifiers in heading anchors', () => {
+    const el = main(`
+      <h1 id="size-xl-overview">Overview</h1><p>intro</p>
+      <h2 id="details-size-m">Details</h2><p>details</p>
+      <h3 id="size-xl-api-size-s">API</h3><p>api</p>
+      <h2 id="heading-size-xl-details">Middle</h2><p>middle</p>
+      <h2 id="sizeable-content">Similar</h2><p>similar</p>
+    `);
+
+    assert.deepEqual(
+      splitSections(el).map((section) => section.anchor),
+      ['overview', 'details', 'api', 'heading-size-xl-details', 'sizeable-content'],
+    );
+  });
+
   it('tracks hierarchy across levels and resets deeper levels', () => {
     const el = main(`
       <h1 id="p">Page</h1><p>a</p>

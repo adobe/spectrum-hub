@@ -9,6 +9,8 @@
  * aggregate text, so nesting cannot count a passage twice.
  */
 
+import normalizeHeadingId from '../../scripts/utils/heading-id.js';
+
 const HEADING_TAGS = new Set(['h1', 'h2', 'h3']);
 const MAX_CONTENT_LENGTH = 8000;
 const TEXT_NODE = 3;
@@ -57,7 +59,7 @@ export function splitSections(main) {
       current = {
         heading: normalize(node.text),
         level: Number(tag[1]),
-        anchor: node.getAttribute('id') || '',
+        anchor: normalizeHeadingId(node.getAttribute('id') || ''),
         parts: [],
       };
       // Do not descend: the heading's own text is not body content.
