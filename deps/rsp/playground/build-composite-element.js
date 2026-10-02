@@ -31,6 +31,12 @@ export function parseRspAttributeValue(value) {
   return numericExpression ? Number(numericExpression[1]) : value;
 }
 
+export function buildRspProps(node) {
+  return Object.fromEntries(
+    [...node.attributes].map((attr) => [attr.name, parseRspAttributeValue(attr.value)]),
+  );
+}
+
 // So the caller knows which @react-spectrum/s2 sub-component exports to
 // request from esm.sh (which tree-shakes to exactly what's asked for).
 export function collectFragmentTagNames(root) {
@@ -50,9 +56,7 @@ export function collectFragmentTagNames(root) {
 // rather than treating the tag name as a literal HTML tag string.
 export function buildCompositeElement(node, componentsByTag, createElement) {
   const Component = componentsByTag[node.tagName];
-  const props = Object.fromEntries(
-    [...node.attributes].map((attr) => [attr.name, parseRspAttributeValue(attr.value)]),
-  );
+  const props = buildRspProps(node);
   const childNodes = [...node.children];
   if (!childNodes.length) {
     return createElement(Component, props, node.textContent);
