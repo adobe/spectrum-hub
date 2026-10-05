@@ -13,7 +13,7 @@ These two skills cover complementary halves of the same task:
 
 | Skill | Owns |
 | --- | --- |
-| [`create-new-block`](../create-new-block/SKILL.md) | File structure, `init(el)` contract, how `loadBlock` resolves and loads the CSS file, template injection, block authoring conventions (div soup, object syntax, BEM class names) |
+| [`create-new-block`](../create-new-block/SKILL.md) | File structure, `init(el)` contract, how `loadBlock` resolves and loads the CSS file, metadata-driven composition, and block authoring conventions (div soup, object syntax, project class naming) |
 | `stylesheet-conventions` *(this file)* | What goes inside the CSS file — tokens, light/dark mode, layer cascade, nesting, media queries, shared stylesheets |
 
 **When creating a new block, use both.** Start with `create-new-block` to set up the files and wire the JS. Then use this skill to write the block's CSS correctly.
@@ -133,11 +133,11 @@ Color tokens use the CSS `light-dark()` function — each token resolves automat
 Always use tokens rather than hardcoded colors. Tokens adapt to the user's mode automatically. To force a specific scheme on a section or component:
 
 ```css
-.my-block--dark {
+.my-block.dark-scheme {
   color-scheme: dark;
 }
 
-.my-block--light {
+.my-block.light-scheme {
   color-scheme: light;
 }
 ```
@@ -176,7 +176,9 @@ These are defined in `styles.css` and available everywhere:
 
 - Use **native CSS nesting** (not Sass).
 - Scope all styles to the block root class: `.my-block { ... }`.
-- Use **BEM** for class names added inside the block: `.my-block__element`, `.my-block--modifier`.
+- This project does **not** use BEM. Use kebab-case, block-prefixed child and
+  state classes such as `.my-block-heading` and `.my-block-loading`. Use short
+  root variants such as `.my-block.compact`.
 - Reference tokens, never hardcoded values.
 - Use `rgb(from <token> r g b / <alpha>)` for alpha variants of token colors:
 

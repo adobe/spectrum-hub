@@ -95,7 +95,7 @@ Header and footer are special — they are baked into the HTML shell by the deli
 
 ## CSS file
 
-`loadBlock` automatically loads `blocks/<name>/<name>.css` alongside the JS — no import needed. The CSS file should scope all styles to the block root class and use BEM for any child elements.
+`loadBlock` automatically loads `blocks/<name>/<name>.css` alongside the JS — no import needed. Scope all styles to the block root class. Use kebab-case, block-prefixed names for child classes; this project does not use BEM.
 
 For the full CSS authoring reference — design tokens, light/dark mode, nesting conventions, media query syntax, reduced motion, and global utilities — see **[`.ai/skills/stylesheet-conventions/SKILL.md`](../stylesheet-conventions/SKILL.md)**.
 
@@ -125,12 +125,12 @@ const headings = [...document.querySelectorAll('main h2, main h3')]
   .filter((h) => !el.contains(h)); // exclude any headings inside the block itself
 ```
 
-## Block variants and modifiers
+## Block variants and state classes
 
-Extra classes on a block element are variant/modifier flags. `loadBlock` always uses only the **first** class as the block name — additional classes do not affect which JS or CSS file loads. They are purely CSS targets.
+Extra classes on a block element are variant or state flags. `loadBlock` always uses only the **first** class as the block name — additional classes do not affect which JS or CSS file loads. They are purely CSS targets.
 
 ```html
-<!-- "centered" and "dark" are modifiers — only "hero" drives block resolution -->
+<!-- "centered" and "dark" are variants — only "hero" drives block resolution -->
 <div class="hero centered dark">...</div>
 ```
 
@@ -143,7 +143,7 @@ Extra classes on a block element are variant/modifier flags. `loadBlock` always 
 }
 ```
 
-If a variant needs meaningfully different JS behavior, check for the modifier class inside `init`:
+If a variant needs meaningfully different JS behavior, check for the variant class inside `init`:
 
 ```js
 export default async function init(el) {
@@ -214,32 +214,38 @@ const data = {
 
 // Now use the object — no optional chaining clutter in the logic
 if (data.primaryVariant) {
-  layout.classList.add('my-block--primary');
+  layout.classList.add('my-block-primary');
 } else {
   layout.style.background = `var(--spectrum-${data.backgroundColor})`;
 }
 ```
 
-### Use BEM for class names
+### Use project class naming
 
-Use `block__element--modifier` naming for classes added inside a block. The block folder name is the BEM block; elements and modifiers are scoped under it.
+This project does not use BEM. Use kebab-case and prefix child or state classes
+with the block name when they need a class:
 
 ```css
-/* block */
 .my-block { ... }
-
-/* element */
-.my-block__heading { ... }
-.my-block__image { ... }
-
-/* modifier on the block */
-.my-block--primary { ... }
-
-/* modifier on an element */
-.my-block__heading--large { ... }
+.my-block-heading { ... }
+.my-block-image { ... }
+.my-block-primary { ... }
+.my-block-heading-large { ... }
 ```
 
-The block root class (`my-block`) is set by `loadBlock` from the first class on the element. All additional classes added by `init` should follow BEM from there.
+For variants authored directly on the block root, use a short additional class and
+scope it through the root:
+
+```css
+.my-block {
+  &.compact { ... }
+  &.dark { ... }
+}
+```
+
+The block root class (`my-block`) is set by `loadBlock` from the first class on
+the element. Prefer semantic elements and nested selectors over adding classes
+that are not needed.
 
 ## Testing
 

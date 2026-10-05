@@ -85,7 +85,7 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 #### Stylesheet conventions
 
 - **File**: [`.ai/skills/stylesheet-conventions/SKILL.md`](./skills/stylesheet-conventions/SKILL.md)
-- **Purpose**: Stylesheet organization, complete design token reference, light/dark mode with `light-dark()`, the `spectrum-edge` CSS layer, global utility classes, and CSS conventions for block stylesheets (nesting, BEM, media query syntax, reduced motion).
+- **Purpose**: Stylesheet organization, complete design token reference, light/dark mode with `light-dark()`, the `spectrum-edge` CSS layer, global utility classes, and CSS conventions for block stylesheets (nesting, kebab-case class naming rather than BEM, media query syntax, reduced motion).
 - **How to invoke**: Ask about CSS organization, adding styles, tokens, or light/dark mode (e.g. "where do I add shared styles", "what token should I use for this color", "how does dark mode work here").
 
 #### Create a new block

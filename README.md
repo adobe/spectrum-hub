@@ -8,17 +8,23 @@ Our mission is to deepen Spectrum’s adoption through a multi‑platform websit
 
 ## Developing
 
-Spectrum Hub is built on AEM Edge Delivery Services. Getting started takes a matter of seconds.
+Spectrum Hub is built on AEM Edge Delivery Services. Local development requires
+Node.js 20 and npm.
 
 1. Clone this project to your computer.
-1. Install the AEM CLI using your terminal: `sudo npm install -g @adobe/aem-cli`
-1. Start the AEM CLI: `aem up` in the cloned folder.
-1. Open the cloned folder in your favorite code editor and build something amazing.
-1. **Recommended:** Install common npm packages like linting and testing: `npm i`.
+1. Install project dependencies with `npm ci`.
+1. Start the project-local AEM CLI with `npx aem up`.
+1. Open the cloned folder in your code editor.
+
+To use the AEM CLI globally instead, install it with
+`npm install -g @adobe/aem-cli`, then run `aem up` in the cloned folder. Do not
+use `sudo` for npm package installation; configure npm's global package
+directory for your user if the command reports a permissions error.
 
 ### Testing
 
-Tests run in the browser using [Web Test Runner](https://modern-web.dev/docs/test-runner/overview/). After installing dependencies with `npm i`, run the full test suite:
+The core test command runs the Web Test Runner unit suite plus the Node-based
+extraction, indexer, and link-check unit suites:
 
 ```bash
 npm test
@@ -48,7 +54,8 @@ npm run test:file:watch -- test/scripts/scripts.test.js
 
 ### Algolia Search
 
-Semantic search and AI capabilities are provided by Algolia. Given the private nature of some of the content, this mechanism also runs as a GitHub Action on a two hour basis.
+Semantic search and AI capabilities are provided by Algolia. Given the private
+nature of some content, the indexer runs as a GitHub Action every 12 hours.
 
 ## Accessibility considerations
 
@@ -77,5 +84,6 @@ Automated accessibility testing (axe-core WCAG 2.2 AA scans and accessibility-tr
 To run Playwright/Axe automated accessibility tests:
 
 ```bash
+npx playwright install chromium
 npm run test:a11y
 ```

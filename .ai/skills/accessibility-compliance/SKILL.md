@@ -5,7 +5,7 @@ description: Implement WCAG 2.2 compliant interfaces with mobile accessibility, 
 
 # Accessibility Compliance
 
-Build inclusive experiences that work for everyone, including users with disabilities. This project ships vanilla-JS EDS blocks (`init(el)`), BEM CSS, and design tokens — the patterns below use plain DOM APIs, not a framework. For deeper reference material, see the files in [`references/`](./references/): [`wcag-guidelines.md`](./references/wcag-guidelines.md), [`aria-patterns.md`](./references/aria-patterns.md), and [`mobile-accessibility.md`](./references/mobile-accessibility.md).
+Build inclusive experiences that work for everyone, including users with disabilities. This project does not use BEM; it ships vanilla-JS EDS blocks (`init(el)`), block-scoped CSS with kebab-case class names, and design tokens. The patterns below use plain DOM APIs, not a framework. For deeper reference material, see the files in [`references/`](./references/): [`wcag-guidelines.md`](./references/wcag-guidelines.md), [`aria-patterns.md`](./references/aria-patterns.md), and [`mobile-accessibility.md`](./references/mobile-accessibility.md).
 
 ## When to Use This Skill
 
@@ -83,7 +83,7 @@ A native `<button>` is keyboard- and AT-accessible for free. Communicate state w
 ```js
 const button = document.createElement('button');
 button.type = 'button';
-button.classList.add('my-block__action');
+button.classList.add('my-block-action');
 
 function setLoading(isLoading) {
   button.disabled = isLoading;
@@ -94,7 +94,7 @@ function setLoading(isLoading) {
     label.className = 'visually-hidden';
     label.textContent = 'Loading';
     const spinner = document.createElement('span');
-    spinner.className = 'my-block__spinner';
+    spinner.className = 'my-block-spinner';
     spinner.setAttribute('aria-hidden', 'true');
     button.append(label, spinner);
   } else {
@@ -104,11 +104,11 @@ function setLoading(isLoading) {
 ```
 
 ```css
-.my-block__action {
+.my-block-action {
   min-block-size: 44px;
   min-inline-size: 44px;
 }
-.my-block__action:focus-visible {
+.my-block-action:focus-visible {
   outline: 2px solid var(--s2-blue-900);
   outline-offset: 2px;
 }
