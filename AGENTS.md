@@ -23,6 +23,20 @@ Coding agents working in this repository should treat **`.ai/`** as the canonica
 - **Rules** enforce consistency (documentation shape, CSS conventions, branch naming guidance, and similar). Prefer the always-applied and glob-triggered rules from [`.ai/README.md`](./.ai/README.md) when editing matching paths.
 - **Skills** are **on-demand** playbooks (for example explain-code, test-driven development, session handoff). When the user’s request fits a skill’s description, **read that skill’s `SKILL.md`** before doing the work.
 
+## Skill index
+
+| Task | Skill |
+| ---- | ----- |
+| Accessibility audits and accessible implementation | [`.ai/skills/accessibility-compliance/SKILL.md`](./.ai/skills/accessibility-compliance/SKILL.md) |
+| Conventional commit messages | [`.ai/skills/conventional-commits/SKILL.md`](./.ai/skills/conventional-commits/SKILL.md) |
+| Creating a new EDS block | [`.ai/skills/create-new-block/SKILL.md`](./.ai/skills/create-new-block/SKILL.md) |
+| Reviewing core lifecycle and performance changes | [`.ai/skills/eds-performance-review/SKILL.md`](./.ai/skills/eds-performance-review/SKILL.md) |
+| Adding or organizing CSS | [`.ai/skills/stylesheet-conventions/SKILL.md`](./.ai/skills/stylesheet-conventions/SKILL.md) |
+| Implementing features and fixes with TDD | [`.ai/skills/test-driven-development/SKILL.md`](./.ai/skills/test-driven-development/SKILL.md) |
+
+Unattended agents must not approve their own TDD exceptions. Follow the
+unattended-execution policy in the TDD skill when a human cannot respond.
+
 ## Specs and plans
 
 Design specs and implementation plans live under **`.ai/docs/`**, alongside the rest of the project's agent documentation:
@@ -51,4 +65,4 @@ The project runs axe-core WCAG 2.2 AA scans plus a Playwright `toMatchAriaSnapsh
 
 ## IDE-specific folders
 
-Some editors load extra project config from their own directories (for example `.cursor/` and `.claude/`). Those locations are thin adapters that symlink back to `.ai/`. **`.ai/` remains the portable source of truth** for rules and skills documented here. If instructions conflict, prefer **`.ai/README.md`** and the files under **`.ai/rules/`** and **`.ai/skills/`**.
+Some editors load extra project config from their own directories (for example `.cursor/` and `.claude/`). Those gitignored locations can be configured locally as thin adapters that symlink back to `.ai/`; they are not included in a fresh clone. `CLAUDE.md` is the tracked tool-specific bootstrap file. **`.ai/` remains the portable source of truth** for rules and skills documented here. If instructions conflict, prefer **`.ai/README.md`** and the files under **`.ai/rules/`** and **`.ai/skills/`**.

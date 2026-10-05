@@ -6,11 +6,15 @@ This directory contains rules, skills, and accumulated memory that coding agents
 
 ## Why `.ai/`
 
-All rules and skills now live in **`.ai/`** — a tool-agnostic, plain-markdown directory that any agent or tool can read. IDE-specific directories (`.cursor/`, `.claude/`) become thin adapters that point back to `.ai/` via symlinks:
+All rules and skills live in **`.ai/`** — a tool-agnostic, plain-markdown directory that any agent or tool can read. IDE-specific directories such as `.cursor/` and `.claude/` can use local adapters that point back to `.ai/`:
 
 - Edit once in `.ai/` → all tools see the update automatically
 - No sync step, no duplication, no drift between tools
 - New contributors or tools start from `AGENTS.md` at the repo root, which bootstraps everything
+
+The adapter directories are gitignored and are not part of a fresh clone. `CLAUDE.md`
+is the only tracked tool-specific bootstrap file. Configure local adapters only when
+your editor needs them.
 
 ## Rules
 
@@ -66,6 +70,12 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 
 ### Available skills
 
+#### Accessibility compliance
+
+- **File**: [`.ai/skills/accessibility-compliance/SKILL.md`](./skills/accessibility-compliance/SKILL.md)
+- **Purpose**: Implement and audit WCAG 2.2 interfaces, including semantic structure, ARIA patterns, keyboard navigation, focus management, screen reader support, reduced motion, and mobile accessibility.
+- **How to invoke**: Ask for an accessibility audit or accessible implementation (e.g. "audit this block for accessibility", "add keyboard navigation", "make this work with screen readers").
+
 #### Conventional commits
 
 - **File**: [`.ai/skills/conventional-commits/SKILL.md`](./skills/conventional-commits/SKILL.md)
@@ -81,8 +91,8 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 #### Create a new block
 
 - **File**: [`.ai/skills/create-new-block/SKILL.md`](./skills/create-new-block/SKILL.md)
-- **Purpose**: Scaffold and implement a new EDS block — covers file structure, the `init(el)` function contract, template injection, CSS conventions, design tokens, and when to use templates vs per-page authoring vs fragments.
-- **How to invoke**: Ask to create or add a new block (e.g. "create a new block", "scaffold a block for X", "add a new block to the detail template").
+- **Purpose**: Scaffold and implement a new EDS block — covers file structure, the `init(el)` function contract, metadata-driven block composition, CSS conventions, design tokens, and when to use automatic composition vs per-page authoring vs fragments.
+- **How to invoke**: Ask to create or add a new block (e.g. "create a new block", "scaffold a block for X", "add a new block to component pages").
 
 #### Test-driven development
 
@@ -93,7 +103,7 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 #### EDS performance & lifecycle review
 
 - **File**: [`.ai/skills/eds-performance-review/SKILL.md`](./skills/eds-performance-review/SKILL.md)
-- **Purpose**: Reviews a diff against the actual page-load lifecycle in `scripts.js`/`ak.js`/`lazy.js`/`postlcp.js` — flags fragile, duplicative, or unmeasured "performance" code added to the core loader instead of a block's own `init()`. Walks the lifecycle step-by-step, gives a ruthless CLS/LCP test for anything proposed ahead of `loadArea`, and includes a worked case study (the `component-status` prefetch hook) of the pattern to catch.
+- **Purpose**: Reviews a diff against the actual page-load lifecycle in `scripts.js`/`ak.js`/`lazy.js`/`postlcp.js` — flags fragile, duplicative, or unmeasured "performance" code added to the core loader instead of a block's own `init()`. Walks the lifecycle step-by-step, gives a ruthless CLS/LCP test for anything proposed ahead of `loadArea`, and includes a historical case study of a removed block-specific prefetch hook.
 - **How to invoke**: Ask before opening a PR that touches `scripts.js` or `ak.js` (e.g. "review this against the performance skill", "does this belong in scripts.js"), or when auditing for CLS/LCP regressions or speculative optimizations.
 
 ## Specs and plans
@@ -109,9 +119,9 @@ The Superpowers plugin skills (`brainstorming`, `writing-plans`, `subagent-drive
 
 ## Using rules and skills across tools and IDEs
 
-Canonical content lives in **`.ai/`** (this directory). Tool-specific directories (`.cursor/`, `.claude/`) are thin adapters that point back here via symlinks — edit files in `.ai/`, never in the adapter directories.
+Canonical content lives in **`.ai/`** (this directory). Tool-specific directories such as `.cursor/` and `.claude/` are optional, gitignored local configuration. When you create an adapter, point it back here and continue editing files in `.ai/`, not in the adapter directory.
 
-### Current symlink structure
+### Optional local symlink structure
 
 ```text
 .ai/rules/
@@ -128,18 +138,21 @@ Canonical content lives in **`.ai/`** (this directory). Tool-specific directorie
 .claude/skills/ → ../.ai/skills/  (directory symlink)
 ```
 
-Editing any `.ai/rules/*.md` file immediately updates what both Cursor and Claude Code see — no sync step required.
+These symlinks are examples, not tracked repository content. If configured locally,
+editing `.ai/` immediately updates what the corresponding tool sees.
 
 ### Adding a new rule
 
 1. Create `rule-name.md` in `.ai/rules/` with YAML frontmatter (`globs`, `alwaysApply`).
-2. Add one per-file symlink for Cursor (required — Cursor needs `.mdc` extension):
+2. If you use a local Cursor adapter, add one per-file symlink (Cursor requires the
+   `.mdc` extension):
 
    ```sh
    ln -s "../../.ai/rules/rule-name.md" ".cursor/rules/rule-name.mdc"
    ```
 
-   `.claude/rules/` is a directory symlink pointing at `.ai/rules/`, so it picks up the new file automatically — no extra step needed.
+   A locally configured `.claude/rules/` directory symlink picks up the new file
+   automatically.
 
 3. Register it in the table in this README and in [`AGENTS.md`](../AGENTS.md).
 
@@ -147,7 +160,8 @@ Editing any `.ai/rules/*.md` file immediately updates what both Cursor and Claud
 
 1. Create `.ai/skills/<skill-name>/SKILL.md`.
 2. Register it in the skills catalog above and in [`AGENTS.md`](../AGENTS.md).
-3. Both `.cursor/skills/` and `.claude/skills/` pick it up automatically via directory symlinks.
+3. Locally configured `.cursor/skills/` and `.claude/skills/` directory symlinks
+   pick it up automatically.
 
 ### Using rules and skills in other environments
 
