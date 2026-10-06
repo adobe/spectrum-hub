@@ -8,6 +8,11 @@ Coding agents working in this repository should treat **`.ai/`** as the canonica
 2. **Apply** the rules that match the files and tasks you touch (see globs and activation notes in that README).
 3. **Load** a skill when the task matches its purpose: each skill lives under `.ai/skills/<skill-name>/SKILL.md`.
 
+New contributors can load
+[`.ai/skills/onboarding/SKILL.md`](./.ai/skills/onboarding/SKILL.md) for a
+guided repository orientation. The same skill answers targeted repository
+“where” and “how” questions on return visits.
+
 ## Where things live
 
 | What                         | Location                                                                                           |

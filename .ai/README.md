@@ -70,6 +70,12 @@ Skills are used on-demand. When a task matches a skill's purpose, the agent read
 
 ### Available skills
 
+#### Onboarding
+
+- **File**: [`.ai/skills/onboarding/SKILL.md`](./skills/onboarding/SKILL.md)
+- **Purpose**: Orient new and returning contributors, answer repository “where” and “how” questions, and guide first-time contributors through the core page lifecycle and its performance boundaries.
+- **How to invoke**: Ask to get started or prefix a repository question with `/onboarding` (e.g. “/onboarding how do I remove a component from the status table?” or “/onboarding where do I run an indexer dry run?”).
+
 #### Accessibility compliance
 
 - **File**: [`.ai/skills/accessibility-compliance/SKILL.md`](./skills/accessibility-compliance/SKILL.md)
