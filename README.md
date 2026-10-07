@@ -9,7 +9,7 @@ Our mission is to deepen Spectrum’s adoption through a multi‑platform websit
 ## Developing
 
 Spectrum Hub is built on AEM Edge Delivery Services. Local development requires
-Node.js 20 and npm.
+Node.js 24 and npm.
 
 1. Clone this project to your computer.
 1. Run `nvm install` and `nvm use` to select the version in [`.nvmrc`](./.nvmrc).

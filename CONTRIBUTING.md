@@ -29,7 +29,7 @@ npm ci
 npx aem up
 ```
 
-The repository uses Node.js 20. `aem up` serves local code at
+The repository uses Node.js 24. `aem up` serves local code at
 `http://localhost:3000` and proxies authored preview content.
 
 Install Chromium before running Playwright accessibility or link tests:
