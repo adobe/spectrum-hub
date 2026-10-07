@@ -1,4 +1,5 @@
 ---
+name: write-documentation
 description: Follow Adobe content writing standards when writing documentation for Spectrum Hub.
 globs: "**/*.md"
 alwaysApply: false
