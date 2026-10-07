@@ -29,7 +29,7 @@ npm ci
 npx aem up
 ```
 
-`nvm install` reads the version from [`.nvmrc`](./.nvmrc), currently Node.js 20, so the
+`nvm install` reads the version from [`.nvmrc`](./.nvmrc), currently Node.js 24, so the
 version is never typed by hand. `aem up` serves local code at `http://localhost:3000` and
 proxies authored preview content.
 

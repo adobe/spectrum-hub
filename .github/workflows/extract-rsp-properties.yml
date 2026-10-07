@@ -33,7 +33,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       # extract-props.js resolves types through the real `typescript` compiler
       # (deps/rsp/build-ts-checker.js), so this step is required — it wasn't before.
