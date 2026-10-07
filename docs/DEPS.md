@@ -46,8 +46,10 @@ The generated outputs feed:
 - implementation documentation links
 - playground export-name resolution
 
-Consumers should read the generated model, not independently reinterpret raw
-RSP, SWC, or Figma status values.
+Status consumers should read the generated model, not independently reinterpret
+raw RSP, SWC, or Figma status values. The playground intentionally reads raw
+RSP/SWC prop catalogs because it needs property-level control metadata that is
+not part of the combined status model.
 
 ## Authored inputs
 
@@ -81,9 +83,9 @@ Never hand-edit:
 - `deps/swc/components.json`
 - `deps/swc/data/*.json`
 
-Generated status files include a do-not-edit marker, but not every generated
-source artifact has the same syntax. Use the owning README and generation
-command rather than relying only on a header.
+The JavaScript name map includes a do-not-edit marker. JSON outputs cannot carry
+comments, and not every generated source artifact has a marker. Use the owning
+README and generation command rather than relying on a header.
 
 When generated output looks wrong, fix the authored mapping, extractor, status
 model, or upstream source that produced it. A direct output edit will disappear
@@ -127,8 +129,10 @@ npm run test:extractions
 ```
 
 Both scripts also accept a local CEM path when validating unreleased SWC work.
-The published extraction currently includes a snapshot-version constraint; read
-[`deps/swc/README.md`](../deps/swc/README.md) before changing it.
+Published extraction follows the `latest` distribution tag and records its
+resolved concrete version in `deps/swc/version.json`. Read
+[`deps/swc/README.md`](../deps/swc/README.md) before changing version or source
+handling.
 
 ## Combined status build
 
@@ -170,9 +174,10 @@ collapse them.
 
 ## Automation
 
-GitHub workflows regenerate upstream-derived RSP and SWC data on a schedule and
-can commit the changed generated files. The status build runs after source
-extraction so committed outputs stay synchronized.
+GitHub workflows regenerate upstream-derived RSP and SWC data on a schedule,
+commit changes to bot-owned branches, and create or update pull requests. The
+status build runs after source extraction so each pull request keeps the source
+data and combined outputs synchronized.
 
 When an automation diff is unexpectedly large:
 
