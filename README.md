@@ -12,6 +12,7 @@ Spectrum Hub is built on AEM Edge Delivery Services. Local development requires
 Node.js 20 and npm.
 
 1. Clone this project to your computer.
+1. Run `nvm install` and `nvm use` to select the version in [`.nvmrc`](./.nvmrc).
 1. Install project dependencies with `npm ci`.
 1. Start the project-local AEM CLI with `npx aem up`.
 1. Open the cloned folder in your code editor.
@@ -42,6 +43,28 @@ To watch a single file:
 npm run test:file:watch -- test/scripts/scripts.test.js
 ```
 
+## Contributing
+
+Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md) and choose the workflow that
+matches your change:
+
+- **Engineers** change blocks, scripts, styles, tools, dependency pipelines, and
+  edge code through GitHub.
+- **Authors** change pages, metadata, and fragments through Document Authoring
+  (DA). Content-only changes do not require a GitHub pull request.
+
+### Contributor guides
+
+| Guide | Use it when |
+| --- | --- |
+| [Architecture](./docs/ARCHITECTURE.md) | Tracing the page lifecycle, production request path, or code ownership boundaries |
+| [Content authoring](./docs/CONTENT_AUTHORING.md) | Editing or debugging pages, metadata, fragments, preview, and publish behavior |
+| [Blocks](./docs/BLOCKS.md) | Adding or changing an EDS block |
+| [Tests](./docs/TESTS.md) | Choosing the correct local or CI validation |
+| [Styles](./docs/STYLES.md) | Adding CSS, tokens, color schemes, responsive behavior, or motion |
+| [Dependencies](./docs/DEPS.md) | Changing vendored code, extracted implementation data, mappings, or generated outputs |
+| [Tools](./docs/TOOLS.md) | Changing DA tools, Sidekick integrations, the scheduler, or the Algolia indexer |
+
 ## Integrations
 
 ### Spectrum Design Data
@@ -56,6 +79,21 @@ npm run test:file:watch -- test/scripts/scripts.test.js
 
 Semantic search and AI capabilities are provided by Algolia. Given the private
 nature of some content, the indexer runs as a GitHub Action every 12 hours.
+
+## Glossary
+
+| Term | Meaning |
+| --- | --- |
+| **AEM** | Adobe Experience Manager, the platform that hosts authoring and Edge Delivery Services |
+| **DA** | Document Authoring, where authors edit pages, metadata, and fragments |
+| **EDS** | Edge Delivery Services, which combines authored content with repository code and serves preview and published pages |
+| **Block** | A repository-owned component that decorates an authored table or generated block structure |
+| **Fragment** | A separately authored document reused inside other pages, such as navigation |
+| **RSP** | React Spectrum, an implementation source used by component status and playground data |
+| **S2** | The current Spectrum 2 generation of React Spectrum components |
+| **SWC** | Spectrum Web Components, the custom-element implementation source |
+| **CEM** | Custom Elements Manifest, the machine-readable source used to extract SWC component metadata |
+| **Sidekick** | The AEM browser extension that provides preview, publish, and custom authoring actions |
 
 ## Accessibility considerations
 
@@ -86,4 +124,84 @@ To run Playwright/Axe automated accessibility tests:
 ```bash
 npx playwright install chromium
 npm run test:a11y
+```
+
+## How engineering and content merge
+
+```mermaid
+flowchart LR
+    Authors["Content authors"]
+    Developers["Developers"]
+    GitHub["GitHub repository<br/>Blocks · JavaScript · CSS · Tools"]
+
+    subgraph AEM["AEM"]
+        DA["Document Authoring (DA)<br/>Pages · Metadata · Fragments"]
+        EDS["Edge Delivery Services (EDS)<br/>Combines content and site code"]
+        DA -->|"Preview or publish content"| EDS
+    end
+
+    Authors -->|"Create and edit content"| DA
+    Developers -->|"Build and review code"| GitHub
+    GitHub -->|"Deploy site code"| EDS
+
+    EDS --> PreviewOrigin["AEM preview origin<br/>branch--spectrum-hub--adobe.aem.page"]
+    PreviewOrigin --> PreviewSite["Preview site<br/>preview.spectrum.adobe.com"]
+
+    EDS --> PublishedOrigin["AEM published origin<br/>main--spectrum-hub--adobe.aem.live"]
+    PublishedOrigin --> ProductionSite["Production site<br/>spectrum.adobe.com"]
+
+    classDef people fill:#f5f5f5,stroke:#666,color:#222;
+    classDef content fill:#e9f4ff,stroke:#1473e6,color:#222;
+    classDef code fill:#f2edff,stroke:#7a4ce0,color:#222;
+    classDef delivery fill:#fff2df,stroke:#d06b00,color:#222;
+    classDef preview fill:#e5f3ff,stroke:#1473e6,color:#222;
+    classDef production fill:#e8f8ee,stroke:#268e53,color:#222;
+
+    class Authors,Developers people;
+    class DA content;
+    class GitHub code;
+    class EDS delivery;
+    class PreviewOrigin,PreviewSite preview;
+    class PublishedOrigin,ProductionSite production;
+```
+
+## Authoring and development lifecycle
+
+```mermaid
+flowchart TD
+    DA["Edit content in DA<br/>Pages · Metadata · Fragments"]
+    GitHub["Develop code in GitHub<br/>Blocks · Styles · Scripts · Tools"]
+
+    DA -->|"Content changes"| Preview
+    GitHub --> PR["Commit and review<br/>Pull request"]
+    PR -->|"Code changes"| Preview
+
+    subgraph AEM["AEM Edge Delivery Services"]
+        Preview["Preview the combined page<br/>Content + code"]
+        Publish["Publish the approved page"]
+        Live["Serve the live experience"]
+    end
+
+    Preview --> Review{"Content and experience<br/>look correct?"}
+
+    Review -->|"Content needs changes"| DA
+    Review -->|"Code needs changes"| GitHub
+    Review -->|"Approved"| Publish
+
+    Publish --> Live
+    Live --> Feedback["Feedback and new requirements"]
+    Feedback --> DA
+    Feedback --> GitHub
+
+    classDef content fill:#e9f4ff,stroke:#1473e6,color:#222;
+    classDef code fill:#f2edff,stroke:#7a4ce0,color:#222;
+    classDef delivery fill:#fff2df,stroke:#d06b00,color:#222;
+    classDef decision fill:#fff8d6,stroke:#b8860b,color:#222;
+    classDef feedback fill:#e8f8ee,stroke:#268e53,color:#222;
+
+    class DA content;
+    class GitHub,PR code;
+    class Preview,Publish,Live delivery;
+    class Review decision;
+    class Feedback feedback;
 ```

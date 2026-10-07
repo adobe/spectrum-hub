@@ -24,6 +24,43 @@ When a problem appears on one page, first determine whether it comes from the
 authored document, a shared fragment, metadata, generated EDS markup, or
 repository code.
 
+## Author contribution workflow
+
+Content authors work in Document Authoring (DA), not directly in this
+repository. DA access and publish permissions are managed separately from
+GitHub access.
+
+Use DA for:
+
+- page copy, headings, links, and media
+- existing block rows and cells
+- page metadata
+- shared fragments
+
+Use the GitHub engineering workflow when the change requires:
+
+- a new block or new block behavior
+- JavaScript or CSS changes
+- a new metadata value or interpretation
+- changes to generated data, tools, integrations, or edge behavior
+
+For a content-only change:
+
+1. Open the page or fragment in the Spectrum Hub DA workspace.
+2. Edit the content, existing block structure, or metadata.
+3. Preview the page and verify the combined content and code.
+4. Check shared fragments on more than one consuming page.
+5. Use the Sidekick or DA publish action when the change is approved.
+6. Verify the published AEM page and the public production URL when applicable.
+
+A content-only change does not require a Git branch or pull request. If the
+existing authored structures cannot express the requested experience, record
+the page URL, desired behavior, and representative content for an engineer
+rather than inventing unsupported markup.
+
+See the [author workflow in the contribution guide](../CONTRIBUTING.md#author-workflow)
+for the shorter task checklist.
+
 ## Environments
 
 | Environment | Typical use |

@@ -9,6 +9,7 @@ single root command that runs every repository check.
 Use Node.js 20 and install root dependencies:
 
 ```bash
+nvm use
 npm ci
 ```
 

@@ -1,51 +1,148 @@
-# Adobe Code of Conduct
+# Contributing to Spectrum Hub
 
-## Our Pledge
+Spectrum Hub combines repository code with content authored in Adobe Document
+Authoring (DA). Choose the workflow that matches the source of truth for your
+change.
 
-We as members, contributors, and leaders pledge to make participation in our project and community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.
+| Contributor | Use this workflow for |
+| --- | --- |
+| [Engineer](#engineer-workflow) | Blocks, JavaScript, CSS, tools, dependency pipelines, tests, and edge infrastructure |
+| [Author](#author-workflow) | Page copy, media, metadata, existing block content, and fragments |
 
-We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
+All contributors must follow the [Adobe Code of Conduct](./CODE_OF_CONDUCT.md).
+External code contributors must also sign the
+[Adobe Open Source CLA](https://opensource.adobe.com/cla.html).
 
-## Our Standards
+## Engineer workflow
 
-Examples of behavior that contribute to a positive environment for our project and community include:
+Engineering changes are made in Git and reviewed through a GitHub pull request.
+Most block and page work can be developed without service credentials.
 
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience
-* Focusing on what is best, not just for us as individuals but for the overall community
+### Set up the repository
 
-Examples of unacceptable behavior include:
+Install [nvm](https://github.com/nvm-sh/nvm), then run:
 
-* The use of sexualized language or imagery, and sexual attention or advances of any kind
-* Trolling, insulting or derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others’ private information, such as a physical or email address, without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a professional setting
+```bash
+nvm install
+nvm use
+npm ci
+npx aem up
+```
 
-## Our Responsibilities
+The repository uses Node.js 20. `aem up` serves local code at
+`http://localhost:3000` and proxies authored preview content.
 
-Project maintainers are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any instances of unacceptable behavior.
+Install Chromium before running Playwright accessibility or link tests:
 
-Project maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, or to ban temporarily or permanently any contributor for behaviors that they deem inappropriate, threatening, offensive, or harmful.
+```bash
+npx playwright install chromium
+```
 
-## Scope
+An `.env` file is needed only for workflows that call configured services, such
+as an Algolia indexer dry run. Copy `.env.example` to an untracked `.env` and
+use development credentials. Never commit credentials.
 
-This Code of Conduct applies when an individual is representing the project or its community both within project spaces and in public spaces. Examples of representing a project or community include using an official e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event. Representation of a project may be further defined and clarified by project maintainers.
+### Find the owner of a change
 
-## Enforcement
+| Change | Start here |
+| --- | --- |
+| Page lifecycle, global loading, or production request flow | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) |
+| Block behavior or authored block markup | [`docs/BLOCKS.md`](./docs/BLOCKS.md) |
+| CSS, tokens, color schemes, responsive behavior, or motion | [`docs/STYLES.md`](./docs/STYLES.md) |
+| Authored pages, metadata, fragments, or preview behavior | [`docs/CONTENT_AUTHORING.md`](./docs/CONTENT_AUTHORING.md) |
+| Test selection or CI reproduction | [`docs/TESTS.md`](./docs/TESTS.md) |
+| Vendored code, implementation data, mappings, or generated output | [`deps/README.md`](./deps/README.md) |
+| DA tools, Sidekick actions, scheduler, or Algolia indexer | [`docs/TOOLS.md`](./docs/TOOLS.md) |
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by first contacting the project team. Oversight of Adobe projects is handled by the Adobe Open Source Office, which has final say in any violations and enforcement of this Code of Conduct and can be reached at Grp-opensourceoffice@adobe.com. All complaints will be reviewed and investigated promptly and fairly.
+Keep behavior with its closest owner. Block-specific behavior belongs in the
+block, not in `scripts/scripts.js` or `scripts/ak.js`. General utilities belong
+in `scripts/`; operational tooling belongs in `tools/`.
 
-The project team must respect the privacy and security of the reporter of any incident.
+### Your first engineering change
 
-Project maintainers who do not follow or enforce the Code of Conduct may face temporary or permanent repercussions as determined by other members of the project's leadership or the Adobe Open Source Office.
+1. Start from an issue or Jira ticket when the change requires one.
+2. Create a branch and choose a small, representative page for validation.
+3. Read the guide for the area you are changing.
+4. Inspect the authored HTML shape before changing a block.
+5. Add or update the focused test that describes the intended behavior.
+6. Make the smallest source change and keep generated output with its generator
+   change.
+7. Run the minimum validation for the files changed, using
+   [`docs/TESTS.md`](./docs/TESTS.md#what-to-run).
+8. Run `npx aem up` and verify the representative page in a browser.
+9. Push the branch and verify
+   `https://<branch>--spectrum-hub--adobe.aem.page/<path>`.
+10. Open a pull request and complete the repository template with validation
+    steps, accessibility results, and screenshots when applicable.
 
-## Attribution
+### Validation
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1,
-available at [https://contributor-covenant.org/version/2/1][version]
+Start with focused checks while iterating. Before requesting review, run every
+independent suite affected by the change.
 
-[homepage]: https://contributor-covenant.org
-[version]: https://contributor-covenant.org/version/2/1
+```bash
+npm test
+npm run lint
+```
+
+`npm test` is the core suite, not every repository check. Accessibility,
+full-site link crawls, and edge-package tests run separately. New or changed
+blocks also need their Playwright accessibility spec and manual keyboard and
+screen-reader review.
+
+Never edit generated files directly. Change their source of truth, run the
+owning generator, and review generated additions, removals, and renames.
+
+## Author workflow
+
+Content-only changes are made in DA and do not require a Git branch or pull
+request. DA access and publish permissions are separate from GitHub access.
+
+### Work in DA
+
+Use DA for:
+
+- page copy, headings, links, and media
+- rows and cells for an existing block
+- page metadata
+- shared fragments, including navigation content
+
+For a content change:
+
+1. Open the page or fragment in the Spectrum Hub DA workspace.
+2. Make the smallest content, metadata, or existing block-structure change.
+3. Preview the page and verify the combined content and repository code.
+4. Check links, responsive layout, light and dark schemes, and relevant
+   accessibility behavior.
+5. If a shared fragment changed, verify more than one consuming page.
+6. Use the Sidekick or DA publish action after approval.
+7. Verify the published AEM page and `https://spectrum.adobe.com/<path>` when
+   the page is public.
+
+Read [`docs/CONTENT_AUTHORING.md`](./docs/CONTENT_AUTHORING.md) for metadata,
+fragments, environments, audience-aware content, and authoring tools.
+
+### When an author needs an engineer
+
+Open an engineering issue instead of inventing new markup when a request needs:
+
+- a new block or a change to block behavior
+- JavaScript or CSS
+- a new metadata key or value
+- a new authoring tool or Sidekick action
+- changes to authentication, audience filtering, search, or generated data
+
+Include the DA or preview URL, the desired behavior, representative content,
+screenshots when visual output matters, and the affected audience. This gives
+the engineer enough context to reproduce the authored state locally.
+
+## Pull request expectations
+
+- Keep pull requests focused on one coherent change.
+- Link the related GitHub issue or include the Jira ticket identifier without
+  linking to private Jira content.
+- Describe what changed, why it changed, and how reviewers can verify it.
+- Include the branch preview URL for page-facing changes.
+- Record manual accessibility testing for interactive or semantic changes.
+- Do not include secrets, private content, or internal credentials in commits,
+  screenshots, logs, or pull request text.
