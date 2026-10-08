@@ -5,7 +5,7 @@
       "type": "boolean",
       "kind": "boolean",
       "values": [],
-      "description": "Whether the button should be displayed with an [emphasized\nstyle](https://spectrum.adobe.com/page/action-button/#Emphasis)."
+      "description": "Whether the button should be displayed with an [emphasized\nstyle](https://spectrum.adobe.com/web/rsp/components/action-button#component-options)."
     },
     {
       "property": "styles",
@@ -56,7 +56,7 @@
       "type": "boolean",
       "kind": "boolean",
       "values": [],
-      "description": "Whether the button should be displayed with a [quiet\nstyle](https://spectrum.adobe.com/page/action-button/#Quiet).",
+      "description": "Whether the button should be displayed with a [quiet\nstyle](https://spectrum.adobe.com/web/rsp/components/action-button#component-options).",
       "inheritedFrom": "ActionButtonGroupProps"
     },
     {

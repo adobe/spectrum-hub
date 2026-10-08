@@ -110,7 +110,7 @@
         "negative"
       ],
       "default": "'informative'",
-      "description": "The [visual style](https://spectrum.adobe.com/page/meter/#-Options) of the Meter.",
+      "description": "The [visual style](https://spectrum.adobe.com/web/rsp/components/meter#component-options) of\nthe Meter.",
       "inheritedFrom": "MeterStyleProps"
     },
     {

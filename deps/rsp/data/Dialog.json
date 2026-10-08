@@ -47,6 +47,14 @@
       "inheritedFrom": "AriaDialogProps"
     },
     {
+      "property": "isEntering",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the dialog is currently performing an entry animation. Focus is not moved into the\ndialog until the animation completes, since moving the screen reader cursor may cause scrolling\nthat interrupts the animation.",
+      "inheritedFrom": "AriaDialogProps"
+    },
+    {
       "property": "id",
       "type": "string",
       "kind": "text",

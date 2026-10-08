@@ -308,6 +308,9 @@
     "interface": "SideNavItemLinkProps",
     "file": "SideNav"
   },
+  "SideNavPanel": {
+    "interface": "SideNavPanelProps"
+  },
   "Skeleton": {
     "interface": "SkeletonProps"
   },
