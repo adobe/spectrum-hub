@@ -19,6 +19,7 @@
     import {
       collectFragmentTagNames,
       buildCompositeElement,
+      buildRspProps,
       buildRspImportSpecifiers,
       resolveExternalComponent,
     } from './build-composite-element.js';
@@ -180,9 +181,7 @@
         const root = createRoot(mount);
         // Covers required props with no matching control (e.g. Tabs' aria-label).
         const currentProps = compositeRoot
-          ? Object.fromEntries(
-            [...compositeRoot.attributes].map((attr) => [attr.name, attr.value === '' ? true : attr.value]),
-          )
+          ? buildRspProps(compositeRoot)
           : { children: capitalize(component) };
         applyMountSizing(currentProps.orientation);
 
