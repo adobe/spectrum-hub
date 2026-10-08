@@ -1,13 +1,13 @@
 # Accessibility tests
 
-This suite runs [axe-core](https://github.com/dequelabs/axe-core) WCAG 2.2 AA scans plus Playwright's [`toMatchAriaSnapshot()`](https://playwright.dev/docs/aria-snapshots) accessibility-tree checks against every block, template, and shared custom element, using [Playwright](https://playwright.dev/). Tests run on every pull request via [`.github/workflows/a11y.yml`](../../.github/workflows/a11y.yml).
+This suite uses [Playwright](https://playwright.dev/) to run [axe-core](https://github.com/dequelabs/axe-core) WCAG 2.2 AA scans and [`toMatchAriaSnapshot()`](https://playwright.dev/docs/aria-snapshots) accessibility-tree checks against covered blocks, shared custom elements, and the homepage. Tests run on every pull request via [`.github/workflows/a11y.yml`](../../.github/workflows/a11y.yml).
 
 ## What we're testing for
 
 Each block gets three checks:
 
 - **Light/default mode** — a full WCAG 2.2 A/AA scan (`wcag2a`, `wcag2aa`, `wcag22aa` tags), covering ARIA usage, semantic structure, labeling, keyboard/focus concerns, target size, and more.
-- **Accessibility tree** — a `toMatchAriaSnapshot()` assertion against the block's root element, asserting its accessible roles/names/structure match a committed baseline. Axe only flags known WCAG rule violations; it won't notice a heading silently demoted to a `div`, a landmark losing its name, or a role getting clobbered, as long as nothing technically violates a rule. This test runs once, gated to the `chromium` project (the tree is browser/viewport-agnostic — see the gotcha below), and is skipped for a couple of blocks noted inline in their spec files (`schedule`: non-deterministic render pending a bug fix; `section-metadata`: removes its own root from the DOM on init). `sitenav` and `status-table` are the exceptions to "runs once". Both change layout below 900px in ways that reshape the tree, so each has two tree tests — one gated to `chromium`, one gated to `Mobile Chrome`. `sitenav` CSS-hides its rail, leaving only the trigger button. `status-table` clips its `thead` out of view and marks every sort-header button `aria-hidden`, so its columnheaders lose their nested buttons.
+- **Accessibility tree** — a `toMatchAriaSnapshot()` assertion against the block's root element, asserting its accessible roles/names/structure match a committed baseline. Axe only flags known WCAG rule violations; it won't notice a heading silently demoted to a `div`, a landmark losing its name, or a role getting clobbered, as long as nothing technically violates a rule. This test normally runs once, gated to the `chromium` project (the tree is browser/viewport-agnostic — see the gotcha below). `sitenav` and `status-table` also have `Mobile Chrome` snapshots because their responsive layouts reshape the accessibility tree.
 - **Dark mode** — a focused color-contrast scan only. Dark mode reuses the same tokens and markup as light mode, so re-running the full ruleset (or the tree snapshot) would just repeat checks that don't vary by color scheme; contrast is the one thing that does.
 
 `accessibility.homepage.spec.js` runs the same axe scans against the real homepage (proxied through a local [`aem up`](https://github.com/adobe/helix-cli) dev server — see [Running the tests](#running-the-tests)), rather than an isolated fixture.
@@ -113,15 +113,17 @@ Use a `data:` URI placeholder for any authored image so fixtures don't depend on
 <picture><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7" alt=""></picture>
 ```
 
-### Templates need `setConfig` before `init`
+### Fixtures that load nested blocks need `setConfig`
 
-Templates use `loadBlock()` internally, which requires `components` to be defined. Call `setConfig` in the fixture script before `init()`:
+Some blocks, such as `page-hero`, call `loadBlock()` for nested blocks during
+`init()`. Because isolated fixtures do not run `scripts.js`, initialize the
+configuration those calls read before invoking `init()`:
 
 ```js
 setConfig({ components: [], hostnames: [], linkBlocks: [] });
 ```
 
-## When you change a block or template
+## When you change a block or shared custom element
 
 | What changed | What to update |
 | --- | --- |
@@ -164,7 +166,11 @@ npx playwright test -g "sitenav"
 
 > **Windows/PowerShell:** always use forward slashes in file-path arguments, even on Windows — `test/a11y/blocks/card.spec.js`, not `.\test\a11y\blocks\card.spec.js`. Playwright treats the argument as a regex matched against forward-slash paths; backslashes get parsed as regex escapes (`\t`, `\s`, etc.) and silently match nothing.
 
-This suite is **not** part of `npm test` (that runs unit + extraction tests only) — it's kept separate since it needs its own browser install and dev server. Run it with `npm run test:a11y`, or via the dedicated [`a11y.yml`](../../.github/workflows/a11y.yml) workflow in CI.
+This suite is **not** part of `npm test`, which runs the unit, extraction,
+indexer, and link-check unit suites. Accessibility tests stay separate because
+they need their own browser installation and development server. Run them with
+`npm run test:a11y`, or via the dedicated
+[`a11y.yml`](../../.github/workflows/a11y.yml) workflow in CI.
 
 ## File structure
 
@@ -174,7 +180,7 @@ This suite is **not** part of `npm test` (that runs unit + extraction tests only
 | [`block-a11y.js`](./block-a11y.js) | Shared `gotoBlock()` and `formatViolations()` utilities used by every block spec. |
 | [`mocks.js`](./mocks.js) | Reusable mock HTML/JSON for blocks that fetch remote data at runtime. |
 | [`blocks/<name>.spec.js`](./blocks/) | One file per block — the light-mode, accessibility-tree, and dark-mode tests. |
-| [`fixtures/<name>.html`](./fixtures/) | One fixture per block/template — the isolated page each spec loads. |
+| [`fixtures/<name>.html`](./fixtures/) | One fixture per covered block — the isolated page each spec loads. |
 | [`custom-components/<name>.spec.js`](./custom-components/) | One file per shared `deps/se/se.js` element. |
 | [`fixtures/custom-components/<name>.html`](./fixtures/custom-components/) | One fixture per shared custom element. |
 | [`coverage.spec.js`](./coverage.spec.js) | Fails if a block under `blocks/` (repo root), or a `deps/se/se.js` custom element, has no matching spec file, unless explicitly exempted. |

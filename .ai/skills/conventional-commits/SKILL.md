@@ -1,6 +1,6 @@
 ---
 name: conventional-commits
-description: Create conventional commit messages following best conventions. Use when committing code changes, writing commit messages, or formatting git history. Follows conventional commits specification.
+description: Use when committing code changes, writing commit messages, or formatting git history.
 license: MIT
 metadata:
   version: '1.0.0'
@@ -12,21 +12,18 @@ Follow these conventions when creating commits.
 
 ## Prerequisites
 
-Before committing, ensure you're working on a feature branch, not the main branch.
+Commit only when the user or the active platform workflow explicitly requests it.
+Before committing, inspect the current branch and working tree:
 
 ```bash
-# Check current branch
 git branch --show-current
+git status --short
 ```
 
-If you're on `main`, create a new branch first:
-
-```bash
-# Create and switch to a new branch
-git checkout -b <short-description>
-```
-
-Branch naming needs to be short to fit URL length constraints.
+Respect the environment's branch and worktree management. Do not create or switch
+branches with raw Git commands unless the user explicitly requests it and the
+active workflow permits it. If the current branch is unsuitable for a commit,
+stop and ask for guidance instead of changing repository state.
 
 ## Format
 
@@ -42,7 +39,7 @@ The header is required. Scope is optional. All lines must stay under 100 charact
 
 ## Commit Types
 
-Use the types defined in `.ai/config.json` under `git.types`.
+Use one of these conventional commit types:
 
 | Type       | Purpose                                       |
 | ---------- | --------------------------------------------- |
@@ -58,12 +55,10 @@ Use the types defined in `.ai/config.json` under `git.types`.
 | `style`    | Code style and formatting                     |
 | `test`     | Tests added, updated or improved              |
 
-Source list: `.ai/config.json` → `git.types`.
-
 ## Subject Line Rules
 
 - Provide concise description of **why** the changes were made
-- Start with a lowercase letter — commitlint enforces this (`subject-case` rule forbids sentence-case, start-case, pascal-case, and upper-case)
+- Start with a lowercase letter to keep the history consistent
 - No period or white space at the end
 - Maximum 70 characters
 

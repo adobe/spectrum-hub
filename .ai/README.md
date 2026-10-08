@@ -1,158 +1,70 @@
 # AI and agent documentation
 
-Coding agents should start with [`AGENTS.md`](../AGENTS.md) at the repository root. It summarizes how to use this directory as the canonical source for rules and skills.
-
-This directory contains rules, skills, and accumulated memory that coding agents use to enforce consistent formatting and structure in our codebase.
+Coding agents should start with [`AGENTS.md`](../AGENTS.md) at the repository
+root. It bootstraps the canonical skills and design records in this directory.
 
 ## Why `.ai/`
 
-All rules and skills now live in **`.ai/`** — a tool-agnostic, plain-markdown directory that any agent or tool can read. IDE-specific directories (`.cursor/`, `.claude/`) become thin adapters that point back to `.ai/` via symlinks:
+Repository skills live in **`.ai/skills/`** as tool-agnostic Markdown. Design
+specifications and implementation plans live in **`.ai/docs/`**.
 
-- Edit once in `.ai/` → all tools see the update automatically
-- No sync step, no duplication, no drift between tools
-- New contributors or tools start from `AGENTS.md` at the repo root, which bootstraps everything
+Tool-specific directories such as `.cursor/` and `.claude/` are optional,
+gitignored local adapters. They are not part of a fresh clone. `CLAUDE.md` is
+the only tracked tool-specific bootstrap file.
 
-## Rules
+## Available skills
 
-Rules can be found in the `rules` directory in `md` format.
+| Skill | Purpose | Invoke when |
+| --- | --- | --- |
+| [Onboarding](./skills/onboarding/SKILL.md) | Orient new and returning contributors and route repository work | Getting started or asking where and how to make a change |
+| [Code review](./skills/code-review/SKILL.md) | Review local and GitHub pull request diffs for actionable defects and concrete maintainability or test risks | Reviewing code before merge or delivery |
+| [New block workflow](./skills/new-block-workflow/SKILL.md) | Coordinate a new block from authored contract through verified implementation and optional delivery | Building a new block end to end |
+| [Create a new block](./skills/create-new-block/SKILL.md) | Apply the EDS block structure, `init(el)` contract, authoring modes, and required tests | Scaffolding or implementing a block |
+| [Accessibility compliance](./skills/accessibility-compliance/SKILL.md) | Implement and audit WCAG 2.2 semantics, interaction, focus, motion, and mobile behavior | Building or reviewing accessible interfaces |
+| [Stylesheet conventions](./skills/stylesheet-conventions/SKILL.md) | Apply repository CSS organization, tokens, schemes, class naming, and responsive conventions | Adding or changing CSS |
+| [Test-driven development](./skills/test-driven-development/SKILL.md) | Use red-green-refactor for features, fixes, refactors, and behavior changes | Before writing implementation code |
+| [EDS performance and lifecycle review](./skills/eds-performance-review/SKILL.md) | Review core page-loading changes for ownership, fragility, and unmeasured cost | Changing `scripts.js`, `ak.js`, lifecycle behavior, CLS, or LCP |
+| [Conventional commits](./skills/conventional-commits/SKILL.md) | Prepare conventional commit messages while respecting branch and worktree ownership | A commit is explicitly requested |
+| [Write documentation](./skills/write-documentation/SKILL.md) | Apply Adobe content standards to repository documentation | Writing or editing Markdown |
+| [Write issues and tickets](./skills/write-issues-tickets/SKILL.md) | Draft Jira tickets and GitHub issues using repository conventions | A ticket or issue draft is requested |
+| [Write pull request descriptions](./skills/write-pr-descriptions/SKILL.md) | Draft pull request titles and bodies using Spectrum Hub conventions | A pull request description is requested |
 
-### Available rules
-
-#### Writing issues/tickets
-
-- **File**: [`.ai/rules/write-issues-tickets.md`](./rules/write-issues-tickets.md)
-- **Purpose**: Guidelines for drafting and formatting Jira tickets and/or GitHub issues — title format, severity classification, labels, issue types, and templates for general tickets and bugs.
-- **How to invoke**: Ask to create or draft a Jira ticket (e.g. "write a Jira ticket for this bug", "draft a new issue ticket").
-
-#### GitHub pull request descriptions
-
-- **File**: [`.ai/rules/pr-descriptions.md`](./rules/pr-descriptions.md)
-- **Purpose**: Generates GitHub pull request titles and body following Spectrum Hub conventions, including description structure, accessibility testing checklist, validation steps, and device review.
-- **How to invoke**: Ask to create or draft a PR description (e.g. "write a PR description", "draft a pull request for this branch"). Requires a GitHub issue or Jira ticket number; the agent will prompt if not provided.
-
-#### Writing documentation
-
-- **File**: [`.ai/rules/write-documentation.md`](./rules/write-documentation.md)
-- **Purpose**: Follow Adobe content writing standards when writing documentation for Spectrum Hub — including Markdown formatting, voice and tone, and writing for external or internal audiences.
-- **How to invoke**: Auto-triggers when editing `*.md` files, or ask explicitly (e.g. "write the docs for this block", "update the README").
-
-### When rules are activated
-
-**Always-applied rules:** Rules use `alwaysApply: true` to activate automatically, or `globs` to activate when matching files are edited.
-**On-demand rules:** Rules with `alwaysApply: false` and no globs are on-demand only — invoke by mentioning the rule or asking for the relevant task (e.g. "write a PR description", "draft a Jira ticket").
-
-| Rule                 | Always applied | On-demand | Glob       |
-| -------------------- | :------------: | :-------: | ---------- |
-| write-issues-tickets |                |     x     | —          |
-| pr-descriptions      |                |     x     | —          |
-| write-documentation  |                |     x     | `**/*.md`  |
-
-### Usage
-
-1. Rules are on-demand; invoke them by asking for the relevant task (e.g. "write a PR description", "draft a Jira ticket").
-2. To invoke a specific rule by name, mention it in chat (e.g. `@pr-descriptions` in Cursor, or "use the pr-descriptions rule" in Claude Code).
-
-### Updating rules
-
-To modify these rules:
-
-1. Edit the appropriate file in the `rules` directory.
-2. Try to follow the existing structure and format where possible.
-3. Register any new rules in the table above and in [`AGENTS.md`](../AGENTS.md).
-
-## Skills
-
-Skills are used on-demand. When a task matches a skill's purpose, the agent reads the skill file for workflows, patterns, and guidance. Skills live in the `skills` directory; each has a `SKILL.md` and may include references or scripts.
-
-### Available skills
-
-#### Conventional commits
-
-- **File**: [`.ai/skills/conventional-commits/SKILL.md`](./skills/conventional-commits/SKILL.md)
-- **Purpose**: Create conventional commit messages following the conventional commits specification.
-- **How to invoke**: Ask for a commit message (e.g. "write a commit message for these changes", "suggest a commit message"). Applies when you're about to run `git commit`.
-
-#### Stylesheet conventions
-
-- **File**: [`.ai/skills/stylesheet-conventions/SKILL.md`](./skills/stylesheet-conventions/SKILL.md)
-- **Purpose**: Stylesheet organization, complete design token reference, light/dark mode with `light-dark()`, the `spectrum-edge` CSS layer, global utility classes, and CSS conventions for block stylesheets (nesting, BEM, media query syntax, reduced motion).
-- **How to invoke**: Ask about CSS organization, adding styles, tokens, or light/dark mode (e.g. "where do I add shared styles", "what token should I use for this color", "how does dark mode work here").
-
-#### Create a new block
-
-- **File**: [`.ai/skills/create-new-block/SKILL.md`](./skills/create-new-block/SKILL.md)
-- **Purpose**: Scaffold and implement a new EDS block — covers file structure, the `init(el)` function contract, template injection, CSS conventions, design tokens, and when to use templates vs per-page authoring vs fragments.
-- **How to invoke**: Ask to create or add a new block (e.g. "create a new block", "scaffold a block for X", "add a new block to the detail template").
-
-#### Test-driven development
-
-- **File**: [`.ai/skills/test-driven-development/SKILL.md`](./skills/test-driven-development/SKILL.md)
-- **Purpose**: Red–green–refactor TDD for agents — define behavior with a failing test first, implement the smallest change that passes, then refactor with tests green. Covers when TDD applies (features, bug fixes, refactors, behavior changes), exceptions that need human agreement, and the red–green–refactor cycle. Companion reference: [`.ai/skills/test-driven-development/testing-anti-patterns.md`](./skills/test-driven-development/testing-anti-patterns.md) (mock misuse, test-only production hooks, and related smells); load it when adding mocks or heavy test doubles.
-- **How to invoke**: Use before writing implementation code for a feature or fix (per the skill frontmatter). Ask explicitly (e.g. "use TDD", "write the failing test first", "red–green–refactor") or mention `@test-driven-development` / the skill path in Cursor.
-
-#### EDS performance & lifecycle review
-
-- **File**: [`.ai/skills/eds-performance-review/SKILL.md`](./skills/eds-performance-review/SKILL.md)
-- **Purpose**: Reviews a diff against the actual page-load lifecycle in `scripts.js`/`ak.js`/`lazy.js`/`postlcp.js` — flags fragile, duplicative, or unmeasured "performance" code added to the core loader instead of a block's own `init()`. Walks the lifecycle step-by-step, gives a ruthless CLS/LCP test for anything proposed ahead of `loadArea`, and includes a worked case study (the `component-status` prefetch hook) of the pattern to catch.
-- **How to invoke**: Ask before opening a PR that touches `scripts.js` or `ak.js` (e.g. "review this against the performance skill", "does this belong in scripts.js"), or when auditing for CLS/LCP regressions or speculative optimizations.
+Skills are on-demand. Load a skill when the task matches its frontmatter
+description. Skills can require other skills for specific phases; follow those
+requirements rather than copying their guidance.
 
 ## Specs and plans
 
-Design specs and implementation plans live in [`.ai/docs/`](./docs/):
+| Artifact | Location | Filename |
+| --- | --- | --- |
+| Design specifications | [`docs/specs/`](./docs/specs/) | `YYYY-MM-DD-<topic>-design.md` |
+| Implementation plans | [`docs/plans/`](./docs/plans/) | `YYYY-MM-DD-<feature-name>.md` |
 
-| What | Location | Filename |
-| ---- | -------- | -------- |
-| Design specs (brainstorming output) | [`.ai/docs/specs/`](./docs/specs/) | `YYYY-MM-DD-<topic>-design.md` |
-| Implementation plans | [`.ai/docs/plans/`](./docs/plans/) | `YYYY-MM-DD-<feature-name>.md` |
+This overrides Superpowers defaults under `docs/superpowers/`. Store
+repository design work under `.ai/docs/` and do not create a
+`docs/superpowers/` directory.
 
-The Superpowers plugin skills (`brainstorming`, `writing-plans`, `subagent-driven-development`, `executing-plans`, `requesting-code-review`) default to `docs/superpowers/specs/` and `docs/superpowers/plans/`. In this repository those paths are **overridden** by the convention above — write specs and plans to `.ai/docs/` instead, and do not create a `docs/superpowers/` directory. See [`AGENTS.md`](../AGENTS.md) for the instruction agents load at session start.
+## Local adapters
 
-## Using rules and skills across tools and IDEs
-
-Canonical content lives in **`.ai/`** (this directory). Tool-specific directories (`.cursor/`, `.claude/`) are thin adapters that point back here via symlinks — edit files in `.ai/`, never in the adapter directories.
-
-### Current symlink structure
+A locally configured editor can point its skills directory at the canonical
+source:
 
 ```text
-.ai/rules/
-└── *.md                          ← canonical, tool-agnostic source of truth
-
 .ai/skills/
-└── <skill-name>/SKILL.md         ← canonical, tool-agnostic source of truth
+└── <skill-name>/SKILL.md
 
-.cursor/rules/
-└── *.mdc → ../../.ai/rules/*.md  (per-file symlinks; Cursor expects .mdc)
-.cursor/skills/ → ../.ai/skills/  (directory symlink)
-
-.claude/rules/ → ../.ai/rules/    (directory symlink; Claude Code reads .md)
-.claude/skills/ → ../.ai/skills/  (directory symlink)
+.cursor/skills/ → ../.ai/skills/
+.claude/skills/ → ../.ai/skills/
 ```
 
-Editing any `.ai/rules/*.md` file immediately updates what both Cursor and Claude Code see — no sync step required.
+Continue editing `.ai/skills/`; do not edit through an adapter.
 
-### Adding a new rule
-
-1. Create `rule-name.md` in `.ai/rules/` with YAML frontmatter (`globs`, `alwaysApply`).
-2. Add one per-file symlink for Cursor (required — Cursor needs `.mdc` extension):
-
-   ```sh
-   ln -s "../../.ai/rules/rule-name.md" ".cursor/rules/rule-name.mdc"
-   ```
-
-   `.claude/rules/` is a directory symlink pointing at `.ai/rules/`, so it picks up the new file automatically — no extra step needed.
-
-3. Register it in the table in this README and in [`AGENTS.md`](../AGENTS.md).
-
-### Adding a new skill
+## Adding a skill
 
 1. Create `.ai/skills/<skill-name>/SKILL.md`.
-2. Register it in the skills catalog above and in [`AGENTS.md`](../AGENTS.md).
-3. Both `.cursor/skills/` and `.claude/skills/` pick it up automatically via directory symlinks.
+2. Use YAML frontmatter with `name` and a trigger-focused `description`.
+3. Register the skill in the table above and in [`AGENTS.md`](../AGENTS.md).
+4. Test the skill's behavior before relying on it.
 
-### Using rules and skills in other environments
-
-If you use a tool that does not read `.cursor/` or `.claude/`, point it at `.ai/` directly:
-
-- **Start from [`AGENTS.md`](../AGENTS.md)** at the repository root.
-- **Reference files when prompting** — for example: "Follow the rules in `.ai/rules/` and load `.ai/skills/<skill-name>/SKILL.md` for this task."
-- **Copy or adapt** the markdown content into your tool's own config format as needed.
+Tools that do not support adapters can read `.ai/` directly. Start from
+[`AGENTS.md`](../AGENTS.md) and load the matching `SKILL.md`.

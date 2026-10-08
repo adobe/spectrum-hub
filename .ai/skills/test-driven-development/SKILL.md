@@ -32,6 +32,19 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
+### Unattended execution
+
+An unattended agent must not silently grant itself an exception:
+
+- Follow the red-green-refactor cycle whenever the repository has a practical
+  test surface for the change.
+- If a listed exception is genuinely necessary and no human can respond, do not
+  write production code under an assumed exception. Report the work as blocked,
+  including why TDD is impractical and what approval is needed.
+- Documentation-only edits are not production code and do not require a
+  manufactured failing test. Run documentation validation when the repository
+  provides it.
+
 ## The Iron Law
 
 ```
@@ -318,4 +331,5 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without your human partner's permission.
+No production-code exceptions without your human partner's permission. If no
+human is available, follow the unattended-execution policy above.
