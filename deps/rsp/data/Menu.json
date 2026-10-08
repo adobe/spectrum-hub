@@ -29,6 +29,28 @@
       "description": "Hides the default link out icons on menu items that open links in a new tab."
     },
     {
+      "property": "loadingState",
+      "type": "\"loading\" | \"sorting\" | \"loadingMore\" | \"error\" | \"idle\" | \"filtering\"",
+      "kind": "enum",
+      "values": [
+        "loading",
+        "sorting",
+        "loadingMore",
+        "error",
+        "idle",
+        "filtering"
+      ],
+      "description": "The current loading state of the Menu."
+    },
+    {
+      "property": "isVirtualized",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "default": "false",
+      "description": "Whether the Menu should be virtualized. Submenus inherit this from their parent menu by\ndefault."
+    },
+    {
       "property": "escapeKeyBehavior",
       "type": "\"clearSelection\" | \"none\"",
       "kind": "enum",
@@ -190,6 +212,14 @@
       "values": [],
       "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
       "inheritedFrom": "SlotProps"
+    },
+    {
+      "property": "onLoadMore",
+      "type": "() => any",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when more items should be loaded, e.g. while scrolling near the bottom.",
+      "inheritedFrom": "AsyncLoadable"
     },
     {
       "property": "styles",

@@ -1,0 +1,72 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The content of the side panel."
+    },
+    {
+      "property": "isCollapsed",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the side panel is collapsed (controlled)."
+    },
+    {
+      "property": "defaultCollapsed",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the side panel is collapsed by default (uncontrolled)."
+    },
+    {
+      "property": "onCollapsedChange",
+      "type": "(isCollapsed: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the collapsed state changes."
+    },
+    {
+      "property": "styles",
+      "type": "StylesPropWithHeight",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    }
+  ],
+  "status": "alpha"
+}

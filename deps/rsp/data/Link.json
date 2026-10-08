@@ -8,6 +8,14 @@
       "required": true
     },
     {
+      "property": "aria-current",
+      "type": "false | true | \"true\" | \"false\" | \"page\" | \"step\" | \"location\" | \"date\" | \"time\"",
+      "kind": "unknown",
+      "values": [],
+      "description": "Indicates whether this element represents the current item within a container or set of related\nelements.",
+      "inheritedFrom": "AriaLinkProps"
+    },
+    {
       "property": "onPress",
       "type": "(e: PressEvent) => void",
       "kind": "unknown",
@@ -234,7 +242,7 @@
         "secondary"
       ],
       "default": "'primary'",
-      "description": "The [visual style](https://spectrum.adobe.com/page/link/#Options) of the link.",
+      "description": "The [visual style](https://spectrum.adobe.com/web/rsp/components/link#component-options) of the\nlink.",
       "inheritedFrom": "LinkStyleProps"
     },
     {

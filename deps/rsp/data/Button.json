@@ -320,7 +320,7 @@
         "genai"
       ],
       "default": "'primary'",
-      "description": "The [visual style](https://spectrum.adobe.com/page/button/#Options) of the button.",
+      "description": "The [visual style](https://spectrum.adobe.com/web/rsp/components/button#component-options) of\nthe button.",
       "inheritedFrom": "ButtonStyleProps"
     },
     {

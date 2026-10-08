@@ -40,12 +40,36 @@
       "inheritedFrom": "ModalOverlayProps"
     },
     {
+      "property": "onEnter",
+      "type": "(element: HTMLElement) => void | Promise<void>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Callback when the modal starts entering. Return a promise to indicate when the entry animation\nhas completed.",
+      "inheritedFrom": "ModalOverlayProps"
+    },
+    {
+      "property": "onExit",
+      "type": "(element: HTMLElement) => void | Promise<void>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Callback when the modal starts exiting. Return a promise to indicate when the exit animation\nhas completed.",
+      "inheritedFrom": "ModalOverlayProps"
+    },
+    {
       "property": "UNSTABLE_portalContainer",
       "type": "Element",
       "kind": "unknown",
       "values": [],
       "default": "document.body",
       "description": "The container element in which the overlay portal will be placed. This may have unknown\nbehavior depending on where it is portalled to.",
+      "inheritedFrom": "ModalOverlayProps"
+    },
+    {
+      "property": "UNSTABLE_deferUntilEntered",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether to wait until the entry animation completes before hiding content outside the modal\nand moving focus into it.",
       "inheritedFrom": "ModalOverlayProps"
     },
     {
@@ -64,6 +88,14 @@
       "values": [],
       "default": "false",
       "description": "Whether pressing the escape key to close the modal should be disabled.",
+      "inheritedFrom": "AriaModalOverlayProps"
+    },
+    {
+      "property": "UNSTABLE_overrideFocus",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether to override the `focus()` method so it does not scroll the page.\nThis is temporary and will be removed after fully testing all overlays.",
       "inheritedFrom": "AriaModalOverlayProps"
     },
     {

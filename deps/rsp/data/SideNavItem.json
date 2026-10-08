@@ -16,6 +16,18 @@
       "description": "Whether this item has children."
     },
     {
+      "property": "focusMode",
+      "type": "\"child\" | \"row\"",
+      "kind": "enum",
+      "values": [
+        "child",
+        "row"
+      ],
+      "default": "'row'",
+      "description": "Whether the row or its first focusable child element should be focused when the row is\nfocused.",
+      "inheritedFrom": "AriaGridListItemOptions"
+    },
+    {
       "property": "id",
       "type": "string | number",
       "kind": "unknown",
