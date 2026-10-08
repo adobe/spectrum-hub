@@ -1118,24 +1118,6 @@
       }
     },
     {
-      "name": "SideNavPanel",
-      "label": "Side Nav Panel",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "available",
-            "context": "Alpha"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Slider",
       "label": "Slider",
       "platforms": {
