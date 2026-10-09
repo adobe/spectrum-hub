@@ -165,7 +165,7 @@
 
     .row {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       align-items: start;
       gap: var(--columns-gap);
 
@@ -273,11 +273,11 @@
     &.centered {
       align-items: center;
       text-align: center;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     &.centered:has(.row:only-child):has(.col:only-child) .row {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     &.centered .col {
@@ -332,7 +332,7 @@
 
 .columns:not(.grid-layout, .centered, :has(> .row > .col:nth-child(2))) {
   > .row:has(> .col:only-child) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
 
     > .col:only-child {
       grid-column: 1 / -1;
