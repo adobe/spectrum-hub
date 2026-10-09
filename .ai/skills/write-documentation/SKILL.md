@@ -1,14 +1,13 @@
 ---
-description: Follow Adobe content writing standards when writing documentation for Spectrum Hub.
-globs: "**/*.md"
-alwaysApply: false
+name: write-documentation
+description: Use when writing or editing documentation for Spectrum Hub.
 ---
 
 # Documentation standards
 
 Follow and understand Adobe content writing standards when writing documentation for Spectrum Hub.
 
-## When this rule applies
+## When this skill applies
 
 - Writing or updating documentation for this codebase
 - Writing any documentation that is shipped to external consumers
@@ -30,15 +29,19 @@ To set a focal point on the background image, add a `data-focal` attribute with 
 
 ## Format
 
-Documentation is written in GitHub-Flavored Markdown. The point of this rule is the Adobe voice-and-tone standards, not Markdown syntax: match the register of the example above (plain, specific, calm — no shouting, no `!!!`, no run-on sentences) and follow the authoritative style guides in Resources below.
+Documentation is written in GitHub-Flavored Markdown. This skill applies Adobe
+voice-and-tone standards rather than redefining Markdown syntax. Match the
+register of the example above: plain, specific, calm, and free of shouting,
+excessive punctuation, or run-on sentences. Follow the authoritative style
+guides in Resources below.
 
 ## Resources
 
-- [Adobe voice and tone](https://spectrum.adobe.com/page/voice-and-tone/)
-- [Grammar and mechanics](https://spectrum.adobe.com/page/grammar-and-mechanics/)
-- [Inclusive UX writing](https://spectrum.adobe.com/page/inclusive-ux-writing/)
-- [Writing about people](https://spectrum.adobe.com/page/writing-about-people/)
-- [Writing for readability](https://spectrum.adobe.com/page/writing-for-readability/)
-- [Writing with visuals](https://spectrum.adobe.com/page/writing-with-visuals/)
-- [In-product word list](https://spectrum.adobe.com/page/in-product-word-list/)
-- [Writing for errors](https://spectrum.adobe.com/page/writing-for-errors/)
+- [Adobe voice and tone](https://spectrum.adobe.com/content/voice-and-tone)
+- [Grammar and mechanics](https://spectrum.adobe.com/content/grammar-and-mechanics)
+- [Inclusive UX writing](https://spectrum.adobe.com/content/language-and-inclusivity/inclusive-ux-writing)
+- [Writing about people](https://spectrum.adobe.com/content/language-and-inclusivity/writing-about-people)
+- [Writing for readability](https://spectrum.adobe.com/content/language-and-inclusivity/writing-for-readability)
+- [Writing with visuals](https://spectrum.adobe.com/content/language-and-inclusivity/writing-with-visuals)
+- [In-product word list](https://spectrum.adobe.com/content/in-product-word-list)
+- [Writing for errors](https://spectrum.adobe.com/content/writing-for-errors)

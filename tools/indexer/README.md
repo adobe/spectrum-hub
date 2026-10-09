@@ -1,6 +1,6 @@
 # Content indexer
 
-Publishes Spectrum Hub content to Algolia. Runs every two hours via
+Publishes Spectrum Hub content to Algolia. Runs every 12 hours via
 [`.github/workflows/index-algolia.yml`](../../.github/workflows/index-algolia.yml), and runs
 identically on a laptop.
 
