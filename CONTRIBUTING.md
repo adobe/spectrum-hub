@@ -52,7 +52,7 @@ use development credentials. Never commit credentials.
 | CSS, tokens, color schemes, responsive behavior, or motion | [`docs/STYLES.md`](./docs/STYLES.md) |
 | Authored pages, metadata, fragments, or preview behavior | [`docs/CONTENT_AUTHORING.md`](./docs/CONTENT_AUTHORING.md) |
 | Test selection or CI reproduction | [`docs/TESTS.md`](./docs/TESTS.md) |
-| Vendored code, implementation data, mappings, or generated output | [`deps/README.md`](./deps/README.md) |
+| Vendored code, implementation data, mappings, or generated output | [`docs/DEPS.md`](./docs/DEPS.md) |
 | DA tools, Sidekick actions, scheduler, or Algolia indexer | [`docs/TOOLS.md`](./docs/TOOLS.md) |
 
 Keep behavior with its closest owner. Block-specific behavior belongs in the
@@ -66,14 +66,16 @@ in `scripts/`; operational tooling belongs in `tools/`.
 
     i. if possible, keep the branch name to 8 characters or fewer to avoid browser console errors from IMS (though this isn't a blocker)
 3. Read the guide for the area you are changing — most often
-   [`docs/BLOCKS.md`](./docs/BLOCKS.md) or [`docs/DEPS.md`](./docs/DEPS.md).
-   [Find the owner of a change](#find-the-owner-of-a-change) maps every area to its guide.
+[`docs/BLOCKS.md`](./docs/BLOCKS.md) or [`docs/DEPS.md`](./docs/DEPS.md).
+[Find the owner of a change](#find-the-owner-of-a-change) maps every area to its guide.
 4. Inspect the authored HTML shape before changing a block.
 5. Add or update the focused test that describes the intended behavior.
 6. Make the smallest source change and keep any generated output with its generator change.
 7. Run the minimum validation for the files changed, using [`docs/TESTS.md`](./docs/TESTS.md#what-to-run).
 8. Run `aem up` and verify the representative page in a browser.
-9. Push the branch and verify `https://<branch>--spectrum-hub--adobe.aem.page/<path>`. (`.page` preview branches are gated behind authorization with Sidekick)
+9. Push the branch and verify `https://<branch>--spectrum-hub--adobe.aem.live/<path>`, the
+same host the pull request template asks reviewers to test. The matching
+`<branch>--spectrum-hub--adobe.aem.page` preview host is gated behind Sidekick authorization.
 10. Open a pull request and complete the repository PR template with validation steps, accessibility results, and screenshots when applicable.
 
 **Non-blocking note about branch naming:** IMS validates the branch preview's URI
@@ -128,8 +130,9 @@ For a content change:
 1. Open the page or fragment in the Spectrum Hub DA workspace.
 2. Make the smallest content, metadata, or existing block-structure change.
 3. Preview the page and verify the combined content and repository code.
+
     i. `preview.spectrum.adobe.com` is gated behind Adobe VPN to preview your content changes,
-    and also is only the code behavior or functionality that is found in the `main` branch.
+and also is only the code behavior or functionality that is found in the `main` branch.
 4. Check links, responsive layout, light and dark schemes, and relevant accessibility behavior.
 5. If a shared fragment changed, verify more than one consuming page.
 6. Use the Sidekick or DA publish action after approval.

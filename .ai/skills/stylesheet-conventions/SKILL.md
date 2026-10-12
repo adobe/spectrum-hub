@@ -1,6 +1,6 @@
 ---
 name: stylesheet-conventions
-description: Stylesheet organization, design token usage, light/dark mode, and CSS conventions for Spectrum Hub. Use when adding global styles, creating block CSS, or structuring new stylesheet files.
+description: Use when adding global styles, creating block CSS, or structuring new stylesheet files. Stylesheet organization, design token usage, light/dark mode, and CSS conventions for Spectrum Hub.
 ---
 
 # Stylesheet Conventions
@@ -13,7 +13,7 @@ These two skills cover complementary halves of the same task:
 
 | Skill | Owns |
 | --- | --- |
-| [`create-new-block`](../create-new-block/SKILL.md) | File structure, `init(el)` contract, how `loadBlock` resolves and loads the CSS file, template injection, block authoring conventions (div soup, object syntax, BEM class names) |
+| [`create-new-block`](../create-new-block/SKILL.md) | File structure, `init(el)` contract, how `loadBlock` resolves and loads the CSS file, metadata-driven composition, and block authoring conventions (div soup, object syntax, class naming) |
 | `stylesheet-conventions` *(this file)* | What goes inside the CSS file — tokens, light/dark mode, layer cascade, nesting, media queries, shared stylesheets |
 
 **When creating a new block, use both.** Start with `create-new-block` to set up the files and wire the JS. Then use this skill to write the block's CSS correctly.
@@ -86,17 +86,17 @@ Other color scales follow the same pattern: `--s2-red-*`, `--s2-orange-*`, `--s2
 
 #### Typography — headings
 ```
---s2-heading-size-xs (18px)  --s2-heading-size-s  (20px)
+--s2-heading-size-xs (16px)  --s2-heading-size-s  (18px)
 --s2-heading-size-m  (22px)  --s2-heading-size-l  (28px)
---s2-heading-size-xl (36px)  --s2-heading-size-xxl (45px)
+--s2-heading-size-xl (36px)  --s2-heading-size-xxl (40px)
 --s2-heading-size-xxxl (58px) --s2-heading-size-xxxxl (73px)
---s2-heading-font-weight: 800
---s2-heading-line-height: 1.3
+--s2-heading-font-weight: 600
+--s2-heading-line-height: 1.2
 ```
 
 #### Typography — fonts
 ```
---s2-font-family:         'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif
+--s2-font-family:         adobe-clean, 'Adobe Clean', 'Trebuchet MS', sans-serif
 --s2-font-display-family: 'Adobe Clean Display', adobe-clean-display, sans-serif
 ```
 
@@ -105,7 +105,7 @@ Other color scales follow the same pattern: `--s2-red-*`, `--s2-orange-*`, `--s2
 --se-grid-container-width  (83.4% up to 1500px at 1800px+)
 --se-grid-column-width     (container / 12)
 --se-grid-gutter-width     (8.3%)
---sh-header-height         (56px)
+--sh-header-height         (104px)
 ```
 
 #### Spectrum Edge conveniences
@@ -133,11 +133,11 @@ Color tokens use the CSS `light-dark()` function — each token resolves automat
 Always use tokens rather than hardcoded colors. Tokens adapt to the user's mode automatically. To force a specific scheme on a section or component:
 
 ```css
-.my-block--dark {
+.my-block.dark-scheme {
   color-scheme: dark;
 }
 
-.my-block--light {
+.my-block.light-scheme {
   color-scheme: light;
 }
 ```
@@ -176,7 +176,9 @@ These are defined in `styles.css` and available everywhere:
 
 - Use **native CSS nesting** (not Sass).
 - Scope all styles to the block root class: `.my-block { ... }`.
-- Use **BEM** for class names added inside the block: `.my-block__element`, `.my-block--modifier`.
+- Name child and state classes in kebab-case, prefixed with the block name:
+  `.my-block-heading`, `.my-block-loading`. Name variants authored on the block
+  root with a short standalone class, scoped through the root: `.my-block.compact`.
 - Reference tokens, never hardcoded values.
 - Use `rgb(from <token> r g b / <alpha>)` for alpha variants of token colors:
 

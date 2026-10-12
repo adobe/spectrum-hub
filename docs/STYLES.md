@@ -228,7 +228,7 @@ prefixes except `-webkit-backdrop-filter`. Note that `lint:css` covers
 ## Review checklist
 
 1. The selector belongs in the chosen global or block stylesheet.
-2. Child classes are block-scoped kebab-case, not BEM.
+2. Child classes are kebab-case and prefixed with the block name.
 3. Existing tokens replace unexplained literal colors, spacing, and type values.
 4. Light and dark schemes both work.
 5. Narrow widths, zoom, long text, and reduced motion work.

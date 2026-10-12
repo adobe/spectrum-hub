@@ -1,6 +1,6 @@
 ---
-description: Guidelines for drafting and formatting Jira tickets and GitHub issues
-alwaysApply: false
+name: write-issues-tickets
+description: Use when drafting or formatting a Jira ticket or GitHub issue for Spectrum Hub.
 ---
 
 # Writing tickets/issues guidelines

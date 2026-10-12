@@ -176,8 +176,8 @@ value or assuming a truthy value has special semantics.
 
 ## Automatic page composition
 
-This repository does not currently have a `templates/` registry. Page-type behavior is
-implemented through the `metadata` spreadsheet in DA, and existing owners:
+Page-type behavior is implemented through the `metadata` spreadsheet in DA and the
+owners below, rather than a `templates/` registry:
 
 - `scripts/scripts.js` creates automatic page heroes and breadcrumbs.
 - `page-hero` creates the component status block for component pages.

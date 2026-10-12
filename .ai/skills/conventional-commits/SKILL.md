@@ -1,6 +1,6 @@
 ---
 name: conventional-commits
-description: Create conventional commit messages following best conventions. Use when committing code changes, writing commit messages, or formatting git history. Follows conventional commits specification.
+description: Use when committing code changes, writing commit messages, or formatting git history. Creates conventional commit messages following best conventions. Follows conventional commits specification.
 license: MIT
 metadata:
   version: '1.0.0'
@@ -12,21 +12,27 @@ Follow these conventions when creating commits.
 
 ## Prerequisites
 
-Before committing, ensure you're working on a feature branch, not the main branch.
+Commit only when the user or the active platform workflow explicitly requests it.
+Before committing, inspect the current branch and working tree:
 
-```bash
+```zsh
 # Check current branch
 git branch --show-current
+git status --short
 ```
 
 If you're on `main`, create a new branch first:
 
-```bash
+```zsh
 # Create and switch to a new branch
 git checkout -b <short-description>
 ```
 
 Branch naming needs to be short to fit URL length constraints.
+Respect the environment's branch and worktree management. Do not create or switch
+branches with raw Git commands unless the user explicitly requests it and the
+active workflow permits it. If the current branch is unsuitable for a commit,
+always stop and ask for guidance instead of changing repository state.
 
 ## Format
 
@@ -42,7 +48,7 @@ The header is required. Scope is optional. All lines must stay under 100 charact
 
 ## Commit Types
 
-Use the types defined in `.ai/config.json` under `git.types`.
+Use one of these conventional commit types:
 
 | Type       | Purpose                                       |
 | ---------- | --------------------------------------------- |
@@ -58,12 +64,10 @@ Use the types defined in `.ai/config.json` under `git.types`.
 | `style`    | Code style and formatting                     |
 | `test`     | Tests added, updated or improved              |
 
-Source list: `.ai/config.json` → `git.types`.
-
 ## Subject Line Rules
 
 - Provide concise description of **why** the changes were made
-- Start with a lowercase letter — commitlint enforces this (`subject-case` rule forbids sentence-case, start-case, pascal-case, and upper-case)
+- Start with a lowercase letter to keep the history consistent- tools like commitlint enforces this (`subject-case` rule forbids sentence-case, start-case, pascal-case, and upper-case)
 - No period or white space at the end
 - Maximum 70 characters
 
@@ -140,11 +144,35 @@ This reverts commit abc123def456.
 Reason: Caused performance regression in production.
 ```
 
+## Commit Message Verification
+
+Write multiline commit messages through a file or standard input. Do not use
+escaped `\n` sequences inside `git commit -m` arguments.
+
+Before committing, validate the prepared message:
+
+```zsh
+grep -F '\n' "$commit_message_file" && exit 1
+awk 'length($0) > 80 { print NR ":" length($0) ":" $0; failed=1 }
+    END { exit failed }' "$commit_message_file"
+```
+
+After committing, inspect and validate the message Git stored:
+
+```zsh
+git log -1 --format='%B'
+git log -1 --format='%B' |
+  awk 'length($0) > 80 { print NR ":" length($0) ":" $0; failed=1 }
+      END { exit failed }'
+git log -1 --format='%B' | git interpret-trailers --parse
+```
+
 ## Principles
 
 - Each commit should be a single, stable change
 - Commits should be independently reviewable
 - The repository should be in a working state after each commit
+- Provide information on **why** a change was made, as opposed to **what** changed
 
 ## References
 
