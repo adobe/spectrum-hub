@@ -5,7 +5,7 @@ description: Implement WCAG 2.2 compliant interfaces with mobile accessibility, 
 
 # Accessibility Compliance
 
-Build inclusive experiences that work for everyone, including users with disabilities. This project does not use BEM; it ships vanilla-JS EDS blocks (`init(el)`), block-scoped CSS with kebab-case class names, and design tokens. The patterns below use plain DOM APIs, not a framework. For deeper reference material, see the files in [`references/`](./references/): [`wcag-guidelines.md`](./references/wcag-guidelines.md), [`aria-patterns.md`](./references/aria-patterns.md), and [`mobile-accessibility.md`](./references/mobile-accessibility.md).
+Build inclusive experiences that work for everyone, including users with disabilities. This project ships vanilla-JS EDS blocks (`init(el)`), block-scoped CSS with kebab-case class names, and design tokens. The patterns below use plain DOM APIs, not a framework. For deeper reference material, see the files in [`references/`](./references/): [`wcag-guidelines.md`](./references/wcag-guidelines.md), [`aria-patterns.md`](./references/aria-patterns.md), and [`mobile-accessibility.md`](./references/mobile-accessibility.md).
 
 ## When to Use This Skill
 
