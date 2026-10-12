@@ -24,7 +24,7 @@ The membership signal — the set of components an implementation currently repo
 
 ### Spectrum Web Components (SWC) — automatic membership signal
 
-- [discover-components.js](../swc/discover-components.js) fetches the **published** `@adobe/spectrum-wc` CEM from the `latest` distribution tag and **rewrites `deps/swc/components.json` wholesale** every run. The extractor records the concrete version that `latest` resolved to in `deps/swc/version.json`. The daily workflow ([extract-swc-properties.yml](../../.github/workflows/extract-swc-properties.yml)) runs this discovery step before extraction. `components.json` is a generated `{ tag: modulePath }` object; a tag drops out when it disappears from the published CEM.
+- [discover-components.js](../swc/discover-components.js) fetches the published `@adobe/spectrum-wc` CEM from the `latest` distribution tag and **rewrites `deps/swc/components.json` wholesale** every run. The extractor records the concrete version that `latest` resolved to in `deps/swc/version.json`. The daily workflow ([extract-swc-properties.yml](../../.github/workflows/extract-swc-properties.yml)) runs this discovery step before extraction. `components.json` is a generated `{ tag: modulePath }` object; a tag drops out when it disappears from the published CEM.
 - [extract-cem-components.js](../swc/extract-cem-components.js) iterates the generated allow list and, if a tag is unexpectedly missing from the CEM it fetches, **warns and skips** (`Warning: <tag> not found in CEM`), leaving the existing data file in place. Discovery and extraction read the same published CEM in the same run; this path also supports a manually supplied local CEM.
 - **Unlike RSP's discovery script, SWC's has no empty-result guard.** `collectComponents` can return an empty object without throwing, and `discover-components.js` will still write it to `components.json` — there's no floor/abort check comparable to RSP's `fetchFirst` failure path. This is a real gap worth closing before relying on SWC's signal the way the guards below rely on RSP's.
 
@@ -45,19 +45,28 @@ Work per **platform + implementation** independently (the index is already shape
 1. Derive **current membership** for each implementation: the set of component keys the adapter reports this run (present with any real status — `available` / `experimental` / `deprecated`). Read this from the roster the adapter builds, not from the data directory.
 2. Derive **baseline membership** from the prior index (see AC2).
 3. A component is a **removal candidate** when it is present in the baseline and absent from the current run for that implementation.
-4. Removal candidates are only promoted to **Removed** after the guards (AC3) and the confirmation window pass. Presence in the current run always recomputes a real status and clears any prior Removed (AC4).
+4. Removal candidates are only promoted to **Removed** after the guards (AC3) pass and
+the component has been missing for the required number of consecutive successful
+extraction runs. Presence in the current run always recomputes a real status and
+clears any prior Removed (AC4).
 
 ### 2. Where the baseline lives and how far back (AC2)
 
 **Recommendation: distinguish the last accepted baseline from the last successful
-scheduled run. The current workflow preserves the former, not the latter.**
+scheduled run. The current workflow preserves the last accepted baseline on the
+default branch, but does not preserve the last successful scheduled run.**
 
 - The index on the default branch is the last **merged and accepted** snapshot. It is a suitable baseline for deciding what changed relative to production.
 - Each scheduled workflow recreates its bot branch from the default branch and force-updates the extraction pull request. An unmerged run is therefore not automatically the next run's baseline, and default-branch git history is not a per-run snapshot trail.
-- A K-run confirmation window needs state that survives those force-updated runs. Before implementing detection, either retain the prior bot-branch ledger when recreating the branch, preserve run state in another durable store, or change the branch update strategy. Do not equate one commit with one day; failed runs, unmerged pull requests, and manual dispatches all break that assumption.
+- Confirming a removal across multiple successful runs requires state that survives those
+force-updated runs. Before implementing detection, either retain the prior bot-branch
+ledger when recreating the branch, preserve run state in another durable store, or
+change the branch update strategy. Do not equate one commit with one day; failed runs,
+unmerged pull requests, and manual dispatches all break that assumption.
 
-**Absence ledger.** To carry the confirmation window and the Removed tombstone across
-runs, persist a small record—either a top-level field in the index or a sibling
+**Absence ledger.** To remember how many successful runs a component has been missing
+and retain the Removed tombstone across runs, persist a small record—either a top-level
+field in the index or a sibling
 `deps/status-absence-ledger.json`. Per component + implementation it holds
 `{ missingSinceRun, consecutiveMisses, removedDate? }`. Keeping it inside the index gives
 the accepted state one surface, but the workflow must also recover the prior unmerged
@@ -72,9 +81,16 @@ A bad extraction must never mark every component Removed. Layer these guards; th
 2. **Absolute floor.** Refuse to diff an implementation whose current membership is below a configured floor (e.g. fewer than a handful of components). Below the floor is presumed broken, not a mass removal.
 3. **Relative-drop circuit breaker.** If membership shrinks by more than a threshold in a single run — recommend a small absolute count **and** a percentage (e.g. more than 3 components _or_ more than ~10%) — do **not** auto-mark Removed. Genuine removals are one or two components at a time; a broken run drops many at once. A tripped breaker aborts the run and flags for manual review rather than writing removals.
 4. **Per-source isolation.** Evaluate guards per implementation. An RSP fetch problem must not zero out SWC, and vice versa.
-5. **Confirmation window (debounce).** Require a candidate to be absent for **K consecutive successful extraction runs** (recommend K = 2) before flipping to Removed, tracked via `consecutiveMisses` in the durable ledger described above. This absorbs a single transient miss (CDN hiccup, one-off truncation) that slipped past the other guards. K is configurable so PM can tune sensitivity vs latency.
+5. **Confirm the absence more than once.** Require a candidate to be absent for a
+configured number of consecutive successful extraction runs before marking it Removed.
+The recommendation is two runs. Track the count in `consecutiveMisses` in the durable
+ledger described above. This prevents a single temporary miss, such as a CDN problem
+or incomplete response, from marking a component Removed. The number of required runs
+is configurable so PM can balance faster detection against protection from false
+removals.
 
-Guards 1–4 are fail-closed circuit breakers; guard 5 is the debounce that prevents a one-run blip from ever becoming Removed.
+Guards 1–4 stop a bad run from changing removal status. Guard 5 prevents a one-run
+problem from marking a component Removed.
 
 ### 4. Transition back when a component returns (AC4)
 
@@ -93,7 +109,9 @@ Work items:
 
 - Load the last accepted index as the production baseline and recover the previous successful run's ledger; compute per-implementation current membership from adapter rosters.
 - Diff membership to produce removal candidates.
-- Implement the guards: empty-output fail-closed, absolute floor, relative-drop circuit breaker, per-source isolation, and the K-run confirmation window backed by the absence ledger.
+- Implement the guards: empty-output fail-closed, absolute floor, relative-drop circuit
+breaker, per-source isolation, and confirmation across the configured number of
+successful runs backed by the absence ledger.
 - Persist the ledger (`missingSinceRun`, `consecutiveMisses`, `removedDate`) and synthesize Removed rows from it.
 - Clear tombstones on reappearance; apply optional aging.
 - Ensure `status-overrides.json` applies last and wins.
@@ -108,16 +126,22 @@ guard gap as part of this scope or as a prerequisite.
 
 A reviewer can confirm the approach against fixtures fed to the diff, mirroring the acceptance tests:
 
-- **Detects a simulated disappearance.** Baseline roster contains `Foo`; current roster omits `Foo` while remaining membership is healthy (above floor, within the drop threshold). After K runs of absence, `Foo` resolves to Removed with a `removedDate`.
+- **Detects a simulated disappearance.** Baseline roster contains `Foo`; current roster
+omits `Foo` while remaining membership is healthy (above floor, within the drop
+threshold). After the configured number of consecutive successful runs without `Foo`,
+it resolves to Removed with a `removedDate`.
 - **Rejects a simulated empty run.** Current roster for an implementation is empty. The run aborts without writing removals or updating the extraction pull request.
 - **Rejects a simulated failed or partial run.** Current roster drops below the floor or beyond the drop threshold. The circuit breaker trips, nothing is marked Removed, and the run is flagged for review.
 - **Transitions back.** A component marked Removed reappears in the current roster. Its live status is recomputed and the tombstone is cleared.
-- **Debounces a transient miss.** A component absent for a single run below K remains a candidate rather than being marked Removed.
+- **Ignores a temporary miss.** A component absent for fewer than the required number of
+successful runs remains a candidate rather than being marked Removed.
 
 ## Requirements before implementation
 
 - Harden RSP's `discover-components.js` against a **partial/truncated** `?meta` response (e.g. sanity-check the count against the prior run) so silent under-discovery cannot masquerade as mass removal upstream of the index.
 - Give SWC's `discover-components.js` an empty-result guard equivalent to RSP's fail-closed `fetchFirst`/`process.exit(1)` path, so an empty CEM response cannot silently write an empty `components.json`.
-- Decide how the extraction workflow will preserve the absence ledger across force-updated, unmerged runs before defining K in terms of scheduled runs.
-- Confirm the guard thresholds (floor, relative-drop count/percentage) and the confirmation window K with PM.
+- Decide how the extraction workflow will preserve the absence ledger across force-updated,
+unmerged runs before choosing how many consecutive successful runs are required.
+- Confirm the guard thresholds (floor and relative-drop count/percentage) and the required
+number of consecutive successful runs with PM.
 - Confirm the Removed retention/aging policy with PM/design.

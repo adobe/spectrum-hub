@@ -21,7 +21,7 @@ builder inputs                                           generated outputs
 ──────────────                                           ─────────────────
 authored configuration ─┐                                deps/status-index.json
 generated extraction    ├──► deps/build-status-index.js    (combined table)
-  data                  ─┘    (reads scripts/utils/
+data                   ─┘    (reads scripts/utils/
                               extraction-status.js +      deps/status/<slug>.json
                               status-model.js)              (per-page slices)
 

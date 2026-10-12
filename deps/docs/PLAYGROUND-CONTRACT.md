@@ -74,8 +74,8 @@ first concrete option for each can produce an invalid pair and an empty preview.
 Text and children stay on the route's own element regardless: they are its content, not its configuration. `tooltip` is the only route that needs this — every dialog declares its own props.
 
 **A component with no controls gets no controls panel.** Two mechanisms produce this,
-and both are normal. Either the workbook yields no properties for the page—an empty
-`properties` cell or no row covering this implementation—or properties are authored and
+and both are normal. Either the `playground-data` workbook in DA yields no properties for the page (an empty
+`properties` cell or no row covering the implementation) or properties are authored and
 the existence gate rejects every one because that implementation ships no catalog file
 for the component. Current examples of the second case are SWC's `link`, which is utility
 CSS classes rather than a component API and is absent from `components.json`, and RSP's
@@ -84,7 +84,7 @@ exports.
 
 A third route is possible but currently unexercised: a component whose catalog rows are
 all `unknown` or `text` with no options would skip every control even with properties
-authored. RSP's `SideNav` is one row set away from it, with 16 such props and an empty
+authored. RSP's `SideNav` is one row set away from this route, with 16 such props and an empty
 `properties` cell. `buildControlsPanel` returns `null` when nothing rendered, and the
 layout appends only what exists—otherwise an empty panel keeps its fixed column and
 labels a region containing nothing. No CSS is involved: `.playground-controls` is

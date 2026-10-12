@@ -16,13 +16,13 @@ Table columns are opt-out, not opt-in: an unrecognised row key is appended as a 
 **Sources:**
 
 - RSP: doc maturity from the S2 docs site ([react-spectrum.adobe.com](https://react-spectrum.adobe.com)), fetched live by `extract-doc-status.js`; props resolved from `@react-spectrum/s2` `.d.ts` files on unpkg/jsDelivr with the TypeScript compiler and type checker.
-- SWC: the **published** `@adobe/spectrum-wc` Custom Elements Manifest, fetched from the `latest` distribution tag by `extract-cem-components.js`. The extractor records the resolved concrete package version in `deps/swc/version.json`, and `discover-components.js` generates `components.json` from the same published CEM. The current committed roster lists 41 tags.
+- SWC: the published `@adobe/spectrum-wc` Custom Elements Manifest, fetched from the `latest` distribution tag by `extract-cem-components.js`. The extractor records the resolved concrete package version in `deps/swc/version.json`, and `discover-components.js` generates `components.json` from the same published CEM.
 
 ## Summary
 
 - The two implementations expose status through **different fields with different meanings and different vocabularies**. They must be adapted per source, not merged directly. The adapter boundary is implemented in `extraction-status.js` and `status-model.js`.
 - **Neither source currently emits a deprecation signal in its extracted data.** The SWC pipeline resolves `deprecated` and `preview` when either appears in a declaration's `status` field; it does not read the CEM's separate `deprecated` field. RSP S2 authors no `@deprecated` tags and its docs have no "deprecated" maturity, so RSP has no automatic path.
-- **Manual `status-overrides.json` entries are currently the only way to publish a Deprecated cell.** The file is applied last in the index build, although it does not currently contain a Deprecated override.
+- **Manual `status-overrides.json` entries are currently the only way to publish a Deprecated cell.** The file is applied last in the index build.
 
 ## Status-resolution fields (the contract as built)
 
@@ -33,10 +33,11 @@ Per-component file `deps/rsp/data/<Component>.json` has the shape `{ props: [...
 | Field | Source | Values | Notes |
 | ----- | ------ | ------ | ----- |
 | `status` (top-level) | S2 docs site, not the package types | `stable` \| `alpha` \| `beta` \| `rc` \| *(absent)* | Doc maturity. Absent means no published doc page for that name. |
-| `props[]` | `.d.ts` resolved with a TypeScript `Program` and `TypeChecker` | prop rows | Includes inherited and transformed property graphs that regex parsing could not resolve. See the RSP README. |
+| `props[]` | `.d.ts` resolved with a TypeScript `Program` and `TypeChecker` | prop rows | Includes inherited and transformed property graphs that regex parsing could not resolve. [See the RSP README](../rsp/README.md). |
 
-**Prerelease status.** The docs render a badge
-from `export const version` in `packages/dev/s2-docs/pages/s2/*.mdx`, and
+#### Prerelease status
+
+The docs render a badge from `export const version` in `packages/dev/s2-docs/pages/s2/*.mdx`, and
 `extract-doc-status.js` reads it. In the current committed extraction, `SideNav` is
 `alpha`; the other extracted components are `stable` or have no published doc status.
 The status model therefore treats `alpha`/`beta`/`rc` as valid values without assuming
@@ -48,16 +49,15 @@ Per-component file `deps/swc/data/swc-<tag>.json` is a flat array of prop rows. 
 
 | Field | Source | Values | Notes |
 | ----- | ------ | ------ | ----- |
-| `status` (per row) | CEM declaration `status` | `internal` \| `preview` \| `deprecated` \| *(absent)* | Only `internal` is emitted today, on 2 of 41 tracked tags (`swc-icon`, `swc-ui-icon`). Absent means public/stable. `preview`/`deprecated` are supported declaration-status values with no current occurrence — see below. |
-| `since` (per row) | CEM declaration `since` | e.g. `0.0.1`, `2.0.0` | Copied onto rows in 38 of the 41 committed component catalogs. A declaration with no extracted attributes produces no rows on which to preserve it. |
+| `status` (per row) | CEM declaration `status` | `internal` \| `preview` \| `deprecated` \| *(absent)* | Only `internal` is emitted today. Absent means public/stable. `preview`/`deprecated` are supported declaration-status values with no current occurrence — see below. |
+| `since` (per row) | CEM declaration `since` | e.g. `0.0.1`, `2.0.0` | Copied onto rows in the committed component catalogs. A declaration with no extracted attributes produces no rows on which to preserve it. |
 | rows | CEM declaration `attributes` | attribute rows | Structured — no TS parsing. |
 
 `getSwcComponentStatus` in [extraction-status.js](../../scripts/utils/extraction-status.js) returns the component's `status` as-is when every `since`-tagged prop shares one non-absent value (`internal`, `preview`, or `deprecated`), else `stable` (public or mixed), else `null` (no `since`-bearing prop at all — no maturity signal, floored by the index build).
 
-**Per-row lifecycle metadata.** In the CEM, `status` and `since` are
-**declaration-level** component fields. `extract-cem-components.js` copies them onto
-every attribute row, and the adapter derives component status from those copied values.
-Reading declaration metadata directly instead would remove this round-trip.
+#### Per-row lifecycle metadata
+
+In the CEM, `status` and `since` are **declaration-level** component fields. `extract-cem-components.js` copies them onto every attribute row, and the adapter derives component status from those copied values. Reading declaration metadata directly instead would remove this round-trip.
 
 **Caveat — name collision.** At least one component (`swc-message-feedback`) has a *functional* attribute literally named `status` (`'positive' | 'negative'`). This is unrelated to lifecycle maturity. Any status resolution must key on the **declaration** `status`, never a member named `status`. (`swc-message-feedback` is currently a conversational-AI pattern member excluded from the joined roster by `standaloneSwcTags` — see [Name-matching and canonical join](#name-matching-and-canonical-join) — but the collision risk applies to any component with a functional `status` prop, standalone or not.)
 
@@ -131,7 +131,7 @@ The two rosters differ in shape and, more importantly, in **membership**.
 
 1. **`standaloneSwcTags`** drops any tag whose subpath starts with `patterns/` — currently `conversation-thread`, `conversation-turn`, `message-feedback`, `message-sources`, `pixel-loader`, `prompt-field`, `response-status`, `response-status-step`, `suggestion-group`, `suggestion-item`, `system-message`, `upload-attachment`, and `user-message` (13 of 41 tags). These are pattern members, not standalone documented components, so they never reach the table at all — not even as SWC-only rows.
 2. **`excludeInternalSwc`** then drops any remaining tag whose resolved status is `internal` (currently `swc-icon` and `swc-ui-icon`) from the SWC contribution to the roster. An internal SWC primitive does not surface as an Experimental SWC cell; it is excluded from the join entirely for that column. If the same canonical name ships from RSP or Figma, that row still exists, just with SWC reading Not available rather than Experimental.
-3. This leaves 28 − 2 = 26 standalone, non-internal SWC tags entering the join in the current snapshot.
+3. Dropping 13 pattern tags from 41 leaves 28 standalone tags, and dropping the 2 internal tags leaves 26 entering the join in the current snapshot.
 
 **Approach to name-matching:**
 
