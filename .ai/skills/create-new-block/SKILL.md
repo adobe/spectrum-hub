@@ -97,7 +97,7 @@ Header and footer are special — they are baked into the HTML shell by the deli
 
 `loadBlock` automatically loads `blocks/<name>/<name>.css` alongside the JS — no import needed. Scope all styles to the block root class, and name child classes in kebab-case prefixed with the block name.
 
-For the full CSS authoring reference — design tokens, light/dark mode, nesting conventions, media query syntax, reduced motion, and global utilities — see **[`.ai/skills/stylesheet-conventions/SKILL.md`](../stylesheet-conventions/SKILL.md)**.
+For the full CSS authoring reference — design tokens, light/dark mode, nesting conventions, media query syntax, reduced motion, and global utilities — see **[`.ai/skills/stylesheet-conventions/SKILL.md`](../stylesheet-conventions/SKILL.md)**. When creating a new block, use both. Start with create-new-block to set up the files and wire the JS. Then use the stylesheet skill to write the block's CSS correctly.
 
 ## Querying data from the index
 
