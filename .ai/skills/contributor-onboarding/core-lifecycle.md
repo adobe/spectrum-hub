@@ -369,5 +369,5 @@ Before the walkthrough ends, answer:
 
 Pause after checkpoint 3 for questions. After this checkpoint, the contributor
 is ready to choose a contribution area, inspect its prerequisites, and identify
-the smallest focused validation for that work. The onboarding router conducts
+the smallest focused validation for that work. The contributor-onboarding router conducts
 that post-checkpoint handoff.

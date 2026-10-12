@@ -1,5 +1,5 @@
 ---
-name: onboarding
+name: contributor-onboarding
 description: Use when joining the Spectrum Hub repository, setting up a local contribution environment, or asking where and how to perform a repository task.
 ---
 
@@ -16,20 +16,21 @@ interpretations would change the edit point or operation.
 
 Apply this precedence:
 
-1. When someone identifies as a new contributor and asks a targeted question,
-   answer that target first. Then begin checkpoint 1 of
-   [`core-lifecycle.md`](./core-lifecycle.md).
-2. For any other new-contributor, orientation, or setup request, begin
-   `core-lifecycle.md`. Present one checkpoint per response and pause for
-   questions after each; never dump all three checkpoints into one response.
-   Do not inspect prerequisites or provide setup commands until checkpoint 3
-   is complete.
-3. For a returning contributor with a targeted request, answer or clarify
-   directly without forcing the walkthrough.
+1. When someone identifies as a new contributor and asks a targeted question, answer that target first. Then begin checkpoint 1 of [`core-lifecycle.md`](./core-lifecycle.md).
+2. For any other new-contributor, orientation, or setup request, begin `core-lifecycle.md`. Present one checkpoint per response and pause for questions after each; never dump all three checkpoints into one response. Do not inspect prerequisites or provide setup commands until checkpoint 3 is complete.
+3. For a returning contributor with a targeted request, answer or clarify directly without forcing the walkthrough.
 
 After checkpoint 3, ask the contributor what they want to contribute. Route
 them to the relevant guide, inspect task-specific prerequisites, and suggest
 one focused first task with the smallest validation that covers it.
+
+When the contributor selects the indexer, do not inspect prerequisites or
+suggest a starter change. Provide
+`node tools/indexer/index.js --dry-run`, explain that it writes
+`tools/indexer/out/records.json` without publishing, warn that `--limit` alone
+can still replace the live index with limited records, and link
+[`tools/indexer/README.md`](../../../tools/indexer/README.md). Stop after this
+safe handoff.
 
 ## Route by intent
 
@@ -54,8 +55,7 @@ Give a direct answer in this order:
 
 1. Name the exact file, directory, command, or edit point.
 2. Give the short reason it owns the change.
-3. State the relevant generated-output, production, credential, test, or
-   environment safety boundary.
+3. State the relevant generated-output, production, credential, test, or environment safety boundary.
 4. Link the deeper guide.
 5. Offer to act only after the explanation.
 
