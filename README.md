@@ -8,50 +8,29 @@ Our mission is to deepen Spectrum’s adoption through a multi‑platform websit
 
 ## Developing
 
-Spectrum Hub is built on AEM Edge Delivery Services. Local development requires
-Node.js 20 and npm.
+Spectrum Hub is built on AEM Edge Delivery Services. Getting started takes a matter of seconds.
+
+Local development requires Node.js 20 and npm.
 
 1. Clone this project to your computer.
+1. Install the AEM CLI using your terminal: `sudo npm install -g @adobe/aem-cli`
 1. Run `nvm install` and `nvm use` to select the version in [`.nvmrc`](./.nvmrc).
-1. Install project dependencies with `npm ci`.
-1. Start the project-local AEM CLI with `npx aem up`.
-1. Open the cloned folder in your code editor.
-
-To use the AEM CLI globally instead, install it with
-`npm install -g @adobe/aem-cli`, then run `aem up` in the cloned folder. Do not
-use `sudo` for npm package installation; configure npm's global package
-directory for your user if the command reports a permissions error.
-
-### Testing
-
-The core test command runs the Web Test Runner unit suite plus the Node-based
-extraction, indexer, and link-check unit suites:
-
-```bash
-npm test
-```
-
-To re-run tests automatically as you edit:
-
-```bash
-npm run test:watch
-```
-
-To watch a single file:
-
-```bash
-npm run test:file:watch -- test/scripts/scripts.test.js
-```
+1. **Recommended:** Install common npm packages like linting and testing and project dependencies with `npm install`.
+1. Start the AEM CLI: `aem up` in the cloned folder.
+1. Open the cloned folder in your favorite code editor and build something amazing.
 
 ## Contributing
 
-Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md) and choose the workflow that
-matches your change:
+Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md) and choose the workflow that matches your change:
 
 - **Engineers** change blocks, scripts, styles, tools, dependency pipelines, and
-  edge code through GitHub.
+edge code through GitHub.
 - **Authors** change pages, metadata, and fragments through Document Authoring
-  (DA). Content-only changes do not require a GitHub pull request.
+(DA). Content-only changes do not require a GitHub pull request.
+
+[`CONTRIBUTING.md`](./CONTRIBUTING.md) covers both workflows in depth. Its
+[Find the owner of a change](./CONTRIBUTING.md#find-the-owner-of-a-change) table
+routes each area to its guide under [`docs/`](./docs/).
 
 ### Contributor guides
 
@@ -77,8 +56,7 @@ matches your change:
 
 ### Algolia Search
 
-Semantic search and AI capabilities are provided by Algolia. Given the private
-nature of some content, the indexer runs as a GitHub Action every 12 hours.
+Semantic search and AI capabilities are provided by Algolia. The indexer runs as a GitHub Action every 12 hours.
 
 ## Glossary
 
@@ -89,9 +67,8 @@ nature of some content, the indexer runs as a GitHub Action every 12 hours.
 | **EDS** | Edge Delivery Services, which combines authored content with repository code and serves preview and published pages |
 | **Block** | A repository-owned component that decorates an authored table or generated block structure |
 | **Fragment** | A separately authored document reused inside other pages, such as navigation |
-| **RSP** | React Spectrum, an implementation source used by component status and playground data |
-| **S2** | The current Spectrum 2 generation of React Spectrum components |
-| **SWC** | Spectrum Web Components, the custom-element implementation source |
+| **RSP** | React Spectrum, the React implementation of the Spectrum design system |
+| **SWC** | Spectrum Web Components, the web component implementation of the Spectrum design system |
 | **CEM** | Custom Elements Manifest, the machine-readable source used to extract SWC component metadata |
 | **Sidekick** | The AEM browser extension that provides preview, publish, and custom authoring actions |
 
@@ -117,6 +94,25 @@ Spectrum Hub supports the `prefers-reduced-motion` media query. All animations a
 
 ### Testing
 
+The core test command runs the Web Test Runner unit suite plus the Node-based
+extraction, indexer, and link-check unit suites:
+
+```bash
+npm test
+```
+
+To re-run tests automatically as you edit:
+
+```bash
+npm run test:watch
+```
+
+To watch a single file:
+
+```bash
+npm run test:file:watch -- test/scripts/scripts.test.js
+```
+
 Automated accessibility testing (axe-core WCAG 2.2 AA scans and accessibility-tree checks) is covered in [`test/a11y/README.md`](./test/a11y/README.md). `prefers-reduced-motion` behavior itself should be verified manually by enabling the setting at the OS level.
 
 To run Playwright/Axe automated accessibility tests:
@@ -130,6 +126,9 @@ npm run test:a11y
 
 ```mermaid
 flowchart LR
+    accTitle: How engineering and content merge in Spectrum Hub
+    accDescr: Content authors create and edit pages, metadata, and fragments in Document Authoring, while developers build and review blocks, JavaScript, CSS, and tools in the GitHub repository. Document Authoring previews or publishes content to Edge Delivery Services, which also receives deployed site code from GitHub and combines the two. Edge Delivery Services serves the AEM preview origin at branch--spectrum-hub--adobe.aem.page, which fronts the preview site at preview.spectrum.adobe.com, and the AEM published origin at main--spectrum-hub--adobe.aem.live, which fronts the production site at spectrum.adobe.com.
+
     Authors["Content authors"]
     Developers["Developers"]
     GitHub["GitHub repository<br/>Blocks · JavaScript · CSS · Tools"]
@@ -169,6 +168,9 @@ flowchart LR
 
 ```mermaid
 flowchart TD
+    accTitle: Authoring and development lifecycle
+    accDescr: Content edits made in Document Authoring go straight to preview. Code developed in GitHub is committed and reviewed in a pull request before reaching preview. Preview combines content and code, and a review step asks whether the content and experience look correct. Content problems return to Document Authoring and code problems return to GitHub, while an approved page is published and served live. Feedback and new requirements from the live experience flow back into both Document Authoring and GitHub.
+
     DA["Edit content in DA<br/>Pages · Metadata · Fragments"]
     GitHub["Develop code in GitHub<br/>Blocks · Styles · Scripts · Tools"]
 

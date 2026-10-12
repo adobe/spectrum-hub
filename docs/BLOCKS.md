@@ -131,8 +131,8 @@ Page setup and blocks may create other blocks through `createBlock()` and then
 load them normally. Current examples include automatic `page-hero`,
 `breadcrumbs`, and `component-status` blocks.
 
-This repository does not use a separate template registry. Metadata and the
-closest owning page/block code control automatic composition.
+Metadata and the closest owning page or block code control automatic
+composition, rather than a separate template registry.
 
 ## JavaScript conventions
 
