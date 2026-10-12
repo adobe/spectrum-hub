@@ -32,19 +32,172 @@ can still replace the live index with limited records, and link
 [`tools/indexer/README.md`](../../../tools/indexer/README.md). Stop after this
 safe handoff.
 
-## Route by intent
+## Guided routes
 
-| Intent | Read first | Verify for exact or current behavior |
-| --- | --- | --- |
-| Lifecycle, architecture, or performance | [`core-lifecycle.md`](./core-lifecycle.md) and [Architecture](../../../docs/ARCHITECTURE.md) | `scripts/scripts.js`, `scripts/ak.js`, and `scripts/lazy.js` |
-| Content, metadata, fragments, or audience | [Content authoring](../../../docs/CONTENT_AUTHORING.md) | Consuming script or block and Lambda audience handling |
-| Creating a new block | [`new-block-workflow`](../new-block-workflow/SKILL.md) and [Blocks](../../../docs/BLOCKS.md) | Comparable blocks, loader contract, authored shape, and required tests |
-| Changing or understanding an existing block | [Blocks](../../../docs/BLOCKS.md) | Affected block and loader contract |
-| Styles | [Styles](../../../docs/STYLES.md) | Affected CSS, `styles/styles.css`, and Stylelint configuration |
-| Tests or continuous integration (CI) | [Tests](../../../docs/TESTS.md) | `package.json`, Playwright configuration, and relevant workflow |
-| Status, generated data, React Spectrum S2 (RSP), or Spectrum Web Components (SWC) | [Dependencies and generated data](../../../docs/DEPS.md) | `deps/docs/`, authored inputs, and build script |
-| Indexer, DA, Quick Edit, scheduler, or sidekick | [Tools](../../../docs/TOOLS.md) | Tool README, implementation, and workflow |
-| Production access, filtering, cache, or authentication | [Architecture](../../../docs/ARCHITECTURE.md) | `workers/website-lambda/` |
+After checkpoint 3, offer these tasks. Present only the selected task, one step
+at a time, and pause for questions before continuing. Tell the contributor what
+to do and what evidence marks the task complete; do not turn the route into a
+multiple-choice knowledge check. Explain the owner and safety boundary before
+asking to edit files, run commands, contact an external service, or start a
+local service.
+
+### Trace lifecycle loading in the browser
+
+Use this task for lifecycle, architecture, or performance questions.
+
+**Task:** Capture the observed order in which the page loader, one block, and
+deferred work load.
+
+1. Read [`core-lifecycle.md`](./core-lifecycle.md) and [Architecture](../../../docs/ARCHITECTURE.md), then verify the function names in `scripts/scripts.js`, `scripts/ak.js`, and `scripts/lazy.js`.
+2. Ask before opening a page or starting a local service. In browser DevTools, enable Network recording, disable the cache, and reload a page containing a normal block.
+3. Use DevTools logpoints in the loaded source at `loadPage()`, `loadArea()`, `loadBlock()`, and the `loadLazy()` wrapper. Log the function name and, for `loadBlock()`, the block's first class. Logpoints provide console output without editing repository files.
+4. In the Network panel, locate `scripts.js`, `ak.js`, the selected block's JavaScript and CSS, and `lazy.js`. Record their request order and initiators.
+
+**Done when:** The contributor has an observed sequence showing page setup,
+area loading, block loading, and the later `lazy.js` import, plus one sentence
+about which lifecycle shelf owns each step.
+
+**Cleanup:** Remove the DevTools logpoints. Do not edit `scripts.js` or `ak.js`
+for this exercise. Changes to either file require the
+[`eds-performance-review`](../eds-performance-review/SKILL.md) skill and
+measured LCP or CLS evidence.
+
+### Author public and private block variants
+
+Use this task for content, metadata, fragments, or audience handling.
+
+**Task:** Build paired public and private variants on a disposable, unpublished
+DA page and observe which variant remains.
+
+1. Read [Content authoring](../../../docs/CONTENT_AUTHORING.md), then verify audience behavior in `scripts/ak.js` and `workers/website-lambda/`.
+2. Ask before editing DA content. Add two blocks with distinct text: `Columns (audience public)` and `Columns (audience private)`.
+3. Preview the unpublished page off-CDN and inspect the DOM. Confirm that the private block remains and the public block is removed.
+4. If an appropriate production-like preview and authorized test session are available, compare anonymous and authorized responses without publishing the disposable page.
+
+**Done when:** The contributor can point to the surviving DOM block in each
+tested environment and explain why localhost alone cannot validate anonymous
+production behavior.
+
+**Cleanup:** Remove the disposable DA content. Do not publish it.
+
+### Create a simple authored block
+
+Use this task when a contributor has a real, approved block to create. Do not
+invent a production block only for onboarding.
+
+**Task:** Scaffold the approved block and make one authored example render
+through its `init(el)` contract.
+
+1. Read [`create-new-block`](../create-new-block/SKILL.md) and [Blocks](../../../docs/BLOCKS.md), then write down the block name, authored rows and cells, variants, semantic output, and invalid-input behavior.
+2. After permission to edit, create matching `blocks/<name>/<name>.js` and `blocks/<name>/<name>.css` files. Keep behavior in `init(el)` and styles under the root class.
+3. Add `test/blocks/<name>.test.js`, `test/a11y/fixtures/<name>.html`, and `test/a11y/blocks/<name>.spec.js`.
+4. Run the targeted unit and accessibility commands from [Tests](../../../docs/TESTS.md).
+
+**Done when:** The authored fixture renders the intended semantic structure,
+the focused unit test passes, and the accessibility spec passes in light,
+dark, and accessibility-tree checks.
+
+### Add a vertical banner variant
+
+Use this task for changing an existing block.
+
+**Task:** Add an authored `vertical` variant that keeps the banner content
+stacked at every viewport width.
+
+1. Read [Blocks](../../../docs/BLOCKS.md), `blocks/banner/banner.js`, `blocks/banner/banner.css`, and the banner unit and accessibility tests.
+2. After permission to edit, add the variant to the banner accessibility fixture and add CSS scoped under `.banner.vertical`. Do not change JavaScript unless the variant requires behavior that CSS cannot provide.
+3. Run `npm run lint:css` and `npx playwright test test/a11y/blocks/banner.spec.js`.
+4. Inspect the fixture at mobile and desktop widths and confirm the default banner still changes layout while the vertical variant remains stacked.
+
+**Done when:** CSS lint and the banner accessibility spec pass, the vertical
+fixture stays stacked at both widths, and the default variant is unchanged.
+
+### Change the page background color
+
+Use this task for global styles and design tokens.
+
+**Task:** Temporarily change the global page background token and observe its
+effect in both color schemes.
+
+1. Read [Styles](../../../docs/STYLES.md) and [`stylesheet-conventions`](../stylesheet-conventions/SKILL.md), then locate the authored `--se-body-background-color` token after the generated token boundary in `styles/styles.css`.
+2. After permission to edit and open a page, change both values in its `light-dark()` declaration to clearly distinguishable existing color tokens. Do not add a second body rule.
+3. Run `npm run lint:css`, then inspect a representative page in light and dark modes and use DevTools Computed styles to confirm that `body` resolves the token.
+
+**Done when:** CSS lint passes and the contributor has observed the expected
+computed background in both schemes.
+
+**Cleanup:** Restore the original token values unless the color change is an
+approved product change.
+
+### Observe an accessibility snapshot failure
+
+Use this task for tests or continuous integration.
+
+**Task:** Produce one intentional breadcrumbs accessibility-tree failure, read
+the mismatch, then restore the passing expectation.
+
+1. Read [Tests](../../../docs/TESTS.md) and `test/a11y/README.md`, then inspect `test/a11y/blocks/breadcrumbs.spec.js`.
+2. After permission to edit and run Playwright, change one link name in the inline ARIA snapshot and run `npx playwright test test/a11y/blocks/breadcrumbs.spec.js --project=chromium -g "accessibility tree"`.
+3. Read the expected-versus-received tree in the failure output. Restore the original snapshot and rerun the same command.
+
+**Done when:** The contributor has seen the targeted semantic failure and the
+restored test passes.
+
+**Cleanup:** Confirm the snapshot matches its original content. Do not use
+`--update-snapshots` to hide an unexplained difference.
+
+### Regenerate Figma component data
+
+Use this task for status and generated dependency data.
+
+**Task:** Refresh the Figma component roster from its upstream source and
+rebuild the combined status data.
+
+1. Read [Dependencies and generated data](../../../docs/DEPS.md) and `deps/figma/fetch-figma-components.js`. Explain that the helper is not a standalone command: the current roster comes from the Figma MCP component sets for the documented S2 Web file.
+2. Ask before contacting Figma or writing generated files. Retrieve the component sets, exclude Figma-internal names beginning with `.`, and regenerate `deps/figma/components.json` in the documented `[{ name, figmaPageId }]` shape.
+3. Run `node deps/build-status-index.js` and `npm run test:extractions`.
+4. Inspect the diff for the expected roster changes and unexpected neighboring status changes.
+
+**Done when:** The extraction tests pass and every generated change can be
+traced to an upstream Figma roster difference.
+
+**Safety:** Never expose credentials or hand-edit generated status output.
+
+### Dry-run the indexer
+
+Use this task for the content indexer.
+
+**Task:** Build the local search-record file without publishing to Algolia.
+
+1. Read [Tools](../../../docs/TOOLS.md) and [`tools/indexer/README.md`](../../../tools/indexer/README.md).
+2. Provide `node tools/indexer/index.js --dry-run` and explain that it writes `tools/indexer/out/records.json` without publishing.
+3. Stop after this safe handoff. Do not inspect prerequisites, invent an indexer change, or run the command without permission.
+
+**Done when:** The contributor knows the output path and the difference between
+`--dry-run` and a publishing run.
+
+**Safety:** `--limit` alone can still replace the live index with limited
+records.
+
+### Trace production audience filtering
+
+Use this task for production access, filtering, cache, or authentication.
+
+**Task:** Compare the HTML document response for a page with audience variants
+as an anonymous visitor and as an authorized visitor.
+
+1. Read [Architecture](../../../docs/ARCHITECTURE.md), then trace `audience-public` and `audience-private` through `workers/website-lambda/lib/audience.js`, its focused tests, and `workers/website-lambda/index.js`.
+2. Ask before opening production-like URLs. In a private browsing window, use the Network panel to inspect the document response and record which audience variant is present.
+3. Repeat in an authorized session without exposing or copying cookies, credentials, or response headers containing secrets.
+4. Compare the responses with the post-load DOM and identify when browser filtering in `scripts/ak.js` acts as defense in depth.
+
+**Done when:** The contributor has response-level evidence showing which
+variant each viewer receives and can distinguish edge filtering from browser
+filtering.
+
+**Safety:** Keep the task read-only. Require explicit, operation-specific
+authorization before changing authentication, production filtering, caching,
+secrets, deployment, or invalidation behavior.
 
 Defer other project acronym definitions to `core-lifecycle.md` or the routed
 guide instead of assuming familiarity.
@@ -81,29 +234,12 @@ Require an explicit, operation-specific request and confirmation before:
 
 ## Unconditional boundaries
 
-- Never edit generated status or extraction output. Find the authored source,
-  edit it, and regenerate the output.
+- Never edit generated status or extraction output. Find the authored source, edit it, and regenerate the output.
 - Never expose credential values.
 - `npm test` is the core suite, not the full repository test suite.
-- `workers/website-lambda/` is current production; `workers/website/` is the
-  legacy/reference Cloudflare Worker.
-- Indexer dry runs must use `--dry-run`. `--limit` alone can still replace the
-  live index with limited records.
-- Read and apply the
-  [`eds-performance-review` skill](../eds-performance-review/SKILL.md) before
-  helping modify `scripts/scripts.js` or `scripts/ak.js`.
-
-## Quick examples
-
-**Remove a status-table entry:** First clarify whether “remove” means excluding
-the row or changing its displayed status. Route either answer to the authored
-inputs described in [Dependencies and generated data](../../../docs/DEPS.md),
-then regenerate; never edit generated output.
-
-**Dry-run the indexer:** Explain that
-`node tools/indexer/index.js --dry-run` writes
-`tools/indexer/out/records.json` without publishing. Offer to run it only after
-that explanation.
+- `workers/website-lambda/` is current production; `workers/website/` is the legacy/reference Cloudflare Worker.
+- Indexer dry runs must use `--dry-run`. `--limit` alone can still replace the live index with limited records.
+- Read and apply the [`eds-performance-review` skill](../eds-performance-review/SKILL.md) before helping modify `scripts/scripts.js` or `scripts/ak.js`.
 
 ## Common mistakes
 

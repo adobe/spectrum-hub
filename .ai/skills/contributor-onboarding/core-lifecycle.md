@@ -19,16 +19,10 @@ questions before continuing.
 
 The module starts with project-specific configuration data:
 
-- `hostnames` lists hosts whose absolute links should become local,
-  root-relative links.
-- `linkBlocks` maps link patterns to automatic block names. A matching link
-  becomes an `auto-block` for shared loading.
-- `components` lists blocks that do not need the loader to request a matching
-  CSS file. These are CSS opt-outs, not the complete block catalog.
-- `cdnEnv` identifies whether the page is running through a content delivery
-  network (CDN), the edge layer that delivers cached content close to visitors.
-  It is true for the configured local worker, Adobe, worker, CloudFront, and
-  explicit mock conditions.
+- `hostnames` lists hosts whose absolute links should become local,root-relative links.
+- `linkBlocks` maps link patterns to automatic block names. A matching linkbecomes an `auto-block` for shared loading.
+- `components` lists blocks that do not need the loader to request a matchingCSS file. These are CSS opt-outs, not the complete block catalog.
+- `cdnEnv` identifies whether the page is running through a content deliverynetwork (CDN), the edge layer that delivers cached content close to visitors.It is true for the configured local worker, Adobe, worker, CloudFront, andexplicit mock conditions.
 - `env` classifies the current host as `dev`, `stage`, or `prod`.
 - `locales` supplies the root English locale.
 - `decorateArea` gives the shared loader a project-specific decoration hook.
@@ -45,11 +39,9 @@ and adds work or risk to every page.
 Before `loadPage()` runs, module evaluation establishes page state
 synchronously:
 
-1. It reads the current host, port, and query parameters and determines
-   `cdnEnv` and `env`.
+1. It reads the current host, port, and query parameters and determines `cdnEnv` and `env`.
 2. It adds `spectrum-edge` to the root `<html>` element.
-3. It checks `sessionStorage`. A returning session adds `is-returning` to the
-   body.
+3. It checks `sessionStorage`. A returning session adds `is-returning` to the body.
 4. `setScheme(document.body)` applies the stored or system color scheme.
 5. `getMetadata()` reads `template`.
 6. A non-marketing template adds the `expand-sitenav` root attribute.
@@ -94,10 +86,7 @@ construction. They use different selectors, metadata, and loading decisions.
 `loadPage()` invokes work in this exact order:
 
 1. `setConfig()` publishes the project configuration to `ak.js`.
-2. `checkIms()` is awaited. Adobe Identity Management System (IMS) handling is
-   loaded only when the URL contains an IMS callback hash or the readable
-   session marker cookie is present; otherwise the check returns an anonymous
-   result without the IMS import.
+2. `checkIms()` is awaited. Adobe Identity Management System (IMS) handling is loaded only when the URL contains an IMS callback hash or the readable session marker cookie is present; otherwise the check returns an anonymous result without the IMS import.
 3. For a returning session, `loadNav()` is awaited before page composition.
 4. `decorateBackground()` is invoked to create scheme-aware backgrounds.
 5. `buildAutoHero()` and `buildBreadcrumbs()` create automatic blocks.
@@ -112,8 +101,7 @@ continues through promise callbacks.
 
 After initial page startup, the final module wrapper checks query parameters:
 
-- `dapreview` dynamically imports the DA preview tool and passes `loadPage` to
-  it.
+- `dapreview` dynamically imports the DA preview tool and passes `loadPage` toi t.
 - `quick-edit` dynamically imports and starts the Quick Edit tool.
 
 These are conditional authoring entry points. They are not steps inside
@@ -124,10 +112,8 @@ These are conditional authoring entry points. They are not steps inside
 Before continuing, locate and explain:
 
 1. Where would you add only the pattern for a new link-triggered block?
-2. Which configured function is the universal decoration hook that enters
-   `ak.js`?
-3. Why does a new synchronous selector or computation in this module create a
-   page-wide cost?
+2. Which configured function is the universal decoration hook that enters `ak.js`?
+3. Why does a new synchronous selector or computation in this module create a page-wide cost?
 
 Pause here. Answer the questions and resolve uncertainties before starting
 checkpoint 2.
@@ -142,8 +128,7 @@ for names containing a colon and the `name` attribute otherwise.
 The scheme helpers share color-scheme behavior:
 
 - `getScheme()` returns a valid stored choice or the system preference.
-- `setScheme()` applies a single light or dark class and persists only an
-  explicit selection made for the body.
+- `setScheme()` applies a single light or dark class and persists only an explicit selection made for the body.
 
 `getLocale()` chooses the longest configured path prefix unless `locale`
 metadata overrides it, and updates the document language when configured.
@@ -190,20 +175,14 @@ Before blocks initialize, shared helpers normalize authored and generated
 content:
 
 - Picture decoration repairs PNG handling or adds a large-screen source.
-- Button decoration interprets link title properties, audience hints, and
-  emphasis markup, then assigns shared button classes and styles.
+- Button decoration interprets link title properties, audience hints, and emphasis markup, then assigns shared button classes and styles.
 - URL localization adds the active locale prefix only to eligible local links.
-- Link decoration makes configured hosts relative, handles special hash
-  controls, decorates buttons, and recognizes `linkBlocks` patterns.
-- Icon loading removes size-only icon placeholders or delegates remaining
-  icons to the shared SVG utility.
-- Child grouping separates consecutive default content and block content into
-  `default-content` and `block-content` groups.
-- Section decoration applies section state, decorates links, and records link
-  blocks separately from authored blocks.
+- Link decoration makes configured hosts relative, handles special hash controls, decorates buttons, and recognizes `linkBlocks` patterns.
+- Icon loading removes size-only icon placeholders or delegates remaining icons to the shared SVG utility.
+- Child grouping separates consecutive default content and block content into `default-content` and `block-content` groups.
+- Section decoration applies section state, decorates links, and records link blocks separately from authored blocks.
 - Header decoration applies header metadata or removes a disabled header.
-- Navigation loading conditionally loads site navigation and, outside
-  marketing templates, page navigation.
+- Navigation loading conditionally loads site navigation and, outside marketing templates, page navigation.
 
 `decorateDoc()` owns document-only header decoration and stores a URL hash for
 later lazy-hash handling.
@@ -227,29 +206,17 @@ navigation work begins.
 
 `loadArea()` follows this sequence:
 
-1. It determines whether the area is the full document. For a document, it
-   runs `decorateDoc()`. It then calls the configured project
-   `decorateArea()` hook for any area.
+1. It determines whether the area is the full document. For a document, it runs `decorateDoc()`. It then calls the configured project `decorateArea()` hook for any area.
 2. It awaits `decorateAudience()` before discovering blocks.
 3. It removes empty sections and decorates pictures.
-4. It groups section children, decorates and discovers automatic link blocks,
-   and discovers authored blocks.
-5. For a returning document session, it starts `loadSession()` before the
-   section loop without awaiting it.
-6. For each section in document order, it starts icon loading, then awaits the
-   automatic link blocks with one `Promise.all()`, then awaits the authored
-   blocks with a separate `Promise.all()`.
-7. Loading is parallel within each link-block group and within each
-   authored-block group. The two groups are separate and ordered: authored
-   blocks start only after that section's link blocks finish.
-8. Sections are sequential. The loop does not start the next section until
-   both groups in the current section have finished.
+4. It groups section children, decorates and discovers automatic link blocks, and discovers authored blocks.
+5. For a returning document session, it starts `loadSession()` before the section loop without awaiting it.
+6. For each section in document order, it starts icon loading, then awaits the automatic link blocks with one `Promise.all()`, then awaits the authored blocks with a separate `Promise.all()`.
+7. Loading is parallel within each link-block group and within each authored-block group. The two groups are separate and ordered: authored blocks start only after that section's link blocks finish.
+8. Sections are sequential. The loop does not start the next section until both groups in the current section have finished.
 9. After both groups finish, it deletes the section's `data-status` attribute.
-10. After section 0, a new document session starts `loadSession()` without
-   awaiting it.
-11. After all sections finish, a document imports
-    [`lazy.js`](../../../scripts/lazy.js). The import is started but not
-    awaited.
+10. After section 0, a new document session starts `loadSession()` without awaiting it.
+11. After all sections finish, a document imports[`lazy.js`](../../../scripts/lazy.js). The import is started but not awaited.
 
 The lazy module then starts lazy-hash support, favicon handling, footer loading,
 real user monitoring, and non-production authoring tools.
@@ -261,10 +228,8 @@ A normal block already receives:
 - Dynamic JavaScript loading through `loadBlock()` and `loadExperience()`.
 - Matching CSS loading unless it is a configured opt-out.
 - Parallel loading with peers in the same block group.
-- A progressive slot in section order, after earlier sections and before later
-  sections.
-- Shared picture, link, button, localization, icon, grouping, and audience
-  preparation where applicable.
+- A progressive slot in section order, after earlier sections and before later sections.
+- Shared picture, link, button, localization, icon, grouping, and audience preparation where applicable.
 
 Block code should use this shared contract instead of adding its own loader
 hook to `scripts.js` or `ak.js`.
@@ -305,12 +270,8 @@ Keep work on the earliest shelf that evidence requires, not the earliest shelf
 available:
 
 - Block-specific behavior belongs in the block initializer.
-- Noncritical universal work belongs in
-  [`lazy.js`](../../../scripts/lazy.js), after all sections.
-- [`postlcp.js`](../../../scripts/postlcp.js) exports `loadPostLCP()`, but
-  `postlcp.js` is not currently active or imported by the page lifecycle. Do
-  not describe it as an existing post-LCP hook or move work there without first
-  wiring and validating that lifecycle.
+- Noncritical universal work belongs in[`lazy.js`](../../../scripts/lazy.js), after all sections.
+- [`postlcp.js`](../../../scripts/postlcp.js) exports `loadPostLCP()`, but`postlcp.js` is not currently active or imported by the page lifecycle. Donot describe it as an existing post-LCP hook or move work there without firstwiring and validating that lifecycle.
 
 ### Legitimate core-loader changes
 
@@ -351,16 +312,11 @@ not as a description of the current lifecycle.
 
 ### Before changing either file
 
-Read and apply the
-[`eds-performance-review` skill](../eds-performance-review/SKILL.md) before
-modifying `scripts/scripts.js` or `scripts/ak.js`. Use
-[`ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md) for the wider request and
-runtime boundaries, then verify all lifecycle claims against current source.
+Read and apply the [`eds-performance-review` skill](../eds-performance-review/SKILL.md) before modifying `scripts/scripts.js` or `scripts/ak.js`. Use [`ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md) for the wider request and runtime boundaries, then verify all lifecycle claims against current source.
 
 Before the walkthrough ends, answer:
 
-1. Why do block-specific selectors, imports, and fetches belong in the block
-   initializer?
+1. Why do block-specific selectors, imports, and fetches belong in the block initializer?
 2. Which current shelf owns noncritical universal work?
 3. Why is `postlcp.js` not an available active hook today?
 4. Which configuration-data changes can legitimately use the core loader?
