@@ -53,8 +53,8 @@ export default async function init(el) {
 
 ## How automatic composition injects blocks
 
-This repository does not have a `templates/` registry. Metadata-driven composition
-lives in the existing page lifecycle or in a parent block:
+Metadata-driven composition lives in the existing page lifecycle or in a parent
+block, rather than a `templates/` registry:
 
 - `scripts/scripts.js` reads page metadata and creates universal page structures such
   as the automatic page hero and breadcrumbs.
@@ -77,10 +77,10 @@ export default async function init(el) {
 }
 ```
 
-For multiple independent blocks, load them in parallel:
+For multiple independent blocks, load them in parallel. For example, this is how the project loads the navigation blocks:
 
 ```js
-await Promise.all([loadBlock(firstChild), loadBlock(secondChild)]);
+await Promise.all([loadBlock(sitenav), loadBlock(inPageNav)]);
 ```
 
 ## When to use automatic composition vs per-page authoring vs fragments
@@ -95,7 +95,7 @@ Header and footer are special — they are baked into the HTML shell by the deli
 
 ## CSS file
 
-`loadBlock` automatically loads `blocks/<name>/<name>.css` alongside the JS — no import needed. Scope all styles to the block root class. Use kebab-case, block-prefixed names for child classes; this project does not use BEM.
+`loadBlock` automatically loads `blocks/<name>/<name>.css` alongside the JS — no import needed. Scope all styles to the block root class, and name child classes in kebab-case prefixed with the block name.
 
 For the full CSS authoring reference — design tokens, light/dark mode, nesting conventions, media query syntax, reduced motion, and global utilities — see **[`.ai/skills/stylesheet-conventions/SKILL.md`](../stylesheet-conventions/SKILL.md)**.
 
@@ -125,12 +125,12 @@ const headings = [...document.querySelectorAll('main h2, main h3')]
   .filter((h) => !el.contains(h)); // exclude any headings inside the block itself
 ```
 
-## Block variants and state classes
+## Block variants and modifiers
 
-Extra classes on a block element are variant or state flags. `loadBlock` always uses only the **first** class as the block name — additional classes do not affect which JS or CSS file loads. They are purely CSS targets.
+Extra classes on a block element are variant/modifier or state flags. `loadBlock` always uses only the **first** class as the block name — additional classes do not affect which JS or CSS file loads. They are purely CSS targets.
 
 ```html
-<!-- "centered" and "dark" are variants — only "hero" drives block resolution -->
+<!-- "centered" and "dark" are variants/modifiers — only "hero" drives block resolution -->
 <div class="hero centered dark">...</div>
 ```
 
@@ -143,7 +143,7 @@ Extra classes on a block element are variant or state flags. `loadBlock` always 
 }
 ```
 
-If a variant needs meaningfully different JS behavior, check for the variant class inside `init`:
+If a variant needs meaningfully different JS behavior, check for the modifier/variant class inside `init`:
 
 ```js
 export default async function init(el) {
@@ -220,10 +220,9 @@ if (data.primaryVariant) {
 }
 ```
 
-### Use project class naming
+### Class naming
 
-This project does not use BEM. Use kebab-case and prefix child or state classes
-with the block name when they need a class:
+Name child and state classes in kebab-case, prefixed with the block name:
 
 ```css
 .my-block { ... }
@@ -261,90 +260,90 @@ axe-core WCAG 2.2 AA scans run against every block via Playwright. **A new block
 
 1. Create `test/a11y/fixtures/<name>.html`. The fixture is a minimal HTML page that loads the block's CSS with `<link>` and initializes it with `<script type="module">`. Use a `data:` URI image placeholder so fixture images never 404. Two easy-to-miss requirements that fail *silently* (the block just quietly renders nothing, with no error) rather than throwing: author the block's own markup in raw row → cell(div) → content shape, not simplified/decorated HTML, since `init()` reads it by walking `:scope > div`; and wrap the block in a `<div class="section">` — a block placed directly under `<main>` is hidden by EDS's flash-of-undecorated-content guard.
 
-   ```html
-   <!DOCTYPE html>
-   <html lang="en">
-   <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>My-block fixture</title>
-     <link rel="stylesheet" href="/styles/styles.css">
-     <link rel="stylesheet" href="/blocks/my-block/my-block.css">
-   </head>
-   <body>
-     <main id="main-content">
-       <div class="section">
-         <div class="my-block">
-           <div>
-             <div><!-- cell content here --></div>
-           </div>
-         </div>
-       </div>
-     </main>
-     <script type="module">
-       import init from '/blocks/my-block/my-block.js';
-       document.querySelectorAll('.my-block').forEach(init);
-     </script>
-   </body>
-   </html>
-   ```
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My-block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/my-block/my-block.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="my-block">
+        <div>
+          <div><!-- cell content here --></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/my-block/my-block.js';
+    document.querySelectorAll('.my-block').forEach(init);
+  </script>
+</body>
+</html>
+```
 
 2. Create `test/a11y/blocks/<name>.spec.js` — one file per block, no shared registry to edit. Copy [`test/a11y/blocks/card.spec.js`](../../../test/a11y/blocks/card.spec.js) as a starting template: a light-mode axe scan, an accessibility-tree snapshot, and a dark-mode axe scan, in that order:
 
-   ```js
-   import AxeBuilder from '@axe-core/playwright';
-   import { test, expect } from '../axe-test.js';
-   import { gotoBlock, formatViolations } from '../block-a11y.js';
+```js
+import AxeBuilder from '@axe-core/playwright';
+import { test, expect } from '../axe-test.js';
+import { gotoBlock, formatViolations } from '../block-a11y.js';
 
-   const block = {
-     name: 'my-block',
-     path: '/test/a11y/fixtures/my-block.html',
-     readySelector: '.my-block-inner', // element that appears after init completes
-   };
+const block = {
+  name: 'my-block',
+  path: '/test/a11y/fixtures/my-block.html',
+  readySelector: '.my-block-inner', // element that appears after init completes
+};
 
-   test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
-     await gotoBlock(page, block);
+test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+  await gotoBlock(page, block);
 
-     const results = await makeAxeBuilder()
-       .disableRules(block.disableRules ?? [])
-       .analyze();
+  const results = await makeAxeBuilder()
+    .disableRules(block.disableRules ?? [])
+    .analyze();
 
-     expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
-   });
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
 
-   test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
-     // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
-     // single run — check the project by name to actually run this once, not twice.
-     test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+test(`${block.name} block matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  // Mobile Chrome also runs on the Chromium engine, so `browserName` alone can't isolate a
+  // single run — check the project by name to actually run this once, not twice.
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
 
-     await gotoBlock(page, block);
+  await gotoBlock(page, block);
 
-     await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
-       - ...
-     `);
-   });
+  await expect(page.locator(block.ariaRoot ?? `.${block.name}`)).toMatchAriaSnapshot(`
+    - ...
+  `);
+});
 
-   test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
-     await page.emulateMedia({ colorScheme: 'dark' });
-     await gotoBlock(page, block);
+test(`${block.name} block in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await gotoBlock(page, block);
 
-     const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+  const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
 
-     await testInfo.attach('accessibility-scan-results', {
-       body: JSON.stringify(results, null, 2),
-       contentType: 'application/json',
-     });
+  await testInfo.attach('accessibility-scan-results', {
+    body: JSON.stringify(results, null, 2),
+    contentType: 'application/json',
+  });
 
-     expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
-   });
-   ```
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+```
 
-   `readySelector` is a CSS selector for any element created by `init` — the test waits for it before running axe. If the block removes itself from the DOM on init (like `section-metadata`), use `{ selector: '.my-block', state: 'detached' }` instead of a string.
+`readySelector` is a CSS selector for any element created by `init` — the test waits for it before running axe. If the block removes itself from the DOM on init (like `section-metadata`), use `{ selector: '.my-block', state: 'detached' }` instead of a string.
 
-   **All three `test(...)` calls must be written directly in this file**, not moved into a shared helper — Playwright reports a failing test's file/line as wherever `test()` is literally called, so hiding it in `block-a11y.js` would make every block's failures misreport as coming from that one shared file. Generate/update the accessibility-tree snapshot with `npx playwright test test/a11y/blocks/<name>.spec.js --project=chromium -g "accessibility tree" --update-snapshots`.
+**All three `test(...)` calls must be written directly in this file**, not moved into a shared helper — Playwright reports a failing test's file/line as wherever `test()` is literally called, so hiding it in `block-a11y.js` would make every block's failures misreport as coming from that one shared file. Generate/update the accessibility-tree snapshot with `npx playwright test test/a11y/blocks/<name>.spec.js --project=chromium -g "accessibility tree" --update-snapshots`.
 
-   If the block fetches remote data at runtime, add a `routes` array to the `block` object to mock those requests — copy [`test/a11y/blocks/header.spec.js`](../../../test/a11y/blocks/header.spec.js) for a worked example. Add reusable mock strings to [`test/a11y/mocks.js`](../../../test/a11y/mocks.js); keep one-off mocks inline in the spec file.
+If the block fetches remote data at runtime, add a `routes` array to the `block` object to mock those requests — copy [`test/a11y/blocks/header.spec.js`](../../../test/a11y/blocks/header.spec.js) for a worked example. Add reusable mock strings to [`test/a11y/mocks.js`](../../../test/a11y/mocks.js); keep one-off mocks inline in the spec file.
 
-   The rare block that renders arbitrary passthrough content with no fixed structure to assert against (e.g. `fragment`) can be exempted instead of given a spec file — see the `EXCLUDED` set in `test/a11y/coverage.spec.js`. This should be an explicit, justified exception, not a default.
+The rare block that renders arbitrary passthrough content with no fixed structure to assert against (e.g. `fragment`) can be exempted instead of given a spec file — see the `EXCLUDED` set in `test/a11y/coverage.spec.js`. This should be an explicit, justified exception, not a default.
 
 For fixture-specific requirements such as `setConfig`, the fixture-markup gotchas in full, and what to update when an existing block's behavior changes, see [`test/a11y/README.md`](../../../test/a11y/README.md).
