@@ -37,7 +37,7 @@ the user's request and files in scope. Load each matching skill's `SKILL.md`
 before responding or doing the work. A user's explicit `/skill-name` request
 always counts as a match.
 
-Unattended agents must not approve their own TDD exceptions. Agents must stop work until while a human cannot respond.
+Unattended agents must not approve their own TDD exceptions. Agents must stop work while a human cannot respond.
 
 ## Specs and plans
 
