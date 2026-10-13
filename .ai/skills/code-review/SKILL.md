@@ -68,40 +68,54 @@ Do not report:
 
 Use a question or residual risk when evidence is inconclusive.
 
-## Severity and confidence
+## Severity classification
 
-| Severity | Meaning |
-| --- | --- |
-| `blocking` | Reachable data loss, exploitable security exposure, or production outage |
-| `high` | Likely user-visible failure or major supported-path regression |
-| `medium` | Narrower concrete correctness, reliability, accessibility, maintainability, or test-confidence risk |
-| `low` | Limited-impact issue supported by concrete evidence |
+| Score | Classification | Meaning |
+| --- | --- | --- |
+| `SEV1` | Changes requested, critical failure | System outage, data loss, or exploitable security breach |
+| `SEV2` | Changes requested, major issue | Major functionality is broken or users experience significant impact |
+| `SEV3` | Partial fix | Functionality is partially broken or the impact is moderate |
+| `SEV4` | Minimal issue | A minor functional issue has minimal user impact |
+| `SEV5` | Nit | An objective cosmetic defect or repository-convention violation has no functional impact |
 
-| Confidence | Meaning |
-| --- | --- |
-| `high` | Demonstrated by code flow or a targeted check |
-| `medium` | Strongly supported but dependent on a stated runtime or input condition |
-| `low` | Plausible but incomplete; prefer a question or residual risk if the claim is not yet actionable |
-
-Order findings by severity from `blocking` to `low`, then confidence from `high`
-to `low`.
+SEV5 does not permit subjective style preferences. Order findings from SEV1
+through SEV5.
 
 ## Output
 
 List findings first. Each finding contains:
 
 ```text
-[severity, confidence] path/to/file.js:line — concise title
+[SEV#] path/to/file.js:line — <Classification>, <problem statement>
 
 Concrete failure scenario or maintenance/test risk. Explain why the change
 causes it and give the smallest useful fix direction.
 ```
 
+Copy the classification exactly from the severity table, then describe the
+observed problem rather than proposing a fix or inventing a generic title:
+
+```text
+[SEV2] scripts/example.js:42 — Changes requested, major issue, data-loading promise returns undefined immediately
+```
+
 Then, only when applicable, add:
 
 - **Questions** — intent needed to determine correctness
-- **Residual risks** — meaningful checks or conditions that could not be
-  verified
+- **Residual risks** — meaningful checks or conditions that could not be verified
 
 If no issue qualifies, say `No qualifying findings.` and list only meaningful
 residual risks. Do not lead with praise, a diff summary, or style commentary.
+
+### Blocking-finding fix offer
+
+SEV1 and SEV2 findings are blocking review outcomes. When either severity is
+reported, finish by asking whether the user wants the agent to fix a specific
+SEV1 or SEV2 finding:
+
+- Use structured interaction when the client supports it. List each eligible finding as a separate choice and include an option to review the findings before making changes.
+- Otherwise, use a plain-text fallback that asks the user to identify the specific SEV1 or SEV2 finding they want fixed.
+
+The review remains read-only until the user selects a finding. That selection authorizes a separate implementation phase for only the selected finding.
+
+Do not offer to fix SEV3 through SEV5 findings automatically. Those findings require human review before a separate, explicit implementation request.
