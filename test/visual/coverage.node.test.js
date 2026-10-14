@@ -9,10 +9,6 @@ const TEST_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_ROOT = path.resolve(TEST_ROOT, '../a11y/fixtures');
 const EXEMPT_FIXTURES = new Map([
   [
-    'schedule.html',
-    'The current block fails before it produces a deterministic schedule component because its loadFragment return-shape handling is defective.',
-  ],
-  [
     'section-metadata.html',
     'The block applies section configuration and removes its own root, leaving no visual component to capture.',
   ],
