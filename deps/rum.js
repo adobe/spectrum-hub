@@ -116,6 +116,5 @@ export default function sampleRUM(checkpoint, data) {
 
 window.hlx ??= {};
 window.hlx.RUM_MASK_URL = 'full';
-window.hlx.RUM_MANUAL_ENHANCE = true;
 sampleRUM.collectBaseURL = window.origin;
 sampleRUM();
