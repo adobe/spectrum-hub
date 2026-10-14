@@ -1,4 +1,4 @@
-import { statusIndex, statusTableQueryIndex, svgIcon } from '../../a11y/mocks.js';
+import { statusIndex, statusQueryIndex, svgIcon } from '../../a11y/mocks.js';
 import { defineVisualFixture } from '../visual-test.js';
 
 defineVisualFixture({
@@ -15,7 +15,7 @@ defineVisualFixture({
     {
       url: '**/query-index.json*',
       contentType: 'application/json',
-      body: statusTableQueryIndex,
+      body: statusQueryIndex,
     },
     {
       url: '**/*.svg',
