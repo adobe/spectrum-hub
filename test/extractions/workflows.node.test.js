@@ -185,6 +185,12 @@ function commandStart(run, needle) {
   return findCommand(run, needle)?.start ?? -1;
 }
 
+function stepWithCommand(source, command) {
+  return stepBlocks(source).find(
+    (step) => commandStart(runBlock(step), command) !== -1,
+  ) || null;
+}
+
 function exactCommandBlock(run, expected) {
   const match = runCommands(run).find(({ text }) => normalizeShell(text) === expected);
   return match ? match.text : '';
@@ -296,17 +302,22 @@ describe('extraction workflow PR lifecycle', () => {
   for (const file of EXTRACTION_WORKFLOWS) {
     const source = readFileSync(join(WORKFLOWS, file), 'utf8');
     const workflowName = file.replace(/\.ya?ml$/, '');
-    const validationStep = conditionalSteps(source, 'true').find(
-      (step) => !!exactCommandBlock(runBlock(step), 'npm run test:extractions'),
-    ) || null;
-    const prStep = conditionalSteps(source, 'true').find(
-      (step) => !!exactCommandBlock(runBlock(step), 'git push --force origin "$BRANCH"'),
+    const lintStep = stepWithCommand(source, 'npm run lint:js');
+    const extractionTestStep = stepWithCommand(source, 'npm run test:extractions');
+    const reportStep = stepWithCommand(source, 'node .github/scripts/extraction-validation-report.js');
+    const prStep = stepWithCommand(source, 'git push --force origin "$BRANCH"');
+    const finalGuardStep = stepBlocks(source).find(
+      (step) => step.text.includes("if: always() && steps.stage.outputs.changed == 'true'")
+        && runBlock(step).includes('exit 1'),
     ) || null;
     const cleanupStep = conditionalSteps(source, 'false').find(
       (step) => commandStart(runBlock(step), 'git ls-remote --exit-code --heads origin "$BRANCH"') !== -1,
     ) || null;
-    const validationRun = runBlock(validationStep);
+    const lintRun = runBlock(lintStep);
+    const extractionTestRun = runBlock(extractionTestStep);
+    const reportRun = runBlock(reportStep);
     const prRun = runBlock(prStep);
+    const finalGuardRun = runBlock(finalGuardStep);
     const cleanupRun = runBlock(cleanupStep);
 
     it(`${file}: checks out the default branch`, () => {
@@ -341,30 +352,74 @@ describe('extraction workflow PR lifecycle', () => {
       );
     });
 
-    it(`${file}: validates before force-pushing the bot branch`, () => {
-      assert.ok(
-        validationStep,
-        `${file} should validate the extraction before force-pushing the bot branch`,
+    it(`${file}: records validation failures without blocking the bot branch`, () => {
+      assert.ok(lintStep, `${file} should have a changed-output lint step`);
+      assert.ok(extractionTestStep, `${file} should have a changed-output extraction-test step`);
+      assert.notEqual(
+        lintStep.start,
+        extractionTestStep.start,
+        `${file} should run lint and extraction tests in separate steps`,
       );
-      assert.ok(
-        prStep,
-        `${file} should force-push the bot branch after validation`,
+      assert.match(lintStep.text, /\n {8}id:\s+lint\s*$/m);
+      assert.match(extractionTestStep.text, /\n {8}id:\s+extraction_tests\s*$/m);
+      assert.match(lintStep.text, /\n {8}continue-on-error:\s+true\s*$/m);
+      assert.match(extractionTestStep.text, /\n {8}continue-on-error:\s+true\s*$/m);
+      assert.match(lintRun, /set -o pipefail/);
+      assert.match(extractionTestRun, /set -o pipefail/);
+      assert.match(commandBlock(lintRun, 'npm run lint:js'), /\|\s+tee "\$RUNNER_TEMP\/lint\.log"/);
+      assert.match(
+        commandBlock(extractionTestRun, 'npm run test:extractions'),
+        /\|\s+tee "\$RUNNER_TEMP\/extraction-tests\.log"/,
       );
+      assert.ok(prStep, `${file} should force-push the bot branch after validation`);
       assert.ok(
-        exactCommandBlock(validationRun, 'npm run lint:js'),
-        `${file} should lint the extraction output in the changed-output validation step`,
+        lintStep.start < prStep.start && extractionTestStep.start < prStep.start,
+        `${file} should validate before force-pushing the bot branch`,
       );
-      assert.ok(
-        exactCommandBlock(validationRun, 'npm run test:extractions'),
-        `${file} should run npm run test:extractions as a real command in the changed-output validation step`,
+      assert.match(
+        prStep.text,
+        /\n {8}if:\s+steps\.stage\.outputs\.changed == 'true'\s*$/m,
+        `${file} should publish changed output without requiring validation success`,
       );
-      assert.ok(
-        exactCommandBlock(prRun, 'git push --force origin "$BRANCH"'),
-        `${file} should force-push the bot branch from the changed-output PR step`,
+    });
+
+    it(`${file}: reports validation outcomes in the PR body and job summary`, () => {
+      assert.ok(reportStep, `${file} should generate a validation report`);
+      assert.match(
+        reportStep.text,
+        /LINT_OUTCOME:\s+\$\{\{\s+steps\.lint\.outcome\s+\}\}/,
+        `${file} should pass the lint outcome to the report`,
       );
+      assert.match(
+        reportStep.text,
+        /TEST_OUTCOME:\s+\$\{\{\s+steps\.extraction_tests\.outcome\s+\}\}/,
+        `${file} should pass the extraction-test outcome to the report`,
+      );
+      assert.match(
+        reportStep.text,
+        /RUN_URL:\s+\$\{\{\s+github\.server_url\s+\}\}\/\$\{\{\s+github\.repository\s+\}\}\/actions\/runs\/\$\{\{\s+github\.run_id\s+\}\}/,
+        `${file} should link the report to the workflow run`,
+      );
+      assert.match(reportRun, /> "\$RUNNER_TEMP\/validation\.md"/);
+      assert.match(reportRun, /cat "\$RUNNER_TEMP\/validation\.md"/);
+      assert.match(
+        reportRun,
+        /cat "\$RUNNER_TEMP\/validation\.md" >> "\$GITHUB_STEP_SUMMARY"/,
+      );
+    });
+
+    it(`${file}: fails only after reconciling the extraction PR`, () => {
+      assert.ok(prStep, `${file} is missing the changed-output PR reconciliation step`);
+      assert.ok(finalGuardStep, `${file} should include a final validation guard`);
       assert.ok(
-        validationStep.start < prStep.start,
-        `${file} should run npm run test:extractions before git push --force origin "$BRANCH"`,
+        prStep.start < finalGuardStep.start,
+        `${file} should reconcile the PR before failing validation`,
+      );
+      assert.ok(finalGuardRun.includes('"$LINT_OUTCOME" != "success"'));
+      assert.ok(finalGuardRun.includes('"$TEST_OUTCOME" != "success"'));
+      assert.ok(
+        exactCommandBlock(finalGuardRun, 'exit 1'),
+        `${file} should exit nonzero when validation failed`,
       );
     });
 
