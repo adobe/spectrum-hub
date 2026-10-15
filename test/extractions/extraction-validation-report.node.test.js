@@ -1,10 +1,46 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   buildValidationReport,
   selectFailureDetails,
 } from '../../.github/scripts/extraction-validation-report.js';
+
+const REPORT_SCRIPT = fileURLToPath(
+  new URL('../../.github/scripts/extraction-validation-report.js', import.meta.url),
+);
+
+describe('extraction validation report CLI', () => {
+  it('reports when a failed validation log was not captured', () => {
+    const missingLog = join(
+      tmpdir(),
+      `spectrum-hub-missing-validation-log-${process.pid}.log`,
+    );
+    const result = spawnSync(
+      process.execPath,
+      [REPORT_SCRIPT, missingLog, missingLog],
+      {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          LINT_OUTCOME: 'failure',
+          TEST_OUTCOME: 'success',
+          RUN_URL: 'https://github.com/adobe/spectrum-hub/actions/runs/123',
+        },
+      },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(
+      result.stdout.includes(`The validation logs were not captured: ${missingLog}`),
+      result.stdout,
+    );
+  });
+});
 
 describe('buildValidationReport', () => {
   it('reports both validation commands as passed', () => {

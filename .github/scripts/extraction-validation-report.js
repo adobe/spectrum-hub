@@ -74,7 +74,9 @@ function readLog(path) {
   try {
     return readFileSync(path, 'utf8');
   } catch (error) {
-    if (error.code === 'ENOENT') { return ''; }
+    if (error.code === 'ENOENT') {
+      return `The validation logs were not captured: ${path}`;
+    }
     throw error;
   }
 }
