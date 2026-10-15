@@ -90,19 +90,37 @@ jobs:
             fi
           fi
 
-      - name: Verify the extraction before proposing it
-        if: steps.stage.outputs.changed == 'true'
+      - name: Lint extracted output
         # The PR this opens gets no `pull_request` checks of its own (GitHub does not run
-        # workflows for PRs opened with GITHUB_TOKEN), so the extraction is validated here
-        # instead. A run that produces a catalog the suite rejects fails loudly rather than
-        # opening a PR that merely looks green.
+        # workflows for PRs opened with GITHUB_TOKEN), so validation happens here. Failed
+        # output is still proposed for review, then the final guard keeps the run red.
+        id: lint
+        if: steps.stage.outputs.changed == 'true'
+        continue-on-error: true
         run: |
-          npm run lint:js
-          npm run test:extractions
+          set -o pipefail
+          npm run lint:js 2>&1 | tee "$RUNNER_TEMP/lint.log"
+
+      - name: Test extracted output
+        id: extraction_tests
+        if: steps.stage.outputs.changed == 'true'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run test:extractions 2>&1 | tee "$RUNNER_TEMP/extraction-tests.log"
 
       - name: Describe what changed
         if: steps.stage.outputs.changed == 'true'
+        env:
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TEST_OUTCOME: ${{ steps.extraction_tests.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          node .github/scripts/extraction-validation-report.js \
+            "$RUNNER_TEMP/lint.log" \
+            "$RUNNER_TEMP/extraction-tests.log" \
+            > "$RUNNER_TEMP/validation.md"
+
           {
             echo "Automated run of \`.github/workflows/extract-rsp-properties.yml\`."
             echo
@@ -111,9 +129,10 @@ jobs:
             echo
             node .github/scripts/roster-delta.js deps/rsp/components.json
             echo
-            echo "\`npm run lint:js\` and \`npm run test:extractions\` passed on this output"
-            echo "before the PR was opened."
+            cat "$RUNNER_TEMP/validation.md"
           } > "$RUNNER_TEMP/pr-body.md"
+
+          cat "$RUNNER_TEMP/validation.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit to a branch and open a PR
         if: steps.stage.outputs.changed == 'true'
@@ -142,4 +161,15 @@ jobs:
               --head "$BRANCH" \
               --title "chore: update React Spectrum component properties" \
               --body-file "$RUNNER_TEMP/pr-body.md"
+          fi
+
+      - name: Fail when extraction validation failed
+        if: always() && steps.stage.outputs.changed == 'true'
+        env:
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TEST_OUTCOME: ${{ steps.extraction_tests.outcome }}
+        run: |
+          if [ "$LINT_OUTCOME" != "success" ] || [ "$TEST_OUTCOME" != "success" ]; then
+            echo "Extraction output was published, but validation failed." >&2
+            exit 1
           fi
