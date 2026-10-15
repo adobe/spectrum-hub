@@ -1,6 +1,34 @@
 import { test, expect } from '@playwright/test';
 import { waitForStablePage } from './deployed-test.js';
 
+const stablePageChromeStyle = `
+  header,
+  #sitenav,
+  .sitenav-trigger-btn,
+  .page-nav {
+    position: absolute !important;
+  }
+  .sitenav-trigger-btn {
+    inset-block-start: 104px !important;
+    inset-block-end: auto !important;
+  }
+  header .header-content {
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  header .header-content::before {
+    display: none !important;
+  }
+  header .brand-section a {
+    inline-size: var(--sh-brand-mark-width-compact) !important;
+  }
+  header .brand-section svg > path:nth-child(2) {
+    opacity: 0 !important;
+    transition: none !important;
+  }
+`;
+
 const patternPages = [
   {
     name: 'pattern-library-typography',
@@ -21,14 +49,17 @@ const patternPages = [
     name: 'pattern-library-core-layouts',
     path: '/docs/pattern-library/core-layouts',
     readySelector: 'h1#core-layouts',
-    // Sticky page chrome changes state while Playwright stitches this exceptionally
-    // tall desktop page. Keep the pattern content visible and exclude only that chrome.
-    screenshotStyle: 'header, #sitenav, .page-nav { visibility: hidden !important; }',
   },
   {
     name: 'pattern-library-playground',
     path: '/docs/pattern-library/playground',
     readySelector: 'h1#component-playground',
+    // These RSP previews change internal text/disclosure rendering between identical
+    // remote loads. Keep the surrounding playground and controls covered.
+    maskSelectors: [
+      'iframe[src*="component=action-button&implementation=rsp"]',
+      'iframe[src*="component=accordion&implementation=rsp"]',
+    ],
   },
   {
     name: 'pattern-library-table',
@@ -64,12 +95,13 @@ for (const {
   readySelector,
   readyState = 'visible',
   maskSelectors = [],
-  screenshotStyle,
+  screenshotStyle = stablePageChromeStyle,
 } of patternPages) {
   test(`${name} matches its deployed baseline`, async ({ page }) => {
     await page.goto(path);
     await page.locator('body.se-loaded').waitFor();
     await page.locator(readySelector).waitFor({ state: readyState });
+    await page.locator('header .header-content').waitFor();
     await waitForStablePage(page);
     if (screenshotStyle) {
       await page.addStyleTag({ content: screenshotStyle });
