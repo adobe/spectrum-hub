@@ -82,7 +82,12 @@ export default defineConfig([
   {
     // Root-level test-tooling config files import devDependencies (e.g. @playwright/test)
     // but don't match the test/**/*.js glob above
-    files: ['playwright.config.js', 'playwright.link-check.config.js', 'playwright.visual.config.js'],
+    files: [
+      'playwright.config.js',
+      'playwright.link-check.config.js',
+      'playwright.visual.config.js',
+      'playwright.visual.deployed.config.js',
+    ],
     rules: {
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     },

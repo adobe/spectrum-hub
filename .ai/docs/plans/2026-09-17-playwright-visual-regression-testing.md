@@ -12,6 +12,8 @@
 
 **Implementation reconciliation:** `page-nav` uses a bespoke four-project test because its component is intentionally absent at mobile widths; the mobile scenarios initialize it at desktop width, restore the mobile viewport, assert that the navigation is hidden, and capture that absence. The `columns-grid` fixture added on `main` has its own visual case and is enforced by the fixture coverage test.
 
+**Deployed preview amendment:** Live-site captures are a separate page-level suite. They do not replace local fixture coverage, reuse its baseline directories, or point fixture routes at production. The deployed suite requires an explicit commit-specific preview URL through `VISUAL_BASE_URL`. Mutable production is not the authoritative baseline source.
+
 ---
 
 ## File structure
@@ -46,6 +48,8 @@
 
 - Create `.github/workflows/visual.yml` — non-required pull request comparison job.
 - Create `.github/workflows/visual-baselines.yml` — manual Linux baseline-generation job.
+- Create `playwright.visual.deployed.config.js` — page-only deployed-preview configuration with no local web server.
+- Create `.github/workflows/visual-deployed-baselines.yml` — manual deployed-preview baseline generation with an explicit preview URL.
 - Modify `.ai/README.md` and `AGENTS.md` — register the VRT conventions and coverage expectation.
 
 ---
@@ -1253,3 +1257,208 @@ git commit -m "test(visual): introduce Playwright visual regression coverage"
 ```
 
 Before running `git add -A`, inspect `git status` and stage only VRT-related files. If earlier checkpoint commits were created, skip this aggregate commit and leave the branch as a clean sequence of focused commits.
+
+---
+
+### Task 12: Add deployed preview visual coverage
+
+This is a follow-up task. Complete it without changing the deterministic fixture suite or its baseline paths.
+
+**Files:**
+- Create: `playwright.visual.deployed.config.js`
+- Create: `test/visual/deployed/homepage.spec.js`
+- Create: `test/visual/deployed/swc-button.spec.js`
+- Create: `.github/workflows/visual-deployed-baselines.yml`
+- Modify: `package.json`
+- Modify: `test/visual/README.md`
+
+- [ ] **Step 1: Add a failing configuration validation test**
+
+Add a Node test that loads the deployed configuration without `VISUAL_BASE_URL`.
+
+Expected: FAIL with a clear message that `VISUAL_BASE_URL` is required. The configuration must not fall back to production, localhost, or another implicit origin.
+
+- [ ] **Step 2: Add the deployed Playwright configuration**
+
+Create `playwright.visual.deployed.config.js`. Reuse the visual projects, strict screenshot policy, and Linux naming conventions from `playwright.visual.config.js`, but:
+
+- Set `testDir` to `test/visual/deployed`.
+- Do not configure `webServer`.
+- Set `workers` to `1` to avoid rate-limiting remote preview page and asset requests.
+- Set `use.baseURL` from `VISUAL_BASE_URL`.
+- Write results and reports to deployed-specific directories.
+- Use deployed-specific snapshot directories so local and deployed baselines cannot overwrite each other.
+
+- [ ] **Step 3: Verify configuration validation**
+
+Run the Node configuration test without `VISUAL_BASE_URL`.
+
+Expected: PASS because the missing value is rejected.
+
+Run:
+
+```bash
+VISUAL_BASE_URL=https://preview.example.com \
+  npx playwright test --config=playwright.visual.deployed.config.js --list
+```
+
+Expected: the deployed page scenarios are discovered without starting `aem up`.
+
+- [ ] **Step 4: Add focused deployed page specs**
+
+Add homepage and representative component-detail specs using relative URLs. Capture stable, unauthenticated regions rather than entire pages with independently changing content.
+
+Each spec must:
+
+- Wait for an explicit rendered state.
+- Wait for fonts and relevant images.
+- Avoid user-specific data, timestamps, and loading states.
+- Document every external-service mock or masked region.
+- Avoid importing fixture-only mocks unless the external dependency is explicitly outside the deployed scenario's scope.
+
+- [ ] **Step 5: Add package scripts**
+
+Add separate commands:
+
+```json
+"test:visual:deployed": "playwright test --config=playwright.visual.deployed.config.js",
+"test:visual:deployed:list": "playwright test --config=playwright.visual.deployed.config.js --list"
+```
+
+Do not add the deployed suite to `npm run test:visual`. The existing command remains deterministic and self-contained.
+
+- [ ] **Step 6: Add the manual deployed-baseline workflow**
+
+Create `.github/workflows/visual-deployed-baselines.yml` with a required `workflow_dispatch` input named `preview_url`.
+
+The workflow must:
+
+- Use the same pinned Ubuntu and Playwright environment as the local baseline workflow.
+- Set `VISUAL_BASE_URL` to the provided preview URL.
+- Generate only deployed-suite baselines.
+- Include the commit SHA and a sanitized preview-host identifier in the artifact metadata or name.
+- Upload baselines and reports without committing or pushing.
+- Fail rather than falling back when the preview is unavailable.
+
+- [ ] **Step 7: Generate and review a preview baseline artifact**
+
+Dispatch the workflow with a preview URL tied to an exact commit. Record the commit SHA and full preview URL during review.
+
+Verify:
+
+- The preview serves the intended commit.
+- All captures are stable and unauthenticated.
+- No production-only content drift appears.
+- The artifact contains only deployed baseline directories.
+- A second run against the same preview produces identical screenshots.
+
+- [ ] **Step 8: Evaluate pull request automation separately**
+
+Do not add an automatic pull request trigger until CI can reliably obtain the current pull request's commit-specific preview URL.
+
+If that capability becomes available, compare:
+
+- A reviewed baseline generated from the intended base preview.
+- Actual screenshots generated from the pull request preview through the same deployed configuration.
+
+Never compare deployed baselines with local fixture output, and never silently use mutable production as either side of the comparison.
+
+---
+
+### Task 13: Add deployed pattern-library coverage
+
+**Files:**
+- Create: `test/visual/deployed/pattern-library.spec.js`
+- Modify: `test/visual/deployed/deployed-test.js` only if full-page asset readiness requires a shared helper
+- Modify: `test/visual/README.md`
+
+- [ ] **Step 1: Add an explicit pattern-library page manifest**
+
+Create one deployed spec containing entries for:
+
+```text
+/docs/pattern-library/typography
+/docs/pattern-library/buttons
+/docs/pattern-library/cards
+/docs/pattern-library/core-layouts
+/docs/pattern-library/playground
+/docs/pattern-library/table
+/docs/pattern-library/breadcrumbs
+/docs/pattern-library/search
+/docs/pattern-library/status-table
+/docs/pattern-library/usage
+```
+
+Use these explicit readiness contracts:
+
+| Scenario | Route | Readiness selector |
+| --- | --- | --- |
+| `pattern-library-typography` | `/docs/pattern-library/typography` | `h1#typography` |
+| `pattern-library-buttons` | `/docs/pattern-library/buttons` | `h1#buttons` |
+| `pattern-library-cards` | `/docs/pattern-library/cards` | `h1#cards` |
+| `pattern-library-core-layouts` | `/docs/pattern-library/core-layouts` | `h1#core-layouts` |
+| `pattern-library-playground` | `/docs/pattern-library/playground` | `h1#component-playground` |
+| `pattern-library-table` | `/docs/pattern-library/table` | `h1#table` |
+| `pattern-library-breadcrumbs` | `/docs/pattern-library/breadcrumbs` | `h1#breadcrumbs` |
+| `pattern-library-search` | `/docs/pattern-library/search` | `h1#search` |
+| `pattern-library-status-table` | `/docs/pattern-library/status-table` | `.status-table` |
+| `pattern-library-usage` | `/docs/pattern-library/usage` | `h1#usage` |
+
+Each entry may also define optional mask selectors with an inline reason.
+
+Do not discover routes automatically. Adding a page remains an explicit baseline-scope decision.
+
+- [ ] **Step 2: Capture complete pages**
+
+For each manifest entry:
+
+1. Navigate to the relative route through `VISUAL_BASE_URL`.
+2. Wait for `body.se-loaded`.
+3. Verify the entry's heading or stable root.
+4. Scroll through the document in viewport-sized increments until page height and image count stabilize.
+5. Visit each rendered image and wait for it to load or explicitly report an image error.
+6. Return to the top of the document.
+7. Wait for custom-element updates and document fonts.
+8. Ignore zero-size lazy images in hidden content because they cannot affect the screenshot.
+9. Capture the page with `fullPage: true`.
+
+Use stable screenshot names derived from the manifest, not page titles returned by the deployment.
+
+- [ ] **Step 3: Stabilize only proven volatile regions**
+
+Generate temporary screenshots against a commit-specific preview. Run the suite twice.
+
+If a page differs:
+
+1. Identify the exact changing element and its data source.
+2. Prefer a readiness condition when the difference is caused by incomplete rendering.
+3. Add a page-specific mask only when the region changes independently of repository state.
+4. Document the reason beside the mask selector.
+
+Do not add global masks, tolerances, fixed sleeps, or full-section masks to make comparisons pass.
+
+- [ ] **Step 4: Verify the expanded deployed suite**
+
+Run:
+
+```bash
+VISUAL_BASE_URL=https://<commit-preview-host> npm run test:visual:deployed:list
+VISUAL_BASE_URL=https://<commit-preview-host> \
+  npm run test:visual:deployed -- --update-snapshots
+VISUAL_BASE_URL=https://<commit-preview-host> npm run test:visual:deployed
+```
+
+Expected:
+
+- The list contains the existing deployed scenarios plus ten pattern-library scenarios in each visual project.
+- Both screenshot runs pass with one worker.
+- Temporary macOS baselines are removed after validation.
+
+- [ ] **Step 5: Document pattern-library ownership**
+
+Update `test/visual/README.md` with:
+
+- The explicit routes covered.
+- The full-page capture policy.
+- The rule that masks require demonstrated volatility and an inline reason.
+- The process for adding another pattern-library route.

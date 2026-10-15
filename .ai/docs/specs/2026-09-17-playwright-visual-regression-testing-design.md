@@ -58,6 +58,42 @@ The implementation selects stable, unauthenticated routes that are available thr
 
 Page smoke tests are intentionally limited. Fixture tests remain the primary source of visual coverage because they are faster, more deterministic, and easier to diagnose.
 
+## Deployed preview coverage
+
+Deployed-page captures are additive. They do not replace the deterministic fixture suite or change fixture tests to load production URLs.
+
+A separate Playwright configuration targets page-level specs through a required `VISUAL_BASE_URL` environment variable. It does not start the local AEM server. The target should be a preview URL tied to an exact commit whenever the deployment system provides one. Mutable production is not the authoritative baseline source because content, experiments, authentication, search data, and CDN assets can change independently of repository code.
+
+Deployed specs live separately from local page specs. This keeps their contracts explicit:
+
+- Local fixture and page specs run against `aem up` with deterministic route mocks.
+- Deployed specs run against a commit-specific preview and exercise the deployed rendering pipeline.
+- A baseline generated from a deployed preview is compared only with screenshots produced through the same deployed-suite contract.
+- Local fixture screenshots are never compared with deployed-page baselines.
+
+Deployed specs use relative page paths so the workflow controls the origin through `VISUAL_BASE_URL`. They capture stable, unauthenticated regions and wait for explicit rendered states, fonts, and relevant images. Tests may intercept an external service only when that service is not the subject of the deployed check. Any mock, mask, or scenario-specific tolerance remains narrow and documented.
+
+The deployed configuration uses one Playwright worker. A remote preview can rate-limit simultaneous page and asset requests, leaving otherwise valid pages partially decorated or returning HTTP 429 responses. The deterministic local suite retains its normal parallelism.
+
+Pattern-library coverage uses an explicit page manifest in one deployed spec. The manifest lists each supported route, screenshot name, readiness assertion, and any narrowly justified mask selectors. Initial coverage includes:
+
+- `/docs/pattern-library/typography`
+- `/docs/pattern-library/buttons`
+- `/docs/pattern-library/cards`
+- `/docs/pattern-library/core-layouts`
+- `/docs/pattern-library/playground`
+- `/docs/pattern-library/table`
+- `/docs/pattern-library/breadcrumbs`
+- `/docs/pattern-library/search`
+- `/docs/pattern-library/status-table`
+- `/docs/pattern-library/usage`
+
+Pattern-library assertions capture the entire page because the page shell, documentation layout, and rendered examples are part of the expected presentation. Each scenario waits for `body.se-loaded` and verifies the route-specific primary heading. The status-table page has no authored heading, so it verifies the `.status-table` root instead.
+
+Before capture, the test scrolls through the document until page height and image count stabilize. This triggers native lazy loading and sections that decorate only when they approach the viewport. It then visits each rendered image, waits for it to load or report an error, returns to the top, and waits for fonts and custom-element updates. Zero-size lazy images in hidden navigation content are excluded because they never enter the viewport and cannot affect the screenshot. This prevents below-the-fold content from appearing or shifting only during the full-page screenshot. A mask is allowed only after a region is shown to change independently of the repository state. Each mask remains page-specific and documented beside its manifest entry.
+
+The deployed suite begins as a manually dispatched workflow. Automatic pull request comparisons require a reliable way to discover the pull request's commit-specific preview URL. Until that integration exists, the suite must not silently fall back to production or the local development server.
+
 ## Comparison policy
 
 Visual assertions use Playwright's `toHaveScreenshot()`. The default policy allows no differing pixels in the pinned Linux and Chromium environment.
@@ -80,7 +116,7 @@ To approve an intentional visual change, a developer:
 4. Copies the approved baselines into the branch.
 5. Commits the baseline changes with the implementation.
 
-Local macOS runs are useful for authoring and debugging, but Linux CI is authoritative for baseline creation and comparison.
+Local macOS runs are useful for authoring and debugging, but Linux CI is authoritative for baseline creation and comparison. The baseline artifact records whether it came from the deterministic local suite or the deployed preview suite. The two baseline sets remain separate.
 
 ## Continuous integration
 
@@ -130,6 +166,14 @@ Explicit exemptions are allowed only for fixtures that cannot produce a meaningf
 - Review runtime, flake history, false-positive rate, and usefulness of failure artifacts.
 - Make the VRT check required only when repository owners agree it is reliable.
 
+### Phase 5: Deployed preview evaluation
+
+- Add a separate page-only configuration that requires `VISUAL_BASE_URL`.
+- Add deployed specs for a small set of stable, unauthenticated page regions.
+- Add a manual workflow that accepts a commit-specific preview URL and uploads deployed baselines.
+- Measure content drift, preview availability, runtime, and false-positive rate.
+- Consider pull request automation only after preview URL discovery is reliable.
+
 ## Error handling
 
 Setup failures, missing fixtures, readiness timeouts, missing baselines, and screenshot mismatches fail with their native Playwright errors. Helpers do not catch these errors or convert them into skipped or successful tests.
@@ -145,3 +189,5 @@ Mocks fail when an unexpected request contract is required. Tests do not fall ba
 - Intentional baseline changes require human review and a source-controlled commit.
 - Pull request runtime is acceptable to repository owners.
 - The stabilization period records no unresolved recurring flakes before the check becomes required.
+- Deployed baselines identify the exact preview URL and commit used to generate them.
+- Local and deployed baseline sets cannot overwrite or compare against each other.

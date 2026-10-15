@@ -27,6 +27,47 @@ npx playwright test --config=playwright.visual.config.js test/visual/blocks/card
 
 A local run without approved baselines will report missing snapshots. Use it to check fixture behavior and inspect provisional output, not to establish baselines.
 
+## Running deployed preview tests
+
+The deployed suite captures stable page regions from an explicit preview URL. It does not replace local fixture coverage, start `aem up`, or fall back to production.
+
+List the deployed scenarios:
+
+```bash
+VISUAL_BASE_URL=https://<commit-preview-host> npm run test:visual:deployed:list
+```
+
+Run the deployed suite:
+
+```bash
+VISUAL_BASE_URL=https://<commit-preview-host> npm run test:visual:deployed
+```
+
+`VISUAL_BASE_URL` is required and must be an absolute HTTP or HTTPS URL. Use a preview tied to the exact commit under review. Do not use mutable production as the authoritative baseline source.
+
+Deployed specs and screenshots live under `test/visual/deployed/`. Their result directory, report, and `*-deployed-snapshots/` directories are separate from the deterministic local suite. Never compare a deployed baseline with local fixture output.
+
+The deployed configuration runs one worker at a time. Remote AEM previews can rate-limit concurrent page and asset requests, which may return HTTP 429 responses or leave pages partially decorated.
+
+### Pattern-library pages
+
+The deployed suite captures these pattern-library pages in full:
+
+- `/docs/pattern-library/typography`
+- `/docs/pattern-library/buttons`
+- `/docs/pattern-library/cards`
+- `/docs/pattern-library/core-layouts`
+- `/docs/pattern-library/playground`
+- `/docs/pattern-library/table`
+- `/docs/pattern-library/breadcrumbs`
+- `/docs/pattern-library/search`
+- `/docs/pattern-library/status-table`
+- `/docs/pattern-library/usage`
+
+The explicit manifest is in `test/visual/deployed/pattern-library.spec.js`. To add a page, add its route, stable scenario name, and a route-specific readiness selector to the manifest.
+
+Pattern-library tests scroll until page height and image count stabilize, visit each rendered image, return to the top, wait for custom-element updates and fonts, and then capture the entire page. Zero-size lazy images in hidden content are ignored because they cannot affect the screenshot. Add a mask only after two runs demonstrate that a specific region changes independently of repository code. Keep the selector page-specific and document the reason beside the manifest entry.
+
 ## Why Linux CI owns baselines
 
 Screenshots vary across operating systems because font rasterization and browser rendering differ. Pull request checks run in a pinned Playwright container on Ubuntu, so approved baselines must come from the same environment.
@@ -46,6 +87,20 @@ Download the `visual-baselines-<commit-sha>` artifact from the completed workflo
 The workflow never commits or pushes. It only generates and uploads an artifact, retained for 30 days.
 
 `workflow_dispatch` can run a workflow only after its workflow file exists on the default branch. For the initial rollout, land the VRT infrastructure without baselines first. Then create a follow-up branch, run the manual workflow from that branch, import the artifact, and submit the baselines for review.
+
+## Generating deployed baseline artifacts
+
+After the deployed workflow exists on the default branch, dispatch it with the branch and commit-specific preview URL:
+
+```bash
+gh workflow run visual-deployed-baselines.yml \
+  --ref <branch> \
+  -f preview_url=https://<commit-preview-host>
+```
+
+The workflow validates the URL, runs only `test/visual/deployed/`, and uploads an artifact named with the preview host and commit SHA. It never commits or pushes.
+
+During review, confirm that the preview serves the intended commit and that a second workflow run produces identical screenshots. Do not approve deployed baselines containing personalized data, timestamps, experiments, loading states, or independently changing remote content.
 
 ## Reviewing expected, actual, and diff images
 
@@ -94,7 +149,6 @@ An exemption is allowed only when a fixture cannot produce meaningful visual ren
 
 The current exemptions are:
 
-- `schedule.html`: the block fails before producing a deterministic schedule component because of its current fragment return-shape handling.
 - `section-metadata.html`: the block applies section configuration and removes its own root, so no visual component remains to capture.
 
 Do not exempt a fixture because it is difficult to stabilize or because its expected rendering changed.

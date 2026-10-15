@@ -17,6 +17,7 @@ helix-importer-ui
 playwright-report/
 playwright-report-links/
 playwright-report-visual/
+playwright-report-visual-deployed/
 test-results/
 
 
