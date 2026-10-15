@@ -1372,7 +1372,7 @@ Never compare deployed baselines with local fixture output, and never silently u
 - Modify: `test/visual/deployed/deployed-test.js` only if full-page asset readiness requires a shared helper
 - Modify: `test/visual/README.md`
 
-- [ ] **Step 1: Add an explicit pattern-library page manifest**
+- [x] **Step 1: Add an explicit pattern-library page manifest**
 
 Create one deployed spec containing entries for:
 
@@ -1408,23 +1408,25 @@ Each entry may also define optional mask selectors with an inline reason.
 
 Do not discover routes automatically. Adding a page remains an explicit baseline-scope decision.
 
-- [ ] **Step 2: Capture complete pages**
+- [x] **Step 2: Capture complete pages**
 
 For each manifest entry:
 
 1. Navigate to the relative route through `VISUAL_BASE_URL`.
 2. Wait for `body.se-loaded`.
 3. Verify the entry's heading or stable root.
-4. Scroll through the document in viewport-sized increments until page height and image count stabilize.
-5. Visit each rendered image and wait for it to load or explicitly report an image error.
-6. Return to the top of the document.
-7. Wait for custom-element updates and document fonts.
-8. Ignore zero-size lazy images in hidden content because they cannot affect the screenshot.
-9. Capture the page with `fullPage: true`.
+4. Wait for decorated section markers to clear and for the asynchronous header fragment.
+5. Scroll through the document in viewport-sized increments until page height and image count stabilize.
+6. Visit each rendered image and wait for it to load or explicitly report an image error.
+7. Return to the top of the document.
+8. Wait for document and same-origin iframe stylesheets, custom-element updates, fonts, and iframe DOM stability.
+9. Freeze fixed and sticky page chrome in a compact, absolute-positioned state for the full-page capture.
+10. Ignore zero-size lazy images in hidden content because they cannot affect the screenshot.
+11. Capture the page with `fullPage: true`.
 
 Use stable screenshot names derived from the manifest, not page titles returned by the deployment.
 
-- [ ] **Step 3: Stabilize only proven volatile regions**
+- [x] **Step 3: Stabilize only proven volatile regions**
 
 Generate temporary screenshots against a commit-specific preview. Run the suite twice.
 
@@ -1437,7 +1439,9 @@ If a page differs:
 
 Do not add global masks, tolerances, fixed sleeps, or full-section masks to make comparisons pass.
 
-- [ ] **Step 4: Verify the expanded deployed suite**
+The playground scenario masks only the RSP action-button and accordion preview iframes. Both regions changed internally across identical deployed runs after page, stylesheet, font, and iframe readiness were verified.
+
+- [x] **Step 4: Verify the expanded deployed suite**
 
 Run:
 
@@ -1454,7 +1458,7 @@ Expected:
 - Both screenshot runs pass with one worker.
 - Temporary macOS baselines are removed after validation.
 
-- [ ] **Step 5: Document pattern-library ownership**
+- [x] **Step 5: Document pattern-library ownership**
 
 Update `test/visual/README.md` with:
 

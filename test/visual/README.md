@@ -66,7 +66,11 @@ The deployed suite captures these pattern-library pages in full:
 
 The explicit manifest is in `test/visual/deployed/pattern-library.spec.js`. To add a page, add its route, stable scenario name, and a route-specific readiness selector to the manifest.
 
-Pattern-library tests scroll until page height and image count stabilize, visit each rendered image, return to the top, wait for custom-element updates and fonts, and then capture the entire page. Zero-size lazy images in hidden content are ignored because they cannot affect the screenshot. Add a mask only after two runs demonstrate that a specific region changes independently of repository code. Keep the selector page-specific and document the reason beside the manifest entry.
+Pattern-library tests wait until decorated sections finish loading and the asynchronous header fragment is present. They scroll until page height and image count stabilize, visit each rendered image, return to the top, and wait for stylesheets, custom-element updates, fonts, and same-origin iframe content to settle before capturing the entire page. Zero-size lazy images in hidden content are ignored because they cannot affect the screenshot.
+
+Full-page screenshot stitching changes the site's fixed and sticky navigation state as Playwright scrolls. The suite keeps that page chrome visible but freezes it in a compact, absolute-positioned state during capture. The playground page masks only the RSP action-button and accordion preview iframes. Those two remote previews demonstrated internal rendering changes across identical runs; the surrounding playground, controls, and every other preview remain covered.
+
+Add a mask only after two runs demonstrate that a specific region changes independently of repository code. Keep the selector page-specific and document the reason beside the manifest entry.
 
 ## Why Linux CI owns baselines
 

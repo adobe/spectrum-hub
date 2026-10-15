@@ -22,12 +22,67 @@ async function waitForImages(locator) {
   });
 }
 
+async function waitForFrameComponents(page) {
+  await page.waitForFunction(() => [...document.querySelectorAll('iframe')]
+    .every((iframe) => iframe.contentDocument?.readyState === 'complete'));
+
+  await Promise.all(page.frames()
+    .filter((frame) => frame !== page.mainFrame())
+    .map((frame) => frame.evaluate(async () => {
+      const nextFrame = () => new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
+      const customElementNames = [...new Set(
+        [...document.querySelectorAll('*')]
+          .map((element) => element.localName)
+          .filter((name) => name.includes('-')),
+      )];
+
+      await Promise.all(customElementNames.map((name) => customElements.whenDefined(name)));
+      let stylesReady = false;
+      for (let pass = 0; pass < 100; pass += 1) {
+        stylesReady = [...document.querySelectorAll('link[rel="stylesheet"]')]
+          .every((link) => link.sheet);
+        if (stylesReady) { break; }
+        await new Promise((resolve) => { setTimeout(resolve, 100); });
+      }
+      if (!stylesReady) {
+        throw new Error('Frame stylesheets did not load before screenshot capture.');
+      }
+      await document.fonts.ready;
+
+      for (let pass = 0; pass < 3; pass += 1) {
+        await Promise.all(
+          [...document.querySelectorAll('*')]
+            .map((element) => element.updateComplete)
+            .filter((updateComplete) => updateComplete?.then),
+        );
+        await nextFrame();
+      }
+
+      let previousSignature;
+      let stablePasses = 0;
+      for (let pass = 0; pass < 20 && stablePasses < 3; pass += 1) {
+        await new Promise((resolve) => { setTimeout(resolve, 100); });
+        const mount = document.querySelector('#mount');
+        const signature = `${document.documentElement.scrollWidth}:${document.documentElement.scrollHeight}:${mount?.innerHTML ?? document.body.innerHTML}`;
+        stablePasses = signature === previousSignature ? stablePasses + 1 : 0;
+        previousSignature = signature;
+      }
+      if (stablePasses < 3) {
+        throw new Error('Frame content did not stabilize before screenshot capture.');
+      }
+    })));
+}
+
 export async function waitForStableCapture(locator) {
   await locator.page().evaluate(async () => document.fonts.ready);
   await waitForImages(locator);
 }
 
 export async function waitForStablePage(page) {
+  await page.locator('.section[data-status="decorated"]').waitFor({ state: 'detached' });
+
   await page.evaluate(async () => {
     const nextFrame = () => new Promise((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(resolve));
@@ -73,6 +128,24 @@ export async function waitForStablePage(page) {
 
     window.scrollTo(0, 0);
     await nextFrame();
+    const customElementNames = [...new Set(
+      [...document.querySelectorAll('*')]
+        .map((element) => element.localName)
+        .filter((name) => name.includes('-')),
+    )];
+    await Promise.all(customElementNames.map((name) => customElements.whenDefined(name)));
+
+    let stylesReady = false;
+    for (let pass = 0; pass < 100; pass += 1) {
+      stylesReady = [...document.querySelectorAll('link[rel="stylesheet"]')]
+        .every((link) => link.sheet);
+      if (stylesReady) { break; }
+      await new Promise((resolve) => { setTimeout(resolve, 100); });
+    }
+    if (!stylesReady) {
+      throw new Error('Page stylesheets did not load before screenshot capture.');
+    }
+
     await Promise.all(
       [...document.querySelectorAll('*')]
         .map((element) => element.updateComplete)
@@ -82,5 +155,6 @@ export async function waitForStablePage(page) {
     await document.fonts.ready;
   });
 
+  await waitForFrameComponents(page);
   await waitForImages(page.locator('body'));
 }
