@@ -854,7 +854,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -1428,7 +1429,8 @@
             "secondary": "Use image"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }

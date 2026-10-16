@@ -38,7 +38,7 @@
   {
     "attribute": "placement",
     "property": "placement",
-    "type": "\"start\" | \"end\" | \"top\" | \"bottom\" | \"bottom-left\" | \"bottom-right\" | \"bottom-start\" | \"bottom-end\" | \"top-left\" | \"top-right\" | \"top-start\" | \"top-end\" | \"left\" | \"left-top\" | \"left-bottom\" | \"start-top\" | \"start-bottom\" | \"right\" | \"right-top\" | \"right-bottom\" | \"end-top\" | \"end-bottom\"",
+    "type": "\"start\" | \"end\" | \"bottom-start\" | \"bottom-end\" | \"top-start\" | \"top-end\" | \"left-top\" | \"left-bottom\" | \"right-top\" | \"right-bottom\" | \"start-top\" | \"start-bottom\" | \"end-top\" | \"end-bottom\" | \"top\" | \"bottom\" | \"bottom-left\" | \"bottom-right\" | \"top-left\" | \"top-right\" | \"left\" | \"right\"",
     "kind": "enum",
     "values": [
       "bottom",

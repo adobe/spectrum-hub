@@ -54,7 +54,7 @@
       "mega"
     ],
     "optional": true,
-    "description": "Cycles through a themed sequence of icons, one per loop, instead of a\nsingle `icon`.",
+    "description": "Cycles through a themed sequence of icons, one per loop, instead of a\nsingle `icon`. The `mega` preset shuffles its sequence per instance while\nkeeping `aiLogo` first and the Adobe letter icons in order.",
     "since": "2.0.0-beta.3"
   },
   {

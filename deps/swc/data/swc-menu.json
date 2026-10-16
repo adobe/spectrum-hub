@@ -1,0 +1,77 @@
+[
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\"",
+    "kind": "enum",
+    "values": [
+      "s",
+      "m",
+      "l",
+      "xl"
+    ],
+    "optional": false,
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "for",
+    "property": "for",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The `id` of the trigger element in the same document tree root.",
+    "inheritedFrom": "MenuBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "placement",
+    "property": "placement",
+    "type": "\"bottom-start\" | \"bottom-end\" | \"top-start\" | \"top-end\" | \"left-top\" | \"left-bottom\" | \"right-top\" | \"right-bottom\" | \"start-top\" | \"start-bottom\" | \"end-top\" | \"end-bottom\"",
+    "kind": "enum",
+    "values": [
+      "bottom-start",
+      "bottom-end",
+      "top-start",
+      "top-end",
+      "left-top",
+      "left-bottom",
+      "right-top",
+      "right-bottom",
+      "start-top",
+      "start-bottom",
+      "end-top",
+      "end-bottom"
+    ],
+    "optional": false,
+    "default": "'bottom-start'",
+    "description": "Where the anchored surface opens relative to the trigger, and its\ncross-axis alignment against it.",
+    "inheritedFrom": "MenuBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "should-flip",
+    "property": "shouldFlip",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "true",
+    "description": "Whether the surface may reposition to the opposite side when the\nrequested direction does not fit within the viewport.",
+    "inheritedFrom": "MenuBase",
+    "since": "2.0.0-beta.4"
+  },
+  {
+    "attribute": "open",
+    "property": "open",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the menu is open.",
+    "inheritedFrom": "MenuBase",
+    "since": "2.0.0-beta.4"
+  }
+]

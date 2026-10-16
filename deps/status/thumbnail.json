@@ -10,7 +10,8 @@
       "secondary": "Use image"
     },
     "swc": {
-      "status": "not-available"
+      "status": "available",
+      "context": "Stable"
     }
   },
   "figmaPageId": "9392:43644"

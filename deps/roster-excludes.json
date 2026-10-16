@@ -59,6 +59,8 @@
   "SideNavItemLink",
   "SideNavPanel",
   "InfieldButton",
-  "Asset"
+  "Asset",
+  "Icon",
+  "UiIcon"
 ]
 

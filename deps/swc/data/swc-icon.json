@@ -14,8 +14,7 @@
     "optional": false,
     "description": "T-shirt icon size.",
     "inheritedFrom": "SizedMixin",
-    "status": "internal",
-    "since": "2.0.0-beta.1"
+    "since": "2.0.0-beta.4"
   },
   {
     "attribute": "accessible-label",
@@ -27,7 +26,6 @@
     "default": "''",
     "description": "Accessible label for the icon. When empty the icon is decorative.",
     "inheritedFrom": "IconBase",
-    "status": "internal",
-    "since": "2.0.0-beta.1"
+    "since": "2.0.0-beta.4"
   }
 ]
