@@ -730,6 +730,24 @@
       }
     },
     {
+      "name": "Icon",
+      "label": "Icon",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "IllustratedMessage",
       "label": "Illustrated Message",
       "platforms": {
@@ -854,7 +872,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -1428,7 +1447,8 @@
             "secondary": "Use image"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -1483,6 +1503,24 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "UiIcon",
+      "label": "Ui Icon",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }

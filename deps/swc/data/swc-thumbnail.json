@@ -1,0 +1,54 @@
+[
+  {
+    "attribute": "size",
+    "property": "size",
+    "type": "50 | 75 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 1000",
+    "kind": "enum",
+    "values": [
+      50,
+      75,
+      100,
+      200,
+      300,
+      400,
+      500,
+      600,
+      700,
+      800,
+      900,
+      1000
+    ],
+    "optional": false,
+    "default": "500",
+    "description": "The size of the thumbnail. Invalid values fall back to the default (500).",
+    "inheritedFrom": "ThumbnailBase",
+    "since": "2.0.0-beta.5"
+  },
+  {
+    "attribute": "fit",
+    "property": "fit",
+    "type": "\"cover\" | \"contain\"",
+    "kind": "enum",
+    "values": [
+      "cover",
+      "contain"
+    ],
+    "optional": false,
+    "default": "'contain'",
+    "description": "How the slotted image fits within the thumbnail's bounds. Invalid\nvalues fall back to the default (`'contain'`).",
+    "inheritedFrom": "ThumbnailBase",
+    "since": "2.0.0-beta.5"
+  },
+  {
+    "attribute": "decorative",
+    "property": "decorative",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Marks the thumbnail as decorative, hiding it (and its slotted image)\nfrom assistive technology via `aria-hidden`, and gives the slotted image\n`alt=\"\"` when unset.",
+    "inheritedFrom": "ThumbnailBase",
+    "since": "2.0.0-beta.5"
+  }
+]
