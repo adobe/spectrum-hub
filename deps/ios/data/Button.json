@@ -1,0 +1,53 @@
+[
+  {
+    "property": "enabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "true",
+    "description": "The visual variant of the button.\n\n`outline` fill-style is only supported with `primary` and `secondary`.\n`static-color` is only supported with `primary` and `secondary`.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "size",
+    "type": "\"Small\" | \"Medium\" | \"Large\"",
+    "kind": "enum",
+    "values": [
+      "Small",
+      "Medium",
+      "Large"
+    ],
+    "optional": false,
+    "description": "The size of the button.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "style",
+    "type": "\"Quiet\" | \"Secondary\" | \"Primary\" | \"Accent\" | \"Premium\"",
+    "kind": "enum",
+    "values": [
+      "Quiet",
+      "Secondary",
+      "Primary",
+      "Accent",
+      "Premium"
+    ],
+    "optional": false,
+    "description": "The size of the button.",
+    "inheritedFrom": "SizedMixin",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "show-icon",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "true",
+    "description": "This is really coming from the JSON, eh?",
+    "since": "2.0.0-beta.1"
+  }
+  
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "property": "label",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The menu's accessible label.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "selectionMode",
+    "type": "\"None\" | \"Single\" | \"Multiple\"",
+    "kind": "enum",
+    "values": [
+      "None",
+      "Single",
+      "Multiple"
+    ],
+    "optional": false,
+    "default": "'none'",
+    "description": "How many items may be selected at once.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the menu can be opened.",
+    "since": "2.0.0-beta.1"
+  }
+]

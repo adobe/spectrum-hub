@@ -35,6 +35,16 @@
         "id": "swc",
         "label": "Spectrum Web Components"
       }
+    ],
+    "mobile": [
+      {
+        "id": "ios",
+        "label": "iOS"
+      },
+      {
+        "id": "android",
+        "label": "Android"
+      }
     ]
   },
   "components": [
@@ -273,6 +283,16 @@
             "context": "Stable"
           },
           "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        },
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
             "status": "available",
             "context": "Stable"
           }
@@ -669,6 +689,24 @@
       }
     },
     {
+      "name": "ExtendedFAB",
+      "label": "Extended FAB",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "secondary": "Use properties within Button",
+            "figmaPageSource": "Extended FAB",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "FieldLabel",
       "label": "Field Label",
       "platforms": {
@@ -685,6 +723,24 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "FloatingActionButtonFAB",
+      "label": "Floating action button (FAB)",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "secondary": "Use properties within Button",
+            "figmaPageSource": "Floating Action Button (FAB)",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -725,6 +781,42 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "IconButton",
+      "label": "Icon button",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "secondary": "Use properties within Button",
+            "figmaPageSource": "Cards (Asset)",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "IconToggleButton",
+      "label": "Icon toggle button",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "secondary": "Use properties within Toggle button",
+            "figmaPageSource": "Floating Action Button (FAB)",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -857,6 +949,15 @@
             "status": "available",
             "context": "Stable"
           }
+        },
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "not-available"
+          }
         }
       }
     },
@@ -912,6 +1013,15 @@
           "swc": {
             "status": "not-available"
           }
+        },
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "not-available"
+          }
         }
       }
     },
@@ -930,6 +1040,21 @@
           "swc": {
             "status": "available",
             "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "PopUpButton",
+      "label": "Pop-up button",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "not-available"
           }
         }
       }
@@ -1133,6 +1258,33 @@
           "swc": {
             "status": "not-available"
           }
+        },
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Snackbar",
+      "label": "Snackbar",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "secondary": "Use Toast",
+            "figmaPageSource": "Toast",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
+          }
         }
       }
     },
@@ -1263,6 +1415,16 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        },
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -1448,6 +1610,34 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        },
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "available",
+            "secondary": "Use Snackbar",
+            "figmaPageSource": "Snackbar",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          }
+        }
+      }
+    },
+    {
+      "name": "ToggleButton",
+      "label": "Toggle button",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "android": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }

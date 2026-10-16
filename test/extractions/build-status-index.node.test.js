@@ -19,6 +19,11 @@ import {
   buildComponentSlices,
   buildImplComponentNames,
   statusLegend,
+  WEB_COLUMNS,
+  PLATFORM_CONFIG,
+  joinNamedRosters,
+  mergePlatformIndexes,
+  mergeSlices,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
 
@@ -434,16 +439,37 @@ describe('buildIndex', () => {
 describe('readSecondaries', () => {
   const columns = [{ id: 'rsp' }, { id: 'swc' }, { id: 'figma' }];
 
-  it('keys each overlay entry by canonical name, applying figma aliases', () => {
+  it('keys each overlay entry by canonical name', () => {
     const overlays = {
       rsp: [{ name: 'Alert Dialog', context: 'Use Dialog component' }],
-      swc: [{ name: 'Table', context: 'Use Gen1' }],
+      swc: [{ name: 'Text Area', context: 'Use text field' }],
       figma: null,
     };
-    const secondaries = readSecondaries(columns, (id) => overlays[id], { figma: { Table: 'TableView' } });
+    const secondaries = readSecondaries(columns, (id) => overlays[id], {});
     assert.equal(secondaries.rsp.AlertDialog, 'Use Dialog component');
-    assert.equal(secondaries.swc.TableView, 'Use Gen1');
+    assert.equal(secondaries.swc.TextArea, 'Use text field');
     assert.ok(!('figma' in secondaries));
+  });
+
+  it('applies each source\'s own alias map rather than one shared map', () => {
+    const overlays = { figma: [{ name: 'Table', context: 'Use Gen1' }] };
+    const secondaries = readSecondaries(
+      [{ id: 'figma' }],
+      (id) => overlays[id] ?? null,
+      { figma: { Table: 'TableView' } },
+    );
+    assert.equal(secondaries.figma.TableView, 'Use Gen1');
+  });
+
+  it('does not let one source\'s aliases rewrite another source\'s overlay', () => {
+    const overlays = { ios: [{ name: 'Table', context: 'Use native component' }] };
+    const secondaries = readSecondaries(
+      [{ id: 'ios' }],
+      (id) => overlays[id] ?? null,
+      { figma: { Table: 'TableView' } },
+    );
+    assert.equal(secondaries.ios.Table, 'Use native component');
+    assert.ok(!('TableView' in secondaries.ios));
   });
 });
 
@@ -456,6 +482,29 @@ describe('applySecondaries', () => {
     const comps = components();
     applySecondaries(comps, { swc: { TableView: 'Use Gen1' } });
     assert.equal(comps[0].platforms.web.swc.secondary, 'Use Gen1');
+  });
+
+  // The overrides file is shared and keyed name -> platform -> impl, so most entries say
+  // nothing about any given platform. Staying silent about those is the difference
+  // between a clean build and sixty lines of noise on every run.
+  it('ignores an override that names a different platform', () => {
+    const comps = [{ name: 'Snackbar', platforms: { mobile: { ios: { status: 'available' } } } }];
+    const { warnings } = applyOverrides(
+      comps,
+      { RadioButton: { web: { rsp: { status: 'available' } } } },
+      'mobile',
+    );
+    assert.deepEqual(warnings, []);
+  });
+
+  it('still warns when an override names this platform but no such component', () => {
+    const comps = [{ name: 'Snackbar', platforms: { mobile: { ios: { status: 'available' } } } }];
+    const { warnings } = applyOverrides(
+      comps,
+      { Nonexistent: { mobile: { ios: { status: 'available' } } } },
+      'mobile',
+    );
+    assert.ok(warnings.some((w) => /unknown component "Nonexistent"/.test(w)));
   });
 
   it('warns when an overlay entry matches no component', () => {
@@ -732,5 +781,292 @@ describe('buildImplComponentNames', () => {
     assert.deepEqual(buildImplComponentNames(slices, roster), {
       rsp: { 'takeover-dialog': { docs: 'Dialog', export: 'FullscreenDialog' } },
     });
+  });
+});
+
+describe('buildIndex platform', () => {
+  const columns = [{ id: 'ios', label: 'iOS' }, { id: 'android', label: 'Android' }];
+  const roster = [{ name: 'Snackbar', sources: { ios: 'Snackbar', android: 'Snackbar' } }];
+  const presentFloor = { ios: { status: 'available' }, android: { status: 'available' } };
+  const build = (overrides = {}) => buildIndex({
+    roster, readData: () => null, columns, platform: 'mobile', presentFloor, ...overrides,
+  });
+
+  // buildIndex produces one platform's slice; mergePlatformIndexes folds the slices
+  // together, so the platform lives in the keys rather than a top-level field.
+  it('files the columns under that platform', () => {
+    assert.deepEqual(build().index.implementations, { mobile: columns });
+  });
+
+  it('files each component\'s cells under that platform', () => {
+    const { index } = build();
+    assert.deepEqual(index.components[0].platforms.mobile.ios, { status: 'available' });
+    assert.ok(!('web' in index.components[0].platforms));
+  });
+
+  it('floors a present source with the floor it was given', () => {
+    const { index } = build({ presentFloor: { ios: { status: 'experimental' } } });
+    assert.deepEqual(index.components[0].platforms.mobile.ios, { status: 'experimental' });
+  });
+
+  it('falls back to the default floor for a source with no floor configured', () => {
+    const { index } = build({ presentFloor: {} });
+    assert.deepEqual(index.components[0].platforms.mobile.ios, { status: 'experimental' });
+  });
+
+  it('layers secondary guidance onto a cell under that platform', () => {
+    const { index } = build({ secondaries: { ios: { Snackbar: 'Use Toast' } } });
+    assert.equal(index.components[0].platforms.mobile.ios.secondary, 'Use Toast');
+  });
+
+  it('applies an override addressed to that platform', () => {
+    const { index } = build({
+      overrides: { Snackbar: { mobile: { android: { status: 'not-available' } } } },
+    });
+    assert.deepEqual(index.components[0].platforms.mobile.android, { status: 'not-available' });
+  });
+});
+
+describe('displayLabel', () => {
+  const columns = [{ id: 'ios', label: 'iOS' }];
+  const labelFor = (entry) => buildIndex({
+    roster: [entry],
+    readData: () => null,
+    columns,
+    platform: 'mobile',
+    presentFloor: { ios: { status: 'available' } },
+  }).index.components[0].label;
+
+  it('prefers an explicit label from the roster entry', () => {
+    assert.equal(
+      labelFor({
+        name: 'FloatingActionButtonFAB',
+        label: 'Floating action button (FAB)',
+        sources: { ios: 'Floating action button (FAB)' },
+      }),
+      'Floating action button (FAB)',
+    );
+  });
+
+  // Without an explicit label the canonical key is de-PascalCased, which cannot recover
+  // the parentheses or the hyphen the authored name carried. That is why `label` exists:
+  // mobile rosters are display-name-first, so the derivation runs the wrong way for them.
+  it('de-PascalCases the canonical name when the entry carries no label', () => {
+    assert.equal(
+      labelFor({ name: 'FloatingActionButtonFAB', sources: { ios: 'Floating action button (FAB)' } }),
+      'Floating Action Button FAB',
+    );
+  });
+});
+
+describe('buildComponentSlices platform', () => {
+  it('files a slice\'s cells under the platform it was built for', () => {
+    const roster = [{ name: 'Snackbar', sources: { ios: 'Snackbar' } }];
+    const components = [{ name: 'Snackbar', platforms: { mobile: { ios: { status: 'available' } } } }];
+    const { slices } = buildComponentSlices(roster, components, [], 'mobile');
+    assert.deepEqual(slices[0], {
+      slug: 'snackbar',
+      data: { mobile: { ios: { status: 'available' } } },
+      shared: false,
+    });
+  });
+});
+
+describe('PLATFORM_CONFIG', () => {
+  it('keeps the web entry\'s columns in step with WEB_COLUMNS', () => {
+    assert.deepEqual(PLATFORM_CONFIG.web.columns, WEB_COLUMNS);
+  });
+
+  it('names an overlay file for every web column', () => {
+    for (const { id } of PLATFORM_CONFIG.web.columns) {
+      assert.ok(PLATFORM_CONFIG.web.overlayFiles[id], `no overlay file configured for ${id}`);
+    }
+  });
+
+  it('configures mobile with the iOS and Android columns, in order', () => {
+    assert.deepEqual(PLATFORM_CONFIG.mobile.columns.map((c) => c.id), ['ios', 'android']);
+  });
+
+  // Membership is presence, as it is for SWC: a platform that lists a component ships
+  // it, so a catalog with no maturity signal floors to Available rather than reading as
+  // Not available on a component the platform demonstrably has.
+  it('floors every mobile column to Available', () => {
+    for (const { id } of PLATFORM_CONFIG.mobile.columns) {
+      assert.deepEqual(PLATFORM_CONFIG.mobile.presentFloor[id], { status: 'available' });
+    }
+  });
+
+  it('names an overlay file for every mobile column', () => {
+    for (const { id } of PLATFORM_CONFIG.mobile.columns) {
+      assert.ok(PLATFORM_CONFIG.mobile.overlayFiles[id], `no overlay file configured for ${id}`);
+    }
+  });
+});
+
+describe('joinNamedRosters', () => {
+  const ios = {
+    'Floating action button (FAB)': 'Sources/SpectrumComponents/FloatingActionButton',
+    Toolbar: 'Sources/SpectrumComponents/Toolbar',
+  };
+  const android = {
+    'Floating action button (FAB)': 'FloatingActionButton',
+    Snackbar: 'Snackbar',
+  };
+  const join = (aliases) => joinNamedRosters({ ios, android }, aliases);
+
+  it('joins entries from different sources that normalize to one canonical name', () => {
+    const fab = join().find((e) => e.name === 'FloatingActionButtonFAB');
+    assert.deepEqual(fab.sources, {
+      ios: 'Floating action button (FAB)',
+      android: 'Floating action button (FAB)',
+    });
+  });
+
+  // The canonical key is derived from the display name here, so the derivation is lossy
+  // in the other direction — the row carries the authored name rather than rebuilding it.
+  it('keeps the authored display name as the row label', () => {
+    assert.equal(join().find((e) => e.name === 'FloatingActionButtonFAB').label, 'Floating action button (FAB)');
+  });
+
+  it('keeps a single-platform component as a single-source row', () => {
+    assert.deepEqual(join().find((e) => e.name === 'Snackbar').sources, { android: 'Snackbar' });
+  });
+
+  it('keeps a component only one platform lists', () => {
+    assert.deepEqual(join().find((e) => e.name === 'Toolbar').sources, { ios: 'Toolbar' });
+  });
+
+  it('returns rows sorted by canonical name', () => {
+    const names = join().map((e) => e.name);
+    assert.deepEqual(names, [...names].sort());
+  });
+
+  it('lets a per-source alias merge a differently-named entry into one row', () => {
+    const roster = joinNamedRosters(
+      { ios: { 'Snack bar': 'Snack' }, android: { Snackbar: 'Snackbar' } },
+      { ios: { 'Snack bar': 'Snackbar' } },
+    );
+    assert.equal(roster.length, 1);
+    assert.deepEqual(roster[0].sources, { ios: 'Snack bar', android: 'Snackbar' });
+  });
+});
+
+describe('mergePlatformIndexes', () => {
+  const build = (platform, columns, components) => ({
+    platform,
+    index: { implementations: { [platform]: columns }, components },
+  });
+
+  const web = build('web', [{ id: 'rsp', label: 'React Spectrum' }], [
+    { name: 'Button', label: 'Button', platforms: { web: { rsp: { status: 'available' } } } },
+    { name: 'Accordion', label: 'Accordion', platforms: { web: { rsp: { status: 'available' } } } },
+  ]);
+  const mobile = build('mobile', [{ id: 'ios', label: 'iOS' }], [
+    { name: 'Button', label: 'Button', platforms: { mobile: { ios: { status: 'available' } } } },
+    { name: 'Snackbar', label: 'Snackbar', platforms: { mobile: { ios: { status: 'available' } } } },
+  ]);
+
+  it('files every platform\'s columns under its own key', () => {
+    const index = mergePlatformIndexes([web, mobile]);
+    assert.deepEqual(Object.keys(index.implementations), ['web', 'mobile']);
+    assert.deepEqual(index.implementations.mobile, [{ id: 'ios', label: 'iOS' }]);
+  });
+
+  it('merges a component that both platforms ship into one row', () => {
+    const button = mergePlatformIndexes([web, mobile]).components.find((c) => c.name === 'Button');
+    assert.deepEqual(Object.keys(button.platforms), ['web', 'mobile']);
+    assert.deepEqual(button.platforms.web.rsp, { status: 'available' });
+    assert.deepEqual(button.platforms.mobile.ios, { status: 'available' });
+  });
+
+  it('keeps a single-platform component with only its own platform key', () => {
+    const { components } = mergePlatformIndexes([web, mobile]);
+    assert.deepEqual(Object.keys(components.find((c) => c.name === 'Snackbar').platforms), ['mobile']);
+    assert.deepEqual(Object.keys(components.find((c) => c.name === 'Accordion').platforms), ['web']);
+  });
+
+  // One row carries one label, so a deterministic winner is needed where the platforms
+  // disagree — web derives `Text Field` from the code identifier while iOS authors
+  // `Text field`. First build in platform order wins, and web is built first.
+  it('keeps the first platform\'s label when they disagree', () => {
+    const a = build('web', [], [{ name: 'TextField', label: 'Text Field', platforms: { web: {} } }]);
+    const b = build('mobile', [], [{ name: 'TextField', label: 'Text field', platforms: { mobile: {} } }]);
+    assert.equal(mergePlatformIndexes([a, b]).components[0].label, 'Text Field');
+  });
+
+  it('sorts the merged components by canonical name', () => {
+    const names = mergePlatformIndexes([web, mobile]).components.map((c) => c.name);
+    assert.deepEqual(names, ['Accordion', 'Button', 'Snackbar']);
+  });
+
+  it('embeds the status legend once', () => {
+    const { statuses } = mergePlatformIndexes([web, mobile]);
+    assert.deepEqual(Object.keys(statuses), Object.keys(STATUSES));
+  });
+
+  // The index now describes every platform, so it cannot declare a single one.
+  it('declares no top-level platform', () => {
+    assert.ok(!('platform' in mergePlatformIndexes([web, mobile])));
+  });
+});
+
+describe('mergeSlices', () => {
+  const webSlices = [
+    { slug: 'button', data: { web: { rsp: { status: 'available' } } }, shared: false },
+    { slug: 'accordion', data: { web: { rsp: { status: 'available' } }, figmaPageId: '1:2' }, shared: false },
+  ];
+  const mobileSlices = [
+    { slug: 'button', data: { mobile: { ios: { status: 'available' } } }, shared: false },
+    { slug: 'snackbar', data: { mobile: { ios: { status: 'available' } } }, shared: false },
+  ];
+
+  it('carries both platforms on one slice when they share a slug', () => {
+    const merged = mergeSlices([webSlices, mobileSlices]).find((s) => s.slug === 'button');
+    assert.deepEqual(merged.data, {
+      web: { rsp: { status: 'available' } },
+      mobile: { ios: { status: 'available' } },
+    });
+  });
+
+  it('keeps a single-platform slice intact, including its figmaPageId', () => {
+    const merged = mergeSlices([webSlices, mobileSlices]);
+    assert.deepEqual(merged.find((s) => s.slug === 'accordion').data, {
+      web: { rsp: { status: 'available' } },
+      figmaPageId: '1:2',
+    });
+    assert.deepEqual(Object.keys(merged.find((s) => s.slug === 'snackbar').data), ['mobile']);
+  });
+
+  it('emits one slice per slug', () => {
+    const slugs = mergeSlices([webSlices, mobileSlices]).map((s) => s.slug);
+    assert.deepEqual(slugs.length, new Set(slugs).size);
+  });
+});
+
+describe('buildIndex with no present floor', () => {
+  const columns = [{ id: 'ios', label: 'iOS' }, { id: 'android', label: 'Android' }];
+  const roster = [{ name: 'Toolbar', label: 'Toolbar', sources: { ios: 'Toolbar', android: 'Toolbar' } }];
+  const authored = { 'ios:Toolbar': { status: 'not-available' } };
+
+  it('honours an authored Not available instead of flooring it to Available', () => {
+    const { index } = buildIndex({
+      roster,
+      readData: (source, name) => authored[`${source}:${name}`] ?? null,
+      columns,
+      platform: 'mobile',
+      presentFloor: null,
+    });
+    assert.deepEqual(index.components[0].platforms.mobile.ios, { status: 'not-available' });
+  });
+
+  it('still floors a source with no signal when a floor is configured', () => {
+    const { index } = buildIndex({
+      roster,
+      readData: () => null,
+      columns,
+      platform: 'mobile',
+      presentFloor: { ios: { status: 'available' } },
+    });
+    assert.deepEqual(index.components[0].platforms.mobile.ios, { status: 'available' });
   });
 });

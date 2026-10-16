@@ -1,0 +1,10 @@
+{
+  "Button": "Button",
+  "Extended FAB": "ExtendedFAB",
+  "Floating action button (FAB)": "FloatingActionButton",
+  "Icon button": "IconButton",
+  "Icon toggle button": "IconToggleButton",
+  "Snackbar": "Snackbar",
+  "Switch": "Switch",
+  "Toggle button": "ToggleButton"
+}

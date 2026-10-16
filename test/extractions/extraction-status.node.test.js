@@ -144,4 +144,14 @@ describe('getComponentStatus — extraction data shapes', () => {
   it('returns the doc status for an RSP component with a top-level status field', () => {
     assert.equal(getComponentStatus(rspWithDocStatusFixture), 'beta');
   });
+
+  // The mobile catalogs are flat prop-row arrays like SWC's, so they resolve through
+  // the same branch — there is no separate authored-status shape.
+  it('derives a mobile component\'s status from its prop rows, as it does for SWC', () => {
+    assert.equal(getComponentStatus([{ property: 'size', since: '2.0.0-beta.1' }]), 'stable');
+  });
+
+  it('returns null for a component catalog with no since-bearing row', () => {
+    assert.equal(getComponentStatus([{ property: 'size' }]), null);
+  });
 });
