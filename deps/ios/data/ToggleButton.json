@@ -1,0 +1,50 @@
+[
+  {
+    "property": "isSelected",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the button is in the selected state.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "size",
+    "type": "\"Small\" | \"Medium\" | \"Large\"",
+    "kind": "enum",
+    "values": [
+      "Small",
+      "Medium",
+      "Large"
+    ],
+    "optional": false,
+    "default": "'medium'",
+    "description": "The size of the button.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "style",
+    "type": "\"Primary\" | \"Secondary\" | \"Quiet\"",
+    "kind": "enum",
+    "values": [
+      "Primary",
+      "Secondary",
+      "Quiet"
+    ],
+    "optional": false,
+    "default": "'primary'",
+    "description": "The visual variant of the button.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the button responds to interaction.",
+    "since": "2.0.0-beta.1"
+  }
+]

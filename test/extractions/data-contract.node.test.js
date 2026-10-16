@@ -33,12 +33,18 @@ function allRows(impl) {
     .flatMap(({ component, rows }) => rows.map((row) => ({ ...row, id: `${component}.${row.property}` })));
 }
 
-for (const impl of ['rsp', 'swc']) {
+// The structural rules hold for every catalog under deps/*/data, whoever wrote it —
+// the playground builds controls from `kind`/`values` regardless of source. The
+// populated-catalog threshold is separate: it is a canary for an extraction that ran
+// and produced nothing, so it applies only to the extracted catalogs. ios/android are
+// hand-written placeholders until their extractions exist.
+for (const impl of ['rsp', 'swc', 'ios', 'android']) {
   describe(`deps/${impl}/data contract`, () => {
     const rows = allRows(impl);
 
     it('has rows to check', () => {
-      assert.ok(rows.length > 100, `expected a populated catalog, got ${rows.length} rows`);
+      const floor = ['rsp', 'swc'].includes(impl) ? 100 : 0;
+      assert.ok(rows.length > floor, `expected a populated catalog, got ${rows.length} rows`);
     });
 
     it('gives every row a known kind', () => {

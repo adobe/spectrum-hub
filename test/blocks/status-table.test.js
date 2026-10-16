@@ -175,6 +175,14 @@ describe('status-table block', () => {
       expect(stub.firstCall.args[0]).to.match(/\/deps\/status-index\.json$/);
     });
 
+    it('reads one combined index regardless of platform', async () => {
+      const stub = stubFetchOk();
+      const el = makeEl();
+      el.classList.add('mobile');
+      await init(el);
+      expect(stub.firstCall.args[0]).to.match(/\/deps\/status-index\.json$/);
+    });
+
     it('renders no table and logs when the fetch fails', async () => {
       sandbox.stub(window, 'fetch').resolves(new Response('', { status: 500 }));
       const logStub = sandbox.stub(getConfig(), 'log');
@@ -855,6 +863,202 @@ describe('status-table block', () => {
       expect(header).to.equal('Component,Figma,React Spectrum,Spectrum Web Components');
       expect(rows).to.include('Calendar,Not available,Available,Not available');
       expect(rows).to.include('Color Area,Available,Experimental,Not available (Use Gen1)');
+    });
+  });
+
+  // The index declares which platform it describes, so the block reads that platform's
+  // key rather than a hard-coded `web`. /mobile/status-table is the first consumer, but
+  // nothing below is mobile-specific — a third platform is a data change.
+  // One index describes every platform. The authored class on the block names which
+  // platform this instance renders; everything else — columns, labels, cells — still
+  // comes from the data under that key, so a third platform is a data change plus a class.
+  describe('platform', () => {
+    const COMBINED_INDEX = {
+      implementations: {
+        web: [
+          { id: 'figma', label: 'Figma' },
+          { id: 'rsp', label: 'React Spectrum' },
+        ],
+        mobile: [
+          { id: 'ios', label: 'iOS' },
+          { id: 'android', label: 'Android' },
+        ],
+      },
+      components: [
+        // Shipped on both: one row carrying both platform keys.
+        {
+          name: 'Button',
+          label: 'Button',
+          platforms: {
+            web: { figma: { status: 'available' }, rsp: { status: 'available' } },
+            mobile: { ios: { status: 'available' }, android: { status: 'available' } },
+          },
+        },
+        // Mobile only — must not appear in the web table.
+        {
+          name: 'Snackbar',
+          label: 'Snackbar',
+          platforms: {
+            mobile: {
+              ios: { status: 'available', secondary: 'Use Toast' },
+              android: { status: 'available' },
+            },
+          },
+        },
+        {
+          name: 'NavigationBar',
+          label: 'Navigation bar',
+          platforms: {
+            mobile: {
+              ios: { status: 'not-available', secondary: 'Use native component' },
+              android: { status: 'not-available' },
+            },
+          },
+        },
+        // Web only — must not appear in the mobile table.
+        {
+          name: 'Accordion',
+          label: 'Accordion',
+          platforms: {
+            web: { figma: { status: 'available' }, rsp: { status: 'experimental' } },
+          },
+        },
+      ],
+    };
+
+    const MOBILE_PAGES = {
+      data: [
+        { path: '/mobile/components/snackbar' },
+        { path: '/mobile/components/button' },
+        { path: '/web/rsp/components/button' },
+      ],
+    };
+
+    const initPlatform = async (platformClass, pages = MOBILE_PAGES) => {
+      stubFetchOk(COMBINED_INDEX, pages);
+      const el = makeEl();
+      if (platformClass) { el.classList.add(platformClass); }
+      await init(el);
+      return el;
+    };
+
+    const rowNames = (el) => [...el.querySelectorAll('tbody tr')]
+      .map((tr) => tr.querySelector('th .status-table-cell-value').textContent);
+    const rowNamed = (el, name) => [...el.querySelectorAll('tbody tr')]
+      .find((tr) => tr.querySelector('th .status-table-cell-value').textContent === name);
+
+    it('builds columns from the platform the class names', async () => {
+      const el = await initPlatform('mobile');
+      expect([...el.querySelectorAll('thead th')].map((th) => th.textContent))
+        .to.deep.equal(['Component', 'iOS', 'Android']);
+    });
+
+    it('builds the web columns when the block carries no platform class', async () => {
+      const el = await initPlatform(null);
+      expect([...el.querySelectorAll('thead th')].map((th) => th.textContent))
+        .to.deep.equal(['Component', 'Figma', 'React Spectrum']);
+    });
+
+    it('ignores a class that is not a platform in the index', async () => {
+      const el = await initPlatform('compact');
+      expect([...el.querySelectorAll('thead th')].map((th) => th.textContent))
+        .to.deep.equal(['Component', 'Figma', 'React Spectrum']);
+    });
+
+    // A combined index carries every platform's roster, and they barely overlap. A row
+    // that does not declare this platform has no cells to show, so it is not a row here.
+    it('renders only the components that ship on the named platform', async () => {
+      expect(rowNames(await initPlatform('mobile')).sort())
+        .to.deep.equal(['Button', 'Navigation bar', 'Snackbar']);
+    });
+
+    it('leaves a mobile-only component out of the web table', async () => {
+      expect(rowNames(await initPlatform(null)).sort()).to.deep.equal(['Accordion', 'Button']);
+    });
+
+    it('reads a shared row\'s cells from the named platform only', async () => {
+      const el = await initPlatform('mobile');
+      const labels = [...rowNamed(el, 'Button').querySelectorAll('td .status-table-label')]
+        .map((s) => s.textContent);
+      expect(labels).to.deep.equal(['Available', 'Available']);
+    });
+
+    it('renders the named platform\'s secondary guidance', async () => {
+      const el = await initPlatform('mobile');
+      const secondary = rowNamed(el, 'Snackbar').querySelector('td[data-col="ios"] .status-table-secondary');
+      expect(secondary.textContent).to.equal('Use Toast');
+    });
+
+    it('builds status cards from the named platform\'s cells only', async () => {
+      const el = await initPlatform('mobile');
+      const cards = [...el.querySelectorAll('.status-table-card')].map((c) => c.getAttribute('data-status'));
+      // Mobile has no experimental cell; web's Accordion does, and must not leak in.
+      expect(cards).to.deep.equal(['available', 'not-available']);
+    });
+
+    it('exports only the named platform\'s rows to CSV', async () => {
+      const el = await initPlatform('mobile');
+      let captured;
+      sandbox.stub(URL, 'createObjectURL').callsFake((blob) => {
+        captured = blob;
+        return 'blob:mock';
+      });
+      sandbox.stub(URL, 'revokeObjectURL');
+      sandbox.stub(window.HTMLAnchorElement.prototype, 'click');
+
+      el.querySelector('.status-table-export').click();
+
+      const text = await captured.text();
+      const [header, ...rows] = text.split('\r\n');
+      expect(header).to.equal('Component,iOS,Android');
+      expect(rows).to.include('Snackbar,Available (Use Toast),Available');
+      expect(rows.join('\n')).to.not.include('Accordion');
+    });
+
+    // Mobile publishes one page per component, shared by both platforms, so the route
+    // carries no implementation segment — unlike web, where each implementation owns its
+    // own page tree. The column still decides *whether* a cell links, via its status.
+    it('links an available mobile cell to the shared component page', async () => {
+      const el = await initPlatform('mobile');
+      const link = rowNamed(el, 'Snackbar').querySelector('td[data-col="ios"] a.status-table-link');
+      expect(link).to.not.be.null;
+      expect(link.getAttribute('href')).to.equal('/mobile/components/snackbar');
+    });
+
+    it('omits the implementation segment from a mobile route', async () => {
+      const el = await initPlatform('mobile');
+      for (const link of el.querySelectorAll('a.status-table-link')) {
+        expect(link.getAttribute('href')).to.not.match(/\/mobile\/(ios|android)\//);
+      }
+    });
+
+    // Deliberately redundant: both cells point at the same page. The accessible names
+    // still differ by implementation, so the two links are distinguishable out of context.
+    it('links both platform cells of an available row to the same page', async () => {
+      const el = await initPlatform('mobile');
+      const links = [...rowNamed(el, 'Button').querySelectorAll('a.status-table-link')];
+      expect(links.map((a) => a.getAttribute('href')))
+        .to.deep.equal(['/mobile/components/button', '/mobile/components/button']);
+      expect(new Set(links.map((a) => a.getAttribute('aria-label'))).size).to.equal(2);
+    });
+
+    // The real case this serves: iOS ships Snackbar and Android does not, so only one
+    // cell in the row is a link even though both would resolve to the same page.
+    it('does not link a not-available mobile cell whose row links elsewhere', async () => {
+      const el = await initPlatform('mobile');
+      expect(rowNamed(el, 'Navigation bar').querySelector('a.status-table-link')).to.be.null;
+    });
+
+    it('does not link a mobile cell whose page is absent from query-index', async () => {
+      const el = await initPlatform('mobile', { data: [] });
+      expect(el.querySelector('a.status-table-link')).to.be.null;
+    });
+
+    // The web route is unaffected by the mobile branch.
+    it('still routes a web cell through its implementation segment', async () => {
+      const el = await initPlatform(null);
+      const link = rowNamed(el, 'Button').querySelector('td[data-col="rsp"] a.status-table-link');
+      expect(link.getAttribute('href')).to.equal('/web/rsp/components/button');
     });
   });
 });

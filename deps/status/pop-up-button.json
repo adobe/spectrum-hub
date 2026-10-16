@@ -1,0 +1,11 @@
+{
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "context": "Stable"
+    },
+    "android": {
+      "status": "not-available"
+    }
+  }
+}

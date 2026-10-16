@@ -106,5 +106,59 @@
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
     }
+  },
+  "IconButton": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "figmaPageSource": "Cards (Asset)",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+   "FloatingActionButtonFAB": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "figmaPageSource": "Floating Action Button (FAB)",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+  "ExtendedFAB": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "figmaPageSource": "Extended FAB",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+  "IconToggleButton": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "figmaPageSource": "Floating Action Button (FAB)",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+  "Snackbar": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "figmaPageSource": "Toast",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+  "Toast": {
+    "mobile": {
+      "android": {
+        "status": "available",
+        "figmaPageSource": "Snackbar",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
   }
 }

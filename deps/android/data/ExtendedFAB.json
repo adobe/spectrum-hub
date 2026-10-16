@@ -1,0 +1,43 @@
+[
+  {
+    "property": "label",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The label shown beside the icon.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "icon",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The leading icon name.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "expanded",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "true",
+    "description": "Whether the label is visible alongside the icon.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "size",
+    "type": "\"Medium\" | \"Large\"",
+    "kind": "enum",
+    "values": [
+      "Medium",
+      "Large"
+    ],
+    "optional": false,
+    "default": "'medium'",
+    "description": "The size of the floating action button.",
+    "since": "1.0.0"
+  }
+]

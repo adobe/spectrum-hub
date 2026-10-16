@@ -1,0 +1,44 @@
+[
+  {
+    "property": "selection",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The currently selected option.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "size",
+    "type": "\"Small\" | \"Medium\" | \"Large\"",
+    "kind": "enum",
+    "values": [
+      "Small",
+      "Medium",
+      "Large"
+    ],
+    "optional": false,
+    "default": "'medium'",
+    "description": "The size of the picker.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the picker accepts input.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "placeholder",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": true,
+    "description": "Text shown before a selection is made.",
+    "since": "2.0.0-beta.1"
+  }
+]
