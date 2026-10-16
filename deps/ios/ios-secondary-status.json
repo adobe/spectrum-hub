@@ -1,0 +1,9 @@
+[
+  { "name": "Icon button", "context": "Use properties within Button" },
+  { "name": "Floating action button (FAB)", "context": "Use properties within Button" },
+  { "name": "Extended FAB", "context": "Use properties within Button" },
+  { "name": "Icon toggle button", "context": "Use properties within Toggle button" },
+  { "name": "Navigation bar", "context": "Use native component" },
+  { "name": "Snackbar", "context": "Use Toast" },
+  { "name": "Toolbar", "context": "Use native component" }
+]
