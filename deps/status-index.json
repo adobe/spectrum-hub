@@ -730,24 +730,6 @@
       }
     },
     {
-      "name": "Icon",
-      "label": "Icon",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available",
-            "context": "Stable"
-          }
-        }
-      }
-    },
-    {
       "name": "IllustratedMessage",
       "label": "Illustrated Message",
       "platforms": {
@@ -1503,24 +1485,6 @@
           },
           "swc": {
             "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "UiIcon",
-      "label": "Ui Icon",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "available",
-            "context": "Stable"
           }
         }
       }
