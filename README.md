@@ -10,7 +10,7 @@ Our mission is to deepen Spectrum’s adoption through a multi‑platform websit
 
 Spectrum Hub is built on AEM Edge Delivery Services. Getting started takes a matter of seconds.
 
-Local development requires Node.js 20 and npm.
+Local development requires Node.js 24 and npm.
 
 1. Clone this project to your computer.
 1. Install the AEM CLI using your terminal: `sudo npm install -g @adobe/aem-cli`

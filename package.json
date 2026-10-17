@@ -28,6 +28,9 @@
   },
   "author": "Adobe",
   "license": "Apache License 2.0",
+  "engines": {
+    "node": ">=24.15 <25"
+  },
   "bugs": {
     "url": "https://github.com/adobe/spectrum-hub/issues"
   },
