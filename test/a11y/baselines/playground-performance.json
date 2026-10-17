@@ -1,0 +1,2072 @@
+{
+  "label": "deterministic",
+  "mode": "deterministic",
+  "sourceRevision": "56a9012eece6cbb08a04638d30c778c24ecf8516",
+  "runs": [
+    {
+      "requests": [
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground-data.js",
+          "resourceType": "Script",
+          "encodedDataLength": 5697
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1727
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.js",
+          "resourceType": "Script",
+          "encodedDataLength": 11231
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/lit/dist/index.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6361
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=badge&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=button&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/badge.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 79
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/button.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 82
+        },
+        {
+          "url": "http://localhost:3001/deps/se/buttons.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 1179
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 4350
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.js",
+          "resourceType": "Script",
+          "encodedDataLength": 4439
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/img/icons/s2-icon-copy-20-n.svg",
+          "resourceType": "Image",
+          "encodedDataLength": 279
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=components",
+          "resourceType": "Fetch",
+          "encodedDataLength": 152
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=controls",
+          "resourceType": "Fetch",
+          "encodedDataLength": 76
+        },
+        {
+          "url": "http://localhost:3001/scripts/ak.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6560
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/implementations.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1541
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/styles.js",
+          "resourceType": "Script",
+          "encodedDataLength": 932
+        },
+        {
+          "url": "http://localhost:3001/styles/styles.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 7001
+        },
+        {
+          "url": "http://localhost:3001/test/a11y/fixtures/playground-multiple.html",
+          "resourceType": "Document",
+          "encodedDataLength": 931
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Badge,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Button,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        }
+      ],
+      "totals": {
+        "requests": 80,
+        "encodedDataLength": 227673
+      },
+      "marks": {
+        "firstShellReady": null,
+        "firstPreviewInit": null,
+        "firstPreviewMounted": 92.2000000178814
+      }
+    },
+    {
+      "requests": [
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground-data.js",
+          "resourceType": "Script",
+          "encodedDataLength": 5697
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1727
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.js",
+          "resourceType": "Script",
+          "encodedDataLength": 11231
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/lit/dist/index.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6361
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=badge&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=button&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/badge.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 79
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/button.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 82
+        },
+        {
+          "url": "http://localhost:3001/deps/se/buttons.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 1179
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 4350
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.js",
+          "resourceType": "Script",
+          "encodedDataLength": 4439
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/img/icons/s2-icon-copy-20-n.svg",
+          "resourceType": "Image",
+          "encodedDataLength": 279
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=components",
+          "resourceType": "Fetch",
+          "encodedDataLength": 152
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=controls",
+          "resourceType": "Fetch",
+          "encodedDataLength": 76
+        },
+        {
+          "url": "http://localhost:3001/scripts/ak.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6560
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/implementations.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1541
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/styles.js",
+          "resourceType": "Script",
+          "encodedDataLength": 932
+        },
+        {
+          "url": "http://localhost:3001/styles/styles.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 7001
+        },
+        {
+          "url": "http://localhost:3001/test/a11y/fixtures/playground-multiple.html",
+          "resourceType": "Document",
+          "encodedDataLength": 931
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Badge,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Button,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        }
+      ],
+      "totals": {
+        "requests": 80,
+        "encodedDataLength": 227673
+      },
+      "marks": {
+        "firstShellReady": null,
+        "firstPreviewInit": null,
+        "firstPreviewMounted": 79.90000000596046
+      }
+    },
+    {
+      "requests": [
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground-data.js",
+          "resourceType": "Script",
+          "encodedDataLength": 5697
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1727
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.js",
+          "resourceType": "Script",
+          "encodedDataLength": 11231
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/lit/dist/index.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6361
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=badge&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=button&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/badge.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 79
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/button.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 82
+        },
+        {
+          "url": "http://localhost:3001/deps/se/buttons.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 1179
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 4350
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.js",
+          "resourceType": "Script",
+          "encodedDataLength": 4439
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/img/icons/s2-icon-copy-20-n.svg",
+          "resourceType": "Image",
+          "encodedDataLength": 279
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=components",
+          "resourceType": "Fetch",
+          "encodedDataLength": 152
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=controls",
+          "resourceType": "Fetch",
+          "encodedDataLength": 76
+        },
+        {
+          "url": "http://localhost:3001/scripts/ak.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6560
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/implementations.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1541
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/styles.js",
+          "resourceType": "Script",
+          "encodedDataLength": 932
+        },
+        {
+          "url": "http://localhost:3001/styles/styles.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 7001
+        },
+        {
+          "url": "http://localhost:3001/test/a11y/fixtures/playground-multiple.html",
+          "resourceType": "Document",
+          "encodedDataLength": 931
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Badge,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Button,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        }
+      ],
+      "totals": {
+        "requests": 80,
+        "encodedDataLength": 227673
+      },
+      "marks": {
+        "firstShellReady": null,
+        "firstPreviewInit": null,
+        "firstPreviewMounted": 80
+      }
+    },
+    {
+      "requests": [
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground-data.js",
+          "resourceType": "Script",
+          "encodedDataLength": 5697
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1727
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.js",
+          "resourceType": "Script",
+          "encodedDataLength": 11231
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/lit/dist/index.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6361
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=badge&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=button&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/badge.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 79
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/button.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 82
+        },
+        {
+          "url": "http://localhost:3001/deps/se/buttons.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 1179
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 4350
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.js",
+          "resourceType": "Script",
+          "encodedDataLength": 4439
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/img/icons/s2-icon-copy-20-n.svg",
+          "resourceType": "Image",
+          "encodedDataLength": 279
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=components",
+          "resourceType": "Fetch",
+          "encodedDataLength": 152
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=controls",
+          "resourceType": "Fetch",
+          "encodedDataLength": 76
+        },
+        {
+          "url": "http://localhost:3001/scripts/ak.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6560
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/implementations.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1541
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/styles.js",
+          "resourceType": "Script",
+          "encodedDataLength": 932
+        },
+        {
+          "url": "http://localhost:3001/styles/styles.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 7001
+        },
+        {
+          "url": "http://localhost:3001/test/a11y/fixtures/playground-multiple.html",
+          "resourceType": "Document",
+          "encodedDataLength": 931
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Badge,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Button,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        }
+      ],
+      "totals": {
+        "requests": 80,
+        "encodedDataLength": 227673
+      },
+      "marks": {
+        "firstShellReady": null,
+        "firstPreviewInit": null,
+        "firstPreviewMounted": 83.19999998807907
+      }
+    },
+    {
+      "requests": [
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/__internal__/livereload.js",
+          "resourceType": "Script",
+          "encodedDataLength": 37435
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground-data.js",
+          "resourceType": "Script",
+          "encodedDataLength": 5697
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1727
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/playground.js",
+          "resourceType": "Script",
+          "encodedDataLength": 11231
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-params.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1322
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/blocks/playground/preview-shell.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 1302
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/impl-component-names.js",
+          "resourceType": "Script",
+          "encodedDataLength": 883
+        },
+        {
+          "url": "http://localhost:3001/deps/lit/dist/index.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6361
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Badge.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/data/Button.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 77
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/apply-rsp-prop.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1145
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/build-composite-element.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1404
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/compose-preview-children.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1038
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=badge&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/index.html?component=button&implementation=rsp",
+          "resourceType": "Document",
+          "encodedDataLength": 5422
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/overlay-triggers.js",
+          "resourceType": "Script",
+          "encodedDataLength": 2158
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/pascal-case.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1301
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-color-scheme.js",
+          "resourceType": "Script",
+          "encodedDataLength": 724
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/resolve-stylesheet-hrefs.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1215
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/badge.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 79
+        },
+        {
+          "url": "http://localhost:3001/deps/rsp/playground/snippets/button.jsx",
+          "resourceType": "Fetch",
+          "encodedDataLength": 82
+        },
+        {
+          "url": "http://localhost:3001/deps/se/buttons.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 1179
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.css",
+          "resourceType": "Fetch",
+          "encodedDataLength": 4350
+        },
+        {
+          "url": "http://localhost:3001/deps/se/se.js",
+          "resourceType": "Script",
+          "encodedDataLength": 4439
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/apply-attribute.js",
+          "resourceType": "Script",
+          "encodedDataLength": 848
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/build-icon-svg.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1218
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/icon-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 557
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/prop-listener.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1025
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/shared-fonts.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 945
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/text-keys.js",
+          "resourceType": "Script",
+          "encodedDataLength": 823
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/theme-sync.js",
+          "resourceType": "Script",
+          "encodedDataLength": 941
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/deps/shared/playground/unset-control-options.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1204
+        },
+        {
+          "url": "http://localhost:3001/img/icons/s2-icon-copy-20-n.svg",
+          "resourceType": "Image",
+          "encodedDataLength": 279
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=components",
+          "resourceType": "Fetch",
+          "encodedDataLength": 152
+        },
+        {
+          "url": "http://localhost:3001/playground-data.json?sheet=controls",
+          "resourceType": "Fetch",
+          "encodedDataLength": 76
+        },
+        {
+          "url": "http://localhost:3001/scripts/ak.js",
+          "resourceType": "Script",
+          "encodedDataLength": 6560
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/implementations.js",
+          "resourceType": "Script",
+          "encodedDataLength": 1541
+        },
+        {
+          "url": "http://localhost:3001/scripts/utils/styles.js",
+          "resourceType": "Script",
+          "encodedDataLength": 932
+        },
+        {
+          "url": "http://localhost:3001/styles/styles.css",
+          "resourceType": "Stylesheet",
+          "encodedDataLength": 7001
+        },
+        {
+          "url": "http://localhost:3001/test/a11y/fixtures/playground-multiple.html",
+          "resourceType": "Document",
+          "encodedDataLength": 931
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@1.0.0-test/flat",
+          "resourceType": "Fetch",
+          "encodedDataLength": 199
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Badge,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2@1.0.0-test?bundle&exports=Button,Provider,Text&deps=react@19.0.0,react-dom@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 222
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/@react-spectrum/s2/package.json",
+          "resourceType": "Fetch",
+          "encodedDataLength": 158
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react-dom@19.0.0/client",
+          "resourceType": "Script",
+          "encodedDataLength": 157
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        },
+        {
+          "url": "https://esm.sh/react@19.0.0",
+          "resourceType": "Script",
+          "encodedDataLength": 273
+        }
+      ],
+      "totals": {
+        "requests": 80,
+        "encodedDataLength": 227673
+      },
+      "marks": {
+        "firstShellReady": null,
+        "firstPreviewInit": null,
+        "firstPreviewMounted": 91
+      }
+    }
+  ]
+}

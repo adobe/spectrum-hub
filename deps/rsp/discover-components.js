@@ -9,21 +9,22 @@
  * Usage: node deps/rsp/discover-components.js
  */
 
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { runtimeSourceVersion } from './generate-playground-runtime-manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_FILE = join(__dirname, 'components.json');
-// Unpinned, like extract-props.js — always tracks latest published @react-spectrum/s2.
-const META_URLS = [
-  'https://unpkg.com/@react-spectrum/s2/dist/types/src/?meta',
-  'https://cdn.jsdelivr.net/npm/@react-spectrum/s2/dist/types/src/?meta',
-];
-const TYPES_BASE_URLS = [
-  (path) => `https://unpkg.com/@react-spectrum/s2/dist/types/src/${path}`,
-  (path) => `https://cdn.jsdelivr.net/npm/@react-spectrum/s2/dist/types/src/${path}`,
-];
+const RUNTIME_MANIFEST_FILE = join(__dirname, 'playground/runtime-manifest.json');
+export function publishedTypeUrls(packageVersion, path = '?meta') {
+  if (!packageVersion?.trim()) throw new Error('A package version is required for RSP discovery.');
+  const suffix = path === '?meta' ? '?meta' : path;
+  return [
+    `https://unpkg.com/@react-spectrum/s2@${packageVersion}/dist/types/src/${suffix}`,
+    `https://cdn.jsdelivr.net/npm/@react-spectrum/s2@${packageVersion}/dist/types/src/${suffix}`,
+  ];
+}
 
 const SKIP_FILES = /^(bar-utils|style-utils|useDOMRef|intl|CenterBaseline|pressScale|Content|Field|Provider|Tree|Collection|Fonts|ImageCoordinator)$/;
 
@@ -90,7 +91,9 @@ export function buildEntry(componentName, fileName, source) {
 }
 
 async function main() {
-  const meta = JSON.parse(await fetchFirst(META_URLS));
+  const runtimeManifest = JSON.parse(readFileSync(RUNTIME_MANIFEST_FILE, 'utf8'));
+  const packageVersion = runtimeSourceVersion(runtimeManifest, 's2');
+  const meta = JSON.parse(await fetchFirst(publishedTypeUrls(packageVersion)));
   const files = meta.files
     .map((f) => f.path.replace('/dist/types/src/', '').replace('.d.ts', ''))
     .filter((name) => /^[A-Z]/.test(name) && !SKIP_FILES.test(name))
@@ -99,7 +102,7 @@ async function main() {
   const components = {};
 
   for (const fileName of files) {
-    const source = await fetchFirst(TYPES_BASE_URLS.map((b) => b(`${fileName}.d.ts`)));
+    const source = await fetchFirst(publishedTypeUrls(packageVersion, `${fileName}.d.ts`));
 
     for (const componentName of findExportedNames(source)) {
       const entry = buildEntry(componentName, fileName, source);
