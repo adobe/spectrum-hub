@@ -72,15 +72,80 @@ Full-page screenshot stitching changes the site's fixed and sticky navigation st
 
 Add a mask only after two runs demonstrate that a specific region changes independently of repository code. Keep the selector page-specific and document the reason beside the manifest entry.
 
-## Why Linux CI owns baselines
+## Why pinned Linux owns baselines
 
-Screenshots vary across operating systems because font rasterization and browser rendering differ. Pull request checks run in a pinned Playwright container on Ubuntu, so approved baselines must come from the same environment.
+Screenshots vary across operating systems because font rasterization and browser rendering differ. Pull request checks run in a pinned Playwright container on Ubuntu, so approved baselines must come from that same environment.
 
-Local macOS screenshots are not approved baselines. Only the manual Ubuntu baseline workflow produces committable baselines.
+Local macOS screenshots are useful for diagnosis, but they are not approved baselines. Generate committable baselines in the pinned Linux Playwright container, either through the local Docker commands or the manual GitHub Actions workflows.
+
+## Reviewing differences in a browser
+
+Docker must be running. Start Playwright UI mode in the pinned Linux container:
+
+```bash
+npm run test:visual:review
+```
+
+Open `http://127.0.0.1:9323`, run the affected tests, and inspect the expected, actual, and diff attachments. The expected-image view includes an overlay slider for comparing the images.
+
+Narrow the review with normal Playwright file, title, and project filters:
+
+```bash
+npm run test:visual:review -- \
+  test/visual/blocks/card.spec.js \
+  --project=desktop-light
+```
+
+Review mode forces `--update-snapshots=none`. It cannot create or replace a baseline. Stop the command with `Ctrl+C` when review is complete.
+
+For a deployed preview, provide the commit-specific URL explicitly:
+
+```bash
+VISUAL_BASE_URL=https://<commit-preview-host> \
+  npm run test:visual:deployed:review -- \
+  pattern-library.spec.js \
+  --project=desktop-light
+```
+
+The deployed command never falls back to localhost or production.
+
+## Approving an intentional change
+
+Playwright does not provide an approval button in UI mode. After reviewing an intentional change, update only the accepted test and project:
+
+```bash
+npm run test:visual:approve -- \
+  test/visual/blocks/card.spec.js \
+  --project=desktop-light
+```
+
+A title filter is also supported:
+
+```bash
+npm run test:visual:approve -- \
+  --grep='card default' \
+  --project=desktop-light
+```
+
+Approval requires a test-file or title filter. A project or worker option alone is rejected so the command cannot replace a broad baseline set accidentally. The command also rejects overrides for its Playwright configuration, UI, and snapshot-update options.
+
+Use the separate deployed command for a commit-specific preview:
+
+```bash
+VISUAL_BASE_URL=https://<commit-preview-host> \
+  npm run test:visual:deployed:approve -- \
+  pattern-library.spec.js \
+  --grep='pattern-library-buttons' \
+  --project=desktop-light
+```
+
+After an update, inspect `git status`, the PNG changes, and the related source change. Baseline changes are reviewed as source changes. Do not approve a PNG only to make a check pass.
+
+Rejecting a regression means leaving the baseline unchanged, fixing the implementation or the source of nondeterminism, and rerunning the comparison.
 
 ## Generating baseline artifacts
 
-Push the branch, then dispatch the manual workflow:
+The manual workflows remain available when Docker is unavailable or when the team needs a shared baseline artifact. Push the branch, then dispatch the local-suite workflow:
 
 ```bash
 gh workflow run visual-baselines.yml --ref <branch>
@@ -88,7 +153,7 @@ gh workflow run visual-baselines.yml --ref <branch>
 
 Download the `visual-baselines-<commit-sha>` artifact from the completed workflow run. It contains PNG files under `test/visual/**/*-snapshots/`. Copy the reviewed files into the same paths in the branch.
 
-The workflow never commits or pushes. It only generates and uploads an artifact, retained for 30 days.
+The workflow uses the same pinned Playwright image as the local Docker commands. It never commits or pushes. It only generates and uploads an artifact, retained for 30 days.
 
 `workflow_dispatch` can run a workflow only after its workflow file exists on the default branch. For the initial rollout, land the VRT infrastructure without baselines first. Then create a follow-up branch, run the manual workflow from that branch, import the artifact, and submit the baselines for review.
 
@@ -106,7 +171,7 @@ The workflow validates the URL, runs only `test/visual/deployed/`, and uploads a
 
 During review, confirm that the preview serves the intended commit and that a second workflow run produces identical screenshots. Do not approve deployed baselines containing personalized data, timestamps, experiments, loading states, or independently changing remote content.
 
-## Reviewing expected, actual, and diff images
+## Reviewing CI artifacts
 
 Open the HTML report after a failed run:
 
@@ -125,7 +190,7 @@ Inspect the images together. Confirm that the expected image represents intentio
 3. Use `defineVisualFixture()` with an exact fixture path, a readiness condition, and the narrowest meaningful visual root.
 4. Add separate tests for meaningful states that require interaction or different mocked data.
 5. Run `npm run test:visual:unit` to confirm fixture coverage.
-6. Generate Ubuntu baselines with the manual workflow and review every PNG.
+6. Generate pinned Linux baselines with a targeted approval command or the manual workflow, then review every changed PNG.
 
 Every new supported HTML fixture must add VRT coverage or a reasoned no-rendering exemption.
 
@@ -163,8 +228,9 @@ The pull request workflow compares the committed Ubuntu baselines but remains no
 
 ## Troubleshooting
 
-- **No baseline exists:** Follow the initial-rollout sequence above or run the manual Ubuntu workflow for a branch after the workflow exists on `main`.
-- **A local macOS comparison fails:** Use local output for diagnosis. Generate any committable baseline in the Ubuntu workflow.
+- **No baseline exists:** Use a targeted approval command or run the manual Ubuntu workflow for a branch after the workflow exists on `main`.
+- **Docker is unavailable:** Use local output for diagnosis and the manual Ubuntu workflow for committable baselines.
+- **A local macOS comparison fails:** Use local output for diagnosis. Reproduce and update any committable baseline in the pinned Linux container.
 - **The expected image is missing from the report:** Confirm that the PNG is beside its spec in the expected `*-snapshots/` directory and includes the project name.
 - **A fixture times out:** Verify its route mocks and `readySelector`. Avoid fixed sleeps.
 - **Images or fonts shift between runs:** Use stable image data, wait for the final rendered state, and confirm all external requests are mocked.

@@ -1466,3 +1466,65 @@ Update `test/visual/README.md` with:
 - The full-page capture policy.
 - The rule that masks require demonstrated volatility and an inline reason.
 - The process for adding another pattern-library route.
+
+---
+
+### Task 14: Add browser review and targeted baseline approval
+
+**Files:**
+- Create: `test/visual/review-command.js`
+- Create: `test/visual/review.js`
+- Create: `test/visual/review-command.node.test.js`
+- Modify: `package.json`
+- Modify: `test/visual/README.md`
+
+- [x] **Step 1: Add a tested pinned-container command builder**
+
+Build Docker arguments as an array rather than a shell string. Keep forwarded Playwright filters and `VISUAL_BASE_URL` as separate arguments.
+
+The command builder:
+
+- Uses `mcr.microsoft.com/playwright:v1.62.1-noble`.
+- Selects the local or deployed configuration explicitly.
+- Binds Playwright UI to `127.0.0.1`.
+- Forces `--update-snapshots=none` in review mode.
+- Rejects wrapper-owned configuration, UI, and snapshot options.
+- Requires a test-file or title filter before approval.
+- Requires an explicit HTTP or HTTPS `VISUAL_BASE_URL` for deployed commands.
+
+- [x] **Step 2: Add local and deployed npm commands**
+
+Add:
+
+```text
+npm run test:visual:review
+npm run test:visual:approve
+npm run test:visual:deployed:review
+npm run test:visual:deployed:approve
+```
+
+Review commands open Playwright UI mode. Approval commands rerun only the selected test with `--update-snapshots`.
+
+- [x] **Step 3: Document review, approval, and rejection**
+
+Document:
+
+- Expected, actual, diff, and overlay review in Playwright UI mode.
+- File, title, and project filter examples.
+- The requirement to inspect changed PNGs in Git.
+- Rejection as a source fix without a baseline update.
+- The manual GitHub Actions workflows as the fallback when Docker is unavailable.
+
+- [ ] **Step 4: Verify the interactive Docker workflow**
+
+Start Docker, create one controlled fixture mismatch, and run a single desktop-light scenario in review mode.
+
+Expected:
+
+- UI mode is available only at `http://127.0.0.1:9323`.
+- The failure includes expected, actual, and diff attachments.
+- Review mode does not modify a baseline.
+- Project-only approval is rejected before Docker starts.
+- A file-targeted no-change approval passes without modifying unrelated snapshots.
+
+This step remains pending because the Docker daemon was unavailable during implementation.

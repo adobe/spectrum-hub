@@ -108,19 +108,41 @@ Normal pull request runs never approve or update baselines. A missing baseline f
 
 ## Baseline ownership
 
-Linux-generated baselines are committed beside the visual specs. They are reviewed as source-controlled test expectations.
+Baselines generated in the pinned Linux Playwright environment are committed beside the visual specs. They are reviewed as source-controlled test expectations.
 
 A manually dispatched GitHub Actions workflow runs the same Node, Playwright, Chromium, font, viewport, and operating-system environment as pull request VRT. It invokes Playwright with `--update-snapshots` and uploads the generated baseline directories as an artifact. The workflow never commits or pushes.
 
+## Browser review and targeted approval
+
+The project keeps Playwright as both the screenshot runner and comparison engine. It does not add BackstopJS or an external review service only to provide an approval interface.
+
+Playwright UI mode provides the browser review surface. Reviewers can filter failed tests and inspect the expected, actual, and diff attachments with the image overlay slider. Repository commands start UI mode in the same pinned Linux Playwright container used by CI so a reviewer can reproduce failures without creating macOS-specific candidates. The pinned environment, whether it runs locally or in GitHub Actions, is authoritative.
+
+Playwright does not provide a browser approval button. Approval remains a separate, explicit command that reruns only the selected test and project with `--update-snapshots` in the pinned container. The command accepts Playwright's normal file, title, and project filters instead of promoting every changed screenshot from the latest run.
+
+The deterministic local suite and deployed suite have separate review and approval commands because they use different Playwright configurations and snapshot directories. Deployed commands require an explicit `VISUAL_BASE_URL` and pass it into the container. They never fall back to localhost or production.
+
+This split is intentional:
+
+- The browser supports diagnosis and review.
+- The targeted update command creates candidate Linux baselines.
+- The Git diff shows exactly which PNG files changed.
+- Code review and the baseline commit provide the final approval boundary.
+
+Rejecting a regression does not change a baseline. The developer fixes the implementation or removes the source of nondeterminism, then reruns the comparison. Reviewers must not update snapshots only to make a failed check pass.
+
+The existing manual GitHub Actions baseline workflows remain available when Docker is unavailable or when a shared CI artifact is preferable. Both paths use the same pinned Playwright image and produce the same repository-owned snapshot paths.
+
 To approve an intentional visual change, a developer:
 
-1. Dispatches the baseline-update workflow for the change branch.
-2. Downloads the generated artifact.
-3. Reviews the changed images.
-4. Copies the approved baselines into the branch.
-5. Commits the baseline changes with the implementation.
+1. Reproduces and reviews the failure in Playwright UI mode.
+2. Runs the targeted baseline-update command for the accepted test and project.
+3. Reviews the changed PNG files in Git.
+4. Commits the baseline changes with the implementation.
 
-Local macOS runs are useful for authoring and debugging, but Linux CI is authoritative for baseline creation and comparison. The baseline artifact records whether it came from the deterministic local suite or the deployed preview suite. The two baseline sets remain separate.
+Alternatively, the developer can dispatch the baseline-update workflow, download its artifact, review the generated images, and copy the accepted files into the branch.
+
+Local macOS runs are useful for authoring and debugging, but the pinned Linux Playwright environment is authoritative for baseline creation and comparison. The baseline artifact records whether it came from the deterministic local suite or the deployed preview suite. The two baseline sets remain separate.
 
 ## Continuous integration
 
