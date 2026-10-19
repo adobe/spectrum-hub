@@ -29,7 +29,11 @@ export default defineConfig({
   testDir: './test/e2e',
   testMatch: '**/*.spec.js',
   fullyParallel: true,
-  retries: process.env.CI ? 1 : 0,
+  // The .aem.live origin rate-limits bursts, and a throttled 429 reads as a
+  // site failure. A deployed run therefore goes one page at a time and retries,
+  // while the local aem up default keeps Playwright's full parallelism.
+  workers: deployedURL ? 1 : undefined,
+  retries: (deployedURL || process.env.CI) ? 2 : 0,
   reporter: process.env.CI
     ? [['github'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]]
     : [['list'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]],

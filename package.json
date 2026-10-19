@@ -18,6 +18,7 @@
     "test:a11y": "playwright test",
     "test:e2e": "playwright test --config=playwright.smoke.config.js",
     "test:e2e:ui": "playwright test --config=playwright.smoke.config.js --ui",
+    "test:e2e:deployed": "PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://main--spectrum-hub--adobe.aem.live} playwright test --config=playwright.smoke.config.js",
     "test:links:local": "playwright test --config=playwright.link-check.config.js",
     "test:links:deployed": "LINKCHECK_BASE_URL=${LINKCHECK_BASE_URL:-https://main--spectrum-hub--adobe.aem.live} playwright test --config=playwright.link-check.config.js",
     "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js",
