@@ -122,6 +122,19 @@ npx playwright install chromium
 npm run test:a11y
 ```
 
+To run the Pattern Library smoke tests in Chromium, Firefox, and WebKit:
+
+```bash
+npx playwright install chromium firefox webkit
+npm run test:e2e
+```
+
+The smoke command starts a local `aem up` server that proxies public content
+from the main `.aem.live` origin. Set
+`PLAYWRIGHT_BASE_URL=https://<branch>--spectrum-hub--adobe.aem.live` to test a
+deployed environment instead. See [`docs/TESTS.md`](./docs/TESTS.md) for the
+route list, fixture conventions, and guidance on choosing a test suite.
+
 ## How engineering and content merge
 
 ```mermaid
