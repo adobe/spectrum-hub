@@ -347,3 +347,19 @@ If the block fetches remote data at runtime, add a `routes` array to the `block`
 The rare block that renders arbitrary passthrough content with no fixed structure to assert against (e.g. `fragment`) can be exempted instead of given a spec file — see the `EXCLUDED` set in `test/a11y/coverage.spec.js`. This should be an explicit, justified exception, not a default.
 
 For fixture-specific requirements such as `setConfig`, the fixture-markup gotchas in full, and what to update when an existing block's behavior changes, see [`test/a11y/README.md`](../../../test/a11y/README.md).
+
+### Pattern Library page contract tests
+
+Unit and accessibility tests remain mandatory for every new block. Page
+contract coverage is conditional.
+
+Add or update
+[`test/e2e/pattern-library.spec.js`](../../../test/e2e/pattern-library.spec.js)
+only when the block has a representative Pattern Library route and the change
+affects its full-page composition contract. Use a stable repository-owned
+selector that appears after decoration. Do not use the authored block root when
+it exists before `init(el)` completes.
+
+Run `npm run test:e2e` when the page contract changes. See
+[Pattern Library page contract tests](../../../docs/TESTS.md#pattern-library-page-contract-tests)
+for route, selector, local-server, and deployed-URL guidance.

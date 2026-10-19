@@ -19,7 +19,8 @@ Install Chromium for accessibility and link-check tests:
 npx playwright install chromium
 ```
 
-Install all three browsers before running the end-to-end smoke suite:
+Install all three browsers before running the Pattern Library page contract
+suite:
 
 ```bash
 npx playwright install chromium firefox webkit
@@ -38,9 +39,9 @@ CI adds `--with-deps` because Linux runners also need browser system packages.
 | `npm run test:indexer` | `test/indexer/` Node tests | Algolia index-record changes |
 | `npm run test:links:unit` | `test/link-check/lib/` Node tests | Link crawler logic without crawling a site |
 | `npm run test:a11y` | Playwright axe scans and accessibility-tree snapshots | Block, shared page structure, and custom-element accessibility |
-| `npm run test:e2e` | Pattern Library smoke tests in Chromium, Firefox, and WebKit | Full-page composition and stable block hooks |
-| `npm run test:e2e:ui` | The smoke suite in Playwright UI mode | Local smoke-test authoring and debugging |
-| `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same smoke suite against a deployed site | Branch preview or production validation |
+| `npm run test:e2e` | Pattern Library page contract tests in Chromium, Firefox, and WebKit | Full-page composition and stable route hooks |
+| `npm run test:e2e:ui` | The page contract suite in Playwright UI mode | Local contract-test authoring and debugging |
+| `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same page contract suite against a deployed site | Branch preview or production validation |
 | `npm run test:links:local` | Playwright crawl against local `aem up` | Full navigation/link validation |
 | `LINKCHECK_BASE_URL=<url> npm run test:links:deployed` | Playwright crawl against a deployed site | Branch preview or production validation |
 | `npm run lint` | JavaScript and CSS lint | Pull-request validation |
@@ -48,7 +49,7 @@ CI adds `--with-deps` because Linux runners also need browser system packages.
 | `npm run lint:css` | Stylelint only | CSS iteration |
 
 `npm test` is the core suite, not the full suite. It does not run Playwright
-accessibility scans, end-to-end smoke tests, full link crawls, lint, or the two
+accessibility scans, page contract tests, full link crawls, lint, or the two
 edge packages under `workers/` (see [Edge tests](#edge-tests)).
 
 ## Browser unit tests
@@ -121,7 +122,7 @@ Read [`test/a11y/README.md`](../test/a11y/README.md) before adding or changing a
 fixture. It documents the page harness, route mocks, authored-markup constraints,
 snapshot conventions, and known issues.
 
-## End-to-end smoke tests
+## Pattern Library page contract tests
 
 `test/e2e/` uses Playwright to verify that representative Pattern Library pages
 load and compose stable repository-owned block hooks. The initial routes are:
@@ -183,19 +184,20 @@ npm run test:e2e -- --project=firefox --workers=1
 ```
 
 Use Web Test Runner for focused JavaScript behavior that can be expressed with
-an isolated DOM. Use the smoke suite when a regression would appear only after
-a complete page loads and decorates its blocks. Keep smoke assertions on
-repository-owned classes or data attributes. Do not assert exact copy,
+an isolated DOM. Use the page contract suite when a regression would appear
+only after a complete page loads and decorates its blocks. Keep contract
+assertions on repository-owned classes or data attributes. Do not assert exact copy,
 screenshots, or Spectrum implementation internals.
 
 Web Test Runner collects coverage during `test:unit`, `test:file`, and watch
-runs because those scripts pass `--coverage`. Playwright smoke tests protect
-page composition and do not produce JavaScript coverage.
+runs because those scripts pass `--coverage`. Pattern Library page contract
+tests protect page composition and do not produce JavaScript coverage.
 
-Before opening a pull request, use the repository template to record which
-automated suites ran and how affected pages were browser tested. Automated
-tests do not replace the template's manual keyboard and screen-reader checks
-when a change affects interaction, semantics, or accessibility.
+Before opening a pull request, use the
+[repository pull-request template](../.github/PULL_REQUEST_TEMPLATE.md) to
+record which automated suites ran and how affected pages were browser tested.
+Automated tests do not replace the template's manual keyboard and screen-reader
+checks when a change affects interaction, semantics, or accessibility.
 
 ## Link checks
 
@@ -278,7 +280,7 @@ CloudFront functions, or the proxy handler.
 | `.github/workflows/lint.yml` | Pull requests to `main` | Root JavaScript and CSS lint |
 | `.github/workflows/test.yml` | Pull requests to `main` | Unit, extraction, indexer, and link-unit matrix |
 | `.github/workflows/a11y.yml` | Pull requests to `main` | Playwright accessibility suite and coverage |
-| `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library smoke tests |
+| `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library page contract tests |
 | `.github/workflows/link-check.yml` | Daily 06:00 UTC/manual | Full deployed-site crawl, with an optional `base_url` input |
 | `.github/workflows/index-algolia.yml` | Every 12 hours/manual | Algolia record build and publish |
 | `.github/workflows/extract-rsp-properties.yml` | Daily 07:00 UTC/manual | Refresh generated RSP data, then rebuild the status index |

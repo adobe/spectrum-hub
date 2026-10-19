@@ -1,4 +1,4 @@
-name: End-to-end smoke tests
+name: Pattern Library page contract tests
 
 on:
   pull_request:
@@ -28,7 +28,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
-      - name: Run end-to-end smoke tests
+      - name: Run Pattern Library page contract tests
         run: npm run test:e2e
 
       - name: Upload Playwright artifacts
