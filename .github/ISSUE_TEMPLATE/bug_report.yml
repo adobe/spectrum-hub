@@ -1,0 +1,67 @@
+name: Bug report
+description: Create a report to help us improve the project
+title: '[Bug]: '
+labels: ['🐛 Bug']
+assignees: ['marissahuysentruyt']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🐛 Bug Report
+        Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: By submitting this issue, you agree to follow our [code of conduct](https://github.com/adobe/spectrum-hub/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's code of conduct.
+          required: true
+  - type: input
+    id: blocks
+    attributes:
+      label: Impacted block(s)
+      description: Please list the block(s) impacted by this issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🤔 Expected behavior
+      description: A brief description of what you expected to happen.
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: 😯 Actual behavior
+      description: Explain the difference from expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshots
+      description: You can attach images by clicking this area to highlight it and then dragging files in.
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: What browsers are you seeing the problem in?
+      multiple: true
+      options:
+        - Firefox
+        - Chrome
+        - Safari
+        - Microsoft Edge
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How can we reproduce this issue?
+      value: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll to '....'
+        4. Check console
+        5. See error
+  - type: textarea
+    id: code
+    attributes:
+      label: Sample code or abstract reproduction which illustrates the problem
