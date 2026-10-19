@@ -1,0 +1,53 @@
+name: Feature Request
+description: Want to request a feature for spectrum-hub?
+title: '[Feature]: '
+labels: ['✨ Feature']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # ✨ Feature request
+        Thanks for taking the time to contribute an idea for a new feature! Before you submit, search open/closed issues before submitting since someone might have asked the same thing before.
+  - type: textarea
+    id: general-summary
+    attributes:
+      label: Provide a general summary of the feature here. The more details the better!
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🤔 Expected behavior?
+      description: Tell us how the feature should work! What problem is the feature solving? What benefits does this feature provide Spectrum Hub users? Why should the team prioritize this?
+    validations:
+      required: true
+  - type: textarea
+    id: possible-solution
+    attributes:
+      label: 💁 Possible solution
+      description: Ideas how to implement this feature or a similar solution/workaround that already exists
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: 🔦 Context
+      description: |
+        Providing context helps us come up with a solution that is most useful in the real world.
+        How has this issue affected you? What are you trying to accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: 💻 Examples
+      description: Examples help us understand the requested feature better. Include design mocks here if possible.
+  - type: markdown
+    attributes:
+      value: '## 🦄 Other'
+  - type: input
+    id: company-team
+    attributes:
+      label: 🧢 Your Company/Team
+      description: Which product team is this bug impacting? (i.e. Adobe/Photoshop)
+
