@@ -63,15 +63,15 @@ https://<branch-name>--spectrum-hub--adobe.aem.live/
 
 - [ ] **Keyboard** 
 <!-- What to test for: Focus order is logical; `Tab` reaches the component and all interactive descendants; `Enter`/`Space` activate where appropriate; arrow keys work for tabs, menus, sliders, etc.; no focus traps; `Escape` dismisses when applicable; focus indicator is visible. -->
-  1. Go [here](url)
-  2. Do this action
-  3. Expect this result
+1. Go [here](url)
+2. Do this action
+3. Expect this result
 
 - [ ] **Screen reader** 
 <!-- _What to test for:_ Role and name are announced correctly; state changes (e.g. expanded, selected) are announced; labels and relationships are clear; no unnecessary or duplicate announcements. -->
-  1. Go [here](url)
-  2. Do this action
-  3. Expect this result
+1. Go [here](url)
+2. Do this action
+3. Expect this result
 
 ### Device review
 
