@@ -46,9 +46,34 @@ import { test, expect } from '@playwright/test';
 
 const routes = [
   {
+    name: 'buttons',
+    path: '/docs/pattern-library/buttons',
+    selector: '.se-button .btn.primary',
+  },
+  {
     name: 'cards',
     path: '/docs/pattern-library/cards',
     selector: '.card-content-container',
+  },
+  {
+    name: 'core-layouts',
+    path: '/docs/pattern-library/core-layouts',
+    selector: '.columns',
+  },
+  {
+    name: 'playground',
+    path: '/docs/pattern-library/playground',
+    selector: '.playground-layout',
+  },
+  {
+    name: 'search',
+    path: '/docs/pattern-library/search',
+    selector: 'sh-search',
+  },
+  {
+    name: 'status-table',
+    path: '/docs/pattern-library/status-table',
+    selector: '.status-table table',
   },
   {
     name: 'table',
@@ -56,9 +81,14 @@ const routes = [
     selector: '.table table',
   },
   {
-    name: 'playground',
-    path: '/docs/pattern-library/playground',
-    selector: '.playground-layout',
+    name: 'typography',
+    path: '/docs/pattern-library/typography',
+    selector: '.heading-size-xxl',
+  },
+  {
+    name: 'usage',
+    path: '/docs/pattern-library/usage',
+    selector: '.usage',
   },
 ];
 
@@ -161,7 +191,7 @@ Run:
 npx playwright test --config=playwright.smoke.config.js --list
 ```
 
-Expected: PASS and list 9 tests, consisting of 3 routes across 3 browser projects.
+Expected: PASS and list 27 tests, consisting of 9 routes across 3 browser projects.
 
 - [ ] **Step 8: Install the local browser binaries**
 
@@ -181,7 +211,7 @@ Run:
 npm run test:e2e
 ```
 
-Expected: PASS with 9 tests. Playwright starts `aem up` on port 3003 and each route exposes its expected visible hook.
+Expected: PASS with 27 tests. Playwright starts `aem up` on port 3003 and each route exposes its expected visible hook.
 
 - [ ] **Step 10: Verify the deployed URL override**
 
@@ -191,7 +221,7 @@ Run:
 PLAYWRIGHT_BASE_URL=https://main--spectrum-hub--adobe.aem.live npm run test:e2e
 ```
 
-Expected: PASS with 9 tests and no local `aem up` startup message.
+Expected: PASS with 27 tests and no local `aem up` startup message.
 
 - [ ] **Step 11: Inspect the uncommitted task diff**
 
@@ -371,9 +401,15 @@ load and compose stable repository-owned block hooks. The initial routes are:
 
 | Route | Expected hook |
 | --- | --- |
+| `/docs/pattern-library/buttons` | `.se-button .btn.primary` |
 | `/docs/pattern-library/cards` | `.card-content-container` |
-| `/docs/pattern-library/table` | `.table table` |
+| `/docs/pattern-library/core-layouts` | `.columns` |
 | `/docs/pattern-library/playground` | `.playground-layout` |
+| `/docs/pattern-library/search` | `sh-search` |
+| `/docs/pattern-library/status-table` | `.status-table table` |
+| `/docs/pattern-library/table` | `.table table` |
+| `/docs/pattern-library/typography` | `.heading-size-xxl` |
+| `/docs/pattern-library/usage` | `.usage` |
 
 Run the local suite:
 
@@ -449,7 +485,127 @@ git status --short
 
 Expected: documentation matches the implemented commands and no unrelated contributor guidance changes. Do not commit.
 
-### Task 4: Run complete validation
+### Task 4: Work around the macOS 27 Firefox launch regression
+
+**Files:**
+- Modify: `playwright.smoke.config.js`
+- Modify: `docs/TESTS.md`
+- Modify: `.ai/docs/specs/2026-10-14-pattern-library-smoke-tests-design.md`
+
+- [ ] **Step 1: Verify the Firefox project fails before the workaround**
+
+Run:
+
+```bash
+npm run test:e2e -- --project=firefox --workers=1
+```
+
+Expected on macOS 27 with Playwright Firefox before 158: FAIL before navigation
+with `Could not find profile folder` or a browser-launch timeout. This is the
+regression test. The same command is expected to pass on unaffected platforms.
+
+- [ ] **Step 2: Add the scoped Firefox launch environment**
+
+Update `playwright.smoke.config.js`:
+
+```js
+import { mkdirSync } from 'node:fs';
+import { release, tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { defineConfig, devices } from '@playwright/test';
+
+const deployedURL = process.env.PLAYWRIGHT_BASE_URL;
+const darwinMajor = Number.parseInt(release().split('.')[0], 10);
+const needsFirefoxHome = process.platform === 'darwin' && darwinMajor >= 27;
+let firefoxLaunchOptions;
+
+if (needsFirefoxHome) {
+  const firefoxHome = process.env.CFFIXED_USER_HOME
+    || join(tmpdir(), 'spectrum-hub-playwright-firefox');
+  mkdirSync(firefoxHome, { recursive: true });
+  firefoxLaunchOptions = {
+    env: {
+      ...process.env,
+      CFFIXED_USER_HOME: firefoxHome,
+    },
+  };
+}
+```
+
+Apply the launch options only to the Firefox project:
+
+```js
+{
+  name: 'firefox',
+  use: {
+    ...devices['Desktop Firefox'],
+    launchOptions: firefoxLaunchOptions,
+  },
+},
+```
+
+Add a short comment beside the workaround linking:
+
+- `https://github.com/microsoft/playwright/issues/42768`
+- `https://bugzilla.mozilla.org/show_bug.cgi?id=2060476`
+- `https://github.com/microsoft/playwright/pull/43494`
+
+The comment must state that the workaround can be removed after Playwright
+bundles Firefox 158 or newer and the unmodified Firefox command passes on
+macOS 27.
+
+- [ ] **Step 3: Document the workaround and removal condition**
+
+Add a macOS Firefox note to `docs/TESTS.md` explaining:
+
+- Firefox versions bundled before Firefox 158 can fail on macOS 27 because the
+  real Firefox app-data directory is protected.
+- The smoke config automatically supplies an isolated `CFFIXED_USER_HOME` only
+  to Firefox on Darwin 27 or newer.
+- The directory is retained under the operating system temp directory.
+- The upstream Playwright issue, Mozilla bug, and Playwright Firefox roll.
+- Remove the workaround after upgrading to a release with Firefox 158 or newer
+  and confirming this command passes without the workaround:
+
+```bash
+npm run test:e2e -- --project=firefox --workers=1
+```
+
+- [ ] **Step 4: Verify Firefox passes locally**
+
+Run:
+
+```bash
+npm run test:e2e -- --project=firefox --workers=1
+```
+
+Expected: PASS with 9 tests.
+
+- [ ] **Step 5: Verify the workaround is browser- and platform-scoped**
+
+Run:
+
+```bash
+npm run test:e2e -- --project=chromium --project=webkit
+npx eslint playwright.smoke.config.js
+git diff --check
+```
+
+Expected: Chromium and WebKit pass unchanged, the config passes ESLint, and
+there are no whitespace errors.
+
+- [ ] **Step 6: Keep the changes uncommitted**
+
+Run:
+
+```bash
+git status --short
+```
+
+Expected: the Firefox workaround and documentation are present with the
+existing smoke-test changes. Do not commit.
+
+### Task 5: Run complete validation
 
 **Files:**
 - Verify: `playwright.smoke.config.js`
@@ -466,7 +622,7 @@ Run:
 npx playwright test --config=playwright.smoke.config.js --list
 ```
 
-Expected: PASS and 9 discovered tests.
+Expected: PASS and 27 discovered tests.
 
 - [ ] **Step 2: Run the three-browser local smoke suite**
 
@@ -476,7 +632,7 @@ Run:
 npm run test:e2e
 ```
 
-Expected: PASS with 9 tests.
+Expected: PASS with 27 tests.
 
 - [ ] **Step 3: Run the core test baseline**
 
@@ -514,7 +670,8 @@ Expected: no whitespace errors; only the approved smoke, workflow, documentation
 
 Prepare the implementation handoff with:
 
-- SPDOCS-141 initial routes: cards, table, and playground.
+- SPDOCS-141 initial routes: buttons, cards, core layouts, playground, search,
+  status table, table, typography, and usage.
 - SPDOCS-141 validation commands and their results.
 - SPDOCS-144 canonical guide: `docs/TESTS.md`.
 - The future pull-request URL once a pull request is created.

@@ -128,9 +128,15 @@ load and compose stable repository-owned block hooks. The initial routes are:
 
 | Route | Expected hook |
 | --- | --- |
+| `/docs/pattern-library/buttons` | `.se-button .btn.primary` |
 | `/docs/pattern-library/cards` | `.card-content-container` |
-| `/docs/pattern-library/table` | `.table table` |
+| `/docs/pattern-library/core-layouts` | `.columns` |
 | `/docs/pattern-library/playground` | `.playground-layout` |
+| `/docs/pattern-library/search` | `sh-search` |
+| `/docs/pattern-library/status-table` | `.status-table table` |
+| `/docs/pattern-library/table` | `.table table` |
+| `/docs/pattern-library/typography` | `.heading-size-xxl` |
+| `/docs/pattern-library/usage` | `.usage` |
 
 Run the local suite:
 
@@ -148,6 +154,29 @@ PLAYWRIGHT_BASE_URL=https://<branch>--spectrum-hub--adobe.aem.live npm run test:
 
 Set `PLAYWRIGHT_BASE_URL` inline as shown or export it in your shell. The test
 command does not load the repository's `.env` file.
+
+### macOS 27 Firefox
+
+Firefox versions before 158 can fail to launch on macOS 27 because macOS
+protects the real Firefox app-data directory. The smoke configuration
+automatically gives only the Firefox project an isolated `CFFIXED_USER_HOME`
+under the operating system's temporary directory on Darwin 27 or newer. The
+directory is retained between runs because Firefox adds access-control entries
+that make per-run cleanup unreliable.
+
+This is a temporary workaround for:
+
+- [Playwright issue 42768](https://github.com/microsoft/playwright/issues/42768)
+- [Mozilla bug 2060476](https://bugzilla.mozilla.org/show_bug.cgi?id=2060476)
+- [Playwright Firefox roll 43494](https://github.com/microsoft/playwright/pull/43494)
+
+Remove the workaround after upgrading to a Playwright release that bundles
+Firefox 158 or newer. Before removal, disable the workaround and confirm this
+command passes on macOS 27:
+
+```bash
+npm run test:e2e -- --project=firefox --workers=1
+```
 
 Use Web Test Runner for focused JavaScript behavior that can be expressed with
 an isolated DOM. Use the smoke suite when a regression would appear only after

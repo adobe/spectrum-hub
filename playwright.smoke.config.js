@@ -1,6 +1,29 @@
+import { mkdirSync } from 'node:fs';
+import { release, tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const deployedURL = process.env.PLAYWRIGHT_BASE_URL;
+const darwinMajor = Number.parseInt(release().split('.')[0], 10);
+const needsFirefoxHome = process.platform === 'darwin' && darwinMajor >= 27;
+let firefoxLaunchOptions;
+
+if (needsFirefoxHome) {
+  const firefoxHome = process.env.CFFIXED_USER_HOME
+    || join(tmpdir(), 'spectrum-hub-playwright-firefox');
+  mkdirSync(firefoxHome, { recursive: true });
+  // Work around the macOS 27 app-data regression in Firefox before version 158.
+  // Remove after upgrading Playwright and verifying Firefox without this environment:
+  // https://github.com/microsoft/playwright/issues/42768
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=2060476
+  // https://github.com/microsoft/playwright/pull/43494
+  firefoxLaunchOptions = {
+    env: {
+      ...process.env,
+      CFFIXED_USER_HOME: firefoxHome,
+    },
+  };
+}
 
 export default defineConfig({
   testDir: './test/e2e',
@@ -22,7 +45,13 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    {
+      name: 'firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+        ...(firefoxLaunchOptions && { launchOptions: firefoxLaunchOptions }),
+      },
+    },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

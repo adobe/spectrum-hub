@@ -56,6 +56,36 @@ The suite runs tests in parallel. CI uses one retry and records a trace on the
 first retry. Smoke reports and result artifacts use dedicated output paths so
 they cannot overwrite accessibility or link-check artifacts.
 
+### macOS 27 Firefox workaround
+
+Playwright Firefox versions before 158 cannot launch reliably on macOS 27 when
+the real Firefox app-data directory is protected by macOS privacy controls.
+Firefox resolves `~/Library/Application Support/Firefox` even when Playwright
+supplies a temporary profile, then exits with `Could not find profile folder`.
+
+On Darwin 27 or newer, the smoke configuration creates a stable,
+repository-specific directory under the operating system's temporary directory
+and passes it to the Firefox project as `CFFIXED_USER_HOME`. This gives the
+bundled Firefox an accessible app-data location without changing Chromium,
+WebKit, earlier macOS versions, or Linux CI. The configuration preserves an
+explicitly set `CFFIXED_USER_HOME`.
+
+The workaround directory is retained between runs because Firefox adds macOS
+access-control entries that make per-run cleanup unreliable. It contains only
+the bundled test browser's app-data bookkeeping and remains outside the
+repository.
+
+The workaround is tracked by:
+
+- [Playwright issue 42768](https://github.com/microsoft/playwright/issues/42768)
+- [Mozilla bug 2060476](https://bugzilla.mozilla.org/show_bug.cgi?id=2060476)
+- [Playwright Firefox roll 43494](https://github.com/microsoft/playwright/pull/43494)
+
+Remove the workaround after upgrading to a Playwright release that bundles
+Firefox 158 or newer. Before removal, run the Firefox project on macOS 27
+without `CFFIXED_USER_HOME` and confirm that the browser launches and all
+Firefox smoke tests pass.
+
 Add these npm scripts:
 
 - `test:e2e` runs the smoke suite with `playwright.smoke.config.js`.
@@ -67,9 +97,15 @@ Use one data-driven smoke spec with an explicit route and selector table:
 
 | Route | Stable hook |
 | --- | --- |
+| `/docs/pattern-library/buttons` | `.se-button .btn.primary` |
 | `/docs/pattern-library/cards` | `.card-content-container` |
-| `/docs/pattern-library/table` | `.table table` |
+| `/docs/pattern-library/core-layouts` | `.columns` |
 | `/docs/pattern-library/playground` | `.playground-layout` |
+| `/docs/pattern-library/search` | `sh-search` |
+| `/docs/pattern-library/status-table` | `.status-table table` |
+| `/docs/pattern-library/table` | `.table table` |
+| `/docs/pattern-library/typography` | `.heading-size-xxl` |
+| `/docs/pattern-library/usage` | `.usage` |
 
 Each test:
 
@@ -147,6 +183,6 @@ stable preview or production URL is available.
 
 ## Ticket outcomes
 
-SPDOCS-141 will list the three initial routes and link the implementing pull
-request. SPDOCS-144 will point contributors to the updated canonical testing
-guide and the reproducible local and deployed smoke commands.
+SPDOCS-141 will list the initial routes and link the implementing pull request.
+SPDOCS-144 will point contributors to the updated canonical testing guide and
+the reproducible local and deployed smoke commands.
