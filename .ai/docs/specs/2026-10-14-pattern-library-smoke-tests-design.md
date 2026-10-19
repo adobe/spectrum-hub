@@ -33,6 +33,11 @@ part of the terminology update.
 
 - Detect regressions that prevent representative Pattern Library pages from
   composing their expected blocks.
+- Detect a page that composes its blocks but breaks underneath: an uncaught
+  exception, a `console.error`, or a missing same-origin asset.
+- Cover the blocks the page lifecycle composes without an author placing them.
+- Run the same contract against the deployed site, so a content publish — which
+  never passes through this repository — is also covered.
 - Run the same page contract in Chromium, Firefox, and WebKit.
 - Keep local execution self-contained while supporting deployed preview and
   production URLs through `PLAYWRIGHT_BASE_URL`.
@@ -47,6 +52,8 @@ part of the terminology update.
 - Exhaustive coverage of every Pattern Library route.
 - Assertions against Spectrum Web Components or React Spectrum internals.
 - Replacing block unit tests, accessibility tests, or the full-site link crawl.
+- Gating on third-party origins, which fail for reasons this repository cannot
+  fix.
 - Mobile emulation in the initial page contract suite.
 - Sharding before runtime demonstrates a need.
 
@@ -138,6 +145,48 @@ screenshots, or `networkidle`. This keeps the contract focused on page
 availability, full-page block composition, and the explicit typography
 normalization contract.
 
+### Automatically composed blocks
+
+A second spec, `test/e2e/auto-blocks.spec.js`, covers the blocks no author
+places. A Pattern Library route cannot reach them, because the page lifecycle
+decides them from the template and page metadata rather than from authored
+content. The global shell — `header`, `sitenav`, `footer`, `page-nav`,
+`action-button`, `profile` — is asserted once on `/support/faqs` rather than
+per route, since every page composes it and repeating it buys nothing.
+`banner` is asserted on `/`, the marketing template that carries it, and
+`breadcrumbs`, `page-hero`, and `component-status` on
+`/web/rsp/components/button`, the `component` template that builds them.
+
+`action-button` and `profile` are link blocks. Their hooks match the rewritten
+element rather than the authored anchor, so a passing assertion proves the
+rewrite happened.
+
+### Page error capture
+
+`test/e2e/page-errors.js` extends Playwright's `page` fixture, so both spec
+files gate on three further signals without opting in per test: an uncaught
+exception, a `console.error` call, and a same-origin response of 400 or worse.
+
+Subresource failures are read from responses rather than from console text.
+Every engine words that console message differently and Firefox does not emit
+it at all, so console text would make the suite's strictness depend on which
+browser ran it.
+
+Known defects live in allowlists at the top of the fixture. Each entry states
+what is broken and is deleted with the fix, so the suite can gate on new
+breakage without a permanently red first run.
+
+A test ends as soon as its locator resolves, which would let a lazily loaded
+failure escape. The fixture therefore keeps listening for a bounded settle
+period, overridable through `PLAYWRIGHT_SETTLE_MS`, after the contract
+assertion passes.
+
+### Deployed runs
+
+The `.aem.live` origin rate-limits bursts, and a throttled `429` reads as a site
+failure rather than as throttling. A deployed run therefore uses a single worker
+and retries, while the local `aem up` default keeps full parallelism.
+
 ## Continuous integration
 
 Add a dedicated workflow for pull requests targeting `main`. The job:
@@ -157,6 +206,19 @@ The workflow uses the local `aem up` default. It does not require a repository
 secret or depend on branch-preview availability. Contributors and manual CI
 runs can set `PLAYWRIGHT_BASE_URL` to exercise the same tests against a branch
 preview or production.
+
+### Deployed workflow
+
+`.github/workflows/e2e-deployed.yml` runs the same suite against the published
+site on pushes to `main`, daily, and on manual dispatch with an optional
+`base_url` input, mirroring `link-check.yml`. The default target is the main
+`.aem.live` origin, which serves published content without the production CDN
+cache in front of it.
+
+The daily schedule is the part that matters most. Content publishes in Edge
+Delivery Services never pass through this repository, so a push-triggered run
+only ever sees code changes; a scheduled run is what catches a publish, a
+content change, or an origin problem that breaks a page.
 
 ## Contributor documentation
 

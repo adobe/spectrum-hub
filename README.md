@@ -132,8 +132,12 @@ npm run test:e2e
 The page contract command starts a local `aem up` server that proxies public
 content from the main `.aem.live` origin. Set
 `PLAYWRIGHT_BASE_URL=https://<branch>--spectrum-hub--adobe.aem.live` to test a
-deployed environment instead. See [`docs/TESTS.md`](./docs/TESTS.md) for the
-route list, fixture conventions, and guidance on choosing a test suite.
+deployed environment instead, or run `npm run test:e2e:deployed` to test what is
+published on `main`. Every page contract test also fails on an uncaught
+exception, a `console.error`, or a same-origin request that 404s. See
+[`docs/TESTS.md`](./docs/TESTS.md) for the route list, the blocks the page
+lifecycle composes automatically, fixture conventions, and guidance on choosing
+a test suite.
 
 ## How engineering and content merge
 

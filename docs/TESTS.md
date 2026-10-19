@@ -42,6 +42,7 @@ CI adds `--with-deps` because Linux runners also need browser system packages.
 | `npm run test:e2e` | Pattern Library page contract tests in Chromium, Firefox, and WebKit | Full-page composition and stable route hooks |
 | `npm run test:e2e:ui` | The page contract suite in Playwright UI mode | Local contract-test authoring and debugging |
 | `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same page contract suite against a deployed site | Branch preview or production validation |
+| `npm run test:e2e:deployed` | The page contract suite against the main `.aem.live` origin | Checking what is actually published |
 | `npm run test:links:local` | Playwright crawl against local `aem up` | Full navigation/link validation |
 | `LINKCHECK_BASE_URL=<url> npm run test:links:deployed` | Playwright crawl against a deployed site | Branch preview or production validation |
 | `npm run lint` | JavaScript and CSS lint | Pull-request validation |
@@ -143,6 +144,67 @@ Most routes assert a post-decoration block hook. Typography instead verifies
 that the sized H6 keeps its `heading-size-xxl` styling class while its generated
 ID is normalized from `heading-6-size-xxl` to `heading-6`.
 
+### Automatically composed blocks
+
+`test/e2e/auto-blocks.spec.js` covers the blocks no author places. A Pattern
+Library route cannot reach them, because the page lifecycle decides them from
+the template and page metadata rather than from authored content.
+
+The global shell is asserted once on `/support/faqs`, an interior documentation
+page that composes the fullest version of it:
+
+| Block | Expected hook |
+| --- | --- |
+| `header` | `header.header` |
+| `sitenav` | `#sitenav nav` |
+| `footer` | `footer.footer` |
+| `page-nav` | `.page-nav a` |
+| `action-button` | `button.action-button[data-widget]` |
+| `profile` | `se-profile` |
+
+`action-button` and `profile` are link blocks, so matching the rewritten
+element — a `button`, a `se-profile` — proves `scripts.js` replaced the authored
+anchor rather than merely leaving it in place.
+
+The remaining blocks depend on a template or on page metadata, so each is
+asserted on a page representative of how it ships:
+
+| Block | Route | Expected hook |
+| --- | --- | --- |
+| `banner` | `/` | `.banner .se-button` |
+| `breadcrumbs` | `/web/rsp/components/button` | `nav.breadcrumbs[aria-label="Breadcrumb"] ol li` |
+| `page-hero` | `/web/rsp/components/button` | `.page-hero h1` |
+| `component-status` | `/web/rsp/components/button` | `.component-status[role="group"]` |
+
+`/` is the marketing template, the only one that carries the audience-gated
+banner. `/web/rsp/components/button` is the `component` template, the only one
+that builds a page hero, its breadcrumbs, and the status pills.
+
+### Page error capture
+
+`test/e2e/page-errors.js` extends Playwright's `page` fixture, so every page
+contract test — in both spec files — also fails when a page composes its blocks
+but breaks underneath. It gates on three signals:
+
+- an uncaught exception (`pageerror`);
+- a `console.error` call;
+- a same-origin response of 400 or worse.
+
+These are the failures a visible-locator assertion cannot see, and the ones most
+likely to differ between engines. Subresource failures are read from responses
+rather than from console text, because every engine words that console message
+differently and Firefox does not emit it at all.
+
+Third-party origins are not gated: they fail for reasons this repository cannot
+fix. Known defects live in the `ALLOWED_RESPONSES` and `ALLOWED_CONSOLE_ERRORS`
+lists at the top of the fixture; each entry states what is broken, and the entry
+is deleted with the fix rather than left behind.
+
+Because a test ends as soon as its locator resolves, the fixture keeps listening
+for a bounded settle period after the contract assertion passes, so lazily
+loaded work can still report. Override it with `PLAYWRIGHT_SETTLE_MS` when
+diagnosing something that surfaces later than the default.
+
 Run the local suite:
 
 ```bash
@@ -158,7 +220,14 @@ PLAYWRIGHT_BASE_URL=https://<branch>--spectrum-hub--adobe.aem.live npm run test:
 ```
 
 Set `PLAYWRIGHT_BASE_URL` inline as shown or export it in your shell. The test
-command does not load the repository's `.env` file.
+command does not load the repository's `.env` file. `npm run test:e2e:deployed`
+is the same run against the main `.aem.live` origin, which serves published
+content without the production CDN cache in front of it.
+
+The `.aem.live` origin rate-limits bursts of requests, and a throttled `429`
+reads as a site failure rather than as throttling. A deployed run therefore uses
+a single worker and retries; the local `aem up` default keeps Playwright's full
+parallelism.
 
 ### macOS 27 Firefox
 
@@ -281,6 +350,7 @@ CloudFront functions, or the proxy handler.
 | `.github/workflows/test.yml` | Pull requests to `main` | Unit, extraction, indexer, and link-unit matrix |
 | `.github/workflows/a11y.yml` | Pull requests to `main` | Playwright accessibility suite and coverage |
 | `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library page contract tests |
+| `.github/workflows/e2e-deployed.yml` | Pushes to `main`, daily 06:30 UTC/manual | The same page contract suite against the deployed site, with an optional `base_url` input |
 | `.github/workflows/link-check.yml` | Daily 06:00 UTC/manual | Full deployed-site crawl, with an optional `base_url` input |
 | `.github/workflows/index-algolia.yml` | Every 12 hours/manual | Algolia record build and publish |
 | `.github/workflows/extract-rsp-properties.yml` | Daily 07:00 UTC/manual | Refresh generated RSP data, then rebuild the status index |
@@ -298,6 +368,7 @@ Node version, environment variables, browser installation, and command.
 | `scripts.js`, `ak.js`, or `lazy.js` | Related unit tests, affected accessibility specs, then `npm test` |
 | Accessibility fixture/harness | Targeted spec plus the a11y coverage spec |
 | Full-page composition or stable page hooks | `npm run test:e2e` |
+| Automatically composed blocks, or the page lifecycle that builds them | `npm run test:e2e` |
 | RSP/SWC extraction | `npm run test:extractions` and the relevant regeneration command |
 | Algolia indexer | `npm run test:indexer` and dry-run when configuration is available |
 | Link crawler | `npm run test:links:unit`, then the local or deployed crawl |
