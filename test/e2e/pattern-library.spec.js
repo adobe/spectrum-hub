@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './page-errors.js';
 
 const routes = [
   {
