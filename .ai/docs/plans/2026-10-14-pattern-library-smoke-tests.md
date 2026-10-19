@@ -58,7 +58,7 @@ const routes = [
   {
     name: 'core-layouts',
     path: '/docs/pattern-library/core-layouts',
-    selector: '.columns',
+    selector: '.columns .col',
   },
   {
     name: 'playground',
@@ -83,17 +83,18 @@ const routes = [
   {
     name: 'typography',
     path: '/docs/pattern-library/typography',
-    selector: '.heading-size-xxl',
+    selector: 'h6#heading-6.heading-size-xxl',
+    expectation: 'normalizes its sized heading ID',
   },
   {
     name: 'usage',
     path: '/docs/pattern-library/usage',
-    selector: '.usage',
+    selector: '.usage .usage-panel',
   },
 ];
 
 for (const route of routes) {
-  test(`${route.name} pattern composes its block`, async ({ page }) => {
+  test(`${route.name} pattern ${route.expectation ?? 'composes its block'}`, async ({ page }) => {
     const response = await page.goto(route.path, {
       waitUntil: 'domcontentloaded',
     });
@@ -403,13 +404,17 @@ load and compose stable repository-owned block hooks. The initial routes are:
 | --- | --- |
 | `/docs/pattern-library/buttons` | `.se-button .btn.primary` |
 | `/docs/pattern-library/cards` | `.card-content-container` |
-| `/docs/pattern-library/core-layouts` | `.columns` |
+| `/docs/pattern-library/core-layouts` | `.columns .col` |
 | `/docs/pattern-library/playground` | `.playground-layout` |
 | `/docs/pattern-library/search` | `sh-search` |
 | `/docs/pattern-library/status-table` | `.status-table table` |
 | `/docs/pattern-library/table` | `.table table` |
-| `/docs/pattern-library/typography` | `.heading-size-xxl` |
-| `/docs/pattern-library/usage` | `.usage` |
+| `/docs/pattern-library/typography` | `h6#heading-6.heading-size-xxl` |
+| `/docs/pattern-library/usage` | `.usage .usage-panel` |
+
+The typography selector intentionally verifies the authored size-marker
+transformation rather than block decoration. It fails if the sized H6 keeps
+`size-xxl` in its generated ID instead of normalizing to `heading-6`.
 
 Run the local suite:
 

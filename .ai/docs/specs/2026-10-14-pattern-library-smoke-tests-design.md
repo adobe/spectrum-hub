@@ -99,23 +99,30 @@ Use one data-driven smoke spec with an explicit route and selector table:
 | --- | --- |
 | `/docs/pattern-library/buttons` | `.se-button .btn.primary` |
 | `/docs/pattern-library/cards` | `.card-content-container` |
-| `/docs/pattern-library/core-layouts` | `.columns` |
+| `/docs/pattern-library/core-layouts` | `.columns .col` |
 | `/docs/pattern-library/playground` | `.playground-layout` |
 | `/docs/pattern-library/search` | `sh-search` |
 | `/docs/pattern-library/status-table` | `.status-table table` |
 | `/docs/pattern-library/table` | `.table table` |
-| `/docs/pattern-library/typography` | `.heading-size-xxl` |
-| `/docs/pattern-library/usage` | `.usage` |
+| `/docs/pattern-library/typography` | `h6#heading-6.heading-size-xxl` |
+| `/docs/pattern-library/usage` | `.usage .usage-panel` |
 
 Each test:
 
 1. Navigates to the route and waits for `domcontentloaded`.
 2. Verifies that the document response exists and has a successful status.
-3. Verifies that at least one matching block hook is visible.
+3. Verifies that at least one matching route contract is visible.
+
+Most route contracts prove that block decoration completed. Typography is the
+deliberate exception: its combined element, ID, and modifier-class selector
+verifies that the authored `size-xxl` marker becomes the visual
+`heading-size-xxl` class while the generated ID is normalized from
+`heading-6-size-xxl` to `heading-6`.
 
 The suite does not assert exact copy, Spectrum implementation details,
 screenshots, or `networkidle`. This keeps the contract focused on page
-availability and full-page block composition.
+availability, full-page block composition, and the explicit typography
+normalization contract.
 
 ## Continuous integration
 

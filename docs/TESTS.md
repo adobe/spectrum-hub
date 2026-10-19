@@ -130,13 +130,17 @@ load and compose stable repository-owned block hooks. The initial routes are:
 | --- | --- |
 | `/docs/pattern-library/buttons` | `.se-button .btn.primary` |
 | `/docs/pattern-library/cards` | `.card-content-container` |
-| `/docs/pattern-library/core-layouts` | `.columns` |
+| `/docs/pattern-library/core-layouts` | `.columns .col` |
 | `/docs/pattern-library/playground` | `.playground-layout` |
 | `/docs/pattern-library/search` | `sh-search` |
 | `/docs/pattern-library/status-table` | `.status-table table` |
 | `/docs/pattern-library/table` | `.table table` |
-| `/docs/pattern-library/typography` | `.heading-size-xxl` |
-| `/docs/pattern-library/usage` | `.usage` |
+| `/docs/pattern-library/typography` | `h6#heading-6.heading-size-xxl` |
+| `/docs/pattern-library/usage` | `.usage .usage-panel` |
+
+Most routes assert a post-decoration block hook. Typography instead verifies
+that the sized H6 keeps its `heading-size-xxl` styling class while its generated
+ID is normalized from `heading-6-size-xxl` to `heading-6`.
 
 Run the local suite:
 

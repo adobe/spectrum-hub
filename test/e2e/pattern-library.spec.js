@@ -14,7 +14,7 @@ const routes = [
   {
     name: 'core-layouts',
     path: '/docs/pattern-library/core-layouts',
-    selector: '.columns',
+    selector: '.columns .col',
   },
   {
     name: 'playground',
@@ -39,17 +39,18 @@ const routes = [
   {
     name: 'typography',
     path: '/docs/pattern-library/typography',
-    selector: '.heading-size-xxl',
+    selector: 'h6#heading-6.heading-size-xxl',
+    expectation: 'normalizes its sized heading ID',
   },
   {
     name: 'usage',
     path: '/docs/pattern-library/usage',
-    selector: '.usage',
+    selector: '.usage .usage-panel',
   },
 ];
 
 for (const route of routes) {
-  test(`${route.name} pattern composes its block`, async ({ page }) => {
+  test(`${route.name} pattern ${route.expectation ?? 'composes its block'}`, async ({ page }) => {
     const response = await page.goto(route.path, {
       waitUntil: 'domcontentloaded',
     });
