@@ -122,18 +122,18 @@ npx playwright install chromium
 npm run test:a11y
 ```
 
-To run the Pattern Library page contract tests in Chromium, Firefox, and WebKit:
+To run the Pattern Library end-to-end smoke tests (which validate page contracts) in Chromium, Firefox, and WebKit:
 
 ```bash
 npx playwright install chromium firefox webkit
 npm run test:e2e
 ```
 
-The page contract command starts a local `aem up` server that proxies public
+The E2E command starts a local `aem up` server that proxies public
 content from the main `.aem.live` origin. Set
 `PLAYWRIGHT_BASE_URL=https://<branch>--spectrum-hub--adobe.aem.live` to test a
 deployed environment instead, or run `npm run test:e2e:deployed` to test what is
-published on `main`. Every page contract test also fails on an uncaught
+published on `main`. Every E2E smoke test also fails on an uncaught
 exception, a `console.error`, or a same-origin request that 404s. See
 [`docs/TESTS.md`](./docs/TESTS.md) for the route list, the blocks the page
 lifecycle composes automatically, fixture conventions, and guidance on choosing

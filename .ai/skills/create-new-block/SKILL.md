@@ -348,10 +348,9 @@ The rare block that renders arbitrary passthrough content with no fixed structur
 
 For fixture-specific requirements such as `setConfig`, the fixture-markup gotchas in full, and what to update when an existing block's behavior changes, see [`test/a11y/README.md`](../../../test/a11y/README.md).
 
-### Pattern Library page contract tests
+### Pattern Library smoke tests
 
-Unit and accessibility tests remain mandatory for every new block. Page
-contract coverage is conditional.
+Unit and accessibility tests remain mandatory for every new block. Smoke test coverage that validates the page contract is conditional.
 
 Add or update
 [`test/e2e/pattern-library.spec.js`](../../../test/e2e/pattern-library.spec.js)
@@ -361,5 +360,5 @@ selector that appears after decoration. Do not use the authored block root when
 it exists before `init(el)` completes.
 
 Run `npm run test:e2e` when the page contract changes. See
-[Pattern Library page contract tests](../../../docs/TESTS.md#pattern-library-page-contract-tests)
+[Pattern Library smoke tests](../../../docs/TESTS.md#pattern-library-smoke-tests)
 for route, selector, local-server, and deployed-URL guidance.

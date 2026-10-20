@@ -28,7 +28,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
-      - name: Run Pattern Library page contract tests
+      - name: Run Pattern Library smoke tests
         run: npm run test:e2e
 
       - name: Upload Playwright artifacts

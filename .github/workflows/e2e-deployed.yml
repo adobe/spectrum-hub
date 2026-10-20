@@ -1,4 +1,4 @@
-name: Deployed page contract tests
+name: Deployed smoke tests (page contracts)
 
 # Catches breakage the pull-request run cannot see: a content publish (which
 # never passes through this repository), a CDN or origin problem, and anything
@@ -41,7 +41,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
-      - name: Run Pattern Library page contract tests against the deployed site
+      - name: Run Pattern Library smoke tests against the deployed site
         run: npx playwright test --config=playwright.smoke.config.js
         env:
           PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || 'https://main--spectrum-hub--adobe.aem.live' }}

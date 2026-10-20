@@ -96,12 +96,12 @@ through its `init(el)` contract.
    alters its full-page composition contract, add or update its
    repository-owned post-decoration selector in
    `test/e2e/pattern-library.spec.js` and run `npm run test:e2e`. Otherwise, do
-   not add page contract coverage solely because the block is new.
+   not add end-to-end smoke test coverage solely because the block is new.
 
 **Done when:** The authored fixture renders the intended semantic structure,
 the focused unit test passes, and the accessibility spec passes in light,
 dark, and accessibility-tree checks. When step 5 applies, the Pattern Library
-page contract suite also passes.
+E2E smoke test suite also passes.
 
 ### Add a vertical banner variant
 

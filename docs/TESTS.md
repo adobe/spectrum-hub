@@ -19,7 +19,7 @@ Install Chromium for accessibility and link-check tests:
 npx playwright install chromium
 ```
 
-Install all three browsers before running the Pattern Library page contract
+Install all three browsers before running the Pattern Library smoke tests
 suite:
 
 ```bash
@@ -39,10 +39,10 @@ CI adds `--with-deps` because Linux runners also need browser system packages.
 | `npm run test:indexer` | `test/indexer/` Node tests | Algolia index-record changes |
 | `npm run test:links:unit` | `test/link-check/lib/` Node tests | Link crawler logic without crawling a site |
 | `npm run test:a11y` | Playwright axe scans and accessibility-tree snapshots | Block, shared page structure, and custom-element accessibility |
-| `npm run test:e2e` | Pattern Library page contract tests in Chromium, Firefox, and WebKit | Full-page composition and stable route hooks |
-| `npm run test:e2e:ui` | The page contract suite in Playwright UI mode | Local contract-test authoring and debugging |
-| `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same page contract suite against a deployed site | Branch preview or production validation |
-| `npm run test:e2e:deployed` | The page contract suite against the main `.aem.live` origin | Checking what is actually published |
+| `npm run test:e2e` | Pattern Library smoke tests in Chromium, Firefox, and WebKit | Full-page composition and stable route hooks |
+| `npm run test:e2e:ui` | The smoke test suite in Playwright UI mode | Local contract-test authoring and debugging |
+| `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same smoke test suite against a deployed site | Branch preview or production validation |
+| `npm run test:e2e:deployed` | The smoke test suite against the main `.aem.live` origin | Checking what is actually published |
 | `npm run test:links:local` | Playwright crawl against local `aem up` | Full navigation/link validation |
 | `LINKCHECK_BASE_URL=<url> npm run test:links:deployed` | Playwright crawl against a deployed site | Branch preview or production validation |
 | `npm run lint` | JavaScript and CSS lint | Pull-request validation |
@@ -50,7 +50,7 @@ CI adds `--with-deps` because Linux runners also need browser system packages.
 | `npm run lint:css` | Stylelint only | CSS iteration |
 
 `npm test` is the core suite, not the full suite. It does not run Playwright
-accessibility scans, page contract tests, full link crawls, lint, or the two
+accessibility scans, smoke/page contract tests, full link crawls, lint, or the two
 edge packages under `workers/` (see [Edge tests](#edge-tests)).
 
 ## Browser unit tests
@@ -123,7 +123,7 @@ Read [`test/a11y/README.md`](../test/a11y/README.md) before adding or changing a
 fixture. It documents the page harness, route mocks, authored-markup constraints,
 snapshot conventions, and known issues.
 
-## Pattern Library page contract tests
+## Pattern Library smoke tests
 
 `test/e2e/` uses Playwright to verify that representative Pattern Library pages
 load and compose stable repository-owned block hooks. The initial routes are:
@@ -150,8 +150,8 @@ ID is normalized from `heading-6-size-xxl` to `heading-6`.
 Library route cannot reach them, because the page lifecycle decides them from
 the template and page metadata rather than from authored content.
 
-The global shell is asserted once on `/support/faqs`, an interior documentation
-page that composes the fullest version of it:
+The global shell is asserted on `/content/voice-and-tone`, an interior
+documentation page that composes the fullest version of it:
 
 | Block | Expected hook |
 | --- | --- |
@@ -164,7 +164,8 @@ page that composes the fullest version of it:
 
 `action-button` and `profile` are link blocks, so matching the rewritten
 element — a `button`, a `se-profile` — proves `scripts.js` replaced the authored
-anchor rather than merely leaving it in place.
+anchor rather than merely leaving it in place. The profile has a separate
+contract because affected deployed branch origins cannot initialize IMS.
 
 The remaining blocks depend on a template or on page metadata, so each is
 asserted on a page representative of how it ships:
@@ -183,11 +184,12 @@ that builds a page hero, its breadcrumbs, and the status pills.
 ### Page error capture
 
 `test/e2e/page-errors.js` extends Playwright's `page` fixture, so every page
-contract test — in both spec files — also fails when a page composes its blocks
-but breaks underneath. It gates on three signals:
+contract test also fails when a page composes its blocks
+but breaks underneath. It gates on four signals:
 
 - an uncaught exception (`pageerror`);
 - a `console.error` call;
+- a same-origin request that fails before receiving a response;
 - a same-origin response of 400 or worse.
 
 These are the failures a visible-locator assertion cannot see, and the ones most
@@ -196,9 +198,10 @@ rather than from console text, because every engine words that console message
 differently and Firefox does not emit it at all.
 
 Third-party origins are not gated: they fail for reasons this repository cannot
-fix. Known defects live in the `ALLOWED_RESPONSES` and `ALLOWED_CONSOLE_ERRORS`
-lists at the top of the fixture; each entry states what is broken, and the entry
-is deleted with the fix rather than left behind.
+fix. Known defects live in the `ALLOWED_RESPONSES`, `ALLOWED_CONSOLE_ERRORS`,
+`ALLOWED_PAGE_ERRORS`, and `ALLOWED_REQUEST_FAILURES` lists at the top of the
+fixture. Each entry states what is broken and is deleted with the fix rather
+than left behind.
 
 Because a test ends as soon as its locator resolves, the fixture keeps listening
 for a bounded settle period after the contract assertion passes, so lazily
@@ -227,16 +230,15 @@ content without the production CDN cache in front of it.
 #### Deployed branch limitation
 
 Adobe IMS returns a CORS error for `.aem.live` branch origins when the branch
-name is longer than eight characters. The page contract suite records
+name is longer than eight characters. The smoke test suite records
 page errors, but ignores this specific third-party failure. Because IMS also
 prevents the profile component from initializing, the profile contract is
 skipped for affected branch origins. Local runs, `main`, and branch names with
 eight or fewer characters continue to test the profile contract.
 
 The `.aem.live` origin rate-limits bursts of requests, and a throttled `429`
-reads as a site failure rather than as throttling. A deployed run therefore uses
-a single worker and retries; the local `aem up` default keeps Playwright's full
-parallelism.
+reads as a site failure rather than as throttling. Deployed runs and CI use a
+single worker and retry. Local developer runs keep Playwright's full parallelism.
 
 ### macOS 27 Firefox
 
@@ -262,13 +264,13 @@ npm run test:e2e -- --project=firefox --workers=1
 ```
 
 Use Web Test Runner for focused JavaScript behavior that can be expressed with
-an isolated DOM. Use the page contract suite when a regression would appear
-only after a complete page loads and decorates its blocks. Keep contract
+an isolated DOM. Use the smoke test suite when a regression would appear
+only after a complete page loads and decorates its blocks (i.e. the page contract has changed). Keep contract
 assertions on repository-owned classes or data attributes. Do not assert exact copy,
 screenshots, or Spectrum implementation internals.
 
 Web Test Runner collects coverage during `test:unit`, `test:file`, and watch
-runs because those scripts pass `--coverage`. Pattern Library page contract
+runs because those scripts pass `--coverage`. Pattern Library smoke
 tests protect page composition and do not produce JavaScript coverage.
 
 Before opening a pull request, use the
@@ -358,8 +360,8 @@ CloudFront functions, or the proxy handler.
 | `.github/workflows/lint.yml` | Pull requests to `main` | Root JavaScript and CSS lint |
 | `.github/workflows/test.yml` | Pull requests to `main` | Unit, extraction, indexer, and link-unit matrix |
 | `.github/workflows/a11y.yml` | Pull requests to `main` | Playwright accessibility suite and coverage |
-| `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library page contract tests |
-| `.github/workflows/e2e-deployed.yml` | Pushes to `main`, daily 06:30 UTC/manual | The same page contract suite against the deployed site, with an optional `base_url` input |
+| `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library smoke/page contract tests |
+| `.github/workflows/e2e-deployed.yml` | Pushes to `main`, daily 06:30 UTC/manual | The same smoke test suite against the deployed site, with an optional `base_url` input |
 | `.github/workflows/link-check.yml` | Daily 06:00 UTC/manual | Full deployed-site crawl, with an optional `base_url` input |
 | `.github/workflows/index-algolia.yml` | Every 12 hours/manual | Algolia record build and publish |
 | `.github/workflows/extract-rsp-properties.yml` | Daily 07:00 UTC/manual | Refresh generated RSP data, then rebuild the status index |
