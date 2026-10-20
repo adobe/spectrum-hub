@@ -13,7 +13,7 @@ import { test, expect } from './page-errors.js';
 
 // An interior documentation page: the fullest version of the global shell,
 // including the page-nav that the marketing homepage template omits.
-const SHELL_ROUTE = '/support/faqs';
+const SHELL_ROUTE = '/content/voice-and-tone';
 
 // `template: component` is the only template that builds a page hero, its
 // breadcrumbs, and the component status pills.

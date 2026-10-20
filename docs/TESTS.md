@@ -224,6 +224,15 @@ command does not load the repository's `.env` file. `npm run test:e2e:deployed`
 is the same run against the main `.aem.live` origin, which serves published
 content without the production CDN cache in front of it.
 
+#### Deployed branch limitation
+
+Adobe IMS returns a CORS error for `.aem.live` branch origins when the branch
+name is longer than eight characters. The page contract suite records
+`console.error` messages, so its tests fail even when the page and its expected
+blocks load successfully. This failure does not mean `PLAYWRIGHT_BASE_URL` was
+ignored. Use a branch name with eight or fewer characters when running the
+suite against a branch deployment.
+
 The `.aem.live` origin rate-limits bursts of requests, and a throttled `429`
 reads as a site failure rather than as throttling. A deployed run therefore uses
 a single worker and retries; the local `aem up` default keeps Playwright's full
