@@ -17,8 +17,9 @@ instead of duplicating that infrastructure.
 
 ## Naming
 
-Human and agent guidance calls these tests **Pattern Library page contract
-tests**. The existing technical interfaces remain unchanged for compatibility:
+Human and agent guidance calls these tests **Pattern Library smoke tests** and
+explains that they validate page contracts. The existing technical interfaces
+remain unchanged for compatibility:
 
 - npm scripts: `test:e2e` and `test:e2e:ui`
 - configuration: `playwright.smoke.config.js`
@@ -34,7 +35,8 @@ part of the terminology update.
 - Detect regressions that prevent representative Pattern Library pages from
   composing their expected blocks.
 - Detect a page that composes its blocks but breaks underneath: an uncaught
-  exception, a `console.error`, or a missing same-origin asset.
+  exception, a `console.error`, a failed same-origin request, or a same-origin
+  response of 400 or worse.
 - Cover the blocks the page lifecycle composes without an author placing them.
 - Run the same contract against the deployed site, so a content publish — which
   never passes through this repository — is also covered.
@@ -52,8 +54,9 @@ part of the terminology update.
 - Exhaustive coverage of every Pattern Library route.
 - Assertions against Spectrum Web Components or React Spectrum internals.
 - Replacing block unit tests, accessibility tests, or the full-site link crawl.
-- Gating on third-party origins, which fail for reasons this repository cannot
-  fix.
+- Gating on third-party network responses or request failures, which fail for
+  reasons this repository cannot fix. Console errors and uncaught exceptions
+  still gate the suite unless narrowly allowlisted.
 - Mobile emulation in the initial page contract suite.
 - Sharding before runtime demonstrates a need.
 
@@ -73,9 +76,11 @@ The configuration reads `PLAYWRIGHT_BASE_URL`:
 - When the variable is set, Playwright does not start a local server and uses
   the supplied deployed URL without fallback.
 
-The suite runs tests in parallel. CI uses one retry and records a trace on the
-first retry. Page contract reports and result artifacts use dedicated output paths so
-they cannot overwrite accessibility or link-check artifacts.
+Local developer runs use Playwright's default parallelism. CI and deployed runs
+use one worker and two retries to avoid rate-limiting the proxied or directly
+tested `.aem.live` origin. Playwright records a trace on the first retry. Page
+contract reports and result artifacts use dedicated output paths so they cannot
+overwrite accessibility or link-check artifacts.
 
 ### macOS 27 Firefox workaround
 
@@ -150,31 +155,38 @@ normalization contract.
 A second spec, `test/e2e/auto-blocks.spec.js`, covers the blocks no author
 places. A Pattern Library route cannot reach them, because the page lifecycle
 decides them from the template and page metadata rather than from authored
-content. The global shell — `header`, `sitenav`, `footer`, `page-nav`,
-`action-button`, `profile` — is asserted once on `/support/faqs` rather than
-per route, since every page composes it and repeating it buys nothing.
+content. The global shell — `header`, `sitenav`, `footer`, `page-nav`, and
+`action-button` — is asserted once on `/content/voice-and-tone` rather than per
+route, since every page composes it and repeating it buys nothing.
 `banner` is asserted on `/`, the marketing template that carries it, and
 `breadcrumbs`, `page-hero`, and `component-status` on
 `/web/rsp/components/button`, the `component` template that builds them.
 
 `action-button` and `profile` are link blocks. Their hooks match the rewritten
 element rather than the authored anchor, so a passing assertion proves the
-rewrite happened.
+rewrite happened. The profile has a separate contract because Adobe IMS
+prevents it from initializing on `.aem.live` branch origins whose branch name
+is longer than eight characters. Only those affected deployed origins skip the
+profile contract.
 
 ### Page error capture
 
-`test/e2e/page-errors.js` extends Playwright's `page` fixture, so both spec
-files gate on three further signals without opting in per test: an uncaught
-exception, a `console.error` call, and a same-origin response of 400 or worse.
+`test/e2e/page-errors.js` extends Playwright's `page` fixture, so every contract
+test gates on four signals without opting in per test: an uncaught exception, a
+`console.error` call, a same-origin request that fails before receiving a
+response, and a same-origin response of 400 or worse. A third spec,
+`test/e2e/page-errors.spec.js`, verifies the request-failure behavior.
 
-Subresource failures are read from responses rather than from console text.
-Every engine words that console message differently and Firefox does not emit
-it at all, so console text would make the suite's strictness depend on which
-browser ran it.
+Subresource failures are read from response and request-failure events rather
+than from console text. Every engine words that console message differently and
+Firefox does not emit it at all, so console text would make the suite's
+strictness depend on which browser ran it.
 
-Known defects live in allowlists at the top of the fixture. Each entry states
-what is broken and is deleted with the fix, so the suite can gate on new
-breakage without a permanently red first run.
+Network failures gate only the tested site's origin. Console errors and
+uncaught exceptions can still fail a test regardless of their source. Known
+defects live in signal-specific allowlists at the top of the fixture. Each
+entry states what is broken and is deleted with the fix, so the suite can gate
+on new breakage without a permanently red first run.
 
 A test ends as soon as its locator resolves, which would let a lazily loaded
 failure escape. The fixture therefore keeps listening for a bounded settle
@@ -184,23 +196,24 @@ assertion passes.
 ### Deployed runs
 
 The `.aem.live` origin rate-limits bursts, and a throttled `429` reads as a site
-failure rather than as throttling. A deployed run therefore uses a single worker
-and retries, while the local `aem up` default keeps full parallelism.
+failure rather than as throttling. Deployed runs and CI therefore use a single
+worker and two retries. Non-CI local runs keep Playwright's default parallelism.
 
 ## Continuous integration
 
 Add a dedicated workflow for pull requests targeting `main`. The job:
 
 1. Checks out the repository.
-2. Configures Node.js 20 with the existing npm cache pattern.
+2. Configures Node.js 24 with the existing npm cache pattern.
 3. Runs `npm ci`.
 4. Runs `npx playwright install --with-deps chromium firefox webkit`.
 5. Runs `npm run test:e2e`.
 6. Uploads the dedicated HTML report and `test-results` directory even when
    tests fail.
 
-The workflow and step display labels use “Pattern Library page contract tests.”
-The workflow path remains `.github/workflows/e2e.yml`.
+The workflow display label is “Pattern Library smoke tests (page contracts),”
+and its test step is “Run Pattern Library smoke tests.” The workflow path
+remains `.github/workflows/e2e.yml`.
 
 The workflow uses the local `aem up` default. It does not require a repository
 secret or depend on branch-preview availability. Contributors and manual CI

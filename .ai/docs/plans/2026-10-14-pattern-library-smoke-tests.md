@@ -4,13 +4,21 @@
 
 **Goal:** Add cross-browser Playwright page contract coverage for representative Pattern Library routes and document how humans and agents run and extend the repository's test suites.
 
-**Architecture:** A dedicated Playwright configuration owns full-page contract execution, local `aem up` startup, deployed URL overrides, browser projects, and isolated artifacts. One data-driven spec defines the route-to-selector contract. A separate pull-request workflow installs all three browsers and preserves reports and retry traces, while `docs/TESTS.md` remains the canonical human guide and repository skills provide matching agent guidance.
+**Architecture:** A dedicated Playwright configuration owns full-page contract execution, local `aem up` startup, deployed URL overrides, browser projects, and isolated artifacts. A data-driven spec defines the route-to-selector contract, a second spec covers automatically composed blocks, and a shared fixture gates on page and network failures. Pull-request and deployed workflows install all three browsers and preserve reports and retry traces, while `docs/TESTS.md` remains the canonical human guide and repository skills provide matching agent guidance.
 
-**Tech Stack:** Node.js 20, npm, `@playwright/test`, Adobe AEM CLI, GitHub Actions, GitHub-Flavored Markdown.
+**Tech Stack:** Node.js 24, npm, `@playwright/test`, Adobe AEM CLI, GitHub Actions, GitHub-Flavored Markdown.
 
 **Approved TDD exception:** The user approved command-based validation instead of test-first automation for configuration files, package scripts, workflows, and documentation. The page contract spec is itself executable test coverage for existing page behavior. No production application code is added.
 
 **Commit policy:** Do not create commits during implementation. The user explicitly asked to keep task changes uncommitted.
+
+**Implementation outcome:** This plan records the sequence used to build the
+initial suite. Review-driven hardening later added automatically composed block
+coverage, shared page-error detection, a request-failure regression test, and a
+deployed workflow. Intermediate test counts remain specific to the step where
+they appear. The final verification count is 42 tests across three browsers.
+For current behavior, use `playwright.smoke.config.js`, `test/e2e/`, and
+`docs/TESTS.md` as the source of truth.
 
 ---
 
@@ -20,10 +28,14 @@
 | --- | --- |
 | `playwright.smoke.config.js` | Configure the page contract browser projects, base URL selection, local server, retries, traces, reports, and result output. |
 | `test/e2e/pattern-library.spec.js` | Define the route contracts and assert successful navigation plus visible repository-owned hooks. |
+| `test/e2e/auto-blocks.spec.js` | Verify global and template-created blocks on representative routes. |
+| `test/e2e/page-errors.js` | Gate every contract on uncaught exceptions, console errors, and same-origin network failures. |
+| `test/e2e/page-errors.spec.js` | Verify that an aborted same-origin request fails the shared page fixture. |
 | `package.json` | Expose the stable `test:e2e` and UI-mode commands. |
 | `.gitignore` | Ignore the dedicated page contract HTML report at its compatibility path. |
 | `eslint.config.js` | Allow the root page contract configuration to import the existing Playwright dev dependency. |
 | `.github/workflows/e2e.yml` | Run the three-browser page contract suite on pull requests targeting `main` and upload artifacts. |
+| `.github/workflows/e2e-deployed.yml` | Run the suite against the deployed site after pushes to `main`, daily, and on manual dispatch. |
 | `README.md` | Add the shortest contributor entry point for installing browsers and running page contract tests. |
 | `docs/TESTS.md` | Document runner selection, fixture conventions, page contracts, environment behavior, CI mapping, and pull-request expectations. |
 | `.ai/skills/create-new-block/SKILL.md` | Tell agents when a new or changed block needs a Pattern Library page contract. |
@@ -137,7 +149,8 @@ export default defineConfig({
   testDir: './test/e2e',
   testMatch: '**/*.spec.js',
   fullyParallel: true,
-  retries: process.env.CI ? 1 : 0,
+  workers: (deployedURL || process.env.CI) ? 1 : undefined,
+  retries: (deployedURL || process.env.CI) ? 2 : 0,
   reporter: process.env.CI
     ? [['github'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]]
     : [['list'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]],
@@ -249,7 +262,7 @@ design-document changes are present. Do not commit.
 Create `.github/workflows/e2e.yml`:
 
 ```yaml
-name: Pattern Library page contract tests
+name: Pattern Library smoke tests (page contracts)
 
 on:
   pull_request:
@@ -270,7 +283,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies
@@ -279,7 +292,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
-      - name: Run Pattern Library page contract tests
+      - name: Run Pattern Library smoke tests
         run: npm run test:e2e
 
       - name: Upload Playwright artifacts
@@ -304,7 +317,9 @@ git diff --check
 git diff -- .github/workflows/e2e.yml .github/workflows/a11y.yml .github/workflows/test.yml
 ```
 
-Expected: `git diff --check` passes. The new workflow follows the repository's checkout, Node 20, npm cache, `npm ci`, Playwright installation, concurrency, and artifact-retention patterns.
+Expected: `git diff --check` passes. The new workflow follows the repository's
+checkout, Node 24, npm cache, `npm ci`, Playwright installation, concurrency,
+and artifact-retention patterns.
 
 - [ ] **Step 3: Inspect the uncommitted task diff**
 
@@ -327,7 +342,8 @@ Expected: `.github/workflows/e2e.yml` is added and no unrelated workflow is modi
 After the accessibility command in `README.md`, add:
 
 ```markdown
-To run the Pattern Library page contract tests in Chromium, Firefox, and WebKit:
+To run the Pattern Library end-to-end smoke tests (which validate page
+contracts) in Chromium, Firefox, and WebKit:
 
 ```bash
 npx playwright install chromium firefox webkit
@@ -368,9 +384,9 @@ CI adds `--with-deps` because Linux runners also need browser system packages.
 Add:
 
 ```markdown
-| `npm run test:e2e` | Pattern Library page contract tests in Chromium, Firefox, and WebKit | Full-page composition and stable route hooks |
-| `npm run test:e2e:ui` | The page contract suite in Playwright UI mode | Local contract-test authoring and debugging |
-| `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same page contract suite against a deployed site | Branch preview or production validation |
+| `npm run test:e2e` | Pattern Library smoke tests in Chromium, Firefox, and WebKit | Full-page composition and stable route hooks |
+| `npm run test:e2e:ui` | The smoke test suite in Playwright UI mode | Local contract-test authoring and debugging |
+| `PLAYWRIGHT_BASE_URL=<url> npm run test:e2e` | The same smoke test suite against a deployed site | Branch preview or production validation |
 ```
 
 Update the paragraph below the table so it also states that `npm test` does not
@@ -401,7 +417,7 @@ This corrects the ticket's generic fixture example to match the repository's act
 Place it after accessibility tests and before link checks:
 
 ```markdown
-## Pattern Library page contract tests
+## Pattern Library smoke tests
 
 `test/e2e/` uses Playwright to verify that representative Pattern Library pages
 load and compose stable repository-owned block hooks. The initial routes are:
@@ -465,7 +481,7 @@ when a change affects interaction, semantics, or accessibility.
 Add `.github/workflows/e2e.yml` to the CI mapping:
 
 ```markdown
-| `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library page contract tests |
+| `.github/workflows/e2e.yml` | Pull requests to `main` | Chromium, Firefox, and WebKit Pattern Library smoke/page contract tests |
 ```
 
 Add an end-to-end row to the validation matrix:
@@ -616,7 +632,7 @@ git status --short
 Expected: the Firefox workaround and documentation are present with the
 existing smoke-test changes. Do not commit.
 
-### Task 5: Rename human and agent guidance to page contract tests
+### Task 5: Use smoke-test language for page contract coverage
 
 **Files:**
 - Modify: `README.md`
@@ -629,8 +645,9 @@ existing smoke-test changes. Do not commit.
 
 - [ ] **Step 1: Update human-facing terminology**
 
-Replace descriptive uses of “smoke tests” with “Pattern Library page contract
-tests” in `README.md` and `docs/TESTS.md`. Keep these technical interfaces
+Use “Pattern Library smoke tests” in `README.md` and `docs/TESTS.md`. Explain
+that the tests validate page contracts where that distinction helps
+contributors choose the correct suite. Keep these technical interfaces
 unchanged:
 
 ```text
@@ -642,7 +659,7 @@ playwright-report-smoke/
 test-results/smoke/
 ```
 
-Rename the `docs/TESTS.md` section to `## Pattern Library page contract tests`.
+Name the `docs/TESTS.md` section `## Pattern Library smoke tests`.
 Describe the tests as route-level contracts that verify successful navigation
 and stable repository-owned post-decoration hooks.
 
@@ -663,11 +680,11 @@ In `.github/workflows/e2e.yml`, change only the human-facing workflow and step
 names:
 
 ```yaml
-name: Pattern Library page contract tests
+name: Pattern Library smoke tests (page contracts)
 ```
 
 ```yaml
-- name: Run Pattern Library page contract tests
+- name: Run Pattern Library smoke tests
   run: npm run test:e2e
 ```
 
@@ -675,8 +692,8 @@ Do not rename the workflow file, command, artifact name, or artifact paths.
 
 - [ ] **Step 4: Add create-new-block agent guidance**
 
-In `.ai/skills/create-new-block/SKILL.md`, add a `### Pattern Library page
-contract tests` subsection after the accessibility-test guidance:
+In `.ai/skills/create-new-block/SKILL.md`, add a `### Pattern Library smoke
+tests` subsection after the accessibility-test guidance:
 
 - Unit and accessibility tests remain mandatory for every new block.
 - Add or update `test/e2e/pattern-library.spec.js` only when the block has a
@@ -707,23 +724,19 @@ when that condition applies.
 
 - [ ] **Step 6: Align agent design records**
 
-Replace nonliteral descriptive uses of “smoke tests” and “smoke suite” in the
-design and implementation plan with “page contract tests” or “page contract
-suite.” Preserve all literal technical names listed in Step 1.
+Use “smoke tests” for the suite name and “page contract” for the behavior it
+validates. Preserve all literal technical names listed in Step 1.
 
 - [ ] **Step 7: Check terminology boundaries**
 
 Run:
 
 ```bash
-rg -n -i "smoke test|smoke suite|end-to-end smoke" README.md docs/TESTS.md .github/workflows/e2e.yml .ai/skills .ai/docs/specs
+rg -n -i "page contract test|page contract suite" README.md docs/TESTS.md .github/workflows/e2e.yml .ai/skills .ai/docs/specs
 ```
 
-Expected: no human- or agent-facing descriptive uses remain. Matches are
-limited to literal compatibility filenames, artifact paths, or historical
-commands where replacing `smoke` would make the command inaccurate.
-Review this implementation plan separately because the check command and
-compatibility instructions intentionally contain the old terms.
+Expected: “page contract” describes the behavior rather than replacing the
+human-facing “smoke test” suite name. Review each match for that distinction.
 
 - [ ] **Step 8: Keep the changes uncommitted**
 
@@ -755,7 +768,7 @@ Run:
 npx playwright test --config=playwright.smoke.config.js --list
 ```
 
-Expected: PASS and 27 discovered tests.
+Expected: PASS and 42 discovered tests.
 
 - [ ] **Step 2: Run the three-browser local page contract suite**
 
@@ -765,7 +778,7 @@ Run:
 npm run test:e2e
 ```
 
-Expected: PASS with 27 tests.
+Expected: PASS with 42 tests.
 
 - [ ] **Step 3: Run the core test baseline**
 

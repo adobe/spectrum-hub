@@ -134,7 +134,8 @@ content from the main `.aem.live` origin. Set
 `PLAYWRIGHT_BASE_URL=https://<branch>--spectrum-hub--adobe.aem.live` to test a
 deployed environment instead, or run `npm run test:e2e:deployed` to test what is
 published on `main`. Every E2E smoke test also fails on an uncaught
-exception, a `console.error`, or a same-origin request that 404s. See
+exception, a `console.error`, a same-origin request that fails before receiving
+a response, or a same-origin response of 400 or worse. See
 [`docs/TESTS.md`](./docs/TESTS.md) for the route list, the blocks the page
 lifecycle composes automatically, fixture conventions, and guidance on choosing
 a test suite.

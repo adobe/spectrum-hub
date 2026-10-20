@@ -193,15 +193,16 @@ but breaks underneath. It gates on four signals:
 - a same-origin response of 400 or worse.
 
 These are the failures a visible-locator assertion cannot see, and the ones most
-likely to differ between engines. Subresource failures are read from responses
-rather than from console text, because every engine words that console message
-differently and Firefox does not emit it at all.
+likely to differ between engines. Subresource failures are read from response
+and request-failure events rather than from console text, because every engine
+words that console message differently and Firefox does not emit it at all.
 
-Third-party origins are not gated: they fail for reasons this repository cannot
-fix. Known defects live in the `ALLOWED_RESPONSES`, `ALLOWED_CONSOLE_ERRORS`,
-`ALLOWED_PAGE_ERRORS`, and `ALLOWED_REQUEST_FAILURES` lists at the top of the
-fixture. Each entry states what is broken and is deleted with the fix rather
-than left behind.
+Network failures gate the suite only for the tested site's origin. Console
+errors and uncaught exceptions can still fail a test regardless of their
+source. Known defects live in the `ALLOWED_RESPONSES`,
+`ALLOWED_CONSOLE_ERRORS`, `ALLOWED_PAGE_ERRORS`, and
+`ALLOWED_REQUEST_FAILURES` lists at the top of the fixture. Each entry states
+what is broken and is deleted with the fix rather than left behind.
 
 Because a test ends as soon as its locator resolves, the fixture keeps listening
 for a bounded settle period after the contract assertion passes, so lazily
@@ -238,7 +239,8 @@ eight or fewer characters continue to test the profile contract.
 
 The `.aem.live` origin rate-limits bursts of requests, and a throttled `429`
 reads as a site failure rather than as throttling. Deployed runs and CI use a
-single worker and retry. Local developer runs keep Playwright's full parallelism.
+single worker and two retries. Local developer runs keep Playwright's full
+parallelism.
 
 ### macOS 27 Firefox
 
