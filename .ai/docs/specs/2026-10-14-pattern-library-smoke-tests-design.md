@@ -1,4 +1,4 @@
-# Pattern Library page contract tests and contributor testing guide
+# Pattern Library smoke/page contract tests and contributor testing guide
 
 ## Summary
 
