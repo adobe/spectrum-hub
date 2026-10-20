@@ -8,10 +8,19 @@ body:
       value: |
         # ✨ Feature request
         Thanks for taking the time to contribute an idea for a new feature! Before you submit, search open/closed issues before submitting since someone might have asked the same thing before.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of conduct
+      description: By submitting this issue, you agree to follow our [code of conduct](https://github.com/adobe/spectrum-hub/blob/main/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's code of conduct.
+          required: true
   - type: textarea
     id: general-summary
     attributes:
-      label: Provide a general summary of the feature here. The more details the better!
+      label: ✨ Summary of new feature
+      description: Provide a general summary of the feature here. The more details the better!
     validations:
       required: true
   - type: textarea
@@ -44,7 +53,7 @@ body:
       description: Examples help us understand the requested feature better. Include design mocks here if possible.
   - type: markdown
     attributes:
-      value: '## 🦄 Other'
+      value: '## 🦄 Other info that helps us'
   - type: input
     id: company-team
     attributes:

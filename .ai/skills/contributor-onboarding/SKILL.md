@@ -92,10 +92,16 @@ through its `init(el)` contract.
 2. After permission to edit, create matching `blocks/<name>/<name>.js` and `blocks/<name>/<name>.css` files. Keep behavior in `init(el)` and styles under the root class.
 3. Add `test/blocks/<name>.test.js`, `test/a11y/fixtures/<name>.html`, and `test/a11y/blocks/<name>.spec.js`.
 4. Run the targeted unit and accessibility commands from [Tests](../../../docs/TESTS.md).
+5. If the block has a representative Pattern Library route and this change
+   alters its full-page composition contract, add or update its
+   repository-owned post-decoration selector in
+   `test/e2e/pattern-library.spec.js` and run `npm run test:e2e`. Otherwise, do
+   not add end-to-end smoke test coverage solely because the block is new.
 
 **Done when:** The authored fixture renders the intended semantic structure,
 the focused unit test passes, and the accessibility spec passes in light,
-dark, and accessibility-tree checks.
+dark, and accessibility-tree checks. When step 5 applies, the Pattern Library
+E2E smoke test suite also passes.
 
 ### Add a vertical banner variant
 

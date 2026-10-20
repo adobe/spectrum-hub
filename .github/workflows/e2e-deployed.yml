@@ -1,0 +1,57 @@
+name: Deployed smoke tests (page contracts)
+
+# Catches breakage the pull-request run cannot see: a content publish (which
+# never passes through this repository), a CDN or origin problem, and anything
+# that only appears once the real site serves the page. The default target is
+# the .aem.live origin, which skips the production CDN cache.
+on:
+  schedule:
+    - cron: '0 7 * * *' # Daily at 07:00 UTC
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Site to test (defaults to the main .aem.live origin)'
+        type: string
+        default: 'https://main--spectrum-hub--adobe.aem.live'
+
+# The origin rate-limits bursts, so overlapping runs would fail each other.
+concurrency:
+  group: e2e-deployed
+  cancel-in-progress: false
+
+jobs:
+  e2e-deployed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run Pattern Library smoke tests against the deployed site
+        run: npx playwright test --config=playwright.smoke.config.js
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ inputs.base_url || 'https://main--spectrum-hub--adobe.aem.live' }}
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-deployed-results
+          path: |
+            playwright-report-smoke/
+            test-results/smoke/
+          retention-days: 30
