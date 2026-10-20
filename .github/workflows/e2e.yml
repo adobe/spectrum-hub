@@ -1,4 +1,4 @@
-name: Pattern Library page contract tests
+name: Pattern Library smoke tests (page contracts)
 
 on:
   pull_request:
