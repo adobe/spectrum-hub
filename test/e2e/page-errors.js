@@ -21,7 +21,17 @@ const ALLOWED_RESPONSES = [
   /\/deps\/rsp\/playground\/snippets\/table-view\.jsx$/,
 ];
 
-const ALLOWED_CONSOLE_ERRORS = [];
+const ALLOWED_CONSOLE_ERRORS = [
+  // Adobe IMS rejects token checks from .aem.live origins whose branch name
+  // exceeds eight characters. The page remains usable, so ignore only that
+  // specific third-party CORS message.
+  /^Access to XMLHttpRequest at 'https:\/\/adobeid-na1\.services\.adobe\.com\/ims\/check\/v6\/token(?:\?[^']*)?' from origin '[^']+' has been blocked by CORS policy:/,
+  /Cross-Origin Request Blocked:.*https:\/\/adobeid-na1\.services\.adobe\.com\/ims\/check\/v6\/token\b.*CORS header .*Access-Control-Allow-Origin.* missing/,
+];
+
+const ALLOWED_PAGE_ERRORS = [
+  /^XMLHttpRequest cannot load https:\s*\/adobeid-na1\.services\.adobe\.com\/ims\/check\/v6\/token(?:\?\S*)? due to access control checks\.$/,
+];
 
 // How long a page keeps reporting after its contract assertion passes.
 const SETTLE_MS = Number(process.env.PLAYWRIGHT_SETTLE_MS ?? 2000);
@@ -32,8 +42,13 @@ export const test = base.extend({
   page: async ({ page, baseURL }, use) => {
     const { origin } = new URL(baseURL);
     const failures = [];
+    let allowedImsPageError = false;
 
     page.on('pageerror', (error) => {
+      if (matches(ALLOWED_PAGE_ERRORS, error.toString())) {
+        allowedImsPageError = true;
+        return;
+      }
       failures.push(`uncaught ${error.name}: ${error.message}`);
     });
 
@@ -64,7 +79,14 @@ export const test = base.extend({
     await page.waitForLoadState('load').catch(() => {});
     await page.waitForTimeout(SETTLE_MS);
 
-    expect(failures, `${page.url()} reported page errors`).toEqual([]);
+    // WebKit reports the IMS failure twice. Its console event omits the request
+    // URL, so suppress it only when the matching IMS page error was observed.
+    const webkitImsConsoleError = `console.error: Origin ${origin} is not allowed by Access-Control-Allow-Origin. Status code: 200`;
+    const reportedFailures = allowedImsPageError
+      ? failures.filter((failure) => failure !== webkitImsConsoleError)
+      : failures;
+
+    expect(reportedFailures, `${page.url()} reported page errors`).toEqual([]);
   },
 });
 

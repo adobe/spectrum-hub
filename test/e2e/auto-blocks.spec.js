@@ -19,64 +19,84 @@ const SHELL_ROUTE = '/content/voice-and-tone';
 // breadcrumbs, and the component status pills.
 const COMPONENT_ROUTE = '/web/rsp/components/button';
 
-const shellBlocks = [
-  { name: 'header', selector: 'header.header' },
-  { name: 'sitenav', selector: '#sitenav nav' },
-  { name: 'footer', selector: 'footer.footer' },
-  { name: 'page-nav', selector: '.page-nav a' },
-  // Both are link blocks: an anchor scripts.js rewrites into a real widget.
-  // Matching the rewritten element proves the rewrite happened.
-  { name: 'action-button', selector: 'button.action-button[data-widget]' },
-  { name: 'profile', selector: 'se-profile' },
-];
-
-const templateBlocks = [
+const routeContracts = [
   {
-    name: 'banner',
+    name: 'global shell',
+    path: SHELL_ROUTE,
+    blocks: [
+      { name: 'header', selector: 'header.header' },
+      { name: 'sitenav', selector: '#sitenav nav' },
+      { name: 'footer', selector: 'footer.footer' },
+      { name: 'page-nav', selector: '.page-nav a' },
+      // The authored anchor is rewritten into a real widget.
+      { name: 'action-button', selector: 'button.action-button[data-widget]' },
+    ],
+  },
+  {
+    name: 'marketing template',
     path: '/',
-    // The homepage banner is audience-gated; an anonymous visitor keeps the
-    // public row, and its button proves the block decorated rather than just survived.
-    selector: '.banner .se-button',
+    blocks: [
+      {
+        name: 'banner',
+        // The homepage banner is audience-gated; an anonymous visitor keeps the
+        // public row, and its button proves the block decorated rather than just survived.
+        selector: '.banner .se-button',
+      },
+    ],
   },
   {
-    name: 'breadcrumbs',
+    name: 'component template',
     path: COMPONENT_ROUTE,
-    // The block replaces its authored div with a labelled nav.
-    selector: 'nav.breadcrumbs[aria-label="Breadcrumb"] ol li',
-  },
-  {
-    name: 'page-hero',
-    path: COMPONENT_ROUTE,
-    // scripts.js moves the page h1 into the hero it builds.
-    selector: '.page-hero h1',
-  },
-  {
-    name: 'component-status',
-    path: COMPONENT_ROUTE,
-    // The block removes itself unless the path resolves to an indexed
-    // component, so the group role is also proof the status slice resolved.
-    selector: '.component-status[role="group"]',
+    blocks: [
+      {
+        name: 'breadcrumbs',
+        // The block replaces its authored div with a labelled nav.
+        selector: 'nav.breadcrumbs[aria-label="Breadcrumb"] ol li',
+      },
+      {
+        name: 'page-hero',
+        // scripts.js moves the page h1 into the hero it builds.
+        selector: '.page-hero h1',
+      },
+      {
+        name: 'component-status',
+        // The block removes itself unless the path resolves to an indexed
+        // component, so the group role is also proof the status slice resolved.
+        selector: '.component-status[role="group"]',
+      },
+    ],
   },
 ];
 
-test.describe('global shell', () => {
-  for (const block of shellBlocks) {
-    test(`${block.name} composes on every page`, async ({ page }) => {
-      const response = await page.goto(SHELL_ROUTE, { waitUntil: 'domcontentloaded' });
+const hasUnsupportedImsBranch = (baseURL) => {
+  const { hostname } = new URL(baseURL);
+  if (!hostname.endsWith('.aem.live')) { return false; }
+  const [branch, repo, owner] = hostname.split('--');
+  return Boolean(repo && owner && branch.length > 8);
+};
 
-      expect(response.ok(), `${SHELL_ROUTE} returned ${response.status()}`).toBe(true);
-      await expect(page.locator(block.selector).first()).toBeVisible();
-    });
-  }
-});
+for (const route of routeContracts) {
+  test(`${route.name} composes on ${route.path}`, async ({ page }) => {
+    const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' });
 
-test.describe('template blocks', () => {
-  for (const block of templateBlocks) {
-    test(`${block.name} composes on ${block.path}`, async ({ page }) => {
-      const response = await page.goto(block.path, { waitUntil: 'domcontentloaded' });
+    expect(response.ok(), `${route.path} returned ${response.status()}`).toBe(true);
 
-      expect(response.ok(), `${block.path} returned ${response.status()}`).toBe(true);
-      await expect(page.locator(block.selector).first()).toBeVisible();
-    });
-  }
+    for (const block of route.blocks) {
+      await test.step(`${block.name} composes`, async () => {
+        await expect(page.locator(block.selector).first()).toBeVisible();
+      });
+    }
+  });
+}
+
+test('profile composes on the global shell', async ({ page, baseURL }) => {
+  test.skip(
+    hasUnsupportedImsBranch(baseURL),
+    'Adobe IMS does not support .aem.live branch names longer than eight characters',
+  );
+
+  const response = await page.goto(SHELL_ROUTE, { waitUntil: 'domcontentloaded' });
+
+  expect(response.ok(), `${SHELL_ROUTE} returned ${response.status()}`).toBe(true);
+  await expect(page.locator('se-profile').first()).toBeVisible();
 });

@@ -228,10 +228,10 @@ content without the production CDN cache in front of it.
 
 Adobe IMS returns a CORS error for `.aem.live` branch origins when the branch
 name is longer than eight characters. The page contract suite records
-`console.error` messages, so its tests fail even when the page and its expected
-blocks load successfully. This failure does not mean `PLAYWRIGHT_BASE_URL` was
-ignored. Use a branch name with eight or fewer characters when running the
-suite against a branch deployment.
+page errors, but ignores this specific third-party failure. Because IMS also
+prevents the profile component from initializing, the profile contract is
+skipped for affected branch origins. Local runs, `main`, and branch names with
+eight or fewer characters continue to test the profile contract.
 
 The `.aem.live` origin rate-limits bursts of requests, and a throttled `429`
 reads as a site failure rather than as throttling. A deployed run therefore uses
