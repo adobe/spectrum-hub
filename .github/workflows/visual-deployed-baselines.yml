@@ -1,0 +1,59 @@
+name: Update deployed visual baselines
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: Commit-specific AEM preview URL
+        required: true
+        type: string
+
+concurrency:
+  group: visual-deployed-baselines-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baselines:
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    env:
+      VISUAL_BASE_URL: ${{ inputs.preview_url }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify visual test metadata
+        run: npm run test:visual:unit
+
+      - name: Identify preview host
+        id: preview
+        run: |
+          node --input-type=module <<'EOF' >> "$GITHUB_OUTPUT"
+          const url = new URL(process.env.VISUAL_BASE_URL);
+          if (!['http:', 'https:'].includes(url.protocol)) {
+            throw new Error('preview_url must use HTTP or HTTPS.');
+          }
+          const host = url.host.toLowerCase().replace(/[^a-z0-9.-]+/g, '-');
+          console.log(`host=${host}`);
+          EOF
+
+      - name: Generate deployed visual baselines
+        run: npm run test:visual:deployed -- --update-snapshots
+
+      - name: Upload deployed visual baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-deployed-baselines-${{ steps.preview.outputs.host }}-${{ github.sha }}
+          path: test/visual/deployed/**/*-deployed-snapshots/*.png
+          if-no-files-found: error
+          retention-days: 30
