@@ -4,7 +4,7 @@ import { test as base, expect } from '@playwright/test';
  * A page can compose every block it owns and still be broken underneath: an
  * uncaught exception, a `console.error`, or a missing asset. Those failures are
  * invisible to a locator assertion and are the ones most likely to differ
- * between Chromium, Firefox, and WebKit, so every page contract test gates on
+ * between Chromium, Firefox, and WebKit, so every smoke test gates on
  * them through this extended `page` fixture.
  */
 
@@ -33,6 +33,8 @@ const ALLOWED_PAGE_ERRORS = [
   /^XMLHttpRequest cannot load https:\s*\/adobeid-na1\.services\.adobe\.com\/ims\/check\/v6\/token(?:\?\S*)? due to access control checks\.$/,
 ];
 
+const ALLOWED_REQUEST_FAILURES = [];
+
 // How long a page keeps reporting after its contract assertion passes.
 const SETTLE_MS = Number(process.env.PLAYWRIGHT_SETTLE_MS ?? 2000);
 
@@ -60,12 +62,21 @@ export const test = base.extend({
       failures.push(`console.error: ${text}`);
     });
 
+    page.on('requestfailed', (request) => {
+      const url = request.url();
+      if (new URL(url).origin !== origin) { return; }
+      const errorText = request.failure()?.errorText ?? 'unknown network error';
+      const failure = `${errorText} ${url}`;
+      if (matches(ALLOWED_REQUEST_FAILURES, failure)) { return; }
+      failures.push(`request failed: ${failure}`);
+    });
+
     // Third-party origins fail for reasons this repository cannot fix, so only
     // the site's own assets gate the suite.
     page.on('response', (response) => {
       const url = response.url();
       if (response.status() < 400) { return; }
-      if (!url.startsWith(origin)) { return; }
+      if (new URL(url).origin !== origin) { return; }
       if (matches(ALLOWED_RESPONSES, url)) { return; }
       failures.push(`${response.status()} ${url}`);
     });
