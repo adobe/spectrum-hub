@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const deployedURL = process.env.PLAYWRIGHT_BASE_URL;
+const rateLimitedRun = Boolean(deployedURL || process.env.CI);
 const darwinMajor = Number.parseInt(release().split('.')[0], 10);
 const needsFirefoxHome = process.platform === 'darwin' && darwinMajor >= 27;
 let firefoxLaunchOptions;
@@ -32,8 +33,8 @@ export default defineConfig({
   // The .aem.live origin rate-limits bursts, and a throttled 429 reads as a
   // site failure. Deployed and CI runs therefore go one page at a time. Local
   // developers keep full parallelism when iterating against aem up.
-  workers: (deployedURL || process.env.CI) ? 1 : undefined,
-  retries: (deployedURL || process.env.CI) ? 2 : 0,
+  workers: rateLimitedRun ? 1 : undefined,
+  retries: rateLimitedRun ? 2 : 0,
   reporter: process.env.CI
     ? [['github'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]]
     : [['list'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]],

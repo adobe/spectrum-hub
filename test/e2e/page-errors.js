@@ -30,6 +30,8 @@ const ALLOWED_CONSOLE_ERRORS = [
 ];
 
 const ALLOWED_PAGE_ERRORS = [
+  // WebKit splits the URL between Error.name (`... https`) and Error.message
+  // (`/adobeid...`), so Error.toString() contains `https: /...`.
   /^XMLHttpRequest cannot load https:\s*\/adobeid-na1\.services\.adobe\.com\/ims\/check\/v6\/token(?:\?\S*)? due to access control checks\.$/,
 ];
 

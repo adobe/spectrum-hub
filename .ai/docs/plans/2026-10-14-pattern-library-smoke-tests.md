@@ -16,7 +16,7 @@
 initial suite. Review-driven hardening later added automatically composed block
 coverage, shared page-error detection, a request-failure regression test, and a
 deployed workflow. Intermediate test counts remain specific to the step where
-they appear. The final verification count is 42 tests across three browsers.
+they appear. The final verification count is 45 tests across three browsers.
 For current behavior, use `playwright.smoke.config.js`, `test/e2e/`, and
 `docs/TESTS.md` as the source of truth.
 
@@ -768,7 +768,7 @@ Run:
 npx playwright test --config=playwright.smoke.config.js --list
 ```
 
-Expected: PASS and 42 discovered tests.
+Expected: PASS and 45 discovered tests.
 
 - [ ] **Step 2: Run the three-browser local page contract suite**
 
@@ -778,7 +778,7 @@ Run:
 npm run test:e2e
 ```
 
-Expected: PASS with 42 tests.
+Expected: PASS with 45 tests.
 
 - [ ] **Step 3: Run the core test baseline**
 
