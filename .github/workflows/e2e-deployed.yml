@@ -6,7 +6,7 @@ name: Deployed smoke tests (page contracts)
 # the .aem.live origin, which skips the production CDN cache.
 on:
   schedule:
-    - cron: '30 6 * * *' # Daily at 06:30 UTC, after the link check
+    - cron: '0 7 * * *' # Daily at 07:00 UTC
   push:
     branches: [main]
   workflow_dispatch:
