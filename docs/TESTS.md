@@ -6,7 +6,7 @@ single root command that runs every repository check.
 
 ## Setup
 
-Use Node.js 20 and install root dependencies:
+Use Node.js 24 and install root dependencies:
 
 ```bash
 nvm use
