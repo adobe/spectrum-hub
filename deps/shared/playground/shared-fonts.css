@@ -3,11 +3,8 @@
  * that ship with neither @adobe/spectrum-wc nor swc.css / tokens.css, nor
  * @react-spectrum/s2 — those only *name* the family, they never load it, so
  * every preview implementation falls back to a system font without this.
- * Alias that family name to the Adobe Clean woff2 files the site already
- * self-hosts under /styles/fonts/, so every preview shell (SWC, RSP, and the
- * generic ios/android one) renders in the correct typeface with no external
- * (Typekit) request. Root-relative URLs resolve the same on the local dev
- * server and in production.
+ * Load the Typekit-hosted variable faces so every preview shell (SWC, RSP, and
+ * the generic iOS/Android one) renders with the same typography as the site.
  */
 
 @font-face {

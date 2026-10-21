@@ -16,6 +16,33 @@ and the conventions enforced by lint and review.
 Do not add a global rule merely because several pages currently use the same
 block. If a selector only makes sense inside one block, keep it with that block.
 
+## Fonts
+
+Spectrum Hub uses Adobe Clean Spectrum VF for body and component typography.
+The normal and italic variable faces are delivered from Typekit through the
+`@font-face` declarations in [`styles/styles.css`](../styles/styles.css).
+Component playgrounds load the same faces through
+[`deps/shared/playground/shared-fonts.css`](../deps/shared/playground/shared-fonts.css).
+These stylesheets are the source of truth for the font asset URLs.
+
+Local development and CI require network access to `use.typekit.net` to load
+Adobe Clean Spectrum VF. If Typekit or web fonts are unavailable, the site
+falls back to Trebuchet MS and then the platform sans-serif font.
+
+Before changing the delivery method or committing font binaries, confirm that
+the licensing and distribution terms permit the proposed use. To update the
+font:
+
+1. Update the normal and italic `@font-face` declarations in both source
+   stylesheets.
+1. Keep the family name, style, and supported weight range consistent between
+   the site and playground declarations.
+1. Verify that normal text loads the normal face and italic text loads the
+   italic face.
+1. Test representative pages and component playgrounds in supported browsers.
+   Include light and dark modes, an accented or supported non-Latin string,
+   and a run with Typekit requests blocked to exercise the fallback stack.
+
 ## Cascade model
 
 Global site rules live in the `spectrum-edge` layer, opened in
