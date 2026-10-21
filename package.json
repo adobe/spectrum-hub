@@ -23,7 +23,7 @@
     "test:links:deployed": "LINKCHECK_BASE_URL=${LINKCHECK_BASE_URL:-https://main--spectrum-hub--adobe.aem.live} playwright test --config=playwright.link-check.config.js",
     "build:lit": "esbuild --format=esm --minify ./deps/lit/src/index.js --bundle --outfile=./deps/lit/dist/index.js",
     "build:turndown": "esbuild --format=esm --minify ./deps/turndown/src/index.js --bundle --outfile=./deps/turndown/dist/index.js",
-    "build:swc-tooltip": "esbuild --format=esm --minify ./deps/components/swc-tooltip/src/index.js --bundle --outfile=./deps/components/swc-tooltip/dist/index.js"
+    "build:components": "esbuild --format=esm --minify ./deps/components/**/src/index.js --bundle --outdir=./deps/components/dist/index.js"
   },
   "repository": {
     "type": "git",
