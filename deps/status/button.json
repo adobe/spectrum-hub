@@ -19,8 +19,7 @@
       "context": "Stable"
     },
     "android": {
-      "status": "available",
-      "context": "Stable"
+      "status": "not-available"
     }
   }
 }

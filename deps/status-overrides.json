@@ -119,7 +119,7 @@
    "FloatingActionButtonFAB": {
     "mobile": {
       "ios": {
-        "status": "available",
+        "status": "experimental",
         "figmaPageSource": "Floating Action Button (FAB)",
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
