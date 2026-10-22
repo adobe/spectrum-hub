@@ -13,20 +13,41 @@ compares the approaches available to us, and recommends one.
 
 ## Requirements
 
-1. **Machine-readable.** A person editing a file by hand is the state we are trying
-   to leave, not a design.
-2. **Refreshable without our involvement.** Status drifts with every release. Data
-   that needs a Spectrum Hub engineer in the loop will go stale.
-3. **Reviewable.** Every change arrives as a diff a human approves before it
-   publishes. This is how the web pipelines work and it has caught real upstream
-   breakage.
-4. **No internal credentials in a public repository.** `adobe/spectrum-hub` is
-   open source.
-5. **Degrades safely.** A source that fails, returns nothing, or produces malformed
+Grouped by who owns them, because most of these are a commitment by one side rather
+than a shared aspiration.
+
+### What the mobile workflows produce
+
+1. **Machine-readable JSON.** A person editing a file by hand is the state we are
+   trying to leave, not a design.
+2. **Refreshed and pruned on release cadence.** Status drifts with every release, so
+   the roster is regenerated rather than edited, and a component that stops shipping
+   is removed rather than left behind.
+3. **Two levels of detail, independently useful.** Component availability alone powers
+   the status table. Per-component property details power the documentation pages. The
+   first can ship without the second.
+4. **Delivered as a pull request.** Changes arrive as a pull request, never a direct
+   push, so nothing publishes unreviewed.
+
+### What Spectrum Hub commits to
+
+1. **Degrading safely.** A source that fails, returns nothing, or produces malformed
    output must not take the published site down or silently blank a table.
-6. **Two levels of detail, independently useful.** Component availability alone
-   powers the status table. Per-component property details power the documentation
-   pages. The first is worth shipping without the second.
+2. **Reviewing and approving.** We read the diff and merge it. Nothing is published
+   that a person has not looked at.
+3. **Contract stability.** The schema is a shared interface. Changing the roster or
+   catalog shape breaks the mobile teams' continuous integration, so changes are
+   coordinated, not unilateral.
+4. **Validating on the incoming pull request.** Our checks run against your data and
+   report the component and property that failed, so you do not have to reimplement
+   our rules to find out whether your generator is correct.
+5. **Honouring a removal.** When a component leaves your roster, its data is removed
+   from every surface we publish, not just hidden from the table.
+
+### Constraints on any solution
+
+1. **No internal credentials in a public repository.** `adobe/spectrum-hub` is
+   open source.
 
 ## How Spectrum Hub handles this data today
 
@@ -84,6 +105,18 @@ each cell through the adapter, layers on manual overrides, and writes:
 
 Membership is the union of every source. A component only one source ships is a
 legitimate row, with the others reading Not available.
+
+Slices are pruned as well as written: a component that leaves every roster has its
+`deps/status/<slug>.json` deleted in the same run. Without that the file lingers and any
+page resolving to that slug is served data no build produced. A collapsed roster cannot
+trigger a mass deletion, because a fail-closed guard stops the build when a roster comes
+back empty.
+
+A component can also be carried in the index but kept out of the table. Composition parts
+— `AccordionItem`, `TableHeader` — are documented, and their extracted properties are
+worth publishing, but they are not components in their own right. They are marked
+`listed: false`, which keeps their data reaching a documentation page while the status
+table filters them out.
 
 ### Stage 4 — Delivery
 
@@ -198,8 +231,11 @@ the roster still ships something real.
 
 ## The data contract
 
-What either delivery mechanism would produce. Both platforms use the same shapes,
-which are the shapes the Spectrum Web Components pipeline already writes.
+What either delivery mechanism would produce. The shapes mirror the existing web
+pipelines closely but not exactly: Spectrum Web Components keys its property rows by
+custom-element `attribute`, and React Spectrum omits fields its source does not describe.
+The mobile contract below is the one being specified now, so it is stated exactly rather
+than inherited.
 
 ### Roster — `deps/<platform>/components.json`
 
@@ -215,6 +251,10 @@ A component listed here is one your platform ships.
 
 The key is the display name, as you would write it in documentation — we derive the
 table's row label from it, so `Pop-up button` renders exactly that way.
+
+A component removed from this file is removed everywhere: its row, its cells, and its
+per-component data file. Listing composition parts is fine if they are worth documenting
+— tell us and we will mark them so they are published but kept out of the table.
 
 ### Version — `deps/<platform>/version.json`
 
@@ -255,12 +295,20 @@ of that component's module path.
 | `description` | yes | One or two sentences. |
 | `since` | no | The release that introduced the property. |
 
-Two rules our tests enforce, because the interactive playground builds controls from
-these fields:
+Every field above marked required is enforced on your pull request, along with two rules
+the interactive playground depends on, since it builds controls from these fields:
 
 - `kind` is `enum` if and only if `values` is non-empty.
-- `values` never contains `null`, `undefined`, or the strings `"null"` or
+- `values` holds only primitives, never `null`, `undefined`, or the strings `"null"` or
   `"undefined"`.
+
+The roster and the catalogs also have to agree: every component in `components.json` needs
+a catalog beside it, and every catalog needs a roster entry.
+
+Worth noting that the web catalogs are held to a looser standard — they are written by
+extractors that predate this contract and carry rows the upstream source does not fully
+describe. The mobile contract is being specified now, for generators that do not exist
+yet, so it is the stricter one.
 
 ### Expressing maturity
 
@@ -272,15 +320,40 @@ Web Components already works.
 | Carry `since`, all sharing `status: "preview"` | Available, labelled Preview |
 | Carry `since`, all sharing `status: "deprecated"` | Deprecated |
 | Carry `since`, with no `status` | Available, labelled Stable |
+| Carry `since`, with `status` on only some rows | Available |
 | No row carries `since` | Available |
 
 Add a `status` field only when a component is not generally available.
 
+**Every row has to agree.** A `status` on one property does not mark the component — the
+rows are resolved to a single component status, and anything less than unanimous falls
+back to Available. So a component with one deprecated property publishes as Available,
+not Deprecated.
+
+`status` also only counts on a row that carries `since`. A row marked `deprecated` with no
+`since` is skipped, and the component publishes as Available.
+
+### Validation
+
+Spectrum Hub's continuous integration runs on your pull request — no setup needed on your
+side, it is how the repository is already configured. A row that breaks any rule above
+fails the check naming the component and the property, so a mistake in a generator
+surfaces on the pull request rather than as a missing control on the site weeks later.
+
 ### Failure behaviour
 
-A missing or unparseable catalog costs that one component its maturity label and logs
-a warning. It does not fail the build or remove the component. A half-written catalog
-is a normal state while a pipeline is being developed.
+The two policies are deliberately different. The **build** tolerates a missing or
+unparseable catalog: it costs that one component its maturity label, logs a warning, and
+publishes the component as Available. A half-written catalog does not take the site down.
+
+**Continuous integration** is stricter, and reports the same file as a failure. The build
+degrading quietly is what keeps a bad afternoon from becoming an outage; the check is what
+makes sure someone fixes it.
+
+Configuration files on our side — the aliases, overrides, and roster rules the build reads
+— get the opposite treatment again: a malformed one fails the build outright. That is not
+a policy we are asking you to work around; it exists because a config file that silently
+reads as empty corrupts every row rather than one.
 
 ## Open questions
 
@@ -292,8 +365,9 @@ is a normal state while a pipeline is being developed.
 3. **Release workflow ownership.** Could existing release automation open an external
    pull request, or would this be a separate workflow?
 4. **Components neither platform ships.** Some belong in the table as Not available
-   with guidance — "defer to the native component". Membership currently comes from
-   the rosters, so a component in neither roster has no row. Should one platform list
-   it, or should we carry those rows on our side?
+   with guidance — "defer to the native component". Membership comes from the rosters,
+   so a component in neither roster has no row at all. Either one platform lists it, or
+   we carry those rows on our side. We would rather carry them than ask you to list
+   components you do not ship, but it is your call which reads more honestly.
 5. **Catalog scope.** Is every public property in scope, or only those a designer or
    documentation reader would care about?

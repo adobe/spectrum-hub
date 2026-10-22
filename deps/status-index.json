@@ -68,6 +68,79 @@
       }
     },
     {
+      "name": "AccordionItem",
+      "label": "Accordion Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "AccordionItemHeader",
+      "label": "Accordion Item Header",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "AccordionItemPanel",
+      "label": "Accordion Item Panel",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "AccordionItemTitle",
+      "label": "Accordion Item Title",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "ActionBar",
       "label": "Action Bar",
       "platforms": {
@@ -180,6 +253,24 @@
       }
     },
     {
+      "name": "AssetCard",
+      "label": "Asset Card",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "Avatar",
       "label": "Avatar",
       "platforms": {
@@ -251,6 +342,24 @@
           }
         }
       }
+    },
+    {
+      "name": "Breadcrumb",
+      "label": "Breadcrumb",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "Breadcrumbs",
@@ -362,6 +471,24 @@
       }
     },
     {
+      "name": "Cell",
+      "label": "Cell",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "Checkbox",
       "label": "Checkbox",
       "platforms": {
@@ -452,6 +579,42 @@
           }
         }
       }
+    },
+    {
+      "name": "CoachMarkTrigger",
+      "label": "Coach Mark Trigger",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "CollectionCardPreview",
+      "label": "Collection Card Preview",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "ColorArea",
@@ -576,6 +739,24 @@
       }
     },
     {
+      "name": "Column",
+      "label": "Column",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "ComboBox",
       "label": "Combo Box",
       "platforms": {
@@ -594,6 +775,24 @@
       }
     },
     {
+      "name": "ComboBoxItem",
+      "label": "Combo Box Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "ContextualHelp",
       "label": "Contextual Help",
       "platforms": {
@@ -610,6 +809,24 @@
           }
         }
       }
+    },
+    {
+      "name": "ContextualHelpPopover",
+      "label": "Contextual Help Popover",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "DateAndTimeField",
@@ -650,6 +867,42 @@
       }
     },
     {
+      "name": "DisclosurePanel",
+      "label": "Disclosure Panel",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "DisclosureTitle",
+      "label": "Disclosure Title",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "Divider",
       "label": "Divider",
       "platforms": {
@@ -686,6 +939,24 @@
           }
         }
       }
+    },
+    {
+      "name": "EditableCell",
+      "label": "Editable Cell",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "ExtendedFAB",
@@ -915,6 +1186,27 @@
       }
     },
     {
+      "name": "LinkButton",
+      "label": "Link Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available",
+            "secondary": "Use button component"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available",
+            "secondary": "N/A"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "ListView",
       "label": "List View",
       "platforms": {
@@ -931,6 +1223,24 @@
           }
         }
       }
+    },
+    {
+      "name": "ListViewItem",
+      "label": "List View Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "Menu",
@@ -959,6 +1269,24 @@
           }
         }
       }
+    },
+    {
+      "name": "MenuItem",
+      "label": "Menu Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "Meter",
@@ -1025,6 +1353,24 @@
       }
     },
     {
+      "name": "PickerItem",
+      "label": "Picker Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "Popover",
       "label": "Popover",
       "platforms": {
@@ -1044,6 +1390,24 @@
       }
     },
     {
+      "name": "PopoverBase",
+      "label": "Popover Base",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "PopUpButton",
       "label": "Pop-up button",
       "platforms": {
@@ -1058,6 +1422,24 @@
           }
         }
       }
+    },
+    {
+      "name": "ProductCard",
+      "label": "Product Card",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "ProgressBar",
@@ -1153,6 +1535,24 @@
       }
     },
     {
+      "name": "Row",
+      "label": "Row",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "ScrollBar",
       "label": "Scroll Bar",
       "platforms": {
@@ -1206,6 +1606,24 @@
       }
     },
     {
+      "name": "SegmentedControlItem",
+      "label": "Segmented Control Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "SelectBox",
       "label": "Select Box",
       "platforms": {
@@ -1225,6 +1643,24 @@
       }
     },
     {
+      "name": "SideNavHeader",
+      "label": "Side Nav Header",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "SideNavigation",
       "label": "Side Navigation",
       "platforms": {
@@ -1242,6 +1678,60 @@
           }
         }
       }
+    },
+    {
+      "name": "SideNavItem",
+      "label": "Side Nav Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "SideNavItemContent",
+      "label": "Side Nav Item Content",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "SideNavItemLink",
+      "label": "Side Nav Item Link",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "Slider",
@@ -1430,6 +1920,25 @@
       }
     },
     {
+      "name": "Tab",
+      "label": "Tab",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "Table",
       "label": "Table",
       "platforms": {
@@ -1447,6 +1956,79 @@
           }
         }
       }
+    },
+    {
+      "name": "TableBody",
+      "label": "Table Body",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "TableFooter",
+      "label": "Table Footer",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "TableHeader",
+      "label": "Table Header",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "TabPanel",
+      "label": "Tab Panel",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      },
+      "listed": false
     },
     {
       "name": "Tabs",
@@ -1577,6 +2159,24 @@
       }
     },
     {
+      "name": "TextFieldBase",
+      "label": "Text Field Base",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "Thumbnail",
       "label": "Thumbnail",
       "platforms": {
@@ -1662,6 +2262,24 @@
       }
     },
     {
+      "name": "TooltipTrigger",
+      "label": "Tooltip Trigger",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
       "name": "TreeView",
       "label": "Tree View",
       "platforms": {
@@ -1678,6 +2296,78 @@
           }
         }
       }
+    },
+    {
+      "name": "TreeViewItem",
+      "label": "Tree View Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "TreeViewItemContent",
+      "label": "Tree View Item Content",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "TreeViewLoadMoreItem",
+      "label": "Tree View Load More Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
+    },
+    {
+      "name": "UserCard",
+      "label": "User Card",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      },
+      "listed": false
     }
   ]
 }

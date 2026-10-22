@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import {
+  mkdtempSync, mkdirSync, writeFileSync, readdirSync,
+} from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 import {
   normalizeName,
@@ -24,8 +29,166 @@ import {
   joinNamedRosters,
   mergePlatformIndexes,
   mergeSlices,
+  validateConfigShape,
+  markUnlisted,
+  pruneComponentSlices,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
+
+// Configuration files decide what the whole index contains. A malformed one that
+// silently reads as empty does not degrade a row, it corrupts every row — an excludes
+// file that parses as `{}` publishes every composition part as a table row, and the
+// empty-roster guard never fires because the roster is fuller, not emptier.
+describe('validateConfigShape', () => {
+  const ok = (value, shape) => validateConfigShape('roster-excludes.json', value, shape);
+
+  it('accepts an object whose values are all arrays', () => {
+    const value = { web: ['Cell'], mobile: [] };
+    assert.equal(ok(value, 'object-of-arrays'), value);
+  });
+
+  // The exact failure this guard exists for: the file was still a flat array while the
+  // builder indexed it by platform, so `excludes.web` was undefined and every exclusion
+  // was silently dropped.
+  it('rejects a flat array where an object of arrays is expected', () => {
+    assert.throws(() => ok(['Cell', 'Column'], 'object-of-arrays'), /roster-excludes\.json/);
+  });
+
+  it('rejects an object with a non-array value', () => {
+    assert.throws(() => ok({ web: 'Cell' }, 'object-of-arrays'), /object-of-arrays/);
+  });
+
+  it('rejects null', () => {
+    assert.throws(() => ok(null, 'object-of-arrays'));
+  });
+
+  it('names the file and the expected shape in the message', () => {
+    assert.throws(() => ok([], 'object-of-arrays'), (error) => error.message.includes('roster-excludes.json')
+      && error.message.includes('object-of-arrays'));
+  });
+
+  it('accepts an object whose values are all objects', () => {
+    const value = { RadioButton: { web: {} } };
+    assert.equal(ok(value, 'object-of-objects'), value);
+  });
+
+  it('rejects an array where an object of objects is expected', () => {
+    assert.throws(() => ok([{ name: 'x' }], 'object-of-objects'));
+  });
+
+  it('accepts a plain object and a plain array for their own shapes', () => {
+    assert.deepEqual(ok({ Button: 'x' }, 'object'), { Button: 'x' });
+    assert.deepEqual(ok([{ name: 'Button' }], 'array'), [{ name: 'Button' }]);
+  });
+
+  it('rejects an array for the object shape', () => {
+    assert.throws(() => ok([], 'object'));
+  });
+});
+
+// The writer used to add and update but never delete, so a component leaving every
+// roster left its slice behind indefinitely. Nothing reads a directory listing, so the
+// table stayed correct — but a stale slice is served to any page that resolves to that
+// slug, and a run with a bad config once left 64 of them on disk at once.
+describe('pruneComponentSlices', () => {
+  const withSlices = (names) => {
+    const dir = mkdtempSync(join(tmpdir(), 'slices-'));
+    mkdirSync(dir, { recursive: true });
+    for (const name of names) { writeFileSync(join(dir, name), '{}\n'); }
+    return dir;
+  };
+  const slugs = (dir) => readdirSync(dir).sort();
+
+  it('removes a slice with no component behind it', () => {
+    const dir = withSlices(['button.json', 'obsolete.json']);
+    pruneComponentSlices([{ slug: 'button' }], dir);
+    assert.deepEqual(slugs(dir), ['button.json']);
+  });
+
+  it('returns the slugs it removed', () => {
+    const dir = withSlices(['button.json', 'obsolete.json', 'gone.json']);
+    assert.deepEqual(pruneComponentSlices([{ slug: 'button' }], dir).sort(), ['gone', 'obsolete']);
+  });
+
+  it('keeps every current slice', () => {
+    const dir = withSlices(['button.json', 'toast.json']);
+    pruneComponentSlices([{ slug: 'button' }, { slug: 'toast' }], dir);
+    assert.deepEqual(slugs(dir), ['button.json', 'toast.json']);
+  });
+
+  it('removes nothing when every slice is current', () => {
+    const dir = withSlices(['button.json']);
+    assert.deepEqual(pruneComponentSlices([{ slug: 'button' }], dir), []);
+  });
+
+  it('leaves files that are not slices alone', () => {
+    const dir = withSlices(['button.json', 'README.md']);
+    pruneComponentSlices([{ slug: 'button' }], dir);
+    assert.deepEqual(slugs(dir), ['README.md', 'button.json']);
+  });
+
+  it('tolerates a directory that does not exist yet', () => {
+    assert.deepEqual(pruneComponentSlices([{ slug: 'button' }], join(tmpdir(), 'no-such-dir-xyz')), []);
+  });
+});
+
+// Composition parts are documented but are not components in their own right. They stay
+// in the roster so their extracted catalogs reach a slice, and carry a flag the status
+// table filters on — unlike roster-excludes.json, which drops a name outright.
+describe('markUnlisted', () => {
+  const roster = () => [
+    { name: 'Accordion', sources: { rsp: 'Accordion' } },
+    { name: 'AccordionItem', sources: { rsp: 'AccordionItem' } },
+  ];
+
+  it('marks an entry named in the unlisted set', () => {
+    const marked = markUnlisted(roster(), ['AccordionItem']);
+    assert.equal(marked.find((entry) => entry.name === 'AccordionItem').listed, false);
+  });
+
+  it('leaves a listed entry without the field at all', () => {
+    const marked = markUnlisted(roster(), ['AccordionItem']);
+    assert.ok(!('listed' in marked.find((entry) => entry.name === 'Accordion')));
+  });
+
+  it('keeps every entry — unlisted is not excluded', () => {
+    assert.equal(markUnlisted(roster(), ['AccordionItem']).length, 2);
+  });
+
+  it('ignores a name that is not in the roster', () => {
+    assert.equal(markUnlisted(roster(), ['Nonexistent']).length, 2);
+  });
+
+  it('is a no-op with an empty set', () => {
+    assert.deepEqual(markUnlisted(roster(), []), roster());
+  });
+});
+
+describe('buildIndex unlisted components', () => {
+  const columns = [{ id: 'rsp', label: 'React Spectrum' }];
+  const build = (roster) => buildIndex({
+    roster, readData: () => ({ props: [], status: 'stable' }), columns,
+  }).index;
+
+  it('carries listed:false onto the component', () => {
+    const { components } = build([
+      { name: 'AccordionItem', sources: { rsp: 'AccordionItem' }, listed: false },
+    ]);
+    assert.equal(components[0].listed, false);
+  });
+
+  it('omits the field for a component that belongs in the table', () => {
+    const { components } = build([{ name: 'Accordion', sources: { rsp: 'Accordion' } }]);
+    assert.ok(!('listed' in components[0]));
+  });
+
+  it('resolves an unlisted component\'s cells like any other', () => {
+    const { components } = build([
+      { name: 'AccordionItem', sources: { rsp: 'AccordionItem' }, listed: false },
+    ]);
+    assert.deepEqual(components[0].platforms.web.rsp, { status: 'available', context: 'Stable' });
+  });
+});
 
 describe('swcTagToPascal', () => {
   it('strips the swc- prefix and converts kebab to Pascal', () => {
@@ -912,10 +1075,10 @@ describe('joinNamedRosters', () => {
     'Floating action button (FAB)': 'FloatingActionButton',
     Snackbar: 'Snackbar',
   };
-  const join = (aliases) => joinNamedRosters({ ios, android }, aliases);
+  const joined = (aliases) => joinNamedRosters({ ios, android }, aliases);
 
   it('joins entries from different sources that normalize to one canonical name', () => {
-    const fab = join().find((e) => e.name === 'FloatingActionButtonFAB');
+    const fab = joined().find((e) => e.name === 'FloatingActionButtonFAB');
     assert.deepEqual(fab.sources, {
       ios: 'Floating action button (FAB)',
       android: 'Floating action button (FAB)',
@@ -925,19 +1088,19 @@ describe('joinNamedRosters', () => {
   // The canonical key is derived from the display name here, so the derivation is lossy
   // in the other direction — the row carries the authored name rather than rebuilding it.
   it('keeps the authored display name as the row label', () => {
-    assert.equal(join().find((e) => e.name === 'FloatingActionButtonFAB').label, 'Floating action button (FAB)');
+    assert.equal(joined().find((e) => e.name === 'FloatingActionButtonFAB').label, 'Floating action button (FAB)');
   });
 
   it('keeps a single-platform component as a single-source row', () => {
-    assert.deepEqual(join().find((e) => e.name === 'Snackbar').sources, { android: 'Snackbar' });
+    assert.deepEqual(joined().find((e) => e.name === 'Snackbar').sources, { android: 'Snackbar' });
   });
 
   it('keeps a component only one platform lists', () => {
-    assert.deepEqual(join().find((e) => e.name === 'Toolbar').sources, { ios: 'Toolbar' });
+    assert.deepEqual(joined().find((e) => e.name === 'Toolbar').sources, { ios: 'Toolbar' });
   });
 
   it('returns rows sorted by canonical name', () => {
-    const names = join().map((e) => e.name);
+    const names = joined().map((e) => e.name);
     assert.deepEqual(names, [...names].sort());
   });
 

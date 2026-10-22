@@ -32,7 +32,7 @@
  */
 
 import {
-  readFileSync, writeFileSync, existsSync, mkdirSync,
+  readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync,
 } from 'fs';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
@@ -51,6 +51,9 @@ const OVERRIDES_FILE = join(__dirname, 'status-overrides.json');
 // once and the platforms disagree about what counts as a standalone component:
 // `ToggleButton` is a web composition part but a first-class mobile component.
 const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
+// Documented, but not components in their own right. Unlike the excludes list these stay
+// in the roster and the index, carrying `listed: false`; the status table filters on it.
+const UNLISTED_FILE = join(__dirname, 'roster-unlisted.json');
 const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 
 // The platform a build run describes. Every function below takes it as an argument;
@@ -301,6 +304,60 @@ export function joinNamedRosters(rosters, aliases = {}) {
   return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+const isPlainObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const CONFIG_SHAPES = {
+  object: isPlainObject,
+  array: Array.isArray,
+  'object-of-arrays': (value) => isPlainObject(value) && Object.values(value).every(Array.isArray),
+  'object-of-objects': (value) => isPlainObject(value) && Object.values(value).every(isPlainObject),
+};
+
+/**
+ * Asserts a configuration file parsed to the shape the build expects, returning it.
+ *
+ * Configuration decides what the whole index contains, so a malformed file must stop the
+ * build rather than degrade quietly. The failure this guards against already happened
+ * once: `roster-excludes.json` was still a flat array while the builder indexed it by
+ * platform, so `excludes.web` was `undefined`, every exclusion was dropped, and the run
+ * published ~60 composition parts as table rows. Nothing caught it — the fail-closed
+ * empty-roster guard only fires when a roster is emptier than expected, never fuller.
+ *
+ * Per-component catalogs keep the opposite behaviour (see readJson): one unreadable
+ * catalog should cost that component its maturity label, not the whole build.
+ *
+ * @param {string} name - The file name, for the error message.
+ * @param {unknown} value - The parsed contents.
+ * @param {keyof CONFIG_SHAPES} shape
+ * @returns {unknown} `value`, when it matches.
+ */
+export function validateConfigShape(name, value, shape) {
+  if (CONFIG_SHAPES[shape](value)) { return value; }
+  const actual = Array.isArray(value) ? 'an array' : `${value === null ? 'null' : typeof value}`;
+  throw new Error(
+    `${name}: expected ${shape}, got ${actual}. `
+    + 'A malformed config file silently empties the roster rules it carries, so the build stops here.',
+  );
+}
+
+/**
+ * Flags roster entries that are documented but are not components in their own right —
+ * composition parts like `AccordionItem` or `TableHeader`.
+ *
+ * They stay in the roster, so their extracted catalogs still reach `deps/status/<slug>.json`
+ * and a page can show their properties. The flag rides into the index, and the status
+ * table filters on it. This is the difference from `deps/roster-excludes.json`, which
+ * removes a name outright and discards its data with it.
+ *
+ * @param {{ name: string }[]} roster
+ * @param {string[]} unlisted - Canonical names to flag.
+ * @returns {{ name: string, listed?: false }[]}
+ */
+export function markUnlisted(roster, unlisted = []) {
+  const names = new Set(unlisted);
+  return roster.map((entry) => (names.has(entry.name) ? { ...entry, listed: false } : entry));
+}
+
 /**
  * Drops composition parts (sub-components) from the joined roster by canonical name, so a
  * part is removed from every source at once. The exclusion list is a reviewed, committed
@@ -521,7 +578,7 @@ export function buildIndex({
   secondaries = {},
 }) {
   const components = roster.map(({
-    name, label, sources, upstreamNames = {},
+    name, label, listed, sources, upstreamNames = {},
   }) => {
     const cells = {};
     for (const { id } of columns) {
@@ -543,11 +600,14 @@ export function buildIndex({
       if (upstreamNames[id]) { cell.upstreamName = upstreamNames[id]; }
       cells[id] = cell;
     }
-    return {
+    const component = {
       name,
       label: displayLabel(name, sources, label),
       platforms: { [platform]: cells },
     };
+    // Only ever emitted when false, so a listed component stays the clean common case.
+    if (listed === false) { component.listed = false; }
+    return component;
   });
 
   const secondaryWarnings = applySecondaries(components, secondaries, platform);
@@ -776,6 +836,37 @@ export function dedupeSlices(slices) {
   return { slices: kept, warnings };
 }
 
+/**
+ * Deletes slices that no longer have a component behind them, returning their slugs.
+ *
+ * The writer used to add and update but never delete, so a component leaving every
+ * roster left its slice on disk indefinitely. Nothing reads a directory listing, so the
+ * table stayed correct — but any page resolving to that slug was served stale data, and
+ * a single run with a malformed config once stranded 64 files at once.
+ *
+ * Safe against a collapsed roster: buildPlatform exits the process when a platform's
+ * roster comes back empty, so a run that would prune everything never reaches here.
+ *
+ * @param {{ slug: string }[]} slices - The slices this run wrote.
+ * @param {string} [dir]
+ * @returns {string[]} the slugs removed.
+ */
+export function pruneComponentSlices(slices, dir = SLICES_DIR) {
+  if (!existsSync(dir)) { return []; }
+  const keep = new Set(slices.map((slice) => slice.slug));
+  const removed = [];
+
+  for (const file of readdirSync(dir)) {
+    if (!file.endsWith('.json')) { continue; }
+    const slug = file.replace(/\.json$/, '');
+    if (keep.has(slug)) { continue; }
+    unlinkSync(join(dir, file));
+    removed.push(slug);
+  }
+
+  return removed;
+}
+
 /** Writes one `deps/status/<slug>.json` per slice. Deduped and merged before it gets here. */
 export function writeComponentSlices(slices, dir = SLICES_DIR) {
   mkdirSync(dir, { recursive: true });
@@ -798,9 +889,28 @@ function readJson(path, fallback) {
   try {
     return JSON.parse(readFileSync(path, 'utf8'));
   } catch (error) {
-    console.warn(`warning: could not parse ${path} — ${error.message}`);
+    console.warn(`warning: catalog unreadable, skipping — ${path}: ${error.message}`);
     return fallback;
   }
+}
+
+/**
+ * Reads a configuration file, failing the build when it is absent, unparseable, or the
+ * wrong shape. The opposite policy to readJson, and deliberately so: see
+ * validateConfigShape for which failure this exists to catch.
+ */
+function readConfig(path, shape) {
+  const name = basename(path);
+  if (!existsSync(path)) {
+    throw new Error(`${name}: configuration file is missing. The build cannot proceed without it.`);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    throw new Error(`${name}: ${error.message}. A malformed config file would silently empty the roster rules it carries.`);
+  }
+  return validateConfigShape(name, parsed, shape);
 }
 
 /** Reads a component's raw extraction file for a source, or null when absent/unparseable. */
@@ -815,10 +925,10 @@ function readExtraction(source, name) {
  * a function here rather than an entry in PLATFORM_CONFIG.
  */
 function readWebRoster(config, aliases, excludes) {
-  const rspComponents = readJson(join(__dirname, 'rsp', 'components.json'), {});
+  const rspComponents = readConfig(join(__dirname, 'rsp', 'components.json'), 'object');
   // swc/components.json maps bare name -> module subpath; the roster is its keys as tags.
-  const swcComponents = readJson(join(__dirname, 'swc', 'components.json'), {});
-  const figmaRoster = readJson(join(__dirname, 'figma', 'components.json'), []);
+  const swcComponents = readConfig(join(__dirname, 'swc', 'components.json'), 'object');
+  const figmaRoster = readConfig(join(__dirname, 'figma', 'components.json'), 'array');
   // The secondary overlay lists Figma designs that carry redirect guidance; some are not
   // in the roster export but still exist in the library, so they count toward membership.
   const figmaOverlay = readJson(join(__dirname, 'figma', config.overlayFiles.figma), []);
@@ -852,7 +962,7 @@ function readWebRoster(config, aliases, excludes) {
 function readMobileRoster(config, aliases, excludes) {
   const rosters = Object.fromEntries(config.columns.map(({ id }) => [
     id,
-    readJson(join(__dirname, id, 'components.json'), {}),
+    readConfig(join(__dirname, id, 'components.json'), 'object'),
   ]));
 
   const joined = joinNamedRosters(rosters, aliases);
@@ -874,8 +984,11 @@ function readMobileRoster(config, aliases, excludes) {
  * @param {object} config - That platform's PLATFORM_CONFIG entry.
  * @param {{ aliases: object, overrides: object, excludes: string[] }} inputs
  */
-function buildPlatform(platform, config, { aliases, overrides, excludes }) {
-  const { roster, figmaRoster, readData } = config.readRoster(config, aliases, excludes);
+function buildPlatform(platform, config, {
+  aliases, overrides, excludes, unlisted,
+}) {
+  const { roster: joined, figmaRoster, readData } = config.readRoster(config, aliases, excludes);
+  const roster = markUnlisted(joined, unlisted);
 
   // Fail-closed guard: an empty roster means an upstream extraction produced nothing.
   // Refuse to overwrite a good index with an empty one (see deps/docs/REMOVED-DETECTION.md).
@@ -913,14 +1026,20 @@ function buildPlatform(platform, config, { aliases, overrides, excludes }) {
 }
 
 function main() {
-  const aliases = readJson(ALIASES_FILE, {});
-  const overrides = readJson(OVERRIDES_FILE, {});
-  const excludes = readJson(EXCLUDES_FILE, {});
+  const aliases = readConfig(ALIASES_FILE, 'object-of-objects');
+  const overrides = readConfig(OVERRIDES_FILE, 'object-of-objects');
+  const excludes = readConfig(EXCLUDES_FILE, 'object-of-arrays');
+  const unlisted = readConfig(UNLISTED_FILE, 'object-of-arrays');
 
   const builds = Object.entries(PLATFORM_CONFIG).map(([platform, config]) => buildPlatform(
     platform,
     config,
-    { aliases, overrides, excludes: excludes[platform] ?? [] },
+    {
+      aliases,
+      overrides,
+      excludes: excludes[platform] ?? [],
+      unlisted: unlisted[platform] ?? [],
+    },
   ));
 
   const index = mergePlatformIndexes(builds);
@@ -932,6 +1051,13 @@ function main() {
   // component page reads whichever platform key it cares about from one small fetch.
   const slices = mergeSlices(builds.map((build) => build.slices));
   console.log(`Wrote ${writeComponentSlices(slices)} component status slice(s) to ${SLICES_DIR}`);
+
+  // A component that leaves every roster takes its slice with it. Without this the file
+  // lingers and any page resolving to that slug is served data no build produced.
+  const removed = pruneComponentSlices(slices);
+  if (removed.length) {
+    console.log(`Removed ${removed.length} obsolete slice(s): ${removed.join(', ')}`);
+  }
 
   // Web-only by construction: buildImplComponentNames skips any column that is not a
   // registered web implementation, so feeding it other platforms would add nothing.
@@ -951,5 +1077,12 @@ function main() {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main();
+  try {
+    main();
+  } catch (error) {
+    // Configuration failures are operator errors, not crashes — report them the way the
+    // empty-roster guard does rather than as a stack trace in a CI log.
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
 }

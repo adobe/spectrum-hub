@@ -1,7 +1,8 @@
 {
   "web": {
     "figma": {
-      "status": "not-available"
+      "status": "available",
+      "secondary": "Use button component"
     },
     "rsp": {
       "status": "available",
@@ -9,7 +10,7 @@
     },
     "swc": {
       "status": "not-available",
-      "secondary": "Use Slider"
+      "secondary": "N/A"
     }
   }
 }

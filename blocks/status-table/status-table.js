@@ -39,9 +39,17 @@ const DEFAULT_PLATFORM = 'web';
 const platformOf = (el, index) => Object.keys(index.implementations ?? {})
   .find((name) => el.classList.contains(name)) ?? DEFAULT_PLATFORM;
 
-/** The components that ship on this platform — the only ones this table has rows for. */
+/**
+ * The components this table has rows for: the ones that ship on this platform and belong
+ * in the table at all.
+ *
+ * `listed: false` marks a component that is documented but is not a component in its own
+ * right — a composition part like Accordion Item. The index carries it so its properties
+ * reach a documentation page; the table leaves it out. Absent means listed, so only the
+ * exception costs a field.
+ */
 const componentsFor = (index, platform) => (index.components ?? [])
-  .filter((component) => component.platforms?.[platform]);
+  .filter((component) => component.platforms?.[platform] && component.listed !== false);
 
 // Route segment for a Figma-only component (no code implementation) — not a
 // registered implementation itself, just the URL segment its Figma cell links to.

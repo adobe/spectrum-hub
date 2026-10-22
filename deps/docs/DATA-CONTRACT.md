@@ -134,7 +134,36 @@ Reads are tolerant: an absent **or unparseable** catalog yields no maturity sign
 
 Two consequences worth knowing. A component **neither** platform lists has no row at all, since membership is presence — a component documented as unavailable everywhere needs a roster entry somewhere. And module subpaths are recorded relative to the package root, with the package version belonging in a `version.json` beside them (as `deps/swc/version.json` does) rather than baked into every path, so a version bump is one edit.
 
+Slices are pruned as well as written: a component that leaves every roster takes its `deps/status/<slug>.json` with it. Without that the file lingers and any page resolving to that slug is served data no build produced. A collapsed roster cannot trigger a mass deletion, because the fail-closed empty-roster guard exits before the writer runs.
+
 Per-component slices are merged the same way: one `deps/status/<slug>.json` carrying every platform that ships the component, because the slug is the key `/web/<impl>/components/<slug>` and `/mobile/components/<slug>` share. A component page reads whichever platform key it needs from one small fetch. `impl-component-names.js` stays web-derived — `buildImplComponentNames` skips any column that is not a registered web implementation, so other platforms would add nothing to it.
+
+### Listed and unlisted components
+
+A component carries `listed: false` when it is documented but is not a component in its
+own right — a composition part such as Accordion Item or Table Header. It stays in the
+roster, its status resolves normally, and its extracted catalog reaches
+`deps/status/<slug>.json`, so a documentation page can show its properties. The status
+table filters it out. Absent means listed, so only the exception costs a field.
+
+This is the distinction from [`roster-excludes.json`](../roster-excludes.json), which
+removes a name from the roster outright and discards its catalog with it. Use the
+excludes list for names that are not components at all; use
+[`roster-unlisted.json`](../roster-unlisted.json) for the ones worth documenting.
+
+### Configuration is read strictly, catalogs leniently
+
+Per-component catalogs are read with `readJson`, which tolerates an absent or unparseable
+file: that costs one component its maturity label and warns.
+
+Configuration files — aliases, overrides, excludes, unlisted, and the generated rosters —
+are read with `readConfig`, which fails the build when a file is missing, unparseable, or
+the wrong shape. The policies are opposite on purpose. A malformed catalog degrades one
+row; a malformed config silently empties the rules it carries and corrupts every row. That
+happened once: `roster-excludes.json` was still a flat array while the builder indexed it
+by platform, so every exclusion was dropped and the run published ~60 composition parts as
+table rows. The fail-closed empty-roster guard never fired, because the roster came out
+fuller rather than emptier.
 
 ### Component-page routes
 

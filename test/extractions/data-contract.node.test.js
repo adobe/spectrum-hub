@@ -28,9 +28,14 @@ function readCatalog(impl) {
     });
 }
 
+// A row's name is `property` for RSP and the mobile platforms, `attribute` for SWC —
+// which keys its rows by the custom-element attribute and only sometimes carries a
+// matching `property`. Either names the row; a row with neither is unidentifiable.
+const rowName = (row) => row.property ?? row.attribute;
+
 function allRows(impl) {
   return readCatalog(impl)
-    .flatMap(({ component, rows }) => rows.map((row) => ({ ...row, id: `${component}.${row.property}` })));
+    .flatMap(({ component, rows }) => rows.map((row) => ({ ...row, id: `${component}.${rowName(row)}` })));
 }
 
 // The structural rules hold for every catalog under deps/*/data, whoever wrote it —
@@ -66,6 +71,69 @@ for (const impl of ['rsp', 'swc', 'ios', 'android']) {
       const bad = rows.filter((row) => row.values
         .some((v) => v === null || v === undefined || v === 'undefined' || v === 'null'));
       assert.deepEqual(bad.map((row) => row.id), []);
+    });
+
+    // Without a name a row cannot be rendered, matched to a control, or reported in a
+    // failure message — it is not a property, it is noise in the table.
+    it('gives every row a name', () => {
+      const bad = rows.filter((row) => typeof rowName(row) !== 'string' || !rowName(row).trim());
+      assert.deepEqual(bad.map((row) => `${row.id} (${JSON.stringify(row).slice(0, 60)}…)`), []);
+    });
+
+    // The playground renders each option directly. An object or array here reaches the
+    // control as "[object Object]".
+    it('offers only primitive values', () => {
+      const bad = rows.filter((row) => row.values.some((v) => v !== null && typeof v === 'object'));
+      assert.deepEqual(bad.map((row) => row.id), []);
+    });
+  });
+}
+
+// The web catalogs are written by extractors that predate this contract, and carry rows
+// the upstream source simply does not describe — 428 RSP rows have no description, and
+// RSP emits no `optional` at all. The mobile contract is one we are specifying now, for
+// generators that do not exist yet, so it is held to the shape the proposal documents.
+for (const impl of ['ios', 'android']) {
+  describe(`deps/${impl}/data required fields`, () => {
+    const rows = allRows(impl);
+
+    for (const field of ['property', 'type', 'description']) {
+      it(`gives every row a non-empty ${field}`, () => {
+        const bad = rows.filter((row) => typeof row[field] !== 'string' || !row[field].trim());
+        assert.deepEqual(bad.map((row) => row.id), []);
+      });
+    }
+
+    it('gives every row a boolean optional', () => {
+      const bad = rows.filter((row) => typeof row.optional !== 'boolean');
+      assert.deepEqual(bad.map((row) => row.id), []);
+    });
+
+    for (const field of ['default', 'since']) {
+      it(`keeps ${field} a string when present`, () => {
+        const bad = rows.filter((row) => row[field] !== undefined && typeof row[field] !== 'string');
+        assert.deepEqual(bad.map((row) => row.id), []);
+      });
+    }
+  });
+
+  // A roster entry names a module; the catalog beside it is named for that module's last
+  // segment. A roster entry with no catalog floors to Available with no properties shown
+  // — the exact mistake a new generator makes — and a catalog with no roster entry is a
+  // file nothing will ever read.
+  describe(`deps/${impl} roster and catalogs correspond`, () => {
+    const roster = JSON.parse(readFileSync(join(DEPS, impl, 'components.json'), 'utf8'));
+    const expected = new Set(Object.values(roster).map((subpath) => subpath.split('/').pop()));
+    const onDisk = new Set(readdirSync(join(DEPS, impl, 'data'))
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => file.replace(/\.json$/, '')));
+
+    it('has a catalog for every roster entry', () => {
+      assert.deepEqual([...expected].filter((name) => !onDisk.has(name)), []);
+    });
+
+    it('has a roster entry for every catalog', () => {
+      assert.deepEqual([...onDisk].filter((name) => !expected.has(name)), []);
     });
   });
 }

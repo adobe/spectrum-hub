@@ -193,6 +193,71 @@ describe('status-table block', () => {
     });
   });
 
+  // Composition parts are documented — their catalogs reach a slice so a page can show
+  // their properties — but they are not components in their own right, so the table
+  // leaves them out. The index carries `listed: false`; the block filters on it.
+  describe('unlisted components', () => {
+    const INDEX_WITH_PART = {
+      implementations: { web: [{ id: 'rsp', label: 'React Spectrum' }] },
+      components: [
+        {
+          name: 'Accordion',
+          label: 'Accordion',
+          platforms: { web: { rsp: { status: 'available' } } },
+        },
+        {
+          name: 'AccordionItem',
+          label: 'Accordion Item',
+          listed: false,
+          platforms: { web: { rsp: { status: 'experimental' } } },
+        },
+      ],
+    };
+
+    const initWith = async (index) => {
+      stubFetchOk(index, { data: [] });
+      const el = makeEl();
+      await init(el);
+      return el;
+    };
+
+    const rowNames = (el) => [...el.querySelectorAll('tbody tr')]
+      .map((tr) => tr.querySelector('th .status-table-cell-value').textContent);
+
+    it('leaves an unlisted component out of the table', async () => {
+      expect(rowNames(await initWith(INDEX_WITH_PART))).to.deep.equal(['Accordion']);
+    });
+
+    it('still renders components that carry no listed field', async () => {
+      expect(rowNames(await initWith(MOCK_INDEX))).to.have.length.greaterThan(1);
+    });
+
+    // The status key would otherwise advertise a status no visible row has.
+    it('ignores an unlisted component when building the status cards', async () => {
+      const el = await initWith(INDEX_WITH_PART);
+      const cards = [...el.querySelectorAll('.status-table-card')]
+        .map((card) => card.getAttribute('data-status'));
+      expect(cards).to.not.include('experimental');
+    });
+
+    it('leaves an unlisted component out of the CSV export', async () => {
+      const el = await initWith(INDEX_WITH_PART);
+      let captured;
+      sandbox.stub(URL, 'createObjectURL').callsFake((blob) => {
+        captured = blob;
+        return 'blob:mock';
+      });
+      sandbox.stub(URL, 'revokeObjectURL');
+      sandbox.stub(window.HTMLAnchorElement.prototype, 'click');
+
+      el.querySelector('.status-table-export').click();
+
+      const text = await captured.text();
+      expect(text).to.not.include('Accordion Item');
+      expect(text).to.include('Accordion');
+    });
+  });
+
   describe('table structure', () => {
     let el;
     beforeEach(async () => {
