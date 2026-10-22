@@ -19,11 +19,13 @@ import ts from 'typescript';
 import { fetchComponentDocStatus } from './extract-doc-status.js';
 import { crawl, buildProgram } from './build-ts-checker.js';
 import { S2_COMPONENT_BASE } from './locate-published-files.js';
+import { runtimeSourceVersion } from './generate-playground-runtime-manifest.js';
 import { typeToDisplayString, typeToValues, declaredValueOrder, propKind } from '../shared/prop-contract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, 'data');
 const COMPONENTS_FILE = join(__dirname, 'components.json');
+const RUNTIME_MANIFEST_FILE = join(__dirname, 'playground/runtime-manifest.json');
 
 const ALLOW_LIST = JSON.parse(readFileSync(COMPONENTS_FILE, 'utf8'));
 
@@ -123,9 +125,12 @@ export function extractPropsFromType(checker, type, primaryInterfaceName) {
  * @param {Map<string, string|null>} sharedFileCache - reused across components in the same
  *   run (see build-ts-checker.js's crawl()) so the ~200 base files aren't re-fetched every time.
  */
-export async function extractComponentProps(component, config, sharedFileCache) {
+export async function extractComponentProps(component, config, sharedFileCache, packageVersion) {
   const entryPath = `${S2_COMPONENT_BASE}/${config.file ?? component}.d.ts`;
-  const fileCache = await crawl([entryPath], { cache: sharedFileCache });
+  const fileCache = await crawl([entryPath], {
+    cache: sharedFileCache,
+    packageVersions: packageVersion ? { '@react-spectrum/s2': packageVersion } : {},
+  });
 
   const { program, checker } = buildProgram(fileCache, [entryPath]);
   const sourceFile = program.getSourceFile(entryPath);
@@ -152,6 +157,8 @@ export function buildComponentData(props, status) {
 
 async function main() {
   mkdirSync(OUTPUT_DIR, { recursive: true });
+  const runtimeManifest = JSON.parse(readFileSync(RUNTIME_MANIFEST_FILE, 'utf8'));
+  const packageVersion = runtimeSourceVersion(runtimeManifest, 's2');
 
   const sharedFileCache = new Map();
   let count = 0;
@@ -160,7 +167,7 @@ async function main() {
 
     let props;
     try {
-      props = await extractComponentProps(component, config, sharedFileCache);
+      props = await extractComponentProps(component, config, sharedFileCache, packageVersion);
     } catch (err) {
       console.warn(`  Warning: failed to extract ${component}: ${err.message}`);
       continue;

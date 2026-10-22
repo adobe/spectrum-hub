@@ -47,8 +47,13 @@ export function clearFetchCache() {
 
 // Fetches one tab from an AEM JSON workbook, lowercasing column headers so
 // downstream lookups are case-insensitive.
-function fetchSheet(url, sheet) {
+function fetchSheet(url, sheet, loader) {
   const sheetUrl = `${url}?sheet=${sheet}`;
+  if (loader) {
+    return loader.json(sheetUrl).then(({ data }) => data.map((row) => Object.fromEntries(
+      Object.entries(row).map(([k, v]) => [k.toLowerCase(), v]),
+    )));
+  }
   return cachedFetch(sheetUrl, async () => {
     const resp = await fetch(sheetUrl);
     if (!resp.ok) { throw new Error(`Failed to fetch sheet "${sheet}" from ${url}: ${resp.status}`); }
@@ -60,10 +65,10 @@ function fetchSheet(url, sheet) {
 }
 
 // Fetches both playground tabs (components + controls) from the workbook.
-export async function fetchPlaygroundSheets(url) {
+export async function fetchPlaygroundSheets(url, loader) {
   const [componentsSheet, controlsSheet] = await Promise.all([
-    fetchSheet(url, 'components'),
-    fetchSheet(url, 'controls'),
+    fetchSheet(url, 'components', loader),
+    fetchSheet(url, 'controls', loader),
   ]);
   return { componentsSheet, controlsSheet };
 }

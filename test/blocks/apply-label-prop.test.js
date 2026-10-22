@@ -4,7 +4,7 @@ import { applyLabelProp } from '../../deps/swc/playground/apply-label-prop.js';
 // Mirrors the two real shapes a "label"-authored property can take on an SWC
 // custom element: a real reflected attribute (e.g. swc-progress-circle's
 // `label`) or a nested `slot="label"` element (e.g. swc-meter's/
-// swc-accordion-item's visible label) — see deps/swc/playground/index.html's
+// swc-accordion-item's visible label) — see the SWC preview adapter's
 // applySwcProp for how this return value is used to decide whether to fall
 // back to the flat text/children convention instead.
 describe('applyLabelProp', () => {
