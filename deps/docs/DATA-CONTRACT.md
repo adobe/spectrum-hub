@@ -90,18 +90,89 @@ The index is emitted so a single fetch is interpretable without also reading `st
     "available": { "label": "Available", "definition": "Ready for use. Fidelity may vary." }
     // …experimental, not-available, deprecated, removed
   },
-  "implementations": { "web": [ { "id": "figma", "label": "Figma" }, /* … */ ] },
+  // One entry per platform, each listing that platform's columns in display order.
+  "implementations": {
+    "web": [ { "id": "figma", "label": "Figma" }, /* rsp, swc */ ],
+    "mobile": [ { "id": "ios", "label": "iOS" }, { "id": "android", "label": "Android" } ]
+  },
   "components": [
     {
-      "name": "ActionButton",
-      "label": "Action Button",
-      "platforms": { "web": { "figma": { "status": "available" }, /* … */ } }
+      "name": "Button",
+      "label": "Button",
+      // Only the platforms that ship it. A reader tells "no row here" from "cell is Not
+      // available" by whether its platform key is present at all.
+      "platforms": {
+        "web": { "figma": { "status": "available" }, /* … */ },
+        "mobile": { "ios": { "status": "available" }, "android": { "status": "available" } }
+      }
     }
   ]
 }
 ```
 
 The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](../build-status-index.js), so the embedded definitions never drift from the adapter.
+
+### One index, every platform
+
+A component is one row carrying a key per platform that ships it. That shape is what makes the status table platform-agnostic: columns, labels and cells all come from `implementations[platform]` and `platforms[platform]`, so onboarding a platform is a data change.
+
+The index cannot say which platform a given table renders, since it describes them all — the authored class on the block does (`status-table mobile`). [`blocks/status-table/status-table.js`](../../blocks/status-table/status-table.js) matches that class against the platforms the index declares, ignoring classes that name none, and renders only the components carrying that platform's key.
+
+Keeping one file works because the shared configuration is already platform-aware: `status-overrides.json` has always been keyed `name → platform → impl`, and aliases and secondary overlays are keyed by **source** id (`figma`/`rsp`/`swc`/`ios`/`android`), which is unique across platforms. `roster-excludes.json` is the one that was not, and is now keyed by platform — an exclusion drops a canonical name from every source at once, and the platforms disagree about what is standalone (`ToggleButton` is a web composition part but a first-class mobile component).
+
+[`PLATFORM_CONFIG`](../build-status-index.js) holds what genuinely varies — columns, present floors, overlay filenames, and a `readRoster` function, since web unions three extracted sources while mobile reads authored files. Its key order is the merge order, and the first platform to produce a row supplies that row's label.
+
+A roster entry may carry an explicit `label`. A platform whose roster is display-name-first derives its canonical key *from* the display name, and that direction is lossy — `Floating action button (FAB)` normalizes to `FloatingActionButtonFAB`, which de-PascalCases back with the parentheses gone. Such an entry carries its authored name instead of having it reconstructed. RSP/SWC rows need none: their canonical key is the code identifier.
+
+### The mobile rosters
+
+What the mobile teams generate, and what is enforced on it, is specified in
+[MOBILE-DATA-CONTRACT.md](./MOBILE-DATA-CONTRACT.md) — including the two phases, the
+catalog row fields, and why a roster without catalogs is a valid contribution. This
+section is the builder's side of that contract.
+
+The native mobile implementations follow SWC's shape rather than inventing one. `deps/ios/components.json` and `deps/android/components.json` map the name that implementation uses to the component's **module subpath**, exactly as `deps/swc/components.json` maps a tag to a module subpath, and `joinNamedRosters` unions them. Status is never in these files: it comes from a per-component catalog of prop rows at `deps/<implementation>/data/<Name>.json`, where `<Name>` is the subpath's last segment. That indirection is what lets a display-name key like `Pop-up button` sit beside a `PopUpButton.json` catalog.
+
+Everything downstream is therefore the SWC path: `getSwcComponentStatus` derives the component's status from the rows' `status`/`since`, `SOURCE_MAPPINGS.ios`/`.android` map SWC's vocabulary (`stable`/`preview`/`deprecated`), and a component present in a roster whose catalog yields no maturity signal is floored to Available — presence in a roster is never "Not available" for that column.
+
+Reads are tolerant: a missing catalog yields no maturity signal silently, an **unparseable** one does the same and warns, and neither aborts the build. A half-written catalog is a normal state while an implementation's extraction is still being built, and it should cost that one component its context, not take the whole index down and leave every surface on a stale file.
+
+Two consequences worth knowing. A component **neither** implementation lists has no row at all, since membership is presence. A component that should be documented as unavailable everywhere — Toolbar, Navigation bar — is carried by this repository instead, in [`roster-additions.json`](../roster-additions.json): a platform-keyed list of display names appended to the roster with no sources, so every column resolves to Not available and the secondary overlay supplies the guidance. Additions are appended after the empty-roster guard, so they can never disguise a collapsed extraction as a populated roster. And module subpaths are recorded relative to the package root, with the package version belonging in a `version.json` beside them (as `deps/swc/version.json` does) rather than baked into every path, so a version bump is one edit.
+
+Slices are pruned as well as written: a component that leaves every roster takes its `deps/status/<slug>.json` with it. Without that the file lingers and any page resolving to that slug is served data no build produced. A collapsed roster cannot trigger a mass deletion, because the fail-closed empty-roster guard exits before the writer runs.
+
+Per-component slices are merged the same way: one `deps/status/<slug>.json` carrying every platform that ships the component, because the slug is the key `/web/<impl>/components/<slug>` and `/mobile/components/<slug>` share. A component page reads whichever platform key it needs from one small fetch. `impl-component-names.js` stays web-derived — `buildImplComponentNames` skips any column that is not a registered web implementation, so other platforms would add nothing to it.
+
+### Listed and unlisted components
+
+A component carries `listed: false` when it is documented but is not a component in its
+own right — a composition part such as Accordion Item or Table Header. It stays in the
+roster, its status resolves normally, and its extracted catalog reaches
+`deps/status/<slug>.json`, so a documentation page can show its properties. The status
+table filters it out. Absent means listed, so only the exception costs a field.
+
+This is the distinction from [`roster-excludes.json`](../roster-excludes.json), which
+removes a name from the roster outright and discards its catalog with it. Use the
+excludes list for names that are not components at all; use
+[`roster-unlisted.json`](../roster-unlisted.json) for the ones worth documenting.
+
+### Configuration is read strictly, catalogs leniently
+
+Per-component catalogs are read with `readJson`, which tolerates an absent or unparseable
+file: that costs one component its maturity label and warns.
+
+Configuration files — aliases, overrides, excludes, unlisted, and the generated rosters —
+are read with `readConfig`, which fails the build when a file is missing, unparseable, or
+the wrong shape. The policies are opposite on purpose. A malformed catalog degrades one
+row; a malformed config silently empties the rules it carries and corrupts every row. That
+happened once: `roster-excludes.json` was still a flat array while the builder indexed it
+by platform, so every exclusion was dropped and the run published ~60 composition parts as
+table rows. The fail-closed empty-roster guard never fired, because the roster came out
+fuller rather than emptier.
+
+### Component-page routes
+
+Web gives each implementation its own page tree, so a cell links to `/web/<impl>/components/<slug>`. Mobile publishes one page per component shared by both platforms, so its cells link to `/mobile/components/<slug>` with no implementation segment — every linked cell in a row points at the same page. `PER_COLUMN_PAGES` in the block holds that distinction. Which cells link at all is unchanged: `LINKED_STATUSES` plus the published-page gate, so an Available iOS cell is a link while a Not available Android cell beside it is plain text.
 
 Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/status-model.js)):
 

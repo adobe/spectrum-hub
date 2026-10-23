@@ -4,7 +4,8 @@ A quick-reference map of every file involved in building the combined component 
 table. For the deeper story on the RSP/SWC status vocabulary itself — what `stable`,
 `internal`, `preview`, and `deprecated` mean per source, and why they can't be merged
 directly — see [DATA-CONTRACT.md](./DATA-CONTRACT.md). This doc is the map; that one is
-the contract.
+the contract. For data pushed by the iOS and Android teams rather than extracted here, see
+[MOBILE-DATA-CONTRACT.md](./MOBILE-DATA-CONTRACT.md).
 
 The combined status surfaces are produced by
 [`deps/build-status-index.js`](../build-status-index.js), run by the daily GitHub Actions
@@ -37,14 +38,26 @@ data                   ─┘    (reads scripts/utils/
 | Fix a name that doesn't match cleanly across RSP/SWC/Figma (e.g. `swc-card` joins the canonical `Cards` row) | [`deps/component-aliases.json`](../component-aliases.json) |
 | Point a component's "Go to RSP/SWC" link at a different upstream page | `upstreamName` — in [`deps/component-aliases.json`](../component-aliases.json) if that source ships the component, in [`deps/status-overrides.json`](../status-overrides.json) if it doesn't (Field Label → RSP's `Form.html`) |
 | Point a component's Figma link at a different design's page | `figmaPageSource` on the figma cell in [`deps/status-overrides.json`](../status-overrides.json) |
-| Remove a sub-component from the table entirely (it's a composition part, not a standalone component) | [`deps/roster-excludes.json`](../roster-excludes.json) |
+| Keep a composition part documented but out of the table (Accordion Item, Table Header) | that platform's list in [`deps/roster-unlisted.json`](../roster-unlisted.json) |
+| Drop a name from the data entirely, discarding its catalog with it | that platform's list in [`deps/roster-excludes.json`](../roster-excludes.json) |
+| Carry a component no implementation ships, so the table can give guidance instead of silence (Toolbar) | that platform's list in [`deps/roster-additions.json`](../roster-additions.json) |
 | Add a "use Gen1 instead" style note under a status badge | `deps/<impl>/<impl>-secondary-status.json` (or `deps/figma/figma-secondary-status.json`) |
 | Change what a raw status value (`stable`, `internal`, `preview`, ...) means in the unified table | [`scripts/utils/status-model.js`](../../scripts/utils/status-model.js) |
 | Change how a raw RSP/SWC extraction file's status field is read | [`scripts/utils/extraction-status.js`](../../scripts/utils/extraction-status.js) |
+| Add or remove a **mobile** component | that implementation's `deps/<implementation>/components.json` (membership is presence) |
+| Change a mobile component's status | its prop catalog at `deps/<implementation>/data/<Name>.json` — status derives from the rows, as it does for SWC |
+| Onboard a new platform | A `PLATFORM_CONFIG` entry plus a roster reader in [`deps/build-status-index.js`](../build-status-index.js) |
+
+The configuration above is shared across platforms, not duplicated per platform:
+`status-overrides.json` is keyed `name → platform → impl`, `roster-excludes.json` is keyed
+by platform, and aliases and secondary overlays are keyed by source id, which is unique
+across platforms. Only the rosters themselves are per-platform. See
+[DATA-CONTRACT.md](./DATA-CONTRACT.md#one-index-every-platform).
 
 None of the files under "generated outputs" below should ever be hand-edited. The
 JavaScript output carries a generated-file comment; the JSON outputs do not because JSON
-has no comments. Run `node deps/build-status-index.js` to regenerate them.
+has no comments. Run `node deps/build-status-index.js` to regenerate them — one run builds
+every platform.
 
 ## Full file inventory
 
@@ -54,8 +67,11 @@ has no comments. Run `node deps/build-status-index.js` to regenerate them.
 | --- | --- | --- |
 | [`deps/component-aliases.json`](../component-aliases.json) | source (`rsp`/`swc`/`figma`) → that source's own name | Canonical-name resolution for the roster join. Can also carry `upstreamName` — the name the *source's own public docs* use, when it differs from the canonical name (see [`upstreamName`](#upstreamname-and-figmapagesource) below). |
 | [`deps/status-overrides.json`](../status-overrides.json) | canonical name → platform → impl | Manual status override, applied last — wins over anything auto-detected. |
-| [`deps/roster-excludes.json`](../roster-excludes.json) | — (flat list) | Canonical names to drop from the joined roster entirely (composition sub-parts). |
-| `deps/rsp/rsp-secondary-status.json`, `deps/swc/swc-secondary-status.json`, `deps/figma/figma-secondary-status.json` | canonical name | Per-implementation secondary guidance text shown under the primary status badge. |
+| `deps/rsp/rsp-secondary-status.json`, `deps/swc/swc-secondary-status.json`, `deps/figma/figma-secondary-status.json`, `deps/ios/ios-secondary-status.json`, `deps/android/android-secondary-status.json` | canonical name | Per-implementation secondary guidance text shown under the primary status badge. Lives beside the roster, never under `data/`. |
+| [`deps/ios/components.json`](../ios/components.json), [`deps/android/components.json`](../android/components.json) | name → module subpath | The mobile rosters, in the same name-to-locator form as `deps/swc/components.json`. Membership is presence. Status is **not** here — it comes from `deps/<implementation>/data/<Name>.json`, named after the subpath's last segment. |
+| [`deps/roster-excludes.json`](../roster-excludes.json) | platform → flat list | Names dropped from the roster entirely, discarding their catalogs. Keyed by platform, because the platforms disagree about what counts as standalone. |
+| [`deps/roster-additions.json`](../roster-additions.json) | platform → flat list | Display names appended to the roster with no sources, for components no implementation ships. Every column reads Not available; guidance comes from the secondary overlay. |
+| [`deps/roster-unlisted.json`](../roster-unlisted.json) | platform → flat list | Composition parts: documented, but not components in their own right. They stay in the roster and the index carrying `listed: false`, so their catalogs reach a slice while the status table filters them out. |
 
 ### Generated extraction inputs
 
@@ -65,6 +81,8 @@ builder. Do not hand-edit them either.
 | File | Keyed by | Purpose |
 | --- | --- | --- |
 | `deps/rsp/data/*.json`, `deps/swc/data/swc-*.json`, `deps/figma/components.json` | — | Raw per-source extraction data (see each implementation's own README + [DATA-CONTRACT.md](./DATA-CONTRACT.md)). |
+| `deps/ios/data/<Name>.json`, `deps/android/data/<Name>.json` | — | Per-component prop rows, SWC-shaped. Named after the module subpath's last segment, not the roster key. An absent or unparseable catalog costs that component its maturity signal and warns; it does not fail the build. |
+| `deps/swc/version.json`, `deps/ios/version.json`, `deps/android/version.json` | — | The concrete package version the catalogs beside them were extracted from. Written by each source's extractor; the mobile ones are authored placeholders until those extractors exist. |
 
 ### Build-time logic
 

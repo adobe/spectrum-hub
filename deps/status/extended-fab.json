@@ -1,0 +1,14 @@
+{
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "secondary": "Use properties within Button",
+      "figmaPageSource": "Extended FAB",
+      "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+    },
+    "android": {
+      "status": "available",
+      "context": "Stable"
+    }
+  }
+}
