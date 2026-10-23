@@ -6,13 +6,19 @@ export default function sampleRUM(checkpoint, data) {
     if (!window.hlx.rum || !window.hlx.rum.collector) {
       sampleRUM.enhance = () => {};
       const param = new URLSearchParams(window.location.search).get('rum');
-      const weight = (param === 'on' && 1)
-          || (window.SAMPLE_PAGEVIEWS_AT_RATE === 'high' && 10)
-          || (window.SAMPLE_PAGEVIEWS_AT_RATE === 'low' && 1000)
-          || 100;
+      const rate = ['on', 'off'].includes(param) ? param : window.SAMPLE_PAGEVIEWS_AT_RATE;
+      // Let operators tune or disable collection without requiring a deployment.
+      const rates = {
+        on: 1,
+        off: 0,
+        high: 10,
+        medium: 100,
+        low: 1000,
+      };
+      const weight = Object.hasOwn(rates, rate) ? rates[rate] : 100;
       const id = (window.hlx.rum && window.hlx.rum.id) || crypto.randomUUID().slice(-9);
       const isSelected = (window.hlx.rum && window.hlx.rum.isSelected)
-          || (param !== 'off' && Math.random() * weight < 1);
+          || (weight > 0 && Math.random() * weight < 1);
         // eslint-disable-next-line object-curly-newline, max-len
       window.hlx.rum = {
         weight,
@@ -41,6 +47,22 @@ export default function sampleRUM(checkpoint, data) {
           return errData;
         };
 
+        // Makes DOM event rejections name the resource that failed (images, fonts, etc.)
+        const dataFromEventObj = (event) => {
+          const errData = { source: 'Unhandled Rejection', target: 'Unknown' };
+          try {
+            const el = event.target;
+            const locator = el && el.tagName
+              ? [el.tagName.toLowerCase(), el.src, el.href]
+                .filter((part) => part && typeof part === 'string').join('@')
+              : el && el.toString();
+            errData.target = (locator || event.type).slice(0, 200);
+          } catch (err) {
+            /* event structure was not as expected */
+          }
+          return errData;
+        };
+
         window.addEventListener('error', ({ error }) => {
           const errData = dataFromErrorObj(error);
           sampleRUM('error', errData);
@@ -53,13 +75,30 @@ export default function sampleRUM(checkpoint, data) {
           };
           if (reason instanceof Error) {
             errData = dataFromErrorObj(reason);
+          } else if (reason instanceof Event) {
+            errData = dataFromEventObj(reason);
           }
           sampleRUM('error', errData);
+        });
+
+        // If an enhanced RUM gets blocked by CSP, this should use the base collector
+        window.addEventListener('securitypolicyviolation', (e) => {
+          if (e.blockedURI.includes('helix-rum-enhancer') && e.disposition === 'enforce') {
+            const errData = {
+              source: 'csp',
+              target: e.blockedURI,
+            };
+            sampleRUM.sendPing('error', timeShift(), errData);
+          }
         });
 
         sampleRUM.baseURL = sampleRUM.baseURL || new URL(window.RUM_BASE || '/', new URL('https://rum.hlx.page'));
         sampleRUM.collectBaseURL = sampleRUM.collectBaseURL || sampleRUM.baseURL;
         sampleRUM.sendPing = (ck, time, pingData = {}) => {
+          // Separate Playwright/automated browser traffic from real user sessions
+          const uaExtra = navigator.webdriver && !navigator.userAgent.includes('+http')
+            ? { ua: `${navigator.userAgent} +http://navigator.webdriver` }
+            : {};
           // eslint-disable-next-line max-len, object-curly-newline
           const rumData = JSON.stringify({
             weight,
@@ -68,6 +107,7 @@ export default function sampleRUM(checkpoint, data) {
             checkpoint: ck,
             t: time,
             ...pingData,
+            ...uaExtra,
           });
           const urlParams = window.RUM_PARAMS
             ? new URLSearchParams(window.RUM_PARAMS).toString() || ''
@@ -116,6 +156,5 @@ export default function sampleRUM(checkpoint, data) {
 
 window.hlx ??= {};
 window.hlx.RUM_MASK_URL = 'full';
-window.hlx.RUM_MANUAL_ENHANCE = true;
 sampleRUM.collectBaseURL = window.origin;
 sampleRUM();
