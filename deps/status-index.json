@@ -1308,6 +1308,23 @@
       }
     },
     {
+      "name": "NavigationBar",
+      "label": "Navigation bar",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "available",
+            "secondary": "Use native component",
+            "figmaPageSource": "Toast",
+            "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+          },
+          "android": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "NumberField",
       "label": "Number Field",
       "platforms": {
@@ -2238,6 +2255,21 @@
           "android": {
             "status": "available",
             "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "Toolbar",
+      "label": "Toolbar",
+      "platforms": {
+        "mobile": {
+          "ios": {
+            "status": "not-available",
+            "secondary": "Use native component"
+          },
+          "android": {
+            "status": "not-available"
           }
         }
       }

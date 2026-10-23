@@ -116,7 +116,7 @@
       }
     }
   },
-   "FloatingActionButtonFAB": {
+  "FloatingActionButtonFAB": {
     "mobile": {
       "ios": {
         "status": "experimental",
@@ -157,6 +157,15 @@
       "android": {
         "status": "available",
         "figmaPageSource": "Snackbar",
+        "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+  "NavigationBar": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "figmaPageSource": "Toast",
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
     }

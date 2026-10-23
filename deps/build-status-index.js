@@ -54,6 +54,10 @@ const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
 // Documented, but not components in their own right. Unlike the excludes list these stay
 // in the roster and the index, carrying `listed: false`; the status table filters on it.
 const UNLISTED_FILE = join(__dirname, 'roster-unlisted.json');
+// Components this repository carries although no implementation ships them, so the table
+// can answer "what about Toolbar?" with guidance rather than silence. Keyed by platform,
+// like its two siblings.
+const ADDITIONS_FILE = join(__dirname, 'roster-additions.json');
 const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 
 // The platform a build run describes. Every function below takes it as an argument;
@@ -356,6 +360,40 @@ export function validateConfigShape(name, value, shape) {
 export function markUnlisted(roster, unlisted = []) {
   const names = new Set(unlisted);
   return roster.map((entry) => (names.has(entry.name) ? { ...entry, listed: false } : entry));
+}
+
+/**
+ * Appends the components this repository carries although no implementation ships them.
+ *
+ * Membership is presence, so a component no roster lists has no row at all — and on
+ * mobile there is no Figma column to supply one, the way it does for a web design-only
+ * component. Toolbar and Navigation bar are real entries in the mobile status table whose
+ * answer is "use the native component", and that answer needs a row to sit on.
+ *
+ * An addition carries no sources, so every column resolves to Not available and no
+ * present floor applies. The guidance itself comes from the secondary overlay as it does
+ * for any other cell.
+ *
+ * @param {{ name: string }[]} roster
+ * @param {string[]} additions - Display names, as the table should render them.
+ * @returns {{ roster: object[], warnings: string[] }}
+ */
+export function addRosterAdditions(roster, additions = []) {
+  const warnings = [];
+  const present = new Set(roster.map((entry) => entry.name));
+  const rows = [];
+
+  for (const label of additions) {
+    const name = normalizeName(label);
+    if (present.has(name)) {
+      warnings.push(`addition "${name}" is already in the roster`);
+      continue;
+    }
+    present.add(name);
+    rows.push({ name, label, sources: {} });
+  }
+
+  return { roster: [...roster, ...rows], warnings };
 }
 
 /**
@@ -985,17 +1023,21 @@ function readMobileRoster(config, aliases, excludes) {
  * @param {{ aliases: object, overrides: object, excludes: string[] }} inputs
  */
 function buildPlatform(platform, config, {
-  aliases, overrides, excludes, unlisted,
+  aliases, overrides, excludes, unlisted, additions,
 }) {
   const { roster: joined, figmaRoster, readData } = config.readRoster(config, aliases, excludes);
-  const roster = markUnlisted(joined, unlisted);
 
   // Fail-closed guard: an empty roster means an upstream extraction produced nothing.
   // Refuse to overwrite a good index with an empty one (see deps/docs/REMOVED-DETECTION.md).
-  if (!roster.length) {
+  // Checked before the additions are appended, so the handful of rows this repository
+  // carries itself can never disguise a collapsed extraction as a populated roster.
+  if (!joined.length) {
     console.error(`Refusing to write an empty status index — the ${platform} roster is empty.`);
     process.exit(1);
   }
+
+  const added = addRosterAdditions(joined, additions);
+  const roster = markUnlisted(added.roster, unlisted);
 
   const secondaries = readSecondaries(
     config.columns,
@@ -1021,7 +1063,7 @@ function buildPlatform(platform, config, {
     roster,
     index,
     slices: deduped.slices,
-    warnings: [...warnings, ...built.warnings, ...deduped.warnings],
+    warnings: [...added.warnings, ...warnings, ...built.warnings, ...deduped.warnings],
   };
 }
 
@@ -1030,6 +1072,7 @@ function main() {
   const overrides = readConfig(OVERRIDES_FILE, 'object-of-objects');
   const excludes = readConfig(EXCLUDES_FILE, 'object-of-arrays');
   const unlisted = readConfig(UNLISTED_FILE, 'object-of-arrays');
+  const additions = readConfig(ADDITIONS_FILE, 'object-of-arrays');
 
   const builds = Object.entries(PLATFORM_CONFIG).map(([platform, config]) => buildPlatform(
     platform,
@@ -1039,6 +1082,7 @@ function main() {
       overrides,
       excludes: excludes[platform] ?? [],
       unlisted: unlisted[platform] ?? [],
+      additions: additions[platform] ?? [],
     },
   ));
 

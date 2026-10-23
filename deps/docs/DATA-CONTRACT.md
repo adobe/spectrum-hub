@@ -126,13 +126,18 @@ A roster entry may carry an explicit `label`. A platform whose roster is display
 
 ### The mobile rosters
 
-The native mobile platforms follow SWC's shape rather than inventing one. `deps/ios/components.json` and `deps/android/components.json` map the name that platform uses to the component's **module subpath**, exactly as `deps/swc/components.json` maps a tag to a module subpath, and `joinNamedRosters` unions them. Status is never in these files: it comes from a per-component catalog of prop rows at `deps/<platform>/data/<Name>.json`, where `<Name>` is the subpath's last segment. That indirection is what lets a display-name key like `Pop-up button` sit beside a `PopUpButton.json` catalog.
+What the mobile teams generate, and what is enforced on it, is specified in
+[MOBILE-DATA-CONTRACT.md](./MOBILE-DATA-CONTRACT.md) — including the two phases, the
+catalog row fields, and why a roster without catalogs is a valid contribution. This
+section is the builder's side of that contract.
+
+The native mobile implementations follow SWC's shape rather than inventing one. `deps/ios/components.json` and `deps/android/components.json` map the name that implementation uses to the component's **module subpath**, exactly as `deps/swc/components.json` maps a tag to a module subpath, and `joinNamedRosters` unions them. Status is never in these files: it comes from a per-component catalog of prop rows at `deps/<implementation>/data/<Name>.json`, where `<Name>` is the subpath's last segment. That indirection is what lets a display-name key like `Pop-up button` sit beside a `PopUpButton.json` catalog.
 
 Everything downstream is therefore the SWC path: `getSwcComponentStatus` derives the component's status from the rows' `status`/`since`, `SOURCE_MAPPINGS.ios`/`.android` map SWC's vocabulary (`stable`/`preview`/`deprecated`), and a component present in a roster whose catalog yields no maturity signal is floored to Available — presence in a roster is never "Not available" for that column.
 
-Reads are tolerant: an absent **or unparseable** catalog yields no maturity signal and warns, rather than aborting the build. A half-written catalog is a normal state while a platform's extraction is still being built, and it should cost that one component its context, not take the whole index down and leave every surface on a stale file.
+Reads are tolerant: a missing catalog yields no maturity signal silently, an **unparseable** one does the same and warns, and neither aborts the build. A half-written catalog is a normal state while an implementation's extraction is still being built, and it should cost that one component its context, not take the whole index down and leave every surface on a stale file.
 
-Two consequences worth knowing. A component **neither** platform lists has no row at all, since membership is presence — a component documented as unavailable everywhere needs a roster entry somewhere. And module subpaths are recorded relative to the package root, with the package version belonging in a `version.json` beside them (as `deps/swc/version.json` does) rather than baked into every path, so a version bump is one edit.
+Two consequences worth knowing. A component **neither** implementation lists has no row at all, since membership is presence. A component that should be documented as unavailable everywhere — Toolbar, Navigation bar — is carried by this repository instead, in [`roster-additions.json`](../roster-additions.json): a platform-keyed list of display names appended to the roster with no sources, so every column resolves to Not available and the secondary overlay supplies the guidance. Additions are appended after the empty-roster guard, so they can never disguise a collapsed extraction as a populated roster. And module subpaths are recorded relative to the package root, with the package version belonging in a `version.json` beside them (as `deps/swc/version.json` does) rather than baked into every path, so a version bump is one edit.
 
 Slices are pruned as well as written: a component that leaves every roster takes its `deps/status/<slug>.json` with it. Without that the file lingers and any page resolving to that slug is served data no build produced. A collapsed roster cannot trigger a mass deletion, because the fail-closed empty-roster guard exits before the writer runs.
 

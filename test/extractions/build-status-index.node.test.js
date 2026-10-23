@@ -14,6 +14,7 @@ import {
   canonicalNameForRsp,
   joinRosters,
   filterRoster,
+  addRosterAdditions,
   standaloneSwcTags,
   excludeInternalSwc,
   toIndexStatus,
@@ -161,6 +162,37 @@ describe('markUnlisted', () => {
 
   it('is a no-op with an empty set', () => {
     assert.deepEqual(markUnlisted(roster(), []), roster());
+  });
+});
+
+describe('addRosterAdditions', () => {
+  const roster = () => [{ name: 'Button', sources: { ios: 'Sources/Button' } }];
+
+  it('adds a row for a name no implementation ships', () => {
+    const { roster: result } = addRosterAdditions(roster(), ['Navigation bar']);
+    assert.deepEqual(result.map((entry) => entry.name), ['Button', 'NavigationBar']);
+  });
+
+  it('gives the added row no sources, so every column reads Not available', () => {
+    const { roster: result } = addRosterAdditions(roster(), ['Navigation bar']);
+    assert.deepEqual(result.at(-1).sources, {});
+  });
+
+  it('keeps the name as written for the label, canonicalising only the key', () => {
+    const { roster: result } = addRosterAdditions(roster(), ['Navigation bar']);
+    assert.equal(result.at(-1).label, 'Navigation bar');
+  });
+
+  it('skips a name an implementation already ships, and says so', () => {
+    const { roster: result, warnings } = addRosterAdditions(roster(), ['Button']);
+    assert.equal(result.length, 1);
+    assert.deepEqual(warnings, ['addition "Button" is already in the roster']);
+  });
+
+  it('is a no-op with an empty list', () => {
+    const { roster: result, warnings } = addRosterAdditions(roster(), []);
+    assert.deepEqual(result, roster());
+    assert.deepEqual(warnings, []);
   });
 });
 

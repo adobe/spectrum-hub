@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,10 +13,21 @@ const DEPS = join(dirname(fileURLToPath(import.meta.url)), '../../deps');
 
 const KINDS = new Set(['enum', 'boolean', 'text', 'number', 'unknown']);
 
+// Whether the mobile implementations have shipped their catalogs as well as their rosters.
+// Phase one of the mobile contract is a roster alone: the build floors a catalog-less
+// entry to Available (PLATFORM_CONFIG.mobile.presentFloor), so an implementation can power
+// the status table before it can introspect its API. Set false while that is the live state.
+// Row shape is held either way — this governs only whether catalogs must exist and be
+// populated. See deps/docs/MOBILE-DATA-CONTRACT.md.
+const REQUIRE_MOBILE_CATALOGS = true;
+
 // The two catalogs still differ in file naming and wrapper shape; unifying those is
 // outstanding Layer 1 work. Absorbing it here keeps the assertions identical for both.
 function readCatalog(impl) {
   const dir = join(DEPS, impl, 'data');
+  // A phase-one implementation has no data directory at all; ENOENT here would mask the
+  // pairing assertion below with a stack trace.
+  if (!existsSync(dir)) { return []; }
   return readdirSync(dir)
     .filter((file) => file.endsWith('.json'))
     .map((file) => {
@@ -47,7 +58,9 @@ for (const impl of ['rsp', 'swc', 'ios', 'android']) {
   describe(`deps/${impl}/data contract`, () => {
     const rows = allRows(impl);
 
-    it('has rows to check', () => {
+    const expectsCatalogs = ['rsp', 'swc'].includes(impl) || REQUIRE_MOBILE_CATALOGS;
+
+    it('has rows to check', { skip: !expectsCatalogs }, () => {
       const floor = ['rsp', 'swc'].includes(impl) ? 100 : 0;
       assert.ok(rows.length > floor, `expected a populated catalog, got ${rows.length} rows`);
     });
@@ -118,17 +131,19 @@ for (const impl of ['ios', 'android']) {
   });
 
   // A roster entry names a module; the catalog beside it is named for that module's last
-  // segment. A roster entry with no catalog floors to Available with no properties shown
-  // — the exact mistake a new generator makes — and a catalog with no roster entry is a
-  // file nothing will ever read.
+  // segment. Once both phases have landed the two must correspond: a roster entry with no
+  // catalog floors to Available with no properties shown, which past phase one is a
+  // generator that dropped a component. A catalog with no roster entry is a file nothing
+  // will ever read, in either phase, so that direction is always enforced.
   describe(`deps/${impl} roster and catalogs correspond`, () => {
     const roster = JSON.parse(readFileSync(join(DEPS, impl, 'components.json'), 'utf8'));
     const expected = new Set(Object.values(roster).map((subpath) => subpath.split('/').pop()));
-    const onDisk = new Set(readdirSync(join(DEPS, impl, 'data'))
+    const dir = join(DEPS, impl, 'data');
+    const onDisk = new Set((existsSync(dir) ? readdirSync(dir) : [])
       .filter((file) => file.endsWith('.json'))
       .map((file) => file.replace(/\.json$/, '')));
 
-    it('has a catalog for every roster entry', () => {
+    it('has a catalog for every roster entry', { skip: !REQUIRE_MOBILE_CATALOGS }, () => {
       assert.deepEqual([...expected].filter((name) => !onDisk.has(name)), []);
     });
 
