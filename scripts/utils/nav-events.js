@@ -1,8 +1,5 @@
-// Shared by blocks/search/search.js and blocks/sitenav/sitenav.js, which
-// can't import from each other directly: sitenav.js's module body is a
-// side-effecting IIFE that fetches and injects the whole sitenav rail on
-// import, which search must not force onto a page that loads search but
-// intentionally has no sitenav. This module has no side effects, so both
-// can depend on it safely.
+// Share event names without importing another block's dependencies or running
+// its module-level initialization. This module has no side effects.
 export const SEARCH_EXPAND_EVENT = 'sitenav:expand-level1';
 export const SEARCH_ANNOUNCE_EVENT = 'search:announce';
+export const PAGE_NAV_REVEAL_EVENT = 'page-nav:reveal-target';

@@ -536,6 +536,81 @@ describe('page-nav block', () => {
     });
   });
 
+  describe('revealing navigation targets before scrolling', () => {
+    let originalUrl;
+
+    beforeEach(() => {
+      originalUrl = window.location.href;
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+    });
+
+    afterEach(() => {
+      window.history.replaceState(null, '', originalUrl);
+    });
+
+    it('lets a target container finish revealing a clicked heading before scroll and focus', async () => {
+      makeDOM();
+      const el = await loadPageNav();
+      const heading = document.querySelectorAll('main h2')[1];
+      const scroll = sandbox.stub(heading, 'scrollIntoView');
+      const focus = sandbox.spy(heading, 'focus');
+      let reveal;
+      const update = new Promise((resolve) => { reveal = resolve; });
+      const onReveal = sandbox.spy((event) => event.detail.waitUntil(update));
+      heading.parentElement.addEventListener('page-nav:reveal-target', onReveal);
+
+      el.querySelector('a[href="#section-two"]').click();
+
+      expect(onReveal.calledOnce).to.be.true;
+      expect(onReveal.firstCall.args[0].target === heading).to.be.true;
+      expect(scroll.called).to.be.false;
+      expect(focus.called).to.be.false;
+      reveal();
+      await waitFor(() => scroll.called);
+      expect(scroll.calledOnceWithExactly({ block: 'start', behavior: 'instant' })).to.be.true;
+      expect(focus.calledOnceWithExactly({ preventScroll: true })).to.be.true;
+    });
+
+    it('reveals an initial hash target before scrolling', async () => {
+      makeDOM();
+      const heading = document.querySelectorAll('main h2')[1];
+      const scroll = sandbox.stub(heading, 'scrollIntoView');
+      let reveal;
+      const update = new Promise((resolve) => { reveal = resolve; });
+      heading.addEventListener('page-nav:reveal-target', (event) => event.detail.waitUntil(update));
+      window.history.replaceState(null, '', '#section-two');
+
+      await loadPageNav();
+
+      expect(scroll.called).to.be.false;
+      reveal();
+      await waitFor(() => scroll.called);
+      expect(scroll.calledOnce).to.be.true;
+    });
+
+    it('does not finish stale navigation after another heading is selected', async () => {
+      makeDOM();
+      const el = await loadPageNav();
+      const [first, second] = document.querySelectorAll('main h2');
+      const firstScroll = sandbox.stub(first, 'scrollIntoView');
+      const secondScroll = sandbox.stub(second, 'scrollIntoView');
+      let reveal;
+      const update = new Promise((resolve) => { reveal = resolve; });
+      first.addEventListener('page-nav:reveal-target', (event) => event.detail.waitUntil(update));
+
+      el.querySelector('a[href="#section-one"]').click();
+      el.querySelector('a[href="#section-two"]').click();
+      expect(secondScroll.calledOnce).to.be.true;
+      reveal();
+      await update;
+      await Promise.resolve();
+
+      expect(firstScroll.called).to.be.false;
+    });
+  });
+
   describe('resolving a #hash present at import time (a direct deep link)', () => {
     let originalUrl;
 

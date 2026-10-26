@@ -1,4 +1,5 @@
 import { normalizeHeadingId, removeForAudience } from '../../scripts/ak.js';
+import { PAGE_NAV_REVEAL_EVENT } from '../../scripts/utils/nav-events.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -233,7 +234,21 @@ function watchScrollSpy(headings, linkById) {
   };
 }
 
-function navigateToHeading(heading) {
+let navigationSequence = 0;
+
+async function navigateToHeading(heading) {
+  navigationSequence += 1;
+  const sequence = navigationSequence;
+  const updates = [];
+  // A target's containers can reveal hidden content before scrolling or focusing it.
+  heading.dispatchEvent(new CustomEvent(PAGE_NAV_REVEAL_EVENT, {
+    bubbles: true,
+    detail: { waitUntil: (update) => updates.push(update) },
+  }));
+  if (updates.length) {
+    await Promise.all(updates);
+    if (sequence !== navigationSequence) { return; }
+  }
   heading.scrollIntoView({ block: 'start', behavior: 'instant' });
   heading.focus({ preventScroll: true });
 }
@@ -341,6 +356,7 @@ function navigateToHeading(heading) {
     const id = window.location.hash.slice(1);
     const heading = targetById.get(id);
     if (!heading) {
+      navigationSequence += 1;
       setActive(null);
       resume();
       return;
