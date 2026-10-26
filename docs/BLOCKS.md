@@ -198,10 +198,11 @@ Block styles are unlayered, so [they override the global styles](https://develop
 | `playground` | Interactive component demonstration driven by generated contracts |
 | `profile` | Link-triggered account/profile control |
 | `search` | Link-triggered Algolia search interface |
-| `section-metadata` | Applies section style, layout, spacing, radius, and background settings |
+| `section-metadata` | Applies section style, layout, spacing, radius, background, and tabs boundary settings |
 | `sitenav` | Site-level navigation loaded from a fragment |
 | `status-table` | Tabular component status presentation |
 | `table` | General authored table decoration |
+| `tabs` | SWC tab groups built from labels and the following page or fragment sections |
 | `usage` | Recommended/not-recommended media guidance panels |
 | `youtube` | Link-triggered embedded YouTube player |
 
