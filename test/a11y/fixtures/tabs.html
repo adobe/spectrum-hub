@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabs block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/tabs/tabs.css">
+  <link rel="stylesheet" href="/blocks/page-nav/page-nav.css">
+</head>
+<body>
+  <main id="main-content">
+    <div>
+      <h1>Component information</h1>
+      <p>This introduction stays outside the tabs.</p>
+    </div>
+    <div>
+      <div class="tabs" aria-label="Component information">
+        <div>
+          <div>
+            <ul>
+              <li>Overview</li>
+              <li>Details</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2 id="overview">Overview</h2>
+      <p>An introduction to the component.</p>
+      <div class="section-metadata">
+        <div><div>tabs</div><div>start</div></div>
+        <div><div>style</div><div>container</div></div>
+      </div>
+    </div>
+    <div>
+      <h2 id="anatomy">Anatomy</h2>
+      <p>The parts that make up the component.</p>
+    </div>
+    <div>
+      <h2 id="implementation">Implementation</h2>
+      <p>Implementation guidance for the component.</p>
+      <div class="section-metadata">
+        <div><div>tabs</div><div>start</div></div>
+      </div>
+    </div>
+    <div>
+      <h2 id="details">Technical details</h2>
+      <p>Detailed component guidance.</p>
+      <a href="#main-content">Back to introduction</a>
+      <div class="section-metadata">
+        <div><div>tabs</div><div>end</div></div>
+      </div>
+    </div>
+    <div>
+      <h2 id="related">Related resources</h2>
+      <p>This content stays outside the tabs.</p>
+    </div>
+  </main>
+  <script type="module">
+    import { loadArea, setConfig } from '/scripts/ak.js';
+    setConfig({ components: [], hostnames: [], linkBlocks: [] });
+    await loadArea({ area: document.querySelector('main') });
+    await import('/blocks/page-nav/page-nav.js');
+    document.querySelector('.tabs').dataset.ready = 'true';
+  </script>
+</body>
+</html>
