@@ -8,7 +8,7 @@ Most changes here fall into one of six categories:
 
 | Category | Examples | Source of truth |
 | --- | --- | --- |
-| Vendored browser dependencies | `lit/`, `turndown/`, `components/swc-tooltip/`, `rum.js` | The upstream package, bundled by the build in [Vendored dependencies](#vendored-dependencies) |
+| Vendored browser dependencies | `lit/`, `turndown/`, `components/`, `rum.js` | The upstream package, bundled by the build in [Vendored dependencies](#vendored-dependencies) |
 | Authored runtime components | `se/` | The checked-in source in this repository |
 | Implementation catalogs | `rsp/`, `swc/`, `figma/` | Published implementation metadata and extraction scripts |
 | Authored mappings | `component-aliases.json`, `status-overrides.json`, `roster-excludes.json` | The checked-in JSON file |
@@ -22,7 +22,7 @@ Add something to `deps/` when it meets one of these needs:
 | Need | Location |
 | --- | --- |
 | A library must ship as a static browser dependency rather than only supporting local development or a build | `deps/<library>/` |
-| A custom element wraps an element published by an upstream package | `deps/components/<name>/` |
+| A custom element wraps an element published by an upstream package | `deps/components/src/<name>/` |
 | Spectrum Hub extracts component metadata from an implementation source | `deps/<implementation>/` |
 | Multiple implementation pipelines need the same extraction or playground contract logic | `deps/shared/` |
 | The combined status model needs an authored alias, override, exclusion, or secondary message | The existing top-level or implementation-specific mapping file |
@@ -40,7 +40,7 @@ Do not add a file here only because other code imports it. Use:
 
 ## Vendored dependencies
 
-`lit/`, `turndown/`, and each directory under `components/` share one layout:
+`lit/` and `turndown/` share one layout:
 
 | Path | Role |
 | --- | --- |
@@ -53,8 +53,28 @@ Treat `dist/index.js` as generated output. To change what a dependency exposes, 
 ```bash
 npm run build:lit
 npm run build:turndown
-npm run build:swc-tooltip
+npm run build:components
 ```
+
+Component dependencies use a shared source and output tree:
+
+| Path | Role |
+| --- | --- |
+| `components/src/<name>/index.js` | Authored entry point that imports an upstream component |
+| `components/dist/<name>/index.js` | Bundled component dependency loaded by the browser |
+| `components/dist/index.js` | Generated side-effect imports of all current component outputs |
+
+`npm run build:components` recursively discovers `index.js` entries under
+`components/src/` and preserves their relative paths under `components/dist/`.
+Adding a component entry requires no build-script changes. The source root
+`components/src/index.js` is reserved and must not be authored.
+
+Blocks should import only the component outputs they need, such as
+`/deps/components/dist/swc-tooltip/index.js`. Import
+`/deps/components/dist/index.js` only when all components are needed. This root
+entry imports the individual outputs rather than bundling their code again.
+All files under `components/dist/` are generated. Commit the required outputs
+alongside source changes.
 
 Pages resolve the bare `lit` specifier to `/deps/lit/dist/index.js` through the import
 map in `head.html`, so blocks import `lit` by name. Standalone pages under `tools/`
@@ -70,7 +90,7 @@ policy. Check which one you are editing:
 
 | Directory | Kind | How to change it |
 | --- | --- | --- |
-| `components/<name>/` | Vendored wrapper around an element published by Spectrum Web Components | Edit `src/index.js`, then run the owning `npm run build:*` script |
+| `components/` | Vendored wrapper around an element published by Spectrum Web Components | Edit `src/<name>/index.js`, then run `npm run build:components` |
 | `se/` | Lit source authored in this repository | Edit `se.js` and its CSS directly. There is no upstream package and no build step; the browser loads `se.js` as written |
 
 `se/se.js` registers the shared `se-*` form and UI elements that several blocks import.
@@ -120,7 +140,8 @@ Common generated paths, with the generator that writes each one:
 | `deps/impl-component-names.js` | `deps/build-status-index.js` |
 | `deps/lit/dist/index.js` | `npm run build:lit` |
 | `deps/turndown/dist/index.js` | `npm run build:turndown` |
-| `deps/components/swc-tooltip/dist/index.js` | `npm run build:swc-tooltip` |
+| `deps/components/dist/<name>/index.js` | `npm run build:components` |
+| `deps/components/dist/index.js` | `npm run build:components` |
 
 Not every generated format can carry a do-not-edit comment. Use the owning README and
 build documentation to identify generated files.

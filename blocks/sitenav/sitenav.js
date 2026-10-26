@@ -4,7 +4,7 @@ import {
 import { getSvgRef, fetchSvgEl } from '../../scripts/utils/svg.js';
 import { SEARCH_EXPAND_EVENT } from '../../scripts/utils/nav-events.js';
 import rovingTabindex, { isFocusable, focusableIn } from '../../scripts/utils/roving-tabindex.js';
-import '../../deps/components/swc-tooltip/dist/index.js';
+import '../../deps/components/dist/swc-tooltip/index.js';
 import { IMPLEMENTATIONS } from '../../scripts/utils/implementations.js';
 
 const { log } = getConfig();
