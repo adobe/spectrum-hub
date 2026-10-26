@@ -1,0 +1,6 @@
+.tabs {
+  --swc-gray-700: var(--s2-gray-700);
+  --swc-blue-800: var(--s2-blue-800);
+  --swc-font-size-100: var(--s2-component-m-regular-font-size);
+  --swc-tab-height: var(--s2-spacing-700);
+}
