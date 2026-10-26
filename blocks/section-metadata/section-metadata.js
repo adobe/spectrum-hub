@@ -108,11 +108,17 @@ const getMetadata = (el) => [...el.childNodes].reduce((rdx, row) => {
   return rdx;
 }, {});
 
+export function getTabsMetadata(el) {
+  const { tabs } = getMetadata(el);
+  return tabs ? tabs.text.split(',').map(toClassName) : [];
+}
+
 export default async function init(el) {
   const section = el.closest('.section');
   if (!section) { return; }
   const metadata = getMetadata(el);
   if (metadata.style?.text) { await handleStyle(metadata.style.text, section); }
+  section.classList.add(...getTabsMetadata(el).map((marker) => `tabs-${marker}`));
   if (metadata.grid?.text) { handleLayout(metadata.grid.text, section, 'grid'); }
   if (metadata.gap?.text) { handleLayout(metadata.gap.text, section, 'gap'); }
   if (metadata.radius?.text) { handleLayout(metadata.radius.text, section, 'radius'); }
