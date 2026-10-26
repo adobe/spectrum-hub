@@ -1,4 +1,4 @@
-import { decorateAudience, normalizeHeadingId, removeForAudience } from '../../scripts/ak.js';
+import { decorateAudience, normalizeHeadingId, removeForAudience, loadStyle } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
@@ -75,6 +75,7 @@ async function renderWidgets(el) {
   const group = document.createElement('div');
   group.className = 'page-nav-widgets';
   const { getSvgRef } = await import('../../scripts/utils/svg.js');
+  loadStyle('/blocks/action-button/action-button.css');
 
   const elements = candidates.map(
     ({ tag, name, label, icon }) => makeWidgetElement(tag, name, label, icon, getSvgRef),
