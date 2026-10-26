@@ -70,6 +70,38 @@ describe('section-metadata block', () => {
     });
   });
 
+  describe('tabs row', () => {
+    for (const { value, classes } of [
+      { value: 'start', classes: ['tabs-start'] },
+      { value: 'end', classes: ['tabs-end'] },
+      { value: ' Start, End ', classes: ['tabs-start', 'tabs-end'] },
+    ]) {
+      it(`reflects "${value}" as section boundary classes`, async () => {
+        const { section, el } = makeSection(row('tabs', value));
+        document.body.append(section);
+
+        await init(el);
+
+        expect([...section.classList]).to.deep.equal(['section', ...classes]);
+        expect(section.contains(el)).to.be.false;
+      });
+    }
+
+    it('preserves other section metadata alongside the boundary', async () => {
+      const { section, el } = makeSection(
+        row('tabs', 'start') + row('style', 'container, center') + row('spacing', 'xxl'),
+      );
+      document.body.append(section);
+
+      await init(el);
+
+      expect(section.classList.contains('tabs-start')).to.be.true;
+      expect(section.classList.contains('container')).to.be.true;
+      expect(section.classList.contains('center')).to.be.true;
+      expect(section.classList.contains('spacing-xxl')).to.be.true;
+    });
+  });
+
   describe('base .section rule — cascade layer regression', () => {
     // section-metadata.css loads as a plain <link> (unlayered). Page-level base styles live inside
     // a named @layer. Per the cascade-layers spec, unlayered rules always beat layered ones
