@@ -8,7 +8,7 @@ contracts consumed by blocks. Treat each category differently.
 
 | Category | Examples | Change policy |
 | --- | --- | --- |
-| Vendored browser dependencies | `deps/lit/`, `deps/turndown/`, `deps/components/swc-tooltip/` | Edit `src/index.js`, then rerun the corresponding `npm run build:*` script |
+| Vendored browser dependencies | `deps/lit/`, `deps/turndown/`, `deps/components/` | Edit the source entry, then rerun the corresponding `npm run build:*` script |
 | Authored runtime components | `deps/se/` | Edit the source in place; there is no upstream package or build step |
 | Extraction source data | `deps/rsp/data/`, `deps/swc/data/`, `deps/figma/components.json` | Regenerate from upstream sources |
 | Authored mappings and overrides | `component-aliases.json`, `status-overrides.json`, `roster-excludes.json` | Edit intentionally, then rebuild |
@@ -18,7 +18,11 @@ contracts consumed by blocks. Treat each category differently.
 
 Do not assume that everything under `deps/` is safe to replace with an npm
 package or safe to edit as source. [`deps/README.md`](../deps/README.md) describes
-the `src/` and `dist/` layout the vendored dependencies share.
+the vendored dependency layouts. Component entries live under
+`deps/components/src/<name>/index.js`. Run `npm run build:components` to bundle
+them into `deps/components/dist/<name>/index.js` and generate an import-only
+`deps/components/dist/index.js`. Prefer individual component imports in blocks
+to avoid loading unused components.
 
 ## Component data flow
 
