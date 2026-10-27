@@ -1,4 +1,34 @@
 <swc-conversation-thread>
-  <swc-conversation-turn type="user">How do I reset my password?</swc-conversation-turn>
-  <swc-conversation-turn type="system">Go to Settings > Security > Reset password.</swc-conversation-turn>
+  <swc-conversation-turn type="user">
+    <swc-user-message>
+        Can you help me create a 45-minute presentation, with animations, for an
+        executive update?
+      </swc-user-message>
+  </swc-conversation-turn>
+  <swc-conversation-turn type="system">
+    <swc-system-message>
+      <swc-response-status slot="status" status="complete">
+        <span slot="label">
+          I interpreted your request as an executive narrative task and
+          prioritized a concise, audience-ready structure.
+        </span>
+      </swc-response-status>
+      <div class="swc-Typography--prose">
+        <h3>Big idea/core narrative: The warmth of welcome</h3>
+        <p>
+          Hospitality begins the moment our customers set foot off their
+          plane.
+        </p>
+      </div>
+      <swc-message-feedback slot="feedback"></swc-message-feedback>
+      <swc-message-sources slot="sources">
+        <a href="#source-1">Brand brief Q1 2026</a>
+      </swc-message-sources>
+    </swc-system-message>
+  </swc-conversation-turn>
+  <swc-conversation-turn type="user">
+    <swc-user-message>
+        Great. Can you shorten that into three slides?
+      </swc-user-message>
+  </swc-conversation-turn>
 </swc-conversation-thread>
