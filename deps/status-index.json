@@ -1409,7 +1409,8 @@
             "context": "Stable"
           },
           "swc": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           }
         }
       }

@@ -37,6 +37,7 @@
   "tab": "components/tabs",
   "tab-panel": "components/tabs",
   "tabs": "components/tabs",
+  "text-field": "components/text-field",
   "thumbnail": "components/thumbnail",
   "tooltip": "components/tooltip",
   "ui-icon": "components/ui-icons",
