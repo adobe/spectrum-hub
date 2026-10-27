@@ -24,3 +24,36 @@
     </span>
   </swc-response-status-step>
 </swc-response-status>
+
+<script>
+  (() => {
+    const container = document.currentScript?.parentElement;
+    const labels = {
+      active: 'Searching repositories for Europe trips',
+      complete: 'Thought for 9 seconds',
+      stopped: 'You stopped the response',
+    };
+
+    function observeStatus() {
+      const responseStatus = container?.querySelector('swc-response-status');
+      const label = responseStatus?.querySelector('[slot="label"]');
+      if (!responseStatus || !label) return;
+
+      function updateLabel() {
+        const nextLabel = labels[responseStatus.getAttribute('status')];
+        if (nextLabel) label.textContent = nextLabel;
+      }
+
+      updateLabel();
+      new MutationObserver(updateLabel).observe(responseStatus, {
+        attributeFilter: ['status'],
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', observeStatus, { once: true });
+    } else {
+      observeStatus();
+    }
+  })();
+</script>

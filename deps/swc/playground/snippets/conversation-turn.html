@@ -1,1 +1,17 @@
-<swc-conversation-turn type="user">This is a message in the conversation.</swc-conversation-turn>
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <swc-conversation-turn type="user">
+    <swc-user-message>
+      Can you summarize the attached campaign assets?
+    </swc-user-message>
+  </swc-conversation-turn>
+  <swc-conversation-turn type="system" accessible-label="Mensaje del sistema">
+    <swc-system-message>
+      <swc-response-status status="complete">
+        I prioritized campaign outcomes, segmented messaging pillars, and next-step actions to keep the summary presentation-ready.
+      </swc-response-status>
+      <div class="swc-Typography--prose">
+        <p>Here is a concise summary based on the files you shared. I grouped themes by audience and channel.</p>
+      </div>
+    </swc-system-message>
+  </swc-conversation-turn>
+</div>
