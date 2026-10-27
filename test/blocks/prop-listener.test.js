@@ -1,12 +1,68 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { listenForPropUpdates, notifyPreviewReady, requestMarkup } from '../../deps/shared/playground/prop-listener.js';
+import * as preview from '../../deps/shared/playground/prop-listener.js';
+
+const { listenForPropUpdates, notifyPreviewReady, requestMarkup } = preview;
 
 // listenForPropUpdates wires a window 'message' listener; message events are
 // delivered synchronously via dispatchEvent, so no awaiting is needed.
 function send(data) {
   window.dispatchEvent(new MessageEvent('message', { data }));
 }
+
+describe('executeSnippetScripts', () => {
+  it('executes inline scripts parsed through innerHTML', () => {
+    expect(preview.executeSnippetScripts).to.be.a('function');
+
+    const mount = document.createElement('div');
+    mount.innerHTML = '<script>document.currentScript.parentElement.dataset.executed = "true";</script>';
+    document.body.append(mount);
+
+    try {
+      preview.executeSnippetScripts(mount);
+      expect(mount.dataset.executed).to.equal('true');
+    } finally {
+      mount.remove();
+    }
+  });
+
+  it('updates the response-status label when its status changes', async () => {
+    expect(preview.executeSnippetScripts).to.be.a('function');
+
+    const markup = await (await fetch('/deps/swc/playground/snippets/response-status.html')).text();
+    const mount = document.createElement('div');
+    mount.innerHTML = markup;
+    document.body.append(mount);
+
+    try {
+      preview.executeSnippetScripts(mount);
+
+      const responseStatus = mount.querySelector('swc-response-status');
+      const label = responseStatus.querySelector('[slot="label"]');
+      const statuses = [
+        ['active', 'Searching repositories for Europe trips'],
+        ['complete', 'Thought for 9 seconds'],
+        ['stopped', 'You stopped the response'],
+      ];
+
+      for (const [status, expectedLabel] of statuses) {
+        responseStatus.setAttribute('status', status);
+        await new Promise((resolve) => {
+          setTimeout(resolve);
+        });
+        expect(label.textContent).to.equal(expectedLabel);
+      }
+
+      responseStatus.setAttribute('status', 'unsupported');
+      await new Promise((resolve) => {
+        setTimeout(resolve);
+      });
+      expect(label.textContent).to.equal('You stopped the response');
+    } finally {
+      mount.remove();
+    }
+  });
+});
 
 describe('prop-listener — listenForPropUpdates', () => {
   it('invokes the handler with the unwrapped property/attribute/value', () => {
