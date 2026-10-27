@@ -601,7 +601,7 @@ div[data-status],
       margin: 0;
       background-color: var(--se-body-background-color);
       color: var(--se-body-color);
-      font-family: 'Adobe Clean', 'Trebuchet MS', sans-serif;
+      font-family: var(--s2-font-family);
       font-size: var(--s2-body-size-m);
       line-height: var(--s2-body-line-height);
 
