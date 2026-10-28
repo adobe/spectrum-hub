@@ -1,0 +1,45 @@
+[
+  {
+    "property": "icon",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The icon shown in the button.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "checked",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the button is in the checked state.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "size",
+    "type": "\"Small\" | \"Medium\" | \"Large\"",
+    "kind": "enum",
+    "values": [
+      "Small",
+      "Medium",
+      "Large"
+    ],
+    "optional": false,
+    "default": "'medium'",
+    "description": "The size of the button.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "enabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "true",
+    "description": "Whether the button responds to interaction.",
+    "since": "1.0.0"
+  }
+]

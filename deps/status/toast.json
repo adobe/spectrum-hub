@@ -10,5 +10,17 @@
       "status": "not-available"
     }
   },
-  "figmaPageId": "9908:274"
+  "figmaPageId": "9908:274",
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "context": "Stable"
+    },
+    "android": {
+      "status": "available",
+      "secondary": "Use Snackbar",
+      "figmaPageSource": "Snackbar",
+      "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+    }
+  }
 }

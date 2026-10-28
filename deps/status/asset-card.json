@@ -4,11 +4,10 @@
       "status": "not-available"
     },
     "rsp": {
-      "status": "not-available"
+      "status": "available"
     },
     "swc": {
-      "status": "available",
-      "context": "Stable"
+      "status": "not-available"
     }
   }
 }

@@ -1,0 +1,11 @@
+{
+  "mobile": {
+    "ios": {
+      "status": "not-available",
+      "secondary": "Use native component"
+    },
+    "android": {
+      "status": "not-available"
+    }
+  }
+}

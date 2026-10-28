@@ -34,7 +34,11 @@ export const IMPLEMENTATIONS = [
       tagPattern: 'swc-{slug}',
     },
   },
-  { id: 'design-only', label: 'Design only', shortLabel: 'Figma' },
+  {
+    id: 'design-only',
+    label: 'Design only',
+    shortLabel: 'Figma',
+  },
 ];
 
 /**

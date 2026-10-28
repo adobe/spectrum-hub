@@ -32,9 +32,9 @@
  */
 
 import {
-  readFileSync, writeFileSync, existsSync, mkdirSync,
+  readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync,
 } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 
 import { getComponentStatus } from '../scripts/utils/extraction-status.js';
@@ -47,12 +47,22 @@ const OUTPUT_FILE = join(__dirname, 'status-index.json');
 const SLICES_DIR = join(__dirname, 'status');
 const ALIASES_FILE = join(__dirname, 'component-aliases.json');
 const OVERRIDES_FILE = join(__dirname, 'status-overrides.json');
+// Keyed by platform, because an exclusion drops a canonical name from every source at
+// once and the platforms disagree about what counts as a standalone component:
+// `ToggleButton` is a web composition part but a first-class mobile component.
 const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
+// Documented, but not components in their own right. Unlike the excludes list these stay
+// in the roster and the index, carrying `listed: false`; the status table filters on it.
+const UNLISTED_FILE = join(__dirname, 'roster-unlisted.json');
+// Components this repository carries although no implementation ships them, so the table
+// can answer "what about Toolbar?" with guidance rather than silence. Keyed by platform,
+// like its two siblings.
+const ADDITIONS_FILE = join(__dirname, 'roster-additions.json');
 const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 
-// The single platform surfaced today. New platforms are additive (see the memory /
-// data-contract notes); each brings its own roster + columns.
-const PLATFORM = 'web';
+// The platform a build run describes. Every function below takes it as an argument;
+// this is only the fallback for a caller that passes none.
+const DEFAULT_PLATFORM = 'web';
 
 // The status table's web columns, in display order. Figma is a design source; its label
 // lives here (not in the shared code-implementation registry). RSP/SWC labels are sourced
@@ -61,6 +71,16 @@ export const WEB_COLUMNS = [
   { id: 'figma', label: 'Figma' },
   { id: 'rsp', label: getImplementationById('rsp').label },
   { id: 'swc', label: getImplementationById('swc').label },
+];
+
+// The native mobile columns. There is no Figma column: a mobile component available in
+// code is available in the design library and the catalog apps too, so design fidelity
+// rides on the single platform status rather than a column of its own. ios/android are
+// deliberately absent from scripts/utils/implementations.js — that registry is read by
+// every surface that lists web implementations — so these labels live here.
+export const MOBILE_COLUMNS = [
+  { id: 'ios', label: 'iOS' },
+  { id: 'android', label: 'Android' },
 ];
 
 // Roster membership is the presence signal: a component a source ships is never
@@ -85,6 +105,45 @@ const OVERLAY_FILES = {
   figma: 'figma-secondary-status.json',
   rsp: 'rsp-secondary-status.json',
   swc: 'swc-secondary-status.json',
+};
+
+/**
+ * The per-platform knobs of a build run, so onboarding a platform is a config entry
+ * rather than a second copy of this file. Everything below the roster join — the status
+ * resolution, the overlay and override pipelines, the slice writer — is platform-agnostic
+ * and takes these as arguments.
+ *
+ * The outputs are shared, not per-platform: one combined `status-index.json` and one
+ * `deps/status/<slug>.json` per component carrying every platform it ships on. Only the
+ * *inputs* vary by platform. `status-overrides.json` is shared too — it has always been
+ * keyed `name → platform → impl`.
+ *
+ * `readRoster` is a function rather than a file path because each platform assembles its
+ * roster differently: web unions three extracted sources with their own narrowing rules
+ * (SWC drops `patterns/` members and internals, Figma folds its overlay into membership),
+ * while mobile reads authored files that state every row outright.
+ *
+ * Key order matters — it is the platform order mergePlatformIndexes folds in, and the
+ * first platform to produce a row supplies that row's label.
+ */
+export const PLATFORM_CONFIG = {
+  web: {
+    columns: WEB_COLUMNS,
+    presentFloor: PRESENT_FLOOR,
+    overlayFiles: OVERLAY_FILES,
+    readRoster: (...args) => readWebRoster(...args),
+  },
+  mobile: {
+    columns: MOBILE_COLUMNS,
+    // Presence is the signal, as it is for SWC: a platform that lists a component ships
+    // it, so a catalog with no maturity signal floors to Available rather than vanishing.
+    presentFloor: { ios: { status: 'available' }, android: { status: 'available' } },
+    overlayFiles: {
+      ios: 'ios-secondary-status.json',
+      android: 'android-secondary-status.json',
+    },
+    readRoster: (...args) => readMobileRoster(...args),
+  },
 };
 
 // Small words kept lowercase (except when first) when title-casing a Figma display name.
@@ -164,14 +223,24 @@ function toTitleCase(name) {
 }
 
 /**
- * Picks a component's display label. RSP/SWC rows de-PascalCase their canonical key;
- * Figma-only rows keep the designed display name (title-cased).
+ * Picks a component's display label. An explicit label on the roster entry always wins:
+ * a source whose roster is display-name-first (the mobile platforms) derives its canonical
+ * key *from* the display name, and that direction is lossy — `Floating action button
+ * (FAB)` normalizes to `FloatingActionButtonFAB`, which de-PascalCases back to `Floating
+ * Action Button FAB` with the parentheses gone for good. Such a roster carries the name it
+ * was authored with instead of having it reconstructed.
+ *
+ * Otherwise: RSP/SWC rows de-PascalCase their canonical key (which *is* the code
+ * identifier, so the derivation is sound), and Figma-only rows keep the designed display
+ * name, title-cased.
  *
  * @param {string} canonical
  * @param {{ rsp?: string, swc?: string, figma?: string }} sources
+ * @param {string} [label] - The roster entry's own display name, when it has one.
  * @returns {string}
  */
-function displayLabel(canonical, sources) {
+function displayLabel(canonical, sources, label) {
+  if (label) { return label; }
   if (sources.rsp || sources.swc) { return deCamel(canonical); }
   if (sources.figma) { return toTitleCase(sources.figma); }
   return deCamel(canonical);
@@ -206,6 +275,125 @@ export function joinRosters(rspNames, swcTags, figmaNames, aliases = {}) {
   for (const name of figmaNames) { add(canonicalNameForFigma(name, aliases.figma), 'figma', name); }
 
   return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Joins rosters shaped `{ <name>: <module subpath> }` — the same name-to-locator form
+ * `deps/swc/components.json` uses, one file per source. Membership is presence, as
+ * everywhere else: a source that lists a component ships it.
+ *
+ * The key is the name that source calls the component, which for the mobile platforms is
+ * a display name. Normalizing it to a canonical key is lossy (`Floating action button
+ * (FAB)` collapses to `FloatingActionButtonFAB`), so each row keeps the key as its
+ * `label` rather than having the name reconstructed from it — see displayLabel.
+ *
+ * @param {Record<string, Record<string, string>>} rosters - source id → name → subpath.
+ * @param {Record<string, object>} [aliases] - per-source alias maps.
+ * @returns {{ name: string, label: string, sources: Record<string, string> }[]}
+ */
+export function joinNamedRosters(rosters, aliases = {}) {
+  const byName = new Map();
+
+  for (const [id, entries] of Object.entries(rosters)) {
+    for (const name of Object.keys(entries ?? {})) {
+      const canonical = canonicalNameForFigma(name, aliases[id]);
+      // First source in config order supplies the label when two platforms spell the
+      // same component differently (`Icon button` vs `Icon Button`).
+      const entry = byName.get(canonical) ?? { name: canonical, label: name, sources: {} };
+      entry.sources[id] = name;
+      byName.set(canonical, entry);
+    }
+  }
+
+  return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const isPlainObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const CONFIG_SHAPES = {
+  object: isPlainObject,
+  array: Array.isArray,
+  'object-of-arrays': (value) => isPlainObject(value) && Object.values(value).every(Array.isArray),
+  'object-of-objects': (value) => isPlainObject(value) && Object.values(value).every(isPlainObject),
+};
+
+/**
+ * Asserts a configuration file parsed to the shape the build expects, returning it.
+ *
+ * Configuration decides what the whole index contains, so a malformed file must stop the
+ * build rather than degrade quietly. The failure this guards against already happened
+ * once: `roster-excludes.json` was still a flat array while the builder indexed it by
+ * platform, so `excludes.web` was `undefined`, every exclusion was dropped, and the run
+ * published ~60 composition parts as table rows. Nothing caught it — the fail-closed
+ * empty-roster guard only fires when a roster is emptier than expected, never fuller.
+ *
+ * Per-component catalogs keep the opposite behaviour (see readJson): one unreadable
+ * catalog should cost that component its maturity label, not the whole build.
+ *
+ * @param {string} name - The file name, for the error message.
+ * @param {unknown} value - The parsed contents.
+ * @param {keyof CONFIG_SHAPES} shape
+ * @returns {unknown} `value`, when it matches.
+ */
+export function validateConfigShape(name, value, shape) {
+  if (CONFIG_SHAPES[shape](value)) { return value; }
+  const actual = Array.isArray(value) ? 'an array' : `${value === null ? 'null' : typeof value}`;
+  throw new Error(
+    `${name}: expected ${shape}, got ${actual}. `
+    + 'A malformed config file silently empties the roster rules it carries, so the build stops here.',
+  );
+}
+
+/**
+ * Flags roster entries that are documented but are not components in their own right —
+ * composition parts like `AccordionItem` or `TableHeader`.
+ *
+ * They stay in the roster, so their extracted catalogs still reach `deps/status/<slug>.json`
+ * and a page can show their properties. The flag rides into the index, and the status
+ * table filters on it. This is the difference from `deps/roster-excludes.json`, which
+ * removes a name outright and discards its data with it.
+ *
+ * @param {{ name: string }[]} roster
+ * @param {string[]} unlisted - Canonical names to flag.
+ * @returns {{ name: string, listed?: false }[]}
+ */
+export function markUnlisted(roster, unlisted = []) {
+  const names = new Set(unlisted);
+  return roster.map((entry) => (names.has(entry.name) ? { ...entry, listed: false } : entry));
+}
+
+/**
+ * Appends the components this repository carries although no implementation ships them.
+ *
+ * Membership is presence, so a component no roster lists has no row at all — and on
+ * mobile there is no Figma column to supply one, the way it does for a web design-only
+ * component. Toolbar and Navigation bar are real entries in the mobile status table whose
+ * answer is "use the native component", and that answer needs a row to sit on.
+ *
+ * An addition carries no sources, so every column resolves to Not available and no
+ * present floor applies. The guidance itself comes from the secondary overlay as it does
+ * for any other cell.
+ *
+ * @param {{ name: string }[]} roster
+ * @param {string[]} additions - Display names, as the table should render them.
+ * @returns {{ roster: object[], warnings: string[] }}
+ */
+export function addRosterAdditions(roster, additions = []) {
+  const warnings = [];
+  const present = new Set(roster.map((entry) => entry.name));
+  const rows = [];
+
+  for (const label of additions) {
+    const name = normalizeName(label);
+    if (present.has(name)) {
+      warnings.push(`addition "${name}" is already in the roster`);
+      continue;
+    }
+    present.add(name);
+    rows.push({ name, label, sources: {} });
+  }
+
+  return { roster: [...roster, ...rows], warnings };
 }
 
 /**
@@ -266,9 +454,17 @@ export function toIndexStatus(source, rawData) {
  * keying each entry's guidance by canonical name. These render as the muted line beneath a
  * status badge (e.g. an SWC "Use Gen1" redirect) regardless of the cell's primary status.
  *
+ * Overlay entries are authored as display names, so each one normalizes through
+ * `canonicalNameForFigma` (the display-name normalizer, despite the name) using **that
+ * source's own alias map** — never one shared map, which would let a Figma rename silently
+ * rewrite an iOS entry. Note the key space differs per source: `aliases.figma` and the
+ * mobile maps are display-name keyed, while `aliases.rsp`/`aliases.swc` are keyed by
+ * export name and tag. No committed rsp/swc overlay entry needs an alias today; one that
+ * does must be authored under the display name it is written with here.
+ *
  * @param {{ id: string }[]} columns
  * @param {(impl: string) => { name: string, context: string }[] | null} readOverlay
- * @param {{ figma?: object }} aliases
+ * @param {Record<string, object>} aliases - Per-source alias maps.
  * @returns {Record<string, Record<string, string>>} impl id → canonical name → guidance.
  */
 export function readSecondaries(columns, readOverlay, aliases = {}) {
@@ -278,7 +474,7 @@ export function readSecondaries(columns, readOverlay, aliases = {}) {
     if (!entries) { continue; }
     const byCanonical = {};
     for (const { name, context } of entries) {
-      byCanonical[canonicalNameForFigma(name, aliases.figma)] = context;
+      byCanonical[canonicalNameForFigma(name, aliases[id])] = context;
     }
     secondaries[id] = byCanonical;
   }
@@ -291,15 +487,16 @@ export function readSecondaries(columns, readOverlay, aliases = {}) {
  *
  * @param {object[]} components
  * @param {Record<string, Record<string, string>>} secondaries
+ * @param {string} [platform]
  * @returns {string[]} warnings
  */
-export function applySecondaries(components, secondaries = {}) {
+export function applySecondaries(components, secondaries = {}, platform = DEFAULT_PLATFORM) {
   const warnings = [];
   const byName = new Map(components.map((component) => [component.name, component]));
 
   for (const [impl, byCanonical] of Object.entries(secondaries)) {
     for (const [canonical, context] of Object.entries(byCanonical)) {
-      const cell = byName.get(canonical)?.platforms?.[PLATFORM]?.[impl];
+      const cell = byName.get(canonical)?.platforms?.[platform]?.[impl];
       if (!cell) {
         warnings.push(`secondary for ${impl} targets unmatched component "${canonical}"`);
         continue;
@@ -322,18 +519,21 @@ export function applySecondaries(components, secondaries = {}) {
  * @param {object} overrides
  * @returns {{ components: object[], warnings: string[] }}
  */
-export function applyOverrides(components, overrides = {}) {
+export function applyOverrides(components, overrides = {}, platform = DEFAULT_PLATFORM) {
   const warnings = [];
   const byName = new Map(components.map((component) => [component.name, component]));
 
   for (const [name, platforms] of Object.entries(overrides)) {
-    const component = byName.get(name);
-    if (!component) {
-      warnings.push(`override for unknown component "${name}"`);
-      continue;
-    }
+    // One shared, platform-keyed file serves every platform, so most entries say nothing
+    // about the one being built. That is the normal case, not a mistake worth warning on.
+    const impls = platforms[platform];
+    if (impls) {
+      const component = byName.get(name);
+      if (!component) {
+        warnings.push(`override for unknown component "${name}"`);
+        continue;
+      }
 
-    for (const [platform, impls] of Object.entries(platforms)) {
       for (const [impl, override] of Object.entries(impls)) {
         const current = component.platforms?.[platform]?.[impl];
         if (!current) {
@@ -396,25 +596,39 @@ export function statusLegend() {
  * @param {{ name: string, sources: Record<string, string> }[]} args.roster
  * @param {(source: string, name: string) => unknown} args.readData
  * @param {{ id: string, label: string }[]} [args.columns]
+ * @param {string} [args.platform] - The platform key the output is filed under.
+ * @param {Record<string, { status: string }> | null} [args.presentFloor] - Per-source floor
+ *   for a component a source ships but yields no maturity signal for. Pass `null` for a
+ *   platform whose rosters state every status outright (the authored mobile ones) — there
+ *   flooring would overwrite a deliberate Not available with Available purely because the
+ *   component appears in the file.
  * @param {object} [args.overrides]
  * @param {Record<string, Record<string, string>>} [args.secondaries]
  * @returns {{ index: object, warnings: string[] }}
  */
 export function buildIndex({
-  roster, readData, columns = WEB_COLUMNS, overrides = {}, secondaries = {},
+  roster,
+  readData,
+  columns = WEB_COLUMNS,
+  platform = DEFAULT_PLATFORM,
+  presentFloor = PRESENT_FLOOR,
+  overrides = {},
+  secondaries = {},
 }) {
-  const components = roster.map(({ name, sources, upstreamNames = {} }) => {
-    const web = {};
+  const components = roster.map(({
+    name, label, listed, sources, upstreamNames = {},
+  }) => {
+    const cells = {};
     for (const { id } of columns) {
       const sourceName = sources[id];
       if (!sourceName) {
         // This source does not ship the component.
-        web[id] = { status: 'not-available' };
+        cells[id] = { status: 'not-available' };
         continue;
       }
       const resolved = toIndexStatus(id, readData(id, sourceName));
-      const cell = resolved.status === 'not-available'
-        ? { ...(PRESENT_FLOOR[id] ?? DEFAULT_FLOOR) }
+      const cell = (presentFloor && resolved.status === 'not-available')
+        ? { ...(presentFloor[id] ?? DEFAULT_FLOOR) }
         : resolved;
       // What this source's own public docs site calls the component, when that differs
       // from the canonical name — react-spectrum.adobe.com has no `ActionGroup.html`, only
@@ -422,26 +636,102 @@ export function buildIndex({
       // rename's direction isn't inferable, since some canonical names are themselves the
       // real upstream name.
       if (upstreamNames[id]) { cell.upstreamName = upstreamNames[id]; }
-      web[id] = cell;
+      cells[id] = cell;
     }
-    return { name, label: displayLabel(name, sources), platforms: { [PLATFORM]: web } };
+    const component = {
+      name,
+      label: displayLabel(name, sources, label),
+      platforms: { [platform]: cells },
+    };
+    // Only ever emitted when false, so a listed component stays the clean common case.
+    if (listed === false) { component.listed = false; }
+    return component;
   });
 
-  const secondaryWarnings = applySecondaries(components, secondaries);
-  const { warnings: overrideWarnings } = applyOverrides(components, overrides);
+  const secondaryWarnings = applySecondaries(components, secondaries, platform);
+  const { warnings: overrideWarnings } = applyOverrides(components, overrides, platform);
 
   const index = {
     statuses: statusLegend(),
-    implementations: { [PLATFORM]: columns },
+    implementations: { [platform]: columns },
     components,
   };
   return { index, warnings: [...secondaryWarnings, ...overrideWarnings] };
 }
 
-/** The first `page` override found on any of a component's web cells, or null. */
-function sharedPageSlug(component) {
-  const web = component.platforms?.[PLATFORM] ?? {};
-  const cell = Object.values(web).find((c) => c?.page);
+/**
+ * Folds each platform's build into the one index every surface reads.
+ *
+ * A component both platforms ship becomes a single row carrying both keys under
+ * `platforms` — the shape this index was designed around. A component only one platform
+ * ships keeps only that platform's key, which is how a reader tells "this table has no
+ * row for it" from "this cell is Not available": the status table renders only the
+ * components that declare its platform.
+ *
+ * One row carries one label, so where the platforms disagree the first build wins (web is
+ * built first). They disagree when a canonical name is derived from a code identifier on
+ * one side and authored on the other — `Text Field` vs `Text field`.
+ *
+ * @param {{ platform: string, index: object }[]} builds - in platform order.
+ * @returns {object} the combined index.
+ */
+export function mergePlatformIndexes(builds) {
+  const implementations = {};
+  const byName = new Map();
+
+  for (const { platform, index } of builds) {
+    implementations[platform] = index.implementations[platform];
+    for (const component of index.components) {
+      const existing = byName.get(component.name);
+      if (existing) {
+        Object.assign(existing.platforms, component.platforms);
+      } else {
+        byName.set(component.name, { ...component, platforms: { ...component.platforms } });
+      }
+    }
+  }
+
+  return {
+    statuses: statusLegend(),
+    implementations,
+    components: [...byName.values()].sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
+/**
+ * Folds each platform's slices into one file per component slug.
+ *
+ * The slug is the natural key across platforms — `/web/rsp/components/button` and
+ * `/mobile/components/button` are both Button — so one `deps/status/button.json` carries
+ * every platform's cells and each component page reads the key it cares about. Collisions
+ * *within* a platform are already resolved (and warned about) by writeComponentSlices
+ * before this sees them; merging across platforms is the intended outcome, not a clash.
+ *
+ * @param {{ slug: string, data: object, shared: boolean }[][]} sliceSets - in platform order.
+ * @returns {{ slug: string, data: object, shared: boolean }[]}
+ */
+export function mergeSlices(sliceSets) {
+  const bySlug = new Map();
+
+  for (const slices of sliceSets) {
+    for (const { slug, data, shared } of slices) {
+      const existing = bySlug.get(slug);
+      if (existing) {
+        Object.assign(existing.data, data);
+        existing.shared = existing.shared || shared;
+      } else {
+        bySlug.set(slug, { slug, data: { ...data }, shared });
+      }
+    }
+  }
+
+  return [...bySlug.values()];
+}
+
+/** The first `page` override found on any of a component's cells, or null. */
+function sharedPageSlug(component, platform = DEFAULT_PLATFORM) {
+  const cells = component.platforms?.[platform] ?? {};
+  const cell = Object.values(cells).find((c) => c?.page);
   return cell?.page ?? null;
 }
 
@@ -464,7 +754,12 @@ function sharedPageSlug(component) {
  * @param {{ name: string, figmaPageId: string }[]} figmaRoster
  * @returns {{ slices: { slug: string, data: { web: object, figmaPageId?: string }, shared: boolean }[], warnings: string[] }}
  */
-export function buildComponentSlices(roster, components, figmaRoster) {
+export function buildComponentSlices(
+  roster,
+  components,
+  figmaRoster,
+  platform = DEFAULT_PLATFORM,
+) {
   const figmaPageIdByName = new Map(figmaRoster.map((entry) => [entry.name, entry.figmaPageId]));
   const componentByName = new Map(components.map((component) => [component.name, component]));
   const warnings = [];
@@ -476,15 +771,15 @@ export function buildComponentSlices(roster, components, figmaRoster) {
     // field's page, Cards pins one of its six variant pages. It does not change which
     // Figma name or status this component's own roster membership came from. Distinct
     // from `upstreamName`, which is a display name used to build a doc URL.
-    const pageSource = component.platforms[PLATFORM]?.figma?.figmaPageSource;
+    const pageSource = component.platforms[platform]?.figma?.figmaPageSource;
     const figmaSourceName = pageSource ?? sources.figma;
     const figmaPageId = figmaSourceName ? figmaPageIdByName.get(figmaSourceName) : undefined;
     if (pageSource && !figmaPageId) {
       warnings.push(`figma figmaPageSource override for "${name}" targets unmatched Figma roster entry "${pageSource}"`);
     }
-    const data = { web: component.platforms[PLATFORM] };
+    const data = { [platform]: component.platforms[platform] };
     if (figmaPageId) { data.figmaPageId = figmaPageId; }
-    const sharedSlug = sharedPageSlug(component);
+    const sharedSlug = sharedPageSlug(component, platform);
     return { slug: sharedSlug ?? toSlug(name), data, shared: Boolean(sharedSlug) };
   });
 
@@ -527,7 +822,7 @@ export function buildComponentSlices(roster, components, figmaRoster) {
  * @param {{ name: string, sources: Record<string, string> }[]} roster
  * @returns {Record<string, Record<string, { docs?: string, export?: string }>>}
  */
-export function buildImplComponentNames(slices, roster) {
+export function buildImplComponentNames(slices, roster, platform = DEFAULT_PLATFORM) {
   const names = {};
   const put = (impl, slug, field, value) => {
     names[impl] = names[impl] ?? {};
@@ -536,7 +831,7 @@ export function buildImplComponentNames(slices, roster) {
   };
 
   for (const { slug, data } of slices) {
-    for (const [impl, cell] of Object.entries(data.web ?? {})) {
+    for (const [impl, cell] of Object.entries(data[platform] ?? {})) {
       if (!cell?.upstreamName || !getImplementationById(impl)) { continue; }
       put(impl, slug, 'docs', cell.upstreamName);
     }
@@ -560,49 +855,121 @@ export function buildImplComponentNames(slices, roster) {
  * @param {{ slug: string, data: object, shared: boolean }[]} slices
  * @returns {string[]} warnings
  */
-export function writeComponentSlices(slices) {
+export function dedupeSlices(slices) {
   const warnings = [];
   const seen = new Set();
-  mkdirSync(SLICES_DIR, { recursive: true });
+  const kept = [];
 
-  for (const { slug, data, shared } of slices) {
-    if (seen.has(slug)) {
-      if (!shared) {
-        warnings.push(`slug collision "${slug}" — skipping duplicate component status file`);
+  for (const slice of slices) {
+    if (seen.has(slice.slug)) {
+      if (!slice.shared) {
+        warnings.push(`slug collision "${slice.slug}" — skipping duplicate component status file`);
       }
       continue;
     }
-    seen.add(slug);
-    writeFileSync(join(SLICES_DIR, `${slug}.json`), `${JSON.stringify(data, null, 2)}\n`);
+    seen.add(slice.slug);
+    kept.push(slice);
   }
 
-  return warnings;
+  return { slices: kept, warnings };
 }
 
-/** Reads and parses a JSON file, returning `fallback` when it is absent. */
+/**
+ * Deletes slices that no longer have a component behind them, returning their slugs.
+ *
+ * The writer used to add and update but never delete, so a component leaving every
+ * roster left its slice on disk indefinitely. Nothing reads a directory listing, so the
+ * table stayed correct — but any page resolving to that slug was served stale data, and
+ * a single run with a malformed config once stranded 64 files at once.
+ *
+ * Safe against a collapsed roster: buildPlatform exits the process when a platform's
+ * roster comes back empty, so a run that would prune everything never reaches here.
+ *
+ * @param {{ slug: string }[]} slices - The slices this run wrote.
+ * @param {string} [dir]
+ * @returns {string[]} the slugs removed.
+ */
+export function pruneComponentSlices(slices, dir = SLICES_DIR) {
+  if (!existsSync(dir)) { return []; }
+  const keep = new Set(slices.map((slice) => slice.slug));
+  const removed = [];
+
+  for (const file of readdirSync(dir)) {
+    if (!file.endsWith('.json')) { continue; }
+    const slug = file.replace(/\.json$/, '');
+    if (keep.has(slug)) { continue; }
+    unlinkSync(join(dir, file));
+    removed.push(slug);
+  }
+
+  return removed;
+}
+
+/** Writes one `deps/status/<slug>.json` per slice. Deduped and merged before it gets here. */
+export function writeComponentSlices(slices, dir = SLICES_DIR) {
+  mkdirSync(dir, { recursive: true });
+  for (const { slug, data } of slices) {
+    writeFileSync(join(dir, `${slug}.json`), `${JSON.stringify(data, null, 2)}\n`);
+  }
+  return slices.length;
+}
+
+/**
+ * Reads and parses a JSON file, returning `fallback` when it is absent or unparseable.
+ *
+ * Tolerant on purpose: a half-written catalog is a normal state while a platform's
+ * extraction is still being built, and it should cost that one component its maturity
+ * signal — not take the whole index down and leave every surface reading a stale file.
+ * The warning is the signal that something needs attention.
+ */
 function readJson(path, fallback) {
   if (!existsSync(path)) { return fallback; }
-  return JSON.parse(readFileSync(path, 'utf8'));
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    console.warn(`warning: catalog unreadable, skipping — ${path}: ${error.message}`);
+    return fallback;
+  }
 }
 
-/** Reads a component's raw extraction file for a source, or null when absent. */
+/**
+ * Reads a configuration file, failing the build when it is absent, unparseable, or the
+ * wrong shape. The opposite policy to readJson, and deliberately so: see
+ * validateConfigShape for which failure this exists to catch.
+ */
+function readConfig(path, shape) {
+  const name = basename(path);
+  if (!existsSync(path)) {
+    throw new Error(`${name}: configuration file is missing. The build cannot proceed without it.`);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    throw new Error(`${name}: ${error.message}. A malformed config file would silently empty the roster rules it carries.`);
+  }
+  return validateConfigShape(name, parsed, shape);
+}
+
+/** Reads a component's raw extraction file for a source, or null when absent/unparseable. */
 function readExtraction(source, name) {
-  const path = join(__dirname, source, 'data', `${name}.json`);
-  if (!existsSync(path)) { return null; }
-  return JSON.parse(readFileSync(path, 'utf8'));
+  return readJson(join(__dirname, source, 'data', `${name}.json`), null);
 }
 
-function main() {
-  const rspComponents = readJson(join(__dirname, 'rsp', 'components.json'), {});
+/**
+ * Assembles the web roster: the union of the RSP, SWC, and Figma rosters, narrowed and
+ * joined onto canonical names. Each platform needs its own version of this — the sources,
+ * their shapes, and their narrowing rules are all platform-specific — which is why it is
+ * a function here rather than an entry in PLATFORM_CONFIG.
+ */
+function readWebRoster(config, aliases, excludes) {
+  const rspComponents = readConfig(join(__dirname, 'rsp', 'components.json'), 'object');
   // swc/components.json maps bare name -> module subpath; the roster is its keys as tags.
-  const swcComponents = readJson(join(__dirname, 'swc', 'components.json'), {});
-  const figmaRoster = readJson(join(__dirname, 'figma', 'components.json'), []);
+  const swcComponents = readConfig(join(__dirname, 'swc', 'components.json'), 'object');
+  const figmaRoster = readConfig(join(__dirname, 'figma', 'components.json'), 'array');
   // The secondary overlay lists Figma designs that carry redirect guidance; some are not
   // in the roster export but still exist in the library, so they count toward membership.
-  const figmaOverlay = readJson(join(__dirname, 'figma', OVERLAY_FILES.figma), []);
-  const aliases = readJson(ALIASES_FILE, {});
-  const overrides = readJson(OVERRIDES_FILE, {});
-  const excludes = readJson(EXCLUDES_FILE, []);
+  const figmaOverlay = readJson(join(__dirname, 'figma', config.overlayFiles.figma), []);
 
   const figmaNames = [...new Set([
     ...figmaRoster.map((component) => component.name),
@@ -613,44 +980,153 @@ function main() {
     (tag) => readExtraction('swc', tag),
   );
   const joined = joinRosters(Object.keys(rspComponents), swcTags, figmaNames, aliases);
-  const roster = filterRoster(joined, excludes);
+  return {
+    roster: filterRoster(joined, excludes),
+    figmaRoster,
+    readData: readExtraction,
+  };
+}
+
+/**
+ * Assembles the mobile roster from one `deps/<platform>/components.json` per platform,
+ * each mapping the name that platform uses to the component's module subpath.
+ *
+ * The catalog that supplies a component's status lives at `deps/<platform>/data/<X>.json`,
+ * where `X` is the subpath's last segment — the component's own PascalCase name. Keeping
+ * the file named after the module rather than the roster key is what lets a display-name
+ * key like `Pop-up button` sit beside a `PopUpButton.json` catalog, and it is the name a
+ * future extractor would write anyway.
+ */
+function readMobileRoster(config, aliases, excludes) {
+  const rosters = Object.fromEntries(config.columns.map(({ id }) => [
+    id,
+    readConfig(join(__dirname, id, 'components.json'), 'object'),
+  ]));
+
+  const joined = joinNamedRosters(rosters, aliases);
+  return {
+    roster: filterRoster(joined, excludes),
+    figmaRoster: [],
+    readData: (source, name) => {
+      const subpath = rosters[source]?.[name];
+      return subpath ? readExtraction(source, basename(subpath)) : null;
+    },
+  };
+}
+
+/**
+ * Resolves one platform's roster and builds its slice of the index. Writes nothing —
+ * every output is shared across platforms, so writing happens once in `main`.
+ *
+ * @param {string} platform
+ * @param {object} config - That platform's PLATFORM_CONFIG entry.
+ * @param {{ aliases: object, overrides: object, excludes: string[] }} inputs
+ */
+function buildPlatform(platform, config, {
+  aliases, overrides, excludes, unlisted, additions,
+}) {
+  const { roster: joined, figmaRoster, readData } = config.readRoster(config, aliases, excludes);
 
   // Fail-closed guard: an empty roster means an upstream extraction produced nothing.
   // Refuse to overwrite a good index with an empty one (see deps/docs/REMOVED-DETECTION.md).
-  if (!roster.length) {
-    console.error('Refusing to write an empty status index — every roster is empty.');
+  // Checked before the additions are appended, so the handful of rows this repository
+  // carries itself can never disguise a collapsed extraction as a populated roster.
+  if (!joined.length) {
+    console.error(`Refusing to write an empty status index — the ${platform} roster is empty.`);
     process.exit(1);
   }
 
+  const added = addRosterAdditions(joined, additions);
+  const roster = markUnlisted(added.roster, unlisted);
+
   const secondaries = readSecondaries(
-    WEB_COLUMNS,
-    (impl) => readJson(join(__dirname, impl, OVERLAY_FILES[impl]), null),
+    config.columns,
+    (impl) => readJson(join(__dirname, impl, config.overlayFiles[impl]), null),
     aliases,
   );
 
   const { index, warnings } = buildIndex({
-    roster, readData: readExtraction, overrides, secondaries,
+    roster,
+    readData,
+    columns: config.columns,
+    platform,
+    presentFloor: config.presentFloor,
+    overrides,
+    secondaries,
   });
 
-  const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
-  const sliceWarnings = writeComponentSlices(slices);
+  const built = buildComponentSlices(roster, index.components, figmaRoster, platform);
+  const deduped = dedupeSlices(built.slices);
 
-  for (const warning of [...warnings, ...sliceOverrideWarnings, ...sliceWarnings]) {
-    console.warn(`warning: ${warning}`);
-  }
+  return {
+    platform,
+    roster,
+    index,
+    slices: deduped.slices,
+    warnings: [...added.warnings, ...warnings, ...built.warnings, ...deduped.warnings],
+  };
+}
 
+function main() {
+  const aliases = readConfig(ALIASES_FILE, 'object-of-objects');
+  const overrides = readConfig(OVERRIDES_FILE, 'object-of-objects');
+  const excludes = readConfig(EXCLUDES_FILE, 'object-of-arrays');
+  const unlisted = readConfig(UNLISTED_FILE, 'object-of-arrays');
+  const additions = readConfig(ADDITIONS_FILE, 'object-of-arrays');
+
+  const builds = Object.entries(PLATFORM_CONFIG).map(([platform, config]) => buildPlatform(
+    platform,
+    config,
+    {
+      aliases,
+      overrides,
+      excludes: excludes[platform] ?? [],
+      unlisted: unlisted[platform] ?? [],
+      additions: additions[platform] ?? [],
+    },
+  ));
+
+  const index = mergePlatformIndexes(builds);
   writeFileSync(OUTPUT_FILE, `${JSON.stringify(index, null, 2)}\n`);
   console.log(`Wrote ${index.components.length} component(s) to ${OUTPUT_FILE}`);
-  console.log(`Wrote ${slices.length} component status slice(s) to ${SLICES_DIR}`);
 
-  const implComponentNames = buildImplComponentNames(slices, roster);
+  // One slice per component slug, carrying every platform that ships it — the slug is the
+  // key both /web/<impl>/components/<slug> and /mobile/components/<slug> share, so a
+  // component page reads whichever platform key it cares about from one small fetch.
+  const slices = mergeSlices(builds.map((build) => build.slices));
+  console.log(`Wrote ${writeComponentSlices(slices)} component status slice(s) to ${SLICES_DIR}`);
+
+  // A component that leaves every roster takes its slice with it. Without this the file
+  // lingers and any page resolving to that slug is served data no build produced.
+  const removed = pruneComponentSlices(slices);
+  if (removed.length) {
+    console.log(`Removed ${removed.length} obsolete slice(s): ${removed.join(', ')}`);
+  }
+
+  // Web-only by construction: buildImplComponentNames skips any column that is not a
+  // registered web implementation, so feeding it other platforms would add nothing.
+  const web = builds.find((build) => build.platform === 'web');
+  const implComponentNames = buildImplComponentNames(web.slices, web.roster, 'web');
   writeFileSync(IMPL_COMPONENT_NAMES_FILE, '// Generated by deps/build-status-index.js — do not edit by hand.\n'
     + `export default ${JSON.stringify(implComponentNames, null, 2)};\n`);
   const nameCount = Object.values(implComponentNames)
     .reduce((n, bySlug) => n + Object.keys(bySlug).length, 0);
   console.log(`Wrote ${nameCount} component name entr${nameCount === 1 ? 'y' : 'ies'} to ${IMPL_COMPONENT_NAMES_FILE}`);
+
+  for (const build of builds) {
+    for (const warning of build.warnings) {
+      console.warn(`warning: ${build.platform}: ${warning}`);
+    }
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main();
+  try {
+    main();
+  } catch (error) {
+    // Configuration failures are operator errors, not crashes — report them the way the
+    // empty-roster guard does rather than as a stack trace in a CI log.
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
 }
