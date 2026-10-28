@@ -20,6 +20,22 @@
     <se-select label="Disabled picker" name="disabled-picker" disabled>
       <option value="s">Small</option>
     </se-select>
+    <se-select label="Required picker" name="required-picker" error="Select a size to continue">
+      <option value="">Select a size</option>
+      <option value="s">Small</option>
+      <option value="m">Medium</option>
+      <option value="l">Large</option>
+    </se-select>
+    <se-select label="Side label" labelPosition="side" name="side-label" value="m">
+      <option value="s">Small</option>
+      <option value="m">Medium</option>
+      <option value="l">Large</option>
+    </se-select>
+    <se-select label="Hidden label" hide-label name="hidden-label" value="l">
+      <option value="s">Small</option>
+      <option value="m">Medium</option>
+      <option value="l">Large</option>
+    </se-select>
   </main>
   <script type="module">
     import '/deps/se/se.js';

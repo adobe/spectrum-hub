@@ -24,7 +24,15 @@
     </se-dialog>
   </main>
   <script type="module">
-    import '/deps/se/se.js';
+    const variant = new URLSearchParams(window.location.search).get('variant');
+    const dialog = document.querySelector('se-dialog');
+    if (variant === 'overflow-hidden') {
+      dialog.setAttribute('overflow', 'hidden');
+    }
+    if (variant === 'no-heading') {
+      dialog.removeAttribute('heading');
+    }
+    await import('/deps/se/se.js');
   </script>
 </body>
 </html>

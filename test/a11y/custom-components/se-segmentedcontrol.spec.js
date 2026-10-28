@@ -27,14 +27,43 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - text: View
-    - group "View":
-      - radio "Map" [checked]
-      - text: Map
-      - radio "List"
-      - text: List
-      - radio "Grid"
-      - text: Grid
+    - main:
+      - text: View
+      - group "View":
+        - radio "Map" [checked]
+        - text: Map
+        - radio "List"
+        - text: List
+        - radio "Grid"
+        - text: Grid
+      - text: Sort order
+      - group "Sort order":
+        - radio "Ascending" [checked]
+        - text: Ascending
+        - radio "Descending"
+        - text: Descending
+      - group "Alignment":
+        - text: ""
+        - radio "Left" [checked]
+        - text: Left
+        - radio "Center"
+        - text: Center
+        - radio "Right"
+        - text: Right
+      - text: Wrapped options
+      - group "Wrapped options":
+        - radio "Option one" [checked]
+        - text: Option one
+        - radio "Option two"
+        - text: Option two
+        - radio "Option three"
+        - text: Option three
+        - radio "Option four"
+        - text: Option four
+        - radio "Option five"
+        - text: Option five
+        - radio "Option six"
+        - text: Option six
   `);
 });
 

@@ -27,10 +27,16 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - button "Save"
-    - button "Cancel"
-    - button "Continue"
-    - button "Delete" [disabled]
+    - main:
+      - button "Save"
+      - button "Cancel"
+      - button "Continue"
+      - button "Delete" [disabled]
+      - button "Remove"
+      - button "Preview"
+      - button "Go back"
+      - button "Add item"
+      - button "Get started"
   `);
 });
 

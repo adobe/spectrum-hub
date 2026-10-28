@@ -14,6 +14,11 @@
   <main class="test-container">
     <se-textarea label="Notes" name="notes" placeholder="Add notes" rows="4" cols="40"></se-textarea>
     <se-textarea label="Bio" name="bio" error="This field is required"></se-textarea>
+    <se-textarea label="Summary" name="summary" value="A populated summary."></se-textarea>
+    <se-textarea label="Side label" labelPosition="side" name="side-label" value="Side notes"></se-textarea>
+    <se-textarea label="Hidden label" hide-label name="hidden-label" value="Hidden label notes"></se-textarea>
+    <se-textarea class="quiet" label="Quiet notes" name="quiet" value="Quiet text"></se-textarea>
+    <se-textarea class="monospace" label="Code" name="code" value="const count = 3;"></se-textarea>
   </main>
   <script type="module">
     import '/deps/se/se.js';

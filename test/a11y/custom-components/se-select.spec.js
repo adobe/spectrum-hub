@@ -27,14 +27,32 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - text: Size
-    - combobox "Size":
-      - option "Small" [selected]
-      - option "Medium"
-      - option "Large"
-    - text: Disabled picker
-    - combobox "Disabled picker" [disabled]:
-      - option "Small" [selected]
+    - main:
+      - text: Size
+      - combobox "Size":
+        - option "Small" [selected]
+        - option "Medium"
+        - option "Large"
+      - text: Disabled picker
+      - combobox "Disabled picker" [disabled]:
+        - option "Small" [selected]
+      - text: Required picker
+      - combobox "Required picker":
+        - option "Select a size" [selected]
+        - option "Small"
+        - option "Medium"
+        - option "Large"
+      - paragraph: Select a size to continue
+      - text: Side label
+      - combobox "Side label":
+        - option "Small"
+        - option "Medium" [selected]
+        - option "Large"
+      - text: Hidden label
+      - combobox "Hidden label":
+        - option "Small"
+        - option "Medium"
+        - option "Large" [selected]
   `);
 });
 
