@@ -139,7 +139,7 @@ svg.icon {
     }
 
     &.has-error {
-      border: 2px solid var(--s2-red-1000);
+      border: 2px solid var(--s2-red-900);
     }
 
     &:hover {
@@ -360,7 +360,7 @@ svg.icon {
 
   .se-inputfield-error-text {
     font-size: var(--s2-body-size-xs);
-    color: var(--s2-red-900);
+    color: var(--s2-red-1000);
     margin: 0;
   }
 }
@@ -514,7 +514,7 @@ svg.icon {
   .se-inputfield-error-text {
     flex-basis: 100%;
     font-size: var(--s2-body-size-xs);
-    color: var(--s2-red-900);
+    color: var(--s2-red-1000);
     margin: 0;
   }
 }
