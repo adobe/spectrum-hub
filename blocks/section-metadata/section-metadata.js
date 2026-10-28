@@ -108,6 +108,11 @@ const getMetadata = (el) => [...el.childNodes].reduce((rdx, row) => {
   return rdx;
 }, {});
 
+export function getTabsMetadata(el) {
+  const { tabs } = getMetadata(el);
+  return tabs ? tabs.text.split(',').map(toClassName) : [];
+}
+
 export default async function init(el) {
   const section = el.closest('.section');
   if (!section) { return; }
@@ -122,5 +127,6 @@ export default async function init(el) {
   if (metadata['background-color']?.content) { handleBackground(metadata['background-color'], section); }
   if (metadata['background-image']?.content) { handleBackground(metadata['background-image'], section); }
   if (metadata.background?.content) { handleBackground(metadata.background, section); }
+  if (metadata.tabs?.text) { section.classList.add(...getTabsMetadata(el).map((marker) => `tabs-${marker}`)); }
   el.remove();
 }
