@@ -1,5 +1,7 @@
 import { getConfig } from '../../scripts/ak.js';
-import { PAGE_NAV_REVEAL_EVENT } from '../../scripts/utils/nav-events.js';
+// TODO: uncomment this import once we've decided on the approach for page-nav
+// deep linking to tab panel content
+// import { PAGE_NAV_REVEAL_EVENT } from '../../scripts/utils/nav-events.js';
 import { getTabsMetadata } from '../section-metadata/section-metadata.js';
 import '../../deps/components/dist/swc-tabs/index.js';
 
@@ -79,12 +81,14 @@ export default async function init(el) {
     return panel;
   });
   tabs.append(...panels);
-  tabs.addEventListener(PAGE_NAV_REVEAL_EVENT, (event) => {
-    const panel = panels.find((candidate) => candidate.contains(event.target));
-    if (!panel) { return; }
-    tabs.selected = panel.tabId;
-    event.detail.waitUntil(tabs.updateComplete);
-  });
+  // TODO: uncomment this import once we've decided on the approach for page-nav
+  // deep linking to tab panel content
+  // tabs.addEventListener(PAGE_NAV_REVEAL_EVENT, (event) => {
+  //   const panel = panels.find((candidate) => candidate.contains(event.target));
+  //   if (!panel) { return; }
+  //   tabs.selected = panel.tabId;
+  //   event.detail.waitUntil(tabs.updateComplete);
+  // });
   list.replaceWith(tabs);
   await tabs.updateComplete;
 }
