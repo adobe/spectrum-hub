@@ -43,7 +43,7 @@ export default async function init(el) {
 
   const list = el.querySelector('ul');
   if (!list) {
-    log('Please add an unordered list of tab labels to the tabs block.', el);
+    log('Please add an unordered list of tab items to the tabs block.', el);
     return;
   }
 
@@ -56,7 +56,7 @@ export default async function init(el) {
   const groups = getPanelSections(sections, el);
   if (!groups) { return; }
   if (!labels.length || labels.some((label) => !label) || labels.length !== groups.length) {
-    log('Tabs require one nonempty label for each tab panel.', el);
+    log('Tabs require one nonempty tab item for each tab panel. Please add a list to the tabs block.', el);
     return;
   }
 
