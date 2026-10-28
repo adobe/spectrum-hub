@@ -27,10 +27,21 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - switch "Notifications"
-    - text: Notifications
-    - switch "Dark mode" [checked]
-    - text: Dark mode
+    - main:
+      - switch "Notifications"
+      - text: Notifications
+      - switch "Dark mode" [checked]
+      - text: Dark mode
+      - switch "Required switch"
+      - text: Required switch
+      - paragraph: This field is required
+      - switch "Side label"
+      - text: Side label
+      - switch "Hidden label"
+      - text: Hidden label
+      - switch "Unavailable setting" [checked]
+      - text: Unavailable setting
+      - paragraph: This setting is no longer available
   `);
 });
 

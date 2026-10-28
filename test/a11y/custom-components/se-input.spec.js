@@ -27,15 +27,34 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - text: Name
-    - textbox "Name":
-      - /placeholder: Jane Doe
-    - text: Search
-    - searchbox "Search": spectrum
-    - button "Clear search"
-    - text: Email
-    - textbox "Email"
-    - paragraph: Enter a valid email address
+    - main:
+      - text: Name
+      - textbox "Name":
+        - /placeholder: Jane Doe
+      - text: Search
+      - searchbox "Search": spectrum
+      - button "Clear search"
+      - text: Email
+      - textbox "Email"
+      - paragraph: Enter a valid email address
+      - text: Quantity
+      - spinbutton "Quantity": "3"
+      - text: Password
+      - textbox "Password": spectrum
+      - text: Start date
+      - textbox "Start date": 2026-10-28
+      - text: Appointment
+      - textbox "Appointment": 2026-10-28T13:00
+      - text: Volume
+      - slider "Volume": "50"
+      - text: Quiet field
+      - textbox "Quiet field": Quiet text
+      - text: Code
+      - textbox "Code": const count = 3;
+      - text: Side label
+      - textbox "Side label": Side text
+      - text: Hidden label
+      - textbox "Hidden label": Hidden label text
   `);
 });
 

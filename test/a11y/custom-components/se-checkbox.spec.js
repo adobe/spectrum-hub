@@ -27,13 +27,17 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - checkbox "I agree to the terms"
-    - text: I agree to the terms
-    - checkbox "Subscribe to the newsletter" [checked]
-    - text: Subscribe to the newsletter
-    - checkbox "Required checkbox"
-    - text: Required checkbox
-    - paragraph: This field is required
+    - main:
+      - checkbox "I agree to the terms"
+      - text: I agree to the terms
+      - checkbox "Subscribe to the newsletter" [checked]
+      - text: Subscribe to the newsletter
+      - checkbox "Required checkbox"
+      - text: Required checkbox
+      - paragraph: This field is required
+      - checkbox "Unavailable option" [checked]
+      - text: Unavailable option
+      - paragraph: This option is no longer available
   `);
 });
 

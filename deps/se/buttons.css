@@ -1,6 +1,7 @@
 .se-button {
   --se-button-color: #fff;
   --se-button-background-color: light-dark(var(--s2-blue-900), var(--s2-blue-700));
+  --se-button-background-color-negative: light-dark(var(--s2-red-900), var(--s2-red-700));
   --se-button-border-color: var(--se-button-background-color);
   --se-button-outline-color: var(--se-button-background-color);
   --se-button-line-height: var(--s2-component-m-bold-line-height);
@@ -74,9 +75,9 @@
     }
 
     &.negative {
-      --se-button-background-color: var(--s2-red-900);
-      --se-button-border-color: var(--s2-red-900);
-      --se-button-outline-color: var(--s2-red-900);
+      --se-button-background-color: var(--se-button-background-color-negative);
+      --se-button-border-color: var(--se-button-background-color-negative);
+      --se-button-outline-color: var(--se-button-background-color-negative);
 
       &:hover, &:focus-visible {
         --se-button-background-color: var(--s2-red-800);

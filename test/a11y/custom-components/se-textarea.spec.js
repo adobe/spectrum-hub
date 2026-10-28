@@ -27,12 +27,23 @@ test(`${component.name} component matches its expected accessibility tree`, asyn
   await gotoBlock(page, component);
 
   await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
-    - text: Notes
-    - textbox "Notes":
-      - /placeholder: Add notes
-    - text: Bio
-    - textbox "Bio"
-    - paragraph: This field is required
+    - main:
+      - text: Notes
+      - textbox "Notes":
+        - /placeholder: Add notes
+      - text: Bio
+      - textbox "Bio"
+      - paragraph: This field is required
+      - text: Summary
+      - textbox "Summary": A populated summary.
+      - text: Side label
+      - textbox "Side label": Side notes
+      - text: Hidden label
+      - textbox "Hidden label": Hidden label notes
+      - text: Quiet notes
+      - textbox "Quiet notes": Quiet text
+      - text: Code
+      - textbox "Code": const count = 3;
   `);
 });
 

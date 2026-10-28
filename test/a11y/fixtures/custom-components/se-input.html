@@ -12,9 +12,18 @@
 </head>
 <body>
   <main class="test-container">
-    <se-input label="Name" name="name" placeholder="Jane Doe"></se-input>
+    <se-input type="text" label="Name" name="name" placeholder="Jane Doe"></se-input>
     <se-input type="search" label="Search" name="search" value="spectrum"></se-input>
-    <se-input label="Email" name="email" error="Enter a valid email address"></se-input>
+    <se-input type="text" label="Email" name="email" error="Enter a valid email address"></se-input>
+    <se-input type="number" label="Quantity" name="quantity" value="3"></se-input>
+    <se-input type="password" label="Password" name="password" value="spectrum"></se-input>
+    <se-input type="date" label="Start date" name="start-date" value="2026-10-28"></se-input>
+    <se-input type="datetime-local" label="Appointment" name="appointment" value="2026-10-28T13:00"></se-input>
+    <se-input type="range" label="Volume" name="volume" value="50"></se-input>
+    <se-input type="text" class="quiet" label="Quiet field" name="quiet" value="Quiet text"></se-input>
+    <se-input type="text" class="monospace" label="Code" name="code" value="const count = 3;"></se-input>
+    <se-input type="text" label="Side label" labelPosition="side" name="side-label" value="Side text"></se-input>
+    <se-input type="text" label="Hidden label" hide-label name="hidden-label" value="Hidden label text"></se-input>
   </main>
   <script type="module">
     import '/deps/se/se.js';
