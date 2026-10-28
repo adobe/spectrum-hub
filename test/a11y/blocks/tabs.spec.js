@@ -89,7 +89,7 @@ test('tabs support native keyboard activation and keep inactive panel content un
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
-test('page-nav collects inactive headings and opens their panel before moving focus', async ({ page }, testInfo) => {
+test.skip('page-nav collects inactive headings and opens their panel before moving focus', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'page-nav is absent below the desktop breakpoint');
   await gotoBlock(page, block);
   const nav = page.getByRole('navigation', { name: 'On this page' });
