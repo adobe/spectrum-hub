@@ -118,7 +118,6 @@ export default async function init(el) {
   if (!section) { return; }
   const metadata = getMetadata(el);
   if (metadata.style?.text) { await handleStyle(metadata.style.text, section); }
-  section.classList.add(...getTabsMetadata(el).map((marker) => `tabs-${marker}`));
   if (metadata.grid?.text) { handleLayout(metadata.grid.text, section, 'grid'); }
   if (metadata.gap?.text) { handleLayout(metadata.gap.text, section, 'gap'); }
   if (metadata.radius?.text) { handleLayout(metadata.radius.text, section, 'radius'); }
@@ -128,5 +127,6 @@ export default async function init(el) {
   if (metadata['background-color']?.content) { handleBackground(metadata['background-color'], section); }
   if (metadata['background-image']?.content) { handleBackground(metadata['background-image'], section); }
   if (metadata.background?.content) { handleBackground(metadata.background, section); }
+  if (metadata.tabs?.text) { section.classList.add(...getTabsMetadata(el).map((marker) => `tabs-${marker}`)); }
   el.remove();
 }
