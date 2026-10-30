@@ -5,7 +5,21 @@ import {
   buildEntry,
   findComponentInterface,
   findExportedNames,
+  publishedTypeUrls,
 } from '../../deps/rsp/discover-components.js';
+
+describe('publishedTypeUrls', () => {
+  it('pins metadata and declaration URLs to the manifest package version', () => {
+    assert.deepEqual(publishedTypeUrls('1.7.1', 'Button.d.ts'), [
+      'https://unpkg.com/@react-spectrum/s2@1.7.1/dist/types/src/Button.d.ts',
+      'https://cdn.jsdelivr.net/npm/@react-spectrum/s2@1.7.1/dist/types/src/Button.d.ts',
+    ]);
+  });
+
+  it('rejects a missing package version before discovery starts', () => {
+    assert.throws(() => publishedTypeUrls('', 'Button.d.ts'), /package version/i);
+  });
+});
 
 describe('findExportedNames', () => {
   it('finds forwardRef-style const exports', () => {

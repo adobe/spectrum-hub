@@ -3,7 +3,7 @@ import { applySwcProp } from '../../deps/swc/playground/apply-swc-prop.js';
 import { NO_ICON } from '../../deps/shared/playground/icon-options.js';
 import { NONE_OPTION } from '../../deps/shared/playground/unset-control-options.js';
 
-// Exercises the single dispatch point deps/swc/playground/index.html wires
+// Exercises the single dispatch point the SWC preview adapter wires
 // every prop-update message through — see its applySwcProp import.
 describe('applySwcProp', () => {
   describe('label', () => {
