@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/adobe/spectrum-hub#readme",
   "devDependencies": {
-    "@adobe/aem-cli": "^16.20.9",
+    "@adobe/aem-cli": "^16.22.16",
     "@adobe/eslint-config-helix": "^3.0.17",
     "@axe-core/playwright": "^4.11.3",
     "@esm-bundle/chai": "4.3.4-fix.0",
