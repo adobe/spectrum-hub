@@ -1,0 +1,45 @@
+[
+  {
+    "property": "message",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The message shown in the toast.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "variant",
+    "type": "\"Neutral\" | \"Positive\" | \"Negative\" | \"Info\"",
+    "kind": "enum",
+    "values": [
+      "Neutral",
+      "Positive",
+      "Negative",
+      "Info"
+    ],
+    "optional": false,
+    "default": "'neutral'",
+    "description": "The semantic variant of the toast.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "duration",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
+    "default": "5",
+    "description": "How long the toast stays on screen, in seconds.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "actionLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": true,
+    "description": "Label for the optional trailing action.",
+    "since": "2.0.0-beta.1"
+  }
+]

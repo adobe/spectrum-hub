@@ -12,5 +12,14 @@
       "context": "Stable"
     }
   },
-  "figmaPageId": "9308:71766"
+  "figmaPageId": "9308:71766",
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "context": "Stable"
+    },
+    "android": {
+      "status": "not-available"
+    }
+  }
 }

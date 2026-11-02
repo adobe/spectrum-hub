@@ -88,6 +88,21 @@ const SOURCE_MAPPINGS = {
     deprecated: { status: 'deprecated' },
     preview: { status: 'available', context: 'Preview' },
   },
+  // The native mobile catalogs follow SWC's shape — one file of prop rows per component
+  // (deps/<platform>/data/<Name>.json) — so component status is derived from those rows
+  // by getSwcComponentStatus rather than stored, and the vocabulary reaching the adapter
+  // is SWC's. A component present in the roster whose rows carry no maturity signal is
+  // floored to Available by the index build, exactly as SWC's are.
+  ios: {
+    stable: { status: 'available', context: 'Stable' },
+    preview: { status: 'available', context: 'Preview' },
+    deprecated: { status: 'deprecated' },
+  },
+  android: {
+    stable: { status: 'available', context: 'Stable' },
+    preview: { status: 'available', context: 'Preview' },
+    deprecated: { status: 'deprecated' },
+  },
 };
 
 /**

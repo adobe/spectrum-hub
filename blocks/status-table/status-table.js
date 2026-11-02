@@ -23,13 +23,45 @@ const QUERY_INDEX = '/query-index.json';
 
 const NOT_AVAILABLE = 'not-available';
 
-// The platform segment of the component-page route `/<platform>/<impl>/components/<slug>`.
-// Web-scoped today; hoisted here for when per-platform tables (mobile, desktop) arrive.
-const PLATFORM = 'web';
+// The platform this instance renders: the key its columns and each component's cells are
+// filed under, and the first segment of the component-page route. One index describes
+// every platform, so the data cannot say which one this table is — the authored class
+// does (`status-table mobile` on /mobile/status-table).
+//
+// The class is matched against the platforms the index actually declares, so onboarding a
+// platform stays a data change plus a class, with no list of platform names in here. A
+// class that names no platform in the data (`compact`, a section modifier) is ignored.
+//
+// Deliberately not derived from window.location: the block would then be unreachable from
+// the a11y and visual fixtures, which are served from fixed paths with no platform
+// segment, and a page moved out of /mobile would silently render the wrong data.
+const DEFAULT_PLATFORM = 'web';
+const platformOf = (el, index) => Object.keys(index.implementations ?? {})
+  .find((name) => el.classList.contains(name)) ?? DEFAULT_PLATFORM;
+
+/**
+ * The components this table has rows for: the ones that ship on this platform and belong
+ * in the table at all.
+ *
+ * `listed: false` marks a component that is documented but is not a component in its own
+ * right — a composition part like Accordion Item. The index carries it so its properties
+ * reach a documentation page; the table leaves it out. Absent means listed, so only the
+ * exception costs a field.
+ */
+const componentsFor = (index, platform) => (index.components ?? [])
+  .filter((component) => component.platforms?.[platform] && component.listed !== false);
 
 // Route segment for a Figma-only component (no code implementation) — not a
 // registered implementation itself, just the URL segment its Figma cell links to.
 const DESIGN_ONLY = 'design-only';
+
+// Platforms whose columns each own a page tree, so the route names the column:
+// `/web/rsp/components/button`. Everywhere else one page per component serves every
+// column — `/mobile/components/button` — because those platforms document a component
+// once rather than per implementation. Every cell in such a row links to that one page;
+// which cells link at all is still decided by status (LINKED_STATUSES), so an Available
+// iOS cell is a link while a Not available Android cell beside it stays plain text.
+const PER_COLUMN_PAGES = new Set(['web']);
 
 // A cell links to its internal component page; a column links when it's a registered
 // code implementation. Figma also links, but only for design-only rows.
@@ -37,8 +69,8 @@ const LINKED_STATUSES = new Set(['available', 'experimental']);
 const isLinkableColumn = (columnId) => getImplementationById(columnId) !== null;
 
 /** True when no registered code implementation (rsp, swc, ...) has this component. */
-const isDesignOnly = (web = {}) => IMPLEMENTATIONS.every(
-  (impl) => (web[impl.id]?.status ?? NOT_AVAILABLE) === NOT_AVAILABLE,
+const isDesignOnly = (cells = {}) => IMPLEMENTATIONS.every(
+  (impl) => (cells[impl.id]?.status ?? NOT_AVAILABLE) === NOT_AVAILABLE,
 );
 
 /**
@@ -60,22 +92,27 @@ async function fetchPublishedPaths() {
 
 /**
  * The internal component-page URL for a status cell, or null when it shouldn't link.
- * `publishedPaths` (from fetchPublishedPaths) gates the result on the page actually being
- * live — a component can be Available in the roster well before its doc page is written.
- * Passing null (index unreadable) skips that gate.
+ * `context.publishedPaths` (from fetchPublishedPaths) gates the result on the page
+ * actually being live — a component can be Available in the roster well before its doc
+ * page is written. A null `publishedPaths` (index unreadable) skips that gate.
  */
-const componentPageHref = (columnId, status, name, web, cell = {}, publishedPaths = null) => {
+const componentPageHref = (columnId, cell = {}, context = {}) => {
+  const {
+    componentName, cells, publishedPaths = null, platform = DEFAULT_PLATFORM,
+  } = context;
   const { hasPage = true, page } = cell;
-  if (!name || !LINKED_STATUSES.has(status) || !hasPage) { return null; }
+  if (!componentName || !LINKED_STATUSES.has(cell?.status) || !hasPage) { return null; }
   // `page` (deps/build-status-index.js's override pipeline) redirects a row that keeps its
   // own statuses/cells to a slug shared with another component documented on the same page.
-  const slug = page ?? toSlug(name);
+  const slug = page ?? toSlug(componentName);
 
   let path = null;
-  if (columnId === 'figma') {
-    if (isDesignOnly(web)) { path = `/${PLATFORM}/${DESIGN_ONLY}/components/${slug}`; }
+  if (!PER_COLUMN_PAGES.has(platform)) {
+    path = `/${platform}/components/${slug}`;
+  } else if (columnId === 'figma') {
+    if (isDesignOnly(cells)) { path = `/${platform}/${DESIGN_ONLY}/components/${slug}`; }
   } else if (isLinkableColumn(columnId)) {
-    path = `/${PLATFORM}/${columnId}/components/${slug}`;
+    path = `/${platform}/${columnId}/components/${slug}`;
   }
   if (!path) { return null; }
 
@@ -135,15 +172,13 @@ const buildBadge = (cell) => {
 
 /** One implementation cell: the status badge plus an optional secondary guidance line. */
 const buildStatusCell = (cell, context = {}) => {
-  const {
-    columnId, columnLabel, componentName, componentLabel, web, publishedPaths,
-  } = context;
+  const { columnId, columnLabel, componentLabel } = context;
   const td = withRole(document.createElement('td'), 'cell');
   const value = buildCellValue();
   td.append(buildCellLabel(columnLabel), value);
 
   const badge = buildBadge(cell);
-  const href = componentPageHref(columnId, cell?.status, componentName, web, cell, publishedPaths);
+  const href = componentPageHref(columnId, cell, context);
   if (href) {
     const status = STATUSES[cell.status];
     const link = document.createElement('a');
@@ -169,11 +204,11 @@ const buildStatusCell = (cell, context = {}) => {
   return td;
 };
 
-const buildTable = (index, publishedPaths) => {
+const buildTable = (index, platform, publishedPaths) => {
   // Columns come from the index (each `{ id, label }`), never hard-coded — onboarding a
   // source is a data change. Figma rides here as a column without being a code
   // implementation in scripts/utils/implementations.js.
-  const columns = index.implementations?.web ?? [];
+  const columns = index.implementations?.[platform] ?? [];
 
   const headRow = withRole(document.createElement('tr'), 'row');
   headRow.classList.add('row');
@@ -195,7 +230,7 @@ const buildTable = (index, publishedPaths) => {
   const componentLabel = componentHead.textContent;
 
   const tbody = withRole(document.createElement('tbody'), 'rowgroup');
-  for (const component of index.components ?? []) {
+  for (const component of componentsFor(index, platform)) {
     const row = withRole(document.createElement('tr'), 'row');
     row.classList.add('row');
 
@@ -206,15 +241,16 @@ const buildTable = (index, publishedPaths) => {
     nameCell.append(buildCellLabel(componentLabel), nameValue);
     row.append(nameCell);
 
-    const web = component.platforms?.web ?? {};
+    const cells = component.platforms?.[platform] ?? {};
     for (const { id, label } of columns) {
-      const cell = buildStatusCell(web[id], {
+      const cell = buildStatusCell(cells[id], {
         columnId: id,
         columnLabel: label,
         componentName: component.name,
         componentLabel: component.label ?? component.name,
-        web,
+        cells,
         publishedPaths,
+        platform,
       });
       cell.dataset.col = id;
       row.append(cell);
@@ -232,13 +268,13 @@ const buildTable = (index, publishedPaths) => {
  * The status ids that actually occur in the rendered table, in canonical STATUSES order.
  * Mirrors the cell fallback so a missing cell counts as Not available, matching the table.
  */
-const presentStatusIds = (index) => {
-  const columns = index.implementations?.web ?? [];
+const presentStatusIds = (index, platform) => {
+  const columns = index.implementations?.[platform] ?? [];
   const present = new Set();
-  for (const component of index.components ?? []) {
-    const web = component.platforms?.web ?? {};
+  for (const component of componentsFor(index, platform)) {
+    const cells = component.platforms?.[platform] ?? {};
     for (const { id } of columns) {
-      present.add(web[id]?.status ?? NOT_AVAILABLE);
+      present.add(cells[id]?.status ?? NOT_AVAILABLE);
     }
   }
   return Object.keys(STATUSES).filter((id) => present.has(id));
@@ -249,10 +285,10 @@ const presentStatusIds = (index) => {
  * statuses (e.g. Deprecated/Removed today) get no card, so the key only explains what
  * the table actually shows.
  */
-const buildStatusCards = (index) => {
+const buildStatusCards = (index, platform) => {
   const cards = document.createElement('ul');
   cards.className = 'status-table-cards';
-  for (const id of presentStatusIds(index)) {
+  for (const id of presentStatusIds(index, platform)) {
     const { label, definition, color } = STATUSES[id];
     const card = document.createElement('li');
     card.className = 'status-table-card';
@@ -280,14 +316,14 @@ const cellCsvText = (cell) => {
 };
 
 /** Flattens the index to CSV rows mirroring the rendered table (Component + columns). */
-const buildCsvRows = (index) => {
-  const columns = index.implementations?.web ?? [];
+const buildCsvRows = (index, platform) => {
+  const columns = index.implementations?.[platform] ?? [];
   const header = ['Component', ...columns.map((column) => column.label)];
-  const body = (index.components ?? []).map((component) => {
-    const web = component.platforms?.web ?? {};
+  const body = componentsFor(index, platform).map((component) => {
+    const cells = component.platforms?.[platform] ?? {};
     return [
       component.label ?? component.name,
-      ...columns.map((column) => cellCsvText(web[column.id])),
+      ...columns.map((column) => cellCsvText(cells[column.id])),
     ];
   });
   return [header, ...body];
@@ -436,7 +472,7 @@ const buildColumnFilter = (columns, table, announce) => {
  * An "Export CSV" control that downloads the current table as a CSV file.
  * Note for test doubles: this is init()'s second fetch, after the status index.
  */
-const buildExportButton = async (index) => {
+const buildExportButton = async (index, platform) => {
   const button = document.createElement('button');
   const downloadIcon = await fetchSvgEl('/img/icons/s2-icon-download-20-n.svg');
   downloadIcon.setAttribute('aria-hidden', 'true');
@@ -446,7 +482,7 @@ const buildExportButton = async (index) => {
 
   button.prepend(downloadIcon);
 
-  button.addEventListener('click', () => downloadCsv(CSV_FILENAME, toCsv(buildCsvRows(index))));
+  button.addEventListener('click', () => downloadCsv(CSV_FILENAME, toCsv(buildCsvRows(index, platform))));
   return button;
 };
 
@@ -587,8 +623,8 @@ const buildAnnouncer = () => {
 };
 
 /** The controls row above the table: search, show-details, column filter, and export. */
-const buildToolbar = async (index, table, el, announce) => {
-  const columns = index.implementations?.web ?? [];
+const buildToolbar = async (index, platform, table, el, announce) => {
+  const columns = index.implementations?.[platform] ?? [];
   const toolbar = document.createElement('div');
   toolbar.className = 'status-table-toolbar';
 
@@ -597,7 +633,7 @@ const buildToolbar = async (index, table, el, announce) => {
   toggleAndExportWrapper.append(
     // TODO: uncomment when filters are ready for post-V1
     // buildColumnFilter(columns, table, announce)
-    await buildExportButton(index),
+    await buildExportButton(index, platform),
   );
   toolbar.append(
     buildSearch(table, announce),
@@ -628,8 +664,15 @@ const labelTable = (el, table) => {
   if (labelIds.length) { table.setAttribute('aria-labelledby', labelIds.join(' ')); }
 };
 
+/**
+ * The index this instance reads: an authored JSON link wins, then the platform class,
+ * then the web index. `mobile-status-index.json` still satisfies the link selector's
+ * suffix, so the authored override keeps working on every platform's page.
+ */
+const indexHref = (el) => el.querySelector('a[href$="status-index.json"]')?.href ?? DEFAULT_INDEX;
+
 export default async function init(el) {
-  const href = el.querySelector('a[href$="status-index.json"]')?.href ?? DEFAULT_INDEX;
+  const href = indexHref(el);
 
   const resp = await fetch(href);
   if (!resp.ok) {
@@ -639,13 +682,14 @@ export default async function init(el) {
   const index = await resp.json();
   const publishedPaths = await fetchPublishedPaths();
 
-  const table = buildTable(index, publishedPaths);
+  const platform = platformOf(el, index);
+  const table = buildTable(index, platform, publishedPaths);
   labelTable(el, table);
 
   const { region, announce } = buildAnnouncer();
   el.replaceChildren(
-    buildStatusCards(index),
-    await buildToolbar(index, table, el, announce),
+    buildStatusCards(index, platform),
+    await buildToolbar(index, platform, table, el, announce),
     table,
     region,
   );

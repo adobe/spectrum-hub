@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,10 +13,21 @@ const DEPS = join(dirname(fileURLToPath(import.meta.url)), '../../deps');
 
 const KINDS = new Set(['enum', 'boolean', 'text', 'number', 'unknown']);
 
+// Whether the mobile implementations have shipped their catalogs as well as their rosters.
+// Phase one of the mobile contract is a roster alone: the build floors a catalog-less
+// entry to Available (PLATFORM_CONFIG.mobile.presentFloor), so an implementation can power
+// the status table before it can introspect its API. Set false while that is the live state.
+// Row shape is held either way — this governs only whether catalogs must exist and be
+// populated. See deps/docs/MOBILE-DATA-CONTRACT.md.
+const REQUIRE_MOBILE_CATALOGS = true;
+
 // The two catalogs still differ in file naming and wrapper shape; unifying those is
 // outstanding Layer 1 work. Absorbing it here keeps the assertions identical for both.
 function readCatalog(impl) {
   const dir = join(DEPS, impl, 'data');
+  // A phase-one implementation has no data directory at all; ENOENT here would mask the
+  // pairing assertion below with a stack trace.
+  if (!existsSync(dir)) { return []; }
   return readdirSync(dir)
     .filter((file) => file.endsWith('.json'))
     .map((file) => {
@@ -28,17 +39,30 @@ function readCatalog(impl) {
     });
 }
 
+// A row's name is `property` for RSP and the mobile platforms, `attribute` for SWC —
+// which keys its rows by the custom-element attribute and only sometimes carries a
+// matching `property`. Either names the row; a row with neither is unidentifiable.
+const rowName = (row) => row.property ?? row.attribute;
+
 function allRows(impl) {
   return readCatalog(impl)
-    .flatMap(({ component, rows }) => rows.map((row) => ({ ...row, id: `${component}.${row.property}` })));
+    .flatMap(({ component, rows }) => rows.map((row) => ({ ...row, id: `${component}.${rowName(row)}` })));
 }
 
-for (const impl of ['rsp', 'swc']) {
+// The structural rules hold for every catalog under deps/*/data, whoever wrote it —
+// the playground builds controls from `kind`/`values` regardless of source. The
+// populated-catalog threshold is separate: it is a canary for an extraction that ran
+// and produced nothing, so it applies only to the extracted catalogs. ios/android are
+// hand-written placeholders until their extractions exist.
+for (const impl of ['rsp', 'swc', 'ios', 'android']) {
   describe(`deps/${impl}/data contract`, () => {
     const rows = allRows(impl);
 
-    it('has rows to check', () => {
-      assert.ok(rows.length > 100, `expected a populated catalog, got ${rows.length} rows`);
+    const expectsCatalogs = ['rsp', 'swc'].includes(impl) || REQUIRE_MOBILE_CATALOGS;
+
+    it('has rows to check', { skip: !expectsCatalogs }, () => {
+      const floor = ['rsp', 'swc'].includes(impl) ? 100 : 0;
+      assert.ok(rows.length > floor, `expected a populated catalog, got ${rows.length} rows`);
     });
 
     it('gives every row a known kind', () => {
@@ -60,6 +84,71 @@ for (const impl of ['rsp', 'swc']) {
       const bad = rows.filter((row) => row.values
         .some((v) => v === null || v === undefined || v === 'undefined' || v === 'null'));
       assert.deepEqual(bad.map((row) => row.id), []);
+    });
+
+    // Without a name a row cannot be rendered, matched to a control, or reported in a
+    // failure message — it is not a property, it is noise in the table.
+    it('gives every row a name', () => {
+      const bad = rows.filter((row) => typeof rowName(row) !== 'string' || !rowName(row).trim());
+      assert.deepEqual(bad.map((row) => `${row.id} (${JSON.stringify(row).slice(0, 60)}…)`), []);
+    });
+
+    // The playground renders each option directly. An object or array here reaches the
+    // control as "[object Object]".
+    it('offers only primitive values', () => {
+      const bad = rows.filter((row) => row.values.some((v) => v !== null && typeof v === 'object'));
+      assert.deepEqual(bad.map((row) => row.id), []);
+    });
+  });
+}
+
+// The web catalogs are written by extractors that predate this contract, and carry rows
+// the upstream source simply does not describe — 428 RSP rows have no description, and
+// RSP emits no `optional` at all. The mobile contract is one we are specifying now, for
+// generators that do not exist yet, so it is held to the shape the proposal documents.
+for (const impl of ['ios', 'android']) {
+  describe(`deps/${impl}/data required fields`, () => {
+    const rows = allRows(impl);
+
+    for (const field of ['property', 'type', 'description']) {
+      it(`gives every row a non-empty ${field}`, () => {
+        const bad = rows.filter((row) => typeof row[field] !== 'string' || !row[field].trim());
+        assert.deepEqual(bad.map((row) => row.id), []);
+      });
+    }
+
+    it('gives every row a boolean optional', () => {
+      const bad = rows.filter((row) => typeof row.optional !== 'boolean');
+      assert.deepEqual(bad.map((row) => row.id), []);
+    });
+
+    for (const field of ['default', 'since']) {
+      it(`keeps ${field} a string when present`, () => {
+        const bad = rows.filter((row) => row[field] !== undefined && typeof row[field] !== 'string');
+        assert.deepEqual(bad.map((row) => row.id), []);
+      });
+    }
+  });
+
+  // A roster entry names a module; the catalog beside it is named for that module's last
+  // segment. Once both phases have landed the two must correspond: a roster entry with no
+  // catalog floors to Available with no properties shown, which past phase one is a
+  // generator that dropped a component. A catalog with no roster entry is a file nothing
+  // will ever read, in either phase, so that direction is always enforced.
+  describe(`deps/${impl} roster and catalogs correspond`, () => {
+    const roster = JSON.parse(readFileSync(join(DEPS, impl, 'components.json'), 'utf8'));
+    const expected = new Set(Object.values(roster).map((subpath) => subpath.split('/').pop()));
+    const dir = join(DEPS, impl, 'data');
+    const onDisk = new Set((existsSync(dir) ? readdirSync(dir) : [])
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => file.replace(/\.json$/, '')));
+
+    it('has a catalog for every roster entry', { skip: !REQUIRE_MOBILE_CATALOGS }, () => {
+      assert.deepEqual([...expected].filter((name) => !onDisk.has(name)), []);
+    });
+
+    it('has a roster entry for every catalog', () => {
+      assert.deepEqual([...onDisk].filter((name) => !expected.has(name)), []);
     });
   });
 }

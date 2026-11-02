@@ -15,9 +15,7 @@ const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
 const INDEX_BASED_NAV = [
   ...IMPLEMENTATIONS.map((impl) => ({ prefix: `/web/${impl.id}`, count: 0 })),
-  // ios/android aren't in the implementations registry yet — see implementations.js.
-  { prefix: '/mobile/ios', count: 0 },
-  { prefix: '/mobile/android', count: 0 },
+  { prefix: '/mobile/components', count: 0 },
 ];
 
 // Authored labels and URL segments both normalize through this, so "React Spectrum",
@@ -28,6 +26,37 @@ const findImplementationByLabel = (text) => {
   const slug = navSlug(text);
   return IMPLEMENTATIONS.find((impl) => [impl.label, impl.shortLabel, impl.id]
     .some((name) => navSlug(name) === slug));
+};
+
+/**
+ * The INDEX_BASED_NAV prefix a "Components" item owns, or null when it owns none.
+ *
+ * The platforms nest differently because they document components differently. Web gives
+ * every implementation its own page tree, so a Components item sits beside its
+ * implementation and borrows that implementation's prefix — the same `/web/<id>` string
+ * INDEX_BASED_NAV builds from the registry above. Mobile documents a component once for
+ * both iOS and Android, so one Components item hangs straight off the platform and takes
+ * the platform's own prefix.
+ *
+ * The platform case resolves against INDEX_BASED_NAV instead of rebuilding a path, so
+ * that array stays the single place a prefix is declared: a platform with no entry there
+ * gets no marker, and therefore auto-populates nothing.
+ *
+ * The platform label comes from the clone decorateLevel leaves in the level-2 menu
+ * wrapper, already in the DOM by the time this level is decorated. A list decorated from
+ * level 2 in isolation has no wrapper, so only the sibling rule applies there.
+ */
+const componentsNavPrefix = (li) => {
+  const prevLiText = li.previousElementSibling?.textContent;
+  const impl = prevLiText ? findImplementationByLabel(prevLiText) : null;
+  if (impl) { return `/web/${impl.id}`; }
+
+  const platformLabel = li.closest('.level-2-menu')
+    ?.querySelector(':scope > .list-item-label')?.textContent;
+  if (!platformLabel) { return null; }
+
+  const platform = navSlug(platformLabel);
+  return INDEX_BASED_NAV.find(({ prefix }) => prefix.startsWith(`/${platform}/`))?.prefix ?? null;
 };
 
 const level2SwapCleanups = new WeakMap();
@@ -102,14 +131,12 @@ export const decorateLevel = (ul, depth, seenMenuIds = new Set()) => {
       btn.setAttribute('aria-label', labelText);
     } else {
       if (labelText === 'Components') {
-        // Authors title the parent however reads best; the prefix always comes from
-        // the implementation id, which is the URL segment.
-        // A "Components" item authored first in its list has no sibling to read a
-        // prefix from; without the guard the whole nav dies on the null.
-        const prevLiText = li.previousElementSibling?.textContent;
-        const impl = prevLiText ? findImplementationByLabel(prevLiText) : null;
-        if (impl) {
-          label.setAttribute('index-based-nav-prefix', `/web/${impl.id}`);
+        // Authors title the parent however reads best; the prefix comes from the URL
+        // segments, resolved by componentsNavPrefix. An item whose platform and sibling
+        // both come up empty is simply left unmarked rather than guessed at.
+        const prefix = componentsNavPrefix(li);
+        if (prefix) {
+          label.setAttribute('index-based-nav-prefix', prefix);
         }
       }
 

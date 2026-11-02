@@ -1,0 +1,52 @@
+[
+  {
+    "property": "value",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
+    "default": "0",
+    "description": "The slider's current value.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "minValue",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
+    "default": "0",
+    "description": "The lowest selectable value.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "maxValue",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
+    "default": "100",
+    "description": "The highest selectable value.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "step",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
+    "default": "1",
+    "description": "The increment between selectable values.",
+    "since": "2.0.0-beta.1"
+  },
+  {
+    "property": "isDisabled",
+    "type": "boolean",
+    "kind": "boolean",
+    "values": [],
+    "optional": false,
+    "default": "false",
+    "description": "Whether the slider accepts input.",
+    "since": "2.0.0-beta.1"
+  }
+]

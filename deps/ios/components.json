@@ -1,0 +1,10 @@
+{
+  "Button": "Sources/SpectrumComponents/Button",
+  "Menu": "Sources/SpectrumComponents/Menu",
+  "Picker": "Sources/SpectrumComponents/Picker",
+  "Pop-up button": "Sources/SpectrumComponents/PopUpButton",
+  "Slider": "Sources/SpectrumComponents/Slider",
+  "Switch": "Sources/SpectrumComponents/Switch",
+  "Toast": "Sources/SpectrumComponents/Toast",
+  "Toggle button": "Sources/SpectrumComponents/ToggleButton"
+}

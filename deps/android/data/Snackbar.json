@@ -1,0 +1,45 @@
+[
+  {
+    "property": "message",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "description": "The message shown in the snackbar.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "actionLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": true,
+    "description": "Label for the optional trailing action.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "duration",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": false,
+    "default": "4",
+    "description": "How long the snackbar stays on screen, in seconds.",
+    "since": "1.0.0"
+  },
+  {
+    "property": "variant",
+    "type": "\"Neutral\" | \"Positive\" | \"Negative\" | \"Info\"",
+    "kind": "enum",
+    "values": [
+      "Neutral",
+      "Positive",
+      "Negative",
+      "Info"
+    ],
+    "optional": false,
+    "default": "'neutral'",
+    "description": "The semantic variant of the snackbar.",
+    "since": "1.0.0"
+  }
+]

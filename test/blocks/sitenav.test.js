@@ -565,6 +565,77 @@ describe('sitenav block', () => {
       expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
     });
 
+    // Web gives each implementation its own page tree, so its Components item sits
+    // beside an implementation and borrows that implementation's prefix. Mobile
+    // documents a component once for both iOS and Android, so a single Components item
+    // hangs straight off the platform and takes the platform's own prefix instead.
+    function buildPlatformList(platformLabel) {
+      return buildNavList(`
+        <ul>
+          <li>
+            <p>${platformLabel}</p>
+            <ul>
+              <li>
+                <p>Components</p>
+                <ul><li>[auto-generated]</li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+    }
+
+    it('marks a Components item nested directly under a platform with that platform\'s prefix', () => {
+      const ul = buildPlatformList('Mobile');
+      decorateLevel(ul, 1);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label).to.not.be.null;
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/mobile/components');
+    });
+
+    it('leaves a Components item unmarked when its platform has no indexed prefix', () => {
+      const ul = buildPlatformList('Foundations');
+      decorateLevel(ul, 1);
+      expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
+    });
+
+    // The implementation sibling wins, so adding the platform fallback cannot change
+    // which prefix a web Components item resolves to.
+    it('still prefers an implementation sibling over the platform fallback', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Web</p>
+            <ul>
+              <li><p>SWC</p></li>
+              <li>
+                <p>Components</p>
+                <ul><li>[auto-generated]</li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc');
+    });
+
+    it('auto-generates mobile component links under the platform prefix', () => {
+      const ul = buildPlatformList('Mobile');
+      const navList = decorateLevel(ul, 1);
+      decorateIndexBasedNav(navList, [
+        { path: '/mobile/components/snackbar', title: 'Snackbar' },
+        { path: '/mobile/components/button', title: 'Button' },
+        { path: '/web/swc/components/button', title: 'Button' },
+      ]);
+      const links = [...navList.querySelectorAll('.level-3-list a')];
+      expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
+        '/mobile/components/button',
+        '/mobile/components/snackbar',
+      ]);
+    });
+
     // Authors moved from the short forms ("RSP"/"SWC") to the full product names.
     // Both must resolve to the same URL segment, since the prefix comes from the
     // implementation id rather than the authored text.
