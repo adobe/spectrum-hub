@@ -304,6 +304,12 @@
     --image-size: 316px;
   }
 
+  /* TODO: temp solution until component status links in mobile are merged. */
+  :has(svg) h3 {
+    display: flex;
+    gap: 8px;
+  }
+
   .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
