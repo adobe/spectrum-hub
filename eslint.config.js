@@ -8,6 +8,7 @@ export default defineConfig([
     '.claude/**',
     // workers/ are self-contained deployables with their own tooling/tests
     'workers/**',
+    '.worktrees/**'
   ]),
   {
     languageOptions: {
