@@ -14,7 +14,7 @@ loadStyle(import.meta.url.replace('js', 'css'));
 const DEF_SITE_NAV_PATH = '/fragments/nav/site-nav';
 const DEF_SITE_NAME = 'Spectrum Hub';
 const INDEX_BASED_NAV = [
-  ...IMPLEMENTATIONS.map((impl) => ({ prefix: `/web/${impl.id}`, count: 0 })),
+  ...IMPLEMENTATIONS.map((impl) => ({ prefix: `/web/${impl.id}/components`, count: 0 })),
   // ios/android do combined docs.
   { prefix: '/mobile/components', count: 0 },
 ];
@@ -29,31 +29,21 @@ const findImplementationByLabel = (text) => {
     .some((name) => navSlug(name) === slug));
 };
 
-/**
- * The INDEX_BASED_NAV prefix a "Components" item owns, or null when it owns none.
- *
- * Mobile documents a component once for both iOS and Android, so one Components item
- * hangs straight off the platform and takes the platform's own prefix.
- *
- * The platform case resolves against INDEX_BASED_NAV instead of rebuilding a path, so
- * that array stays the single place a prefix is declared: a platform with no entry there
- * gets no marker, and therefore auto-populates nothing.
- *
- * The platform label comes from the clone decorateLevel leaves in the level-2 menu
- * wrapper, already in the DOM by the time this level is decorated. A list decorated from
- * level 2 in isolation has no wrapper, so only the sibling rule applies there.
- */
+// Web Components items follow an implementation heading. Mobile's combined docs
+// instead use the first item directly under the platform's level-2 menu.
 const componentsNavPrefix = (li) => {
   const prevLiText = li.previousElementSibling?.textContent;
   const impl = prevLiText ? findImplementationByLabel(prevLiText) : null;
-  if (impl) { return `/web/${impl.id}`; }
+  if (impl) { return `/web/${impl.id}/components`; }
 
-  const platformLabel = li.closest('.level-2-menu')
-    ?.querySelector(':scope > .list-item-label')?.textContent;
+  const platformMenu = li.parentElement?.parentElement;
+  if (li.previousElementSibling || !platformMenu?.matches('.level-2-menu')) { return null; }
+
+  const platformLabel = platformMenu.querySelector(':scope > .list-item-label')?.textContent;
   if (!platformLabel) { return null; }
 
   const platform = navSlug(platformLabel);
-  return INDEX_BASED_NAV.find(({ prefix }) => prefix.startsWith(`/${platform}/`))?.prefix ?? null;
+  return INDEX_BASED_NAV.find(({ prefix }) => prefix === `/${platform}/components`)?.prefix ?? null;
 };
 
 const level2SwapCleanups = new WeakMap();

@@ -98,6 +98,59 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} generated Mobile component links are accessible and exclude other page types`, async ({ page, makeAxeBuilder, isMobile }) => {
+  await gotoBlock(page, {
+    ...block,
+    routes: [
+      {
+        url: '**/fragments/nav/site-nav',
+        contentType: 'text/html',
+        body: `<body><header></header><main><div><ul>
+          <li><p>Mobile</p><ul>
+            <li><p>Components</p><ul><li>[auto-generated]</li></ul></li>
+            <li><a href="/mobile/getting-started">Getting started</a></li>
+          </ul></li>
+        </ul></div></main></body>`,
+      },
+      {
+        url: '**/query-index.json*',
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            { path: '/mobile/components/button', title: 'Button' },
+            { path: '/mobile/getting-started', title: 'Getting started' },
+            { path: '/mobile/components-old/button', title: 'Old button' },
+            { path: '/web/rsp/components/button', title: 'React button' },
+          ],
+        }),
+      },
+      {
+        url: '**/*.svg',
+        contentType: 'image/svg+xml',
+        body: svgIcon,
+      },
+    ],
+  });
+  await waitForNavReady(page, isMobile);
+  await page.getByRole('button', { name: 'Mobile', exact: true }).click();
+
+  const menu = page.locator('#sitenav-menu-mobile');
+  await menu.locator('.level-2-button').click();
+
+  const generatedLinks = menu.locator('.level-3-list a');
+  await expect(generatedLinks).toHaveCount(1);
+  await expect(generatedLinks).toHaveAttribute('href', '/mobile/components/button');
+  await expect(generatedLinks).toHaveAccessibleName('Button');
+  await expect(generatedLinks).toBeVisible();
+  await expect(menu.locator('.count-badge')).toHaveText('1');
+  await expect(menu.getByRole('link', { name: 'Getting started', exact: true })).toBeVisible();
+  await generatedLinks.focus();
+  await expect(generatedLinks).toBeFocused();
+
+  const results = await makeAxeBuilder().analyze();
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
 test(`${block.name} block matches its expected accessibility tree`, async ({ page, isMobile }, testInfo) => {
   // Unlike most blocks, sitenav's tree isn't viewport-agnostic: below 900px the rail
   // (nav, list items, expand button) is CSS-hidden (display: none) and only the

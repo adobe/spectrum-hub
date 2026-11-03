@@ -556,7 +556,7 @@ describe('sitenav block', () => {
       const ul = buildImplList('SWC');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc/components');
     });
 
     it('leaves a Components item unmarked when the preceding item is not a known implementation', () => {
@@ -599,6 +599,92 @@ describe('sitenav block', () => {
       expect(ul.querySelector('[index-based-nav-prefix]')).to.be.null;
     });
 
+    it('does not choose a web implementation for a platform-level Components item', () => {
+      const ul = buildPlatformList('Web');
+      decorateLevel(ul, 1);
+      expect(ul.querySelector('[index-based-nav-prefix]') === null).to.be.true;
+    });
+
+    it('preserves authored Components links when Components is not the first platform child', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Mobile</p>
+            <ul>
+              <li><a href="/mobile/overview">Overview</a></li>
+              <li>
+                <p>Components</p>
+                <ul><li><a href="/mobile/components/button">Button</a></li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 1);
+      decorateIndexBasedNav(navList, [
+        { path: '/mobile/components/button', title: 'Button' },
+        { path: '/mobile/components/checkbox', title: 'Checkbox' },
+      ]);
+      const links = [...navList.querySelectorAll('.level-3-list a')];
+      expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
+        '/mobile/components/button',
+      ]);
+      expect(navList.querySelector('[index-based-nav-prefix]') === null).to.be.true;
+    });
+
+    it('leaves Components unmarked when nested deeper than the platform child list', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Mobile</p>
+            <ul>
+              <li>
+                <p>Guides</p>
+                <ul>
+                  <li>
+                    <p>Components</p>
+                    <ul><li>[auto-generated]</li></ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+      decorateLevel(ul, 1);
+      expect(ul.querySelector('[index-based-nav-prefix]') === null).to.be.true;
+    });
+
+    it('does not let a generic Web Components menu capture an implementation menu\'s links', () => {
+      const ul = buildNavList(`
+        <ul>
+          <li>
+            <p>Web</p>
+            <ul>
+              <li>
+                <p>Components</p>
+                <ul><li><a href="/web/overview">Overview</a></li></ul>
+              </li>
+              <li><p>React Spectrum</p></li>
+              <li>
+                <p>Components</p>
+                <ul><li>[auto-generated]</li></ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      `);
+      const navList = decorateLevel(ul, 1);
+      decorateIndexBasedNav(navList, [
+        { path: '/web/rsp/components/button', title: 'Button' },
+      ]);
+      const menus = [...navList.querySelectorAll('.level-3-list')];
+      expect([...menus[0].querySelectorAll('a')].map((a) => a.getAttribute('href')))
+        .to.deep.equal(['/web/overview']);
+      expect([...menus[1].querySelectorAll('a')].map((a) => a.getAttribute('href')))
+        .to.deep.equal(['/web/rsp/components/button']);
+    });
+
     // The implementation sibling wins, so adding the platform fallback cannot change
     // which prefix a web Components item resolves to.
     it('still prefers an implementation sibling over the platform fallback', () => {
@@ -618,7 +704,7 @@ describe('sitenav block', () => {
       `);
       decorateLevel(ul, 1);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc/components');
     });
 
     it('auto-generates mobile component links under the platform prefix', () => {
@@ -627,6 +713,9 @@ describe('sitenav block', () => {
       decorateIndexBasedNav(navList, [
         { path: '/mobile/components/snackbar', title: 'Snackbar' },
         { path: '/mobile/components/button', title: 'Button' },
+        { path: '/mobile/getting-started', title: 'Getting started' },
+        { path: '/mobile/components', title: 'Components overview' },
+        { path: '/mobile/components-old/button', title: 'Old button' },
         { path: '/web/swc/components/button', title: 'Button' },
       ]);
       const links = [...navList.querySelectorAll('.level-3-list a')];
@@ -643,14 +732,14 @@ describe('sitenav block', () => {
       const ul = buildImplList('Spectrum Web Components');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/swc/components');
     });
 
     it('marks a Components item that follows "React Spectrum" with the rsp prefix', () => {
       const ul = buildImplList('React Spectrum');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/rsp');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/rsp/components');
     });
 
     // The parent heading is authored with natural spacing ("Design only"), not
@@ -660,7 +749,7 @@ describe('sitenav block', () => {
       const ul = buildImplList('Design only');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only/components');
     });
 
     // "Figma" is the design-only shortLabel, so it maps to the same prefix.
@@ -668,18 +757,46 @@ describe('sitenav block', () => {
       const ul = buildImplList('Figma');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only/components');
     });
 
     it('matches the "Design only" parent label regardless of case', () => {
       const ul = buildImplList('DESIGN ONLY');
       decorateLevel(ul, 2);
       const label = ul.querySelector('.list-item-label[index-based-nav-prefix]');
-      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only');
+      expect(label.getAttribute('index-based-nav-prefix')).to.equal('/web/design-only/components');
     });
   });
 
   describe('decorateIndexBasedNav + decorateBadges', () => {
+    [
+      { label: 'React Spectrum', id: 'rsp' },
+      { label: 'Spectrum Web Components', id: 'swc' },
+    ].forEach(({ label, id }) => {
+      it(`only generates component-page links for ${label}`, () => {
+        const ul = buildNavList(`
+          <ul>
+            <li><p>${label}</p></li>
+            <li>
+              <p>Components</p>
+              <ul><li>[auto-generated]</li></ul>
+            </li>
+          </ul>
+        `);
+        const navList = decorateLevel(ul, 2);
+        decorateIndexBasedNav(navList, [
+          { path: `/web/${id}/components/button`, title: 'Button' },
+          { path: `/web/${id}/getting-started`, title: 'Getting started' },
+          { path: `/web/${id}/components`, title: 'Components overview' },
+          { path: `/web/${id}/components-old/button`, title: 'Old button' },
+        ]);
+        const links = [...navList.querySelectorAll('.level-3-list a')];
+        expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
+          `/web/${id}/components/button`,
+        ]);
+      });
+    });
+
     // A row with no title would otherwise render <a href="..."></a> — a link with no
     // accessible name (WCAG 2.4.4 / 4.1.2). axe misses it: collapsed flyouts are
     // visibility:hidden when the page is scanned.
@@ -704,7 +821,7 @@ describe('sitenav block', () => {
       expect(links.every((a) => a.textContent.trim())).to.be.true;
     });
 
-    it('counts design-only pages from the query index, badges the label, and lists them', () => {
+    it('counts only design-only component pages, badges the label, and lists them', () => {
       const ul = buildNavList(`
         <ul>
           <li><p>Design only</p></li>
@@ -718,13 +835,16 @@ describe('sitenav block', () => {
       const index = [
         { path: '/web/design-only/components/alert-banner', title: 'Alert banner' },
         { path: '/web/design-only/components/coach-mark', title: 'Coach mark' },
+        { path: '/web/design-only/getting-started', title: 'Getting started' },
+        { path: '/web/design-only/components', title: 'Components overview' },
+        { path: '/web/design-only/components-old/button', title: 'Old button' },
         { path: '/web/rsp/components/action-button', title: 'Action button' },
       ];
 
       decorateIndexBasedNav(navList, index);
       decorateBadges();
 
-      const label = navList.querySelector('[index-based-nav-prefix="/web/design-only"]');
+      const label = navList.querySelector('[index-based-nav-prefix="/web/design-only/components"]');
       const badge = label.nextElementSibling;
       expect(badge.classList.contains('count-badge')).to.be.true;
       expect(badge.textContent).to.equal('2');
