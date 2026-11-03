@@ -112,11 +112,38 @@ describe('getUnifiedStatus — SWC source', () => {
 
 describe('getUnifiedStatus — robustness', () => {
   it('returns Not available for an unknown source without throwing', () => {
-    assert.equal(getUnifiedStatus('ios', 'stable').status.id, 'not-available');
+    assert.equal(getUnifiedStatus('windows', 'stable').status.id, 'not-available');
   });
 
   it('never attaches a context to the Not available fallback', () => {
     assert.equal(getUnifiedStatus('rsp', 'bogus').context, null);
     assert.equal(getUnifiedStatus('unknown', 'stable').context, null);
   });
+});
+
+// The mobile catalogs are per-component prop rows, the same shape SWC's extractor
+// writes, so component status is derived from those rows rather than stored — and the
+// vocabulary the adapter sees is SWC's, not the unified one.
+describe('getUnifiedStatus for the mobile sources', () => {
+  for (const source of ['ios', 'android']) {
+    it(`maps ${source} stable to Available with a Stable context`, () => {
+      const { status, context } = getUnifiedStatus(source, 'stable');
+      assert.equal(status.id, 'available');
+      assert.equal(context, 'Stable');
+    });
+
+    it(`maps ${source} preview to Available with a Preview context`, () => {
+      const { status, context } = getUnifiedStatus(source, 'preview');
+      assert.equal(status.id, 'available');
+      assert.equal(context, 'Preview');
+    });
+
+    it(`maps ${source} deprecated to Deprecated`, () => {
+      assert.equal(getUnifiedStatus(source, 'deprecated').status.id, 'deprecated');
+    });
+
+    it(`falls back to Not available for an unknown ${source} value`, () => {
+      assert.equal(getUnifiedStatus(source, 'bogus').status.id, 'not-available');
+    });
+  }
 });
