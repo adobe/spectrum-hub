@@ -1,7 +1,9 @@
 {
   "Button": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/button",
-  "FloatingActionButton": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/button",
+  "Icon Button": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/button",
+  "Floating Action Button (FAB)": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/button",
+  "Extended FAB": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/button",
   "Snackbar": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/snackbar",
   "Switch": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/Switch",
-  "Toggle button": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/togglebutton"
+  "Toggle Button": "spectrum_components/src/main/kotlin/com/adobe/spectrum/components/togglebutton"
 }

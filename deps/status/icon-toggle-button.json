@@ -1,0 +1,13 @@
+{
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "secondary": "Use properties within Toggle button",
+      "upstreamName": "Toggle",
+      "note": "Use properties with Toggle Button"
+    },
+    "android": {
+      "status": "available"
+    }
+  }
+}

@@ -276,6 +276,13 @@ describe('canonicalNameForFigma', () => {
     assert.equal(canonicalNameForFigma('Table', { Table: 'TableView' }), 'TableView');
   });
 
+  it('reads the canonical name from an object-shaped display-name alias', () => {
+    assert.equal(
+      canonicalNameForFigma('Toggle', { Toggle: { canonical: 'ToggleButton' } }),
+      'ToggleButton',
+    );
+  });
+
   it('lets an identity alias preserve a name normalizeName would otherwise mangle', () => {
     // Without the alias, `normalizeName` strips the parens to `CardsAsset`, splitting the
     // row from the RSP export that aliases to `Cards (Asset)`.
@@ -1151,6 +1158,25 @@ describe('joinNamedRosters', () => {
     );
     assert.equal(roster.length, 1);
     assert.deepEqual(roster[0].sources, { ios: 'Snack bar', android: 'Snackbar' });
+  });
+
+  it('merges an object-shaped mobile alias while preserving its source names', () => {
+    const roster = joinNamedRosters(
+      { ios: { Toggle: 'Sources/Toggle' }, android: { 'Toggle Button': 'components/togglebutton' } },
+      { ios: { Toggle: { canonical: 'ToggleButton' } } },
+    );
+    assert.equal(roster.length, 1);
+    assert.equal(roster[0].name, 'ToggleButton');
+    assert.deepEqual(roster[0].sources, { ios: 'Toggle', android: 'Toggle Button' });
+  });
+
+  it('uses an explicit mobile alias label without renaming the source catalog', () => {
+    const roster = joinNamedRosters(
+      { ios: { Toggle: 'Sources/Toggle' }, android: { 'Toggle Button': 'components/togglebutton' } },
+      { ios: { Toggle: { canonical: 'ToggleButton', label: 'Toggle Button' } } },
+    );
+    assert.equal(roster[0].label, 'Toggle Button');
+    assert.deepEqual(roster[0].sources, { ios: 'Toggle', android: 'Toggle Button' });
   });
 });
 
