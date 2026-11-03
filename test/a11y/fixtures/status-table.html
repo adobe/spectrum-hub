@@ -20,7 +20,12 @@
   </main>
   <script type="module">
     import init from '/blocks/status-table/status-table.js';
-    document.querySelectorAll('.status-table').forEach(init);
+    document.querySelectorAll('.status-table').forEach((el) => {
+      if (new URLSearchParams(window.location.search).get('platform') === 'mobile') {
+        el.classList.add('mobile');
+      }
+      init(el);
+    });
   </script>
 </body>
 </html>
