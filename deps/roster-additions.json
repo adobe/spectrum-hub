@@ -2,6 +2,9 @@
   "web": [],
   "mobile": [
     "Navigation bar",
-    "Toolbar"
+    "Toolbar",
+    "Text Field",
+    "Label",
+    "Icon Toggle Button"
   ]
 }

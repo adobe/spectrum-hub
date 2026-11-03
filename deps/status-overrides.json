@@ -106,5 +106,79 @@
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
     }
+  },
+  "FloatingActionButtonFAB": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "note": "Use properties within Button"
+      }
+    }
+  },
+  "IconButton": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "note": "Use properties within Button"
+      }
+    }
+  },
+  "ExtendedFAB": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "note": "Use properties within Button"
+      }
+    }
+  },
+  "Toast": {
+    "mobile": {
+      "android": {
+        "status": "available",
+        "note": "Use Snackbar",
+        "upstreamName": "Snackbar"
+      }
+    }
+  },
+  "IconToggleButton": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "note": "Use properties with Toggle Button",
+        "upstreamName": "Toggle"
+      },
+       "android": {
+        "status": "available"
+       }
+    }
+  },
+  "Snackbar": {
+    "mobile": {
+      "ios": {
+        "status": "available",
+        "note": "UseToast properties with Toggle Button",
+        "upstreamName": "Toast"
+      }
+    }
+  },
+  "TextField": {
+    "mobile": {
+      "ios": {
+        "status": "not-available"
+      },
+      "android": {
+        "status": "not-available"
+      }
+    }
+  },
+  "Label": {
+    "mobile": {
+      "ios": {
+        "status": "not-available"
+      },
+      "android": {
+        "status": "not-available"
+      }
+    }
   }
 }

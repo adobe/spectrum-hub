@@ -176,7 +176,7 @@ export function swcTagToPascal(tag) {
   return normalizeName(tag.replace(/^swc-/, ''));
 }
 
-/** An alias entry is a plain canonical-name string, or `{ canonical, upstreamName }`. */
+/** Alias entries are strings or `{ canonical, upstreamName?, label? }` objects. */
 function resolveAliasEntry(value) {
   return typeof value === 'string' ? { canonical: value } : value;
 }
@@ -200,7 +200,7 @@ function upstreamNameForAlias(sourceKey, aliases = {}) {
 
 /** Resolves the canonical name for a Figma display name, letting the alias map override. */
 export function canonicalNameForFigma(name, aliases = {}) {
-  return Object.hasOwn(aliases, name) ? aliases[name] : normalizeName(name);
+  return Object.hasOwn(aliases, name) ? resolveAliasEntry(aliases[name]).canonical : normalizeName(name);
 }
 
 /** De-PascalCases a canonical name into a readable label: `ActionButton` → `Action Button`. */
@@ -297,9 +297,13 @@ export function joinNamedRosters(rosters, aliases = {}) {
   for (const [id, entries] of Object.entries(rosters)) {
     for (const name of Object.keys(entries ?? {})) {
       const canonical = canonicalNameForFigma(name, aliases[id]);
+      const alias = Object.hasOwn(aliases[id] ?? {}, name)
+        ? resolveAliasEntry(aliases[id][name]) : null;
       // First source in config order supplies the label when two platforms spell the
       // same component differently (`Icon button` vs `Icon Button`).
-      const entry = byName.get(canonical) ?? { name: canonical, label: name, sources: {} };
+      const entry = byName.get(canonical) ?? {
+        name: canonical, label: alias?.label ?? name, sources: {},
+      };
       entry.sources[id] = name;
       byName.set(canonical, entry);
     }

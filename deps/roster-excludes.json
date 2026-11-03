@@ -26,5 +26,7 @@
     "Icon",
     "UiIcon"
   ],
-  "mobile": []
+  "mobile": [
+    "Toggle"
+  ]
 }

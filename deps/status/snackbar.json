@@ -1,0 +1,13 @@
+{
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "secondary": "Use Toast",
+      "upstreamName": "Toast",
+      "note": "UseToast properties with Toggle Button"
+    },
+    "android": {
+      "status": "available"
+    }
+  }
+}

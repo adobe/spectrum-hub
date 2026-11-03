@@ -98,5 +98,11 @@
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",
     "Slider (Range)": "Slider"
+  },
+  "ios": {
+    "Toggle": {
+      "canonical": "ToggleButton",
+      "label": "Toggle Button"
+    }
   }
 }

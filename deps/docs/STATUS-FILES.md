@@ -9,8 +9,8 @@ the contract.
 The combined status surfaces are produced by
 [`deps/build-status-index.js`](../build-status-index.js), run by the daily GitHub Actions
 after the per-implementation extractions. It reads hand-authored configuration plus
-generated RSP/SWC/Figma extraction data, joins the source rosters, resolves each cell's
-status, and writes the generated outputs below.
+generated RSP/SWC/Figma extraction data and the iOS/Android rosters, joins the source
+rosters, resolves each cell's status, and writes the generated outputs below.
 
 Status consumers bind to those generated outputs. The playground is a deliberate
 exception: it reads the raw RSP/SWC prop catalogs because it needs `kind`, `values`, and
@@ -37,14 +37,23 @@ data                   ─┘    (reads scripts/utils/
 | Fix a name that doesn't match cleanly across RSP/SWC/Figma (e.g. `swc-card` joins the canonical `Cards` row) | [`deps/component-aliases.json`](../component-aliases.json) |
 | Point a component's "Go to RSP/SWC" link at a different upstream page | `upstreamName` — in [`deps/component-aliases.json`](../component-aliases.json) if that source ships the component, in [`deps/status-overrides.json`](../status-overrides.json) if it doesn't (Field Label → RSP's `Form.html`) |
 | Point a component's Figma link at a different design's page | `figmaPageSource` on the figma cell in [`deps/status-overrides.json`](../status-overrides.json) |
-| Remove a sub-component from the table entirely (it's a composition part, not a standalone component) | [`deps/roster-excludes.json`](../roster-excludes.json) |
+| Keep a documented composition part in the data but mark it for omission from the table | that platform's list in [`deps/roster-unlisted.json`](../roster-unlisted.json) |
+| Remove a component from the data entirely | that platform's list in [`deps/roster-excludes.json`](../roster-excludes.json) |
+| Carry a component neither implementation ships, so guidance has a row | that platform's list in [`deps/roster-additions.json`](../roster-additions.json) |
 | Add a "use Gen1 instead" style note under a status badge | `deps/<impl>/<impl>-secondary-status.json` (or `deps/figma/figma-secondary-status.json`) |
 | Change what a raw status value (`stable`, `internal`, `preview`, ...) means in the unified table | [`scripts/utils/status-model.js`](../../scripts/utils/status-model.js) |
 | Change how a raw RSP/SWC extraction file's status field is read | [`scripts/utils/extraction-status.js`](../../scripts/utils/extraction-status.js) |
+| Add or remove a mobile component | `deps/<implementation>/components.json`, where implementation is `ios` or `android` |
+| Change a mobile component's source status | `deps/<implementation>/data/<Name>.json`, named after the module subpath's last segment |
+| Configure a platform's columns, floors, and roster reader | `PLATFORM_CONFIG` in [`deps/build-status-index.js`](../build-status-index.js) |
 
 None of the files under "generated outputs" below should ever be hand-edited. The
 JavaScript output carries a generated-file comment; the JSON outputs do not because JSON
-has no comments. Run `node deps/build-status-index.js` to regenerate them.
+has no comments. Run `node deps/build-status-index.js` to regenerate them. One run
+rebuilds both web and mobile and prunes obsolete slices. Changes to builder or consumer
+code do not update committed output until generation runs. See
+[Platform-aware builds](./DATA-CONTRACT.md#platform-aware-builds) for platform selection
+and component-page routes.
 
 ## Full file inventory
 
@@ -52,10 +61,13 @@ has no comments. Run `node deps/build-status-index.js` to regenerate them.
 
 | File | Keyed by | Purpose |
 | --- | --- | --- |
-| [`deps/component-aliases.json`](../component-aliases.json) | source (`rsp`/`swc`/`figma`) → that source's own name | Canonical-name resolution for the roster join. Can also carry `upstreamName` — the name the *source's own public docs* use, when it differs from the canonical name (see [`upstreamName`](#upstreamname-and-figmapagesource) below). |
+| [`deps/component-aliases.json`](../component-aliases.json) | source (`rsp`/`swc`/`figma`/`ios`/`android`) → that source's own name | Canonical-name resolution for the roster join. Can also carry `upstreamName` — the name the *source's own public docs* use, when it differs from the canonical name (see [`upstreamName`](#upstreamname-and-figmapagesource) below). |
 | [`deps/status-overrides.json`](../status-overrides.json) | canonical name → platform → impl | Manual status override, applied last — wins over anything auto-detected. |
-| [`deps/roster-excludes.json`](../roster-excludes.json) | — (flat list) | Canonical names to drop from the joined roster entirely (composition sub-parts). |
-| `deps/rsp/rsp-secondary-status.json`, `deps/swc/swc-secondary-status.json`, `deps/figma/figma-secondary-status.json` | canonical name | Per-implementation secondary guidance text shown under the primary status badge. |
+| [`deps/roster-excludes.json`](../roster-excludes.json) | platform → list | Canonical names to drop from the joined roster entirely. |
+| [`deps/roster-unlisted.json`](../roster-unlisted.json) | platform → list | Documented composition parts retained with `listed: false`. |
+| [`deps/roster-additions.json`](../roster-additions.json) | platform → list | Display names appended with no sources, for components no implementation ships. |
+| `deps/<implementation>/<implementation>-secondary-status.json`, including `figma`, `rsp`, `swc`, `ios`, and `android` | display name | Per-implementation secondary guidance text, normalized using that source's aliases. Lives beside the roster, not under `data/`. |
+| `deps/ios/components.json`, `deps/android/components.json` | display name → module subpath | Mobile roster membership. Status derives from catalogs or the presence floor, not from these files. |
 
 ### Generated extraction inputs
 
@@ -65,6 +77,7 @@ builder. Do not hand-edit them either.
 | File | Keyed by | Purpose |
 | --- | --- | --- |
 | `deps/rsp/data/*.json`, `deps/swc/data/swc-*.json`, `deps/figma/components.json` | — | Raw per-source extraction data (see each implementation's own README + [DATA-CONTRACT.md](./DATA-CONTRACT.md)). |
+| `deps/ios/data/<Name>.json`, `deps/android/data/<Name>.json` | — | Flat property-row catalogs. Missing catalogs are valid for a roster-only contribution. |
 
 ### Build-time logic
 
@@ -79,7 +92,7 @@ builder. Do not hand-edit them either.
 | File | Consumed by | Purpose |
 | --- | --- | --- |
 | [`deps/status-index.json`](../status-index.json) | `blocks/status-table/status-table.js` | The full combined table — every component, every platform/impl cell, plus a self-describing status legend. |
-| `deps/status/<slug>.json` (one per component page) | `blocks/component-status/component-status.js`, `scripts/utils/figma.js` (via [`scripts/utils/component-slice.js`](../../scripts/utils/component-slice.js)) | One component page's cells + Figma node id — a single small fetch instead of downloading and searching the whole index on every component doc page. A page override can make multiple components share a slug. The writer updates current slices but does not prune obsolete files, so use `status-index.json`, not a directory listing, as the authoritative current roster. |
+| `deps/status/<slug>.json` (one per component page) | `blocks/component-status/component-status.js`, `scripts/utils/figma.js` (via [`scripts/utils/component-slice.js`](../../scripts/utils/component-slice.js)) | One component page's cells for all platforms + Figma node id. A page override can make multiple components share a slug. The writer updates current slices and prunes obsolete JSON files. Use `status-index.json` as the authoritative current roster. |
 | [`deps/impl-component-names.js`](../impl-component-names.js) | `scripts/utils/go-to-impl.js` (`docs`), `blocks/playground/playground.js` via `deps/rsp/playground/pascal-case.js` (`export`) | Per implementation, slug → `{ docs, export }`. `docs` is the name that source's *external docs site* uses, for building working links (`AlertDialog` → `Dialog.html`); `export` is the real name to `import`/render when it differs from the canonical one (`ActionGroup` → `ActionButtonGroup`). |
 
 ## Two names that look redundant but aren't

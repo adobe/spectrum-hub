@@ -103,6 +103,61 @@ The index is emitted so a single fetch is interpretable without also reading `st
 
 The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](../build-status-index.js), so the embedded definitions never drift from the adapter.
 
+### Platform-aware builds
+
+[`PLATFORM_CONFIG`](../build-status-index.js) defines the columns, presence floors,
+secondary-overlay filenames, and roster reader for `web` and `mobile`. A build resolves
+each platform separately, then merges components by canonical name into one index.
+`implementations.web` contains Figma, RSP, and SWC; `implementations.mobile` contains iOS
+and Android. A shared component carries both keys under `platforms`. The first platform
+in configuration order supplies its display label.
+
+The mobile rosters, `deps/ios/components.json` and `deps/android/components.json`, map
+display names to module subpaths. `joinNamedRosters` preserves the authored display name
+as the label and applies each source's own alias map. Alias values are canonical-name
+strings or objects with a `canonical` field, as with RSP and SWC. A mobile alias can
+also supply `label` to override that source's display name without changing its catalog
+lookup. For example, `"Toggle": { "canonical": "ToggleButton", "label": "Toggle Button" }`
+joins iOS's Toggle with Android's Toggle Button. The first source in configuration order
+supplies the row label, including any explicit alias label. The catalog is read from
+`deps/<implementation>/data/<Name>.json`, where `<Name>` is the last segment of the
+module subpath. Mobile catalogs use SWC's flat property-row shape and status vocabulary.
+A listed component with no catalog or maturity signal floors to Available. An absent
+catalog is tolerated; an unparseable catalog is tolerated with a warning.
+
+Roster rules are keyed by platform. `roster-excludes.json` removes canonical names
+entirely. `roster-unlisted.json` retains documented composition parts and emits
+`listed: false`, which a table consumer must filter out. `roster-additions.json` appends
+display names with no sources, allowing guidance for components neither implementation
+ships. Additions happen after the empty-roster guard, so they cannot conceal an empty
+upstream roster. Aliases and secondary overlays remain keyed by source; overrides remain
+keyed by canonical name, platform, and implementation.
+
+Overrides modify existing cells; they do not create roster entries. To show a component
+neither mobile implementation ships, add its display name to `roster-additions.json`.
+Use word boundaries that normalize to the override's canonical key: `Text Field`
+normalizes to `TextField`, whereas `Textfield` remains `Textfield`.
+
+Configuration files are required and validated before output is written. A missing,
+unparseable, or incorrectly shaped configuration stops the build. Each platform must
+also have a nonempty roster.
+
+Slices are deduplicated within each platform, then merged by slug across platforms.
+One `deps/status/<slug>.json` carries every platform's cells for that component.
+Obsolete JSON slices are pruned after current slices are written.
+`deps/impl-component-names.js` remains derived from web only.
+
+The status-table block selects a platform from its authored class, matched against
+the index's implementation keys. `status-table mobile` renders mobile; no matching
+class defaults to web. Rows, status cards, and CSV exports include only listed
+components carrying that platform's key. Mobile links use the shared route
+`/mobile/components/<slug>`; web retains `/web/<implementation>/components/<slug>`
+and the design-only route. Status, `hasPage`, and published-page checks still gate links.
+
+Running `node deps/build-status-index.js` regenerates both platforms and applies the
+web exclusions and unlisted rules. Moving builder or consumer code does not regenerate
+committed output.
+
 Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/status-model.js)):
 
 | Impl | Raw value | Unified status | Level 2 context |
@@ -117,6 +172,11 @@ Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/stat
 | SWC | `preview` | Available | "Preview" |
 | SWC | `internal` | Unmapped; filtered from the SWC roster before the join | — |
 | SWC | `deprecated` | Deprecated | — |
+| iOS / Android | `stable` | Available | "Stable" |
+| iOS / Android | `preview` | Available | "Preview" |
+| iOS / Android | `deprecated` | Deprecated | — |
+| iOS / Android | *(absent, component present)* | Available | — |
+| iOS / Android | *(component not in roster)* | Not available | — |
 
 RSP's `alpha`/`beta`/`rc` all resolve to Available (with their own Level 2 context) per the website status model — they're prerelease documentation states, not maturity gates. A component that's present in a source but yields no maturity signal at all (`null`/absent, not one of the raw values above) never reaches this table — it floors to Available (Figma, RSP) or Available (SWC) directly in the index build (`PRESENT_FLOOR` in `build-status-index.js`), since presence in a roster is never "Not available" for that column. `status: "deprecated"` is supported for SWC; RSP has no automatic path. See [Deprecation signals](#deprecation-signals).
 

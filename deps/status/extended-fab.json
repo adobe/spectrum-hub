@@ -1,0 +1,12 @@
+{
+  "mobile": {
+    "ios": {
+      "status": "available",
+      "secondary": "Use properties within Button",
+      "note": "Use properties within Button"
+    },
+    "android": {
+      "status": "available"
+    }
+  }
+}
