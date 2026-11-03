@@ -26,6 +26,102 @@ const block = {
   ],
 };
 
+const webIndex = JSON.parse(statusIndex);
+const mobileBlock = {
+  ...block,
+  path: `${block.path}?platform=mobile`,
+  routes: [
+    {
+      url: '**/deps/status-index.json',
+      contentType: 'application/json',
+      body: JSON.stringify({
+        implementations: {
+          ...webIndex.implementations,
+          mobile: [{ id: 'ios', label: 'iOS' }, { id: 'android', label: 'Android' }],
+        },
+        components: [
+          ...webIndex.components,
+          {
+            name: 'Snackbar',
+            label: 'Snackbar',
+            platforms: {
+              mobile: { ios: { status: 'experimental' }, android: { status: 'not-available' } },
+            },
+          },
+          {
+            name: 'ButtonPart',
+            label: 'Button Part',
+            listed: false,
+            platforms: {
+              mobile: { ios: { status: 'deprecated' }, android: { status: 'not-available' } },
+            },
+          },
+        ].map((component) => (component.name === 'Button' ? {
+          ...component,
+          platforms: {
+            ...component.platforms,
+            mobile: { ios: { status: 'available' }, android: { status: 'not-available' } },
+          },
+        } : component)),
+      }),
+    },
+    {
+      url: '**/query-index.json',
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          { path: '/mobile/components/button', title: 'Button' },
+          { path: '/mobile/components/snackbar', title: 'Snackbar' },
+        ],
+      }),
+    },
+    {
+      url: '**/*.svg',
+      contentType: 'image/svg+xml',
+      body: svgIcon,
+    },
+  ],
+};
+
+test('status-table mobile platform exposes its columns and shared-page links in the accessibility tree', async ({ page }) => {
+  await gotoBlock(page, mobileBlock);
+
+  await expect(page.getByRole('columnheader')).toHaveText(['Component', 'iOS', 'Android']);
+  await expect(page.locator('.status-table-card')).toHaveCount(3);
+  await expect(page.locator('.status-table-table tbody')).toMatchAriaSnapshot(`
+    - rowgroup:
+      - row "Button Button, Available in iOS Not available":
+        - rowheader "Button"
+        - cell "Button, Available in iOS":
+          - link "Button, Available in iOS":
+            - /url: /mobile/components/button
+            - text: Available
+        - cell "Not available"
+      - row "Snackbar Snackbar, Experimental in iOS Not available":
+        - rowheader "Snackbar"
+        - cell "Snackbar, Experimental in iOS":
+          - link "Snackbar, Experimental in iOS":
+            - /url: /mobile/components/snackbar
+            - text: Experimental
+        - cell "Not available"
+  `);
+});
+
+test('status-table mobile platform in light/default mode has no WCAG 2.2 AA violations', async ({ page, makeAxeBuilder }) => {
+  await gotoBlock(page, mobileBlock);
+
+  const results = await makeAxeBuilder().analyze();
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
+test('status-table mobile platform in dark mode has no color-contrast violations', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await gotoBlock(page, mobileBlock);
+
+  const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
 test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
   await gotoBlock(page, block);
 
