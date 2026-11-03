@@ -569,12 +569,13 @@ describe('sitenav block', () => {
     // beside an implementation and borrows that implementation's prefix. Mobile
     // documents a component once for both iOS and Android, so a single Components item
     // hangs straight off the platform and takes the platform's own prefix instead.
-    function buildPlatformList(platformLabel) {
+    function buildPlatformList(platformLabel, precedingItems = '') {
       return buildNavList(`
         <ul>
           <li>
             <p>${platformLabel}</p>
             <ul>
+              ${precedingItems}
               <li>
                 <p>Components</p>
                 <ul><li>[auto-generated]</li></ul>
@@ -593,6 +594,33 @@ describe('sitenav block', () => {
       expect(label.getAttribute('index-based-nav-prefix')).to.equal('/mobile/components');
     });
 
+    [true, false].forEach((catalogVisible) => {
+      it(`generates Mobile component links when the preceding Catalog app link is ${catalogVisible ? 'visible' : 'audience-filtered'}`, () => {
+        const ul = buildPlatformList(
+          '<svg class="icon icon-devicemobile" viewBox="0 0 20 20"><use href="#icon"></use></svg>Mobile',
+          '<li><p><a href="/mobile/catalog-app">Catalog app</a></p></li>',
+        );
+        const index = [
+          { path: '/mobile/components/snackbar', title: 'Snackbar' },
+          { path: '/mobile/components/buttons', title: 'Buttons' },
+          ...(catalogVisible ? [{ path: '/mobile/catalog-app', title: 'Catalog app' }] : []),
+        ];
+        filterNavByIndex(ul, index);
+        const navList = decorateLevel(ul, 1);
+        removeEmptyMenus(navList);
+        decorateIndexBasedNav(navList, index);
+
+        const links = [...navList.querySelectorAll('.level-3-list a')];
+        expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
+          '/mobile/components/buttons',
+          '/mobile/components/snackbar',
+        ]);
+        expect(navList.textContent).not.to.include('[auto-generated]');
+        expect(navList.querySelectorAll('a[href="/mobile/catalog-app"]').length)
+          .to.equal(catalogVisible ? 1 : 0);
+      });
+    });
+
     it('leaves a Components item unmarked when its platform has no indexed prefix', () => {
       const ul = buildPlatformList('Foundations');
       decorateLevel(ul, 1);
@@ -605,31 +633,38 @@ describe('sitenav block', () => {
       expect(ul.querySelector('[index-based-nav-prefix]') === null).to.be.true;
     });
 
-    it('preserves authored Components links when Components is not the first platform child', () => {
-      const ul = buildNavList(`
-        <ul>
-          <li>
-            <p>Mobile</p>
-            <ul>
-              <li><a href="/mobile/overview">Overview</a></li>
-              <li>
-                <p>Components</p>
-                <ul><li><a href="/mobile/components/button">Button</a></li></ul>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      `);
-      const navList = decorateLevel(ul, 1);
-      decorateIndexBasedNav(navList, [
-        { path: '/mobile/components/button', title: 'Button' },
-        { path: '/mobile/components/checkbox', title: 'Checkbox' },
-      ]);
-      const links = [...navList.querySelectorAll('.level-3-list a')];
-      expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
-        '/mobile/components/button',
-      ]);
-      expect(navList.querySelector('[index-based-nav-prefix]') === null).to.be.true;
+    [true, false].forEach((catalogVisible) => {
+      it(`preserves authored Mobile Components links when the preceding Catalog app link is ${catalogVisible ? 'visible' : 'audience-filtered'}`, () => {
+        const ul = buildNavList(`
+          <ul>
+            <li>
+              <p>Mobile</p>
+              <ul>
+                <li><p><a href="/mobile/catalog-app">Catalog app</a></p></li>
+                <li>
+                  <p>Components</p>
+                  <ul><li><a href="/mobile/components/buttons">Buttons</a></li></ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        `);
+        const index = [
+          { path: '/mobile/components/buttons', title: 'Buttons' },
+          { path: '/mobile/components/checkbox', title: 'Checkbox' },
+          ...(catalogVisible ? [{ path: '/mobile/catalog-app', title: 'Catalog app' }] : []),
+        ];
+        filterNavByIndex(ul, index);
+        const navList = decorateLevel(ul, 1);
+        removeEmptyMenus(navList);
+        decorateIndexBasedNav(navList, index);
+
+        const links = [...navList.querySelectorAll('.level-3-list a')];
+        expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
+          '/mobile/components/buttons',
+        ]);
+        expect(navList.querySelector('[index-based-nav-prefix]') === null).to.be.true;
+      });
     });
 
     it('leaves Components unmarked when nested deeper than the platform child list', () => {

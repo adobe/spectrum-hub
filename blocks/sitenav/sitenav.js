@@ -30,14 +30,17 @@ const findImplementationByLabel = (text) => {
 };
 
 // Web Components items follow an implementation heading. Mobile's combined docs
-// instead use the first item directly under the platform's level-2 menu.
+// instead opt in with a placeholder in the platform's direct Components item.
 const componentsNavPrefix = (li) => {
   const prevLiText = li.previousElementSibling?.textContent;
   const impl = prevLiText ? findImplementationByLabel(prevLiText) : null;
   if (impl) { return `/web/${impl.id}/components`; }
 
   const platformMenu = li.parentElement?.parentElement;
-  if (li.previousElementSibling || !platformMenu?.matches('.level-2-menu')) { return null; }
+  if (!platformMenu?.matches('.level-2-menu')) { return null; }
+
+  const placeholder = li.querySelector(':scope > ul > li');
+  if (placeholder?.textContent !== '[auto-generated]') { return null; }
 
   const platformLabel = platformMenu.querySelector(':scope > .list-item-label')?.textContent;
   if (!platformLabel) { return null; }

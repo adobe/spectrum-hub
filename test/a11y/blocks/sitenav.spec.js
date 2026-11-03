@@ -98,7 +98,7 @@ test(`${block.name} block in light/default mode has no WCAG 2.2 AA violations`, 
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
-test(`${block.name} generated Mobile component links are accessible and exclude other page types`, async ({ page, makeAxeBuilder, isMobile }) => {
+test(`${block.name} generated Mobile component links after Catalog app are accessible and exclude other page types`, async ({ page, makeAxeBuilder, isMobile }) => {
   await gotoBlock(page, {
     ...block,
     routes: [
@@ -107,8 +107,8 @@ test(`${block.name} generated Mobile component links are accessible and exclude 
         contentType: 'text/html',
         body: `<body><header></header><main><div><ul>
           <li><p>Mobile</p><ul>
+            <li><p><a href="/mobile/catalog-app">Catalog app</a></p></li>
             <li><p>Components</p><ul><li>[auto-generated]</li></ul></li>
-            <li><a href="/mobile/getting-started">Getting started</a></li>
           </ul></li>
         </ul></div></main></body>`,
       },
@@ -117,8 +117,8 @@ test(`${block.name} generated Mobile component links are accessible and exclude 
         contentType: 'application/json',
         body: JSON.stringify({
           data: [
-            { path: '/mobile/components/button', title: 'Button' },
-            { path: '/mobile/getting-started', title: 'Getting started' },
+            { path: '/mobile/components/buttons', title: 'Buttons' },
+            { path: '/mobile/catalog-app', title: 'Catalog app' },
             { path: '/mobile/components-old/button', title: 'Old button' },
             { path: '/web/rsp/components/button', title: 'React button' },
           ],
@@ -139,11 +139,11 @@ test(`${block.name} generated Mobile component links are accessible and exclude 
 
   const generatedLinks = menu.locator('.level-3-list a');
   await expect(generatedLinks).toHaveCount(1);
-  await expect(generatedLinks).toHaveAttribute('href', '/mobile/components/button');
-  await expect(generatedLinks).toHaveAccessibleName('Button');
+  await expect(generatedLinks).toHaveAttribute('href', '/mobile/components/buttons');
+  await expect(generatedLinks).toHaveAccessibleName('Buttons');
   await expect(generatedLinks).toBeVisible();
   await expect(menu.locator('.count-badge')).toHaveText('1');
-  await expect(menu.getByRole('link', { name: 'Getting started', exact: true })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Catalog app', exact: true })).toBeVisible();
   await generatedLinks.focus();
   await expect(generatedLinks).toBeFocused();
 
