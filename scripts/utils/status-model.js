@@ -88,6 +88,18 @@ const SOURCE_MAPPINGS = {
     deprecated: { status: 'deprecated' },
     preview: { status: 'available', context: 'Preview' },
   },
+  // The native mobile component present in the roster whose rows carry no maturity signal is
+  // floored to Available by the index build.
+  ios: {
+    stable: { status: 'available', context: 'Stable' },
+    preview: { status: 'available', context: 'Preview' },
+    deprecated: { status: 'deprecated' },
+  },
+  android: {
+    stable: { status: 'available', context: 'Stable' },
+    preview: { status: 'available', context: 'Preview' },
+    deprecated: { status: 'deprecated' },
+  },
 };
 
 /**
