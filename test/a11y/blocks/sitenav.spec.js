@@ -151,6 +151,88 @@ test(`${block.name} generated Mobile component links after Catalog app are acces
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
 
+test(`${block.name} omits Mobile entirely when its pages are audience-filtered`, async ({ page, isMobile }) => {
+  await gotoBlock(page, {
+    ...block,
+    routes: [
+      {
+        url: '**/fragments/nav/site-nav',
+        contentType: 'text/html',
+        body: `<body><header></header><main><div><ul>
+          <li><p>Foundations</p><ul>
+            <li><p><a href="/foundations/overview">Overview</a></p></li>
+          </ul></li>
+          <li><p>Mobile</p><ul>
+            <li><p><a href="/mobile/catalog-app">Catalog app</a></p></li>
+            <li><p>Components</p><ul><li>[auto-generated]</li></ul></li>
+          </ul></li>
+        </ul></div></main></body>`,
+      },
+      {
+        url: '**/query-index.json*',
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [{ path: '/foundations/overview', title: 'Overview' }],
+        }),
+      },
+      {
+        url: '**/*.svg',
+        contentType: 'image/svg+xml',
+        body: svgIcon,
+      },
+    ],
+  });
+  await waitForNavReady(page, isMobile);
+
+  const nav = page.locator('#sitenav');
+  await expect(nav.getByRole('button', { name: 'Foundations', exact: true })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Mobile', exact: true, includeHidden: true })).toHaveCount(0);
+  await expect(nav.locator('#sitenav-menu-mobile')).toHaveCount(0);
+  await expect(nav).not.toContainText('[auto-generated]');
+  await expect(nav.locator('a[href^="/mobile/"]')).toHaveCount(0);
+});
+
+test(`${block.name} preserves navigation when audience filtering empties an authored web Components list`, async ({ page, isMobile }) => {
+  await gotoBlock(page, {
+    ...block,
+    routes: [
+      {
+        url: '**/fragments/nav/site-nav',
+        contentType: 'text/html',
+        body: `<body><header></header><main><div><ul>
+          <li><p>Foundations</p><ul>
+            <li><p><a href="/foundations/overview">Overview</a></p></li>
+          </ul></li>
+          <li><p>Web</p><ul>
+            <li><p>SWC</p></li>
+            <li><p>Components</p><ul>
+              <li><a href="/web/swc/components/private-button">Private button</a></li>
+            </ul></li>
+          </ul></li>
+        </ul></div></main></body>`,
+      },
+      {
+        url: '**/query-index.json*',
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            { path: '/foundations/overview', title: 'Overview' },
+            { path: '/web/swc/components/public-checkbox', title: 'Public checkbox' },
+          ],
+        }),
+      },
+      block.routes[2],
+    ],
+  });
+  await waitForNavReady(page, isMobile);
+
+  const nav = page.locator('#sitenav');
+  await expect(nav.getByRole('button', { name: 'Foundations', exact: true })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Web', exact: true })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Components', exact: true, includeHidden: true })).toHaveCount(0);
+  await expect(nav.locator('a[href^="/web/swc/components/"]')).toHaveCount(0);
+});
+
 test(`${block.name} block matches its expected accessibility tree`, async ({ page, isMobile }, testInfo) => {
   // Unlike most blocks, sitenav's tree isn't viewport-agnostic: below 900px the rail
   // (nav, list items, expand button) is CSS-hidden (display: none) and only the
