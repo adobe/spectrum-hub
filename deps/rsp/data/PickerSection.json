@@ -1,0 +1,52 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (item: T) => ReactElement<unknown, string | JSXElementConstructor<any>>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Static child items or a function to render children.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "An accessibility label for the section.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Item objects in the section.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "id",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The unique id of the section.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "The object value that this section represents. When using dynamic collections, this is set\nautomatically.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "kind": "unknown",
+      "values": [],
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "SectionProps"
+    }
+  ]
+}

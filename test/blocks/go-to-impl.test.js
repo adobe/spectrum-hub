@@ -37,6 +37,43 @@ describe('go-to-impl block', () => {
       });
     });
 
+    it('maps an RSP AI component to an anchor on the shared AI components page', () => {
+      // The @react-spectrum/ai cohort has no page of its own per component; every one of
+      // them is a section of /ai-components.html, anchored by its lowercased export name.
+      expect(resolveImplementation('/web/rsp/components/user-message', null, 'ai')).to.deep.equal({
+        label: 'RSP',
+        href: 'https://react-spectrum.adobe.com/ai-components.html#usermessage',
+      });
+    });
+
+    it('strips the slug\'s separators for a multi-word AI anchor', () => {
+      expect(resolveImplementation('/web/rsp/components/prompt-field', null, 'ai')).to.deep.equal({
+        label: 'RSP',
+        href: 'https://react-spectrum.adobe.com/ai-components.html#promptfield',
+      });
+    });
+
+    it('builds the ordinary per-component RSP URL for the default S2 package', () => {
+      expect(resolveImplementation('/web/rsp/components/action-button', null, 's2')).to.deep.equal({
+        label: 'RSP',
+        href: 'https://react-spectrum.adobe.com/ActionButton.html',
+      });
+    });
+
+    it('uses an AI upstreamName over the URL slug when the two differ', () => {
+      expect(resolveImplementation('/web/rsp/components/suggestion-group', 'MessageSuggestionList', 'ai')).to.deep.equal({
+        label: 'RSP',
+        href: 'https://react-spectrum.adobe.com/ai-components.html#messagesuggestionlist',
+      });
+    });
+
+    it('ignores the package for swc, which has one docs site for every component', () => {
+      expect(resolveImplementation('/web/swc/components/prompt-field', null, 'ai')).to.deep.equal({
+        label: 'SWC',
+        href: 'https://spectrum-web-components.adobe.com/?path=/docs/components-prompt-field--docs',
+      });
+    });
+
     it('returns null when there is no components segment', () => {
       expect(resolveImplementation('/web/swc/get-started')).to.equal(null);
     });
@@ -113,6 +150,26 @@ describe('go-to-impl block', () => {
       expect(a.getAttribute('href')).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/components-action-group--docs',
       );
+    });
+
+    it('links an AI component to the shared AI docs page, from the generated name table', () => {
+      // End to end over the real deps/impl-component-names.js: discovery records
+      // `package: "ai"` in deps/rsp/components.json, build-status-index copies it onto the
+      // slug, and the link builder reads it here. A break anywhere in that chain shows up
+      // as the ordinary per-component URL, which 404s.
+      window.history.pushState({}, '', '/web/rsp/components/user-message');
+      const a = makeAnchor();
+      decorateGoToImpl(a, a.querySelector('span'));
+      expect(a.getAttribute('href')).to.equal(
+        'https://react-spectrum.adobe.com/ai-components.html#usermessage',
+      );
+    });
+
+    it('still links an S2 component to its own page', () => {
+      window.history.pushState({}, '', '/web/rsp/components/action-button');
+      const a = makeAnchor();
+      decorateGoToImpl(a, a.querySelector('span'));
+      expect(a.getAttribute('href')).to.equal('https://react-spectrum.adobe.com/ActionButton.html');
     });
 
     it('removes itself when the page is not a component page', () => {

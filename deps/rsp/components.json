@@ -30,12 +30,48 @@
   "ActionMenu": {
     "interface": "ActionMenuProps"
   },
+  "AIButton": {
+    "interface": "AIButtonProps",
+    "package": "ai"
+  },
+  "Alert": {
+    "interface": "AlertProps",
+    "package": "ai"
+  },
   "AlertDialog": {
     "interface": "AlertDialogProps"
   },
   "AssetCard": {
     "interface": "AssetCardProps",
     "file": "Card"
+  },
+  "AttachFileMenuItem": {
+    "interface": "AttachFileMenuItemProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "Attachment": {
+    "interface": "AttachmentProps",
+    "file": "AttachmentList",
+    "package": "ai"
+  },
+  "AttachmentGrid": {
+    "interface": "AttachmentGridProps",
+    "package": "ai"
+  },
+  "AttachmentGridItem": {
+    "interface": "AttachmentGridItemProps",
+    "file": "AttachmentGrid",
+    "package": "ai"
+  },
+  "AttachmentList": {
+    "interface": "AttachmentListProps",
+    "package": "ai"
+  },
+  "AttachmentPreview": {
+    "interface": "AttachmentPreviewProps",
+    "file": "AttachmentList",
+    "package": "ai"
   },
   "Avatar": {
     "interface": "AvatarProps"
@@ -75,6 +111,10 @@
   "Cell": {
     "interface": "CellProps",
     "file": "TableView"
+  },
+  "Chat": {
+    "interface": "ChatProps",
+    "package": "ai"
   },
   "Checkbox": {
     "interface": "CheckboxProps"
@@ -128,6 +168,15 @@
     "interface": "ComboBoxItemProps",
     "file": "ComboBox"
   },
+  "ComboBoxSection": {
+    "interface": "ComboBoxSectionProps",
+    "file": "ComboBox"
+  },
+  "CommandMenuItem": {
+    "interface": "CommandMenuItemProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
   "ContextualHelp": {
     "interface": "ContextualHelpProps"
   },
@@ -180,6 +229,16 @@
     "interface": "EditableCellProps",
     "file": "TableView"
   },
+  "ExecutionTrace": {
+    "interface": "ExecutionTraceProps",
+    "file": "ResponseStatus",
+    "package": "ai"
+  },
+  "ExecutionTraceItem": {
+    "interface": "ExecutionTraceItemProps",
+    "file": "ResponseStatus",
+    "package": "ai"
+  },
   "Form": {
     "interface": "FormProps"
   },
@@ -194,6 +253,16 @@
   },
   "InlineAlert": {
     "interface": "InlineAlertProps"
+  },
+  "InsertTextMenuItem": {
+    "interface": "InsertTextMenuItemProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "InsertTokenMenuItem": {
+    "interface": "InsertTokenMenuItemProps",
+    "file": "PromptField",
+    "package": "ai"
   },
   "LabeledValue": {
     "interface": "LabeledValueProps<LabeledValueTypes"
@@ -219,6 +288,27 @@
     "interface": "MenuItemProps",
     "file": "Menu"
   },
+  "MenuSection": {
+    "interface": "MenuSectionProps",
+    "file": "Menu"
+  },
+  "MessageFeedback": {
+    "interface": "MessageFeedbackProps",
+    "package": "ai"
+  },
+  "MessageSource": {
+    "interface": "MessageSourceProps",
+    "package": "ai"
+  },
+  "MessageSuggestion": {
+    "interface": "MessageSuggestionProps",
+    "package": "ai"
+  },
+  "MessageSuggestionList": {
+    "interface": "MessageSuggestionListProps",
+    "file": "MessageSuggestion",
+    "package": "ai"
+  },
   "Meter": {
     "interface": "MeterProps"
   },
@@ -227,6 +317,11 @@
   },
   "NotificationBadge": {
     "interface": "NotificationBadgeProps"
+  },
+  "NumberBadge": {
+    "interface": "NumberBadgeProps",
+    "file": "MessageSource",
+    "package": "ai"
   },
   "NumberField": {
     "interface": "NumberFieldProps"
@@ -237,6 +332,10 @@
   "PickerItem": {
     "interface": "PickerItemProps",
     "file": "TabsPicker"
+  },
+  "PickerSection": {
+    "interface": "PickerSectionProps",
+    "file": "Picker"
   },
   "Popover": {
     "interface": "PopoverDialogProps"
@@ -255,6 +354,40 @@
   "ProgressCircle": {
     "interface": "ProgressCircleProps"
   },
+  "PromptField": {
+    "interface": "PromptFieldProps",
+    "package": "ai"
+  },
+  "PromptFieldAttachmentList": {
+    "interface": "PromptFieldAttachmentListProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "PromptFieldSubmitButton": {
+    "interface": "PromptFieldSubmitButtonProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "PromptFieldToolbar": {
+    "interface": "PromptFieldToolbarProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "PromptFieldVoiceButton": {
+    "interface": "PromptFieldVoiceButtonProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "PromptToken": {
+    "interface": "PromptTokenProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
+  "PromptTokenField": {
+    "interface": "PromptTokenFieldProps",
+    "file": "PromptField",
+    "package": "ai"
+  },
   "Radio": {
     "interface": "RadioProps",
     "file": "RadioGroup"
@@ -267,6 +400,20 @@
   },
   "RangeSlider": {
     "interface": "RangeSliderProps"
+  },
+  "ResponseStatus": {
+    "interface": "ResponseStatusProps",
+    "package": "ai"
+  },
+  "ResponseStatusPanel": {
+    "interface": "ResponseStatusPanelProps",
+    "file": "ResponseStatus",
+    "package": "ai"
+  },
+  "ResponseStatusTitle": {
+    "interface": "ResponseStatusTitleProps",
+    "file": "ResponseStatus",
+    "package": "ai"
   },
   "Row": {
     "interface": "RowProps",
@@ -311,6 +458,10 @@
   "SideNavPanel": {
     "interface": "SideNavPanelProps"
   },
+  "SideNavSection": {
+    "interface": "SideNavSectionProps",
+    "file": "SideNav"
+  },
   "Skeleton": {
     "interface": "SkeletonProps"
   },
@@ -319,6 +470,20 @@
   },
   "Slider": {
     "interface": "SliderProps"
+  },
+  "SliderBase": {
+    "interface": "SliderBaseProps",
+    "file": "Slider"
+  },
+  "SourceList": {
+    "interface": "SourceListProps",
+    "file": "MessageSource",
+    "package": "ai"
+  },
+  "SourceListItem": {
+    "interface": "SourceListItemProps",
+    "file": "MessageSource",
+    "package": "ai"
   },
   "StatusLight": {
     "interface": "StatusLightProps"
@@ -345,6 +510,10 @@
   "TableView": {
     "interface": "TableViewProps"
   },
+  "TabList": {
+    "interface": "TabListProps",
+    "file": "Tabs"
+  },
   "TabPanel": {
     "interface": "TabPanelProps",
     "file": "Tabs"
@@ -369,6 +538,21 @@
   "TextFieldBase": {
     "interface": "TextFieldProps",
     "file": "TextField"
+  },
+  "Thread": {
+    "interface": "ThreadProps",
+    "file": "Chat",
+    "package": "ai"
+  },
+  "ThreadItem": {
+    "interface": "ThreadItemProps",
+    "file": "Chat",
+    "package": "ai"
+  },
+  "ThreadLoadMoreItem": {
+    "interface": "ThreadLoadMoreItemProps",
+    "file": "Chat",
+    "package": "ai"
   },
   "TimeField": {
     "interface": "TimeFieldProps"
@@ -408,5 +592,9 @@
   "UserCard": {
     "interface": "UserCardProps",
     "file": "Card"
+  },
+  "UserMessage": {
+    "interface": "UserMessageProps",
+    "package": "ai"
   }
 }

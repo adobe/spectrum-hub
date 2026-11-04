@@ -12,6 +12,11 @@ import { fileURLToPath } from 'url';
 export const S2_DOCS_BASE = 'https://react-spectrum.adobe.com';
 export const s2MdxUrl = (component) =>
   `https://cdn.jsdelivr.net/gh/adobe/react-spectrum@main/packages/dev/s2-docs/pages/s2/${component}.mdx`;
+// Packages documented on one shared page rather than a page per component. The whole
+// @react-spectrum/ai cohort lives on /ai-components.html, which carries a single badge
+// covering all of them; there is no /Chat.html or /UserMessage.html to ask for.
+const SHARED_DOCS_PAGE = { ai: 'ai-components' };
+
 const VERSION_EXPORT = /export\s+const\s+version\s*=\s*['"](alpha|beta|rc)['"]/;
 // Excludes `<option value="alpha">alpha</option>, whose value literally reads
 // the color's alpha/transparency channel, which false-positives as a version badge.
@@ -38,14 +43,35 @@ export function parseStatusFromHtml(html) {
 }
 
 /**
- * Resolves doc maturity for an S2 component name.
+ * The docs page that covers a component: its own page for S2, or the package's shared
+ * page when its package documents every component together.
+ *
+ * @param {string} componentName
+ * @param {string} [pkg] - the roster entry's `package`; S2 when absent.
+ * @returns {string}
+ */
+export function docsPageName(componentName, pkg = 's2') {
+  return SHARED_DOCS_PAGE[pkg] ?? componentName;
+}
+
+/**
+ * Resolves doc maturity for a component name.
  *
  * - `alpha` | `beta` | `rc` when the docs site shows a prerelease badge
  * - `stable` when a doc page exists but has no prerelease badge
  * - `null` when there is no published doc page for that name
+ *
+ * Every component in a package with a shared docs page resolves to that page's badge, so
+ * the whole cohort reports one maturity. That is what the page actually states, and it is
+ * the alternative to every AI component reporting `stable` by default because its own
+ * page 404s.
+ *
+ * @param {string} componentName
+ * @param {string} [pkg] - the roster entry's `package`; S2 when absent.
  */
-export async function fetchComponentDocStatus(componentName) {
-  const htmlUrl = `${S2_DOCS_BASE}/${componentName}.html`;
+export async function fetchComponentDocStatus(componentName, pkg) {
+  const pageName = docsPageName(componentName, pkg);
+  const htmlUrl = `${S2_DOCS_BASE}/${pageName}.html`;
   const html = await fetchText(htmlUrl);
 
   if (html.ok) {
@@ -56,7 +82,7 @@ export async function fetchComponentDocStatus(componentName) {
     return null;
   }
 
-  const mdx = await fetchText(s2MdxUrl(componentName));
+  const mdx = await fetchText(s2MdxUrl(pageName));
   if (!mdx.ok) return null;
 
   return parseStatusFromMdx(mdx.text);

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import {
   S2_DOCS_BASE,
+  docsPageName,
   fetchComponentDocStatus,
   parseStatusFromHtml,
   parseStatusFromMdx,
@@ -35,6 +36,24 @@ describe('parseStatusFromHtml', () => {
       parseStatusFromHtml('<select><option value="alpha">alpha</option></select>'),
       'stable',
     );
+  });
+});
+
+describe('docsPageName', () => {
+  it('uses the component\'s own page for an S2 component', () => {
+    assert.equal(docsPageName('Button', 's2'), 'Button');
+  });
+
+  it('defaults to the S2 package when none is given', () => {
+    assert.equal(docsPageName('Button'), 'Button');
+  });
+
+  it('routes every AI component to the one shared AI components page', () => {
+    // @react-spectrum/ai is not documented a page per component: Chat, PromptField,
+    // UserMessage and the rest share /ai-components.html, which carries a single badge
+    // for the whole cohort. Asking for /Chat.html 404s.
+    assert.equal(docsPageName('Chat', 'ai'), 'ai-components');
+    assert.equal(docsPageName('UserMessage', 'ai'), 'ai-components');
   });
 });
 
@@ -110,6 +129,39 @@ describe('fetchComponentDocStatus', () => {
     });
 
     assert.equal(await fetchComponentDocStatus('Missing'), null);
+  });
+
+  it('reads an AI component\'s status from the shared AI components page', async () => {
+    mockFetch({
+      [`${S2_DOCS_BASE}/ai-components.html`]: {
+        status: 200,
+        body: '<span>alpha</span><h1>AI Components</h1>',
+      },
+    });
+
+    assert.equal(await fetchComponentDocStatus('Chat', 'ai'), 'alpha');
+  });
+
+  it('does not request an AI component\'s own page, which does not exist', async () => {
+    mockFetch({
+      [`${S2_DOCS_BASE}/UserMessage.html`]: { status: 200, body: '<h1>UserMessage</h1>' },
+    });
+
+    // Only /ai-components.html is routed, and it is absent from the mock, so a lookup that
+    // wrongly asked for /UserMessage.html would report stable instead of null.
+    assert.equal(await fetchComponentDocStatus('UserMessage', 'ai'), null);
+  });
+
+  it('falls back to the shared AI components MDX when its HTML returns 404', async () => {
+    mockFetch({
+      [`${S2_DOCS_BASE}/ai-components.html`]: { status: 404, body: '' },
+      [s2MdxUrl('ai-components')]: {
+        status: 200,
+        body: "export const version = 'alpha';\n# AI Components\n",
+      },
+    });
+
+    assert.equal(await fetchComponentDocStatus('PromptField', 'ai'), 'alpha');
   });
 
   it('returns null when HTML fails with a non-404 error', async () => {

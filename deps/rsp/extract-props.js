@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 import ts from 'typescript';
 import { fetchComponentDocStatus } from './extract-doc-status.js';
 import { crawl, buildProgram } from './build-ts-checker.js';
-import { S2_COMPONENT_BASE } from './locate-published-files.js';
+import { componentEntryPath } from './locate-published-files.js';
 import { typeToDisplayString, typeToValues, declaredValueOrder, propKind } from '../shared/prop-contract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -124,7 +124,7 @@ export function extractPropsFromType(checker, type, primaryInterfaceName) {
  *   run (see build-ts-checker.js's crawl()) so the ~200 base files aren't re-fetched every time.
  */
 export async function extractComponentProps(component, config, sharedFileCache) {
-  const entryPath = `${S2_COMPONENT_BASE}/${config.file ?? component}.d.ts`;
+  const entryPath = componentEntryPath(component, config);
   const fileCache = await crawl([entryPath], { cache: sharedFileCache });
 
   const { program, checker } = buildProgram(fileCache, [entryPath]);
@@ -156,7 +156,7 @@ async function main() {
   const sharedFileCache = new Map();
   let count = 0;
   for (const [component, config] of Object.entries(ALLOW_LIST)) {
-    console.log(`Extracting ${component} (@react-spectrum/s2/dist/types/src/${config.file ?? component}.d.ts)...`);
+    console.log(`Extracting ${component} (${componentEntryPath(component, config)})...`);
 
     let props;
     try {
@@ -174,7 +174,7 @@ async function main() {
     const ownCount = props.filter((p) => !p.inheritedFrom).length;
     const inheritedCount = props.length - ownCount;
 
-    const status = await fetchComponentDocStatus(component);
+    const status = await fetchComponentDocStatus(component, config.package);
     const componentData = buildComponentData(props, status);
 
     const outFile = join(OUTPUT_DIR, `${component}.json`);
