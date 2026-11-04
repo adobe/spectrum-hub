@@ -609,6 +609,7 @@ describe('sitenav block', () => {
         const navList = decorateLevel(ul, 1);
         removeEmptyMenus(navList);
         decorateIndexBasedNav(navList, index);
+        removeEmptyMenus(navList);
 
         const links = [...navList.querySelectorAll('.level-3-list a')];
         expect(links.map((a) => a.getAttribute('href'))).to.deep.equal([
@@ -619,6 +620,46 @@ describe('sitenav block', () => {
         expect(navList.querySelectorAll('a[href="/mobile/catalog-app"]').length)
           .to.equal(catalogVisible ? 1 : 0);
       });
+    });
+
+    [
+      [],
+      [{ path: '/web/rsp/components/button', title: 'Button' }],
+      [{ path: '/mobile/components/button', title: '   ' }],
+    ].forEach((index) => {
+      it(`removes Mobile when no accessible components can be generated from ${JSON.stringify(index)}`, () => {
+        const ul = buildPlatformList(
+          'Mobile',
+          '<li><p><a href="/mobile/catalog-app">Catalog app</a></p></li>',
+        );
+        filterNavByIndex(ul, index);
+        const navList = decorateLevel(ul, 1);
+        removeEmptyMenus(navList);
+        decorateIndexBasedNav(navList, index);
+        removeEmptyMenus(navList);
+
+        expect(navList.querySelectorAll('li').length).to.equal(0);
+        expect(navList.textContent).not.to.include('Mobile');
+        expect(navList.textContent).not.to.include('[auto-generated]');
+      });
+    });
+
+    it('removes empty generated Components while preserving an accessible Mobile sibling', () => {
+      const ul = buildPlatformList(
+        'Mobile',
+        '<li><p><a href="/mobile/catalog-app">Catalog app</a></p></li>',
+      );
+      const index = [{ path: '/mobile/catalog-app', title: 'Catalog app' }];
+      filterNavByIndex(ul, index);
+      const navList = decorateLevel(ul, 1);
+      removeEmptyMenus(navList);
+      decorateIndexBasedNav(navList, index);
+      removeEmptyMenus(navList);
+
+      expect(navList.querySelector('.level-1-button .list-item-label').textContent).to.equal('Mobile');
+      expect(navList.querySelector('a').getAttribute('href')).to.equal('/mobile/catalog-app');
+      expect(navList.querySelector('.level-2-button') === null).to.be.true;
+      expect(navList.textContent).not.to.include('[auto-generated]');
     });
 
     it('leaves a Components item unmarked when its platform has no indexed prefix', () => {

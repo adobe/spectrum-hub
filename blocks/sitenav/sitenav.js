@@ -296,6 +296,11 @@ export const decorateIndexBasedNav = (navList, index) => {
 
     lvl3Ul.append(li);
   });
+
+  // An empty generated menu must not keep an audience-filtered branch alive.
+  navList.querySelectorAll('.level-3-list > li').forEach((li) => {
+    if (li.textContent === '[auto-generated]') { li.remove(); }
+  });
 };
 
 export const decorateBadges = () => {
@@ -691,7 +696,11 @@ export const setupSitenavKeyboardHandling = (sitenav, buttons) => {
   setupSearchIntegration(navList);
 
   // Stitch index-based nav post DOM injection (reuses the index fetched above)
-  if (index) { decorateIndexBasedNav(navList, index); }
+  if (index) {
+    decorateIndexBasedNav(navList, index);
+    // Removing unused placeholders can empty menus that survived the first pass.
+    removeEmptyMenus(navList);
+  }
 
   // decorate the badge counts
   decorateBadges();
