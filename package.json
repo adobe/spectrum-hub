@@ -32,7 +32,7 @@
   "author": "Adobe",
   "license": "Apache License 2.0",
   "engines": {
-    "node": ">=24.22.1 <25"
+    "node": ">=24.22.1 <27"
   },
   "bugs": {
     "url": "https://github.com/adobe/spectrum-hub/issues"
