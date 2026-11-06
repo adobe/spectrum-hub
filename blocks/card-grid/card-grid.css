@@ -1,0 +1,159 @@
+/* An empty EDS container collapses whatever layout its section sets.
+   section-metadata sets `display` on `.block-content` from several (0,3,0)
+   selectors - `.grid`, `.grid-2` through `.grid-6`, `.layout-bento`, some
+   inside width media queries - so winning on specificity would mean listing
+   every layout here and relisting it whenever one is added. A rule whose only
+   job is to beat a layout is what `!important` is for, and one selector then
+   covers both the block wrapper and the section. */
+.card-grid-empty {
+  display: none !important;
+}
+
+.card-grid {
+  /* The list carries the grid so the cards stay real list items: a ul of li,
+     announced as a list, rather than divs wearing ARIA roles. */
+  .card-grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: var(--s2-spacing-500);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .card-grid-item {
+    /* Anchors the title link's stretched hit area. */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    /* Grid items default to min-width:auto and refuse to shrink below their
+       content, so a long word would push the card past its track. */
+    min-inline-size: 0;
+    border: 1px solid var(--s2-gray-300);
+    border-radius: var(--s2-corner-radius-800);
+    background-color: var(--s2-gray-25);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-color: var(--s2-gray-500);
+    }
+
+    /* The stretched link puts focus on a small inline anchor, so the ring goes
+       on the card the viewer actually sees. */
+    &:has(.card-grid-item-title a:focus-visible) {
+      outline: 2px solid var(--s2-blue-900);
+      outline-offset: 2px;
+    }
+  }
+
+  .card-grid-item-image {
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background-color: var(--s2-gray-100);
+
+    img {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .card-grid-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2-spacing-100);
+    padding: var(--s2-spacing-300);
+  }
+
+  .card-grid-item-title {
+    margin: 0;
+    font-size: var(--s2-heading-size-xs);
+    font-weight: var(--s2-heading-font-weight);
+    line-height: var(--s2-heading-line-height);
+
+    a {
+      color: var(--s2-gray-1000);
+      text-decoration: none;
+
+      /* Covers the card so the whole surface is clickable, while the link's
+         accessible name stays the title rather than the card's whole text. */
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        outline: none;
+      }
+    }
+  }
+
+  .card-grid-item-description {
+    margin: 0;
+    font-size: var(--s2-body-size-s);
+    color: var(--s2-gray-800);
+  }
+
+  .card-grid-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s2-spacing-200);
+    margin: 0;
+    font-size: var(--s2-body-size-xs);
+    color: var(--s2-gray-700);
+  }
+
+  .card-grid-item-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2-spacing-75);
+
+    /* The status token colors the dot only. The same token behind the label
+       text would not clear contrast at every status. */
+    &::before {
+      content: '';
+      inline-size: var(--s2-spacing-100);
+      block-size: var(--s2-spacing-100);
+      border-radius: 50%;
+      background-color: var(--status-color, var(--s2-gray-600));
+    }
+  }
+
+  /* Sits last in the card and is pushed to the bottom, so cards of unequal
+     text length still line their badges up across a row. */
+  .card-grid-item-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2-spacing-100);
+    margin: 0;
+    margin-block-start: auto;
+    padding: var(--s2-spacing-300);
+    padding-block-start: 0;
+    list-style: none;
+  }
+
+  .card-grid-item-badge {
+    min-inline-size: 0;
+    padding: var(--s2-spacing-75) var(--s2-spacing-200);
+    border-radius: var(--s2-corner-radius-400);
+    background-color: var(--s2-gray-100);
+    font-size: var(--s2-body-size-xs);
+    color: var(--s2-gray-800);
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-grid .card-grid-item {
+    transition: none;
+  }
+}
