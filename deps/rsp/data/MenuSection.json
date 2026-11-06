@@ -1,0 +1,103 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (item: T) => ReactElement<unknown, string | JSXElementConstructor<any>>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Static child items or a function to render children.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "An accessibility label for the section.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Item objects in the section.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "selectionMode",
+      "type": "\"none\" | \"single\" | \"multiple\"",
+      "kind": "enum",
+      "values": [
+        "none",
+        "single",
+        "multiple"
+      ],
+      "description": "The type of selection that is allowed in the collection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "disallowEmptySelection",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the collection allows empty selection.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "selectedKeys",
+      "type": "\"all\" | Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The currently selected keys in the collection (controlled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "defaultSelectedKeys",
+      "type": "\"all\" | Iterable<Key>",
+      "kind": "unknown",
+      "values": [],
+      "description": "The initial selected keys in the collection (uncontrolled).",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "onSelectionChange",
+      "type": "(keys: Selection) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the selection changes.",
+      "inheritedFrom": "MultipleSelection"
+    },
+    {
+      "property": "shouldCloseOnSelect",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the menu should close when the menu item is selected."
+    },
+    {
+      "property": "id",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The unique id of the section.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "value",
+      "type": "T",
+      "kind": "unknown",
+      "values": [],
+      "description": "The object value that this section represents. When using dynamic collections, this is set\nautomatically.",
+      "inheritedFrom": "SectionProps"
+    },
+    {
+      "property": "dependencies",
+      "type": "readonly any[]",
+      "kind": "unknown",
+      "values": [],
+      "description": "Values that should invalidate the item cache when using dynamic collections.",
+      "inheritedFrom": "SectionProps"
+    }
+  ]
+}

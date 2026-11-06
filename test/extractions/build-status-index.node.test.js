@@ -713,6 +713,40 @@ describe('buildImplComponentNames', () => {
     });
   });
 
+  it('records the package for a component that ships from a non-default RSP package', () => {
+    // @react-spectrum/ai components are documented on one shared page, so the link builder
+    // has to know which package a slug came from — the export name alone cannot say.
+    const roster = [
+      { name: 'UserMessage', sources: { rsp: 'UserMessage' } },
+      { name: 'Button', sources: { rsp: 'Button' } },
+    ];
+    const rspComponents = {
+      UserMessage: { interface: 'UserMessageProps', package: 'ai' },
+      Button: { interface: 'ButtonProps' },
+    };
+
+    assert.deepEqual(buildImplComponentNames([], roster, rspComponents), {
+      rsp: { 'user-message': { package: 'ai' } },
+    });
+  });
+
+  it('records both export and package when the AI name also differs from the canonical one', () => {
+    const roster = [{ name: 'SuggestionGroup', sources: { rsp: 'MessageSuggestionList' } }];
+    const rspComponents = { MessageSuggestionList: { interface: 'MessageSuggestionListProps', package: 'ai' } };
+
+    assert.deepEqual(buildImplComponentNames([], roster, rspComponents), {
+      rsp: { 'suggestion-group': { export: 'MessageSuggestionList', package: 'ai' } },
+    });
+  });
+
+  it('records no package when the roster map is not supplied', () => {
+    const roster = [{ name: 'ActionGroup', sources: { rsp: 'ActionButtonGroup' } }];
+
+    assert.deepEqual(buildImplComponentNames([], roster), {
+      rsp: { 'action-group': { export: 'ActionButtonGroup' } },
+    });
+  });
+
   it('skips a component with no RSP source at all', () => {
     assert.deepEqual(buildImplComponentNames([], [{ name: 'FigmaOnly', sources: { figma: 'FigmaOnly' } }]), {});
   });
