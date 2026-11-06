@@ -239,8 +239,9 @@ A distribution with no extension behaviors doesn't need this.
 
 ## Content caching (the default/Lambda behavior)
 
-HTML and JSON can differ by viewer: private pages, `audience-*` blocks, the
-private rows of `/query-index.json`, and the private entries of `/sitemap.xml`.
+HTML and JSON can differ by viewer: private pages, `audience-*` blocks, private
+card metadata, private rows and columns of query indexes, and the private
+entries of `/sitemap.xml`.
 The `spectrum-content` policy keeps them apart:
 
 - **Cache key:** the `spectrum_session` cookie, plus the query params the Lambda
@@ -249,6 +250,13 @@ The `spectrum-content` policy keeps them apart:
   entries.
 - **TTL:** the policy follows the Lambda's `Cache-Control` (`DefaultTTL 0`), so a
   response caches only when the Lambda allows it.
+
+Every query index listed in `PUBLIC_FILTER_PATHS` receives the same filtering
+and gated-validator handling as `/query-index.json`. This includes the web
+roll-up, RSP, SWC, mobile roll-up, and patterns indexes. Anonymous responses
+omit private rows and the `audience`, `card-steward`, `card-design-resources`,
+and `card-contact` columns. Authenticated responses retain those values.
+`?compact=true` projects either viewer's response to `path` and `title`.
 
 `/sitemap.xml` URLs in `<loc>` and alternate links are rewritten from AEM
 origins to the environment's public origin for all viewers. For anonymous
@@ -265,7 +273,7 @@ What the Lambda sends:
 
 | Response | `Cache-Control` | Cached by CloudFront |
 | --- | --- | --- |
-| Anonymous HTML, `/query-index.json`, and `/sitemap.xml` | `public, max-age=<ANON_CACHE_MAX_AGE>, s-maxage=<ANON_EDGE_MAX_AGE>` | Yes, one shared copy |
+| Anonymous HTML, listed query indexes, and `/sitemap.xml` | `public, max-age=<ANON_CACHE_MAX_AGE>, s-maxage=<ANON_EDGE_MAX_AGE>` | Yes, one shared copy |
 | Authenticated HTML, JSON, and `/sitemap.xml` | `private, no-store` | No |
 | Gate 404s and failed query-index or sitemap filtering | `no-store` | No |
 | Redirects that carry the viewer's query string | `no-store` | No |
@@ -276,7 +284,7 @@ copy of a page from before sign-in; without this, AEM could answer `304` and the
 browser would keep showing that copy.
 
 Assets keep AEM's **ETag**, so CloudFront's post-TTL revalidation is a cheap
-conditional `304`. Anonymous pages and the anonymous `/query-index.json` get a
+conditional `304`. Anonymous pages and the listed query indexes get a
 **gated ETag** instead ([lib/etag.js](./lib/etag.js)): AEM's tag with a
 `--gate-v<N>` suffix, and no `Last-Modified`. On revalidation the Lambda forwards
 only tags carrying the current suffix (suffix stripped) and never
@@ -296,13 +304,19 @@ entries are removed.
 > ⚠️ **Bump `GATE_ETAG_VERSION` on filtering-logic deploys.** AEM's ETag tracks
 > the page, not this Lambda's filtering/gating code. When you change
 > `filterAudienceBlocks` / `isPrivateHtml` / the gate / the query-index filter,
-> increment `GATE_ETAG_VERSION` in [lib/etag.js](./lib/etag.js). Every cached
-> anonymous copy then fails revalidation and is re-fetched and re-filtered, with
-> no CloudFront invalidation needed. Clients and edges that still hold a fresh
-> copy keep it until its TTL expires (`s-maxage` at the edge — a day on prod);
+> increment `GATE_ETAG_VERSION` in [lib/etag.js](./lib/etag.js). On revalidation,
+> anonymous copies bearing older tags are re-fetched and re-filtered. This does
+> not evict fresh cached responses. Clients and edges keep those copies until
+> their TTL expires (`s-maxage` at the edge — a day on prod);
 > for a security-relevant fix, also run
 > `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` (this
 > uses your role's permission, so it works in the klam-federated account).
+
+Gate version 3 adds private card metadata and query-index column filtering.
+It rejects version 2 validators so previously cached, unstripped responses
+must be fetched and filtered again. Invalidate existing shared copies when
+deploying this change; the version bump alone does not evict fresh cache
+entries.
 
 > ⚠️ **Test for leaks before changing prod.** With a real `spectrum_session`
 > cookie, confirm that anonymous pages and `/query-index.json` return

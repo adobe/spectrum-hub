@@ -31,6 +31,10 @@ describe('toUpstreamIfNoneMatch', () => {
     expect(toUpstreamIfNoneMatch('"abc--gate-v0"')).toBe(null);
   });
 
+  it('drops gate-v2 tags issued before private card filtering', () => {
+    expect(toUpstreamIfNoneMatch('"abc--gate-v2"')).toBe(null);
+  });
+
   it('drops the wildcard', () => {
     expect(toUpstreamIfNoneMatch('*')).toBe(null);
   });
