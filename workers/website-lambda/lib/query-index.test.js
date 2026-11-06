@@ -161,3 +161,53 @@ describe('collectPrivatePaths', () => {
     expect(collectPrivatePaths({ ':names': ['x'], x: { note: 'no data' } })).toBe(null);
   });
 });
+
+describe('filterPrivateEntries: private card columns', () => {
+  const cardIndex = (...data) => ({
+    total: data.length,
+    offset: 0,
+    limit: 500,
+    columns: ['path', 'card-title', 'card-steward', 'card-design-resources', 'card-contact', 'audience'],
+    data,
+  });
+
+  const row = (path, extra = {}) => ({
+    path, 'card-title': 'Button', 'card-steward': 'Marina Harutyunyan', ...extra,
+  });
+
+  it('removes every private card column from the rows and from columns', () => {
+    const out = filterPrivateEntries(cardIndex(row('/web/swc/components/button', {
+      'card-design-resources': 'https://www.figma.com/design/abc',
+      'card-contact': '#spectrum-help',
+    })));
+
+    expect(out.columns).toEqual(['path', 'card-title']);
+    expect(out.data[0]).toEqual({ path: '/web/swc/components/button', 'card-title': 'Button' });
+  });
+
+  // Row filtering drops a row only when its page marked itself private. These
+  // values are private on a public page too, so the column strip has to cover
+  // a row that carries no audience marker at all.
+  it('strips a row that carries no audience value', () => {
+    const out = filterPrivateEntries(cardIndex(row('/mobile/components/buttons')));
+
+    expect(out.data).toHaveLength(1);
+    expect(out.data[0]['card-steward']).toBeUndefined();
+  });
+
+  it('still drops rows a page marked private', () => {
+    const out = filterPrivateEntries(cardIndex(
+      row('/web/swc/components/button'),
+      row('/web/swc/components/secret', { audience: 'private' }),
+    ));
+
+    expect(out.data.map(({ path }) => path)).toEqual(['/web/swc/components/button']);
+    expect(out.total).toBe(1);
+  });
+
+  it('leaves the public card columns alone', () => {
+    const out = filterPrivateEntries(cardIndex(row('/web/swc/components/button')));
+
+    expect(out.data[0]['card-title']).toBe('Button');
+  });
+});

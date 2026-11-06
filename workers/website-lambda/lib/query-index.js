@@ -10,26 +10,40 @@
  * serve an unfiltered index to an anonymous visitor.
  */
 
+import { PRIVATE_CARD_FIELDS } from './card-fields.js';
+
+// Columns an anonymous client never receives, whatever row they sit on.
+// `audience` goes so a client cannot tell which public entries were ever
+// marked private; the card fields go because they are private by nature (see
+// lib/card-fields.js). Row filtering alone cannot protect the card fields: a
+// row is dropped only when the page marked itself private, while these values
+// are private on a public page too.
+const STRIPPED_COLUMNS = ['audience', ...PRIVATE_CARD_FIELDS];
+
+const stripColumns = (row) => Object.fromEntries(
+  Object.entries(row).filter(([column]) => !STRIPPED_COLUMNS.includes(column)),
+);
+
 // Filter one sheet: drop rows a page marked private (and any malformed,
-// non-object rows), and remove the `audience` column entirely - both the value
-// on every row and its entry in `columns` - so an anonymous client can neither
-// read a private entry nor tell which public ones were ever marked private.
+// non-object rows), then remove every STRIPPED_COLUMNS value and its entry in
+// `columns`, so an anonymous client can neither read a private entry nor tell
+// which public ones were ever marked private.
 // Returns null when there is no `data` array to filter.
 const filterSheet = (sheet) => {
   if (!sheet || typeof sheet !== 'object' || !Array.isArray(sheet.data)) { return null; }
   const data = sheet.data
     .filter((row) => row && typeof row === 'object' && row.audience !== 'private')
-    .map(({ audience, ...rest }) => rest);
+    .map(stripColumns);
   const filtered = { ...sheet, data, total: data.length };
   if (Array.isArray(sheet.columns)) {
-    filtered.columns = sheet.columns.filter((column) => column !== 'audience');
+    filtered.columns = sheet.columns.filter((column) => !STRIPPED_COLUMNS.includes(column));
   }
   return filtered;
 };
 
-// Remove private entries and the audience column from an index. Handles a
-// single sheet or a multi-sheet payload; returns null for anything that is not
-// a recognizable index (the caller turns that into a 404 for anonymous users).
+// Remove private entries, audience and private card columns from an index.
+// Handles a single sheet or a multi-sheet payload; returns null for anything
+// that is not recognizable (the caller returns a 404 for anonymous users).
 export const filterPrivateEntries = (json) => {
   if (!json || typeof json !== 'object') { return null; }
 
