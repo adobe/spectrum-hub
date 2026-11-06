@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card grid block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/card-grid/card-grid.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <div class="card-grid">
+        <div>
+          <div>Content</div>
+          <div>web</div>
+        </div>
+        <div>
+          <div>Card category</div>
+          <div>Components</div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/card-grid/card-grid.js';
+
+    document.querySelectorAll('.card-grid').forEach(init);
+  </script>
+</body>
+</html>
