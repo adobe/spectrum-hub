@@ -1,6 +1,6 @@
 /*
  * Gated ETags: validators for responses the Lambda filters for anonymous
- * visitors (pages and the query index). No Request/Response here.
+ * visitors (pages and the listed query indexes). No Request/Response here.
  *
  * A conditional request (If-None-Match) forwarded to AEM is answered with a
  * bodiless 304 when the AEM content is unchanged - so the gate never sees the
@@ -13,12 +13,13 @@
  * gate checks again.
  *
  * Bump GATE_ETAG_VERSION whenever the gating or filtering logic changes
- * (lib/gate.js isPrivateHtml, lib/audience.js, lib/query-index.js): every
- * cached copy then fails revalidation and is re-fetched and re-filtered, with
- * no CloudFront invalidation needed.
+ * (lib/gate.js isPrivateHtml, lib/audience.js, lib/query-index.js): copies
+ * bearing older tags are re-fetched and re-filtered when they revalidate.
+ * Fresh cached responses remain until their TTL expires. Invalidate CloudFront
+ * when those copies must be replaced before expiry, including the v3 rollout.
  */
 
-export const GATE_ETAG_VERSION = 2;
+export const GATE_ETAG_VERSION = 3;
 export const GATE_ETAG_SUFFIX = `--gate-v${GATE_ETAG_VERSION}`;
 
 const ENTITY_TAG = /^(W\/)?"([^"]*)"$/;
