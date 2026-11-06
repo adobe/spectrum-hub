@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { filterAudienceBlocks, filterAudienceMarkdown, hasAudienceBlocks } from './audience.js';
+import {
+  filterAudienceBlocks, filterAudienceMarkdown, hasAudienceBlocks,
+  filterPrivateCardMeta, hasPrivateCardMeta,
+} from './audience.js';
+import { PRIVATE_CARD_FIELDS } from './card-fields.js';
 
 // A block is `main > div (section) > div[class]` in the served HTML. Build a
 // section from block markup strings so tests read close to real pages.
@@ -213,5 +217,86 @@ describe('filterAudienceMarkdown', () => {
     expect(filterAudienceMarkdown(undefined, false)).toBeUndefined();
     const md = doc('# Title', MD_PLAIN);
     expect(filterAudienceMarkdown(md, false)).toBe(md);
+  });
+});
+
+// A page's <head> carries the private card metadata; filterAudienceBlocks only
+// reaches blocks inside <main>, so these fields need their own strip.
+const metaPage = (...metas) => '<!doctype html><html><head><title>Button</title>'
+  + '<meta property="og:title" content="Button">'
+  + '<meta name="card-title" content="Buttons">'
+  + metas.join('')
+  + '<meta name="platform" content="web">'
+  + '</head><body><main><div class="section">'
+  + '<div class="columns">shared</div></div></main></body></html>';
+
+const STEWARD = '<meta name="card-steward" content="Marina Harutyunyan">';
+const DESIGN = '<meta name="card-design-resources" content="https://www.figma.com/design/abc">';
+const CONTACT = '<meta name="card-contact" content="#spectrum-help">';
+
+describe('hasPrivateCardMeta', () => {
+  it('is true only when a private field name is present', () => {
+    expect(hasPrivateCardMeta(metaPage(STEWARD))).toBe(true);
+    expect(hasPrivateCardMeta(metaPage())).toBe(false);
+  });
+
+  it('is false for non-string input', () => {
+    expect(hasPrivateCardMeta(undefined)).toBe(false);
+    expect(hasPrivateCardMeta(null)).toBe(false);
+  });
+});
+
+describe('filterPrivateCardMeta', () => {
+  it('removes every private card meta tag for an anonymous viewer', () => {
+    const out = filterPrivateCardMeta(metaPage(STEWARD, DESIGN, CONTACT), false);
+
+    PRIVATE_CARD_FIELDS.forEach((field) => expect(out).not.toContain(field));
+    expect(out).not.toContain('Marina Harutyunyan');
+    expect(out).not.toContain('figma.com');
+    expect(out).not.toContain('#spectrum-help');
+  });
+
+  it('leaves the rest of the head and the body untouched', () => {
+    const out = filterPrivateCardMeta(metaPage(STEWARD, DESIGN, CONTACT), false);
+
+    expect(out).toContain('<meta name="card-title" content="Buttons">');
+    expect(out).toContain('<meta property="og:title" content="Button">');
+    expect(out).toContain('<meta name="platform" content="web">');
+    expect(out).toContain('<div class="columns">shared</div>');
+  });
+
+  it('returns the page byte-for-byte for an authenticated viewer', () => {
+    const page = metaPage(STEWARD, DESIGN, CONTACT);
+
+    expect(filterPrivateCardMeta(page, true)).toBe(page);
+  });
+
+  // The whole point of stripping by field name: a public page carries these
+  // values with nothing marking them private, so row/block filtering by an
+  // audience marker would let them through.
+  it('strips an unmarked public page, which no audience class covers', () => {
+    const page = metaPage(STEWARD);
+
+    expect(page).not.toContain('audience-private');
+    expect(filterPrivateCardMeta(page, false)).not.toContain('Marina Harutyunyan');
+  });
+
+  it('returns pages without the fields, and non-strings, unchanged', () => {
+    const page = metaPage();
+
+    expect(filterPrivateCardMeta(page, false)).toBe(page);
+    expect(filterPrivateCardMeta(undefined, false)).toBeUndefined();
+  });
+
+  it('composes with filterAudienceBlocks without disturbing either', () => {
+    const page = metaPage(STEWARD).replace(
+      '<div class="columns">shared</div>',
+      '<div class="columns">shared</div><div class="banner audience-private">secret</div>',
+    );
+    const out = filterPrivateCardMeta(filterAudienceBlocks(page, false), false);
+
+    expect(out).not.toContain('secret');
+    expect(out).not.toContain('Marina Harutyunyan');
+    expect(out).toContain('shared');
   });
 });
