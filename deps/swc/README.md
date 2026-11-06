@@ -105,6 +105,8 @@ Extraction tests live under `test/extractions/` and run with the repo's Node tes
 
 It is the single source of truth for two things: **which tags exist** (the keys) and **where each tag's module lives** (the value). The subpath is the directory of the declaration's module `path` in the CEM, so it mirrors the upstream package layout — `components/<name>` for standard components, `patterns/<pattern>/<name>` for pattern members. Several tags can share one subpath when a module ships a whole family (`components/tabs` exports Tabs, Tab, TabPanel). The playground's `define-swc.js` imports this file to resolve which module to load for a given tag; the extractor reads its keys as the roster of tags to extract.
 
+The parent playground fetches the authored snippet and sends it in `preview-init`. The shared preview shell imports only [`playground/swc-preview.js`](./playground/swc-preview.js) for an SWC frame. That adapter discovers every `swc-*` family member in the fragment, resolves each module through `components.json`, and loads version-matched `swc.css`. A root-definition failure is fatal; a secondary family member can degrade without replacing the root preview. The frame never fetches catalogs, snippets, or workbook data.
+
 Extraction output files are named `{tag}.json` (for example `data/swc-button.json`). Everything resolves against the single `@adobe/spectrum-wc` manifest — there is no per-component npm package suffix (1st-gen used `"sp-button": "button"` for CDN paths).
 
 ## Adding or fixing a component

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Component Playground</title>
+  <link rel="stylesheet" href="../preview-shell.css" />
+  <link rel="stylesheet" href="../../../deps/shared/playground/shared-fonts.css" />
+</head>
+<body>
+  <div id="mount"></div>
+  <div id="image-viewer" aria-label="Component preview image">
+    <img id="preview-image" src="" alt="" />
+  </div>
+  <script>
+    (() => {
+      const frameId = new URLSearchParams(location.search).get('frame');
+      const queuedUpdates = [];
+      let latestTheme;
+      let adapter;
+      let initialized = false;
+      const send = (message) => parent.postMessage({ ...message, frameId }, '*');
+      const reportError = (phase, error) => send({
+        type: 'preview-error',
+        phase,
+        message: error?.message ?? String(error),
+      });
+      const reportDiagnostic = (diagnostic) => send({
+        type: 'preview-diagnostic',
+        ...diagnostic,
+      });
+      const importAdapter = window.__playgroundImport ?? ((url) => import(url));
+
+      window.addEventListener('message', async (event) => {
+        const message = event.data;
+        if (!message || message.frameId !== frameId) return;
+        if (message.type === 'prop-update') {
+          if (adapter) {
+            try {
+              adapter.update(message);
+            } catch (error) {
+              reportError(error.phase ?? 'update', error);
+            }
+          } else queuedUpdates.push(message);
+          return;
+        }
+        if (message.type === 'theme-update') {
+          latestTheme = message.scheme;
+          if (adapter) {
+            try {
+              adapter.updateTheme(latestTheme);
+            } catch (error) {
+              reportError(error.phase ?? 'update', error);
+            }
+          }
+          return;
+        }
+        if (message.type !== 'preview-init' || initialized) return;
+        initialized = true;
+        send({ type: 'preview-init' });
+
+        let module;
+        try {
+          module = await importAdapter(message.adapterUrl);
+        } catch (error) {
+          reportError('adapter-load', error);
+          return;
+        }
+        try {
+          adapter = await module.init({
+            ...message,
+            mount: document.getElementById('mount'),
+            imageViewer: document.getElementById('image-viewer'),
+            reportError,
+            reportDiagnostic,
+          });
+          queuedUpdates.splice(0).forEach((update) => adapter.update(update));
+          adapter.updateTheme(latestTheme);
+          send({ type: 'preview-mounted' });
+        } catch (error) {
+          reportError(error.phase ?? 'mount', error);
+        }
+      });
+      window.addEventListener('pagehide', () => adapter?.destroy());
+      send({ type: 'shell-ready' });
+    })();
+  </script>
+</body>
+</html>

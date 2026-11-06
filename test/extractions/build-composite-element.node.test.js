@@ -8,7 +8,7 @@ const { collectFragmentTagNames, buildCompositeElement } = composite;
 // attributes, children, textContent) — a real Element satisfies this
 // directly, so this is what buildCompositeElement/collectFragmentTagNames
 // actually receive in the browser (see initRsp() in
-// deps/rsp/playground/index.html), just constructed by hand here
+// the RSP preview adapter), just constructed by hand here
 // instead of via DOMParser so this suite can run under node:test.
 function makeNode(tagName, attrs = {}, children = [], text = '') {
   return {

@@ -1,8 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import { applyAttribute } from '../../deps/shared/playground/apply-attribute.js';
 
-// Shared by both preview shells (deps/swc/playground/index.html and
-// deps/rsp/playground/index.html):
+// Shared by both the SWC and RSP preview adapters:
 // - SWC's applySwcProp reflects an update onto the live custom element.
 // - RSP's preview reflects the same update onto the #mount container, since
 //   @react-spectrum/s2 doesn't expose most props back as real DOM attributes,

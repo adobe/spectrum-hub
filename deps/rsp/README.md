@@ -10,6 +10,7 @@ Generates the per-component prop data Spectrum Hub renders in API tables and the
 | **`extract-props.js`** | For each entry, crawls that interface's real `.d.ts` import graph, builds a `ts.Program`, and asks the TypeScript checker for its fully resolved property set. Writes `data/{Component}.json` and attaches doc **status** from the published S2 site. |
 | **`locate-published-files.js`** | Maps a module specifier to a CDN URL. Pure — no network. |
 | **`build-ts-checker.js`** | Fetches the import graph into a cache (`crawl`), then builds a synchronous `ts.CompilerHost` over it (`buildProgram`). |
+| **`generate-playground-runtime-manifest.js`** | Resolves the exact S2 and React versions, crawls public runtime exports, and writes `playground/runtime-manifest.json` with concrete module descriptors and reachable styles. |
 
 S2 publishes no structured metadata, so the compiler is the source of truth: `checker.getPropertiesOfType()` returns a component's own props plus everything it inherits, transitively, with `Omit<>`/`Pick<>` applied as written.
 
@@ -68,6 +69,14 @@ node deps/build-status-index.js        # rebuilds the combined index
 `extract-props.js` shares one file cache across the whole run, so the ~250 base files common to every component are fetched once rather than per component. It also removes `data/*.json` for components no longer in `components.json`, and **fails closed** if the roster is less than half the size of the data directory — a broken discovery run must not be able to delete the catalog.
 
 Both scripts run daily via [`.github/workflows/extract-rsp-properties.yml`](../../.github/workflows/extract-rsp-properties.yml), which needs `npm ci` because the pipeline imports the real `typescript` package.
+
+The workflow resolves one concrete S2 version before discovery and uses it for the roster, declarations, property data, and runtime manifest. Pull-request CI runs the generator in `--check` mode so source configuration or roster drift cannot merge without the updated artifact.
+
+### Adding a playground runtime source
+
+Runtime sources are package-neutral in the browser. Add fallback URL templates to `PLAYGROUND_RUNTIME_SOURCES` in [`scripts/utils/implementations.js`](../../scripts/utils/implementations.js), then add the Node-only crawl configuration in [`playground-runtime-sources.js`](./playground-runtime-sources.js). Regenerate the manifest and add canaries for styles that must remain reachable. The coordinator, shared shell, and RSP adapter consume concrete descriptors and do not need package-specific branches.
+
+The normal browser path requests the local manifest once per page and does not request package metadata or a flat package listing. If the manifest is unavailable or invalid, fallback discovery requests both, reports a recovered diagnostic, and uses all published styles. A missing export within a valid manifest uses that source's committed `allStyles` without browser-time discovery.
 
 ## `components.json` schema
 
