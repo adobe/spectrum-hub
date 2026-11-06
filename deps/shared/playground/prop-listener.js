@@ -1,4 +1,14 @@
 // Shared postMessage contract between the playground block and every preview shell.
+export function executeSnippetScripts(container) {
+  // Scripts parsed through innerHTML stay inert, so recreate trusted snippet scripts.
+  container.querySelectorAll('script').forEach((script) => {
+    const executable = document.createElement('script');
+    [...script.attributes].forEach(({ name, value }) => executable.setAttribute(name, value));
+    executable.textContent = script.textContent;
+    script.replaceWith(executable);
+  });
+}
+
 export function listenForPropUpdates(handler) {
   window.addEventListener('message', (event) => {
     if (event.data?.type !== 'prop-update') { return; }
