@@ -98,6 +98,34 @@ export const statusIndex = JSON.stringify({
   ],
 });
 
+// A component roll-up index (/web/components/query-index.json) for card-grid.
+// Paths resolve against `statusIndex` above, so each card derives a real badge.
+// Images are deliberately omitted: this fixture scans text-only cards.
+// Shaped as a signed-in viewer sees it: the first row carries `card-steward`,
+// which the edge strips for an anonymous one. One card shows all three badges;
+// this fixture does not cover image rendering.
+export const cardGridRollup = JSON.stringify({
+  data: [
+    {
+      path: '/web/swc/components/button',
+      'card-title': 'Button',
+      'card-description': 'A button lets someone perform an action.',
+      'card-subject': 'web',
+      'card-team': 'CXO',
+      'card-category': 'Components',
+      'card-steward': 'Michael Scott',
+    },
+    {
+      path: '/web/swc/components/calendar',
+      'card-title': 'Calendar',
+      'card-description': 'A calendar displays dates and lets someone pick one.',
+      'card-subject': 'web',
+      'card-team': 'CXO',
+      'card-category': 'Components',
+    },
+  ],
+});
+
 // Published component pages used by status-table to decide which status cells link.
 export const statusQueryIndex = JSON.stringify({
   data: [
