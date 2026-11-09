@@ -273,7 +273,6 @@
     &.centered {
       align-items: center;
       text-align: center;
-      grid-template-columns: minmax(0, 1fr);
     }
 
     &.centered:has(.row:only-child):has(.col:only-child) .row {
