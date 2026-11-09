@@ -88,6 +88,12 @@ the variant itself. For anonymous visitors the Lambda handles them as follows:
    `filterAudienceMarkdown` removes `Name (audience private)` block tables from
    `.md`.
 
+The Markdown variant also retains the authored `Metadata` table. For anonymous
+viewers, `filterAudienceMarkdown` removes its `card-steward`,
+`card-design-resources`, and `card-contact` rows, including wrapped values and
+link references used only by those rows. Public metadata and surrounding content
+remain unchanged. Authenticated viewers retain every metadata row.
+
 Authenticated requests skip the canonical lookup. For anonymous requests it
 adds one origin fetch per variant request that reaches the Lambda; the result is
 cached like any other anonymous page (see "Content caching"). Both variants fall
@@ -312,10 +318,10 @@ entries are removed.
 > `aws cloudfront create-invalidation --distribution-id <id> --paths "/*"` (this
 > uses your role's permission, so it works in the klam-federated account).
 
-Gate version 3 adds private card metadata and query-index column filtering.
-It rejects version 2 validators so previously cached, unstripped responses
-must be fetched and filtered again. Invalidate existing shared copies when
-deploying this change; the version bump alone does not evict fresh cache
+Gate version 3 adds private card metadata in HTML and Markdown, plus
+query-index column filtering. It rejects version 2 validators so previously cached,
+unstripped responses must be fetched and filtered again. Invalidate existing shared
+copies when deploying this change; the version bump alone does not evict fresh cache
 entries.
 
 > ⚠️ **Test for leaks before changing prod.** With a real `spectrum_session`

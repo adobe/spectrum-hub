@@ -43,6 +43,20 @@ const mdTable = (header, body) => {
 
 const HTML_TYPE = { 'content-type': 'text/html; charset=utf-8' };
 const MD_TYPE = { 'content-type': 'text/markdown; charset=utf-8' };
+const CARD_METADATA = [
+  '+-----------------------+--------------------------------+',
+  '| Metadata                                               |',
+  '+-----------------------+--------------------------------+',
+  '| Title                 | Public card title              |',
+  '+-----------------------+--------------------------------+',
+  '| Card steward          | Private team                   |',
+  '+-----------------------+--------------------------------+',
+  '| Card design resources | https://example.test/private   |',
+  '+-----------------------+--------------------------------+',
+  '| Card contact          | Private contact                |',
+  '+-----------------------+--------------------------------+',
+].join('\n');
+const CARD_MARKDOWN = `# Public card page\n\n${CARD_METADATA}\n`;
 
 // The fake AEM origin: path -> () => Response.
 const PAGES = {
@@ -57,6 +71,11 @@ const PAGES = {
   ),
   '/public': () => new Response(html('', '<div><p>hello</p></div>'), { headers: HTML_TYPE }),
   '/public.plain.html': () => new Response('<div><p>hello</p></div>', { headers: HTML_TYPE }),
+  '/card': () => new Response(html(
+    '<meta name="card-steward" content="Private team">',
+    '<div><p>Public card page</p></div>',
+  ), { headers: HTML_TYPE }),
+  '/card.md': () => new Response(CARD_MARKDOWN, { headers: MD_TYPE }),
   '/moved': () => new Response(null, { status: 301, headers: { location: '/elsewhere' } }),
   '/moved.plain.html': () => new Response('<div><p>moved</p></div>', { headers: HTML_TYPE }),
   '/broken': () => new Response('upstream error', { status: 500 }),
@@ -171,6 +190,36 @@ describe('private page variants (anonymous)', () => {
 });
 
 describe('public page variants (anonymous)', () => {
+  it('strips private card metadata from a public Markdown variant', async () => {
+    const resp = await invoke('/card.md');
+
+    expect(resp.statusCode).toBe(200);
+    expect(resp.text).toContain('# Public card page');
+    expect(resp.text).toContain('Public card title');
+    expect(resp.text).not.toContain('Private team');
+    expect(resp.text).not.toContain('https://example.test/private');
+    expect(resp.text).not.toContain('Private contact');
+    expect(upstreamPaths()).toEqual(['/card', '/card.md']);
+  });
+
+  it('refetches a gate-v3 Markdown copy before filtering its metadata', async () => {
+    fetchMock.mockImplementation(async (req) => {
+      if (req.headers.has('if-none-match')) {
+        return new Response(null, { status: 304, headers: { etag: '"card"' } });
+      }
+      return PAGES[new URL(req.url).pathname]();
+    });
+
+    const resp = await invoke('/card.md', {
+      headers: { 'if-none-match': '"card--gate-v2"' },
+    });
+
+    expect(resp.statusCode).toBe(200);
+    expect(resp.text).toContain('Public card title');
+    expect(resp.text).not.toContain('Private team');
+    expect(resp.text).not.toContain('Private contact');
+  });
+
   it('serves the .plain.html of a public page after checking the canonical page', async () => {
     const resp = await invoke('/public.plain.html');
     expect(resp.statusCode).toBe(200);
@@ -197,6 +246,15 @@ describe('public page variants (anonymous)', () => {
 });
 
 describe('page variants (authenticated)', () => {
+  it('preserves private card metadata in Markdown without caching it', async () => {
+    const resp = await invoke('/card.md', { cookies: [await sessionCookie()] });
+
+    expect(resp.statusCode).toBe(200);
+    expect(resp.text).toBe(CARD_MARKDOWN);
+    expect(resp.headers['cache-control']).toBe('private, no-store');
+    expect(upstreamPaths()).toEqual(['/card.md']);
+  });
+
   it('serves a private variant without a canonical lookup', async () => {
     const resp = await invoke('/private.plain.html', { cookies: [await sessionCookie()] });
     expect(resp.statusCode).toBe(200);

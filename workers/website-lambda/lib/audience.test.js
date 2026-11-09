@@ -129,6 +129,14 @@ describe('filterAudienceMarkdown', () => {
   const MD_PUBLIC = table('Banner (audience public)', 'public banner');
   const MD_PRIVATE = table('Banner (audience private)', 'private banner');
   const MD_PLAIN = table('Columns (large)', 'shared');
+  const metadata = (...rows) => {
+    const border = `+${'-'.repeat(30)}+${'-'.repeat(50)}+`;
+    const row = (key, value) => `| ${key.padEnd(28)} | ${value.padEnd(48)} |`;
+    return [
+      border, `${'| Metadata'.padEnd(border.length - 1)}|`, border,
+      ...rows.flatMap(([key, value]) => [row(key, value), border]),
+    ].join('\n');
+  };
 
   it('removes audience-private tables for anonymous viewers', () => {
     const out = filterAudienceMarkdown(doc('# Title', MD_PUBLIC, MD_PRIVATE, MD_PLAIN), false);
@@ -211,6 +219,88 @@ describe('filterAudienceMarkdown', () => {
   it('does not treat a metadata row as a block variant', () => {
     const md = doc('# Title', table('Metadata', 'audience | public'));
     expect(filterAudienceMarkdown(md, true)).toBe(md);
+  });
+
+  it.each([
+    'Card steward', 'card-steward', '**CARD-STEWARD**',
+    'Card design resources', 'card-design-resources', 'Card contact', 'card-contact',
+  ])('removes private metadata row %s without changing public rows', (key) => {
+    const md = doc('# Title', metadata(
+      ['Title', 'Public title'],
+      [key, 'private value'],
+      ['Description', 'Public description'],
+    ), MD_PLAIN);
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc('# Title', metadata(
+      ['Title', 'Public title'],
+      ['Description', 'Public description'],
+    ), MD_PLAIN));
+  });
+
+  it('removes wrapped private metadata keys and values', () => {
+    const md = doc(metadata(
+      ['Title', 'Public title'],
+      ['**Card design**', 'private first line'],
+    ).replace(
+      /(\| \*\*Card design\*\*[^\n]*\n)/,
+      '$1| **resources**                | private continuation                             |\n',
+    ));
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc(metadata(['Title', 'Public title'])));
+  });
+
+  it('preserves private metadata for authenticated viewers byte-for-byte', () => {
+    const md = doc(metadata(['Card steward', 'private value']), '# Public content');
+
+    expect(filterAudienceMarkdown(md, true)).toBe(md);
+  });
+
+  it('removes metadata tables left empty after filtering', () => {
+    const md = doc('# Before', metadata(['Card contact', 'private value']), '# After');
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc('# Before', '# After'));
+  });
+
+  it('removes orphaned private metadata references but keeps shared references', () => {
+    const md = doc(
+      metadata(
+        ['Title', 'Public title'],
+        ['Card design resources', '[Design][private] [Shared][shared]'],
+      ),
+      'Public [resource][shared].',
+      '[private]: https://example.test/private-design "private title"',
+      '[shared]: https://example.test/public-resource',
+    );
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc(
+      metadata(['Title', 'Public title']),
+      'Public [resource][shared].',
+      '[shared]: https://example.test/public-resource',
+    ));
+  });
+
+  it('filters every metadata table alongside audience-private blocks', () => {
+    const md = doc(
+      metadata(['Card steward', 'private team']),
+      MD_PRIVATE,
+      metadata(['Title', 'Public title'], ['Card contact', 'private contact']),
+      MD_PUBLIC,
+    );
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc(
+      metadata(['Title', 'Public title']),
+      MD_PUBLIC,
+    ));
+  });
+
+  it('keeps private field names outside metadata keys untouched', () => {
+    const md = doc(
+      'Card steward is an authored metadata field.',
+      metadata(['Description', 'How to author card-steward']),
+      table('Columns', 'card-contact | public example'),
+    );
+
+    expect(filterAudienceMarkdown(md, false)).toBe(md);
   });
 
   it('returns non-strings and audience-free markdown unchanged', () => {

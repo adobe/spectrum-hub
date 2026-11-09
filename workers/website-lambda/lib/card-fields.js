@@ -1,8 +1,8 @@
 /*
  * The card fields that carry private information: a component's steward,
  * design resources and contact. Authored as page metadata, so each value
- * reaches the edge in two places - the page's own <head>, and a column on
- * every card query index once the index config selects it - and both are
+ * reaches the edge as HTML <head> tags, Markdown Metadata rows, and a column
+ * on every card query index once the index config selects it. All three are
  * stripped before an anonymous viewer sees them.
  *
  * Stripping by field name rather than by row value is deliberate: these are

@@ -250,8 +250,8 @@ const processHtmlResponse = async (resp, authed, anonPage, variant = false) => {
   if (resp.status !== 200 || !(isHtml || isMarkdown)) { return resp; }
   const body = await resp.text();
   if (!authed && !variant && isPrivateHtml(body)) { return notFound(); }
-  // The `.md` variant carries no <head>, so only the HTML path needs the
-  // metadata strip; it runs after the block strip so it sees the smaller body.
+  // Markdown retains authored Metadata rows; its filter strips private rows.
+  // HTML carries meta tags, stripped after the block filter sees the body.
   const filtered = isMarkdown
     ? filterAudienceMarkdown(body, authed)
     : filterPrivateCardMeta(filterAudienceBlocks(body, authed), authed);
