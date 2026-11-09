@@ -1,0 +1,148 @@
+{
+  "props": [
+    {
+      "property": "mimeType",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The MIME type of the attachment. Determines the fallback icon, and enables the file-type badge\non large thumbnail variants."
+    },
+    {
+      "property": "src",
+      "type": "string | ImageSource[]",
+      "kind": "unknown",
+      "values": [],
+      "description": "The URL of the image or a list of conditional sources.",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "alt",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Accessible alt text for the image.",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "crossOrigin",
+      "type": "\"anonymous\" | \"use-credentials\"",
+      "kind": "enum",
+      "values": [
+        "anonymous",
+        "use-credentials"
+      ],
+      "description": "Indicates if the fetching of the image must be done using a CORS request.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "decoding",
+      "type": "\"async\" | \"auto\" | \"sync\"",
+      "kind": "enum",
+      "values": [
+        "async",
+        "auto",
+        "sync"
+      ],
+      "description": "Whether the browser should decode images synchronously or asynchronously.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#decoding).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "fetchPriority",
+      "type": "\"auto\" | \"high\" | \"low\"",
+      "kind": "enum",
+      "values": [
+        "high",
+        "low",
+        "auto"
+      ],
+      "description": "Provides a hint of the relative priority to use when fetching the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#fetchpriority).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "loading",
+      "type": "\"eager\" | \"lazy\"",
+      "kind": "enum",
+      "values": [
+        "eager",
+        "lazy"
+      ],
+      "description": "Whether the image should be loaded immediately or lazily when scrolled into view.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#loading).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "referrerPolicy",
+      "type": "\"\" | \"no-referrer\" | \"no-referrer-when-downgrade\" | \"origin\" | \"origin-when-cross-origin\" | \"same-origin\" | \"strict-origin\" | \"strict-origin-when-cross-origin\" | \"unsafe-url\"",
+      "kind": "enum",
+      "values": [
+        "",
+        "no-referrer",
+        "no-referrer-when-downgrade",
+        "origin",
+        "origin-when-cross-origin",
+        "same-origin",
+        "strict-origin",
+        "strict-origin-when-cross-origin",
+        "unsafe-url"
+      ],
+      "description": "A string indicating which referrer to use when fetching the resource.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#referrerpolicy).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "width",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The intrinsic width of the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#width).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "height",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "The intrinsic height of the image.\n[See MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#height).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro.",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "renderError",
+      "type": "() => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "A function that is called to render a fallback when the image fails to load.",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "group",
+      "type": "ImageGroup",
+      "kind": "unknown",
+      "values": [],
+      "description": "A group of images to coordinate between, matching the group passed to the `<ImageCoordinator>`\ncomponent. If not provided, the default image group is used.",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "itemProp",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Associates the image with a microdata object. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/itemprop).",
+      "inheritedFrom": "ImageProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    }
+  ],
+  "status": "alpha"
+}

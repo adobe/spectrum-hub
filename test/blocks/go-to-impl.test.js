@@ -208,6 +208,19 @@ describe('go-to-impl block', () => {
       );
     });
 
+    it('links an AI component to the shared AI docs page, from the generated name table', () => {
+      // End to end over the real deps/impl-component-names.js: discovery records
+      // `package: "ai"` in deps/rsp/components.json, build-status-index copies it onto the
+      // slug, and the link builder reads it here. A break anywhere in that chain shows up
+      // as the ordinary per-component URL, which 404s.
+      window.history.pushState({}, '', '/web/rsp/components/user-message');
+      const a = makeAnchor();
+      decorateGoToImpl(a, a.querySelector('span'));
+      expect(a.getAttribute('href')).to.equal(
+        'https://react-spectrum.adobe.com/ai-components.html#usermessage',
+      );
+    });
+
     it('still links an S2 component to its own page', () => {
       window.history.pushState({}, '', '/web/rsp/components/action-button');
       const a = makeAnchor();

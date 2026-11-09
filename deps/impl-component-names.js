@@ -67,8 +67,113 @@ export default {
       "docs": "Image",
       "export": "Image"
     },
+    "ai-button": {
+      "package": "ai"
+    },
+    "alert": {
+      "package": "ai"
+    },
+    "attach-file-menu-item": {
+      "package": "ai"
+    },
+    "attachment": {
+      "package": "ai"
+    },
+    "attachment-grid": {
+      "package": "ai"
+    },
+    "attachment-grid-item": {
+      "package": "ai"
+    },
+    "attachment-list": {
+      "package": "ai"
+    },
+    "attachment-preview": {
+      "package": "ai"
+    },
+    "chat": {
+      "package": "ai"
+    },
+    "command-menu-item": {
+      "package": "ai"
+    },
+    "execution-trace": {
+      "package": "ai"
+    },
+    "execution-trace-item": {
+      "package": "ai"
+    },
+    "insert-text-menu-item": {
+      "package": "ai"
+    },
+    "insert-token-menu-item": {
+      "package": "ai"
+    },
+    "message-feedback": {
+      "package": "ai"
+    },
+    "message-source": {
+      "package": "ai"
+    },
+    "message-suggestion": {
+      "package": "ai"
+    },
+    "message-suggestion-list": {
+      "package": "ai"
+    },
+    "number-badge": {
+      "package": "ai"
+    },
+    "prompt-field": {
+      "package": "ai"
+    },
+    "prompt-field-attachment-list": {
+      "package": "ai"
+    },
+    "prompt-field-submit-button": {
+      "package": "ai"
+    },
+    "prompt-field-toolbar": {
+      "package": "ai"
+    },
+    "prompt-field-voice-button": {
+      "package": "ai"
+    },
+    "prompt-token": {
+      "package": "ai"
+    },
+    "prompt-token-field": {
+      "package": "ai"
+    },
+    "response-status": {
+      "package": "ai"
+    },
+    "response-status-panel": {
+      "package": "ai"
+    },
+    "response-status-title": {
+      "package": "ai"
+    },
+    "source-list": {
+      "package": "ai"
+    },
+    "source-list-item": {
+      "package": "ai"
+    },
+    "thread": {
+      "package": "ai"
+    },
+    "thread-item": {
+      "package": "ai"
+    },
+    "thread-load-more-item": {
+      "package": "ai"
+    },
     "toast": {
       "export": "ToastContainer"
+    },
+    "user-message": {
+      "package": "ai"
     }
   },
   "swc": {

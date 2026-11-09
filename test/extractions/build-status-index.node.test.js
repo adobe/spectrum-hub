@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { existsSync, readFileSync } from 'node:fs';
 
 import {
   normalizeName,
@@ -257,6 +258,45 @@ describe('swcComponentTags', () => {
     assert.deepEqual(swcComponentTags(components), [
       'swc-button', 'swc-tabs', 'swc-suggestion-group', 'swc-response-status-step',
     ]);
+  });
+
+  it('joins published AI patterns with RSP and Figma without undoing roster exclusions', () => {
+    const readJson = (relative) => JSON.parse(readFileSync(new URL(`../../deps/${relative}`, import.meta.url), 'utf8'));
+    const readData = (source, name) => {
+      const path = new URL(`../../deps/${source}/data/${name}.json`, import.meta.url);
+      return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
+    };
+    const catalog = readJson('swc/components.json');
+    const tags = excludeInternalSwc(swcComponentTags(catalog), (tag) => readData('swc', tag));
+    const roster = filterRoster(
+      joinRosters(['ResponseStatus'], tags, [], readJson('component-aliases.json')),
+      readJson('roster-excludes.json'),
+    );
+    const { index } = buildIndex({
+      roster,
+      readData,
+      figmaRoster: [
+        { source: 'ai-toolkit', platform: 'web', figmaFile: '3WdX799d7ptEVA6RuTESXs', name: 'Message sources', figmaPageId: '1:2' },
+        { source: 'ai-toolkit', platform: 'web', figmaFile: '3WdX799d7ptEVA6RuTESXs', name: 'Response status', figmaPageId: '1:3' },
+      ],
+    });
+    const patterns = Object.entries(catalog).filter(([, path]) => path.startsWith('patterns/'));
+    assert.ok(patterns.length > 0);
+    for (const [tag] of patterns) {
+      const name = swcTagToPascal(tag);
+      const matches = index.components.filter((component) => component.name === name);
+      assert.equal(matches.length, 1, `${name} has exactly one canonical row`);
+      assert.equal(matches[0].platforms.web.swc.status, 'available', name);
+    }
+    assert.ok(!index.components.some(({ name }) => ['Icon', 'UiIcon', 'InfieldButton'].includes(name)));
+    const response = index.components.find(({ name }) => name === 'ResponseStatus');
+    assert.equal(response.platforms.web.rsp.status, 'available');
+    assert.equal(response.platforms.web.figma.figmaSource, 'ai-toolkit');
+    const { slices } = buildComponentSlices(roster, index.components);
+    const sources = slices.find(({ slug }) => slug === 'message-sources').data.web;
+    assert.equal(sources.swc.status, 'available');
+    assert.equal(sources.rsp.status, 'not-available');
+    assert.equal(sources.figma.figmaPageId, '1:2');
   });
 
   it('returns tags in components.json key order', () => {
