@@ -3,8 +3,6 @@ import sinon from 'sinon';
 import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
-// TODO: Once mobile-status-regen generates metadata for excluded components, verify these
-// child-page links against the generated catalog as well as the unit fixtures.
 const CHILD_PATTERN_NAMES = {
   swc: {
     'response-status-step': { docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit' },
@@ -34,6 +32,27 @@ describe('go-to-impl block', () => {
   });
 
   describe('resolveImplementation — component page → impl docs URL', () => {
+    it('derives native documentation URLs with DA aliases and the SnackbarHost exception', () => {
+      for (const [platform, slug, path] of [
+        ['ios', 'buttons', 'button'],
+        ['ios', 'switches', 'switch'],
+        ['ios', 'snackbars-and-toasts', 'toast'],
+        ['ios', 'toggle-buttons', 'togglebutton'],
+        ['android', 'buttons', 'com.adobe.spectrum.components.button/-spectrum-button.html'],
+        ['android', 'switches', 'com.adobe.spectrum.components.switch/-spectrum-switch.html'],
+        ['android', 'snackbars-and-toasts', 'com.adobe.spectrum.components.snackbar/-spectrum-snackbar-host.html'],
+        ['android', 'toggle-buttons', 'com.adobe.spectrum.components.togglebutton/-spectrum-toggle-button.html'],
+      ]) {
+        const base = platform === 'ios'
+          ? 'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/'
+          : 'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/';
+        expect(resolveImplementation(`/mobile/${platform}/components/${slug}`)).to.deep.equal({
+          label: platform === 'ios' ? 'iOS' : 'Android',
+          href: `${base}${path}`,
+        });
+      }
+    });
+
     it('maps swc to the Spectrum Web Components Storybook docs URL', () => {
       expect(resolveImplementation('/web/swc/components/action-button')).to.deep.equal({
         label: 'SWC',
@@ -92,6 +111,18 @@ describe('go-to-impl block', () => {
         label: 'SWC',
         href: 'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-prompt-field--docs',
       });
+    });
+
+    it('uses CEM-derived documentation metadata rather than a pattern route group', () => {
+      expect(resolveImplementation('/web/swc/patterns/conversational-ai/response-status')?.href).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+      );
+    });
+
+    it('uses the RSP AI documentation for a pattern page when its package is AI', () => {
+      expect(resolveImplementation('/web/rsp/patterns/ai-toolkit/prompt-field', null, 'ai')?.href).to.equal(
+        'https://react-spectrum.adobe.com/ai-components.html#promptfield',
+      );
     });
 
     it('keeps the components section when SWC metadata has no documentation section', () => {
@@ -182,6 +213,54 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
+    for (const [parent, slug, docsSlug] of [
+      ['response-status', 'response-status-step', 'response-status'],
+      ['suggestion-group', 'suggestion-item', 'suggestion-group-suggestion-item'],
+    ]) {
+      it(`links nested ${slug} using the shipped documentation catalog`, () => {
+        window.history.pushState({}, '', `/web/swc/patterns/conversational-ai/${parent}/${slug}`);
+        const a = makeAnchor();
+        decorateGoToImpl(a, a.querySelector('span'));
+        expect(a.getAttribute('href')).to.equal(
+          `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
+        );
+      });
+    }
+
+    it('renders both native documentation actions on shared mobile pages', () => {
+      window.history.pushState({}, '', '/mobile/components/buttons');
+      const a = makeAnchor();
+      a.append(document.createElement('svg'));
+      decorateGoToImpl(a, a.querySelector('span'));
+      const links = [...document.querySelectorAll('a')];
+      expect(links.map((link) => link.querySelector('span').textContent))
+        .to.deep.equal(['Go to iOS', 'Go to Android']);
+      expect(links.map((link) => link.href)).to.deep.equal([
+        'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+        'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
+      ]);
+      for (const link of links) {
+        expect(link.querySelector('svg')).to.exist;
+        expect(link.target).to.equal('_blank');
+        expect(link.rel).to.equal('noopener noreferrer');
+        expect(link.getAttribute('aria-label')).to.contain('in a new tab');
+      }
+    });
+
+    it('retains the supplied parent documentation alias on a nested pattern page', () => {
+      const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value(CHILD_PATTERN_NAMES.swc);
+      try {
+        window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status/response-status-step');
+        const a = makeAnchor();
+        decorateGoToImpl(a, a.querySelector('span'));
+        expect(a.href).to.equal(
+          'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+        );
+      } finally {
+        metadata.restore();
+      }
+    });
+
     for (const [slug, docsSlug, upstreamName] of [
       ['prompt-field', 'prompt-field', undefined],
       ['response-status-step', 'response-status', 'ResponseStatus'],

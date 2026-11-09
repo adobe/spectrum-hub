@@ -61,6 +61,21 @@ export function resolveFigmaComponents(rows, {
     if (selection.figmaNodeId) {
       candidates = candidates.filter((entry) => entry.figmaPageId === selection.figmaNodeId);
     }
+    if (!candidates.length && typeof selection.figmaPageSource === 'string'
+      && selection.figmaPageSource.trim() && typeof selection.figmaNodeId === 'string'
+      && /^\d+:\d+$/.test(selection.figmaNodeId)) {
+      const source = FIGMA_SOURCES.find((entry) => entry.id === selection.figmaSource
+        && entry.platform === platform);
+      if (source) {
+        candidates = [{
+          name: selection.figmaPageSource,
+          source: source.id,
+          platform,
+          figmaFile: source.fileKey,
+          figmaPageId: selection.figmaNodeId,
+        }];
+      }
+    }
     if (!candidates.length) {
       throw new Error(`Unmatched Figma selection for ${platform}/${name}; check source, name, and node selectors.`);
     }

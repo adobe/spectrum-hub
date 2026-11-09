@@ -21,5 +21,14 @@
       "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
       "figmaPageId": "3984:38444"
     }
+  },
+  "ios": {
+    "figma": {
+      "status": "available",
+      "figmaPageSource": "Switch (list)",
+      "figmaSource": "s2-ios",
+      "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+      "figmaPageId": "11368:7100"
+    }
   }
 }

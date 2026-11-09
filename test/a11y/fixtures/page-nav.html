@@ -35,10 +35,24 @@
     <div class="fixture-spacer" aria-hidden="true"></div>
   </main>
   <script type="module">
+    import { setConfig } from '/scripts/ak.js';
+
+    if (new URLSearchParams(window.location.search).has('pattern')) {
+      document.querySelectorAll('main h2').forEach((heading) => heading.remove());
+      document.querySelector('main h1').textContent = 'Response status';
+      window.history.replaceState({}, '', '/web/swc/patterns/conversational-ai/response-status');
+      setConfig({
+        hostnames: ['authorkit.dev'],
+        components: [],
+        locales: { '': { lang: 'en' } },
+        cdnEnv: false,
+      });
+    }
+
     // page-nav.js has no default export and no init(el) — it's a self-executing
     // block that scans main h1/h2 and appends its own <nav class="page-nav">
     // to document.body. There's nothing here to call it on.
-    import '/blocks/page-nav/page-nav.js';
+    await import('/blocks/page-nav/page-nav.js');
   </script>
 </body>
 </html>
