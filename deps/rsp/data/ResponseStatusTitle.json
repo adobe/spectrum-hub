@@ -1,0 +1,43 @@
+{
+  "props": [
+    {
+      "property": "level",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "3",
+      "description": "The heading level of the response status header."
+    },
+    {
+      "property": "children",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "required": true,
+      "description": "The contents of the response status header."
+    },
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "pixelLoader",
+      "type": "Cell[] | Cell[][]",
+      "kind": "unknown",
+      "values": [],
+      "description": "Pixel loader icon or sequence to display."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    }
+  ],
+  "status": "alpha"
+}

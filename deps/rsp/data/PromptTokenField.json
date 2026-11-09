@@ -1,0 +1,59 @@
+{
+  "props": [
+    {
+      "property": "completionTrigger",
+      "type": "RegExp",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "renderCompletions",
+      "type": "(filterValue: string, valueType: string) => ReactNode[] | Promise<ReactNode[]>",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "children",
+      "type": "(segment: TokenSegment<PromptFieldTokenValue>) => ReactElement<unknown, string | JSXElementConstructor<any>>",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "pixelLoader",
+      "type": "Cell[] | Cell[][]",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "shouldAnimatePixelLoader",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": []
+    },
+    {
+      "property": "placeholder",
+      "type": "string",
+      "kind": "text",
+      "values": []
+    },
+    {
+      "property": "onKeyDown",
+      "type": "(e: KeyboardEvent<HTMLDivElement>) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onKeyUp",
+      "type": "(e: KeyboardEvent<HTMLDivElement>) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "menuWidth",
+      "type": "number",
+      "kind": "number",
+      "values": []
+    }
+  ],
+  "status": "alpha"
+}

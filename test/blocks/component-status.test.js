@@ -118,6 +118,14 @@ describe('component-status block', () => {
       );
     });
 
+    it('uses the AI package documentation for an AI component', () => {
+      const pills = buildPills('/web/rsp/components/prompt-field', {
+        web: { rsp: { status: 'available' } },
+      });
+      expect(pills.find((pill) => pill.dataset.kind === 'dev').href).to.equal(
+        'https://react-spectrum.adobe.com/ai-components.html#promptfield',
+      );
+    });
     it('uses RSP package metadata for the AI documentation link before catalog refresh', () => {
       const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'rsp').value({
         ...IMPL_COMPONENT_NAMES.rsp,

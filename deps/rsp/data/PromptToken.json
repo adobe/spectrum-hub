@@ -1,0 +1,513 @@
+{
+  "props": [
+    {
+      "property": "token",
+      "type": "TokenSegment<PromptFieldTokenValue>",
+      "kind": "unknown",
+      "values": [],
+      "required": true
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true
+    },
+    {
+      "property": "dir",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "lang",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "hidden",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "inert",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "translate",
+      "type": "\"yes\" | \"no\"",
+      "kind": "enum",
+      "values": [
+        "yes",
+        "no"
+      ],
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "suppressHydrationWarning",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "A React-only flag that suppresses the warning React normally logs when an element's\nserver-rendered content doesn't match the client render during hydration. See [React\ndocs](https://react.dev/reference/react-dom/client/hydrateRoot#suppressing-unavoidable-hydration-mismatch-errors).",
+      "inheritedFrom": "GlobalDOMAttributes"
+    },
+    {
+      "property": "onClick",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onClickCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAuxClick",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAuxClickCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onContextMenu",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onContextMenuCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onDoubleClick",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onDoubleClickCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseDown",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseDownCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseEnter",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseLeave",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseMove",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseMoveCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOut",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOutCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOver",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseOverCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseUp",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onMouseUpCapture",
+      "type": "MouseEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchCancel",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchCancelCapture",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchEnd",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchEndCapture",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchMove",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchMoveCapture",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchStart",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTouchStartCapture",
+      "type": "TouchEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerDown",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerDownCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerMove",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerMoveCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerUp",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerUpCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerCancel",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerCancelCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerEnter",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerLeave",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOver",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOverCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOut",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onPointerOutCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onGotPointerCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onGotPointerCaptureCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onLostPointerCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onLostPointerCaptureCapture",
+      "type": "PointerEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onScroll",
+      "type": "UIEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onScrollCapture",
+      "type": "UIEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onWheel",
+      "type": "WheelEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onWheelCapture",
+      "type": "WheelEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationStart",
+      "type": "AnimationEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationStartCapture",
+      "type": "AnimationEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationEnd",
+      "type": "AnimationEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationEndCapture",
+      "type": "AnimationEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationIteration",
+      "type": "AnimationEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onAnimationIterationCapture",
+      "type": "AnimationEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionCancel",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionCancelCapture",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionEnd",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionEndCapture",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionRun",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionRunCapture",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionStart",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    },
+    {
+      "property": "onTransitionStartCapture",
+      "type": "TransitionEventHandler<HTMLSpanElement>",
+      "kind": "unknown",
+      "values": [],
+      "inheritedFrom": "GlobalDOMEvents"
+    }
+  ],
+  "status": "alpha"
+}

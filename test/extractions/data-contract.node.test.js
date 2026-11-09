@@ -83,9 +83,20 @@ describe('deps/rsp/data pipeline canary', () => {
   // failure. What does fail silently: `Omit<T, K>` collapses the WHOLE interface to
   // zero properties when any package in T's heritage chain was never crawled. So a
   // component reporting no props means a missing package, not a propless component.
+  //
+  // The one real counterexample: a component whose published props interface is declared
+  // empty. Listing it by name keeps the canary sharp — a newly-collapsed component still
+  // fails — where relaxing the assertion to "few props" would not.
+  const EXPECTED_EMPTY = [
+    // @react-spectrum/ai declares `export interface PromptFieldSubmitButtonProps {}` with
+    // no members; the component takes no props. Verified against the published .d.ts, not
+    // inferred from the extraction reporting zero.
+    'PromptFieldSubmitButton',
+  ];
+
   it('leaves no component with zero props', () => {
     const empty = readCatalog('rsp').filter(({ rows }) => rows.length === 0);
-    assert.deepEqual(empty.map(({ component }) => component), []);
+    assert.deepEqual(empty.map(({ component }) => component).sort(), [...EXPECTED_EMPTY].sort());
   });
 });
 
