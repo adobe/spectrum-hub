@@ -2,6 +2,8 @@ import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { figmaNodeUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+import { FIGMA_SOURCES } from '../../scripts/utils/figma-sources.js';
+import { getConfig } from '../../scripts/ak.js';
 
 function makeAnchor(text = 'See in Figma') {
   const a = document.createElement('a');
@@ -13,6 +15,16 @@ function makeAnchor(text = 'See in Figma') {
 }
 
 describe('figma block', () => {
+  let logStub;
+
+  beforeEach(() => {
+    logStub = sinon.stub(getConfig(), 'log');
+  });
+
+  afterEach(() => {
+    logStub.restore();
+  });
+
   describe('figmaNodeUrl — Figma page id → dev-mode URL', () => {
     it('builds a dev-mode URL with the node id hyphenated', () => {
       expect(figmaNodeUrl('9230:3620')).to.equal(
@@ -23,6 +35,21 @@ describe('figma block', () => {
     it('returns null for a falsy page id', () => {
       expect(figmaNodeUrl(undefined)).to.equal(null);
       expect(figmaNodeUrl('')).to.equal(null);
+    });
+
+    for (const source of FIGMA_SOURCES) {
+      it(`links to the registered ${source.id} file`, () => {
+        expect(figmaNodeUrl('1:2', source.id, source.fileKey)).to.equal(
+          `https://www.figma.com/design/${source.fileKey}/${source.urlName}?node-id=1-2&m=dev`,
+        );
+      });
+    }
+
+    it('does not guess a file for an unknown source or mismatched file', () => {
+      expect(figmaNodeUrl('1:2', 'unknown', 'wrong')).to.equal(null);
+      expect(figmaNodeUrl('1:2', 's2-ios', FIGMA_SOURCES[0].fileKey)).to.equal(null);
+      expect(logStub.callCount).to.equal(2);
+      expect(logStub.firstCall.args[0]).to.be.instanceOf(Error);
     });
   });
 
@@ -47,7 +74,13 @@ describe('figma block', () => {
     }
 
     it('deep-links to the component Figma node in dev mode, in a new tab', async () => {
-      stubComponentSlice({ web: {}, figmaPageId: '9230:3620' });
+      stubComponentSlice({
+        web: {
+          figma: {
+            figmaSource: 's2-web', figmaFile: FIGMA_SOURCES[0].fileKey, figmaPageId: '9230:3620',
+          },
+        },
+      });
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const a = makeAnchor();
       await decorateSeeInFigma(a, a.querySelector('span'));
@@ -67,8 +100,15 @@ describe('figma block', () => {
       // deps/build-status-index.js resolves the override into the slice's figmaPageId
       // build-time — the widget just trusts whatever node id the slice carries.
       stubComponentSlice({
-        web: { figma: { status: 'available', figmaPageSource: 'Date and time field' } },
-        figmaPageId: '10196:3411',
+        web: {
+          figma: {
+            status: 'available',
+            figmaPageSource: 'Date and time field',
+            figmaSource: 's2-web',
+            figmaFile: FIGMA_SOURCES[0].fileKey,
+            figmaPageId: '10196:3411',
+          },
+        },
       });
       window.history.pushState({}, '', '/web/rsp/components/calendar');
       const a = makeAnchor();
@@ -87,6 +127,57 @@ describe('figma block', () => {
       const a = makeAnchor();
       await decorateSeeInFigma(a, a.querySelector('span'));
       expect(a.isConnected).to.be.false;
+    });
+
+    for (const source of FIGMA_SOURCES) {
+      it(`uses the ${source.platform} page's ${source.id} reference`, async () => {
+        stubComponentSlice({
+          [source.platform]: {
+            figma: {
+              status: 'available',
+              figmaSource: source.id,
+              figmaFile: source.fileKey,
+              figmaPageId: '1:2',
+            },
+          },
+        });
+        const path = source.platform === 'web' ? '/web/rsp' : `/mobile/${source.platform}`;
+        window.history.pushState({}, '', `${path}/components/button`);
+        const a = makeAnchor();
+        await decorateSeeInFigma(a, a.querySelector('span'));
+        expect(a.href).to.contain(`/design/${source.fileKey}/`);
+        expect(a.getAttribute('aria-label')).to.equal('See in Figma. Opens button in a new tab.');
+      });
+    }
+
+    it('does not use a web reference on an iOS page', async () => {
+      stubComponentSlice({
+        web: {
+          figma: {
+            figmaSource: 's2-web', figmaFile: FIGMA_SOURCES[0].fileKey, figmaPageId: '1:2',
+          },
+        },
+      });
+      window.history.pushState({}, '', '/mobile/ios/components/button');
+      const a = makeAnchor();
+      await decorateSeeInFigma(a, a.querySelector('span'));
+      expect(a.isConnected).to.be.false;
+    });
+
+    it('rejects a web source stored on the native platform cell', async () => {
+      stubComponentSlice({
+        ios: {
+          figma: {
+            figmaSource: 's2-web', figmaFile: FIGMA_SOURCES[0].fileKey, figmaPageId: '1:2',
+          },
+        },
+      });
+      window.history.pushState({}, '', '/mobile/ios/components/button');
+      const a = makeAnchor();
+      await decorateSeeInFigma(a, a.querySelector('span'));
+      expect(a.isConnected).to.be.false;
+      expect(logStub.calledOnce).to.be.true;
+      expect(logStub.firstCall.args[0].message).to.contain('Invalid Figma reference for ios/button');
     });
 
     it('removes itself when the slice cannot be fetched', async () => {

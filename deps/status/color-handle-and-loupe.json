@@ -1,7 +1,10 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9306:18381"
     },
     "rsp": {
       "status": "available",
@@ -17,6 +20,5 @@
       "page": "color-handle-and-loupe",
       "upstreamName": "ColorHandle"
     }
-  },
-  "figmaPageId": "9306:18338"
+  }
 }

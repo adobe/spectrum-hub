@@ -77,6 +77,47 @@ export default {
     },
     "color-handle-and-loupe": {
       "docs": "ColorHandle"
+    },
+    "response-status-step": {
+      "docs": "ResponseStatus",
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "suggestion-item": {
+      "docs": "SuggestionGroupSuggestionItem",
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "conversation-thread": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "conversation-turn": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "message-feedback": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "message-sources": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "pixel-loader": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "prompt-field": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "response-status": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "suggestion-group": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "system-message": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "upload-attachment": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "user-message": {
+      "docsSection": "patterns-ai-toolkit"
     }
   }
 };
