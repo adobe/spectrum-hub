@@ -1,15 +1,22 @@
 # React Spectrum component properties
 
-Generates the per-component prop data Spectrum Hub renders in API tables and the component playground, from the published `@react-spectrum/s2` package.
+Generates the per-component prop data Spectrum Hub renders in API tables and the component playground, from two published packages: `@react-spectrum/s2` and `@react-spectrum/ai`.
+
+Both feed the same roster and the same `rsp` status column — the AI package is a separate npm package, not a separate implementation. An entry records which package it came from in its `package` field, and three steps branch on it: the CDN base `extract-props.js` crawls, the docs page `extract-doc-status.js` reads, and the docs URL [`scripts/utils/go-to-impl.js`](../../scripts/utils/go-to-impl.js) builds.
 
 ## How it works
 
 | Script | Role |
 | ------ | ---- |
-| **`discover-components.js`** | Scans published S2 types on unpkg and regenerates `components.json`: which primary props interface each component uses, and which file it lives in when that differs from the component name. |
+| **`discover-components.js`** | Scans each published package's types on unpkg and regenerates `components.json`: which primary props interface each component uses, which file it lives in when that differs from the component name, and which package it came from when that is not S2. |
 | **`extract-props.js`** | For each entry, crawls that interface's real `.d.ts` import graph, builds a `ts.Program`, and asks the TypeScript checker for its fully resolved property set. Writes `data/{Component}.json` and attaches doc **status** from the published S2 site. |
 | **`locate-published-files.js`** | Maps a module specifier to a CDN URL. Pure — no network. |
+| **`docs.js`** | Selects the documentation page and URL. Shared by status extraction and site links. Pure, with no network or Node dependencies. |
 | **`build-ts-checker.js`** | Fetches the import graph into a cache (`crawl`), then builds a synchronous `ts.CompilerHost` over it (`buildProgram`). |
+
+Discovery and extraction use the same package bases, declaration paths, and CDN URL
+helpers from `locate-published-files.js`. An omitted package selects S2; an explicit
+unknown package ID raises an error.
 
 S2 publishes no structured metadata, so the compiler is the source of truth: `checker.getPropertiesOfType()` returns a component's own props plus everything it inherits, transitively, with `Omit<>`/`Pick<>` applied as written.
 
@@ -47,7 +54,13 @@ It also means the playground's "an optional enum offers a *None* choice" rule is
 
 ### Doc status (`status`)
 
-`extract-doc-status.js` reads the component's published S2 docs page and records `stable`, `alpha`, `beta`, or `rc`. A component with no doc page has no `status` field. See [../docs/DATA-CONTRACT.md](../docs/DATA-CONTRACT.md) for how that feeds the combined status index.
+`extract-doc-status.js` reads the component's published docs page and records `stable`, `alpha`, `beta`, or `rc`. A component with no doc page has no `status` field. See [../docs/DATA-CONTRACT.md](../docs/DATA-CONTRACT.md) for how that feeds the combined status index.
+
+S2 publishes a page per component, so each one is read at `/{Component}.html`.
+The AI package shares `/ai-components.html` and its prerelease badge.
+`docsPageName` in `docs.js` selects the page for both status extraction and external
+documentation links. Link formatting adds the lowercased component name as an
+anchor for a shared page.
 
 ### Display in Spectrum Hub
 
@@ -60,8 +73,8 @@ What the playground does with a row once it has one — and the naming rules eve
 ## Running the extraction
 
 ```sh
-node deps/rsp/discover-components.js   # regenerates components.json
-node deps/rsp/extract-props.js         # regenerates data/*.json (~3 min)
+node deps/rsp/discover-components.js   # regenerates components.json, both packages
+node deps/rsp/extract-props.js         # regenerates data/*.json (several minutes)
 node deps/build-status-index.js        # rebuilds the combined index
 ```
 
@@ -76,14 +89,21 @@ Generated — do not edit by hand; the daily workflow overwrites it.
 | Field | Required | Meaning |
 | ----- | -------- | ------- |
 | **`interface`** | yes | The primary props interface to resolve, e.g. `ButtonProps`. |
-| **`file`** | no | The `.d.ts` basename, when it differs from the component name (`AccordionItem` lives in `Accordion.d.ts`). |
+| **`file`** | no | The declaration path relative to `dist/types/src`, without `.d.ts`, when it differs from the component name. Supports nested paths such as `loader/react`. |
+| **`package`** | no | The publishing package, when it is not S2. Only `ai` today. |
 
 ```json
 {
   "Button": { "interface": "ButtonProps" },
-  "AccordionItem": { "interface": "AccordionItemProps", "file": "Accordion" }
+  "AccordionItem": { "interface": "AccordionItemProps", "file": "Accordion" },
+  "UserMessage": { "interface": "UserMessageProps", "package": "ai" },
+  "Thread": { "interface": "ThreadProps", "file": "Chat", "package": "ai" },
+  "PixelLoader": { "interface": "PixelLoaderProps", "file": "loader/react", "package": "ai" },
+  "InsertMenuButton": { "interface": "InsertMenuItemProps", "file": "PromptField", "package": "ai" }
 }
 ```
+
+`package` is omitted for S2 rather than written as `"s2"`, so an S2-only roster is byte-identical to the one this file described before the AI package was added.
 
 Inheritance is not recorded here. The checker resolves it from the declarations themselves, so there is nothing for this file to configure or drift from.
 
@@ -101,9 +121,9 @@ This is distinct from the same table's `docs` field, which answers "which RSP **
 
 Most components need nothing — discovery finds them and the checker resolves them. When a component is missing or its props look wrong:
 
-1. Confirm it is in `components.json` with the right `interface`. Discovery registers `export declare const` components; anything exported as a function needs investigating there.
+1. Confirm it is in `components.json` with the right `interface`. Discovery supports `export declare const` and `export declare function`, including generic functions. When interface names differ, it can read a function's first parameter type if that references an exported interface in the same file.
 2. Re-run `extract-props.js` and read the warnings. `"<Interface> not found in <file>.d.ts"` means `interface`/`file` is wrong.
-3. If a component resolves to **zero** props, suspect an unresolved package rather than the component — see the `Omit<>` collapse below.
+3. If a component resolves to **zero** props, check for an unresolved package or an intentionally empty upstream interface. `PromptFieldSubmitButtonProps` is intentionally empty. The catalog canary allows only that API to be empty and requires removing the exception if it gains props.
 
 ## Known limitations
 
@@ -113,7 +133,11 @@ Most components need nothing — discovery finds them and the checker resolves t
 
 **`LabeledValue` does not extract.** It is in the roster but produces no data file: `findComponentInterface`'s regex mismatches its declaration.
 
-**Discovery coverage.** Only `export declare const` components in published `.d.ts` files are registered.
+**`PromptFieldContainer` does not register.** Its props interface is published as `PropFieldContainerProps` — an upstream typo, missing the `mt` — so neither the `<Component>Props` nor the `S2Spectrum<Component>Props` fallback finds it, and `buildEntry` drops it. It has no section on the AI docs page either. Adding a name exception here would go stale the moment the typo is fixed upstream, so it is left unregistered.
+
+**Discovery coverage.** Discovery scans capitalized component filenames and the nested
+`loader/react.d.ts` entry that declares `PixelLoader`. Other lowercase helper files
+are excluded.
 
 **`@deprecated` is not surfaced.** S2 does not currently author the tag, and the JSDoc reader keeps only the description and `@default`. If S2 adds it, rows extract as ordinary props with no display-layer filter.
 

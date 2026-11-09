@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import init, { resolveContext, buildPills } from '../../blocks/component-status/component-status.js';
 import { setConfig } from '../../scripts/ak.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
 const SAFE_CONFIG = {
   hostnames: ['authorkit.dev'],
@@ -55,6 +56,22 @@ describe('component-status block', () => {
   });
 
   describe('buildPills — Code pill link', () => {
+    it('uses RSP package metadata for the AI documentation link before catalog refresh', () => {
+      const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'rsp').value({
+        ...IMPL_COMPONENT_NAMES.rsp,
+        'prompt-field': { package: 'ai' },
+      });
+      try {
+        const pills = buildPills('/web/rsp/components/prompt-field', {
+          web: { rsp: { status: 'available' } },
+        });
+        expect(pills.find((pill) => pill.dataset.kind === 'dev').href).to.equal(
+          'https://react-spectrum.adobe.com/ai-components.html#promptfield',
+        );
+      } finally {
+        metadata.restore();
+      }
+    });
     it('deep-links to the current impl\'s own name by default (no upstreamName on the cell)', () => {
       const componentData = { web: { rsp: { status: 'available' }, figma: { status: 'available' } } };
       const pills = buildPills('/web/rsp/components/action-button', componentData);
