@@ -6,6 +6,14 @@
     },
     "swc-dropzone": {
       "canonical": "DropZone"
+    },
+    "swc-response-status-step": {
+      "canonical": "ResponseStatusStep",
+      "upstreamName": "ResponseStatus"
+    },
+    "swc-suggestion-item": {
+      "canonical": "SuggestionItem",
+      "upstreamName": "SuggestionGroupSuggestionItem"
     }
   },
   "rsp": {

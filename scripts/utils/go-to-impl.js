@@ -6,7 +6,9 @@ import { toSlug, implAndSlugFromPath } from './component-path.js';
 const IMPLEMENTATIONS = {
   swc: {
     label: 'SWC',
-    href: (component) => `https://spectrum-web-components.adobe.com/?path=/docs/components-${component}--docs`,
+    href: (component, { docsSection = 'components' } = {}) => (
+      `https://spectrum-web-components.adobe.com/?path=/docs/${docsSection}-${component}--docs`
+    ),
   },
   rsp: {
     label: 'RSP',
