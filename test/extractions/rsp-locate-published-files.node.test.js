@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  componentEntryPath,
   packageEntryPath,
   resolveSpecifier,
   cdnUrlsForCanonicalPath,
@@ -38,8 +39,17 @@ describe('packageEntryPath', () => {
     );
   });
 
+  it('resolves @react-spectrum/s2 to its dist/types/exports entry', () => {
+    // @react-spectrum/ai imports bare `@react-spectrum/s2` specifiers, so S2 has to be
+    // crawlable rather than skipped the way it was when only S2's own files were fetched.
+    assert.equal(
+      packageEntryPath('@react-spectrum/s2'),
+      '@react-spectrum/s2/dist/types/exports/index.d.ts',
+    );
+  });
+
   it('returns null for an unregistered package', () => {
-    assert.equal(packageEntryPath('@react-spectrum/s2'), null);
+    assert.equal(packageEntryPath('react-dom'), null);
   });
 });
 
@@ -104,6 +114,63 @@ describe('resolveSpecifier — bare package imports', () => {
     );
   });
 
+  it('resolves a bare @react-spectrum/s2 specifier to its exports entry', () => {
+    assert.equal(
+      resolveSpecifier('@react-spectrum/s2', '@react-spectrum/ai/dist/types/src/PromptField.d.ts'),
+      '@react-spectrum/s2/dist/types/exports/index.d.ts',
+    );
+  });
+
+  it('resolves an @react-spectrum/s2 component subpath through its exports map', () => {
+    assert.equal(
+      resolveSpecifier('@react-spectrum/s2/Menu', '@react-spectrum/ai/dist/types/src/PromptField.d.ts'),
+      '@react-spectrum/s2/dist/types/exports/Menu.d.ts',
+    );
+  });
+
+  it('resolves @react-spectrum/s2/style to its own tree, not the exports map', () => {
+    // S2's exports map routes "./style" to dist/types/style/index.d.ts. There is no
+    // dist/types/exports/style.d.ts, so resolving it like every other subpath 404s — and
+    // an unresolved heritage member collapses the whole Omit<> chain to zero properties.
+    // Every @react-spectrum/ai component imports StyleString from this subpath.
+    assert.equal(
+      resolveSpecifier('@react-spectrum/s2/style', '@react-spectrum/ai/dist/types/src/UserMessage.d.ts'),
+      '@react-spectrum/s2/dist/types/style/index.d.ts',
+    );
+  });
+
+  it('still resolves a relative import inside @react-spectrum/s2\'s own src tree', () => {
+    // Registering the package must not change how its own files resolve each other.
+    assert.equal(
+      resolveSpecifier('./Button', '@react-spectrum/s2/dist/types/src/ActionButton.d.ts'),
+      '@react-spectrum/s2/dist/types/src/Button.d.ts',
+    );
+  });
+
+  it('resolves an @react-spectrum/s2 icon to the package root, not its exports base', () => {
+    // S2's exports map routes "./icons/*" to "./icons/*.d.ts" at the package root. Before
+    // S2 was crawlable these specifiers resolved to null and were skipped; now they are
+    // followed, so an uncorrected base turns every icon import into a failed fetch.
+    assert.equal(
+      resolveSpecifier('@react-spectrum/s2/icons/Edit', '@react-spectrum/ai/dist/types/src/PromptField.d.ts'),
+      '@react-spectrum/s2/icons/Edit.d.ts',
+    );
+  });
+
+  it('resolves an @react-spectrum/s2 illustration to the package root the same way', () => {
+    assert.equal(
+      resolveSpecifier('@react-spectrum/s2/illustrations/Cloud', 'somewhere/File.d.ts'),
+      '@react-spectrum/s2/illustrations/Cloud.d.ts',
+    );
+  });
+
+  it('still sends an ordinary @react-spectrum/s2 subpath through the exports base', () => {
+    assert.equal(
+      resolveSpecifier('@react-spectrum/s2/Popover', 'somewhere/File.d.ts'),
+      '@react-spectrum/s2/dist/types/exports/Popover.d.ts',
+    );
+  });
+
   it('returns null for an unregistered bare package (e.g. react-dom)', () => {
     assert.equal(resolveSpecifier('react-dom', 'somewhere/File.d.ts'), null);
   });
@@ -133,6 +200,46 @@ describe('cdnUrlsForCanonicalPath', () => {
         'https://unpkg.com/@react-types/shared/src/index.d.ts',
         'https://cdn.jsdelivr.net/npm/@react-types/shared/src/index.d.ts',
       ],
+    );
+  });
+});
+
+describe('componentEntryPath', () => {
+  it('resolves an S2 component against the S2 package', () => {
+    assert.equal(
+      componentEntryPath('Button', { interface: 'ButtonProps' }),
+      '@react-spectrum/s2/dist/types/src/Button.d.ts',
+    );
+  });
+
+  it('uses the entry\'s `file` when the component is declared elsewhere', () => {
+    assert.equal(
+      componentEntryPath('AccordionItem', { interface: 'AccordionItemProps', file: 'Accordion' }),
+      '@react-spectrum/s2/dist/types/src/Accordion.d.ts',
+    );
+  });
+
+  it('resolves an AI component against the AI package, not S2', () => {
+    // Regression: every @react-spectrum/ai component was fetched from the S2 package, which
+    // 404s for all 35 of them — extraction reported "<Interface> not found" and wrote
+    // nothing, rather than failing loudly.
+    assert.equal(
+      componentEntryPath('UserMessage', { interface: 'UserMessageProps', package: 'ai' }),
+      '@react-spectrum/ai/dist/types/src/UserMessage.d.ts',
+    );
+  });
+
+  it('combines `file` and `package` for an AI sub-component', () => {
+    assert.equal(
+      componentEntryPath('ThreadItem', { interface: 'ThreadItemProps', file: 'Chat', package: 'ai' }),
+      '@react-spectrum/ai/dist/types/src/Chat.d.ts',
+    );
+  });
+
+  it('falls back to the S2 package for an unknown package id', () => {
+    assert.equal(
+      componentEntryPath('Button', { interface: 'ButtonProps', package: 'nonexistent' }),
+      '@react-spectrum/s2/dist/types/src/Button.d.ts',
     );
   });
 });

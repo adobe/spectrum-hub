@@ -80,11 +80,12 @@ builder. Do not hand-edit them either.
 | --- | --- | --- |
 | [`deps/status-index.json`](../status-index.json) | `blocks/status-table/status-table.js` | The full combined table — every component, every platform/impl cell, plus a self-describing status legend. |
 | `deps/status/<slug>.json` (one per component page) | `blocks/component-status/component-status.js`, `scripts/utils/figma.js` (via [`scripts/utils/component-slice.js`](../../scripts/utils/component-slice.js)) | One component page's cells + Figma node id — a single small fetch instead of downloading and searching the whole index on every component doc page. A page override can make multiple components share a slug. The writer updates current slices but does not prune obsolete files, so use `status-index.json`, not a directory listing, as the authoritative current roster. |
-| [`deps/impl-component-names.js`](../impl-component-names.js) | `scripts/utils/go-to-impl.js` (`docs`), `blocks/playground/playground.js` via `deps/rsp/playground/pascal-case.js` (`export`) | Per implementation, slug → `{ docs, export }`. `docs` is the name that source's *external docs site* uses, for building working links (`AlertDialog` → `Dialog.html`); `export` is the real name to `import`/render when it differs from the canonical one (`ActionGroup` → `ActionButtonGroup`). |
+| [`deps/impl-component-names.js`](../impl-component-names.js) | `scripts/utils/go-to-impl.js` (`docs`, `package`), `blocks/playground/playground.js` via `deps/rsp/playground/pascal-case.js` (`export`) | Per implementation, slug → `{ docs, export, package }`. `docs` is the name that source's *external docs site* uses, for building working links (`AlertDialog` → `Dialog.html`); `export` is the real name to `import`/render when it differs from the canonical one (`ActionGroup` → `ActionButtonGroup`); `package` is the publishing npm package when it is not the implementation's default (RSP's `ai` cohort — see [`package`](#package--which-npm-package-a-slug-ships-from) below). |
 
 ## Two names that look redundant but aren't
 
-`impl-component-names.js` gives each slug **two** fields, `docs` and `export`, and it's
+`impl-component-names.js` gives each slug up to **three** fields — `docs`, `export` and
+`package`. The first two are the pair that disagree for real components, and it's
 tempting to collapse them to one value. Don't — they answer genuinely different questions:
 
 - **`docs`**: "what does the source's *own public docs site* call this?" Several distinct
@@ -142,3 +143,21 @@ A figma-cell-only override naming which Figma roster entry provides this compone
 variant pages. It selects a page, it does not rename anything, and it never reaches
 `impl-component-names.js` — `buildImplComponentNames` skips figma for exactly this reason. An override
 targeting a Figma entry that doesn't exist warns rather than silently producing no link.
+
+## `package` — which npm package a slug ships from
+
+RSP's components come from two published packages, `@react-spectrum/s2` and
+`@react-spectrum/ai`. They are one implementation and one status column; the split matters
+only because the two are documented differently. S2 publishes a page per component, so a
+link is `react-spectrum.adobe.com/{Export}.html`. The AI cohort is published as sections of
+one page, so a link is `react-spectrum.adobe.com/ai-components.html#{export lowercased}`.
+
+Neither `docs` nor `export` can answer which form to build: both are names, and an AI
+component's name looks exactly like an S2 component's. So `buildImplComponentNames` copies
+the `package` field from [`deps/rsp/components.json`](../rsp/components.json) onto the slug,
+and [`scripts/utils/go-to-impl.js`](../../scripts/utils/go-to-impl.js) branches on it.
+
+It is written only for a non-default package, so every S2 slug is unchanged. The same field
+in `components.json` also selects which CDN base `deps/rsp/extract-props.js` crawls and
+which docs page `deps/rsp/extract-doc-status.js` reads — see
+[`deps/rsp/README.md`](../rsp/README.md).
