@@ -1,12 +1,14 @@
 # React Spectrum component properties
 
-Generates the per-component prop data Spectrum Hub renders in API tables and the component playground, from the published `@react-spectrum/s2` package.
+Generates the per-component prop data Spectrum Hub renders in API tables and the component playground, from two published packages: `@react-spectrum/s2` and `@react-spectrum/ai`.
+
+Both feed the same roster and the same `rsp` status column — the AI package is a separate npm package, not a separate implementation. An entry records which package it came from in its `package` field, and three steps branch on it: the CDN base `extract-props.js` crawls, the docs page `extract-doc-status.js` reads, and the docs URL [`scripts/utils/go-to-impl.js`](../../scripts/utils/go-to-impl.js) builds.
 
 ## How it works
 
 | Script | Role |
 | ------ | ---- |
-| **`discover-components.js`** | Scans published S2 types on unpkg and regenerates `components.json`: which primary props interface each component uses, and which file it lives in when that differs from the component name. |
+| **`discover-components.js`** | Scans each published package's types on unpkg and regenerates `components.json`: which primary props interface each component uses, which file it lives in when that differs from the component name, and which package it came from when that is not S2. |
 | **`extract-props.js`** | For each entry, crawls that interface's real `.d.ts` import graph, builds a `ts.Program`, and asks the TypeScript checker for its fully resolved property set. Writes `data/{Component}.json` and attaches doc **status** from the published S2 site. |
 | **`locate-published-files.js`** | Maps a module specifier to a CDN URL. Pure — no network. |
 | **`build-ts-checker.js`** | Fetches the import graph into a cache (`crawl`), then builds a synchronous `ts.CompilerHost` over it (`buildProgram`). |
@@ -47,7 +49,9 @@ It also means the playground's "an optional enum offers a *None* choice" rule is
 
 ### Doc status (`status`)
 
-`extract-doc-status.js` reads the component's published S2 docs page and records `stable`, `alpha`, `beta`, or `rc`. A component with no doc page has no `status` field. See [../docs/DATA-CONTRACT.md](../docs/DATA-CONTRACT.md) for how that feeds the combined status index.
+`extract-doc-status.js` reads the component's published docs page and records `stable`, `alpha`, `beta`, or `rc`. A component with no doc page has no `status` field. See [../docs/DATA-CONTRACT.md](../docs/DATA-CONTRACT.md) for how that feeds the combined status index.
+
+S2 publishes a page per component, so each one is read at `/{Component}.html`. The AI package does not: its whole cohort is documented on `/ai-components.html`, which carries one prerelease badge covering all of them. `docsPageName` routes an AI component to that shared page, so the cohort reports the maturity the page actually states. Without that routing every AI component 404s on its own page and floors to Available in the index build — reported as stable when the page says alpha.
 
 ### Display in Spectrum Hub
 
@@ -60,8 +64,8 @@ What the playground does with a row once it has one — and the naming rules eve
 ## Running the extraction
 
 ```sh
-node deps/rsp/discover-components.js   # regenerates components.json
-node deps/rsp/extract-props.js         # regenerates data/*.json (~3 min)
+node deps/rsp/discover-components.js   # regenerates components.json, both packages
+node deps/rsp/extract-props.js         # regenerates data/*.json (several minutes)
 node deps/build-status-index.js        # rebuilds the combined index
 ```
 
@@ -77,13 +81,18 @@ Generated — do not edit by hand; the daily workflow overwrites it.
 | ----- | -------- | ------- |
 | **`interface`** | yes | The primary props interface to resolve, e.g. `ButtonProps`. |
 | **`file`** | no | The `.d.ts` basename, when it differs from the component name (`AccordionItem` lives in `Accordion.d.ts`). |
+| **`package`** | no | The publishing package, when it is not S2. Only `ai` today. |
 
 ```json
 {
   "Button": { "interface": "ButtonProps" },
-  "AccordionItem": { "interface": "AccordionItemProps", "file": "Accordion" }
+  "AccordionItem": { "interface": "AccordionItemProps", "file": "Accordion" },
+  "UserMessage": { "interface": "UserMessageProps", "package": "ai" },
+  "Thread": { "interface": "ThreadProps", "file": "Chat", "package": "ai" }
 }
 ```
+
+`package` is omitted for S2 rather than written as `"s2"`, so an S2-only roster is byte-identical to the one this file described before the AI package was added.
 
 Inheritance is not recorded here. The checker resolves it from the declarations themselves, so there is nothing for this file to configure or drift from.
 
@@ -112,6 +121,8 @@ Most components need nothing — discovery finds them and the checker resolves t
 **`typescript` must stay on the 5.x line.** npm's `latest` tag points at the native/Go-ported compiler, whose default export is version metadata only — `ts.createProgram` and the rest of the classic API are absent. `package.json` pins `^5.9.3`; the caret keeps it off the 6.x/7.x line.
 
 **`LabeledValue` does not extract.** It is in the roster but produces no data file: `findComponentInterface`'s regex mismatches its declaration.
+
+**`PromptFieldContainer` does not register.** Its props interface is published as `PropFieldContainerProps` — an upstream typo, missing the `mt` — so neither the `<Component>Props` nor the `S2Spectrum<Component>Props` fallback finds it, and `buildEntry` drops it. It has no section on the AI docs page either. Adding a name exception here would go stale the moment the typo is fixed upstream, so it is left unregistered.
 
 **Discovery coverage.** Only `export declare const` components in published `.d.ts` files are registered.
 

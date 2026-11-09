@@ -21,6 +21,7 @@ import { figmaNodeUrl } from '../../scripts/utils/figma.js';
 import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
 import { fetchComponentSlice } from '../../scripts/utils/component-slice.js';
 import { getConfig, removeForAudience } from '../../scripts/ak.js';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -104,7 +105,8 @@ export function buildPills(pathname, componentData) {
   // the node id the build already resolved (no client-side Figma roster search needed).
   // The current impl's own cell may carry `upstreamName` (an aliased/shared page's real
   // upstream name) — see resolveImplementation.
-  const impl = resolveImplementation(pathname, web[context.impl]?.upstreamName);
+  const metadata = IMPL_COMPONENT_NAMES[context.impl]?.[context.slug];
+  const impl = resolveImplementation(pathname, web[context.impl]?.upstreamName, metadata?.package);
   const figmaHref = figmaNodeUrl(componentData.figmaPageId);
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,
