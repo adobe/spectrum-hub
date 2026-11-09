@@ -135,6 +135,7 @@ Common generated paths, with the generator that writes each one:
 | `deps/swc/components.json` | `deps/swc/discover-components.js` |
 | `deps/swc/data/*.json` | `deps/swc/extract-cem-components.js` |
 | `deps/swc/version.json` | `deps/swc/extract-cem-components.js` |
+| `deps/figma/components.json` | `deps/figma/discover-components.js` |
 | `deps/status-index.json` | `deps/build-status-index.js` |
 | `deps/status/<slug>.json` | `deps/build-status-index.js` |
 | `deps/impl-component-names.js` | `deps/build-status-index.js` |
@@ -154,6 +155,8 @@ build documentation to identify generated files.
   extraction
 - [`deps/swc/README.md`](./swc/README.md) — Spectrum Web Components CEM extraction and
   type resolution
+- [`deps/figma/README.md`](./figma/README.md) — platform-specific Figma discovery,
+  authentication, and design selection
 - [`deps/docs/STATUS-FILES.md`](./docs/STATUS-FILES.md) — status mappings, aliases, and
   generated outputs
 - [`deps/docs/DATA-CONTRACT.md`](./docs/DATA-CONTRACT.md) — extracted row and status

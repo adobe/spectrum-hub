@@ -26,21 +26,21 @@ to avoid loading unused components.
 
 ## Component data flow
 
-Spectrum Hub combines implementation data from React Spectrum S2 (RSP),
-Spectrum Web Components (SWC), and Figma:
+Spectrum Hub combines implementation data from React Spectrum S2 and AI Toolkit
+(RSP), Spectrum Web Components (SWC), and platform-specific Figma libraries:
 
 ```mermaid
 flowchart TD
     accTitle: How implementation data becomes the combined status model
-    accDescr: Three upstream sources are extracted into per-implementation catalogs. React Spectrum S2 produces deps/rsp/components.json and deps/rsp/data. Spectrum Web Components produces deps/swc/components.json and deps/swc/data. The Figma library produces deps/figma/components.json. Those catalogs, together with authored aliases, overrides, and exclusions, are read by deps/build-status-index.js, which writes deps/status-index.json, one deps/status slice per component, and deps/impl-component-names.js.
+    accDescr: React Spectrum S2 and AI Toolkit produce the RSP catalog. Spectrum Web Components produces the SWC catalog, including AI Toolkit patterns. Four platform-specific Figma libraries feed one source-qualified roster. The builder combines these with authored mappings to write the index, component slices, and implementation-name map.
 
-    rsp["React Spectrum S2<br/>package and types"]
+    rsp["React Spectrum S2 and AI Toolkit<br/>packages and types"]
     swc["Spectrum Web Components<br/>manifest and types"]
-    figma["Figma S2 library"]
+    figma["Figma S2 Web, AI Toolkit,<br/>iOS, and Android libraries"]
 
     rsp -->|"discover-components.js<br/>extract-props.js"| rspOut["deps/rsp/components.json<br/>deps/rsp/data/*.json"]
     swc -->|"discover-components.js<br/>extract-cem-components.js"| swcOut["deps/swc/components.json<br/>deps/swc/data/*.json"]
-    figma -->|"fetch-figma-components.js"| figmaOut["deps/figma/components.json"]
+    figma -->|"discover-components.js"| figmaOut["deps/figma/components.json"]
 
     authored["Authored aliases, overrides,<br/>and exclusions"]
 
@@ -58,9 +58,9 @@ The generated outputs feed:
 
 | Consumer | Reads |
 | --- | --- |
-| `blocks/status-table/` | `deps/status-index.json`, for the complete implementation matrix |
+| `blocks/status-table/` | `deps/status-index.json`, filtered to components with web cells |
 | `blocks/component-status/` | `deps/status/<slug>.json`, for one component's status pills |
-| `scripts/utils/figma.js` | `deps/status/<slug>.json`, for the `figmaPageId` behind the "See in Figma" link |
+| `scripts/utils/figma.js` | `deps/status/<slug>.json`, for the page platform's selected source/file/node reference |
 | `scripts/utils/go-to-impl.js` | `deps/impl-component-names.js`, for upstream documentation links |
 | `blocks/playground/` | `deps/impl-component-names.js` for export names, plus the raw `deps/rsp/data` and `deps/swc/data` catalogs |
 
@@ -83,7 +83,8 @@ Edit these files for intentional re-mappings:
 | --- | --- |
 | `deps/component-aliases.json` | Reconciles source-specific names with canonical component names and documentation names |
 | `deps/status-overrides.json` | Overrides automatically detected status or link data |
-| `deps/roster-excludes.json` | Removes composition parts that should not appear as standalone components |
+| `deps/roster-excludes.json` | Removes composition parts from web membership without excluding native designs |
+| `scripts/utils/figma-sources.js` | Registers Figma library identity and platform |
 | `deps/rsp/rsp-secondary-status.json` | Adds RSP guidance below a primary status |
 | `deps/swc/swc-secondary-status.json` | Adds SWC guidance below a primary status |
 | `deps/figma/figma-secondary-status.json` | Adds Figma guidance below a primary status |
@@ -106,6 +107,7 @@ Never hand-edit:
 - `deps/rsp/data/*.json`
 - `deps/swc/components.json`
 - `deps/swc/data/*.json`
+- `deps/figma/components.json`
 
 Only `deps/impl-component-names.js` carries a marker, because it is the one generated
 output in the list above that can hold a comment:
@@ -164,17 +166,36 @@ resolved concrete version in `deps/swc/version.json`. Read
 [`deps/swc/README.md`](../deps/swc/README.md) before changing version or source
 handling.
 
+## Figma discovery
+
+Figma discovery reads the libraries registered in
+`scripts/utils/figma-sources.js`: S2 Web, Spectrum AI Toolkit, S2 iOS, and
+S2 Android. With `FIGMA_TOKEN` stored in an existing ignored `.env` file:
+
+```bash
+node --env-file=.env deps/figma/discover-components.js
+node deps/build-status-index.js
+```
+
+Every source must return validated published component sets before the roster
+is atomically replaced. Index generation then resolves source-qualified aliases
+and explicit selections within each platform. Native design availability does
+not imply native code support or create web-table rows.
+
+Read [deps/figma/README.md](../deps/figma/README.md) for credential scope, file
+access, selection rules, and the manual read-only Actions validation workflow.
+
 ## Combined status build
 
 `deps/build-status-index.js`:
 
-1. reads RSP, SWC, and Figma rosters
-2. resolves aliases to canonical names
-3. maps source-specific states to the unified status vocabulary
-4. applies secondary status guidance
-5. applies manual overrides
-6. removes roster exclusions
-7. writes the complete index, component slices, and name map
+1. reads RSP, SWC, and Figma rosters and authored configuration
+2. excludes internal SWC components and reviewed web composition parts
+3. resolves canonical names and platform-specific Figma selections
+4. maps source-specific states to the unified status vocabulary
+5. applies secondary guidance and manual status overrides
+6. attaches selected source/file/node references
+7. writes the complete index, platform-specific slices, and name map
 
 Run it directly:
 
@@ -197,8 +218,8 @@ models:
 | [`PLAYGROUND-CONTRACT.md`](../deps/docs/PLAYGROUND-CONTRACT.md) | Changing property controls, snippets, component names, or playground lookups |
 | [`REMOVED-DETECTION.md`](../deps/docs/REMOVED-DETECTION.md) | Changing how removed components are detected |
 
-`deps/impl-component-names.js` carries two fields per component, and they are not
-interchangeable:
+`deps/impl-component-names.js` has optional documentation, export, package, and
+Storybook-section metadata. Its two name fields are not interchangeable:
 
 - `docs` names the page the implementation's own documentation site publishes it on. It
   is many-to-one: RSP's `AlertDialog`, `Dialog`, and `FullscreenDialog` all link to
@@ -210,12 +231,21 @@ Collapsing the two fields into one value has shipped a bug before. Read the fiel
 answers your question: `docs` to build a documentation link, `export` to name the
 component in code.
 
+`package` selects RSP's S2 or shared AI documentation route. `docsSection`
+selects SWC's ordinary component or AI Toolkit pattern group in Storybook.
+Neither field changes the component's status implementation.
+
 ## Automation
 
 GitHub workflows regenerate upstream-derived RSP and SWC data on a schedule,
 commit changes to bot-owned branches, and create or update pull requests. The
 status build runs after source extraction so each pull request keeps the source
 data and combined outputs synchronized.
+
+Figma uses a separate manually dispatched validation workflow. It requires a
+configured secret, runs default-branch code, and reports changes without writing
+to the repository. Local authenticated discovery is the initial validation path
+for an unmerged feature branch.
 
 When an automation diff is unexpectedly large:
 

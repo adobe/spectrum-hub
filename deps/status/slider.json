@@ -1,7 +1,11 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaPageSource": "Slider (Range)",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "10213:10589"
     },
     "rsp": {
       "status": "available",
@@ -11,5 +15,12 @@
       "status": "not-available"
     }
   },
-  "figmaPageId": "10483:4908"
+  "ios": {
+    "figma": {
+      "status": "available",
+      "figmaSource": "s2-ios",
+      "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+      "figmaPageId": "17605:7445"
+    }
+  }
 }

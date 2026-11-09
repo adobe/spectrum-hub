@@ -3,12 +3,18 @@ import sinon from 'sinon';
 import init, { resolveContext, buildPills } from '../../blocks/component-status/component-status.js';
 import { setConfig } from '../../scripts/ak.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+import { FIGMA_SOURCES } from '../../scripts/utils/figma-sources.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
 const SAFE_CONFIG = {
   hostnames: ['authorkit.dev'],
   components: [],
   locales: { '': { lang: 'en' } },
+};
+const WEB_FIGMA = {
+  figmaSource: 's2-web',
+  figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q',
+  figmaPageId: '123:456',
 };
 
 const setSessionHint = () => {
@@ -36,9 +42,38 @@ function waitFor(predicate, timeout = 2000) {
 }
 
 describe('component-status block', () => {
+  describe('native Design pills', () => {
+    for (const source of FIGMA_SOURCES.filter((entry) => entry.platform !== 'web')) {
+      it(`renders only the ${source.platform} Design pill, with its own file`, () => {
+        const pills = buildPills(`/mobile/${source.platform}/components/button`, {
+          web: { figma: { status: 'not-available' } },
+          [source.platform]: {
+            figma: {
+              status: 'available',
+              figmaSource: source.id,
+              figmaFile: source.fileKey,
+              figmaPageId: '1:2',
+            },
+          },
+        });
+        expect(pills).to.have.lengthOf(1);
+        expect(pills[0].dataset.kind).to.equal('design');
+        expect(pills[0].href).to.contain(`/design/${source.fileKey}/`);
+      });
+    }
+
+    it('does not invent native Code or Design status from a web-only slice', () => {
+      expect(buildPills('/mobile/ios/components/button', {
+        web: { figma: { status: 'available' } },
+      })).to.deep.equal([]);
+    });
+  });
+
   describe('resolveContext', () => {
     it('resolves the impl and slug from a component page path', () => {
-      expect(resolveContext('/web/rsp/components/action-group')).to.deep.equal({ impl: 'rsp', slug: 'action-group' });
+      expect(resolveContext('/web/rsp/components/action-group')).to.deep.equal({
+        platform: 'web', impl: 'rsp', slug: 'action-group',
+      });
     });
 
     it('returns null for a page with no components segment', () => {
@@ -51,7 +86,7 @@ describe('component-status block', () => {
 
     it('resolves the design-only route to its own impl', () => {
       expect(resolveContext('/web/design-only/components/alert-banner'))
-        .to.deep.equal({ impl: 'design-only', slug: 'alert-banner' });
+        .to.deep.equal({ platform: 'web', impl: 'design-only', slug: 'alert-banner' });
     });
   });
 
@@ -142,7 +177,7 @@ describe('component-status block', () => {
     });
 
     it('links the Design pill to Figma when the slice has a figmaPageId', () => {
-      const componentData = { web: { figma: { status: 'available' } }, figmaPageId: '123:456' };
+      const componentData = { web: { figma: { status: 'available', ...WEB_FIGMA } } };
       const pills = buildPills('/web/design-only/components/alert-banner', componentData);
       const design = pills.find((p) => p.dataset.kind === 'design');
 
@@ -180,9 +215,8 @@ describe('component-status block', () => {
           json: async () => ({
             web: {
               rsp: { status: 'available' },
-              figma: { status: 'available' },
+              figma: { status: 'available', ...WEB_FIGMA },
             },
-            figmaPageId: '123:456',
           }),
         };
       });
@@ -244,9 +278,8 @@ describe('component-status block', () => {
         json: async () => ({
           web: {
             rsp: { status: 'available' },
-            figma: { status: 'available' },
+            figma: { status: 'available', ...WEB_FIGMA },
           },
-          figmaPageId: '123:456',
         }),
       });
       const setup = frame.contentDocument.createElement('script');

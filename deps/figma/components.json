@@ -1,85 +1,1388 @@
 [
-  { "name": "Accordion", "figmaPageId": "10093:987" },
-  { "name": "Action bar", "figmaPageId": "9892:747" },
-  { "name": "Action button", "figmaPageId": "9230:3620" },
-  { "name": "Action group", "figmaPageId": "9230:10723" },
-  { "name": "Alert banner", "figmaPageId": "9894:2628" },
-  { "name": "Alert dialog", "figmaPageId": "9894:25578" },
-  { "name": "App frame (Browsing)", "figmaPageId": "10011:523" },
-  { "name": "Avatar", "figmaPageId": "9190:2" },
-  { "name": "Avatar group", "figmaPageId": "9190:1942" },
-  { "name": "Badge", "figmaPageId": "9225:1954" },
-  { "name": "Badge (Notification + Indicator)", "figmaPageId": "10341:21848" },
-  { "name": "Bar panel and toolbar", "figmaPageId": "9952:1166" },
-  { "name": "Breadcrumbs", "figmaPageId": "10097:3786" },
-  { "name": "Button", "figmaPageId": "9308:53605" },
-  { "name": "Button (Gradient)", "figmaPageId": "9308:71766" },
-  { "name": "Button group", "figmaPageId": "9308:61791" },
-  { "name": "Cards (Asset)", "figmaPageId": "10182:4354" },
-  { "name": "Cards (Collection)", "figmaPageId": "10182:112842" },
-  { "name": "Cards (Gallery)", "figmaPageId": "10182:121138" },
-  { "name": "Cards (Horizontal)", "figmaPageId": "10182:123491" },
-  { "name": "Cards (Product)", "figmaPageId": "10182:123492" },
-  { "name": "Cards (User)", "figmaPageId": "10182:123493" },
-  { "name": "Checkbox", "figmaPageId": "9961:1280" },
-  { "name": "Checkbox group", "figmaPageId": "9961:43523" },
-  { "name": "Close button", "figmaPageId": "9306:13549" },
-  { "name": "Coach indicator", "figmaPageId": "9306:21364" },
-  { "name": "Coach mark", "figmaPageId": "10097:77563" },
-  { "name": "Color area", "figmaPageId": "9306:20114" },
-  { "name": "Color handle", "figmaPageId": "9306:18338" },
-  { "name": "Color slider", "figmaPageId": "9956:3878" },
-  { "name": "Color wheel", "figmaPageId": "9306:18554" },
-  { "name": "Combo box", "figmaPageId": "10101:81448" },
-  { "name": "Contextual help", "figmaPageId": "9394:431" },
-  { "name": "Date and time field", "figmaPageId": "10196:3411" },
-  { "name": "Date picker", "figmaPageId": "10506:4274" },
-  { "name": "Divider", "figmaPageId": "9233:4610" },
-  { "name": "Drop zone", "figmaPageId": "10026:3827" },
-  { "name": "Field label", "figmaPageId": "9244:6297" },
-  { "name": "Help text", "figmaPageId": "9299:166" },
-  { "name": "Illustrated message", "figmaPageId": "10026:49323" },
-  { "name": "In-line alert", "figmaPageId": "9953:42090" },
-  { "name": "Keyboard shortcut", "figmaPageId": "9967:50420" },
-  { "name": "Labeled value", "figmaPageId": "10340:7260" },
-  { "name": "Link", "figmaPageId": "9306:192" },
-  { "name": "List view", "figmaPageId": "10108:2350" },
-  { "name": "Menu", "figmaPageId": "10095:400" },
-  { "name": "Meter", "figmaPageId": "9306:10464" },
-  { "name": "Number field", "figmaPageId": "10031:356" },
-  { "name": "Picker", "figmaPageId": "10109:86152" },
-  { "name": "Popover", "figmaPageId": "9385:13924" },
-  { "name": "Progress bar", "figmaPageId": "9383:377" },
-  { "name": "Progress circle", "figmaPageId": "9385:518" },
-  { "name": "Radio button", "figmaPageId": "9961:45930" },
-  { "name": "Radio group", "figmaPageId": "9961:46792" },
-  { "name": "Rating", "figmaPageId": "9902:3201" },
-  { "name": "Scroll bar", "figmaPageId": "9385:27613" },
-  { "name": "Search field", "figmaPageId": "9902:24447" },
-  { "name": "Segmented control", "figmaPageId": "10034:460" },
-  { "name": "Select box", "figmaPageId": "9966:48949" },
-  { "name": "Side navigation", "figmaPageId": "10134:3926" },
-  { "name": "Slider", "figmaPageId": "10213:663" },
-  { "name": "Slider (Offset)", "figmaPageId": "10483:4906" },
-  { "name": "Slider (Ramp)", "figmaPageId": "10483:4907" },
-  { "name": "Slider (Range)", "figmaPageId": "10483:4908" },
-  { "name": "Standard dialog", "figmaPageId": "10034:52090" },
-  { "name": "Standard panel", "figmaPageId": "10151:3337" },
-  { "name": "Steplist", "figmaPageId": "10179:12704" },
-  { "name": "Status light", "figmaPageId": "9386:255" },
-  { "name": "Swatch", "figmaPageId": "9386:15221" },
-  { "name": "Swatch group", "figmaPageId": "9390:791" },
-  { "name": "Switch", "figmaPageId": "9397:4673" },
-  { "name": "Table", "figmaPageId": "10220:2502" },
-  { "name": "Tabs", "figmaPageId": "9946:189" },
-  { "name": "Tag", "figmaPageId": "9948:720" },
-  { "name": "Tag field", "figmaPageId": "9949:36501" },
-  { "name": "Tag group", "figmaPageId": "9949:41916" },
-  { "name": "Takeover dialog", "figmaPageId": "9918:359" },
-  { "name": "Text area", "figmaPageId": "9913:25077" },
-  { "name": "Text field", "figmaPageId": "9915:1457" },
-  { "name": "Thumbnail", "figmaPageId": "9392:43644" },
-  { "name": "Toast", "figmaPageId": "9908:274" },
-  { "name": "Tooltip", "figmaPageId": "9897:32002" },
-  { "name": "Tree view", "figmaPageId": "10036:62001" }
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Button",
+    "figmaPageId": "2002:3805"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Cancel icon button",
+    "figmaPageId": "3840:9643"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Close icon button",
+    "figmaPageId": "3840:9076"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Done icon button",
+    "figmaPageId": "3840:9439"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Extended FAB",
+    "figmaPageId": "2082:2200"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "FAB",
+    "figmaPageId": "2082:1450"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Help icon button",
+    "figmaPageId": "3840:9189"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Icon button",
+    "figmaPageId": "2074:859"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Icon toggle button (distinct content)",
+    "figmaPageId": "4025:17792"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Icon toggle button (same content)",
+    "figmaPageId": "3993:78201"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Info icon button",
+    "figmaPageId": "3840:9308"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "More icon button",
+    "figmaPageId": "3840:9733"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Snackbar",
+    "figmaPageId": "3279:5329"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "SpectrumIcon",
+    "figmaPageId": "2002:167"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Switch",
+    "figmaPageId": "3984:38444"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Toggle button (distinct content)",
+    "figmaPageId": "3989:70632"
+  },
+  {
+    "source": "s2-android",
+    "platform": "android",
+    "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+    "name": "Toggle button (same content)",
+    "figmaPageId": "3987:38598"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Button",
+    "figmaPageId": "3956:67276"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Cancel button",
+    "figmaPageId": "4250:4206"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Close button",
+    "figmaPageId": "4250:4150"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Done button",
+    "figmaPageId": "4250:4193"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Help button",
+    "figmaPageId": "4250:4163"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Info button",
+    "figmaPageId": "4250:4178"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "iOS 18 iPad Submenu",
+    "figmaPageId": "2645:6219"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "iOS 18 Submenu",
+    "figmaPageId": "2595:3756"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "iOS 18 Submenu Picker",
+    "figmaPageId": "2595:3759"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Control Group",
+    "figmaPageId": "5890:12345"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Control Group (iOS 18)",
+    "figmaPageId": "2595:2599"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Doc Header",
+    "figmaPageId": "5890:12425"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Header",
+    "figmaPageId": "2595:2611"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Header",
+    "figmaPageId": "5890:12355"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Item",
+    "figmaPageId": "2595:2619"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Item",
+    "figmaPageId": "5890:12360"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Menu Separator",
+    "figmaPageId": "5890:12422"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "More button",
+    "figmaPageId": "4250:4219"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Picker",
+    "figmaPageId": "4562:33703"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Pop-up button",
+    "figmaPageId": "4559:30705"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Slider",
+    "figmaPageId": "17605:7445"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Slider (center)",
+    "figmaPageId": "17605:8008"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "SpIcon",
+    "figmaPageId": "3044:2409"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Submenu",
+    "figmaPageId": "5890:12277"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Submenu Picker",
+    "figmaPageId": "5890:12284"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Toast",
+    "figmaPageId": "7499:17007"
+  },
+  {
+    "source": "s2-ios",
+    "platform": "ios",
+    "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+    "name": "Toggle button",
+    "figmaPageId": "5703:13400"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "🚫 Prompt field (Deprecated)",
+    "figmaPageId": "2574:10553"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "🚫 User message (Deprecated)",
+    "figmaPageId": "5705:458"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "AI Mark",
+    "figmaPageId": "24331:8992"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "In-line message",
+    "figmaPageId": "23851:4051"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Message feedback",
+    "figmaPageId": "2:1604"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Message sources",
+    "figmaPageId": "8884:8473"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Prompt field",
+    "figmaPageId": "24045:20181"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Prompt field attachment",
+    "figmaPageId": "24073:16435"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Prompt field attachment (Overflow)",
+    "figmaPageId": "24241:57944"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Response status",
+    "figmaPageId": "25258:5635"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "Response status (Execution step)",
+    "figmaPageId": "24443:9890"
+  },
+  {
+    "source": "ai-toolkit",
+    "platform": "web",
+    "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+    "name": "User message",
+    "figmaPageId": "25161:22075"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Accordion",
+    "figmaPageId": "10093:5812"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Accordion item",
+    "figmaPageId": "10093:4151"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Action bar (dark theme)",
+    "figmaPageId": "9892:3870"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Action bar (light theme)",
+    "figmaPageId": "9892:3901"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Action button",
+    "figmaPageId": "9230:4016"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Action group",
+    "figmaPageId": "9230:13363"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Alert banner",
+    "figmaPageId": "9894:5539"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Alert dialog",
+    "figmaPageId": "9894:25801"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "App frame side nav item (browsing)",
+    "figmaPageId": "10011:4842"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "App frame side navigation (browsing)",
+    "figmaPageId": "10011:5112"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Avatar",
+    "figmaPageId": "9190:562"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Avatar group",
+    "figmaPageId": "9190:2735"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Badge",
+    "figmaPageId": "9225:2307"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Badge (Notification + Indicator)",
+    "figmaPageId": "10466:2948"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Bar panel and toolbar",
+    "figmaPageId": "9952:19120"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Breadcrumbs",
+    "figmaPageId": "10097:13567"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Button",
+    "figmaPageId": "9308:53906"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Button (Gradient)",
+    "figmaPageId": "9308:72417"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Button group",
+    "figmaPageId": "9308:61851"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (Asset)",
+    "figmaPageId": "10182:7201"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (Collection)",
+    "figmaPageId": "10182:112854"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (Gallery)",
+    "figmaPageId": "10182:122031"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (Horizontal basic)",
+    "figmaPageId": "10182:123716"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (Horizontal)",
+    "figmaPageId": "10182:123511"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (Product)",
+    "figmaPageId": "10182:125328"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Card (User)",
+    "figmaPageId": "10190:126397"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Checkbox",
+    "figmaPageId": "9961:1932"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Checkbox group",
+    "figmaPageId": "9961:44138"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Close button",
+    "figmaPageId": "9306:17243"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Coach indicator",
+    "figmaPageId": "9306:24283"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Coach mark",
+    "figmaPageId": "10097:80694"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Color area",
+    "figmaPageId": "9306:20119"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Color handle",
+    "figmaPageId": "9306:18381"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Color slider",
+    "figmaPageId": "9956:4189"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Color wheel",
+    "figmaPageId": "9306:18579"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Combo box",
+    "figmaPageId": "10101:88280"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Combo box (In-line)",
+    "figmaPageId": "10101:87558"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Contextual help",
+    "figmaPageId": "9394:1964"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Date and time field",
+    "figmaPageId": "10507:4275"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Date picker",
+    "figmaPageId": "10197:7190"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Disclosure",
+    "figmaPageId": "19877:2691"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Divider",
+    "figmaPageId": "9233:8955"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Drop zone",
+    "figmaPageId": "10026:6635"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Field label",
+    "figmaPageId": "9244:9450"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Help text",
+    "figmaPageId": "9299:2510"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Illustrated message",
+    "figmaPageId": "10026:49512"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "In-line alert",
+    "figmaPageId": "9953:42188"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Keyboard shortcut",
+    "figmaPageId": "9967:53130"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Link",
+    "figmaPageId": "9306:518"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "List view",
+    "figmaPageId": "10108:6423"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "List view item",
+    "figmaPageId": "10108:5873"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Menu",
+    "figmaPageId": "10095:8886"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Menu item",
+    "figmaPageId": "10095:8388"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Meter",
+    "figmaPageId": "9306:10593"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Number field",
+    "figmaPageId": "10031:837"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Number field (In-line)",
+    "figmaPageId": "10036:57003"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Picker",
+    "figmaPageId": "10109:92114"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Popover",
+    "figmaPageId": "9385:16640"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Progress bar",
+    "figmaPageId": "9384:734"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Progress circle ",
+    "figmaPageId": "9385:767"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Quiet modifiers",
+    "figmaPageId": "9967:53252"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Radio button",
+    "figmaPageId": "9961:46229"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Radio group",
+    "figmaPageId": "9961:47232"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Rating",
+    "figmaPageId": "9902:3568"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Scroll bar",
+    "figmaPageId": "9385:29003"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Search field",
+    "figmaPageId": "9902:27417"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Segmented control",
+    "figmaPageId": "10034:851"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Select box",
+    "figmaPageId": "9966:49777"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Side navigation",
+    "figmaPageId": "10134:4243"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Side navigation item",
+    "figmaPageId": "10134:3957"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Slider",
+    "figmaPageId": "10213:8693"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Slider (Offset)",
+    "figmaPageId": "10213:9860"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Slider (Ramp)",
+    "figmaPageId": "10213:11430"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Slider (Range)",
+    "figmaPageId": "10213:10589"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Standard dialog",
+    "figmaPageId": "10034:55579"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Standard modifiers",
+    "figmaPageId": "9967:53373"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Standard panel",
+    "figmaPageId": "10151:8140"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Status light",
+    "figmaPageId": "9386:684"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Steplist",
+    "figmaPageId": "10179:13507"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Swatch",
+    "figmaPageId": "9386:15324"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Swatch group",
+    "figmaPageId": "9390:1053"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Switch",
+    "figmaPageId": "9397:4922"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tab group",
+    "figmaPageId": "9946:217"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table",
+    "figmaPageId": "10634:9019"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table (empty state)",
+    "figmaPageId": "10634:9005"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table (loading state)",
+    "figmaPageId": "10634:9012"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table (sparkline)",
+    "figmaPageId": "10634:8992"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, avatar)",
+    "figmaPageId": "10634:7344"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, date)",
+    "figmaPageId": "10634:7134"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, layout)",
+    "figmaPageId": "10634:7458"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, number)",
+    "figmaPageId": "10634:7239"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, section header row)",
+    "figmaPageId": "10634:7012"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, select)",
+    "figmaPageId": "10634:7442"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, slot)",
+    "figmaPageId": "10634:7474"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, sparkline)",
+    "figmaPageId": "10634:7417"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, summary row)",
+    "figmaPageId": "10634:7018"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (compact density, text)",
+    "figmaPageId": "10634:7029"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, avatar)",
+    "figmaPageId": "10634:6857"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, date)",
+    "figmaPageId": "10634:6647"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, layout)",
+    "figmaPageId": "10634:6971"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, number)",
+    "figmaPageId": "10634:6752"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, section header row)",
+    "figmaPageId": "10634:6533"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, select)",
+    "figmaPageId": "10634:6955"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, slot)",
+    "figmaPageId": "10634:6987"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, sparkline)",
+    "figmaPageId": "10634:6930"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, summary row)",
+    "figmaPageId": "10634:6539"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (regular density, text)",
+    "figmaPageId": "10634:6550"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, avatar)",
+    "figmaPageId": "10634:7831"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, date)",
+    "figmaPageId": "10634:7621"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, layout)",
+    "figmaPageId": "10634:7945"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, number)",
+    "figmaPageId": "10634:7726"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, section header row)",
+    "figmaPageId": "10634:7499"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, select)",
+    "figmaPageId": "10634:7929"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, slot)",
+    "figmaPageId": "10634:7961"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, sparkline)",
+    "figmaPageId": "10634:7904"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, summary row)",
+    "figmaPageId": "10634:7505"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table cell (spacious density, text)",
+    "figmaPageId": "10634:7516"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (avatar)",
+    "figmaPageId": "10634:8282"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (date)",
+    "figmaPageId": "10634:8361"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (layout)",
+    "figmaPageId": "10634:8677"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (number)",
+    "figmaPageId": "10634:8124"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (select)",
+    "figmaPageId": "10634:8598"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (slot)",
+    "figmaPageId": "10634:8519"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (sparkline)",
+    "figmaPageId": "10634:8440"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table columns (text)",
+    "figmaPageId": "10634:8203"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table header (M, checkbox)",
+    "figmaPageId": "10634:8114"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table header (M, counter)",
+    "figmaPageId": "10634:8036"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table header (M, space)",
+    "figmaPageId": "10634:8046"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Table header (M, text cell)",
+    "figmaPageId": "10634:8053"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tag",
+    "figmaPageId": "9948:3986"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tag field",
+    "figmaPageId": "9949:38288"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tag group",
+    "figmaPageId": "9949:44510"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Takeover dialog",
+    "figmaPageId": "9918:3140"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Text area",
+    "figmaPageId": "9913:25888"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Text area (In-line)",
+    "figmaPageId": "9987:12265"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Text field",
+    "figmaPageId": "9915:1854"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Text field (In-line)",
+    "figmaPageId": "9991:3022"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Thumbnail",
+    "figmaPageId": "9392:43848"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Toast",
+    "figmaPageId": "9908:3034"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tooltip",
+    "figmaPageId": "9897:32209"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tree view",
+    "figmaPageId": "10036:70206"
+  },
+  {
+    "source": "s2-web",
+    "platform": "web",
+    "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+    "name": "Tree view item",
+    "figmaPageId": "10036:70272"
+  }
 ]

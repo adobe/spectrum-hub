@@ -70,8 +70,28 @@ describe('go-to-impl block', () => {
     it('ignores the package for swc, which has one docs site for every component', () => {
       expect(resolveImplementation('/web/swc/components/prompt-field', null, 'ai')).to.deep.equal({
         label: 'SWC',
-        href: 'https://spectrum-web-components.adobe.com/?path=/docs/components-prompt-field--docs',
+        href: 'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-prompt-field--docs',
       });
+    });
+
+    it('links published SWC AI components to their pattern documentation', () => {
+      for (const slug of ['message-sources', 'response-status', 'prompt-field']) {
+        expect(resolveImplementation(`/web/swc/components/${slug}`)?.href).to.equal(
+          `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${slug}--docs`,
+        );
+      }
+    });
+
+    it('uses the parent docs page for a response status step', () => {
+      expect(resolveImplementation('/web/swc/components/response-status-step', 'ResponseStatus')?.href).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+      );
+    });
+
+    it('uses the nested suggestion item documentation page', () => {
+      expect(resolveImplementation('/web/swc/components/suggestion-item', 'SuggestionGroupSuggestionItem')?.href).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-suggestion-group-suggestion-item--docs',
+      );
     });
 
     it('returns null when there is no components segment', () => {
@@ -104,6 +124,21 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
+    it('uses generated SWC AI documentation metadata, including child-page redirects', () => {
+      for (const [slug, story] of [
+        ['message-sources', 'message-sources'],
+        ['response-status', 'response-status'],
+        ['response-status-step', 'response-status'],
+        ['suggestion-item', 'suggestion-group-suggestion-item'],
+      ]) {
+        window.history.pushState({}, '', `/web/swc/components/${slug}`);
+        const a = makeAnchor();
+        decorateGoToImpl(a, a.querySelector('span'));
+        expect(a.href).to.equal(
+          `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${story}--docs`,
+        );
+      }
+    });
     // upstreamName now comes from a static import of deps/build-status-index.js's build
     // output (deps/impl-component-names.js) rather than a per-page fetch — these exercise real
     // committed alias entries instead of stubbing a network response.

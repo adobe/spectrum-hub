@@ -25,7 +25,7 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Test Figma discovery
+      - name: Test Figma discovery and resolution
         run: node --test test/extractions/figma-*.node.test.js test/extractions/build-status-index.node.test.js
 
       - name: Discover published Figma component sets
@@ -33,7 +33,10 @@ jobs:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
         run: node deps/figma/discover-components.js
 
+      - name: Rebuild the combined status index
+        run: node deps/build-status-index.js
+
       - name: Report generated changes
         run: |
-          git diff --stat -- deps/figma/components.json
-          git status --short -- deps/figma/components.json
+          git diff --stat -- deps/figma/components.json deps/status-index.json deps/status deps/impl-component-names.js
+          git status --short -- deps/figma/components.json deps/status-index.json deps/status deps/impl-component-names.js

@@ -2,7 +2,10 @@
   "web": {
     "figma": {
       "status": "available",
-      "secondary": "Use date and time component"
+      "secondary": "Use date and time component",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "10197:7190"
     },
     "rsp": {
       "status": "available",
