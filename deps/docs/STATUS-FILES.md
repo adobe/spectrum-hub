@@ -161,3 +161,16 @@ It is written only for a non-default package, so every S2 slug is unchanged. The
 in `components.json` also selects which CDN base `deps/rsp/extract-props.js` crawls and
 which docs page `deps/rsp/extract-doc-status.js` reads — see
 [`deps/rsp/README.md`](../rsp/README.md).
+
+## `docsSection`: which SWC Storybook group documents it
+
+Published SWC AI Toolkit components live under `patterns/ai-toolkit/` in
+`deps/swc/components.json`. The builder derives
+`docsSection: "patterns-ai-toolkit"` from this grouping. Ordinary SWC components keep the
+default `components` group. Both use the same npm package and SWC status column.
+
+The generated section applies to implementation widgets and Code pills.
+`upstreamName` still selects a different documentation slug when necessary:
+Response Status Step links to Response Status's page; Suggestion Item links to
+the nested `suggestion-group-suggestion-item` page. Neither redirect changes
+the real tag used by the playground.

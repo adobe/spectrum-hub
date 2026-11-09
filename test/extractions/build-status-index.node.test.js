@@ -9,7 +9,7 @@ import {
   canonicalNameForRsp,
   joinRosters,
   filterRoster,
-  standaloneSwcTags,
+  swcComponentTags,
   excludeInternalSwc,
   toIndexStatus,
   readSecondaries,
@@ -246,20 +246,22 @@ describe('filterRoster', () => {
   });
 });
 
-describe('standaloneSwcTags', () => {
-  it('keeps components/* tags and drops patterns/* tags', () => {
+describe('swcComponentTags', () => {
+  it('includes every discovered tag, including AI Toolkit pattern members', () => {
     const components = {
       button: 'components/button',
       tabs: 'components/tabs',
-      'suggestion-group': 'patterns/conversational-ai/suggestion',
-      'response-status-step': 'patterns/conversational-ai/response-status/response-status-step',
+      'suggestion-group': 'patterns/ai-toolkit/suggestion',
+      'response-status-step': 'patterns/ai-toolkit/response-status/response-status-step',
     };
-    assert.deepEqual(standaloneSwcTags(components), ['swc-button', 'swc-tabs']);
+    assert.deepEqual(swcComponentTags(components), [
+      'swc-button', 'swc-tabs', 'swc-suggestion-group', 'swc-response-status-step',
+    ]);
   });
 
   it('returns tags in components.json key order', () => {
     assert.deepEqual(
-      standaloneSwcTags({ tabs: 'components/tabs', accordion: 'components/accordion' }),
+      swcComponentTags({ tabs: 'components/tabs', accordion: 'components/accordion' }),
       ['swc-tabs', 'swc-accordion'],
     );
   });
@@ -650,6 +652,21 @@ describe('buildComponentSlices', () => {
 // genuinely disagree: takeover-dialog documents at Dialog but renders FullscreenDialog.
 // Collapsing them to one value shipped a bug before — see deps/docs/STATUS-FILES.md.
 describe('buildImplComponentNames', () => {
+  it('records the SWC pattern documentation section without replacing RSP package metadata', () => {
+    const roster = [
+      { name: 'ResponseStatus', sources: { swc: 'swc-response-status', rsp: 'ResponseStatus' } },
+      { name: 'Button', sources: { swc: 'swc-button' } },
+    ];
+    assert.deepEqual(buildImplComponentNames([], roster, {
+      ResponseStatus: { package: 'ai' },
+    }, {
+      'response-status': 'patterns/ai-toolkit/response-status',
+      button: 'components/button',
+    }), {
+      rsp: { 'response-status': { package: 'ai' } },
+      swc: { 'response-status': { docsSection: 'patterns-ai-toolkit' } },
+    });
+  });
   it('keys a docs name by impl and the slice\'s own slug', () => {
     const slices = [
       { slug: 'action-group', data: { web: { rsp: { status: 'available', upstreamName: 'ActionButtonGroup' } } } },
