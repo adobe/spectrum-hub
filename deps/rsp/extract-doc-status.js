@@ -8,10 +8,12 @@
  */
 
 import { fileURLToPath } from 'url';
+import { RSP_DOCS_BASE, docsPageName } from './docs.js';
 
-export const S2_DOCS_BASE = 'https://react-spectrum.adobe.com';
+export { RSP_DOCS_BASE as S2_DOCS_BASE, docsPageName } from './docs.js';
 export const s2MdxUrl = (component) =>
   `https://cdn.jsdelivr.net/gh/adobe/react-spectrum@main/packages/dev/s2-docs/pages/s2/${component}.mdx`;
+
 const VERSION_EXPORT = /export\s+const\s+version\s*=\s*['"](alpha|beta|rc)['"]/;
 // Excludes `<option value="alpha">alpha</option>, whose value literally reads
 // the color's alpha/transparency channel, which false-positives as a version badge.
@@ -38,14 +40,20 @@ export function parseStatusFromHtml(html) {
 }
 
 /**
- * Resolves doc maturity for an S2 component name.
+ * Resolves doc maturity for a component name.
  *
  * - `alpha` | `beta` | `rc` when the docs site shows a prerelease badge
  * - `stable` when a doc page exists but has no prerelease badge
  * - `null` when there is no published doc page for that name
+ *
+ * A package with shared documentation uses that page's maturity for every component.
+ *
+ * @param {string} componentName
+ * @param {string} [pkg] - the roster entry's `package`; S2 when absent.
  */
-export async function fetchComponentDocStatus(componentName) {
-  const htmlUrl = `${S2_DOCS_BASE}/${componentName}.html`;
+export async function fetchComponentDocStatus(componentName, pkg) {
+  const pageName = docsPageName(componentName, pkg);
+  const htmlUrl = `${RSP_DOCS_BASE}/${pageName}.html`;
   const html = await fetchText(htmlUrl);
 
   if (html.ok) {
@@ -56,7 +64,7 @@ export async function fetchComponentDocStatus(componentName) {
     return null;
   }
 
-  const mdx = await fetchText(s2MdxUrl(componentName));
+  const mdx = await fetchText(s2MdxUrl(pageName));
   if (!mdx.ok) return null;
 
   return parseStatusFromMdx(mdx.text);

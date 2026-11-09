@@ -9,6 +9,7 @@ import {
   extractComponentProps,
 } from '../../deps/rsp/extract-props.js';
 import { buildProgram } from '../../deps/rsp/build-ts-checker.js';
+import { componentFileNames, discoverComponents } from '../../deps/rsp/discover-components.js';
 
 describe('buildComponentData', () => {
   const props = [{ property: 'size', type: "'M'" }];
@@ -139,6 +140,56 @@ describe('extractComponentProps', () => {
       return { ok: text !== undefined, status: text !== undefined ? 200 : 404, text: async () => text ?? '' };
     };
   }
+
+  it('extracts discovered AI declarations with nested paths and inherited S2 props', async () => {
+    const sources = {
+      '@react-spectrum/ai/dist/types/src/loader/react.d.ts': `
+        export interface PixelLoaderProps { isPlaying?: boolean; size?: number; }
+        export declare function PixelLoader(props: PixelLoaderProps): React.JSX.Element;
+      `,
+      '@react-spectrum/ai/dist/types/src/PromptField.d.ts': `
+        import { MenuTriggerProps } from '@react-spectrum/s2';
+        export interface InsertMenuItemProps extends Pick<MenuTriggerProps, 'onOpenChange'> {
+          children: React.ReactNode;
+        }
+        export declare function InsertMenuButton(props: InsertMenuItemProps): React.JSX.Element;
+        export interface PromptFieldSubmitButtonProps {}
+        export declare function PromptFieldSubmitButton(props: PromptFieldSubmitButtonProps): React.JSX.Element;
+      `,
+      '@react-spectrum/s2/dist/types/exports/index.d.ts': `
+        export interface MenuTriggerProps { onOpenChange?: (isOpen: boolean) => void; }
+      `,
+    };
+    const files = componentFileNames({
+      files: [
+        { path: '/dist/types/src/loader/react.d.ts' },
+        { path: '/dist/types/src/PromptField.d.ts' },
+      ],
+    });
+    const roster = await discoverComponents(
+      files,
+      async (file) => sources[`@react-spectrum/ai/dist/types/src/${file}.d.ts`],
+      'ai',
+    );
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = makeMockFetch(sources);
+    try {
+      const cache = new Map();
+      const loaderProps = await extractComponentProps('PixelLoader', roster.PixelLoader, cache);
+      assert.equal(loaderProps.find((prop) => prop.property === 'isPlaying').kind, 'boolean');
+
+      const buttonProps = await extractComponentProps('InsertMenuButton', roster.InsertMenuButton, cache);
+      assert.equal(buttonProps.find((prop) => prop.property === 'children').required, true);
+      assert.equal(buttonProps.find((prop) => prop.property === 'onOpenChange').inheritedFrom, 'MenuTriggerProps');
+
+      assert.deepEqual(
+        await extractComponentProps('PromptFieldSubmitButton', roster.PromptFieldSubmitButton, cache),
+        [],
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 
   it('resolves a component end to end from its own .d.ts source', async () => {
     const fetchImpl = makeMockFetch({

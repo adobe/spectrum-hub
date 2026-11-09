@@ -81,11 +81,35 @@ describe('deps/rsp/data pipeline canary', () => {
   // RSP has no alias-expansion pass to miss — the checker resolves every type, so a
   // named type here (StylesProp, SortDescriptor) is a real opaque API type, not a
   // failure. What does fail silently: `Omit<T, K>` collapses the WHOLE interface to
-  // zero properties when any package in T's heritage chain was never crawled. So a
-  // component reporting no props means a missing package, not a propless component.
-  it('leaves no component with zero props', () => {
-    const empty = readCatalog('rsp').filter(({ rows }) => rows.length === 0);
-    assert.deepEqual(empty.map(({ component }) => component), []);
+  // zero properties when any package in T's heritage chain was never crawled.
+  function assertEmptyProps(catalog) {
+    // This upstream API is intentionally empty. Remove the exception if it gains props.
+    const expected = catalog
+      .filter(({ component }) => component === 'PromptFieldSubmitButton')
+      .map(({ component }) => component);
+    const empty = catalog.filter(({ rows }) => rows.length === 0);
+    assert.deepEqual(empty.map(({ component }) => component), expected);
+  }
+
+  it('leaves no unexpectedly empty component', () => {
+    assertEmptyProps(readCatalog('rsp'));
+  });
+
+  it('accepts the intentionally empty PromptFieldSubmitButton API after refresh', () => {
+    assertEmptyProps([{ component: 'PromptFieldSubmitButton', rows: [] }]);
+  });
+
+  it('still rejects an unexpectedly empty inherited API', () => {
+    assert.throws(() => assertEmptyProps([
+      { component: 'PromptFieldSubmitButton', rows: [] },
+      { component: 'AttachFileMenuItem', rows: [] },
+    ]), assert.AssertionError);
+  });
+
+  it('requires removing the exception when the upstream API gains props', () => {
+    assert.throws(() => assertEmptyProps([
+      { component: 'PromptFieldSubmitButton', rows: [{ property: 'isDisabled' }] },
+    ]), assert.AssertionError);
   });
 });
 
