@@ -85,6 +85,18 @@ describe('go-to-impl block', () => {
       });
     });
 
+    it('uses CEM-derived documentation metadata rather than a pattern route group', () => {
+      expect(resolveImplementation('/web/swc/patterns/conversational-ai/response-status')?.href).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+      );
+    });
+
+    it('uses the RSP AI documentation for a pattern page when its package is AI', () => {
+      expect(resolveImplementation('/web/rsp/patterns/ai-toolkit/prompt-field', null, 'ai')?.href).to.equal(
+        'https://react-spectrum.adobe.com/ai-components.html#promptfield',
+      );
+    });
+
     it('keeps the components section when SWC metadata has no documentation section', () => {
       expect(resolveImplementation('/web/swc/components/button', undefined, undefined, {})).to.deep.equal({
         label: 'SWC',
@@ -173,6 +185,15 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
+    it('retains the generated parent documentation alias on a nested pattern page', () => {
+      window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status/response-status-step');
+      const a = makeAnchor();
+      decorateGoToImpl(a, a.querySelector('span'));
+      expect(a.href).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+      );
+    });
+
     for (const [slug, docsSlug, upstreamName] of [
       ['prompt-field', 'prompt-field', undefined],
       ['response-status-step', 'response-status', 'ResponseStatus'],

@@ -8,6 +8,48 @@ const block = {
   readySelector: 'nav.page-nav',
 };
 
+test(`${block.name} heading-free pattern page has accessible actions`, async ({ page, makeAxeBuilder }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'Page actions tree only needs the desktop project');
+
+  await gotoBlock(page, {
+    path: `${block.path}?pattern`,
+    readySelector: 'nav.page-nav .page-nav-widgets',
+    routes: [{
+      url: '**/deps/status/response-status.json',
+      contentType: 'application/json',
+      body: JSON.stringify({
+        web: {
+          figma: {
+            status: 'available',
+            figmaSource: 'ai-toolkit',
+            figmaFile: '3WdX799d7ptEVA6RuTESXs',
+            figmaPageId: '1:2',
+          },
+        },
+      }),
+    }],
+  });
+
+  const nav = page.getByRole('navigation', { name: 'Page actions' });
+  await expect(nav.getByRole('list')).toHaveCount(0);
+  await expect(nav).toMatchAriaSnapshot(`
+    - navigation "Page actions":
+      - button "Copy markdown":
+        - img
+        - text: Copy markdown
+      - link "Go to SWC. Opens response-status in a new tab.":
+        - /url: https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs
+        - img
+        - text: Go to SWC
+      - link "See in Figma. Opens response-status in a new tab.":
+        - /url: https://www.figma.com/design/3WdX799d7ptEVA6RuTESXs/Spectrum-AI-Toolkit?node-id=1-2&m=dev
+        - img
+        - text: See in Figma
+  `);
+  const results = await makeAxeBuilder().analyze();
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
 test(`${block.name} clears the fixed header and avoids hidden desktop work`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium', 'this test drives its own viewports');
 

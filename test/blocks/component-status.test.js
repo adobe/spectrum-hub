@@ -70,6 +70,11 @@ describe('component-status block', () => {
   });
 
   describe('resolveContext', () => {
+    it('resolves a nested pattern page without treating its group as an implementation', () => {
+      expect(resolveContext('/web/swc/patterns/conversational-ai/response-status'))
+        .to.deep.equal({ platform: 'web', impl: 'swc', slug: 'response-status' });
+    });
+
     it('resolves the impl and slug from a component page path', () => {
       expect(resolveContext('/web/rsp/components/action-group')).to.deep.equal({
         platform: 'web', impl: 'rsp', slug: 'action-group',
@@ -91,6 +96,28 @@ describe('component-status block', () => {
   });
 
   describe('buildPills — Code pill link', () => {
+    it('shares pattern documentation metadata and the selected AI Toolkit design with widgets', () => {
+      const source = FIGMA_SOURCES.find(({ id }) => id === 'ai-toolkit');
+      const pills = buildPills('/web/swc/patterns/conversational-ai/response-status-step', {
+        web: {
+          swc: { status: 'available', upstreamName: 'ResponseStatus' },
+          figma: {
+            status: 'available',
+            figmaSource: source.id,
+            figmaFile: source.fileKey,
+            figmaPageId: '1:2',
+          },
+        },
+      });
+      expect(pills).to.have.lengthOf(2);
+      expect(pills.find((pill) => pill.dataset.kind === 'dev').href).to.equal(
+        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+      );
+      expect(pills.find((pill) => pill.dataset.kind === 'design').href).to.equal(
+        `https://www.figma.com/design/${source.fileKey}/${source.urlName}?node-id=1-2&m=dev`,
+      );
+    });
+
     for (const [slug, docsSlug, upstreamName] of [
       ['prompt-field', 'prompt-field', undefined],
       ['response-status-step', 'response-status', 'ResponseStatus'],
