@@ -14,7 +14,9 @@ const RSP_AI_DOCS = 'https://react-spectrum.adobe.com/ai-components.html';
 const IMPLEMENTATIONS = {
   swc: {
     label: 'SWC',
-    href: (component) => `https://spectrum-web-components.adobe.com/?path=/docs/components-${component}--docs`,
+    href: (component, { docsSection = 'components' } = {}) => (
+      `https://spectrum-web-components.adobe.com/?path=/docs/${docsSection}-${component}--docs`
+    ),
   },
   rsp: {
     label: 'RSP',
@@ -33,8 +35,9 @@ export function resolveImplementation(pathname, upstreamName, pkg) {
   const { impl: implId, slug } = implAndSlugFromPath(pathname);
   const impl = IMPLEMENTATIONS[implId];
   if (!impl || !slug) { return null; }
+  const { docsSection } = IMPL_COMPONENT_NAMES[implId]?.[slug] ?? {};
   const component = upstreamName ? toSlug(upstreamName) : slug;
-  return { label: impl.label, href: impl.href(component, { pkg }) };
+  return { label: impl.label, href: impl.href(component, { pkg, docsSection }) };
 }
 
 // deps/impl-component-names.js (built by deps/build-status-index.js) is a couple dozen
