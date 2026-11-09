@@ -7,8 +7,12 @@ export function isComponentPath(pathname) {
   return pathname.split('/').includes('components');
 }
 
-export function shouldRenderWidget(widget, isComponentPage) {
-  return isComponentPage || GLOBAL_WIDGETS.has(widget.name);
+function isPatternsPath(pathname) {
+  return pathname.split('/').includes('patterns');
+}
+
+export function shouldRenderWidget(widget, isComponentPage, isPatternsPage = false) {
+  return isComponentPage || isPatternsPage || GLOBAL_WIDGETS.has(widget.name);
 }
 
 function makeWidgetElement(tag, name, label, icon, getSvgRef) {
@@ -67,8 +71,9 @@ const WIDGETS = [
 // them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
+  const isPatternsPage = isPatternsPath(window.location.pathname);
   const candidates = WIDGETS.filter(
-    (widget) => shouldRenderWidget(widget, isComponentPage),
+    (widget) => shouldRenderWidget(widget, isComponentPage, isPatternsPage),
   );
   if (!candidates.length) { return; }
 
@@ -240,7 +245,9 @@ function navigateToHeading(heading) {
 
 (() => {
   const headings = [...document.querySelectorAll('main h2')];
-  if (!headings.length) {
+  if (!headings.length
+    && !isComponentPath(window.location.pathname)
+    && !isPatternsPath(window.location.pathname)) {
     return;
   }
 
@@ -269,7 +276,7 @@ function navigateToHeading(heading) {
     resume,
   } = scrollSpy;
 
-  const lastId = headings[headings.length - 1].id;
+  const lastId = headings.at(-1)?.id ?? null;
   // Resolved against our own collected headings rather than a document-wide
   // getElementById: some other element elsewhere on the page (e.g. the sitenav,
   // which slugifies its own category names into ids the same way) can happen to
@@ -284,7 +291,7 @@ function navigateToHeading(heading) {
     }
     pageNav = document.createElement('nav');
     pageNav.className = 'page-nav';
-    pageNav.setAttribute('aria-label', 'On this page');
+    pageNav.setAttribute('aria-label', headings.length ? 'On this page' : 'Page actions');
     pageNav.dataset.pageNav = 'ready';
     const list = document.createElement('ul');
     headings.forEach((heading) => {
@@ -310,7 +317,9 @@ function navigateToHeading(heading) {
       list.append(li);
       linkById.set(heading.id, link);
     });
-    pageNav.append(list);
+    if (headings.length) {
+      pageNav.append(list);
+    }
     syncActive();
     return pageNav;
   };
@@ -321,7 +330,9 @@ function navigateToHeading(heading) {
       if (placeholder.parentNode) {
         placeholder.replaceWith(nav);
       }
-      scrollSpy.start();
+      if (headings.length) {
+        scrollSpy.start();
+      }
       if (!widgetsStarted) {
         widgetsStarted = true;
         renderWidgets(nav);
