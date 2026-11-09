@@ -96,6 +96,29 @@ describe('figma block', () => {
       expect(a.querySelector('span').textContent).to.equal('See in Figma');
     });
 
+    it('uses the selected AI Toolkit reference for a nested pattern page', async () => {
+      const source = FIGMA_SOURCES.find(({ id }) => id === 'ai-toolkit');
+      stubComponentSlice({
+        web: {
+          figma: {
+            status: 'available',
+            figmaSource: source.id,
+            figmaFile: source.fileKey,
+            figmaPageId: '1:2',
+          },
+        },
+      });
+      window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status');
+      const a = makeAnchor();
+      await decorateSeeInFigma(a, a.querySelector('span'));
+      expect(fetchStub.calledOnce).to.be.true;
+      expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/response-status.json');
+      expect(a.href).to.equal(
+        `https://www.figma.com/design/${source.fileKey}/${source.urlName}?node-id=1-2&m=dev`,
+      );
+      expect(a.getAttribute('aria-label')).to.equal('See in Figma. Opens response-status in a new tab.');
+    });
+
     it('deep-links to a `web.figma.figmaPageSource` override\'s redirected Figma node', async () => {
       // deps/build-status-index.js resolves the override into the slice's figmaPageId
       // build-time — the widget just trusts whatever node id the slice carries.

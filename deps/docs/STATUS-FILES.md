@@ -205,3 +205,15 @@ Response Status Step and Suggestion Item have authored documentation aliases,
 but `roster-excludes.json` excludes both from web membership. Neither contributes
 `docs` or `docsSection` metadata to `impl-component-names.js`, so their aliases
 do not provide runtime documentation redirects.
+
+The same metadata applies on `/web/<impl>/patterns/<group>/<slug>` routes,
+including nested groups. The final slug selects the component's status slice.
+The site's route group does not determine the Storybook group: a page under
+`conversational-ai` still links to the CEM-derived `patterns-ai-toolkit` section.
+Implementation widgets and Code pills share this resolution. Design widgets
+and pills use the selected platform Figma reference, including AI Toolkit.
+
+Component and pattern pages without second-level headings retain their
+desktop page-nav actions under the accessible label **Page actions**. They do
+not render an empty table of contents or start a scroll observer. Design links
+remain private, and page-nav remains absent below the desktop breakpoint.

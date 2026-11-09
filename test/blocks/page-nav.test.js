@@ -173,6 +173,87 @@ describe('page-nav block', () => {
     });
   });
 
+  describe('component and pattern pages without h2 headings', () => {
+    let originalUrl;
+    let mql;
+    let observer;
+    let fetchStub;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      mql = stubMatchMedia(sandbox, true);
+      observer = stubIntersectionObserver(sandbox);
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true,
+        json: async () => ({
+          web: {
+            figma: {
+              figmaSource: 'ai-toolkit', figmaFile: '3WdX799d7ptEVA6RuTESXs', figmaPageId: '1:2',
+            },
+          },
+        }),
+      });
+      resetComponentSliceCacheForTests();
+      makeDOM({ h2Texts: [] });
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    [
+      '/web/swc/components/response-status',
+      '/web/swc/patterns/conversational-ai/response-status',
+    ].forEach((pathname) => {
+      it(`renders accessible page actions and selected links on ${pathname}`, async () => {
+        window.history.pushState({}, '', pathname);
+        const el = await loadPageNav();
+        expect(el).to.not.be.null;
+        const group = await waitForEl(el, '.page-nav-widgets');
+        expect(el.getAttribute('aria-label')).to.equal('Page actions');
+        expect(el.querySelector(':scope > ul')).to.be.null;
+        expect(observer.count).to.equal(0);
+        expect([...group.querySelectorAll('[data-widget]')].map((widget) => widget.dataset.widget))
+          .to.deep.equal(['copy-markdown', 'go-to-impl', 'see-in-figma']);
+        expect(group.querySelector('[data-widget="go-to-impl"]').href).to.equal(
+          'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+        );
+        expect(group.querySelector('[data-widget="see-in-figma"]').href).to.equal(
+          'https://www.figma.com/design/3WdX799d7ptEVA6RuTESXs/Spectrum-AI-Toolkit?node-id=1-2&m=dev',
+        );
+      });
+    });
+
+    it('defers widgets below the desktop breakpoint and does not duplicate them on return', async () => {
+      window.history.pushState({}, '', '/web/swc/patterns/ai-toolkit/response-status');
+      mql.dispatch(false);
+      expect(await loadPageNav()).to.be.null;
+      expect(fetchStub.called).to.be.false;
+      mql.dispatch(true);
+      const el = document.querySelector('nav.page-nav');
+      expect(el).to.not.be.null;
+      await waitForEl(el, '.page-nav-widgets');
+      mql.dispatch(false);
+      expect(document.querySelector('nav.page-nav')).to.be.null;
+      mql.dispatch(true);
+      expect(document.querySelector('nav.page-nav')).to.equal(el);
+      expect(el.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+      expect(observer.count).to.equal(0);
+    });
+
+    it('keeps the pattern Design widget private on CDN', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      window.history.pushState({}, '', '/web/swc/patterns/ai-toolkit/response-status');
+      const el = await loadPageNav();
+      expect(el).to.not.be.null;
+      const group = await waitForEl(el, '.page-nav-widgets');
+      expect(group.querySelector('[data-widget="see-in-figma"]')).to.be.null;
+      expect(group.querySelector('[data-widget="go-to-impl"]')).to.not.be.null;
+      expect(fetchStub.called).to.be.false;
+    });
+  });
+
   describe('the navigation links at the desktop viewport', () => {
     let el;
 
@@ -810,6 +891,11 @@ describe('page-nav block', () => {
 
     it('offers a private widget for audience gating on a component page', () => {
       expect(shouldRenderWidget(seeInFigma, true)).to.be.true;
+    });
+
+    it('offers implementation and private Design widgets on pattern pages', () => {
+      expect(shouldRenderWidget(goToImpl, false, true)).to.be.true;
+      expect(shouldRenderWidget(seeInFigma, false, true)).to.be.true;
     });
 
     it('still requires the URL gate for a private widget', () => {
