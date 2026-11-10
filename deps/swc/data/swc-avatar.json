@@ -47,8 +47,8 @@
       1500
     ],
     "optional": false,
-    "default": "500",
-    "description": "The size of the avatar. Invalid values fall back to the default (500).",
+    "default": "100",
+    "description": "The size of the avatar. Invalid values fall back to the default.",
     "inheritedFrom": "AvatarBase",
     "since": "2.0.0-beta.1"
   },

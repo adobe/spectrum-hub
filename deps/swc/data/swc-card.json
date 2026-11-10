@@ -2,18 +2,17 @@
   {
     "attribute": "size",
     "property": "size",
-    "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\" | \"xxs\" | \"xxl\"",
+    "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"xs\"",
     "kind": "enum",
     "values": [
-      "xxs",
       "xs",
       "s",
       "m",
       "l",
-      "xl",
-      "xxl"
+      "xl"
     ],
     "optional": false,
+    "default": "m",
     "description": "The size of the card.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0"
