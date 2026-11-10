@@ -6,6 +6,12 @@ access rules: gating private pages, stripping `audience-*` content blocks, and
 filtering `query-index.json` and `sitemap.xml`. See [`index.js`](./index.js) for the pipeline and
 [`lib/gate.js`](./lib/gate.js) for the access policy.
 
+For an existing Lambda redeployment, use the
+[preview deployment runbook](./DEPLOY-PREVIEW.md) or
+[production deployment runbook](./DEPLOY-PROD.md). They cover latest-main source
+checks, the `default` AWS profile, preserving environment variables, cache
+invalidation, and human or AI-assisted verification.
+
 ## Runtime environment
 
 Set these on the Lambda (they are read from `process.env`):

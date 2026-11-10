@@ -36,6 +36,7 @@ routes each area to its guide under [`docs/`](./docs/).
 
 | Guide | Use it when |
 | --- | --- |
+| [Maintainer handover](./docs/HANDOVER.md) | Taking over project operations, access, maintenance, or AI-assisted support |
 | [Architecture](./docs/ARCHITECTURE.md) | Tracing the page lifecycle, production request path, or code ownership boundaries |
 | [Content authoring](./docs/CONTENT_AUTHORING.md) | Editing or debugging pages, metadata, fragments, preview, and publish behavior |
 | [Blocks](./docs/BLOCKS.md) | Adding or changing an EDS block |
