@@ -1,7 +1,11 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaPageSource": "Text area (In-line)",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9987:12265"
     },
     "rsp": {
       "status": "available",
@@ -11,6 +15,5 @@
       "status": "not-available",
       "secondary": "Use text field"
     }
-  },
-  "figmaPageId": "9913:25077"
+  }
 }

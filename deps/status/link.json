@@ -1,7 +1,10 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9306:518"
     },
     "rsp": {
       "status": "available",
@@ -12,6 +15,5 @@
       "context": "Stable",
       "note": "Native anchor element with global CSS classes."
     }
-  },
-  "figmaPageId": "9306:192"
+  }
 }

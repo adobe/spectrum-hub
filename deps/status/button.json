@@ -1,7 +1,11 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaPageSource": "Button (Gradient)",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9308:72417"
     },
     "rsp": {
       "status": "available",
@@ -12,5 +16,20 @@
       "context": "Stable"
     }
   },
-  "figmaPageId": "9308:71766"
+  "android": {
+    "figma": {
+      "status": "available",
+      "figmaSource": "s2-android",
+      "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+      "figmaPageId": "2002:3805"
+    }
+  },
+  "ios": {
+    "figma": {
+      "status": "available",
+      "figmaSource": "s2-ios",
+      "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+      "figmaPageId": "3956:67276"
+    }
+  }
 }
