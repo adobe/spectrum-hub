@@ -21,7 +21,7 @@ async function fetchSlice(slug) {
  * slug from the same URL on the same page load, so this avoids a duplicate fetch.
  *
  * @param {string} slug
- * @returns {Promise<{ web: object, figmaPageId?: string } | null>}
+ * @returns {Promise<{ web?: object, ios?: object, android?: object } | null>}
  */
 export function fetchComponentSlice(slug) {
   if (!cache.has(slug)) {

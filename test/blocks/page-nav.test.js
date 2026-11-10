@@ -829,7 +829,13 @@ describe('page-nav block', () => {
       stubMatchMedia(sandbox, true);
       fetchStub = sandbox.stub(window, 'fetch').resolves({
         ok: true,
-        json: async () => ({ web: {}, figmaPageId: '9230:3620' }),
+        json: async () => ({
+          web: {
+            figma: {
+              figmaSource: 's2-web', figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q', figmaPageId: '9230:3620',
+            },
+          },
+        }),
       });
       resetComponentSliceCacheForTests();
       makeDOM();

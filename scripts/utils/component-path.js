@@ -36,3 +36,18 @@ export function implAndSlugFromPath(pathname) {
   if (idx < 1) { return { impl: null, slug: null }; }
   return { impl: parts[idx - 1] ?? null, slug: parts[idx + 1] ?? null };
 }
+
+/** Resolves the site's web and native component routes without a platform fallback. */
+export function componentContextFromPath(pathname) {
+  const parts = pathname.split('/').filter(Boolean);
+  const idx = parts.indexOf('components');
+  if (idx < 2 || !parts[idx + 1] || parts.length !== idx + 2) { return null; }
+  const impl = parts[idx - 1];
+  if (parts[idx - 2] === 'web') {
+    return { platform: 'web', impl, slug: parts[idx + 1] };
+  }
+  if (parts[idx - 2] === 'mobile' && ['ios', 'android'].includes(impl)) {
+    return { platform: impl, impl, slug: parts[idx + 1] };
+  }
+  return null;
+}

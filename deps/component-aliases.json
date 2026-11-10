@@ -104,18 +104,29 @@
     }
   },
   "figma": {
+    "Badge (Notification + Indicator)": "NotificationBadge",
+    "Combo box (In-line)": "ComboBox",
     "In-line alert": "InlineAlert",
     "Card": "Cards",
-    "Cards (Asset)": "Cards",
-    "Cards (Collection)": "Cards",
-    "Cards (Gallery)": "Cards",
-    "Cards (Horizontal)": "Cards",
-    "Cards (Product)": "Cards",
-    "Cards (User)": "Cards",
-    "Badge (Notification + Indicator)": "NotificationBadge",
+    "Card (Asset)": "Cards",
+    "Card (Collection)": "Cards",
+    "Card (Gallery)": "Cards",
+    "Card (Horizontal)": "Cards",
+    "Card (Horizontal basic)": "Cards",
+    "Card (Product)": "Cards",
+    "Card (User)": "Cards",
     "Button (Gradient)": "Button",
+    "Number field (In-line)": "NumberField",
     "Slider (Offset)": "Slider",
     "Slider (Ramp)": "Slider",
-    "Slider (Range)": "Slider"
+    "Slider (Range)": "Slider",
+    "Text field (In-line)": "TextField",
+    "Text area (In-line)": "TextArea"
+  },
+  "figmaSources": {
+    "ai-toolkit": {
+      "🚫 User message (Deprecated)": "UserMessageDeprecated",
+      "🚫 Prompt field (Deprecated)": "PromptFieldDeprecated"
+    }
   }
 }

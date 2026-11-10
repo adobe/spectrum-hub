@@ -15,10 +15,17 @@ describe('component-slice', () => {
   });
 
   it('fetches deps/status/<slug>.json and returns the parsed slice', async () => {
-    fetchStub.resolves({ ok: true, json: async () => ({ web: {}, figmaPageId: '9230:3620' }) });
+    const slice = {
+      ios: {
+        figma: {
+          status: 'available', figmaSource: 's2-ios', figmaFile: 'OQExiy8bX0pRqee71eAWX6', figmaPageId: '1:2',
+        },
+      },
+    };
+    fetchStub.resolves({ ok: true, json: async () => slice });
     const data = await fetchComponentSlice('action-button');
     expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/action-button.json');
-    expect(data).to.deep.equal({ web: {}, figmaPageId: '9230:3620' });
+    expect(data).to.deep.equal(slice);
   });
 
   it('returns null when the slice cannot be fetched', async () => {
@@ -32,7 +39,7 @@ describe('component-slice', () => {
   });
 
   it('caches: a second call for the same slug does not fetch again', async () => {
-    fetchStub.resolves({ ok: true, json: async () => ({ web: {}, figmaPageId: '9230:3620' }) });
+    fetchStub.resolves({ ok: true, json: async () => ({ web: { figma: { status: 'not-available' } } }) });
     await fetchComponentSlice('action-button');
     await fetchComponentSlice('action-button');
     expect(fetchStub.callCount).to.equal(1);

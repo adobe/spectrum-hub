@@ -17,8 +17,8 @@ import { STATUSES } from '../../scripts/utils/status-model.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { getSvgRef } from '../../scripts/utils/svg.js';
 import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
-import { figmaNodeUrl } from '../../scripts/utils/figma.js';
-import { implAndSlugFromPath } from '../../scripts/utils/component-path.js';
+import { getFigmaLink } from '../../scripts/utils/figma.js';
+import { componentContextFromPath } from '../../scripts/utils/component-path.js';
 import { fetchComponentSlice } from '../../scripts/utils/component-slice.js';
 import { getConfig, removeForAudience } from '../../scripts/ak.js';
 
@@ -48,9 +48,11 @@ const STATUS_ICONS = {
  *   `/…/components/<slug>` under a registered code implementation (rsp/swc, never figma).
  */
 export function resolveContext(pathname) {
-  const { impl, slug } = implAndSlugFromPath(pathname);
-  if (!slug || !getImplementationById(impl)) { return null; }
-  return { impl, slug };
+  const context = componentContextFromPath(pathname);
+  if (!context || (context.platform === 'web' && !getImplementationById(context.impl))) {
+    return null;
+  }
+  return context;
 }
 
 /**
@@ -92,27 +94,32 @@ function buildPill({ kind, label: prefix }, cell, link) {
  * an empty array when the path doesn't resolve or the component has no slice.
  *
  * @param {string} pathname
- * @param {{ web: object, figmaPageId?: string } | null} componentData - this component's slice.
+ * @param {{ web?: object, ios?: object, android?: object } | null} componentData
+ *   This component's platform-specific status slice.
  * @returns {HTMLElement[]}
  */
 export function buildPills(pathname, componentData) {
   const context = resolveContext(pathname);
   if (!context || !componentData) { return []; }
-  const web = componentData.web ?? {};
+  const cells = componentData[context.platform];
+  if (context.platform !== 'web' && !cells?.figma) { return []; }
 
   // Development reuses the page-nav widgets' URL logic exactly; Design links straight to
   // the node id the build already resolved (no client-side Figma roster search needed).
   // The current impl's own cell may carry `upstreamName` (an aliased/shared page's real
   // upstream name) — see resolveImplementation.
-  const impl = resolveImplementation(pathname, web[context.impl]?.upstreamName ?? null);
-  const figmaHref = figmaNodeUrl(componentData.figmaPageId);
+  const impl = context.platform === 'web'
+    ? resolveImplementation(pathname, cells?.[context.impl]?.upstreamName ?? null)
+    : null;
+  const figmaLink = getFigmaLink(pathname, componentData);
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,
-    design: figmaHref ? { href: figmaHref, dest: 'Figma' } : null,
+    design: figmaLink ? { href: figmaLink.href, dest: 'Figma' } : null,
   };
 
   return PILLS
-    .map((pill) => buildPill(pill, web[pill.column ?? context.impl], links[pill.kind]))
+    .filter((pill) => context.platform === 'web' || pill.kind === 'design')
+    .map((pill) => buildPill(pill, cells?.[pill.column ?? context.impl], links[pill.kind]))
     .filter(Boolean);
 }
 
