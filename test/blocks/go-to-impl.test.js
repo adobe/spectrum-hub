@@ -1,5 +1,7 @@
 import { expect } from '@esm-bundle/chai';
+import sinon from 'sinon';
 import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
 function makeAnchor(text = 'Go to implementation') {
   const a = document.createElement('a');
@@ -67,10 +69,26 @@ describe('go-to-impl block', () => {
       });
     });
 
-    it('ignores the package for swc, which has one docs site for every component', () => {
-      expect(resolveImplementation('/web/swc/components/prompt-field', null, 'ai')).to.deep.equal({
+    it('ignores the package for swc while preserving its pattern documentation section', () => {
+      const names = { swc: { 'prompt-field': { docsSection: 'patterns-ai-toolkit' } } };
+      expect(resolveImplementation('/web/swc/components/prompt-field', null, 'ai', names)).to.deep.equal({
         label: 'SWC',
-        href: 'https://spectrum-web-components.adobe.com/?path=/docs/components-prompt-field--docs',
+        href: 'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-prompt-field--docs',
+      });
+    });
+
+    it('uses the SWC documentation section from injected metadata', () => {
+      const names = { swc: { 'prompt-field': { docsSection: 'patterns-ai-toolkit' } } };
+      expect(resolveImplementation('/web/swc/components/prompt-field', undefined, undefined, names)).to.deep.equal({
+        label: 'SWC',
+        href: 'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-prompt-field--docs',
+      });
+    });
+
+    it('keeps the components section when SWC metadata has no documentation section', () => {
+      expect(resolveImplementation('/web/swc/components/button', undefined, undefined, {})).to.deep.equal({
+        label: 'SWC',
+        href: 'https://spectrum-web-components.adobe.com/?path=/docs/components-button--docs',
       });
     });
 
@@ -135,9 +153,29 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
-    // upstreamName now comes from a static import of deps/build-status-index.js's build
-    // output (deps/impl-component-names.js) rather than a per-page fetch — these exercise real
-    // committed alias entries instead of stubbing a network response.
+    for (const [slug, docsSlug, upstreamName] of [
+      ['prompt-field', 'prompt-field', undefined],
+      ['response-status-step', 'response-status', 'ResponseStatus'],
+      ['suggestion-item', 'suggestion-group-suggestion-item', 'SuggestionGroupSuggestionItem'],
+    ]) {
+      it(`links ${slug} to its published pattern documentation`, () => {
+        const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value({
+          [slug]: { docs: upstreamName, docsSection: 'patterns-ai-toolkit' },
+        });
+        try {
+          window.history.pushState({}, '', `/web/swc/components/${slug}`);
+          const a = makeAnchor();
+          decorateGoToImpl(a, a.querySelector('span'));
+          expect(a.getAttribute('href')).to.equal(
+            `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
+          );
+          expect(a.getAttribute('aria-label')).to.equal(`Go to SWC. Opens ${upstreamName ?? slug} in a new tab.`);
+        } finally {
+          metadata.restore();
+        }
+      });
+    }
+
     it('sets the SWC label and deep-links to the SWC docs in a new tab', () => {
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const a = makeAnchor();

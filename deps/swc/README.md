@@ -32,7 +32,7 @@ Each row in `data/swc-{tag}.json` maps a CEM attribute to:
 - `inheritedFrom` when the CEM marks the attribute as inherited from a base class or mixin (for example `SizedMixin`, `ButtonBase`)
 - `status` and `since` from the component declaration (`@status`, `@since` in source)
 
-`kind` is `enum` if and only if `values` is non-empty; `test/extractions/swc-data-contract.node.test.js` enforces that over the committed catalog. `kind: "unknown"` draws no control and warns — today only `swc-action-button`'s `aria-haspopup`/`aria-expanded`, which reach the CEM with no type at all.
+`kind` is `enum` if and only if `values` is non-empty; `test/extractions/swc-data-contract.node.test.js` enforces that over the committed catalog. `kind: "unknown"` draws no control and warns when an authored control depends on it. Consult the current catalog for types that could not be resolved.
 
 ### Attribute type resolution
 
@@ -71,17 +71,15 @@ node deps/swc/extract-cem-components.js
 npm run test:extractions
 ```
 
-This fetches the CEM from the CDN with no arguments. The package is currently pinned to a snapshot (`@adobe/spectrum-wc@0.4.0-snapshot-test.20260717104105`) in `extract-cem-components.js`; drop the pin once a stable release ships `dist/custom-elements.json`.
+This fetches the CEM from the `latest` distribution tag, resolves the concrete package version, and records it in `version.json`. The playground reads that committed version rather than independently floating on `latest`.
 
 **Manual CEM regeneration (local build):**
 
-Use this only to regenerate `data/` from an unreleased SWC change, by passing a locally built CEM path:
+To validate an unreleased SWC change, generate its CEM in the SWC repository and pass the same local manifest to discovery and extraction:
 
 ```sh
-cd ../spectrum-web-components/2nd-gen/packages/swc
-yarn analyze
-cd ../../../../spectrum-hub
-node deps/swc/extract-cem-components.js ../spectrum-web-components/2nd-gen/packages/swc/.storybook/custom-elements.json
+node deps/swc/discover-components.js /absolute/path/to/custom-elements.json
+node deps/swc/extract-cem-components.js /absolute/path/to/custom-elements.json
 npm run test:extractions
 ```
 
@@ -99,13 +97,21 @@ Extraction tests live under `test/extractions/` and run with the repo's Node tes
   "button": "components/button",
   "tab": "components/tabs",
   "tabs": "components/tabs",
-  "suggestion-group": "patterns/conversational-ai/suggestion"
+  "suggestion-group": "patterns/ai-toolkit/suggestion"
 }
 ```
 
 It is the single source of truth for two things: **which tags exist** (the keys) and **where each tag's module lives** (the value). The subpath is the directory of the declaration's module `path` in the CEM, so it mirrors the upstream package layout — `components/<name>` for standard components, `patterns/<pattern>/<name>` for pattern members. Several tags can share one subpath when a module ships a whole family (`components/tabs` exports Tabs, Tab, TabPanel). The playground's `define-swc.js` imports this file to resolve which module to load for a given tag; the extractor reads its keys as the roster of tags to extract.
 
 Extraction output files are named `{tag}.json` (for example `data/swc-button.json`). Everything resolves against the single `@adobe/spectrum-wc` manifest — there is no per-component npm package suffix (1st-gen used `"sp-button": "button"` for CDN paths).
+
+### AI Toolkit status and documentation
+
+The status builder includes published pattern members alongside ordinary components. `message-sources` and `response-status` are roster members even though their modules live under `patterns/ai-toolkit/`. An empty attribute array does not mean a discovered component is unavailable. Existing lifecycle and reviewed web-roster exclusions still apply.
+
+Run `node deps/build-status-index.js` after refreshing the catalog or properties. The builder joins matching RSP and Figma resources on the canonical component; it does not create another SWC implementation for AI Toolkit.
+
+The generated `docsSection` selects Storybook's `patterns-ai-toolkit` group. Documentation aliases handle shared or nested pages without changing the published tag or module path. See [STATUS-FILES.md](../docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
 
 ## Adding or fixing a component
 
@@ -115,9 +121,9 @@ Extraction output files are named `{tag}.json` (for example `data/swc-button.jso
 
 - Tag is not listed in `components.json`.
 - Tag is not present in the CEM (component not analyzed or wrong `@customElement` name).
-- CEM was stale — rerun `yarn analyze` in `2nd-gen/packages/swc`.
+- CEM was stale. Rebuild the manifest using the upstream SWC repository's instructions.
 
-Spot-check JSON against [2nd-gen Storybook](https://github.com/adobe/spectrum-web-components/tree/main/2nd-gen/packages/swc) or component docs (for example confirm `size` on `swc-button`).
+Spot-check JSON against [SWC Storybook](https://spectrum-web-components.adobe.com/) or the published package declarations.
 
 **Missing from a release:** If a `swc-*` tag in `components.json` is not yet in the published package, the CDN CEM will not contain it. Validate it with a local `yarn analyze` build until it ships.
 
@@ -128,21 +134,21 @@ Spot-check JSON against [2nd-gen Storybook](https://github.com/adobe/spectrum-we
 - `https://unpkg.com/@adobe/spectrum-wc@<version>/dist/custom-elements.json`
 - Same path on jsDelivr
 
-The package ships `dist/custom-elements.json` (`files: ["dist/"]`, `customElements: "dist/custom-elements.json"`). The `<version>` is currently pinned to a snapshot in the script; remove the pin once a stable release includes the CEM.
+The package ships `dist/custom-elements.json` and exposes it through its `customElements` entry. The extractor requests `latest`; `version.json` records the concrete version used by the published extraction.
 
 ## Future work
 
-- **TODO: Remove the snapshot pin** — Drop the pinned `@0.4.0-snapshot-test.*` version in `extract-cem-components.js` once a stable `@adobe/spectrum-wc` release ships `dist/custom-elements.json`.
 - Render `status` in docs if product needs component lifecycle labels in the table.
 
 ## Known limitations
 
-**Snapshot pin** — The published CEM is currently only available on a snapshot tag, so `extract-cem-components.js` pins that exact version. CDN runs will break if that snapshot is unpublished before the pin moves to a stable release. Components not yet in that snapshot require a local `yarn analyze` build.
-
-**Generated allow list** — `components.json` is regenerated by `discover-components.js` from the CEM. It keys every `tagName` with no status filter, so `internal` primitives (for example `swc-close-button`, `swc-popover`) are included alongside public components. `../core/*` base-class declarations are skipped so a tag's subpath points at its published in-package module, not the core base.
+**Generated allow list:** `components.json` keys every published `tagName` with no status filter. The status builder separately excludes tags whose extraction resolves to `internal`, then applies reviewed roster exclusions. Do not infer lifecycle from a component's name. `../core/*` base-class declarations are skipped so a tag's subpath points at its published in-package module, not the core base.
 
 **CEM fidelity** — Output matches what the analyzer emits. If inherited attributes are missing on a declaration, fix analyzer globs or SWC source — do not expect 1st-gen-style `sp-mixins.json` merging during extraction.
 
 **Duplicate tag names** — If multiple declarations share a `tagName`, the extractor uses the first match in module order.
 
-**Tests** — `extract-cem-components`, `resolve-attribute-types`, `swc-locate-published-files`, and `swc-build-ts-checker` cover the pipeline with mocked fetches (no live CDN); `swc-data-contract` validates the committed catalog.
+**Tests** — `extract-cem-components`, `resolve-attribute-types`,
+`swc-locate-published-files`, and `swc-build-ts-checker` cover the pipeline with
+mocked fetches (no live CDN). `data-contract` validates the committed catalog;
+`build-status-index` covers published AI pattern membership and documentation metadata.

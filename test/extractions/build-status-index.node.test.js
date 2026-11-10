@@ -9,7 +9,7 @@ import {
   canonicalNameForRsp,
   joinRosters,
   filterRoster,
-  standaloneSwcTags,
+  swcComponentTags,
   excludeInternalSwc,
   toIndexStatus,
   readSecondaries,
@@ -21,6 +21,78 @@ import {
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
+
+describe('SWC pattern status pipeline', () => {
+  const components = {
+    button: 'components/button',
+    'conversation-thread': 'patterns/ai-toolkit/conversation-thread',
+    'message-sources': 'patterns/ai-toolkit/message-sources',
+    'response-status-step': 'patterns/ai-toolkit/response-status/response-status-step',
+    'suggestion-item': 'patterns/ai-toolkit/suggestion-item',
+    'internal-helper': 'patterns/ai-toolkit/internal-helper',
+    'suggestion-part': 'patterns/ai-toolkit/suggestion-part',
+  };
+  const aliases = {
+    swc: {
+      'swc-response-status-step': { canonical: 'ResponseStatusStep', upstreamName: 'ResponseStatus' },
+      'swc-suggestion-item': { canonical: 'SuggestionItem', upstreamName: 'SuggestionGroupSuggestionItem' },
+    },
+  };
+  const data = {
+    swc: {
+      'swc-button': [],
+      'swc-conversation-thread': [],
+      'swc-message-sources': [],
+      'swc-response-status-step': [],
+      'swc-suggestion-item': [],
+      'swc-internal-helper': [{ since: '2.0.0', status: 'internal' }],
+      'swc-suggestion-part': [],
+    },
+  };
+  const tags = excludeInternalSwc(
+    swcComponentTags(components),
+    (tag) => data.swc[tag],
+  );
+  const roster = filterRoster(joinRosters([], tags, [], aliases), ['SuggestionPart']);
+  const { index } = buildIndex({
+    roster,
+    readData: (source, name) => data[source][name],
+  });
+
+  it('includes public pattern members with empty attributes while respecting exclusions', () => {
+    assert.deepEqual(index.components.map(({ name, platforms }) => [name, platforms.web.swc]), [
+      ['Button', { status: 'available' }],
+      ['ConversationThread', { status: 'available' }],
+      ['MessageSources', { status: 'available' }],
+      ['ResponseStatusStep', { status: 'available', upstreamName: 'ResponseStatus' }],
+      ['SuggestionItem', { status: 'available', upstreamName: 'SuggestionGroupSuggestionItem' }],
+    ]);
+  });
+
+  it('carries pattern status and documentation aliases into component slices', () => {
+    const { slices } = buildComponentSlices(roster, index.components, []);
+    assert.deepEqual(slices.map(({ slug, data: slice }) => [slug, slice.web.swc]), [
+      ['button', { status: 'available' }],
+      ['conversation-thread', { status: 'available' }],
+      ['message-sources', { status: 'available' }],
+      ['response-status-step', { status: 'available', upstreamName: 'ResponseStatus' }],
+      ['suggestion-item', { status: 'available', upstreamName: 'SuggestionGroupSuggestionItem' }],
+    ]);
+  });
+
+  it('builds pattern documentation metadata without changing ordinary component defaults', () => {
+    const { slices } = buildComponentSlices(roster, index.components, []);
+    const names = buildImplComponentNames(slices, roster, {}, components);
+    assert.deepEqual(names, {
+      swc: {
+        'conversation-thread': { docsSection: 'patterns-ai-toolkit' },
+        'message-sources': { docsSection: 'patterns-ai-toolkit' },
+        'response-status-step': { docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit' },
+        'suggestion-item': { docs: 'SuggestionGroupSuggestionItem', docsSection: 'patterns-ai-toolkit' },
+      },
+    });
+  });
+});
 
 describe('swcTagToPascal', () => {
   it('strips the swc- prefix and converts kebab to Pascal', () => {
@@ -246,20 +318,22 @@ describe('filterRoster', () => {
   });
 });
 
-describe('standaloneSwcTags', () => {
-  it('keeps components/* tags and drops patterns/* tags', () => {
+describe('swcComponentTags', () => {
+  it('includes every discovered tag, including AI Toolkit pattern members', () => {
     const components = {
       button: 'components/button',
       tabs: 'components/tabs',
-      'suggestion-group': 'patterns/conversational-ai/suggestion',
-      'response-status-step': 'patterns/conversational-ai/response-status/response-status-step',
+      'suggestion-group': 'patterns/ai-toolkit/suggestion',
+      'response-status-step': 'patterns/ai-toolkit/response-status/response-status-step',
     };
-    assert.deepEqual(standaloneSwcTags(components), ['swc-button', 'swc-tabs']);
+    assert.deepEqual(swcComponentTags(components), [
+      'swc-button', 'swc-tabs', 'swc-suggestion-group', 'swc-response-status-step',
+    ]);
   });
 
   it('returns tags in components.json key order', () => {
     assert.deepEqual(
-      standaloneSwcTags({ tabs: 'components/tabs', accordion: 'components/accordion' }),
+      swcComponentTags({ tabs: 'components/tabs', accordion: 'components/accordion' }),
       ['swc-tabs', 'swc-accordion'],
     );
   });
@@ -650,6 +724,21 @@ describe('buildComponentSlices', () => {
 // genuinely disagree: takeover-dialog documents at Dialog but renders FullscreenDialog.
 // Collapsing them to one value shipped a bug before — see deps/docs/STATUS-FILES.md.
 describe('buildImplComponentNames', () => {
+  it('records the SWC pattern documentation section without replacing RSP package metadata', () => {
+    const roster = [
+      { name: 'ResponseStatus', sources: { swc: 'swc-response-status', rsp: 'ResponseStatus' } },
+      { name: 'Button', sources: { swc: 'swc-button' } },
+    ];
+    assert.deepEqual(buildImplComponentNames([], roster, {
+      ResponseStatus: { package: 'ai' },
+    }, {
+      'response-status': 'patterns/ai-toolkit/response-status',
+      button: 'components/button',
+    }), {
+      rsp: { 'response-status': { package: 'ai' } },
+      swc: { 'response-status': { docsSection: 'patterns-ai-toolkit' } },
+    });
+  });
   it('keys a docs name by impl and the slice\'s own slug', () => {
     const slices = [
       { slug: 'action-group', data: { web: { rsp: { status: 'available', upstreamName: 'ActionButtonGroup' } } } },

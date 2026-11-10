@@ -56,6 +56,28 @@ describe('component-status block', () => {
   });
 
   describe('buildPills — Code pill link', () => {
+    for (const [slug, docsSlug, upstreamName] of [
+      ['prompt-field', 'prompt-field', undefined],
+      ['response-status-step', 'response-status', 'ResponseStatus'],
+      ['suggestion-item', 'suggestion-group-suggestion-item', 'SuggestionGroupSuggestionItem'],
+    ]) {
+      it(`links ${slug}'s Code pill to its published pattern documentation`, () => {
+        const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value({
+          [slug]: { docsSection: 'patterns-ai-toolkit' },
+        });
+        try {
+          const pills = buildPills(`/web/swc/components/${slug}`, {
+            web: { swc: { status: 'available', upstreamName } },
+          });
+          expect(pills.find((pill) => pill.dataset.kind === 'dev').getAttribute('href')).to.equal(
+            `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
+          );
+        } finally {
+          metadata.restore();
+        }
+      });
+    }
+
     it('uses RSP package metadata for the AI documentation link before catalog refresh', () => {
       const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'rsp').value({
         ...IMPL_COMPONENT_NAMES.rsp,
