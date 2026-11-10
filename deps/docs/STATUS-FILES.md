@@ -80,12 +80,12 @@ builder. Do not hand-edit them either.
 | --- | --- | --- |
 | [`deps/status-index.json`](../status-index.json) | `blocks/status-table/status-table.js` | The full combined table — every component, every platform/impl cell, plus a self-describing status legend. |
 | `deps/status/<slug>.json` (one per component page) | `blocks/component-status/component-status.js`, `scripts/utils/figma.js` (via [`scripts/utils/component-slice.js`](../../scripts/utils/component-slice.js)) | One component page's cells + Figma node id — a single small fetch instead of downloading and searching the whole index on every component doc page. A page override can make multiple components share a slug. The writer updates current slices but does not prune obsolete files, so use `status-index.json`, not a directory listing, as the authoritative current roster. |
-| [`deps/impl-component-names.js`](../impl-component-names.js) | `scripts/utils/go-to-impl.js` (`docs`, `package`), `blocks/playground/playground.js` via `deps/rsp/playground/pascal-case.js` (`export`) | Per implementation, slug → `{ docs, export, package }`. `docs` is the name that source's *external docs site* uses, for building working links (`AlertDialog` → `Dialog.html`); `export` is the real name to `import`/render when it differs from the canonical one (`ActionGroup` → `ActionButtonGroup`); `package` is the publishing npm package when it is not the implementation's default (RSP's `ai` cohort — see [`package`](#package--which-npm-package-a-slug-ships-from) below). |
+| [`deps/impl-component-names.js`](../impl-component-names.js) | `scripts/utils/go-to-impl.js` (`docs`, `package`, `docsSection`), `blocks/playground/playground.js` via `deps/rsp/playground/pascal-case.js` (`export`) | Per implementation, slug → `{ docs, export, package, docsSection }`. `docs` is the name that source's *external docs site* uses, for building working links (`AlertDialog` → `Dialog.html`); `export` is the real name to `import`/render when it differs from the canonical one (`ActionGroup` → `ActionButtonGroup`); `package` identifies a non-default publishing npm package (RSP's `ai` cohort); `docsSection` selects a non-default SWC Storybook group. See the field descriptions below. |
 
 ## Two names that look redundant but aren't
 
-`impl-component-names.js` gives each slug up to **three** fields — `docs`, `export` and
-`package`. The first two are the pair that disagree for real components, and it's
+`impl-component-names.js` gives each slug up to **four** fields: `docs`, `export`,
+`package`, and `docsSection`. The first two are the pair that disagree for real components, and it's
 tempting to collapse them to one value. Don't — they answer genuinely different questions:
 
 - **`docs`**: "what does the source's *own public docs site* call this?" Several distinct

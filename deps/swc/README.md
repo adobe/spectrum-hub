@@ -32,10 +32,7 @@ Each row in `data/swc-{tag}.json` maps a CEM attribute to:
 - `inheritedFrom` when the CEM marks the attribute as inherited from a base class or mixin (for example `SizedMixin`, `ButtonBase`)
 - `status` and `since` from the component declaration (`@status`, `@since` in source)
 
-`kind` is `enum` if and only if `values` is non-empty;
-`test/extractions/data-contract.node.test.js` enforces that over the committed
-catalog. `kind: "unknown"` draws no control and warns when an authored control
-depends on it. Consult the current catalog for types that could not be resolved.
+`kind` is `enum` if and only if `values` is non-empty; `test/extractions/swc-data-contract.node.test.js` enforces that over the committed catalog. `kind: "unknown"` draws no control and warns when an authored control depends on it. Consult the current catalog for types that could not be resolved.
 
 ### Attribute type resolution
 
@@ -74,14 +71,11 @@ node deps/swc/extract-cem-components.js
 npm run test:extractions
 ```
 
-This fetches the CEM from the `latest` distribution tag, resolves the concrete
-package version, and records it in `version.json`. The playground reads that
-committed version rather than independently floating on `latest`.
+This fetches the CEM from the `latest` distribution tag, resolves the concrete package version, and records it in `version.json`. The playground reads that committed version rather than independently floating on `latest`.
 
 **Manual CEM regeneration (local build):**
 
-To validate an unreleased SWC change, generate its CEM in the SWC repository and
-pass the same local manifest to discovery and extraction:
+To validate an unreleased SWC change, generate its CEM in the SWC repository and pass the same local manifest to discovery and extraction:
 
 ```sh
 node deps/swc/discover-components.js /absolute/path/to/custom-elements.json
@@ -113,20 +107,11 @@ Extraction output files are named `{tag}.json` (for example `data/swc-button.jso
 
 ### AI Toolkit status and documentation
 
-The status builder includes published pattern members alongside ordinary
-components. `message-sources` and `response-status` are roster members even
-though their modules live under `patterns/ai-toolkit/`. An empty attribute
-array does not mean a discovered component is unavailable. Existing lifecycle
-and reviewed web-roster exclusions still apply.
+The status builder includes published pattern members alongside ordinary components. `message-sources` and `response-status` are roster members even though their modules live under `patterns/ai-toolkit/`. An empty attribute array does not mean a discovered component is unavailable. Existing lifecycle and reviewed web-roster exclusions still apply.
 
-Run `node deps/build-status-index.js` after refreshing the catalog or properties.
-The builder joins matching RSP and Figma resources on the canonical component;
-it does not create another SWC implementation for AI Toolkit.
+Run `node deps/build-status-index.js` after refreshing the catalog or properties. The builder joins matching RSP and Figma resources on the canonical component; it does not create another SWC implementation for AI Toolkit.
 
-The generated `docsSection` selects Storybook's `patterns-ai-toolkit` group.
-Documentation aliases handle shared or nested pages without changing the
-published tag or module path. See
-[STATUS-FILES.md](../docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
+The generated `docsSection` selects Storybook's `patterns-ai-toolkit` group. Documentation aliases handle shared or nested pages without changing the published tag or module path. See [STATUS-FILES.md](../docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
 
 ## Adding or fixing a component
 
@@ -138,8 +123,7 @@ published tag or module path. See
 - Tag is not present in the CEM (component not analyzed or wrong `@customElement` name).
 - CEM was stale. Rebuild the manifest using the upstream SWC repository's instructions.
 
-Spot-check JSON against [SWC Storybook](https://spectrum-web-components.adobe.com/)
-or the published package declarations.
+Spot-check JSON against [SWC Storybook](https://spectrum-web-components.adobe.com/) or the published package declarations.
 
 **Missing from a release:** If a `swc-*` tag in `components.json` is not yet in the published package, the CDN CEM will not contain it. Validate it with a local `yarn analyze` build until it ships.
 
@@ -150,9 +134,7 @@ or the published package declarations.
 - `https://unpkg.com/@adobe/spectrum-wc@<version>/dist/custom-elements.json`
 - Same path on jsDelivr
 
-The package ships `dist/custom-elements.json` and exposes it through its
-`customElements` entry. The extractor requests `latest`; `version.json` records
-the concrete version used by the published extraction.
+The package ships `dist/custom-elements.json` and exposes it through its `customElements` entry. The extractor requests `latest`; `version.json` records the concrete version used by the published extraction.
 
 ## Future work
 
@@ -160,11 +142,7 @@ the concrete version used by the published extraction.
 
 ## Known limitations
 
-**Generated allow list:** `components.json` keys every published `tagName` with no
-status filter. The status builder separately excludes tags whose extraction
-resolves to `internal`, then applies reviewed roster exclusions. Do not infer
-lifecycle from a component's name. `../core/*` base-class declarations are skipped
-so a tag's subpath points at its published in-package module, not the core base.
+**Generated allow list:** `components.json` keys every published `tagName` with no status filter. The status builder separately excludes tags whose extraction resolves to `internal`, then applies reviewed roster exclusions. Do not infer lifecycle from a component's name. `../core/*` base-class declarations are skipped so a tag's subpath points at its published in-package module, not the core base.
 
 **CEM fidelity** — Output matches what the analyzer emits. If inherited attributes are missing on a declaration, fix analyzer globs or SWC source — do not expect 1st-gen-style `sp-mixins.json` merging during extraction.
 

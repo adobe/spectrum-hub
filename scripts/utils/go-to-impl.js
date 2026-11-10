@@ -12,7 +12,7 @@ const IMPLEMENTATIONS = {
   },
   rsp: {
     label: 'RSP',
-    href: (component, pkg) => componentDocsUrl(pascalCase(component), pkg),
+    href: (component, { package: pkg } = {}) => componentDocsUrl(pascalCase(component), pkg),
   },
 };
 
@@ -32,7 +32,10 @@ export function resolveImplementation(
   const entry = componentNames[implId]?.[slug];
   const name = upstreamName === undefined ? entry?.docs : upstreamName;
   const component = name ? toSlug(name) : slug;
-  return { label: impl.label, href: impl.href(component, pkg ?? entry?.package) };
+  return {
+    label: impl.label,
+    href: impl.href(component, { ...entry, package: pkg ?? entry?.package }),
+  };
 }
 
 export function decorateGoToImpl(a, span) {

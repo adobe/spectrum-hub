@@ -22,6 +22,78 @@ import {
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
 
+describe('SWC pattern status pipeline', () => {
+  const components = {
+    button: 'components/button',
+    'conversation-thread': 'patterns/ai-toolkit/conversation-thread',
+    'message-sources': 'patterns/ai-toolkit/message-sources',
+    'response-status-step': 'patterns/ai-toolkit/response-status/response-status-step',
+    'suggestion-item': 'patterns/ai-toolkit/suggestion-item',
+    'internal-helper': 'patterns/ai-toolkit/internal-helper',
+    'suggestion-part': 'patterns/ai-toolkit/suggestion-part',
+  };
+  const aliases = {
+    swc: {
+      'swc-response-status-step': { canonical: 'ResponseStatusStep', upstreamName: 'ResponseStatus' },
+      'swc-suggestion-item': { canonical: 'SuggestionItem', upstreamName: 'SuggestionGroupSuggestionItem' },
+    },
+  };
+  const data = {
+    swc: {
+      'swc-button': [],
+      'swc-conversation-thread': [],
+      'swc-message-sources': [],
+      'swc-response-status-step': [],
+      'swc-suggestion-item': [],
+      'swc-internal-helper': [{ since: '2.0.0', status: 'internal' }],
+      'swc-suggestion-part': [],
+    },
+  };
+  const tags = excludeInternalSwc(
+    swcComponentTags(components),
+    (tag) => data.swc[tag],
+  );
+  const roster = filterRoster(joinRosters([], tags, [], aliases), ['SuggestionPart']);
+  const { index } = buildIndex({
+    roster,
+    readData: (source, name) => data[source][name],
+  });
+
+  it('includes public pattern members with empty attributes while respecting exclusions', () => {
+    assert.deepEqual(index.components.map(({ name, platforms }) => [name, platforms.web.swc]), [
+      ['Button', { status: 'available' }],
+      ['ConversationThread', { status: 'available' }],
+      ['MessageSources', { status: 'available' }],
+      ['ResponseStatusStep', { status: 'available', upstreamName: 'ResponseStatus' }],
+      ['SuggestionItem', { status: 'available', upstreamName: 'SuggestionGroupSuggestionItem' }],
+    ]);
+  });
+
+  it('carries pattern status and documentation aliases into component slices', () => {
+    const { slices } = buildComponentSlices(roster, index.components, []);
+    assert.deepEqual(slices.map(({ slug, data: slice }) => [slug, slice.web.swc]), [
+      ['button', { status: 'available' }],
+      ['conversation-thread', { status: 'available' }],
+      ['message-sources', { status: 'available' }],
+      ['response-status-step', { status: 'available', upstreamName: 'ResponseStatus' }],
+      ['suggestion-item', { status: 'available', upstreamName: 'SuggestionGroupSuggestionItem' }],
+    ]);
+  });
+
+  it('builds pattern documentation metadata without changing ordinary component defaults', () => {
+    const { slices } = buildComponentSlices(roster, index.components, []);
+    const names = buildImplComponentNames(slices, roster, {}, components);
+    assert.deepEqual(names, {
+      swc: {
+        'conversation-thread': { docsSection: 'patterns-ai-toolkit' },
+        'message-sources': { docsSection: 'patterns-ai-toolkit' },
+        'response-status-step': { docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit' },
+        'suggestion-item': { docs: 'SuggestionGroupSuggestionItem', docsSection: 'patterns-ai-toolkit' },
+      },
+    });
+  });
+});
+
 describe('swcTagToPascal', () => {
   it('strips the swc- prefix and converts kebab to Pascal', () => {
     assert.equal(swcTagToPascal('swc-action-button'), 'ActionButton');
