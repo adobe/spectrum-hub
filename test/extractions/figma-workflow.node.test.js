@@ -4,16 +4,17 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const path = new URL('../../.github/workflows/validate-figma-discovery.yml', import.meta.url);
 function workflow() {
-  assert.ok(existsSync(path), 'A manual authenticated Figma validation workflow must exist');
+  assert.ok(existsSync(path), 'An authenticated Figma validation workflow must exist');
   return readFileSync(path, 'utf8');
 }
 
 describe('authenticated Figma validation workflow', () => {
-  it('only runs on explicit manual dispatch with read-only repository permission', () => {
+  it('runs daily at 08:15 UTC or on manual dispatch with read-only repository permission', () => {
     const source = workflow();
+    assert.match(source, /^ {2}schedule:\n {4}- cron: '15 8 \* \* \*'/m);
     assert.match(source, /workflow_dispatch:/);
     assert.match(source, /contents: read/);
-    assert.doesNotMatch(source, /pull_request(?:_target)?:|schedule:|contents: write/);
+    assert.doesNotMatch(source, /pull_request(?:_target)?:|push:|workflow_run:|contents: write/);
   });
 
   it('checks out trusted default-branch code without persisting credentials', () => {

@@ -1,6 +1,8 @@
 name: Validate Figma discovery
 
 on:
+  schedule:
+    - cron: '15 8 * * *' # Daily at 08:15 UTC
   workflow_dispatch:
 
 permissions:

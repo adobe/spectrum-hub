@@ -1,8 +1,9 @@
 # Figma component roster
 
 Discovers published component sets from the registered Spectrum libraries.
-Discovery runs explicitly and atomically replaces `components.json`. It does
-not update the status index or component slices.
+Discovery atomically replaces `components.json`. It runs locally on demand and
+in CI daily or on manual dispatch. It does not update the status index or
+component slices.
 
 ## Source registry
 
@@ -53,16 +54,24 @@ revoke credentials through the approved credential owner.
 
 ## Authenticated GitHub Actions validation
 
-The manually dispatched
-[`Validate Figma discovery`](../../.github/workflows/validate-figma-discovery.yml)
-workflow uses default-branch code, read-only repository permission, and
+The [`Validate Figma discovery`](../../.github/workflows/validate-figma-discovery.yml)
+workflow runs daily at 08:15 UTC and supports manual dispatch. It uses
+default-branch code, read-only repository permission, and
 checkout without persisted credentials. It passes the repository secret
 `FIGMA_TOKEN` only to discovery and reports roster changes without rebuilding
-legacy status consumers. It does not commit, push, or upload API responses.
+legacy status consumers. Generated changes remain in the runner checkout.
+It does not commit, push, open pull requests, or upload API responses.
 
-The workflow must exist on the default branch before dispatch is available.
-A GitHub secret stores the credential but does not grant Figma file access.
-Do not run contributor code with this secret.
+An authorized maintainer must add `FIGMA_TOKEN` under **Settings > Secrets and
+variables > Actions**. A GitHub secret stores the credential but does not grant
+Figma file access.
+
+The workflow must exist on the default branch before scheduling or manual
+dispatch is available. To validate authentication, select **Validate Figma
+discovery** in Actions, choose **Run workflow**, and select the default branch.
+Do not run contributor code with this secret. Automated extraction and
+generated-data pull requests are deferred until live validation succeeds and
+the platform-aware consumers are available.
 
 ## Roster contract and checks
 
