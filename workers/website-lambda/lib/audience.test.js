@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { filterAudienceBlocks, filterAudienceMarkdown, hasAudienceBlocks } from './audience.js';
+import {
+  filterAudienceBlocks, filterAudienceMarkdown, hasAudienceBlocks,
+  filterPrivateCardMeta, hasPrivateCardMeta,
+} from './audience.js';
+import { PRIVATE_CARD_FIELDS } from './card-fields.js';
 
 // A block is `main > div (section) > div[class]` in the served HTML. Build a
 // section from block markup strings so tests read close to real pages.
@@ -125,6 +129,14 @@ describe('filterAudienceMarkdown', () => {
   const MD_PUBLIC = table('Banner (audience public)', 'public banner');
   const MD_PRIVATE = table('Banner (audience private)', 'private banner');
   const MD_PLAIN = table('Columns (large)', 'shared');
+  const metadata = (...rows) => {
+    const border = `+${'-'.repeat(30)}+${'-'.repeat(50)}+`;
+    const row = (key, value) => `| ${key.padEnd(28)} | ${value.padEnd(48)} |`;
+    return [
+      border, `${'| Metadata'.padEnd(border.length - 1)}|`, border,
+      ...rows.flatMap(([key, value]) => [row(key, value), border]),
+    ].join('\n');
+  };
 
   it('removes audience-private tables for anonymous viewers', () => {
     const out = filterAudienceMarkdown(doc('# Title', MD_PUBLIC, MD_PRIVATE, MD_PLAIN), false);
@@ -209,9 +221,172 @@ describe('filterAudienceMarkdown', () => {
     expect(filterAudienceMarkdown(md, true)).toBe(md);
   });
 
+  it.each([
+    'Card steward', 'card-steward', '**CARD-STEWARD**',
+    'Card design resources', 'card-design-resources', 'Card contact', 'card-contact',
+  ])('removes private metadata row %s without changing public rows', (key) => {
+    const md = doc('# Title', metadata(
+      ['Title', 'Public title'],
+      [key, 'private value'],
+      ['Description', 'Public description'],
+    ), MD_PLAIN);
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc('# Title', metadata(
+      ['Title', 'Public title'],
+      ['Description', 'Public description'],
+    ), MD_PLAIN));
+  });
+
+  it('removes wrapped private metadata keys and values', () => {
+    const md = doc(metadata(
+      ['Title', 'Public title'],
+      ['**Card design**', 'private first line'],
+    ).replace(
+      /(\| \*\*Card design\*\*[^\n]*\n)/,
+      '$1| **resources**                | private continuation                             |\n',
+    ));
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc(metadata(['Title', 'Public title'])));
+  });
+
+  it('preserves private metadata for authenticated viewers byte-for-byte', () => {
+    const md = doc(metadata(['Card steward', 'private value']), '# Public content');
+
+    expect(filterAudienceMarkdown(md, true)).toBe(md);
+  });
+
+  it('removes metadata tables left empty after filtering', () => {
+    const md = doc('# Before', metadata(['Card contact', 'private value']), '# After');
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc('# Before', '# After'));
+  });
+
+  it('removes orphaned private metadata references but keeps shared references', () => {
+    const md = doc(
+      metadata(
+        ['Title', 'Public title'],
+        ['Card design resources', '[Design][private] [Shared][shared]'],
+      ),
+      'Public [resource][shared].',
+      '[private]: https://example.test/private-design "private title"',
+      '[shared]: https://example.test/public-resource',
+    );
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc(
+      metadata(['Title', 'Public title']),
+      'Public [resource][shared].',
+      '[shared]: https://example.test/public-resource',
+    ));
+  });
+
+  it('filters every metadata table alongside audience-private blocks', () => {
+    const md = doc(
+      metadata(['Card steward', 'private team']),
+      MD_PRIVATE,
+      metadata(['Title', 'Public title'], ['Card contact', 'private contact']),
+      MD_PUBLIC,
+    );
+
+    expect(filterAudienceMarkdown(md, false)).toBe(doc(
+      metadata(['Title', 'Public title']),
+      MD_PUBLIC,
+    ));
+  });
+
+  it('keeps private field names outside metadata keys untouched', () => {
+    const md = doc(
+      'Card steward is an authored metadata field.',
+      metadata(['Description', 'How to author card-steward']),
+      table('Columns', 'card-contact | public example'),
+    );
+
+    expect(filterAudienceMarkdown(md, false)).toBe(md);
+  });
+
   it('returns non-strings and audience-free markdown unchanged', () => {
     expect(filterAudienceMarkdown(undefined, false)).toBeUndefined();
     const md = doc('# Title', MD_PLAIN);
     expect(filterAudienceMarkdown(md, false)).toBe(md);
+  });
+});
+
+// A page's <head> carries the private card metadata; filterAudienceBlocks only
+// reaches blocks inside <main>, so these fields need their own strip.
+const metaPage = (...metas) => '<!doctype html><html><head><title>Button</title>'
+  + '<meta property="og:title" content="Button">'
+  + '<meta name="card-title" content="Buttons">'
+  + metas.join('')
+  + '<meta name="platform" content="web">'
+  + '</head><body><main><div class="section">'
+  + '<div class="columns">shared</div></div></main></body></html>';
+
+const STEWARD = '<meta name="card-steward" content="Marina Harutyunyan">';
+const DESIGN = '<meta name="card-design-resources" content="https://www.figma.com/design/abc">';
+const CONTACT = '<meta name="card-contact" content="#spectrum-help">';
+
+describe('hasPrivateCardMeta', () => {
+  it('is true only when a private field name is present', () => {
+    expect(hasPrivateCardMeta(metaPage(STEWARD))).toBe(true);
+    expect(hasPrivateCardMeta(metaPage())).toBe(false);
+  });
+
+  it('is false for non-string input', () => {
+    expect(hasPrivateCardMeta(undefined)).toBe(false);
+    expect(hasPrivateCardMeta(null)).toBe(false);
+  });
+});
+
+describe('filterPrivateCardMeta', () => {
+  it('removes every private card meta tag for an anonymous viewer', () => {
+    const out = filterPrivateCardMeta(metaPage(STEWARD, DESIGN, CONTACT), false);
+
+    PRIVATE_CARD_FIELDS.forEach((field) => expect(out).not.toContain(field));
+    expect(out).not.toContain('Marina Harutyunyan');
+    expect(out).not.toContain('figma.com');
+    expect(out).not.toContain('#spectrum-help');
+  });
+
+  it('leaves the rest of the head and the body untouched', () => {
+    const out = filterPrivateCardMeta(metaPage(STEWARD, DESIGN, CONTACT), false);
+
+    expect(out).toContain('<meta name="card-title" content="Buttons">');
+    expect(out).toContain('<meta property="og:title" content="Button">');
+    expect(out).toContain('<meta name="platform" content="web">');
+    expect(out).toContain('<div class="columns">shared</div>');
+  });
+
+  it('returns the page byte-for-byte for an authenticated viewer', () => {
+    const page = metaPage(STEWARD, DESIGN, CONTACT);
+
+    expect(filterPrivateCardMeta(page, true)).toBe(page);
+  });
+
+  // The whole point of stripping by field name: a public page carries these
+  // values with nothing marking them private, so row/block filtering by an
+  // audience marker would let them through.
+  it('strips an unmarked public page, which no audience class covers', () => {
+    const page = metaPage(STEWARD);
+
+    expect(page).not.toContain('audience-private');
+    expect(filterPrivateCardMeta(page, false)).not.toContain('Marina Harutyunyan');
+  });
+
+  it('returns pages without the fields, and non-strings, unchanged', () => {
+    const page = metaPage();
+
+    expect(filterPrivateCardMeta(page, false)).toBe(page);
+    expect(filterPrivateCardMeta(undefined, false)).toBeUndefined();
+  });
+
+  it('composes with filterAudienceBlocks without disturbing either', () => {
+    const page = metaPage(STEWARD).replace(
+      '<div class="columns">shared</div>',
+      '<div class="columns">shared</div><div class="banner audience-private">secret</div>',
+    );
+    const out = filterPrivateCardMeta(filterAudienceBlocks(page, false), false);
+
+    expect(out).not.toContain('secret');
+    expect(out).not.toContain('Marina Harutyunyan');
+    expect(out).toContain('shared');
   });
 });

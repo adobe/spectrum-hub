@@ -1,6 +1,7 @@
 /*
  * Pure audience-based content filtering: given a page's HTML and whether the
- * viewer is authenticated, removes the content blocks that viewer must not see.
+ * viewer is authenticated, removes the content blocks that viewer must not see,
+ * and the private card metadata in <head> that no block filter can reach.
  * No Request/Response/fetch here - index.js reads the proxied body and re-wraps
  * the filtered result.
  *
@@ -25,6 +26,7 @@
  */
 
 import { parse } from './vendor/node-html-parser.mjs';
+import { PRIVATE_CARD_FIELDS } from './card-fields.js';
 
 export const AUDIENCE_PUBLIC_CLASS = 'audience-public';
 export const AUDIENCE_PRIVATE_CLASS = 'audience-private';
@@ -54,6 +56,47 @@ export const filterAudienceBlocks = (html, authed) => {
   // node-html-parser always populates `range`; the guard is belt-and-suspenders
   // so a missing one can never throw mid-splice.
   const ranges = blocks
+    .map((el) => el.range)
+    .filter((range) => Array.isArray(range) && range.length === 2)
+    .sort((a, b) => b[0] - a[0]);
+
+  let out = html;
+  for (const [start, end] of ranges) {
+    out = out.slice(0, start) + out.slice(end);
+  }
+  return out;
+};
+
+// Cheap gate, mirroring hasAudienceBlocks: a page carrying none of the private
+// field names skips the parse entirely, which is nearly every page.
+export const hasPrivateCardMeta = (html) => typeof html === 'string'
+  && PRIVATE_CARD_FIELDS.some((field) => html.includes(field));
+
+// Remove the private card metadata an anonymous viewer must not see.
+//
+// filterAudienceBlocks cannot do this: it removes blocks inside <main>, and a
+// meta tag is neither a block nor inside <main>. Without this the steward and
+// contact an author entered would ship in the page source of every public
+// page, whatever the query index does.
+//
+// Authenticated viewers keep the tags. Unlike the audience classes there is no
+// public counterpart to strip for them - these fields are private or absent.
+//
+// `meta[name=...]` is matched anywhere in the document rather than only under
+// <head>, so a tag that ends up somewhere unexpected is still removed. Removal
+// splices by source range exactly as filterAudienceBlocks does, leaving the
+// rest of the HTML byte-for-byte unchanged.
+export const filterPrivateCardMeta = (html, authed) => {
+  if (authed || !hasPrivateCardMeta(html)) { return html; }
+
+  const root = parse(html);
+  const tags = root.querySelectorAll(
+    PRIVATE_CARD_FIELDS.map((field) => `meta[name="${field}"]`).join(', '),
+  );
+  if (!tags.length) { return html; }
+
+  // Splice from the tail so each removal leaves earlier offsets valid.
+  const ranges = tags
     .map((el) => el.range)
     .filter((range) => Array.isArray(range) && range.length === 2)
     .sort((a, b) => b[0] - a[0]);
@@ -95,16 +138,40 @@ const getReferenceLabels = (lines) => new Set(
 );
 const REFERENCE_DEFINITION = /^\s{0,3}\[([^\]]+)\]:/;
 
+const getFirstCellKey = (lines) => toClassName(
+  lines.map((line) => line.split('|')[1] ?? '').join(' ').replace(/[*_`\\]/g, ''),
+);
+
+const filterPrivateMetadataRows = (table, headerEnd) => {
+  const kept = table.slice(0, headerEnd + 1);
+  const removed = [];
+  let start = headerEnd + 1;
+  while (start < table.length) {
+    let end = start;
+    while (end < table.length && !isTableBorder(table[end])) { end += 1; }
+    // Keep wrapped keys and values together through the row's closing border.
+    const row = table.slice(start, end);
+    const target = PRIVATE_CARD_FIELDS.includes(getFirstCellKey(row)) ? removed : kept;
+    target.push(...table.slice(start, end + 1));
+    start = end + 1;
+  }
+  return {
+    kept: removed.length && kept.length === headerEnd + 1 ? [] : kept,
+    removed,
+  };
+};
+
 // Markdown counterpart of filterAudienceBlocks for the `.md` page variant:
 // removes each block table this viewer must not see (audience-private for
-// anonymous, audience-public for authenticated), plus one trailing blank line.
+// anonymous, audience-public for authenticated), plus private Metadata rows
+// for anonymous viewers. Empty tables lose one trailing blank line.
 // A table is a maximal run of lines starting with `+` or `|` that opens on a
 // border line, so a nested table inside a cell goes with its parent block.
 // AEM writes a cell's images as `![][imageN]` with the URL/title defined at the
 // end of the document, so a reference definition used only by removed tables
-// goes too. Prose that merely mentions "audience private" is untouched.
+// or metadata rows goes too. Prose that merely mentions a field is untouched.
 export const filterAudienceMarkdown = (md, authed) => {
-  if (typeof md !== 'string' || !/audience/i.test(md)) { return md; }
+  if (typeof md !== 'string' || (authed && !/audience/i.test(md))) { return md; }
 
   const removeClass = authed ? AUDIENCE_PUBLIC_CLASS : AUDIENCE_PRIVATE_CLASS;
   const lines = md.split('\n');
@@ -122,11 +189,19 @@ export const filterAudienceMarkdown = (md, authed) => {
     const table = lines.slice(i, end);
     const headerEnd = table.findIndex((line, idx) => idx > 0 && isTableBorder(line));
     const header = table.slice(1, headerEnd === -1 ? table.length : headerEnd);
+    let kept = table;
     if (getTableClasses(header).includes(removeClass)) {
       removed.push(...table);
+      kept = [];
+    } else if (!authed && headerEnd !== -1 && getFirstCellKey(header) === 'metadata') {
+      const filtered = filterPrivateMetadataRows(table, headerEnd);
+      kept = filtered.kept;
+      removed.push(...filtered.removed);
+    }
+    if (!kept.length) {
       if (end < lines.length && lines[end].trim() === '') { end += 1; }
     } else {
-      out.push(...table);
+      out.push(...kept);
     }
     i = end;
   }

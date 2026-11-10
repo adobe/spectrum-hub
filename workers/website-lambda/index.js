@@ -38,7 +38,7 @@ import { readSession, DEFAULT_SESSION_COOKIE_NAME } from './lib/session.js';
 import {
   classifyPublicPath, getCanonicalPagePath, isPageLike, isPrivateHtml, PUBLIC_FILTER_PATHS,
 } from './lib/gate.js';
-import { filterAudienceBlocks, filterAudienceMarkdown } from './lib/audience.js';
+import { filterAudienceBlocks, filterAudienceMarkdown, filterPrivateCardMeta } from './lib/audience.js';
 import { filterPrivateEntries, compactEntries, collectPrivatePaths } from './lib/query-index.js';
 import { filterSitemap, rewriteSitemapHosts } from './lib/sitemap.js';
 import { toGatedEtag, toUpstreamIfNoneMatch } from './lib/etag.js';
@@ -250,9 +250,11 @@ const processHtmlResponse = async (resp, authed, anonPage, variant = false) => {
   if (resp.status !== 200 || !(isHtml || isMarkdown)) { return resp; }
   const body = await resp.text();
   if (!authed && !variant && isPrivateHtml(body)) { return notFound(); }
+  // Markdown retains authored Metadata rows; its filter strips private rows.
+  // HTML carries meta tags, stripped after the block filter sees the body.
   const filtered = isMarkdown
     ? filterAudienceMarkdown(body, authed)
-    : filterAudienceBlocks(body, authed);
+    : filterPrivateCardMeta(filterAudienceBlocks(body, authed), authed);
   const out = new Response(filtered, resp);
   // Filtered per viewer: anonymous gets the public view (short shared TTL),
   // authenticated stays no-store. The cookie-keyed cache keeps them separate.
@@ -291,12 +293,11 @@ const isPublicCanonicalPage = async (req, url, canonicalPath) => {
 };
 
 // Post-fetch transform for the query-index JSON: for anonymous visitors strip
-// the private rows and the whole `audience` column (so private paths/titles/
-// excerpts never reach an anonymous client, and it can't even tell which rows
-// were private), and optionally project every row to the columns the site nav
-// needs (?compact=true). Fails closed: a non-200, a non-JSON body, or an index
+// the private rows, `audience`, and the private card columns from retained rows.
+// Optionally project every row to the columns the site nav needs (?compact=true)
+// for either audience. Fails closed: a non-200, a non-JSON body, or an index
 // shape it can't recognize is a 404 for anonymous callers rather than an
-// unfiltered index. Authenticated callers see the raw body.
+// unfiltered index. Authenticated callers retain private data unless compacted.
 const transformQueryIndex = async (resp, { removePrivate, compact }) => {
   // A 304 (revalidation) has no body to transform; pass it through so CloudFront
   // serves its cached filtered copy. The caller sets Cache-Control.
@@ -500,19 +501,21 @@ const route = async (req) => {
   // 304 that preserves a cached body from before filtering or host rewriting,
   // so always fetch a full 200.
   const isSitemap = url.pathname === '/sitemap.xml';
+  const isQueryIndex = PUBLIC_FILTER_PATHS.includes(url.pathname)
+    && url.pathname.endsWith('/query-index.json');
   if (authed || isSitemap) {
     request.headers.delete('if-none-match');
     request.headers.delete('if-modified-since');
   }
 
-  // Anonymous pages and the anonymous query index are filtered, so a 304 from
+  // Anonymous pages and the listed query indexes are filtered, so a 304 from
   // AEM is only safe when it confirms a copy the current gate produced. Forward
   // only If-None-Match tags this gate version issued (lib/etag.js) and never
   // If-Modified-Since. Anything else - a copy cached before the gate existed or
   // under an older gate version, a probe for whether a private page exists -
   // gets a full body that the gate checks again.
   const anonPage = !authed && isPageLike(url.pathname);
-  const anonGated = anonPage || (!authed && url.pathname === '/query-index.json');
+  const anonGated = anonPage || (!authed && isQueryIndex);
   if (isPageLike(url.pathname) || PUBLIC_FILTER_PATHS.includes(url.pathname)) {
     // Filtering needs the whole document. A Range request would come back as a
     // 206 slice that skips the gate - and CloudFront could cache it for
@@ -547,9 +550,10 @@ const route = async (req) => {
   if (anonGated && resp.status === 304 && !gatedConditional) { return notFound(); }
 
   // The 'filter' paths. The query-index JSON: strip audience:private rows
-  // (and the audience column) for anonymous visitors and honour ?compact=true
-  // for either audience. Sitemap URLs are rewritten from AEM origins to the
-  // environment's public origin; anonymous visitors also lose private entries.
+  // and remove audience/private card columns for anonymous visitors; honour
+  // ?compact=true for either audience. Sitemap URLs are rewritten from AEM
+  // origins to the environment's public origin; anonymous visitors also lose
+  // private entries.
   // The anonymous response is cacheable with a short shared TTL; the
   // authenticated full view carries private entries and stays no-store.
   if (PUBLIC_FILTER_PATHS.includes(url.pathname)) {
@@ -558,7 +562,7 @@ const route = async (req) => {
       out = authed
         ? await rewriteSitemapResponse(resp, sitemapPublicOrigin)
         : await transformSitemap(resp, privatePathsPromise, sitemapPublicOrigin);
-    } else if (url.pathname === '/query-index.json' && (!authed || compact)) {
+    } else if (isQueryIndex && (!authed || compact)) {
       out = await transformQueryIndex(resp, { removePrivate: !authed, compact });
     }
     if (out.status === 200 || out.status === 304) {

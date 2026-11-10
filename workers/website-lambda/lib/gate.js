@@ -59,11 +59,22 @@ export const PUBLIC_ALLOW_PREFIX = [
 
 // Data resources served to an anonymous visitor only after a content filter.
 // Classified 'filter' here; index.js proxies them and strips the private
-// entries instead of serving them raw: the query index's private rows (see
-// transformQueryIndex / lib/query-index.js) and the sitemap's private URLs
+// entries instead of serving them raw: private rows and columns in query indexes
+// (see transformQueryIndex / lib/query-index.js), and the sitemap's private URLs
 // (see transformSitemap / lib/sitemap.js).
+//
+// Matched whole, never by prefix, so every index target needs its own entry.
+// An index left out of this list falls through to 'allow' and is served raw,
+// keeping the private rows and columns that listed query indexes strip.
 export const PUBLIC_FILTER_PATHS = [
   '/query-index.json',
+  '/web/components/query-index.json',
+  '/web/rsp/components/query-index.json',
+  '/web/swc/components/query-index.json',
+  '/mobile/components/query-index.json',
+  // Patterns sit beside components rather than under them, so this index does
+  // uses /patterns/ rather than the component indexes' /components/ paths.
+  '/patterns/query-index.json',
   '/sitemap.xml',
 ];
 

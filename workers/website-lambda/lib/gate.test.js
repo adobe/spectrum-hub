@@ -38,6 +38,29 @@ describe('classifyPublicPath', () => {
     expect(classifyPublicPath('/sitemap.xml')).toBe('filter');
   });
 
+  it('classifies the component roll-up index as filter, like the site-wide one', () => {
+    expect(classifyPublicPath('/web/components/query-index.json')).toBe('filter');
+  });
+
+  it('classifies the patterns index as filter', () => {
+    expect(classifyPublicPath('/patterns/query-index.json')).toBe('filter');
+  });
+
+  // Every index that backs a card grid carries the private card columns, so
+  // each one must reach transformQueryIndex. A card index missing from
+  // PUBLIC_FILTER_PATHS would default-allow and serve those columns raw.
+  it('classifies every card-grid index as filter', () => {
+    [
+      '/web/components/query-index.json',
+      '/web/rsp/components/query-index.json',
+      '/web/swc/components/query-index.json',
+      '/mobile/components/query-index.json',
+      '/patterns/query-index.json',
+    ].forEach((path) => {
+      expect(classifyPublicPath(path), path).toBe('filter');
+    });
+  });
+
   it('gates the site root and /404.html when they are not in the allow-exact list', () => {
     // PUBLIC_ALLOW_EXACT is currently empty (site-wide public-path review in
     // progress), so these page-like paths fall through to the 'gate' verdict.
