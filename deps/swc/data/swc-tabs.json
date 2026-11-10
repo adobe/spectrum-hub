@@ -9,6 +9,7 @@
       "automatic"
     ],
     "optional": false,
+    "default": "automatic",
     "description": "Whether selection follows keyboard focus (`automatic`, default) or the\nuser must press Enter or Space to activate (`manual`). Prefer `manual`\nwhen tab panels are expensive to render or not fully present in the DOM.",
     "inheritedFrom": "TabsBase",
     "since": "2.0.0-beta.1"
@@ -23,6 +24,7 @@
       "compact"
     ],
     "optional": false,
+    "default": "regular",
     "description": "Layout density: `regular` (default) or `compact` (reduced tab spacing).",
     "inheritedFrom": "TabsBase",
     "since": "2.0.0-beta.1"

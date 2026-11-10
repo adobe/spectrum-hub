@@ -11,6 +11,7 @@
       "xl"
     ],
     "optional": false,
+    "default": "m",
     "description": "Size delegated from the parent field. Defaults to medium when no parent sets it, though standalone usage is not supported.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0"

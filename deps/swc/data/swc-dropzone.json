@@ -43,6 +43,7 @@
       "l"
     ],
     "optional": false,
+    "default": "m",
     "description": "Controls the illustrated icon scale and container dimensions.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0"

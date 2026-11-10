@@ -14,6 +14,20 @@
     "since": "2.0.0-beta.3"
   },
   {
+    "attribute": "size",
+    "property": "size",
+    "type": "\"m\" | \"l\"",
+    "kind": "enum",
+    "values": [
+      "m",
+      "l"
+    ],
+    "optional": false,
+    "default": "'m'",
+    "description": "Tile size for `type=\"media\"` (64px `m`, 96px `l`). Has no effect on `type=\"card\"`.",
+    "since": "2.0.0-beta.3"
+  },
+  {
     "attribute": "dismissible",
     "property": "dismissible",
     "type": "boolean",
@@ -36,6 +50,17 @@
     "since": "2.0.0-beta.3"
   },
   {
+    "attribute": "progress-label",
+    "property": "progressLabel",
+    "type": "string",
+    "kind": "text",
+    "values": [],
+    "optional": false,
+    "default": "'Uploading'",
+    "description": "Accessible label for the upload-progress circle shown while `loading`.",
+    "since": "2.0.0-beta.3"
+  },
+  {
     "attribute": "accessible-label",
     "property": "accessibleLabel",
     "type": "string",
@@ -44,6 +69,16 @@
     "optional": false,
     "default": "''",
     "description": "Accessible name for the tile itself. When unset, derives from the `title`\nslot's text content (typically the file name and type).",
+    "since": "2.0.0-beta.3"
+  },
+  {
+    "attribute": "progress",
+    "property": "progress",
+    "type": "number",
+    "kind": "number",
+    "values": [],
+    "optional": true,
+    "description": "Upload progress percentage (0-100), shown as a `swc-progress-circle`\noverlay on the `type=\"media\"` preview. Hidden when unset or at 100\n(complete); update as the upload advances to show it mid-transfer.\nThe thumbnail itself stays hidden for the whole transfer so a partially\nuploaded asset is never shown; the progress-circle overlay is delayed by\n1s after upload starts, so a fast upload doesn't flash the loading state.",
     "since": "2.0.0-beta.3"
   }
 ]

@@ -12,6 +12,7 @@
       "xl"
     ],
     "optional": false,
+    "default": "m",
     "description": "T-shirt icon size.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.4"

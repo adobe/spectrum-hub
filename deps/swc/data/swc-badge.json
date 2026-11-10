@@ -48,6 +48,7 @@
       "xl"
     ],
     "optional": false,
+    "default": "s",
     "description": "The size of the badge.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"

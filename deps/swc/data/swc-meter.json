@@ -116,6 +116,7 @@
       "xl"
     ],
     "optional": false,
+    "default": "m",
     "description": "The size of the meter.",
     "inheritedFrom": "SizedMixin",
     "since": "2.0.0-beta.1"
