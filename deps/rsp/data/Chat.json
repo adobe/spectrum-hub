@@ -1,0 +1,19 @@
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Children of the chat, such as Thread, PromptField, and ThreadScrollButton."
+    }
+  ],
+  "status": "alpha"
+}

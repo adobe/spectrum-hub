@@ -1,0 +1,20 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true
+    },
+    {
+      "property": "onOpenChange",
+      "type": "(isOpen: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the overlay's open state changes.",
+      "inheritedFrom": "OverlayTriggerProps"
+    }
+  ],
+  "status": "alpha"
+}

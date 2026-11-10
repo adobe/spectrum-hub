@@ -1,0 +1,100 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "required": true,
+      "description": "The label describing the step."
+    },
+    {
+      "property": "status",
+      "type": "\"pending\" | \"failed\" | \"success\"",
+      "kind": "enum",
+      "values": [
+        "pending",
+        "failed",
+        "success"
+      ],
+      "description": "The status of this step."
+    },
+    {
+      "property": "detail",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Additional detail revealed when the step is expanded, such as tool call input or output.\nIf omitted, the row is static and cannot be expanded."
+    },
+    {
+      "property": "detailMaxHeight",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "120",
+      "description": "Maximum height for the detail panel."
+    },
+    {
+      "property": "icon",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "An icon shown at the leading edge of the row. If omitted, a checkmark is rendered by default."
+    },
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "onExpandedChange",
+      "type": "(isExpanded: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the trace is expanded or collapsed."
+    },
+    {
+      "property": "id",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "The element's unique identifier. See\n[MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id).",
+      "inheritedFrom": "DOMProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-describedby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that describes the object.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-details",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that provide a detailed, extended description for the\nobject.",
+      "inheritedFrom": "AriaLabelingProps"
+    }
+  ],
+  "status": "alpha"
+}
