@@ -7,7 +7,10 @@
       "figmaPageId": "23851:4051"
     },
     "rsp": {
-      "status": "not-available"
+      "status": "available",
+      "context": "Alpha",
+      "upstreamName": "Alert",
+      "secondary": "Use alert"
     },
     "swc": {
       "status": "not-available"

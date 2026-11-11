@@ -101,9 +101,15 @@
     "Tag": {
       "canonical": "Tag",
       "upstreamName": "TagGroup"
+    },
+    "Alert": {
+      "canonical": "InLineMessage",
+      "upstreamName": "Alert"
     }
   },
   "figma": {
+    "Action bar (dark theme)": "ActionBar",
+    "Action bar (light theme)": "ActionBar",
     "Badge (Notification + Indicator)": "NotificationBadge",
     "Combo box (In-line)": "ComboBox",
     "In-line alert": "InlineAlert",
@@ -121,7 +127,8 @@
     "Slider (Ramp)": "Slider",
     "Slider (Range)": "Slider",
     "Text field (In-line)": "TextField",
-    "Text area (In-line)": "TextArea"
+    "Text area (In-line)": "TextArea",
+    "Tab group": "Tabs"
   },
   "figmaSources": {
     "ai-toolkit": {

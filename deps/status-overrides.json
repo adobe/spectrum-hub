@@ -1,11 +1,10 @@
 {
-  "NotificationBadge": {
+  "ActionBar": {
     "web": {
       "figma": {
         "status": "available",
         "figmaSource": "s2-web",
-        "figmaNodeId": "10466:2948",
-        "figmaPageSource": "Badge (Notification + Indicator)"
+        "figmaPageSource": "Action bar (light theme)"
       }
     }
   },

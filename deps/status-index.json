@@ -78,51 +78,15 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "not-available"
-          },
-          "rsp": {
             "status": "available",
-            "context": "Stable"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "ActionBarDarkTheme",
-      "label": "Action Bar (dark Theme)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "s2-web",
-            "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
-            "figmaPageId": "9892:3870"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "ActionBarLightTheme",
-      "label": "Action Bar (light Theme)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
+            "figmaPageSource": "Action bar (light theme)",
             "figmaSource": "s2-web",
             "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
             "figmaPageId": "9892:3901"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available"
@@ -1201,7 +1165,7 @@
     },
     {
       "name": "InLineMessage",
-      "label": "In-line Message",
+      "label": "In Line Message",
       "platforms": {
         "web": {
           "figma": {
@@ -1211,7 +1175,10 @@
             "figmaPageId": "23851:4051"
           },
           "rsp": {
-            "status": "not-available"
+            "status": "available",
+            "context": "Alpha",
+            "upstreamName": "Alert",
+            "secondary": "Use alert"
           },
           "swc": {
             "status": "not-available"
@@ -2225,26 +2192,6 @@
       }
     },
     {
-      "name": "TabGroup",
-      "label": "Tab Group",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "s2-web",
-            "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
-            "figmaPageId": "9946:217"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "Table",
       "label": "Table",
       "platforms": {
@@ -2272,7 +2219,10 @@
       "platforms": {
         "web": {
           "figma": {
-            "status": "not-available"
+            "status": "available",
+            "figmaSource": "s2-web",
+            "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+            "figmaPageId": "9946:217"
           },
           "rsp": {
             "status": "available",

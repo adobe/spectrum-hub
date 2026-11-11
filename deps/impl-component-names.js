@@ -34,6 +34,11 @@ export default {
     "help-text": {
       "docs": "Form"
     },
+    "in-line-message": {
+      "docs": "Alert",
+      "export": "Alert",
+      "package": "ai"
+    },
     "message-sources": {
       "docs": "SourceList",
       "export": "SourceList",

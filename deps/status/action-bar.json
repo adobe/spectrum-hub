@@ -1,7 +1,11 @@
 {
   "web": {
     "figma": {
-      "status": "not-available"
+      "status": "available",
+      "figmaPageSource": "Action bar (light theme)",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9892:3901"
     },
     "rsp": {
       "status": "available",
