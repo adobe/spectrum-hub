@@ -150,6 +150,15 @@
   "Thread",
   "ThreadItem",
   "ThreadLoadMoreItem",
-  "UploadAttachment"
+  "UploadAttachment",
+  "PromptFieldDeprecated",
+  "UserMessageDeprecated",
+  "AIMark",
+  "AppFrameSideNavItemBrowsing",
+  "AppFrameSideNavigationBrowsing",
+  "PromptFieldAttachment",
+  "PromptFieldAttachmentOverflow",
+  "ResponseStatusExecutionStep",
+  "Tray"
 ]
 

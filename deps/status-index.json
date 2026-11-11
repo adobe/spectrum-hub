@@ -213,26 +213,6 @@
       }
     },
     {
-      "name": "AIMark",
-      "label": "AI Mark",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "ai-toolkit",
-            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
-            "figmaPageId": "24331:8992"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "AlertBanner",
       "label": "Alert Banner",
       "platforms": {
@@ -267,46 +247,6 @@
             "status": "available",
             "upstreamName": "Dialog",
             "secondary": "Use dialog component"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "AppFrameSideNavigationBrowsing",
-      "label": "App Frame Side Navigation (browsing)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "s2-web",
-            "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
-            "figmaPageId": "10011:5112"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "AppFrameSideNavItemBrowsing",
-      "label": "App Frame Side Nav Item (browsing)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "s2-web",
-            "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
-            "figmaPageId": "10011:4842"
-          },
-          "rsp": {
-            "status": "not-available"
           },
           "swc": {
             "status": "not-available"
@@ -1781,66 +1721,6 @@
       }
     },
     {
-      "name": "PromptFieldAttachment",
-      "label": "Prompt Field Attachment",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "ai-toolkit",
-            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
-            "figmaPageId": "24073:16435"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "PromptFieldAttachmentOverflow",
-      "label": "Prompt Field Attachment (Overflow)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "ai-toolkit",
-            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
-            "figmaPageId": "24241:57944"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
-      "name": "PromptFieldDeprecated",
-      "label": "🚫 Prompt Field (Deprecated)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "ai-toolkit",
-            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
-            "figmaPageId": "2574:10553"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "RadioButton",
       "label": "Radio Button",
       "platforms": {
@@ -1922,26 +1802,6 @@
           "swc": {
             "status": "available",
             "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "ResponseStatusExecutionStep",
-      "label": "Response Status (Execution Step)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "ai-toolkit",
-            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
-            "figmaPageId": "24443:9890"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
@@ -2672,26 +2532,6 @@
       }
     },
     {
-      "name": "Tray",
-      "label": "Tray",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "s2-web",
-            "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
-            "figmaPageId": "35595:13230"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
-          }
-        }
-      }
-    },
-    {
       "name": "TreeView",
       "label": "Tree View",
       "platforms": {
@@ -2730,26 +2570,6 @@
           "swc": {
             "status": "available",
             "context": "Stable"
-          }
-        }
-      }
-    },
-    {
-      "name": "UserMessageDeprecated",
-      "label": "🚫 User Message (Deprecated)",
-      "platforms": {
-        "web": {
-          "figma": {
-            "status": "available",
-            "figmaSource": "ai-toolkit",
-            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
-            "figmaPageId": "5705:458"
-          },
-          "rsp": {
-            "status": "not-available"
-          },
-          "swc": {
-            "status": "not-available"
           }
         }
       }
