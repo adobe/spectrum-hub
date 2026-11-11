@@ -636,7 +636,11 @@ export default async function init(el) {
     config.log('Status table index fetch failed:', href);
     return;
   }
-  const index = await resp.json();
+  const data = await resp.json();
+  const index = {
+    ...data,
+    components: (data.components ?? []).filter((component) => component.platforms?.[PLATFORM]),
+  };
   const publishedPaths = await fetchPublishedPaths();
 
   const table = buildTable(index, publishedPaths);

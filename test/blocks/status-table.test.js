@@ -168,6 +168,10 @@ describe('status-table block', () => {
         name: 'NativeOnly',
         label: 'Native Only',
         platforms: { ios: { figma: { status: 'deprecated' } } },
+      }, {
+        name: 'NativeAndroid',
+        label: 'Native Android',
+        platforms: { android: { figma: { status: 'available' } } },
       }],
     });
     const el = makeEl();
@@ -188,7 +192,9 @@ describe('status-table block', () => {
     sandbox.stub(URL, 'revokeObjectURL');
     sandbox.stub(window.HTMLAnchorElement.prototype, 'click');
     el.querySelector('.status-table-export').click();
-    expect(await download.text()).not.to.contain('Native Only');
+    const csv = await download.text();
+    expect(csv).not.to.contain('Native Only');
+    expect(csv).not.to.contain('Native Android');
   });
 
   describe('data source', () => {
