@@ -4,9 +4,7 @@
       "status": "available"
     },
     "rsp": {
-      "status": "available",
-      "context": "Stable",
-      "upstreamName": "InlineAlert"
+      "status": "not-available"
     },
     "swc": {
       "status": "not-available"

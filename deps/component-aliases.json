@@ -21,6 +21,22 @@
       "canonical": "AlertDialog",
       "upstreamName": "Dialog"
     },
+    "Thread": {
+      "canonical": "ConversationThread",
+      "upstreamName": "Thread"
+    },
+    "ThreadItem": {
+      "canonical": "ConversationTurn",
+      "upstreamName": "ThreadItem"
+    },
+    "SourceList": {
+      "canonical": "MessageSources",
+      "upstreamName": "SourceList"
+    },
+    "MessageSuggestionList": {
+      "canonical": "SuggestionGroup",
+      "upstreamName": "MessageSuggestionList"
+    },
     "ToastContainer": "Toast",
     "CardPreview": "Cards",
     "CardsAsset": "Cards",
@@ -66,10 +82,6 @@
       "canonical": "TakeoverDialog",
       "upstreamName": "Dialog"
     },
-    "InlineAlert": {
-      "canonical": "InLineAlert",
-      "upstreamName": "InlineAlert"
-    },
     "TableView": {
       "canonical": "Table",
       "upstreamName": "TableView"
@@ -92,8 +104,7 @@
     }
   },
   "figma": {
-    "In-line alert": "InLineAlert",
-    "In Line Alert": "InLineAlert",
+    "In-line alert": "InlineAlert",
     "Card": "Cards",
     "Cards (Asset)": "Cards",
     "Cards (Collection)": "Cards",

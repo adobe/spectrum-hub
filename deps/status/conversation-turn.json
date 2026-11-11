@@ -4,7 +4,10 @@
       "status": "not-available"
     },
     "rsp": {
-      "status": "not-available"
+      "status": "available",
+      "context": "Alpha",
+      "upstreamName": "ThreadItem",
+      "secondary": "Use thread item"
     },
     "swc": {
       "status": "available",
