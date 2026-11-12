@@ -1,0 +1,80 @@
+{
+  "props": [
+    {
+      "property": "status",
+      "type": "\"pending\" | \"failed\" | \"success\"",
+      "kind": "enum",
+      "values": [
+        "pending",
+        "failed",
+        "success"
+      ],
+      "default": "'pending'",
+      "description": "The current status of the response."
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true,
+      "description": "The contents of the response status, consisting of a ResponseStatusTitle and\nResponseStatusPanel."
+    },
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the disclosure is disabled.",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "onExpandedChange",
+      "type": "(isExpanded: boolean) => void",
+      "kind": "unknown",
+      "values": [],
+      "description": "Handler that is called when the disclosure's expanded state changes.",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "isExpanded",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the disclosure is expanded (controlled).",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "defaultExpanded",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the disclosure is expanded by default (uncontrolled).",
+      "inheritedFrom": "AriaDisclosureProps"
+    },
+    {
+      "property": "id",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "An id for the disclosure when used within a DisclosureGroup, matching the id used in\n`expandedKeys`.",
+      "inheritedFrom": "DisclosureProps"
+    },
+    {
+      "property": "slot",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A slot name for the component. Slots allow the component to receive props from a parent\ncomponent. An explicit `null` value indicates that the local props completely override all\nprops received from a parent.",
+      "inheritedFrom": "SlotProps"
+    }
+  ],
+  "status": "alpha"
+}

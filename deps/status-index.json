@@ -134,6 +134,42 @@
       }
     },
     {
+      "name": "AIButton",
+      "label": "AI Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Alert",
+      "label": "Alert",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "AlertBanner",
       "label": "Alert Banner",
       "platforms": {
@@ -162,6 +198,114 @@
             "status": "available",
             "upstreamName": "Dialog",
             "secondary": "Use dialog component"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AttachFileMenuItem",
+      "label": "Attach File Menu Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "Attachment",
+      "label": "Attachment",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AttachmentGrid",
+      "label": "Attachment Grid",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AttachmentGridItem",
+      "label": "Attachment Grid Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AttachmentList",
+      "label": "Attachment List",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "AttachmentPreview",
+      "label": "Attachment Preview",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
           },
           "swc": {
             "status": "not-available"
@@ -338,6 +482,24 @@
             "status": "available",
             "context": "Stable",
             "upstreamName": "Card"
+          }
+        }
+      }
+    },
+    {
+      "name": "Chat",
+      "label": "Chat",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -575,6 +737,41 @@
       }
     },
     {
+      "name": "ComboBoxSection",
+      "label": "Combo Box Section",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "CommandMenuItem",
+      "label": "Command Menu Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "ContextualHelp",
       "label": "Contextual Help",
       "platforms": {
@@ -588,6 +785,41 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ConversationThread",
+      "label": "Conversation Thread",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ConversationTurn",
+      "label": "Conversation Turn",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -664,6 +896,42 @@
           "swc": {
             "status": "available",
             "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ExecutionTrace",
+      "label": "Execution Trace",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ExecutionTraceItem",
+      "label": "Execution Trace Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -768,6 +1036,60 @@
       }
     },
     {
+      "name": "InsertMenuButton",
+      "label": "Insert Menu Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "InsertTextMenuItem",
+      "label": "Insert Text Menu Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "InsertTokenMenuItem",
+      "label": "Insert Token Menu Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "KeyboardShortcut",
       "label": "Keyboard Shortcut",
       "platforms": {
@@ -861,6 +1183,114 @@
       }
     },
     {
+      "name": "MenuSection",
+      "label": "Menu Section",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageFeedback",
+      "label": "Message Feedback",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSource",
+      "label": "Message Source",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSources",
+      "label": "Message Sources",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSuggestion",
+      "label": "Message Suggestion",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSuggestionList",
+      "label": "Message Suggestion List",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Meter",
       "label": "Meter",
       "platforms": {
@@ -875,6 +1305,24 @@
           "swc": {
             "status": "available",
             "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "NumberBadge",
+      "label": "Number Badge",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
           }
         }
       }
@@ -911,6 +1359,42 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PickerSection",
+      "label": "Picker Section",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PixelLoader",
+      "label": "Pixel Loader",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -973,6 +1457,133 @@
       }
     },
     {
+      "name": "PromptField",
+      "label": "Prompt Field",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptFieldAttachmentList",
+      "label": "Prompt Field Attachment List",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptFieldSubmitButton",
+      "label": "Prompt Field Submit Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptFieldToolbar",
+      "label": "Prompt Field Toolbar",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptFieldVoiceButton",
+      "label": "Prompt Field Voice Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptToken",
+      "label": "Prompt Token",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PromptTokenField",
+      "label": "Prompt Token Field",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "RadioButton",
       "label": "Radio Button",
       "platforms": {
@@ -1020,6 +1631,80 @@
           },
           "rsp": {
             "status": "not-available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatus",
+      "label": "Response Status",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatusPanel",
+      "label": "Response Status Panel",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatusStep",
+      "label": "Response Status Step",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable",
+            "upstreamName": "ResponseStatus"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatusTitle",
+      "label": "Response Status Title",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
           },
           "swc": {
             "status": "not-available"
@@ -1119,6 +1804,23 @@
       }
     },
     {
+      "name": "SideNavSection",
+      "label": "Side Nav Section",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Slider",
       "label": "Slider",
       "platforms": {
@@ -1129,6 +1831,59 @@
           "rsp": {
             "status": "available",
             "context": "Stable"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SliderBase",
+      "label": "Slider Base",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SourceList",
+      "label": "Source List",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SourceListItem",
+      "label": "Source List Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
           },
           "swc": {
             "status": "not-available"
@@ -1212,6 +1967,42 @@
       }
     },
     {
+      "name": "SuggestionGroup",
+      "label": "Suggestion Group",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "SuggestionItem",
+      "label": "Suggestion Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "upstreamName": "SuggestionGroupSuggestionItem"
+          }
+        }
+      }
+    },
+    {
       "name": "Swatch",
       "label": "Swatch",
       "platforms": {
@@ -1268,6 +2059,23 @@
       }
     },
     {
+      "name": "SystemMessage",
+      "label": "System Message",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available"
+          }
+        }
+      }
+    },
+    {
       "name": "Table",
       "label": "Table",
       "platforms": {
@@ -1279,6 +2087,23 @@
             "status": "available",
             "context": "Stable",
             "upstreamName": "TableView"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "TabList",
+      "label": "Tab List",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available"
           },
           "swc": {
             "status": "not-available"
@@ -1416,6 +2241,60 @@
       }
     },
     {
+      "name": "Thread",
+      "label": "Thread",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ThreadItem",
+      "label": "Thread Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ThreadLoadMoreItem",
+      "label": "Thread Load More Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "Thumbnail",
       "label": "Thumbnail",
       "platforms": {
@@ -1486,6 +2365,43 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "UploadAttachment",
+      "label": "Upload Attachment",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "UserMessage",
+      "label": "User Message",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }

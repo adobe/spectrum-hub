@@ -1,0 +1,131 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true
+    },
+    {
+      "property": "acceptedAttachmentTypes",
+      "type": "string[]",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "value",
+      "type": "PromptFieldValue",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "defaultValue",
+      "type": "PromptFieldValue",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onChange",
+      "type": "(value: PromptFieldValue) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "attachments",
+      "type": "PromptFieldAttachment[]",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "defaultAttachments",
+      "type": "PromptFieldAttachment[]",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onAttachmentsChange",
+      "type": "(attachments: PromptFieldAttachment[]) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onSubmit",
+      "type": "(prompt: PromptFieldValue, attachments: PromptFieldAttachment[]) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "isGenerating",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": []
+    },
+    {
+      "property": "onStop",
+      "type": "() => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onAddAttachments",
+      "type": "(attachments: PromptFieldAttachment[]) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onRemoveAttachments",
+      "type": "(attachments: PromptFieldAttachment[]) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onAITermsPress",
+      "type": "() => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "variant",
+      "type": "\"balanced\" | \"prominent\" | \"subtle\"",
+      "kind": "enum",
+      "values": [
+        "balanced",
+        "prominent",
+        "subtle"
+      ],
+      "default": "'balanced'"
+    },
+    {
+      "property": "brandColor",
+      "type": "string",
+      "kind": "text",
+      "values": []
+    },
+    {
+      "property": "size",
+      "type": "\"S\" | \"M\"",
+      "kind": "enum",
+      "values": [
+        "S",
+        "M"
+      ],
+      "default": "'M'",
+      "description": "The size of the PromptField."
+    },
+    {
+      "property": "aiDisclaimer",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Custom text for the AI usage disclaimer shown below the prompt field."
+    }
+  ],
+  "status": "alpha"
+}

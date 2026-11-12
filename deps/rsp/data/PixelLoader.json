@@ -1,0 +1,34 @@
+{
+  "props": [
+    {
+      "property": "size",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "description": "Size of the loader in pixels. Multiples of 7 render evenly on the pixel grid."
+    },
+    {
+      "property": "isPlaying",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the animation is playing."
+    },
+    {
+      "property": "icon",
+      "type": "Cell[] | Cell[][]",
+      "kind": "unknown",
+      "values": [],
+      "description": "The icon or sequence of icons to display. These should be imported from\n'@react-spectrum/ai/loader'."
+    },
+    {
+      "property": "color",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "default": "'currentColor'",
+      "description": "The color of the icon."
+    }
+  ],
+  "status": "alpha"
+}
