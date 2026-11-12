@@ -593,6 +593,41 @@
       }
     },
     {
+      "name": "ConversationThread",
+      "label": "Conversation Thread",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ConversationTurn",
+      "label": "Conversation Turn",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "DateAndTimeField",
       "label": "Date and Time Field",
       "platforms": {
@@ -861,6 +896,42 @@
       }
     },
     {
+      "name": "MessageFeedback",
+      "label": "Message Feedback",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSources",
+      "label": "Message Sources",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "Meter",
       "label": "Meter",
       "platforms": {
@@ -911,6 +982,24 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PixelLoader",
+      "label": "Pixel Loader",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -973,6 +1062,24 @@
       }
     },
     {
+      "name": "PromptField",
+      "label": "Prompt Field",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "RadioButton",
       "label": "Radio Button",
       "platforms": {
@@ -1023,6 +1130,43 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatus",
+      "label": "Response Status",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatusStep",
+      "label": "Response Status Step",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable",
+            "upstreamName": "ResponseStatus"
           }
         }
       }
@@ -1212,6 +1356,42 @@
       }
     },
     {
+      "name": "SuggestionGroup",
+      "label": "Suggestion Group",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "SuggestionItem",
+      "label": "Suggestion Item",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "upstreamName": "SuggestionGroupSuggestionItem"
+          }
+        }
+      }
+    },
+    {
       "name": "Swatch",
       "label": "Swatch",
       "platforms": {
@@ -1263,6 +1443,23 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SystemMessage",
+      "label": "System Message",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available"
           }
         }
       }
@@ -1486,6 +1683,42 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "UploadAttachment",
+      "label": "Upload Attachment",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "UserMessage",
+      "label": "User Message",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
