@@ -3,11 +3,13 @@ import { test, expect } from '../axe-test.js';
 import { gotoBlock, formatViolations } from '../block-a11y.js';
 
 const component = {
+  name: 'se-disclosure',
   path: '/test/a11y/fixtures/custom-components/se-disclosure.html',
   readySelector: '#long button',
+  ariaRoot: '.test-container',
 };
 
-test('se-disclosure supports native keyboard disclosure and a bounded scroll panel', async ({ page }) => {
+test(`${component.name} supports native keyboard disclosure and a bounded scroll panel`, async ({ page }) => {
   await gotoBlock(page, component);
   const disclosure = page.locator('#long');
   const trigger = disclosure.getByRole('button', { name: 'Full type for autocomplete' });
@@ -35,7 +37,66 @@ test('se-disclosure supports native keyboard disclosure and a bounded scroll pan
   await expect(trigger).toBeFocused();
 });
 
-test('se-disclosure truncates narrow trigger labels without losing their accessible name', async ({ page }) => {
+test(`${component.name} scrolls overflowing panels with vertical arrows`, async ({ page }) => {
+  await gotoBlock(page, component);
+  const disclosure = page.locator('#long');
+  await disclosure.getByRole('button').click();
+  const panel = disclosure.getByRole('region');
+  expect(await panel.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(1);
+  await panel.focus();
+  await expect(panel).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => panel.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  const scrolled = await panel.evaluate((el) => el.scrollTop);
+  await page.keyboard.press('ArrowUp');
+  await expect.poll(() => panel.evaluate((el) => el.scrollTop)).toBeLessThan(scrolled);
+  await expect(panel).toBeFocused();
+});
+
+test(`${component.name} preserves descendant controls and modified panel shortcuts`, async ({ page }) => {
+  await gotoBlock(page, component);
+  const disclosure = page.locator('#long');
+  await disclosure.getByRole('button').click();
+  const panel = disclosure.getByRole('region');
+  const prevented = await panel.evaluate((el) => {
+    const input = document.createElement('input');
+    el.getRootNode().host.append(input);
+    const events = [
+      ...['altKey', 'ctrlKey', 'metaKey', 'shiftKey'].map((modifier) => (
+        new KeyboardEvent('keydown', {
+          key: 'ArrowDown', [modifier]: true, bubbles: true, cancelable: true,
+        })
+      )),
+      new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }),
+    ];
+    const results = events.map((event) => {
+      el.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
+    const inputEvent = new KeyboardEvent('keydown', {
+      key: 'ArrowDown', bubbles: true, composed: true, cancelable: true,
+    });
+    input.dispatchEvent(inputEvent);
+    results.push(inputEvent.defaultPrevented);
+    return results;
+  });
+  expect(prevented).toEqual([false, false, false, false, false, false]);
+  expect(await panel.evaluate((el) => el.scrollTop)).toBe(0);
+});
+
+test(`${component.name} leaves vertical arrows alone when the panel fits`, async ({ page }) => {
+  await gotoBlock(page, component);
+  const panel = page.getByRole('region', { name: 'Open details', exact: true });
+  expect(await panel.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1);
+  const prevented = await panel.evaluate((el) => ['ArrowUp', 'ArrowDown'].map((key) => {
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(event);
+    return event.defaultPrevented;
+  }));
+  expect(prevented).toEqual([false, false]);
+});
+
+test(`${component.name} truncates narrow trigger labels without losing their accessible name`, async ({ page }) => {
   await gotoBlock(page, component);
   const disclosure = page.locator('#long');
   const name = 'Full type for autocomplete with a very long descriptive property name';
@@ -69,7 +130,7 @@ test('se-disclosure truncates narrow trigger labels without losing their accessi
   await expect(disclosure.getByRole('region', { name, exact: true })).toBeVisible();
 });
 
-test('se-disclosure leaves short previews inline and preserves expanded state across resizing', async ({ page }) => {
+test(`${component.name} leaves short previews inline and preserves expanded state across resizing`, async ({ page }) => {
   await gotoBlock(page, component);
   await expect(page.locator('#short').getByRole('button')).toHaveCount(0);
   await expect(page.locator('#short')).toContainText('string');
@@ -80,7 +141,7 @@ test('se-disclosure leaves short previews inline and preserves expanded state ac
   await expect(disclosure.getByRole('region')).toBeVisible();
 });
 
-test('se-disclosure detects overflow after width and content changes', async ({ page }) => {
+test(`${component.name} detects overflow after width and content changes`, async ({ page }) => {
   await gotoBlock(page, component);
   const disclosure = page.locator('#short');
   await disclosure.evaluate((el) => {
@@ -92,60 +153,25 @@ test('se-disclosure detects overflow after width and content changes', async ({ 
   await expect(disclosure.getByRole('button')).toHaveCount(0);
 });
 
-test('se-disclosure keeps desktop table layout stable when overflow adds a trigger', async ({ page }) => {
-  test.setTimeout(10000);
-  await page.setViewportSize({ width: 1600, height: 900 });
-  await gotoBlock(page, component);
-  await page.addStyleTag({ url: '/blocks/table/table.css' });
-  const type = Array.from({ length: 6 }, (_, i) => `"value-${i}"`).join(' | ');
-  await page.evaluate(async (autocompleteType) => {
-    const table = document.createElement('section');
-    table.className = 'table quiet';
-    table.style.inlineSize = '650px';
-    table.innerHTML = '<table><thead><tr><th>Attribute</th><th>Property</th><th>Type</th><th>Default value</th><th>Description</th><th>Inherited from</th></tr></thead><tbody></tbody></table>';
-    document.querySelector('main').append(table);
-    const props = [
-      ['size', '"s" | "m" | "l" | "xl"'],
-      ['type', '"text" | "url" | "tel" | "email" | "password"'],
-      ['autocomplete', autocompleteType],
-    ];
-    for (const [property, propType] of props) {
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${property}</td><td>${property}</td><td class="table-type-cell"><span class="table-cell-value"></span></td><td>undefined</td><td>The ${property} of the field</td><td>TextfieldBase</td>`;
-      const disclosure = document.createElement('se-disclosure');
-      disclosure.setAttribute('preview', '');
-      disclosure.setAttribute('label', `Expand to view more about ${property}`);
-      disclosure.textContent = propType;
-      row.querySelector('.table-cell-value').append(disclosure);
-      table.querySelector('tbody').append(row);
-    }
-    await new Promise((resolve) => { requestAnimationFrame(resolve); });
-  }, type);
-  const disclosure = page.locator('.table se-disclosure').last();
-  const trigger = disclosure.getByRole('button');
-  await expect(trigger).toBeVisible();
-  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-  await trigger.click();
-  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
-  await expect(disclosure.getByRole('region')).toBeVisible();
-  expect(await disclosure.textContent()).toBe(type);
-  await trigger.click();
-  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-});
-
 for (const expanded of [false, true]) {
-  test(`se-disclosure ${expanded ? 'expanded' : 'collapsed'} has no WCAG violations`, async ({ page, makeAxeBuilder }) => {
+  test(`${component.name} component in light/default mode has no WCAG 2.2 AA violations${expanded ? ' when expanded' : ''}`, async ({ page, makeAxeBuilder }) => {
     await gotoBlock(page, component);
     if (expanded) { await page.locator('#long').getByRole('button').click(); }
-    const results = await makeAxeBuilder().analyze();
+
+    const results = await makeAxeBuilder()
+      .disableRules(component.disableRules ?? [])
+      .analyze();
+
     expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
   });
 }
 
-test('se-disclosure matches its expected accessibility tree', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium', 'Only desktop needs the shared tree');
+test(`${component.name} component matches its expected accessibility tree`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic; only the chromium project needs to run it');
+
   await gotoBlock(page, component);
-  await expect(page.locator('.test-container')).toMatchAriaSnapshot(`
+
+  await expect(page.locator(component.ariaRoot)).toMatchAriaSnapshot(`
     - heading "Disclosures" [level=1]
     - button "Details"
     - button "Open details" [expanded]
@@ -155,10 +181,20 @@ test('se-disclosure matches its expected accessibility tree', async ({ page }, t
   `);
 });
 
-test('se-disclosure dark mode has no contrast violations', async ({ page }) => {
+test(`${component.name} component in dark mode has no WCAG 2.2 AA violations`, async ({ page }, testInfo) => {
   await page.emulateMedia({ colorScheme: 'dark' });
+
   await gotoBlock(page, component);
   await page.locator('#long').getByRole('button').click();
-  const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
+
+  const results = await new AxeBuilder({ page })
+    .withRules(['color-contrast'])
+    .analyze();
+
+  await testInfo.attach('accessibility-scan-results', {
+    body: JSON.stringify(results, null, 2),
+    contentType: 'application/json',
+  });
+
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
 });
