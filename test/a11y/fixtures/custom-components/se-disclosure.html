@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disclosure fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <script type="importmap">{"imports":{"lit":"/deps/lit/dist/index.js"}}</script>
+</head>
+<body>
+  <main class="test-container">
+    <h1>Disclosures</h1>
+    <se-disclosure label="Details">Additional information</se-disclosure>
+    <se-disclosure label="Open details" expanded>Visible information</se-disclosure>
+    <se-disclosure id="short" label="Short type" preview>string</se-disclosure>
+    <se-disclosure id="long" label="Full type for autocomplete" preview></se-disclosure>
+  </main>
+  <script type="module">
+    document.querySelector('#long').textContent = Array.from({ length: 200 }, (_, i) => `"value-${i}"`).join(' | ');
+    await import('/deps/se/se.js');
+  </script>
+</body>
+</html>

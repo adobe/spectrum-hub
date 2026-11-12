@@ -15,6 +15,115 @@
   }
 }
 
+:host(se-disclosure) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* see this example in the SWC textfield component API table. */
+.se-disclosure {
+  button {
+    /* Adding the trigger must not resize the table column being measured. */
+    contain: inline-size;
+    box-sizing: border-box;
+    display: flex;
+    align-items: start;
+    gap: var(--s2-spacing-75);
+    min-block-size: 24px;
+    max-inline-size: 100%;
+    padding: var(--s2-spacing-100) var(--s2-spacing-200);
+    border: none;
+    border-radius: var(--s2-corner-radius-500);
+    background: none;
+    box-shadow: none;
+    text-shadow: none;
+    inline-size: 100%;
+    color: var(--s2-gray-900);
+    font-family: var(--s2-font-family);
+    font-weight: var(--s2-heading-font-weight);
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:active {
+      background: var(--s2-gray-300);
+    }
+
+    &:active {
+      scale: 0.97;
+    }
+
+    svg {
+      flex: 0 0 16px;
+      inline-size: 10px;
+      block-size: 10px;
+      margin-block-start: 2px;
+      fill: none;
+      stroke: currentcolor;
+      stroke-width: 2;
+      transition: rotate 200ms;
+    }
+
+    &[aria-expanded="true"] svg {
+      rotate: 90deg;
+    }
+  }
+
+  .se-disclosure-label {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button:focus-visible,
+  .se-disclosure-panel:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+    outline-offset: -2px;
+  }
+
+  .se-disclosure-preview {
+    max-block-size: 4lh;
+    overflow: hidden;
+    white-space: pre-wrap;
+    padding: var(--s2-spacing-300) var(--s2-spacing-200);
+    border: 1px solid transparent;
+    font-family: monospace;
+    font-size: var(--s2-component-s-medium-font-size);
+    color: var(--s2-gray-800);
+    inline-size: fit-content;
+
+    &.measuring {
+      position: absolute;
+      inset-inline: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  .se-disclosure-panel[role="region"] {
+    box-sizing: border-box;
+    max-block-size: 20rem;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: var(--s2-spacing-300) var(--s2-spacing-200);
+    border: 1px solid var(--s2-gray-400);
+    border-radius: var(--s2-corner-radius-300);
+    white-space: pre-wrap;
+    background-color: rgb(from var(--s2-gray-1000) r g b / 8%);
+    font-family: monospace;
+    font-size: var(--s2-component-s-medium-font-size);
+    color: var(--s2-gray-800);
+    inline-size: fit-content;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button svg {
+      transition: none;
+    }
+  }
+}
+
 /* Opt-in: keep the label wired to the field for assistive tech, but hide it visually
    (mirrors the global .visually-hidden utility). Use on icon-only / self-evident fields. */
 :host([hide-label]) label {

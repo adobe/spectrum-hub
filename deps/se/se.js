@@ -476,6 +476,88 @@ class SESegmentedControl extends LitElement {
   }
 }
 
+class SEDisclosure extends LitElement {
+  static properties = {
+    label: { type: String },
+    expanded: { type: Boolean, reflect: true },
+    preview: { type: Boolean },
+    _previewText: { state: true },
+    _overflows: { state: true },
+  };
+
+  constructor() {
+    super();
+    this.label = 'Details';
+    this.expanded = false;
+    this.preview = false;
+    this._previewText = '';
+    this._overflows = false;
+    this._measure = this._measure.bind(this);
+    this._syncContent = this._syncContent.bind(this);
+    this._resizeObserver = new ResizeObserver(this._measure);
+    this._contentObserver = new MutationObserver(this._syncContent);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.shadowRoot.adoptedStyleSheets = styles;
+    this._resizeObserver.observe(this);
+    this._contentObserver.observe(this, { childList: true, characterData: true, subtree: true });
+    document.fonts.addEventListener('loadingdone', this._measure);
+    this._syncContent();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._resizeObserver.disconnect();
+    this._contentObserver.disconnect();
+    document.fonts.removeEventListener('loadingdone', this._measure);
+  }
+
+  _syncContent() {
+    this._previewText = this.textContent;
+  }
+
+  updated() {
+    this._measure();
+  }
+
+  _measure() {
+    if (!this.preview || !this.isConnected) return;
+    const preview = this.shadowRoot.querySelector('.se-disclosure-preview');
+    if (!preview?.clientWidth) return;
+    this._overflows = preview.scrollHeight > preview.clientHeight + 1;
+  }
+
+  _toggle() {
+    this.expanded = !this.expanded;
+    this.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  render() {
+    const collapsible = !this.preview || this._overflows;
+    const open = !collapsible || this.expanded;
+    return html`
+      <div class="se-disclosure">
+        ${collapsible ? html`
+          <button type="button" id="trigger" aria-expanded=${String(this.expanded)}
+            aria-controls="panel" @click=${this._toggle}>
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="m6 3 5 5-5 5"></path>
+            </svg>
+            <span class="se-disclosure-label">${this.label}</span>
+          </button>` : nothing}
+        ${this.preview ? html`
+          <div class="se-disclosure-preview ${open ? 'measuring' : ''}"
+            aria-hidden="true">${this._previewText}</div>` : nothing}
+        <div id="panel" class="se-disclosure-panel" ?hidden=${!open}
+          role=${collapsible ? 'region' : nothing}
+          aria-labelledby=${collapsible ? 'trigger' : nothing}
+          tabindex=${collapsible ? '0' : nothing}><slot></slot></div>
+      </div>`;
+  }
+}
+
 class SEDialog extends LitElement {
   static properties = {
     open: { type: Boolean },
@@ -558,5 +640,6 @@ customElements.define('se-select', SESelect);
 customElements.define('se-button', SEButton);
 customElements.define('se-segmentedcontrol', SESegmentedControl);
 customElements.define('se-dialog', SEDialog);
+customElements.define('se-disclosure', SEDisclosure);
 
 document.body.classList.add('se-loaded');
