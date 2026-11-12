@@ -6,6 +6,7 @@
   <title>Table block fixture</title>
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/blocks/table/table.css">
+  <script type="importmap">{"imports":{"lit":"/deps/lit/dist/index.js"}}</script>
 </head>
 <body>
   <main id="main-content">
@@ -42,7 +43,11 @@
   </main>
   <script type="module">
     import init from '/blocks/table/table.js';
-    document.querySelectorAll('.table').forEach(init);
+    const table = document.querySelector('.table');
+    if (new URLSearchParams(location.search).has('data')) {
+      table.innerHTML = '<div><div><a href="/deps/swc/data/swc-text-field.json">Text field properties</a></div></div>';
+    }
+    await init(table);
   </script>
 </body>
 </html>

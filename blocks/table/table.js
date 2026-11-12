@@ -40,6 +40,7 @@ const EXCLUDED_SOURCES = new Set([
 // `kind`/`values`/`optional` back the playground's controls; this table shows the
 // human-readable `type` instead.
 const EXCLUDED_COLUMNS = new Set(['status', 'since', 'kind', 'values', 'optional']);
+const TYPE_DISCLOSURE_THRESHOLD = 500;
 
 /**
  * The column-header text repeated inside a body cell. Only the narrow stacked layout
@@ -60,6 +61,30 @@ const buildCellValue = () => {
   const value = document.createElement('span');
   value.className = 'table-cell-value';
   return value;
+};
+
+const buildDescription = (text) => {
+  const content = document.createDocumentFragment();
+  const tokens = /(?<!`)(`+)(?!`)([\s\S]*?)(?<!`)\1(?!`)|(?<!!)\[([^\]]+)\]\((https?:\/\/(?:[^()\s]|\([^()\s]*\))+)\)/gi;
+  let offset = 0;
+  for (const match of text.matchAll(tokens)) {
+    const [markdown, backticks, codeText, label, href] = match;
+    let node;
+    if (backticks) {
+      node = document.createElement('code');
+      node.textContent = codeText;
+    } else if (label.trim() && URL.canParse(href)) {
+      node = document.createElement('a');
+      node.href = href;
+      node.append(buildDescription(label));
+    }
+    if (node) {
+      content.append(text.slice(offset, match.index), node);
+      offset = match.index + markdown.length;
+    }
+  }
+  content.append(text.slice(offset));
+  return content;
 };
 
 const buildTableElement = (headerCells, dataCells) => {
@@ -152,12 +177,77 @@ const buildDataTable = async (href) => {
   const dataCells = rows.map((props) => properties.map((key) => {
     const tableCell = document.createElement('td');
     const value = buildCellValue();
-    value.textContent = props[key] || '-';
+    const resolvedValue = props[key] || '-';
+    if (key === 'property'
+      || key === 'attribute'
+      || key === 'type'
+      || (key === 'default' && resolvedValue !== '-')) {
+      tableCell.classList.add('table-type-cell');
+    }
+    if (key === 'type' && typeof props[key] === 'string' && props[key].length > TYPE_DISCLOSURE_THRESHOLD) {
+      const disclosure = document.createElement('se-disclosure');
+      disclosure.setAttribute('preview', '');
+      disclosure.setAttribute('label', `View more about ${props.attribute || props.property || 'this property'}`);
+      disclosure.textContent = resolvedValue;
+      value.append(disclosure);
+    } else if (key === 'description' && typeof resolvedValue === 'string') {
+      value.append(buildDescription(resolvedValue));
+    } else {
+      value.textContent = resolvedValue;
+    }
     tableCell.append(value);
     return tableCell;
   }));
 
   return buildTableElement(headerCells, dataCells);
+};
+
+const buildScroller = (table, labelIds) => {
+  const scroller = document.createElement('div');
+  scroller.className = 'table-scroll';
+  scroller.tabIndex = 0;
+  if (labelIds.length) {
+    scroller.role = 'region';
+    scroller.setAttribute('aria-labelledby', labelIds.join(' '));
+  }
+  // WebKit does not natively scroll focused containers with horizontal arrows.
+  scroller.addEventListener('keydown', (event) => {
+    if (event.target !== scroller || event.defaultPrevented
+      || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
+      || !['ArrowLeft', 'ArrowRight'].includes(event.key)
+      || scroller.scrollWidth - scroller.clientWidth <= 1) {
+      return;
+    }
+    event.preventDefault();
+    scroller.scrollBy({ left: event.key === 'ArrowLeft' ? -40 : 40 });
+  });
+  scroller.append(table);
+  return scroller;
+};
+
+const watchScrollHint = (el, scroller, instructions) => {
+  const update = () => {
+    const overflow = scroller.scrollWidth - scroller.clientWidth;
+    const remaining = overflow - Math.abs(scroller.scrollLeft);
+    el.toggleAttribute('data-scroll-hint', remaining > 1);
+    const descriptionId = overflow > 1 ? instructions.id : null;
+    if (scroller.getAttribute('aria-describedby') !== descriptionId) {
+      instructions.hidden = !descriptionId;
+      if (descriptionId) {
+        scroller.setAttribute('aria-describedby', descriptionId);
+      } else {
+        scroller.removeAttribute('aria-describedby');
+      }
+    }
+  };
+  update();
+  // Measure again when styles, content, or the surrounding layout change.
+  const observer = new ResizeObserver(update);
+  observer.observe(scroller);
+  observer.observe(scroller.querySelector('table'));
+  scroller.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+  document.fonts?.ready.then(update);
 };
 
 export default async function init(el) {
@@ -187,5 +277,15 @@ export default async function init(el) {
     return heading.id;
   });
   if (table && labelIds.length) { table.setAttribute('aria-labelledby', labelIds.join(' ')); }
-  el.tabIndex = 0;
+  if (table) {
+    if (table.querySelector('se-disclosure')) { await import('../../deps/se/se.js'); }
+    const scroller = buildScroller(table, labelIds);
+    const instructions = document.createElement('span');
+    instructions.id = `table-scroll-instructions-${Math.random().toString(36).slice(2)}`;
+    instructions.className = 'visually-hidden';
+    instructions.textContent = 'Scrollable table. Use the left and right arrow keys to view more.';
+    instructions.hidden = true;
+    el.replaceChildren(scroller, instructions);
+    watchScrollHint(el, scroller, instructions);
+  }
 }

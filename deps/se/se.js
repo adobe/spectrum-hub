@@ -534,6 +534,19 @@ class SEDisclosure extends LitElement {
     this.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  _handlePanelKeyDown(event) {
+    const panel = event.currentTarget;
+    // WebKit does not natively scroll the focused panel with vertical arrows.
+    if (event.target !== panel || event.defaultPrevented
+      || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
+      || !['ArrowUp', 'ArrowDown'].includes(event.key)
+      || panel.scrollHeight - panel.clientHeight <= 1) {
+      return;
+    }
+    event.preventDefault();
+    panel.scrollBy({ top: event.key === 'ArrowUp' ? -40 : 40 });
+  }
+
   render() {
     const collapsible = !this.preview || this._overflows;
     const open = !collapsible || this.expanded;
@@ -553,6 +566,7 @@ class SEDisclosure extends LitElement {
         <div id="panel" class="se-disclosure-panel" ?hidden=${!open}
           role=${collapsible ? 'region' : nothing}
           aria-labelledby=${collapsible ? 'trigger' : nothing}
+          @keydown=${this._handlePanelKeyDown}
           tabindex=${collapsible ? '0' : nothing}><slot></slot></div>
       </div>`;
   }

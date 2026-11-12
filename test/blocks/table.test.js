@@ -100,6 +100,22 @@ describe('table block', () => {
       await init(el);
     });
 
+    it('enhances only extracted Type values without modifying their full text', async () => {
+      const type = Array.from({ length: 200 }, (_, i) => `"value-${i}"`).join(' | ');
+      sandbox.stub(window, 'fetch').callThrough().withArgs(sinon.match(/\/props\.json$/)).resolves(new Response(
+        JSON.stringify([{ attribute: 'autocomplete', type, description: type }]),
+        { status: 200 },
+      ));
+      const dataEl = makeEl('<div><div><a href="/props.json">data</a></div></div>');
+      await init(dataEl);
+      const disclosures = dataEl.querySelectorAll('se-disclosure');
+      expect(disclosures).to.have.length(1);
+      expect(disclosures[0].textContent).to.equal(type);
+      expect(disclosures[0].getAttribute('label')).to.equal('View more about autocomplete');
+      expect(disclosures[0].hasAttribute('preview')).to.be.true;
+      expect(dataEl.querySelector('td:last-child se-disclosure')).to.be.null;
+    });
+
     it('repeats every column header inside its body cells', () => {
       const labels = [...el.querySelectorAll('tbody tr:first-child .table-cell-label')]
         .map((label) => label.textContent);
@@ -205,9 +221,145 @@ describe('table block', () => {
       expect(el.classList.contains('quiet')).to.be.true;
     });
 
-    it('sets el.tabIndex to 0', async () => {
+    it('makes the scroll container keyboard reachable rather than the block', async () => {
       await init(el);
-      expect(el.tabIndex).to.equal(0);
+      expect(el.querySelector('.table-scroll')?.tabIndex).to.equal(0);
+      expect(el.tabIndex).to.equal(-1);
+    });
+
+    it('wraps the table in a scroll container', async () => {
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller?.parentElement).to.equal(el);
+      expect(scroller?.querySelector('table')).to.equal(el.querySelector('table'));
+    });
+
+    it('names the scroll region with the same headings as the table', async () => {
+      const h1 = document.createElement('h1');
+      h1.id = 'page-heading';
+      document.body.append(h1, el);
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller?.role).to.equal('region');
+      expect(scroller?.getAttribute('aria-labelledby'))
+        .to.equal(el.querySelector('table').getAttribute('aria-labelledby'));
+    });
+
+    it('leaves the scroll container roleless when no heading names it', async () => {
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller).not.to.be.null;
+      expect(scroller.role).to.equal(null);
+      expect(scroller.hasAttribute('aria-labelledby')).to.be.false;
+    });
+
+    it('handles horizontal arrows on an overflowing scroll container', async () => {
+      sandbox.stub(Element.prototype, 'scrollWidth').get(() => 1000);
+      sandbox.stub(Element.prototype, 'clientWidth').get(() => 600);
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      const scroll = sandbox.stub(scroller, 'scrollBy');
+      for (const key of ['ArrowLeft', 'ArrowRight']) {
+        const event = new KeyboardEvent('keydown', { key, cancelable: true });
+        scroller.dispatchEvent(event);
+        expect(event.defaultPrevented).to.be.true;
+        const { left } = scroll.lastCall.args[0];
+        expect(key === 'ArrowLeft' ? left < 0 : left > 0).to.be.true;
+      }
+    });
+
+    it('leaves descendant controls, modified arrows, and fitting tables alone', async () => {
+      sandbox.stub(Element.prototype, 'scrollWidth').get(() => 1000);
+      const width = sandbox.stub(Element.prototype, 'clientWidth').get(() => 600);
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      const scroll = sandbox.stub(scroller, 'scrollBy');
+      const linkEvent = new KeyboardEvent('keydown', {
+        key: 'ArrowRight', bubbles: true, cancelable: true,
+      });
+      scroller.querySelector('a').dispatchEvent(linkEvent);
+      expect(linkEvent.defaultPrevented).to.be.false;
+      for (const modifier of ['altKey', 'ctrlKey', 'metaKey', 'shiftKey']) {
+        const event = new KeyboardEvent('keydown', {
+          key: 'ArrowRight', [modifier]: true, cancelable: true,
+        });
+        scroller.dispatchEvent(event);
+        expect(event.defaultPrevented).to.be.false;
+      }
+      width.get(() => 1000);
+      const fittingEvent = new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true });
+      scroller.dispatchEvent(fittingEvent);
+      expect(fittingEvent.defaultPrevented).to.be.false;
+      expect(scroll.called).to.be.false;
+    });
+
+    it('updates the scroll hint on scroll and resize, including RTL offsets', async () => {
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      expect(scroller).not.to.be.null;
+      Object.defineProperties(scroller, {
+        scrollWidth: { value: 1000, configurable: true },
+        clientWidth: { value: 600, configurable: true },
+        scrollLeft: { value: 0, writable: true, configurable: true },
+      });
+      scroller.dispatchEvent(new Event('scroll'));
+      expect(el.hasAttribute('data-scroll-hint')).to.be.true;
+      for (const offset of [400, -400]) {
+        scroller.scrollLeft = offset;
+        scroller.dispatchEvent(new Event('scroll'));
+        expect(el.hasAttribute('data-scroll-hint')).to.be.false;
+      }
+      scroller.scrollLeft = 0;
+      window.dispatchEvent(new Event('resize'));
+      expect(el.hasAttribute('data-scroll-hint')).to.be.true;
+      Object.defineProperty(scroller, 'clientWidth', { value: 1000 });
+      window.dispatchEvent(new Event('resize'));
+      expect(el.hasAttribute('data-scroll-hint')).to.be.false;
+    });
+
+    it('describes overflow before scrolling and retains instructions at both scroll ends', async () => {
+      sandbox.stub(Element.prototype, 'scrollWidth').get(() => 1000);
+      sandbox.stub(Element.prototype, 'clientWidth').get(() => 600);
+      await init(el);
+      const scroller = el.querySelector('.table-scroll');
+      const descriptionId = scroller.getAttribute('aria-describedby');
+      expect(descriptionId).to.be.a('string');
+      const instructions = el.querySelector(`#${descriptionId}`);
+      expect(instructions.textContent)
+        .to.equal('Scrollable table. Use the left and right arrow keys to view more.');
+      expect(instructions.classList.contains('visually-hidden')).to.be.true;
+      expect(instructions.hidden).to.be.false;
+      expect(el.querySelector('[aria-live], [role="status"], [role="alert"]')).to.be.null;
+      for (const offset of [400, -400]) {
+        Object.defineProperty(scroller, 'scrollLeft', { value: offset, configurable: true });
+        scroller.dispatchEvent(new Event('scroll'));
+        expect(el.hasAttribute('data-scroll-hint')).to.be.false;
+        expect(scroller.getAttribute('aria-describedby')).to.equal(descriptionId);
+      }
+      Object.defineProperty(scroller, 'clientWidth', { value: 1000, configurable: true });
+      window.dispatchEvent(new Event('resize'));
+      expect(scroller.hasAttribute('aria-describedby')).to.be.false;
+      expect(instructions.hidden).to.be.true;
+      Object.defineProperty(scroller, 'clientWidth', { value: 600 });
+      window.dispatchEvent(new Event('resize'));
+      expect(scroller.getAttribute('aria-describedby')).to.equal(descriptionId);
+      expect(instructions.hidden).to.be.false;
+    });
+
+    it('keeps instructions inactive for fitting tables and gives each table its own description', async () => {
+      const other = makeEl(MOCK_TABLE);
+      await init(el);
+      await init(other);
+      const scrollers = [el, other].map((block) => block.querySelector('.table-scroll'));
+      const instructions = [el, other].map((block) => block.querySelector('.visually-hidden'));
+      for (const scroller of scrollers) {
+        expect(scroller.hasAttribute('aria-describedby')).to.be.false;
+      }
+      instructions.forEach((text) => {
+        expect(text).not.to.be.null;
+        expect(text.hidden).to.be.true;
+      });
+      expect(instructions[0].id).not.to.equal(instructions[1].id);
     });
 
     it('sets aria-labelledby from an existing h1 id', async () => {
@@ -309,7 +461,7 @@ describe('table block', () => {
     }
 
     function stubFetchOk(data) {
-      return sandbox.stub(window, 'fetch').resolves(
+      return sandbox.stub(window, 'fetch').callThrough().withArgs(sinon.match(/\.json$/)).resolves(
         new Response(JSON.stringify(data), { status: 200 }),
       );
     }
@@ -337,6 +489,96 @@ describe('table block', () => {
       expect(headers).to.include('Type');
       expect(headers).to.include('Default value');
       expect(headers).to.include('Description');
+    });
+
+    it('renders description links while preserving surrounding text and other columns', async () => {
+      const description = 'See [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML#attributes) and [the\nreference](http://example.com/reference?a=1&b=2).';
+      stubFetchOk([{
+        property: '[property](https://example.com/property)',
+        type: '[type](https://example.com/type)',
+        description,
+      }]);
+      const el = makeDataEl();
+      await init(el);
+      const cell = el.querySelector('td:last-child .table-cell-value');
+      const links = [...cell.querySelectorAll('a')];
+      expect(links.map((link) => link.textContent)).to.deep.equal(['MDN', 'the\nreference']);
+      expect(links.map((link) => link.getAttribute('href'))).to.deep.equal([
+        'https://developer.mozilla.org/en-US/docs/Web/HTML#attributes',
+        'http://example.com/reference?a=1&b=2',
+      ]);
+      expect(cell.textContent).to.equal('See MDN and the\nreference.');
+      expect(el.querySelectorAll('td:not(:last-child) a')).to.have.length(0);
+    });
+
+    it('keeps HTML, unsafe destinations, and invalid URLs as literal description text', async () => {
+      const description = '<img src=x onerror=alert(1)> [run](javascript:alert(1)) [data](data:text/html,test) [invalid](https://[invalid) [safe](https://example.com).';
+      stubFetchOk([{ property: 'size', description }]);
+      const el = makeDataEl();
+      await init(el);
+      const cell = el.querySelector('td:last-child .table-cell-value');
+      expect(cell.querySelectorAll('img, script')).to.have.length(0);
+      expect(cell.querySelectorAll('a')).to.have.length(1);
+      expect(cell.querySelector('a').textContent).to.equal('safe');
+      expect(cell.textContent).to.equal(description.replace('[safe](https://example.com)', 'safe'));
+    });
+
+    it('preserves parentheses in link destinations and treats labels as plain text', async () => {
+      stubFetchOk([{
+        property: 'size',
+        description: 'See [<em>reference</em>](https://example.com/docs/function(test)#usage).',
+      }]);
+      const el = makeDataEl();
+      await init(el);
+      const link = el.querySelector('td:last-child a');
+      expect(link).not.to.be.null;
+      expect(link.getAttribute('href')).to.equal('https://example.com/docs/function(test)#usage');
+      expect(link.textContent).to.equal('<em>reference</em>');
+      expect(link.children).to.have.length(0);
+    });
+
+    it('renders backtick-delimited description text as code alongside links', async () => {
+      stubFetchOk([{
+        property: '`size`',
+        type: '`string`',
+        description: 'Set `size` to `M`. See [MDN](https://example.com).',
+      }]);
+      const el = makeDataEl();
+      await init(el);
+      const cell = el.querySelector('td:last-child .table-cell-value');
+      expect([...cell.querySelectorAll('code')].map((code) => code.textContent))
+        .to.deep.equal(['size', 'M']);
+      expect(cell.textContent).to.equal('Set size to M. See MDN.');
+      expect(cell.querySelector('a').href).to.equal('https://example.com/');
+      expect(el.querySelectorAll('td:not(:last-child) code')).to.have.length(0);
+    });
+
+    it('keeps code contents literal and leaves unmatched backticks unchanged', async () => {
+      stubFetchOk([{
+        property: 'size',
+        description: '`<img src=x onerror=alert(1)> [MDN](https://example.com)` and `unclosed',
+      }]);
+      const el = makeDataEl();
+      await init(el);
+      const cell = el.querySelector('td:last-child .table-cell-value');
+      expect(cell.querySelector('code').textContent)
+        .to.equal('<img src=x onerror=alert(1)> [MDN](https://example.com)');
+      expect(cell.querySelectorAll('img, a')).to.have.length(0);
+      expect(cell.textContent).to.equal('<img src=x onerror=alert(1)> [MDN](https://example.com) and `unclosed');
+    });
+
+    it('supports matching backtick runs and code in link labels', async () => {
+      stubFetchOk([{
+        property: 'size',
+        description: 'Use ``a `literal` backtick`` or [`size`](https://example.com/size).',
+      }]);
+      const el = makeDataEl();
+      await init(el);
+      const cell = el.querySelector('td:last-child .table-cell-value');
+      expect([...cell.querySelectorAll('code')].map((code) => code.textContent))
+        .to.deep.equal(['a `literal` backtick', 'size']);
+      expect(cell.querySelector('a code').textContent).to.equal('size');
+      expect(cell.querySelector('a').href).to.equal('https://example.com/size');
     });
 
     it('keeps status and since metadata out of table columns', async () => {
@@ -429,6 +671,28 @@ describe('table block', () => {
       await init(el);
       const fallbacks = cellValues(el).filter((text) => text === '-');
       expect(fallbacks.length).to.be.above(0);
+    });
+
+    it('styles default cells only when their displayed value is not the placeholder', async () => {
+      stubFetchOk([
+        { property: 'size', type: 'string', default: 'M' },
+        { property: 'weight', type: 'string', default: 'regular' },
+        { property: 'placeholder', type: 'string', default: '-' },
+        { property: 'missing', type: 'string' },
+        { property: 'empty', type: 'string', default: '' },
+        { property: 'nullable', type: 'string', default: null },
+      ]);
+      const el = makeDataEl();
+      await init(el);
+      const cells = [...el.querySelectorAll('tbody tr td:last-child')];
+      expect(cells.map((cell) => cell.querySelector('.table-cell-value').textContent))
+        .to.deep.equal(['M', 'regular', '-', '-', '-', '-']);
+      expect(cells.map((cell) => cell.classList.contains('table-type-cell')))
+        .to.deep.equal([true, true, false, false, false, false]);
+      el.querySelectorAll('tbody tr').forEach((row) => {
+        expect(row.children[0].classList.contains('table-type-cell')).to.be.true;
+        expect(row.children[1].classList.contains('table-type-cell')).to.be.true;
+      });
     });
 
     it('does not produce a table and calls config.log when fetch returns an error status', async () => {

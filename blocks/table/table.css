@@ -4,7 +4,10 @@
   --table-border-width: 1px;
   --table-head-row-padding-block: 7px;
   --table-body-row-padding-block: 11px;
+  --table-scroll-hint-width: var(--s2-spacing-700);
+  --table-scroll-hint-color: var(--se-body-background-color);
 
+  position: relative;
   container-type: inline-size;
   container-name: table-wrapper;
   margin-block: var(--s2-spacing-500) var(--s2-spacing-800);
@@ -71,6 +74,25 @@
 
   .table-cell-value {
     grid-column: 2;
+    min-inline-size: 0;
+  }
+
+  .table-type-cell {
+    se-disclosure {
+      /* Bound intrinsic sizing without fixing the other table columns. */
+      inline-size: 100%;
+      max-inline-size: 28rem;
+    }
+
+    > .table-cell-value:not(:has(se-disclosure)) {
+      background-color: rgb(from var(--s2-gray-1000) r g b / 8%);
+      font-family: monospace;
+      padding: 2px;
+      border-radius: 3px;
+      font-size: var(--s2-component-s-medium-font-size);
+      color: var(--s2-gray-800);
+      inline-size: fit-content;
+    }
   }
 
   tbody td svg {
@@ -94,8 +116,39 @@
     position: relative;
   }
 
-  @container table-wrapper (width >= 650px) {
+  .table-scroll {
     overflow-x: auto;
+
+    /* Leave room for focus rings on links at the first and last rows. */
+    padding-block: var(--s2-spacing-100);
+    margin-block: calc(var(--s2-spacing-100) * -1);
+  }
+
+  /* Keep the hint outside the scroller so it stays at the visible edge. */
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: var(--table-scroll-hint-width);
+    background: linear-gradient(to right, transparent, var(--table-scroll-hint-color));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  &:dir(rtl)::after {
+    background: linear-gradient(to left, transparent, var(--table-scroll-hint-color));
+  }
+
+  &[data-scroll-hint]::after {
+    opacity: 1;
+  }
+
+  @container table-wrapper (width >= 650px) {
+    .table-type-cell:has(se-disclosure) {
+      min-inline-size: 16rem;
+    }
 
     table {
       border-collapse: separate;
@@ -210,5 +263,11 @@
   &.quiet thead tr {
     border-block-start: none;
     background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table::after {
+    transition: none;
   }
 }
