@@ -134,6 +134,24 @@
       }
     },
     {
+      "name": "AIButton",
+      "label": "AI Button",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "not-available"
+          }
+        }
+      }
+    },
+    {
       "name": "AlertBanner",
       "label": "Alert Banner",
       "platforms": {
@@ -593,6 +611,47 @@
       }
     },
     {
+      "name": "ConversationThread",
+      "label": "Conversation Thread",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha",
+            "upstreamName": "Thread",
+            "secondary": "Use thread"
+          },
+          "swc": {
+            "status": "available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ConversationTurn",
+      "label": "Conversation Turn",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha",
+            "upstreamName": "ThreadItem",
+            "secondary": "Use thread item"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "DateAndTimeField",
       "label": "Date and Time Field",
       "platforms": {
@@ -749,8 +808,8 @@
       }
     },
     {
-      "name": "InLineAlert",
-      "label": "In Line Alert",
+      "name": "InlineAlert",
+      "label": "Inline Alert",
       "platforms": {
         "web": {
           "figma": {
@@ -758,8 +817,7 @@
           },
           "rsp": {
             "status": "available",
-            "context": "Stable",
-            "upstreamName": "InlineAlert"
+            "context": "Stable"
           },
           "swc": {
             "status": "not-available"
@@ -861,6 +919,46 @@
       }
     },
     {
+      "name": "MessageFeedback",
+      "label": "Message Feedback",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
+      "name": "MessageSources",
+      "label": "Message Sources",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha",
+            "upstreamName": "SourceList",
+            "secondary": "Use message source and source list"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "Meter",
       "label": "Meter",
       "platforms": {
@@ -911,6 +1009,25 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "PixelLoader",
+      "label": "Pixel Loader",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -973,6 +1090,25 @@
       }
     },
     {
+      "name": "PromptField",
+      "label": "Prompt Field",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "RadioButton",
       "label": "Radio Button",
       "platforms": {
@@ -1023,6 +1159,25 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "ResponseStatus",
+      "label": "Response Status",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }
@@ -1212,6 +1367,27 @@
       }
     },
     {
+      "name": "SuggestionGroup",
+      "label": "Suggestion Group",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha",
+            "upstreamName": "MessageSuggestionList",
+            "secondary": "Use message suggestion list"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
+          }
+        }
+      }
+    },
+    {
       "name": "Swatch",
       "label": "Swatch",
       "platforms": {
@@ -1263,6 +1439,23 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "SystemMessage",
+      "label": "System Message",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "not-available"
+          },
+          "swc": {
+            "status": "available"
           }
         }
       }
@@ -1486,6 +1679,25 @@
           },
           "swc": {
             "status": "not-available"
+          }
+        }
+      }
+    },
+    {
+      "name": "UserMessage",
+      "label": "User Message",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "not-available"
+          },
+          "rsp": {
+            "status": "available",
+            "context": "Alpha"
+          },
+          "swc": {
+            "status": "available",
+            "context": "Stable"
           }
         }
       }

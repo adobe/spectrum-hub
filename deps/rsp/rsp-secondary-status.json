@@ -6,5 +6,9 @@
   { "name": "Field Label",     "context": "Use form component" },
   { "name": "Help Text",       "context": "Use form component" },
   { "name": "Standard Dialog", "context": "Use dialog component" },
-  { "name": "Thumbnail",       "context": "Use image" }
+  { "name": "Thumbnail",       "context": "Use image" },
+  { "name": "Conversation Thread", "context": "Use thread" },
+  { "name": "Conversation Turn", "context": "Use thread item" },
+  { "name": "Suggestion Group", "context": "Use message suggestion list" },
+  { "name": "Message Sources", "context": "Use message source and source list" }
 ]

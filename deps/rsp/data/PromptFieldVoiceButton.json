@@ -1,0 +1,29 @@
+{
+  "props": [
+    {
+      "property": "lang",
+      "type": "string",
+      "kind": "text",
+      "values": []
+    },
+    {
+      "property": "isDisabled",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": []
+    },
+    {
+      "property": "onError",
+      "type": "(code: VoiceInputErrorCode) => void",
+      "kind": "unknown",
+      "values": []
+    },
+    {
+      "property": "onToggle",
+      "type": "(isListening: boolean) => void",
+      "kind": "unknown",
+      "values": []
+    }
+  ],
+  "status": "alpha"
+}

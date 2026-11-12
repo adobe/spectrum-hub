@@ -1,0 +1,12 @@
+{
+  "props": [
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true
+    }
+  ],
+  "status": "alpha"
+}

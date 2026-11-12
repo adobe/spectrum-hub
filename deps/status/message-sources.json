@@ -1,0 +1,17 @@
+{
+  "web": {
+    "figma": {
+      "status": "not-available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Alpha",
+      "upstreamName": "SourceList",
+      "secondary": "Use message source and source list"
+    },
+    "swc": {
+      "status": "available",
+      "context": "Stable"
+    }
+  }
+}

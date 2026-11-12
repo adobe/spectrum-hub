@@ -18,15 +18,26 @@ export default {
     "color-handle-and-loupe": {
       "docs": "ColorSlider"
     },
+    "conversation-thread": {
+      "docs": "Thread",
+      "export": "Thread",
+      "package": "ai"
+    },
+    "conversation-turn": {
+      "docs": "ThreadItem",
+      "export": "ThreadItem",
+      "package": "ai"
+    },
     "field-label": {
       "docs": "Form"
     },
     "help-text": {
       "docs": "Form"
     },
-    "in-line-alert": {
-      "docs": "InlineAlert",
-      "export": "InlineAlert"
+    "message-sources": {
+      "docs": "SourceList",
+      "export": "SourceList",
+      "package": "ai"
     },
     "radio-button": {
       "docs": "RadioGroup",
@@ -43,6 +54,11 @@ export default {
     "standard-dialog": {
       "docs": "Dialog",
       "export": "Dialog"
+    },
+    "suggestion-group": {
+      "docs": "MessageSuggestionList",
+      "export": "MessageSuggestionList",
+      "package": "ai"
     },
     "swatch": {
       "docs": "ColorSwatch",
@@ -67,8 +83,26 @@ export default {
       "docs": "Image",
       "export": "Image"
     },
+    "ai-button": {
+      "package": "ai"
+    },
+    "message-feedback": {
+      "package": "ai"
+    },
+    "pixel-loader": {
+      "package": "ai"
+    },
+    "prompt-field": {
+      "package": "ai"
+    },
+    "response-status": {
+      "package": "ai"
+    },
     "toast": {
       "export": "ToastContainer"
+    },
+    "user-message": {
+      "package": "ai"
     }
   },
   "swc": {
@@ -77,6 +111,36 @@ export default {
     },
     "color-handle-and-loupe": {
       "docs": "ColorHandle"
+    },
+    "conversation-thread": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "conversation-turn": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "message-feedback": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "message-sources": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "pixel-loader": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "prompt-field": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "response-status": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "suggestion-group": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "system-message": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "user-message": {
+      "docsSection": "patterns-ai-toolkit"
     }
   }
 };

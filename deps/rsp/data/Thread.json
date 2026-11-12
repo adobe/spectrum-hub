@@ -1,0 +1,52 @@
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "scrollEndThreshold",
+      "type": "number",
+      "kind": "number",
+      "values": [],
+      "default": "100",
+      "description": "The maximum distance in px from the bottom of the content for the\nviewport to be considered \"near the end\". While near the end, appended content and streaming\nsize changes will keep the viewport pinned to the latest output."
+    },
+    {
+      "property": "items",
+      "type": "Iterable<T>",
+      "kind": "unknown",
+      "values": [],
+      "description": "Item objects in the collection.",
+      "inheritedFrom": "CollectionBase"
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | (item: T) => ReactNode",
+      "kind": "unknown",
+      "values": [],
+      "description": "The contents of the collection.",
+      "inheritedFrom": "CollectionProps"
+    },
+    {
+      "property": "aria-label",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Defines a string value that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    },
+    {
+      "property": "aria-labelledby",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "Identifies the element (or elements) that labels the current element.",
+      "inheritedFrom": "AriaLabelingProps"
+    }
+  ],
+  "status": "alpha"
+}

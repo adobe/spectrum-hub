@@ -1,0 +1,69 @@
+{
+  "props": [
+    {
+      "property": "styles",
+      "type": "StyleString",
+      "kind": "unknown",
+      "values": [],
+      "description": "Spectrum-defined styles, returned by the `style()` macro."
+    },
+    {
+      "property": "isStreaming",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether or not the item's content is currently being streamed in."
+    },
+    {
+      "property": "shouldAnnounceOnMount",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Announce textValue on mount even when isStreaming is provided."
+    },
+    {
+      "property": "children",
+      "type": "string | number | bigint | false | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode>",
+      "kind": "unknown",
+      "values": [],
+      "required": true,
+      "description": "The content to display in the ThreadItem."
+    },
+    {
+      "property": "textValue",
+      "type": "string",
+      "kind": "text",
+      "values": [],
+      "description": "A string representation of the item's contents, used for features like typeahead.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "focusMode",
+      "type": "\"child\" | \"row\"",
+      "kind": "enum",
+      "values": [
+        "child",
+        "row"
+      ],
+      "description": "Whether the row or its first focusable child element should be focused when navigating\nto the row. Defaults to 'row'.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "allowsArrowNavigation",
+      "type": "boolean",
+      "kind": "boolean",
+      "values": [],
+      "description": "Whether the row should support arrow key navigation even when the containing collection uses\ntab keyboard navigation. Allows users to navigate between rows with arrow keys while\nfocus is on an interactive child element within the row.",
+      "inheritedFrom": "GridListItemProps"
+    },
+    {
+      "property": "id",
+      "type": "string | number",
+      "kind": "unknown",
+      "values": [],
+      "description": "The unique id of the item.",
+      "inheritedFrom": "GridListItemProps"
+    }
+  ],
+  "status": "alpha"
+}

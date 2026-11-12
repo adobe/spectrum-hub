@@ -1,0 +1,16 @@
+{
+  "web": {
+    "figma": {
+      "status": "not-available"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Alpha",
+      "upstreamName": "Thread",
+      "secondary": "Use thread"
+    },
+    "swc": {
+      "status": "available"
+    }
+  }
+}
