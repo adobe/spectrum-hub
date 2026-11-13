@@ -2,13 +2,14 @@
  * Per-component Dev + Design status pills.
  *
  * An author-placed block (mirrors blocks/breadcrumbs): a `<div class="component-status">`
- * dropped anywhere in the page's content. Shows two button-styled pills — Development (the
- * current implementation's status) and Design (the Figma status) — each a per-status icon
- * plus a "<kind> <status>" label (e.g. "Development available").
+ * dropped anywhere in the page's content. Web pages show Code and Design pills.
+ * Shared mobile pages show a labelled Design status for each native platform.
+ * Each pill has a per-status icon and a "<kind> <status>" label.
  *
  * Data comes from a per-component build-time slice (deps/status/<slug>.json, written by
  * deps/build-status-index.js) rather than the whole combined index — one small, targeted
- * fetch instead of downloading and searching the full multi-KB roster. Labels bind to the
+ * fetch instead of downloading and searching the full multi-KB roster. Shared mobile pages
+ * can resolve a different canonical slice per platform. Labels bind to the
  * unified STATUSES model so they never drift from the adapter. When the path doesn't
  * resolve to an indexed component the block removes its own element (render nothing).
  */
@@ -17,9 +18,9 @@ import { STATUSES } from '../../scripts/utils/status-model.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { getSvgRef } from '../../scripts/utils/svg.js';
 import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
-import { getFigmaLink } from '../../scripts/utils/figma.js';
+import { getFigmaLinks, NATIVE_PLATFORMS } from '../../scripts/utils/figma.js';
 import { componentContextFromPath } from '../../scripts/utils/component-path.js';
-import { fetchComponentSlice } from '../../scripts/utils/component-slice.js';
+import { fetchComponentPageSlice } from '../../scripts/utils/component-slice.js';
 import { getConfig, removeForAudience } from '../../scripts/ak.js';
 
 const NOT_AVAILABLE = 'not-available';
@@ -41,11 +42,11 @@ const STATUS_ICONS = {
 };
 
 /**
- * Resolves a component-page pathname to its code implementation and slug.
+ * Resolves a component or pattern pathname to its platform, implementation, and slug.
  *
  * @param {string} pathname
- * @returns {{ impl: string, slug: string } | null} `null` unless the path is
- *   `/…/components/<slug>` under a registered code implementation (rsp/swc, never figma).
+ * @returns {{ platform: string, impl: string|null, slug: string } | null}
+ *   Web routes require a registered implementation; shared mobile pages have no code impl.
  */
 export function resolveContext(pathname) {
   const context = componentContextFromPath(pathname);
@@ -90,7 +91,7 @@ function buildPill({ kind, label: prefix }, cell, link) {
 }
 
 /**
- * Builds the Development + Design status pills for the current component page, or
+ * Builds the Code and platform-specific Design status pills for the current page, or
  * an empty array when the path doesn't resolve or the component has no slice.
  *
  * @param {string} pathname
@@ -101,6 +102,17 @@ function buildPill({ kind, label: prefix }, cell, link) {
 export function buildPills(pathname, componentData) {
   const context = resolveContext(pathname);
   if (!context || !componentData) { return []; }
+  const figmaLinks = getFigmaLinks(pathname, componentData);
+  if (context.platform === 'mobile') {
+    return Object.entries(NATIVE_PLATFORMS).map(([platform, label]) => {
+      const link = figmaLinks.find((entry) => entry.platform === platform);
+      return buildPill(
+        { kind: 'design', label: `${label} Design` },
+        componentData[platform]?.figma,
+        link ? { href: link.href, dest: `${label} Figma` } : null,
+      );
+    });
+  }
   const cells = componentData[context.platform];
   if (context.platform !== 'web' && !cells?.figma) { return []; }
 
@@ -111,7 +123,7 @@ export function buildPills(pathname, componentData) {
   const impl = context.platform === 'web'
     ? resolveImplementation(pathname, cells?.[context.impl]?.upstreamName ?? null)
     : null;
-  const figmaLink = getFigmaLink(pathname, componentData);
+  const [figmaLink] = figmaLinks;
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,
     design: figmaLink ? { href: figmaLink.href, dest: 'Figma' } : null,
@@ -130,7 +142,7 @@ export default async function init(el) {
     return;
   }
 
-  const componentData = await fetchComponentSlice(context.slug);
+  const componentData = await fetchComponentPageSlice(context);
   const pills = buildPills(window.location.pathname, componentData);
   if (!pills.length) {
     el.remove();
@@ -139,12 +151,12 @@ export default async function init(el) {
 
   const fragment = document.createDocumentFragment();
   fragment.append(...pills);
-  const designPill = fragment.querySelector('[data-kind="design"]');
+  const designPills = [...fragment.querySelectorAll('[data-kind="design"]')];
   try {
-    await removeForAudience({ privateEl: designPill });
+    await Promise.all(designPills.map((privateEl) => removeForAudience({ privateEl })));
   } catch (error) {
     getConfig().log(error);
-    designPill?.remove();
+    designPills.forEach((pill) => pill.remove());
   }
   const visiblePills = [...fragment.children];
 

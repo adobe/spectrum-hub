@@ -91,6 +91,16 @@
       }
     }
   },
+  "Switch": {
+    "ios": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaPageSource": "Switch (list)",
+        "figmaNodeId": "11368:7100"
+      }
+    }
+  },
   "FieldLabel": {
     "web": {
       "rsp": {

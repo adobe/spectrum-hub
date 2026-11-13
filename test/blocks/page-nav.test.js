@@ -964,6 +964,35 @@ describe('page-nav block', () => {
       expect(fetchStub.called).to.be.false;
     });
 
+    [false, true].forEach((cdnEnv) => {
+      it(`${cdnEnv ? 'hides' : 'renders'} both native Figma actions on the shared mobile page ${cdnEnv ? 'for anonymous CDN visitors' : 'locally'}`, async () => {
+        setConfig({ ...SAFE_CONFIG, cdnEnv });
+        fetchStub.resolves({
+          ok: true,
+          json: async () => ({
+            ios: {
+              figma: {
+                figmaSource: 's2-ios', figmaFile: 'OQExiy8bX0pRqee71eAWX6', figmaPageId: '3956:67276',
+              },
+            },
+            android: {
+              figma: {
+                figmaSource: 's2-android', figmaFile: 'Yzbd4jgLTo6KhEPZKwv1WA', figmaPageId: '2002:3805',
+              },
+            },
+          }),
+        });
+        window.history.pushState({}, '', '/mobile/components/buttons');
+        const el = await loadPageNav();
+        const group = await waitForEl(el, '.page-nav-widgets');
+        const links = [...group.querySelectorAll('[data-widget="see-in-figma"]')];
+        expect(links.map((link) => link.textContent.trim())).to.deep.equal(
+          cdnEnv ? [] : ['See iOS in Figma', 'See Android in Figma'],
+        );
+        expect(group.querySelector('[data-widget="go-to-impl"]')).to.be.null;
+      });
+    });
+
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: false });
       fetchStub.resolves({ ok: true, json: async () => ({ web: {} }) });

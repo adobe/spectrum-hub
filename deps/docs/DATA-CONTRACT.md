@@ -145,6 +145,12 @@ Each `deps/status/<slug>.json` contains the component's platform sections
 directly, such as `{ web, ios, android }`. Figma references live inside each
 platform's `figma` cell, not at slice level. A shared web page override changes
 the web slice slug without moving a native slice from its canonical slug.
+Shared `/mobile/components/<slug>` pages resolve DA aliases per platform
+without changing canonical JSON filenames. For example, Buttons reads
+`button.json`; Snackbars and toasts reads iOS from `toast.json` and Android
+from `snackbar.json`. A missing native design renders a non-linked
+**Design not available** pill for that platform, without a Figma action.
+Native pages never use web as a fallback.
 
 Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/status-model.js)):
 

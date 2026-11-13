@@ -39,6 +39,7 @@ data                   ─┘    (reads scripts/utils/
 | Add a Figma library or change its platform/file identity | [`scripts/utils/figma-sources.js`](../../scripts/utils/figma-sources.js), then rerun authenticated discovery and the status build |
 | Map a Figma name without affecting another library | `figmaSources[sourceId][displayName]` in [`deps/component-aliases.json`](../component-aliases.json) |
 | Select a component's Figma design among multiple same-platform resources | `figmaSource`, `figmaPageSource`, and/or `figmaNodeId` on its platform's Figma cell in [`deps/status-overrides.json`](../status-overrides.json) |
+| Map a mobile DA page slug to canonical components | Mobile route aliases in [`scripts/utils/component-path.js`](../../scripts/utils/component-path.js) |
 | Remove a composition part from the web table | [`deps/roster-excludes.json`](../roster-excludes.json); native designs are not removed |
 | Add a "use Gen1 instead" style note under a status badge | `deps/<impl>/<impl>-secondary-status.json` (or `deps/figma/figma-secondary-status.json`) |
 | Change what a raw status value (`stable`, `internal`, `preview`, ...) means in the unified table | [`scripts/utils/status-model.js`](../../scripts/utils/status-model.js) |
@@ -153,6 +154,8 @@ These selectors live on `overrides[canonicalName][platform].figma`:
 Every supplied selector must match. No match or multiple remaining candidates
 fails the build, rather than picking the last file or publishing a guessed link.
 The selection preserves all raw resources in `deps/figma/components.json`.
+Supplying all three fields also permits an explicit node outside that roster,
+such as iOS `Switch (list)` (`s2-ios`, `11368:7100`), without changing discovery.
 
 The generated Figma cell carries `figmaSource`, `figmaFile`, and `figmaPageId`
 together. `figmaNodeId` is the authored selector; `figmaPageId` is the historical
@@ -163,6 +166,29 @@ selecting `Card (Asset)`, and iOS Menu Item/Menu Header selecting the iOS 26
 designs by node ID. These selections never enter `impl-component-names.js`.
 Both the Design pill and "See in Figma" widget use the platform's same selected
 reference. Native routes do not fall back to web.
+
+Mobile DA page aliases live in `scripts/utils/component-path.js`. They resolve
+canonical component slices without renaming JSON files or changing the index.
+For example, `/mobile/components/buttons` reads `deps/status/button.json`.
+`/mobile/components/buttons` shows separate **iOS Design** and **Android Design**
+pills and matching **See iOS in Figma** and **See Android in Figma** actions.
+A missing native design gets a non-linked **Design not available** pill for
+that platform, not a web fallback. Its Figma action is omitted. Both platforms'
+Design pills remain private under the existing audience rules.
+
+The authored mobile routes resolve these components:
+
+| DA page slug | iOS component | Android component |
+| --- | --- | --- |
+| `buttons` | `Button` | `Button` |
+| `switches` | `Switch` | `Switch` |
+| `snackbars-and-toasts` | `Toast` | `Snackbar` |
+| `toggle-buttons` | `ToggleButton` | `ToggleButtonSameContent` |
+
+Both widgets use `fetchComponentPageSlice` to select the requested platform
+from each canonical slice. Fetches are cached, so two platforms sharing one
+component do not fetch it twice. Android Toggle buttons uses the same-content
+design, not the distinct-content or icon variants.
 
 See [Figma discovery](../figma/README.md) for registry changes, authentication,
 source-qualified aliases, and live validation.
