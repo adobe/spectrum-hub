@@ -3,6 +3,13 @@ import sinon from 'sinon';
 import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
+const CHILD_PATTERN_NAMES = {
+  swc: {
+    'response-status-step': { docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit' },
+    'suggestion-item': { docs: 'SuggestionGroupSuggestionItem', docsSection: 'patterns-ai-toolkit' },
+  },
+};
+
 function makeAnchor(text = 'Go to implementation') {
   const a = document.createElement('a');
   const span = document.createElement('span');
@@ -165,13 +172,13 @@ describe('go-to-impl block', () => {
     });
 
     it('uses the parent docs page for a response status step', () => {
-      expect(resolveImplementation('/web/swc/components/response-status-step', 'ResponseStatus')?.href).to.equal(
+      expect(resolveImplementation('/web/swc/components/response-status-step', 'ResponseStatus', undefined, CHILD_PATTERN_NAMES)?.href).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
       );
     });
 
     it('uses the nested suggestion item documentation page', () => {
-      expect(resolveImplementation('/web/swc/components/suggestion-item', 'SuggestionGroupSuggestionItem')?.href).to.equal(
+      expect(resolveImplementation('/web/swc/components/suggestion-item', 'SuggestionGroupSuggestionItem', undefined, CHILD_PATTERN_NAMES)?.href).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-suggestion-group-suggestion-item--docs',
       );
     });
@@ -226,13 +233,18 @@ describe('go-to-impl block', () => {
       }
     });
 
-    it('retains the generated parent documentation alias on a nested pattern page', () => {
-      window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status/response-status-step');
-      const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
-      expect(a.href).to.equal(
-        'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
-      );
+    it('retains the supplied parent documentation alias on a nested pattern page', () => {
+      const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value(CHILD_PATTERN_NAMES.swc);
+      try {
+        window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status/response-status-step');
+        const a = makeAnchor();
+        decorateGoToImpl(a, a.querySelector('span'));
+        expect(a.href).to.equal(
+          'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+        );
+      } finally {
+        metadata.restore();
+      }
     });
 
     for (const [slug, docsSlug, upstreamName] of [
@@ -258,12 +270,10 @@ describe('go-to-impl block', () => {
       });
     }
 
-    it('uses generated SWC AI documentation metadata, including child-page redirects', () => {
+    it('uses generated SWC AI documentation metadata for indexed components', () => {
       for (const [slug, story] of [
         ['message-sources', 'message-sources'],
         ['response-status', 'response-status'],
-        ['response-status-step', 'response-status'],
-        ['suggestion-item', 'suggestion-group-suggestion-item'],
       ]) {
         window.history.pushState({}, '', `/web/swc/components/${slug}`);
         const a = makeAnchor();
