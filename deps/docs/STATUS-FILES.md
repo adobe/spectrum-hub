@@ -190,6 +190,14 @@ from each canonical slice. Fetches are cached, so two platforms sharing one
 component do not fetch it twice. Android Toggle buttons uses the same-content
 design, not the distinct-content or icon variants.
 
+Mobile pages also show **Code documentation** pills and **Go to iOS** /
+**Go to Android** actions. Both use `scripts/utils/go-to-impl.js`. iOS documentation
+uses the canonical component name without hyphens. Android uses that name for the
+package and `-spectrum-<kebab-name>.html` for the symbol. Snackbar links to
+`-spectrum-snackbar-host.html`; Toggle button design variants share the
+`togglebutton/-spectrum-toggle-button.html` documentation. These are documentation
+links, not native code availability statuses. No native extraction is required.
+
 See [Figma discovery](../figma/README.md) for registry changes, authentication,
 source-qualified aliases, and live validation.
 

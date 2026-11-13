@@ -60,12 +60,24 @@ function waitFor(predicate, timeout = 2000) {
 }
 
 describe('component-status block', () => {
+  it('renders native Code documentation links without inferring availability from Figma', () => {
+    const pills = buildPills('/mobile/components/buttons', MOBILE_BUTTON);
+    const code = pills.filter((pill) => pill.dataset.kind === 'dev');
+    expect(code.map((pill) => pill.textContent.trim()))
+      .to.deep.equal(['iOS Code documentation', 'Android Code documentation']);
+    expect(code.map((pill) => pill.href)).to.deep.equal([
+      'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+      'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
+    ]);
+    expect(code.every((pill) => !pill.hasAttribute('data-status'))).to.be.true;
+  });
+
   describe('native Design pills', () => {
     it('links the shared DA buttons page to each native design, never web', () => {
       const pills = buildPills('/mobile/components/buttons', {
         ...MOBILE_BUTTON,
         web: { figma: { status: 'available', ...WEB_FIGMA } },
-      });
+      }).filter((pill) => pill.dataset.kind === 'design');
       expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
         'iOS Design available', 'Android Design available',
       ]);
@@ -80,7 +92,7 @@ describe('component-status block', () => {
       const pills = buildPills('/mobile/components/switches', {
         android: MOBILE_BUTTON.android,
         web: { figma: { status: 'available', ...WEB_FIGMA } },
-      });
+      }).filter((pill) => pill.dataset.kind === 'design');
       expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
         'iOS Design not available', 'Android Design available',
       ]);
@@ -92,7 +104,7 @@ describe('component-status block', () => {
     it('never promotes web availability to a missing native design', () => {
       const pills = buildPills('/mobile/components/buttons', {
         web: { figma: { status: 'available', ...WEB_FIGMA } },
-      });
+      }).filter((pill) => pill.dataset.kind === 'design');
       expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
         'iOS Design not available', 'Android Design not available',
       ]);
@@ -100,7 +112,7 @@ describe('component-status block', () => {
     });
 
     for (const source of FIGMA_SOURCES.filter((entry) => entry.platform !== 'web')) {
-      it(`renders only the ${source.platform} Design pill, with its own file`, () => {
+      it(`renders the ${source.platform} Design pill with its own file`, () => {
         const pills = buildPills(`/mobile/${source.platform}/components/button`, {
           web: { figma: { status: 'not-available' } },
           [source.platform]: {
@@ -111,17 +123,20 @@ describe('component-status block', () => {
               figmaPageId: '1:2',
             },
           },
-        });
+        }).filter((pill) => pill.dataset.kind === 'design');
         expect(pills).to.have.lengthOf(1);
         expect(pills[0].dataset.kind).to.equal('design');
         expect(pills[0].href).to.contain(`/design/${source.fileKey}/`);
       });
     }
 
-    it('does not invent native Code or Design status from a web-only slice', () => {
-      expect(buildPills('/mobile/ios/components/button', {
+    it('offers native documentation without inventing Code or Design status from web data', () => {
+      const pills = buildPills('/mobile/ios/components/button', {
         web: { figma: { status: 'available' } },
-      })).to.deep.equal([]);
+      });
+      expect(pills).to.have.lengthOf(1);
+      expect(pills[0].textContent.trim()).to.equal('iOS Code documentation');
+      expect(pills[0].hasAttribute('data-status')).to.be.false;
     });
   });
 
@@ -347,8 +362,8 @@ describe('component-status block', () => {
         await init(el);
 
         expect(el.querySelectorAll('[data-kind="design"]')).to.have.lengthOf(cdnEnv ? 0 : 2);
-        expect(el.querySelector('[data-kind="dev"]')).to.be.null;
-        expect(el.isConnected).to.equal(!cdnEnv);
+        expect(el.querySelectorAll('[data-kind="dev"]')).to.have.lengthOf(2);
+        expect(el.isConnected).to.be.true;
       });
     }
 
@@ -441,11 +456,7 @@ describe('component-status block', () => {
         await frame.contentWindow.__authFailureInit;
 
         const codePill = frame.contentWindow.__authFailureEl.querySelector('[data-kind="dev"]');
-        if (mobile) {
-          expect(codePill).to.be.null;
-        } else {
-          expect(codePill).to.exist;
-        }
+        expect(codePill).to.exist;
         expect(frame.contentWindow.__authFailureEl.querySelector('[data-kind="design"]')).to.be.null;
         expect(frame.contentWindow.__authFailureLog).to.deep.equal([failure]);
       });

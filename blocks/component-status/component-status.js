@@ -3,7 +3,8 @@
  *
  * An author-placed block (mirrors blocks/breadcrumbs): a `<div class="component-status">`
  * dropped anywhere in the page's content. Web pages show Code and Design pills.
- * Shared mobile pages show a labelled Design status for each native platform.
+ * Mobile pages show native Code documentation links and platform-specific Design statuses.
+ * Native documentation links do not claim code availability; no native code status is ingested.
  * Each pill has a per-status icon and a "<kind> <status>" label.
  *
  * Data comes from a per-component build-time slice (deps/status/<slug>.json, written by
@@ -17,7 +18,7 @@
 import { STATUSES } from '../../scripts/utils/status-model.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { getSvgRef } from '../../scripts/utils/svg.js';
-import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
+import { resolveImplementation, resolveImplementations } from '../../scripts/utils/go-to-impl.js';
 import { getFigmaLinks, NATIVE_PLATFORMS } from '../../scripts/utils/figma.js';
 import { componentContextFromPath } from '../../scripts/utils/component-path.js';
 import { fetchComponentPageSlice } from '../../scripts/utils/component-slice.js';
@@ -61,14 +62,14 @@ export function resolveContext(pathname) {
  * external link when `link` resolves, otherwise a static span. An absent cell
  * (e.g. Development on a design-only component) renders as Not available.
  */
-function buildPill({ kind, label: prefix }, cell, link) {
+function buildPill({ kind, label: prefix, documentation = false }, cell, link) {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
-  const text = `${prefix} ${status.label.toLowerCase()}`; // e.g. "Development available"
+  const text = `${prefix} ${documentation ? 'documentation' : status.label.toLowerCase()}`;
 
   const pill = document.createElement(link ? 'a' : 'span');
   pill.className = 'component-status-pill';
   pill.dataset.kind = kind;
-  pill.dataset.status = status.id;
+  if (!documentation) { pill.dataset.status = status.id; }
   if (link) {
     pill.href = link.href;
     pill.target = '_blank';
@@ -79,7 +80,8 @@ function buildPill({ kind, label: prefix }, cell, link) {
     pill.setAttribute('aria-label', `${text}. Opens ${link.dest} in a new tab.`);
   }
 
-  const glyph = getSvgRef(STATUS_ICONS[status.id] ?? STATUS_ICONS[NOT_AVAILABLE], 'component-status-icon');
+  const icon = documentation ? 'openin' : STATUS_ICONS[status.id] ?? STATUS_ICONS[NOT_AVAILABLE];
+  const glyph = getSvgRef(icon, 'component-status-icon');
   glyph.setAttribute('aria-hidden', 'true');
 
   const label = document.createElement('span');
@@ -103,26 +105,33 @@ export function buildPills(pathname, componentData) {
   const context = resolveContext(pathname);
   if (!context || !componentData) { return []; }
   const figmaLinks = getFigmaLinks(pathname, componentData);
-  if (context.platform === 'mobile') {
-    return Object.entries(NATIVE_PLATFORMS).map(([platform, label]) => {
-      const link = figmaLinks.find((entry) => entry.platform === platform);
-      return buildPill(
-        { kind: 'design', label: `${label} Design` },
-        componentData[platform]?.figma,
-        link ? { href: link.href, dest: `${label} Figma` } : null,
-      );
-    });
+  if (context.platform !== 'web') {
+    const code = resolveImplementations(pathname).map((link) => buildPill(
+      { kind: 'dev', label: `${link.label} Code`, documentation: true },
+      null,
+      { href: link.href, dest: `${link.label} documentation` },
+    ));
+    const platforms = context.platform === 'mobile'
+      ? Object.entries(NATIVE_PLATFORMS) : [[context.platform, '']];
+    const design = platforms
+      .filter(([platform]) => context.platform === 'mobile' || componentData[platform]?.figma)
+      .map(([platform, label]) => {
+        const link = figmaLinks.find((entry) => entry.platform === platform);
+        return buildPill(
+          { kind: 'design', label: `${label} Design`.trim() },
+          componentData[platform]?.figma,
+          link ? { href: link.href, dest: `${label} Figma`.trim() } : null,
+        );
+      });
+    return [...code, ...design];
   }
   const cells = componentData[context.platform];
-  if (context.platform !== 'web' && !cells?.figma) { return []; }
 
   // Development reuses the page-nav widgets' URL logic exactly; Design links straight to
   // the node id the build already resolved (no client-side Figma roster search needed).
   // The current impl's own cell may carry `upstreamName` (an aliased/shared page's real
   // upstream name) — see resolveImplementation.
-  const impl = context.platform === 'web'
-    ? resolveImplementation(pathname, cells?.[context.impl]?.upstreamName ?? null)
-    : null;
+  const impl = resolveImplementation(pathname, cells?.[context.impl]?.upstreamName ?? null);
   const [figmaLink] = figmaLinks;
   const links = {
     dev: impl ? { href: impl.href, dest: `${impl.label} documentation` } : null,
@@ -130,7 +139,6 @@ export function buildPills(pathname, componentData) {
   };
 
   return PILLS
-    .filter((pill) => context.platform === 'web' || pill.kind === 'design')
     .map((pill) => buildPill(pill, cells?.[pill.column ?? context.impl], links[pill.kind]))
     .filter(Boolean);
 }

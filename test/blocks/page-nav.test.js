@@ -989,7 +989,13 @@ describe('page-nav block', () => {
         expect(links.map((link) => link.textContent.trim())).to.deep.equal(
           cdnEnv ? [] : ['See iOS in Figma', 'See Android in Figma'],
         );
-        expect(group.querySelector('[data-widget="go-to-impl"]')).to.be.null;
+        const docs = [...group.querySelectorAll('[data-widget="go-to-impl"]')];
+        expect(docs.map((link) => link.textContent.trim()))
+          .to.deep.equal(['Go to iOS', 'Go to Android']);
+        expect(docs.map((link) => link.href)).to.deep.equal([
+          'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+          'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
+        ]);
       });
     });
 

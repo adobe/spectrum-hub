@@ -25,6 +25,27 @@ describe('go-to-impl block', () => {
   });
 
   describe('resolveImplementation — component page → impl docs URL', () => {
+    it('derives native documentation URLs with DA aliases and the SnackbarHost exception', () => {
+      for (const [platform, slug, path] of [
+        ['ios', 'buttons', 'button'],
+        ['ios', 'switches', 'switch'],
+        ['ios', 'snackbars-and-toasts', 'toast'],
+        ['ios', 'toggle-buttons', 'togglebutton'],
+        ['android', 'buttons', 'com.adobe.spectrum.components.button/-spectrum-button.html'],
+        ['android', 'switches', 'com.adobe.spectrum.components.switch/-spectrum-switch.html'],
+        ['android', 'snackbars-and-toasts', 'com.adobe.spectrum.components.snackbar/-spectrum-snackbar-host.html'],
+        ['android', 'toggle-buttons', 'com.adobe.spectrum.components.togglebutton/-spectrum-toggle-button.html'],
+      ]) {
+        const base = platform === 'ios'
+          ? 'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/'
+          : 'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/';
+        expect(resolveImplementation(`/mobile/${platform}/components/${slug}`)).to.deep.equal({
+          label: platform === 'ios' ? 'iOS' : 'Android',
+          href: `${base}${path}`,
+        });
+      }
+    });
+
     it('maps swc to the Spectrum Web Components Storybook docs URL', () => {
       expect(resolveImplementation('/web/swc/components/action-button')).to.deep.equal({
         label: 'SWC',
@@ -185,6 +206,26 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
+    it('renders both native documentation actions on shared mobile pages', () => {
+      window.history.pushState({}, '', '/mobile/components/buttons');
+      const a = makeAnchor();
+      a.append(document.createElement('svg'));
+      decorateGoToImpl(a, a.querySelector('span'));
+      const links = [...document.querySelectorAll('a')];
+      expect(links.map((link) => link.querySelector('span').textContent))
+        .to.deep.equal(['Go to iOS', 'Go to Android']);
+      expect(links.map((link) => link.href)).to.deep.equal([
+        'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+        'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
+      ]);
+      for (const link of links) {
+        expect(link.querySelector('svg')).to.exist;
+        expect(link.target).to.equal('_blank');
+        expect(link.rel).to.equal('noopener noreferrer');
+        expect(link.getAttribute('aria-label')).to.contain('in a new tab');
+      }
+    });
+
     it('retains the generated parent documentation alias on a nested pattern page', () => {
       window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status/response-status-step');
       const a = makeAnchor();

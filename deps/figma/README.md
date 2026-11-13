@@ -155,9 +155,10 @@ The source must match the platform. This does not change discovery.
 The selected platform Figma cell carries `figmaSource`, `figmaFile`, and
 `figmaPageId` in both the index and its component slice. Web component routes read
 `web.figma`; `/mobile/ios/components/<slug>` and
-`/mobile/android/components/<slug>` read their own platform's cell. Native pages
-show Design only. They never borrow a web reference or imply native code
-availability. The existing combined status table remains web-only.
+`/mobile/android/components/<slug>` read their own platform's cell. Native Design
+statuses never borrow a web reference. Native Code documentation links are
+resolved separately and do not imply code availability. The existing combined
+status table remains web-only.
 
 Shared `/mobile/components/<slug>` pages show separate iOS and Android Design
 pills and Figma actions for the native references present in the slice.
