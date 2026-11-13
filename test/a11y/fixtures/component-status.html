@@ -14,9 +14,11 @@
     </div>
   </main>
   <script type="module">
-    // resolveContext needs a real /web/<impl>/components/<slug> path — this fixture's own
-    // served URL doesn't look like one, so rewrite it before init() reads window.location.
-    history.pushState({}, '', '/web/swc/components/button');
+    const params = new URLSearchParams(location.search);
+    const platform = params.get('platform');
+    const root = ['ios', 'android'].includes(platform) ? `/mobile/${platform}` : '/web/swc';
+    const component = params.get('component') || 'button';
+    history.pushState({}, '', `${root}/components/${component}`);
     import init from '/blocks/component-status/component-status.js';
     document.querySelectorAll('.component-status').forEach(init);
   </script>

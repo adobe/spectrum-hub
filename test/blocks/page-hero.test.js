@@ -6,8 +6,15 @@ const COMPONENT_PATH = '/web/swc/components/button';
 
 // The per-component status slice component-status fetches (deps/status/<slug>.json).
 const STATUS_SLICE = {
-  web: { swc: { status: 'available' }, figma: { status: 'experimental' } },
-  figmaPageId: '9230:3620',
+  web: {
+    swc: { status: 'available' },
+    figma: {
+      status: 'experimental',
+      figmaSource: 's2-web',
+      figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q',
+      figmaPageId: '9230:3620',
+    },
+  },
 };
 
 function setMeta(name, content) {

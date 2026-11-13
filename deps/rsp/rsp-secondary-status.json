@@ -7,6 +7,7 @@
   { "name": "Help Text",       "context": "Use form component" },
   { "name": "Standard Dialog", "context": "Use dialog component" },
   { "name": "Thumbnail",       "context": "Use image" },
+  { "name": "In Line Message", "context": "Use alert" },
   { "name": "Conversation Thread", "context": "Use thread" },
   { "name": "Conversation Turn", "context": "Use thread item" },
   { "name": "Suggestion Group", "context": "Use message suggestion list" },

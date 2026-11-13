@@ -24,12 +24,12 @@ describe('authenticated Figma validation workflow', () => {
     assert.match(source, /persist-credentials: false/);
   });
 
-  it('injects the Figma credential only into discovery without rebuilding legacy consumers', () => {
+  it('injects the Figma credential only into discovery and rebuilds afterward', () => {
     const source = workflow();
     assert.match(source, /FIGMA_TOKEN: \$\{\{ secrets\.FIGMA_TOKEN \}\}/);
     const discovery = source.indexOf('node deps/figma/discover-components.js');
-    assert.ok(discovery >= 0);
-    assert.doesNotMatch(source, /node deps\/build-status-index\.js/);
+    const builder = source.indexOf('node deps/build-status-index.js');
+    assert.ok(discovery >= 0 && builder > discovery);
     assert.doesNotMatch(source, /git (?:commit|push)|gh pr create|upload-artifact/);
   });
 });

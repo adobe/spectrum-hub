@@ -1,10 +1,93 @@
 {
+  "ActionBar": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Action bar (light theme)"
+      }
+    }
+  },
+  "Button": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Button (Gradient)"
+      }
+    }
+  },
+  "ComboBox": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Combo box (In-line)"
+      }
+    }
+  },
+  "NumberField": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Number field (In-line)"
+      }
+    }
+  },
+  "Slider": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Slider (Range)"
+      }
+    }
+  },
+  "TextArea": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Text area (In-line)"
+      }
+    }
+  },
+  "TextField": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Text field (In-line)"
+      }
+    }
+  },
   "RadioButton": {
     "web": {
       "rsp": {
         "status": "available",
         "context": "Stable",
         "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
+      }
+    }
+  },
+  "MenuItem": {
+    "ios": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaNodeId": "5890:12360",
+        "note": "Use the iOS 26 Menu Elements design."
+      }
+    }
+  },
+  "MenuHeader": {
+    "ios": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaNodeId": "5890:12355",
+        "note": "Use the iOS 26 Menu Elements design."
       }
     }
   },
@@ -68,6 +151,10 @@
         "context": "Stable",
         "page": "color-handle-and-loupe",
         "upstreamName": "ColorHandle"
+      },
+      "figma": {
+        "status": "available",
+        "note": "See color handle."
       }
     }
   },
@@ -102,7 +189,8 @@
     "web": {
       "figma": {
         "status": "available",
-        "figmaPageSource": "Cards (Asset)",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Card (Asset)",
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
     }

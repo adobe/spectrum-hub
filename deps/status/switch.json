@@ -1,7 +1,10 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9397:4922"
     },
     "rsp": {
       "status": "available",
@@ -11,5 +14,12 @@
       "status": "not-available"
     }
   },
-  "figmaPageId": "9397:4673"
+  "android": {
+    "figma": {
+      "status": "available",
+      "figmaSource": "s2-android",
+      "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
+      "figmaPageId": "3984:38444"
+    }
+  }
 }
