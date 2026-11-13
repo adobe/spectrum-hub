@@ -187,6 +187,63 @@ describe('figma block', () => {
       expect(a.isConnected).to.be.false;
     });
 
+    it('renders platform-labelled native actions using the canonical Button slice', async () => {
+      stubComponentSlice({
+        web: {
+          figma: {
+            figmaSource: 's2-web', figmaFile: FIGMA_SOURCES[0].fileKey, figmaPageId: '1:2',
+          },
+        },
+        ios: {
+          figma: {
+            figmaSource: 's2-ios', figmaFile: 'OQExiy8bX0pRqee71eAWX6', figmaPageId: '3956:67276',
+          },
+        },
+        android: {
+          figma: {
+            figmaSource: 's2-android', figmaFile: 'Yzbd4jgLTo6KhEPZKwv1WA', figmaPageId: '2002:3805',
+          },
+        },
+      });
+      window.history.pushState({}, '', '/mobile/components/buttons');
+      const a = makeAnchor();
+      await decorateSeeInFigma(a, a.querySelector('span'));
+      expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/button.json');
+      const links = [...document.querySelectorAll('a')];
+      expect(links.map((link) => link.textContent)).to.deep.equal([
+        'See iOS in Figma', 'See Android in Figma',
+      ]);
+      expect(links.map((link) => link.getAttribute('href'))).to.deep.equal([
+        'https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=3956-67276&m=dev',
+        'https://www.figma.com/design/Yzbd4jgLTo6KhEPZKwv1WA/S2---Android?node-id=2002-3805&m=dev',
+      ]);
+      expect(links.every((link) => link.target === '_blank'
+        && link.rel === 'noopener noreferrer'
+        && link.getAttribute('aria-label').includes(link.textContent))).to.be.true;
+    });
+
+    it('does not substitute web when a shared mobile page is missing a native design', async () => {
+      stubComponentSlice({
+        web: {
+          figma: {
+            figmaSource: 's2-web', figmaFile: FIGMA_SOURCES[0].fileKey, figmaPageId: '1:2',
+          },
+        },
+        ios: {
+          figma: {
+            figmaSource: 's2-ios', figmaFile: 'OQExiy8bX0pRqee71eAWX6', figmaPageId: '3956:67276',
+          },
+        },
+      });
+      window.history.pushState({}, '', '/mobile/components/buttons');
+      const a = makeAnchor();
+      await decorateSeeInFigma(a, a.querySelector('span'));
+      const links = [...document.querySelectorAll('a')];
+      expect(links).to.have.lengthOf(1);
+      expect(links[0].textContent).to.equal('See iOS in Figma');
+      expect(links[0].href).to.contain('/OQExiy8bX0pRqee71eAWX6/');
+    });
+
     it('rejects a web source stored on the native platform cell', async () => {
       stubComponentSlice({
         ios: {

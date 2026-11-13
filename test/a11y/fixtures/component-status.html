@@ -16,7 +16,8 @@
   <script type="module">
     const params = new URLSearchParams(location.search);
     const platform = params.get('platform');
-    const root = ['ios', 'android'].includes(platform) ? `/mobile/${platform}` : '/web/swc';
+    const root = platform === 'mobile' ? '/mobile'
+      : ['ios', 'android'].includes(platform) ? `/mobile/${platform}` : '/web/swc';
     const component = params.get('component') || 'button';
     history.pushState({}, '', `${root}/components/${component}`);
     import init from '/blocks/component-status/component-status.js';

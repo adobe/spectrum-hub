@@ -1,4 +1,5 @@
 import { getConfig } from '../ak.js';
+import { componentSlugForPlatform } from './component-path.js';
 
 const cache = new Map();
 
@@ -28,6 +29,20 @@ export function fetchComponentSlice(slug) {
     cache.set(slug, fetchSlice(slug));
   }
   return cache.get(slug);
+}
+
+/** Resolves mobile DA aliases without renaming or mixing canonical component slices. */
+export async function fetchComponentPageSlice({ slug, platform }) {
+  if (platform === 'web') { return fetchComponentSlice(slug); }
+  const platforms = platform === 'mobile' ? ['ios', 'android'] : [platform];
+  const slices = await Promise.all(platforms.map((nativePlatform) => (
+    fetchComponentSlice(componentSlugForPlatform(slug, nativePlatform))
+  )));
+  if (slices.every((slice) => !slice)) { return null; }
+  return Object.fromEntries(platforms.flatMap((nativePlatform, index) => {
+    const cells = slices[index]?.[nativePlatform];
+    return cells ? [[nativePlatform, cells]] : [];
+  }));
 }
 
 /** Test-only: clears the module-scoped cache between tests. */
