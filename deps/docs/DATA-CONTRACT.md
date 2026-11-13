@@ -138,13 +138,21 @@ The index is emitted so a single fetch is interpretable without also reading `st
 The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](../build-status-index.js), so the embedded definitions never drift from the adapter.
 
 Native platform metadata is emitted when that platform has selected designs.
-Native cells contain Figma only. Native-only components do not get web cells or
+Native cells contain Figma only. Native Code documentation links are resolved
+separately by `scripts/utils/go-to-impl.js`; they do not claim code availability
+or derive it from Figma status. Native-only components do not get web cells or
 enter the web table's rows, counts, search results, or CSV export.
 
 Each `deps/status/<slug>.json` contains the component's platform sections
 directly, such as `{ web, ios, android }`. Figma references live inside each
 platform's `figma` cell, not at slice level. A shared web page override changes
 the web slice slug without moving a native slice from its canonical slug.
+Shared `/mobile/components/<slug>` pages resolve DA aliases per platform
+without changing canonical JSON filenames. For example, Buttons reads
+`button.json`; Snackbars and toasts reads iOS from `toast.json` and Android
+from `snackbar.json`. A missing native design renders a non-linked
+**Design not available** pill for that platform, without a Figma action.
+Native pages never use web as a fallback.
 
 Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/status-model.js)):
 

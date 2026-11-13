@@ -16,6 +16,24 @@ const WEB_FIGMA = {
   figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q',
   figmaPageId: '123:456',
 };
+const MOBILE_BUTTON = {
+  ios: {
+    figma: {
+      status: 'available',
+      figmaSource: 's2-ios',
+      figmaFile: 'OQExiy8bX0pRqee71eAWX6',
+      figmaPageId: '3956:67276',
+    },
+  },
+  android: {
+    figma: {
+      status: 'available',
+      figmaSource: 's2-android',
+      figmaFile: 'Yzbd4jgLTo6KhEPZKwv1WA',
+      figmaPageId: '2002:3805',
+    },
+  },
+};
 
 const setSessionHint = () => {
   document.cookie = `spectrum_session_active=${Date.now() + 2 * 60 * 60 * 1000}; path=/`;
@@ -42,9 +60,59 @@ function waitFor(predicate, timeout = 2000) {
 }
 
 describe('component-status block', () => {
+  it('renders native Code documentation links without inferring availability from Figma', () => {
+    const pills = buildPills('/mobile/components/buttons', MOBILE_BUTTON);
+    const code = pills.filter((pill) => pill.dataset.kind === 'dev');
+    expect(code.map((pill) => pill.textContent.trim()))
+      .to.deep.equal(['iOS Code documentation', 'Android Code documentation']);
+    expect(code.map((pill) => pill.href)).to.deep.equal([
+      'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+      'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
+    ]);
+    expect(code.every((pill) => !pill.hasAttribute('data-status'))).to.be.true;
+  });
+
   describe('native Design pills', () => {
+    it('links the shared DA buttons page to each native design, never web', () => {
+      const pills = buildPills('/mobile/components/buttons', {
+        ...MOBILE_BUTTON,
+        web: { figma: { status: 'available', ...WEB_FIGMA } },
+      }).filter((pill) => pill.dataset.kind === 'design');
+      expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
+        'iOS Design available', 'Android Design available',
+      ]);
+      expect(pills.map((pill) => pill.getAttribute('href'))).to.deep.equal([
+        'https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=3956-67276&m=dev',
+        'https://www.figma.com/design/Yzbd4jgLTo6KhEPZKwv1WA/S2---Android?node-id=2002-3805&m=dev',
+      ]);
+      expect(pills.every((pill) => pill.dataset.kind === 'design')).to.be.true;
+    });
+
+    it('shows a non-linked unavailable pill for the missing iOS design without borrowing web status', () => {
+      const pills = buildPills('/mobile/components/switches', {
+        android: MOBILE_BUTTON.android,
+        web: { figma: { status: 'available', ...WEB_FIGMA } },
+      }).filter((pill) => pill.dataset.kind === 'design');
+      expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
+        'iOS Design not available', 'Android Design available',
+      ]);
+      expect(pills[0].tagName).to.equal('SPAN');
+      expect(pills[0].hasAttribute('href')).to.be.false;
+      expect(pills[1].href).to.contain('/Yzbd4jgLTo6KhEPZKwv1WA/');
+    });
+
+    it('never promotes web availability to a missing native design', () => {
+      const pills = buildPills('/mobile/components/buttons', {
+        web: { figma: { status: 'available', ...WEB_FIGMA } },
+      }).filter((pill) => pill.dataset.kind === 'design');
+      expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
+        'iOS Design not available', 'Android Design not available',
+      ]);
+      expect(pills.every((pill) => pill.tagName === 'SPAN')).to.be.true;
+    });
+
     for (const source of FIGMA_SOURCES.filter((entry) => entry.platform !== 'web')) {
-      it(`renders only the ${source.platform} Design pill, with its own file`, () => {
+      it(`renders the ${source.platform} Design pill with its own file`, () => {
         const pills = buildPills(`/mobile/${source.platform}/components/button`, {
           web: { figma: { status: 'not-available' } },
           [source.platform]: {
@@ -55,21 +123,29 @@ describe('component-status block', () => {
               figmaPageId: '1:2',
             },
           },
-        });
+        }).filter((pill) => pill.dataset.kind === 'design');
         expect(pills).to.have.lengthOf(1);
         expect(pills[0].dataset.kind).to.equal('design');
         expect(pills[0].href).to.contain(`/design/${source.fileKey}/`);
       });
     }
 
-    it('does not invent native Code or Design status from a web-only slice', () => {
-      expect(buildPills('/mobile/ios/components/button', {
+    it('offers native documentation without inventing Code or Design status from web data', () => {
+      const pills = buildPills('/mobile/ios/components/button', {
         web: { figma: { status: 'available' } },
-      })).to.deep.equal([]);
+      });
+      expect(pills).to.have.lengthOf(1);
+      expect(pills[0].textContent.trim()).to.equal('iOS Code documentation');
+      expect(pills[0].hasAttribute('data-status')).to.be.false;
     });
   });
 
   describe('resolveContext', () => {
+    it('resolves a nested pattern page without treating its group as an implementation', () => {
+      expect(resolveContext('/web/swc/patterns/conversational-ai/response-status'))
+        .to.deep.equal({ platform: 'web', impl: 'swc', slug: 'response-status' });
+    });
+
     it('resolves the impl and slug from a component page path', () => {
       expect(resolveContext('/web/rsp/components/action-group')).to.deep.equal({
         platform: 'web', impl: 'rsp', slug: 'action-group',
@@ -91,6 +167,35 @@ describe('component-status block', () => {
   });
 
   describe('buildPills — Code pill link', () => {
+    it('shares pattern documentation metadata and the selected AI Toolkit design with widgets', () => {
+      const source = FIGMA_SOURCES.find(({ id }) => id === 'ai-toolkit');
+      const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value({
+        'response-status-step': { docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit' },
+      });
+      try {
+        const pills = buildPills('/web/swc/patterns/conversational-ai/response-status-step', {
+          web: {
+            swc: { status: 'available', upstreamName: 'ResponseStatus' },
+            figma: {
+              status: 'available',
+              figmaSource: source.id,
+              figmaFile: source.fileKey,
+              figmaPageId: '1:2',
+            },
+          },
+        });
+        expect(pills).to.have.lengthOf(2);
+        expect(pills.find((pill) => pill.dataset.kind === 'dev').href).to.equal(
+          'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+        );
+        expect(pills.find((pill) => pill.dataset.kind === 'design').href).to.equal(
+          `https://www.figma.com/design/${source.fileKey}/${source.urlName}?node-id=1-2&m=dev`,
+        );
+      } finally {
+        metadata.restore();
+      }
+    });
+
     for (const [slug, docsSlug, upstreamName] of [
       ['prompt-field', 'prompt-field', undefined],
       ['response-status-step', 'response-status', 'ResponseStatus'],
@@ -253,6 +358,22 @@ describe('component-status block', () => {
       document.body.innerHTML = '';
     });
 
+    for (const cdnEnv of [false, true]) {
+      it(`${cdnEnv ? 'hides both' : 'renders both'} native Design pills for an anonymous ${cdnEnv ? 'CDN' : 'local'} visitor`, async () => {
+        setConfig({ ...SAFE_CONFIG, cdnEnv });
+        window.history.pushState({}, '', '/mobile/components/buttons');
+        window.fetch.resolves({ ok: true, json: async () => MOBILE_BUTTON });
+        const el = document.createElement('div');
+        document.body.append(el);
+
+        await init(el);
+
+        expect(el.querySelectorAll('[data-kind="design"]')).to.have.lengthOf(cdnEnv ? 0 : 2);
+        expect(el.querySelectorAll('[data-kind="dev"]')).to.have.lengthOf(2);
+        expect(el.isConnected).to.be.true;
+      });
+    }
+
     it('removes the Design pill for an anonymous CDN visitor', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: true });
       const el = document.createElement('div');
@@ -278,35 +399,44 @@ describe('component-status block', () => {
       await initPromise;
 
       expect(el.querySelector('[data-kind="design"]')).to.exist;
+
+      window.history.pushState({}, '', '/mobile/components/buttons#access_token=test');
+      window.fetch.resolves({ ok: true, json: async () => MOBILE_BUTTON });
+      const mobileEl = document.createElement('div');
+      await init(mobileEl);
+      expect(mobileEl.querySelectorAll('[data-kind="design"]')).to.have.lengthOf(2);
     });
 
-    it('renders only Code and logs when IMS readiness fails for an active CDN session', async function test() {
-      this.timeout(5000);
-      setSessionHint();
-      const frame = document.createElement('iframe');
-      frame.src = '/test/a11y/fixtures/action-button.html';
-      document.body.append(frame);
-      await new Promise((resolve) => {
-        frame.addEventListener('load', resolve, { once: true });
-      });
+    for (const mobile of [false, true]) {
+      it(`hides ${mobile ? 'both native Designs' : 'Design but not Code'} and logs when IMS readiness fails`, async function test() {
+        this.timeout(5000);
+        setSessionHint();
+        const frame = document.createElement('iframe');
+        frame.src = '/test/a11y/fixtures/action-button.html';
+        document.body.append(frame);
+        await new Promise((resolve) => {
+          frame.addEventListener('load', resolve, { once: true });
+        });
 
-      frame.contentWindow.history.pushState(
-        {},
-        '',
-        '/web/rsp/components/action-button#access_token=test',
-      );
-      frame.contentWindow.fetch = async () => ({
-        ok: true,
-        json: async () => ({
-          web: {
-            rsp: { status: 'available' },
-            figma: { status: 'available', ...WEB_FIGMA },
-          },
-        }),
-      });
-      const setup = frame.contentDocument.createElement('script');
-      setup.type = 'module';
-      setup.textContent = `
+        frame.contentWindow.history.pushState(
+          {},
+          '',
+          mobile ? '/mobile/components/buttons#access_token=test'
+            : '/web/rsp/components/action-button#access_token=test',
+        );
+        frame.contentWindow.fetch = async () => ({
+          ok: true,
+          json: async () => ({
+            ...MOBILE_BUTTON,
+            web: {
+              rsp: { status: 'available' },
+              figma: { status: 'available', ...WEB_FIGMA },
+            },
+          }),
+        });
+        const setup = frame.contentDocument.createElement('script');
+        setup.type = 'module';
+        setup.textContent = `
         window.__authFailureReady = (async () => {
           const [{ setConfig }, { default: init }] = await Promise.all([
             import('/scripts/ak.js'),
@@ -323,19 +453,21 @@ describe('component-status block', () => {
           window.__authFailureInit = init(window.__authFailureEl);
         })();
       `;
-      frame.contentDocument.body.append(setup);
+        frame.contentDocument.body.append(setup);
 
-      await waitFor(() => frame.contentWindow.__authFailureReady);
-      await frame.contentWindow.__authFailureReady;
-      await waitFor(() => frame.contentWindow.adobeid?.onError);
-      const failure = new frame.contentWindow.Error('IMS failed');
-      frame.contentWindow.adobeid.onError(failure);
-      await frame.contentWindow.__authFailureInit;
+        await waitFor(() => frame.contentWindow.__authFailureReady);
+        await frame.contentWindow.__authFailureReady;
+        await waitFor(() => frame.contentWindow.adobeid?.onError);
+        const failure = new frame.contentWindow.Error('IMS failed');
+        frame.contentWindow.adobeid.onError(failure);
+        await frame.contentWindow.__authFailureInit;
 
-      expect(frame.contentWindow.__authFailureEl.querySelector('[data-kind="dev"]')).to.exist;
-      expect(frame.contentWindow.__authFailureEl.querySelector('[data-kind="design"]')).to.be.null;
-      expect(frame.contentWindow.__authFailureLog).to.deep.equal([failure]);
-    });
+        const codePill = frame.contentWindow.__authFailureEl.querySelector('[data-kind="dev"]');
+        expect(codePill).to.exist;
+        expect(frame.contentWindow.__authFailureEl.querySelector('[data-kind="design"]')).to.be.null;
+        expect(frame.contentWindow.__authFailureLog).to.deep.equal([failure]);
+      });
+    }
 
     it('keeps the Design pill off-CDN without authentication', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: false });

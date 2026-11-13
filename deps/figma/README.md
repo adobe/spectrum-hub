@@ -148,14 +148,26 @@ match:
 canonical component's design. `figmaNodeId` selects a node; it is written to
 generated output as `figmaPageId`. A selection neither renames nor removes raw
 resources from the roster. No match or multiple remaining candidates is an
-error, never a last-file-wins choice.
+error, never a last-file-wins choice. A complete `figmaSource`, `figmaPageSource`,
+and `figmaNodeId` override can also reference a node outside the discovered roster.
+The source must match the platform. This does not change discovery.
 
 The selected platform Figma cell carries `figmaSource`, `figmaFile`, and
 `figmaPageId` in both the index and its component slice. Web component routes read
 `web.figma`; `/mobile/ios/components/<slug>` and
-`/mobile/android/components/<slug>` read their own platform's cell. Native pages
-show Design only. They never borrow a web reference or imply native code
-availability. The existing combined status table remains web-only.
+`/mobile/android/components/<slug>` read their own platform's cell. Native Design
+statuses never borrow a web reference. Native Code documentation links are
+resolved separately and do not imply code availability. The existing combined
+status table remains web-only.
+
+Shared `/mobile/components/<slug>` pages show separate iOS and Android Design
+pills and Figma actions for the native references present in the slice.
+A missing native design shows a non-linked **Design not available** pill for
+that platform, without a Figma action.
+Mobile DA aliases in `scripts/utils/component-path.js` resolve each platform's
+canonical component. For example, `/mobile/components/buttons` reads
+`deps/status/button.json`, not a DA-named `buttons.json`. These aliases do not
+change Figma discovery or generated filenames.
 
 Figma presence maps to Available unless overridden. Names containing
 "Deprecated" do not automatically change lifecycle status.
