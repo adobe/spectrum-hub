@@ -216,11 +216,18 @@ block is provided in the main content, `page-hero` creates an empty one and
 resolves its component and platform from the current URL. An empty block
 removes itself on unsupported routes or when no component status slice can be
 fetched. Automatically generated native **Code documentation** pills link to
-documentation, not measured code availability. Design pills and Figma actions
-follow the existing private-audience rules.
+documentation, not measured code availability. Each native documentation pill
+requires that platform's resolved status data. If Android's slice is missing,
+the hero omits its documentation link without hiding iOS's link. Design pills
+and Figma actions follow the existing private-audience rules.
 
-See [Status and link mappings](../deps/docs/STATUS-FILES.md) for mobile aliases,
-documentation targets, and the known excluded-child-page limitation.
+For a mobile page slug that differs from its canonical component, configure
+platform-level `page` values in `deps/status-overrides.json` and rebuild the
+generated data. `upstreamName` and Android's optional `package` control
+documentation naming independently of Design selections. No per-component
+JavaScript mapping is needed. See
+[Status and link mappings](../deps/docs/STATUS-FILES.md#mobile-page-links) for
+examples, documentation targets, and the known excluded-child-page limitation.
 
 ### Authored component status
 

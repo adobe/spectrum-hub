@@ -1,7 +1,12 @@
 import { getConfig } from '../ak.js';
-import { componentSlugForPlatform } from './component-path.js';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
+import { toSlug } from './component-path.js';
 
 const cache = new Map();
+
+export function componentSlugForPlatform(slug, platform, componentNames = IMPL_COMPONENT_NAMES) {
+  return toSlug(componentNames[platform]?.[slug]?.canonical ?? slug);
+}
 
 async function fetchSlice(slug) {
   const { codeBase = '' } = getConfig();

@@ -7,7 +7,8 @@
  * empty block for pages with `template: component` when no status block is provided.
  *
  * In automatic mode, web pages show Code and Design statuses. Mobile pages show native
- * Code documentation links and platform-specific Design statuses.
+ * Code documentation links only for platforms with resolved status data, plus
+ * platform-specific Design statuses.
  * Native documentation links do not claim code availability; no native code status is ingested.
  *
  * Automatic data comes from a build-time slice (deps/status/<slug>.json, written by
@@ -21,7 +22,7 @@
 import { STATUSES } from '../../scripts/utils/status-model.js';
 import { getImplementationById } from '../../scripts/utils/implementations.js';
 import { getSvgRef } from '../../scripts/utils/svg.js';
-import { resolveImplementation, resolveImplementations } from '../../scripts/utils/go-to-impl.js';
+import { resolveImplementation } from '../../scripts/utils/go-to-impl.js';
 import { getFigmaLinks, NATIVE_PLATFORMS } from '../../scripts/utils/figma.js';
 import { componentContextFromPath } from '../../scripts/utils/component-path.js';
 import { fetchComponentPageSlice } from '../../scripts/utils/component-slice.js';
@@ -105,13 +106,17 @@ export function buildPills(pathname, componentData) {
   if (!context || !componentData) { return []; }
   const figmaLinks = getFigmaLinks(pathname, componentData);
   if (context.platform !== 'web') {
-    const code = resolveImplementations(pathname).map((link) => buildPill(
-      { kind: 'dev', label: `${link.label} Code`, documentation: true },
-      null,
-      { href: link.href, dest: `${link.label} documentation` },
-    ));
     const platforms = context.platform === 'mobile'
       ? Object.entries(NATIVE_PLATFORMS) : [[context.platform, '']];
+    const code = platforms
+      .filter(([platform]) => componentData[platform])
+      .map(([platform]) => resolveImplementation(`/mobile/${platform}/components/${context.slug}`))
+      .filter(Boolean)
+      .map((link) => buildPill(
+        { kind: 'dev', label: `${link.label} Code`, documentation: true },
+        null,
+        { href: link.href, dest: `${link.label} documentation` },
+      ));
     const design = platforms
       .filter(([platform]) => context.platform === 'mobile' || componentData[platform]?.figma)
       .map(([platform, label]) => {

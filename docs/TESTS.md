@@ -111,13 +111,21 @@ and accessibility; the page-nav spec also checks authored action focus order.
 
 ### Documentation-link regressions
 
-`test/blocks/go-to-impl.test.js` and `test/blocks/page-nav.test.js` check that
-missing status slices suppress automatic resource actions, while Copy markdown
-remains. They cover web and mobile routes, partially missing native slices, and
-reuse of cached status requests. Run them together:
+Native naming is covered at both ends of the pipeline:
+`test/extractions/build-status-index.node.test.js` checks platform-level
+metadata, generated page aliases, and ambiguous mapping rejection.
+`test/blocks/component-slice.test.js` and `test/blocks/go-to-impl.test.js` check
+that new generated aliases need no runtime mapping, and that Android package
+names can differ from documentation symbols.
+
+`test/blocks/component-status.test.js`, `test/blocks/go-to-impl.test.js`, and
+`test/blocks/page-nav.test.js` check that missing status slices suppress native
+documentation pills and automatic resource actions, while Copy markdown remains.
+They cover web and mobile routes, partially missing native slices, and reuse of
+cached status requests. Run them together:
 
 ```bash
-npm run test:file -- 'test/blocks/{go-to-impl,page-nav}.test.js' --concurrency 1
+npm run test:file -- 'test/blocks/{component-status,go-to-impl,page-nav}.test.js' --concurrency 1
 ```
 
 `test/blocks/go-to-impl.test.js` and `test/blocks/component-status.test.js`

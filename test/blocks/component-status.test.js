@@ -74,6 +74,18 @@ describe('component-status block', () => {
   });
 
   describe('native Design pills', () => {
+    it('links iOS Menu using its shipped explicit reference without a discovered component set', async () => {
+      const response = await fetch('/deps/status/menu.json');
+      expect(response.ok, 'Menu status slice').to.be.true;
+      const pills = buildPills('/mobile/components/menus', await response.json());
+      const design = pills.find((pill) => pill.dataset.kind === 'design');
+
+      expect(design.textContent.trim()).to.equal('iOS Design available');
+      expect(design.getAttribute('href')).to.equal(
+        'https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=5890-12308&m=dev',
+      );
+    });
+
     it('links the shared DA buttons page to each native design, never web', () => {
       const pills = buildPills('/mobile/components/buttons', {
         ...MOBILE_BUTTON,
@@ -131,8 +143,16 @@ describe('component-status block', () => {
       });
     }
 
-    it('offers native documentation without inventing Code or Design status from web data', () => {
+    it('does not offer native documentation using only web status data', () => {
       const pills = buildPills('/mobile/ios/components/button', {
+        web: { figma: { status: 'available' } },
+      });
+      expect(pills).to.have.lengthOf(0);
+    });
+
+    it('offers native documentation with naming metadata but no Figma or code status', () => {
+      const pills = buildPills('/mobile/ios/components/button', {
+        ios: { page: 'buttons' },
         web: { figma: { status: 'available' } },
       });
       expect(pills).to.have.lengthOf(1);
@@ -578,6 +598,28 @@ describe('component-status block', () => {
         });
       }
     });
+
+    for (const [page, missingSlug, survivingPlatform] of [
+      ['pickers', 'pickers', 'iOS'],
+      ['snackbars-and-toasts', 'toast', 'Android'],
+      ['snackbars-and-toasts', 'snackbar', 'iOS'],
+    ]) {
+      it(`keeps only ${survivingPlatform} documentation on ${page} when the other status slice 404s`, async () => {
+        window.history.pushState({}, '', `/mobile/components/${page}`);
+        window.fetch.callsFake(async (url) => (url.endsWith(`/${missingSlug}.json`)
+          ? { ok: false, status: 404 }
+          : { ok: true, json: async () => MOBILE_BUTTON }));
+        const el = document.createElement('div');
+        document.body.append(el);
+
+        await init(el);
+
+        const code = [...el.querySelectorAll('[data-kind="dev"]')];
+        expect(code.map((pill) => pill.textContent.trim()))
+          .to.deep.equal([`${survivingPlatform} Code documentation`]);
+        expect(el.querySelectorAll('[data-kind="design"]')).to.have.lengthOf(2);
+      });
+    }
 
     for (const cdnEnv of [false, true]) {
       it(`${cdnEnv ? 'hides both' : 'renders both'} native Design pills for an anonymous ${cdnEnv ? 'CDN' : 'local'} visitor`, async () => {

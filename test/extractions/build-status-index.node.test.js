@@ -628,6 +628,39 @@ describe('applyOverrides', () => {
     const { warnings } = applyOverrides(base(), overrides);
     assert.ok(!warnings.some((w) => /redundant/i.test(w)));
   });
+
+  it('applies native naming metadata outside Figma without inventing code statuses', () => {
+    const components = base();
+    const figma = { status: 'available', figmaPageId: '1:2' };
+    components[0].platforms.ios = { figma };
+    const { warnings } = applyOverrides(components, {
+      ActionButton: {
+        ios: { page: 'action-buttons', upstreamName: 'Button' },
+        android: { page: 'action-buttons', upstreamName: 'Button', package: 'buttons' },
+      },
+    });
+
+    assert.deepEqual(warnings, []);
+    assert.deepEqual(components[0].platforms.ios, {
+      figma, page: 'action-buttons', upstreamName: 'Button',
+    });
+    assert.deepEqual(components[0].platforms.android, {
+      page: 'action-buttons', upstreamName: 'Button', package: 'buttons',
+    });
+    assert.deepEqual(components[0].platforms.web, base()[0].platforms.web);
+  });
+
+  for (const [field, value] of [
+    ['page', '../buttons'],
+    ['upstreamName', '   '],
+    ['package', 42],
+  ]) {
+    it(`rejects invalid native ${field} metadata`, () => {
+      assert.throws(() => applyOverrides(base(), {
+        ActionButton: { ios: { [field]: value } },
+      }), /invalid.*ios.*ActionButton/i);
+    });
+  }
 });
 
 describe('buildComponentSlices', () => {
@@ -770,6 +803,70 @@ describe('buildComponentSlices', () => {
 // genuinely disagree: takeover-dialog documents at Dialog but renders FullscreenDialog.
 // Collapsing them to one value shipped a bug before — see deps/docs/STATUS-FILES.md.
 describe('buildImplComponentNames', () => {
+  it('generates platform-specific page aliases and native documentation overrides', () => {
+    const components = [
+      { name: 'Toast', platforms: { ios: { page: 'snackbars-and-toasts' } } },
+      {
+        name: 'Snackbar',
+        platforms: {
+          android: {
+            page: 'snackbars-and-toasts', upstreamName: 'SnackbarHost', package: 'snackbar',
+          },
+        },
+      },
+    ];
+
+    assert.deepEqual(buildImplComponentNames([], [], {}, {}, components), {
+      ios: { 'snackbars-and-toasts': { canonical: 'Toast' } },
+      android: {
+        snackbar: { docs: 'SnackbarHost', package: 'snackbar' },
+        'snackbars-and-toasts': {
+          canonical: 'Snackbar', docs: 'SnackbarHost', package: 'snackbar',
+        },
+      },
+    });
+  });
+
+  it('keeps canonical native routes when a web component uses a shared page', () => {
+    const components = [{
+      name: 'ColorHandle',
+      platforms: {
+        web: { rsp: { status: 'available', page: 'color-handle-and-loupe' } },
+        ios: { page: 'color-handles', upstreamName: 'ColorSlider' },
+      },
+    }];
+    const { slices } = buildComponentSlices([], components);
+
+    assert.deepEqual(buildImplComponentNames(slices, [], {}, {}, components), {
+      ios: {
+        'color-handle': { docs: 'ColorSlider' },
+        'color-handles': { canonical: 'ColorHandle', docs: 'ColorSlider' },
+      },
+    });
+    assert.ok(slices.some(({ slug, data }) => slug === 'color-handle' && data.ios));
+  });
+
+  it('does not turn native Figma selections into documentation naming overrides', () => {
+    const components = [{
+      name: 'Button',
+      platforms: { ios: { figma: { status: 'available', upstreamName: 'DesignOnlyName' } } },
+    }];
+    assert.deepEqual(buildImplComponentNames([], [], {}, {}, components), {});
+  });
+
+  for (const conflictingPage of ['native-controls', 'switch']) {
+    it(`rejects a native page alias that conflicts with ${conflictingPage}`, () => {
+      const components = [
+        { name: 'Button', platforms: { ios: { page: conflictingPage } } },
+        { name: 'Switch', platforms: { ios: { page: 'native-controls' } } },
+      ];
+      assert.throws(
+        () => buildImplComponentNames([], [], {}, {}, components),
+        /conflicting native page.*ios/i,
+      );
+    });
+  }
+
   it('records the SWC pattern documentation section without replacing RSP package metadata', () => {
     const roster = [
       { name: 'ResponseStatus', sources: { swc: 'swc-response-status', rsp: 'ResponseStatus' } },

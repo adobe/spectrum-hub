@@ -144,7 +144,7 @@ test(`${block.name} shared mobile page exposes separate accessible native Design
   }
 });
 
-test(`${block.name} shared mobile page identifies a missing design without a dead link`, async ({ page, makeAxeBuilder }, testInfo) => {
+test(`${block.name} shared mobile page omits documentation for a missing platform`, async ({ page, makeAxeBuilder }, testInfo) => {
   await gotoBlock(page, {
     ...block,
     path: `${block.path}?platform=mobile&component=switches`,
@@ -164,15 +164,13 @@ test(`${block.name} shared mobile page identifies a missing design without a dea
     }],
   });
   await expect(page.getByText('iOS Design not available')).toBeVisible();
-  await expect(page.locator('.component-status a')).toHaveCount(3);
+  await expect(page.getByRole('link', { name: 'iOS Code documentation', exact: false })).toHaveCount(0);
+  await expect(page.locator('.component-status a')).toHaveCount(2);
   const results = await makeAxeBuilder().analyze();
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
   if (testInfo.project.name === 'chromium') {
     await expect(page.locator('.component-status')).toMatchAriaSnapshot(`
       - group "Component status":
-        - link "iOS Code documentation. Opens iOS documentation in a new tab.":
-          - /url: https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/switch
-          - text: ""
         - link "Android Code documentation. Opens Android documentation in a new tab.":
           - /url: https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html
           - text: ""

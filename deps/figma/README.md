@@ -159,6 +159,8 @@ and the node ID must use the numeric `123:456` format. The file key comes from
 the source registry. An incomplete unmatched selection fails the build.
 
 iOS Switch uses this path for `Switch (list)` in `s2-ios`, node `11368:7100`.
+The iOS Menu override also uses it for the standalone `Menu` component, node
+`5890:12308`, while standalone-component discovery remains unsupported.
 The override does not add a resource to discovery. The builder does not call
 Figma to verify the node's existence or name; verify the target in Figma before
 publishing it.

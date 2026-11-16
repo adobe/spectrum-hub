@@ -1,5 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 import {
   fetchComponentSlice, fetchComponentPageSlice, resetComponentSliceCacheForTests,
 } from '../../scripts/utils/component-slice.js';
@@ -76,6 +77,23 @@ describe('component-slice', () => {
     expect(actionData).to.deep.equal(statusData);
     expect(fetchStub.callCount).to.equal(1);
     expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/button.json');
+  });
+
+  it('resolves a new mobile page alias from generated metadata without a runtime mapping', async () => {
+    const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'ios').value({
+      ...IMPL_COMPONENT_NAMES.ios, 'future-buttons': { canonical: 'Button' },
+    });
+    const ios = { figma: { status: 'available' } };
+    fetchStub.callsFake(async (url) => (url.endsWith('/button.json')
+      ? { ok: true, json: async () => ({ ios }) } : { ok: false, status: 404 }));
+    try {
+      expect(await fetchComponentPageSlice({
+        platform: 'ios', impl: 'ios', slug: 'future-buttons',
+      })).to.deep.equal({ ios });
+      expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/button.json');
+    } finally {
+      metadata.restore();
+    }
   });
 
   it('combines the canonical Toast and Snackbar slices without crossing platforms', async () => {

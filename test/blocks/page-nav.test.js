@@ -228,7 +228,8 @@ describe('page-nav block', () => {
         expect(source.isConnected).to.be.false;
         expect(group.querySelectorAll('a')).to.have.lengthOf(0);
         expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
-        expect(fetchStub.calledOnce).to.be.true;
+        expect(fetchStub.called).to.be.true;
+        expect(fetchStub.callCount).to.equal(new Set(fetchStub.args.map(([url]) => url)).size);
       });
     });
 

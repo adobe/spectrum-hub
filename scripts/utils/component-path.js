@@ -21,17 +21,6 @@ export function toSlug(name) {
     .toLowerCase();
 }
 
-const MOBILE_PAGE_COMPONENTS = {
-  buttons: { ios: 'button', android: 'button' },
-  switches: { ios: 'switch', android: 'switch' },
-  'snackbars-and-toasts': { ios: 'toast', android: 'snackbar' },
-  'toggle-buttons': { ios: 'toggle-button', android: 'toggle-button-same-content' },
-};
-
-export function componentSlugForPlatform(slug, platform) {
-  return MOBILE_PAGE_COMPONENTS[slug]?.[platform] ?? slug;
-}
-
 function patternContextFromParts(parts) {
   const idx = parts.indexOf('patterns');
   if (idx < 2 || parts[idx - 2] !== 'web' || parts.length < idx + 3) { return null; }

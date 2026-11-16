@@ -33,12 +33,34 @@ describe('go-to-impl block', () => {
   });
 
   describe('resolveImplementation — component page → impl docs URL', () => {
-    it('derives native documentation URLs with DA aliases and the SnackbarHost exception', () => {
+    it('uses the generated canonical component for a new native page alias', () => {
+      const names = { ios: { 'future-buttons': { canonical: 'Button' } } };
+      const target = resolveImplementation('/mobile/ios/components/future-buttons', undefined, undefined, names);
+      expect(target).to.deep.equal({
+        label: 'iOS',
+        href: 'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+      });
+    });
+
+    it('uses independent generated documentation names for an Android package and symbol', () => {
+      const names = {
+        android: { 'future-snackbars': { docs: 'SnackbarHost', package: 'snackbar' } },
+      };
+      const target = resolveImplementation('/mobile/android/components/future-snackbars', undefined, undefined, names);
+      expect(target).to.deep.equal({
+        label: 'Android',
+        href: 'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.snackbar/-spectrum-snackbar-host.html',
+      });
+    });
+
+    it('derives native documentation URLs from shipped page aliases and documentation names', () => {
       for (const [platform, slug, path] of [
         ['ios', 'buttons', 'button'],
         ['ios', 'switches', 'switch'],
         ['ios', 'snackbars-and-toasts', 'toast'],
         ['ios', 'toggle-buttons', 'togglebutton'],
+        ['ios', 'sliders', 'slider'],
+        ['ios', 'pop-up-buttons', 'popupbutton'],
         ['android', 'buttons', 'com.adobe.spectrum.components.button/-spectrum-button.html'],
         ['android', 'switches', 'com.adobe.spectrum.components.switch/-spectrum-switch.html'],
         ['android', 'snackbars-and-toasts', 'com.adobe.spectrum.components.snackbar/-spectrum-snackbar-host.html'],
@@ -228,6 +250,24 @@ describe('go-to-impl block', () => {
     afterEach(() => {
       sandbox.restore();
       resetComponentSliceCacheForTests();
+    });
+
+    it('honors each platform\'s generated documentation naming on a shared mobile page', async () => {
+      sandbox.stub(IMPL_COMPONENT_NAMES, 'ios').value({
+        buttons: { canonical: 'Button', docs: 'PrimaryButton' },
+      });
+      sandbox.stub(IMPL_COMPONENT_NAMES, 'android').value({
+        buttons: { canonical: 'Button', docs: 'NativeButton', package: 'controls' },
+      });
+      window.history.pushState({}, '', '/mobile/components/buttons');
+      const a = makeAnchor();
+
+      await decorateGoToImpl(a, a.querySelector('span'));
+
+      expect([...document.querySelectorAll('a')].map((link) => link.href)).to.deep.equal([
+        'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/primarybutton',
+        'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.controls/-spectrum-native-button.html',
+      ]);
     });
 
     [

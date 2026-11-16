@@ -54,6 +54,8 @@ const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 // Code implementations and the combined status table are web-only. Native platforms
 // contribute design references without inventing code availability.
 const PLATFORM = 'web';
+const NATIVE_PLATFORMS = ['ios', 'android'];
+const NATIVE_NAMING_FIELDS = ['page', 'upstreamName', 'package'];
 
 // The status table's web columns, in display order. Figma is a design source; its label
 // lives here (not in the shared code-implementation registry). RSP/SWC labels are sourced
@@ -315,6 +317,7 @@ export function applySecondaries(components, secondaries = {}) {
  * status is accurate but no component page exists yet — suppresses the status-table link),
  * and a `note` provenance field. Redundant, unknown-component, unknown-implementation, and
  * unknown-status overrides are warned about but do not abort the build.
+ * Native platforms also accept naming metadata outside their Figma cell, without a status.
  *
  * @param {object[]} components
  * @param {object} overrides
@@ -332,7 +335,21 @@ export function applyOverrides(components, overrides = {}) {
     }
 
     for (const [platform, impls] of Object.entries(platforms)) {
+      const native = NATIVE_PLATFORMS.includes(platform);
+      if (native) {
+        for (const field of NATIVE_NAMING_FIELDS) {
+          if (!Object.hasOwn(impls, field)) { continue; }
+          const value = impls[field];
+          if (typeof value !== 'string' || !value.trim()
+            || (field === 'page' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))) {
+            throw new Error(`Invalid ${platform} ${field} override for "${name}"`);
+          }
+          component.platforms[platform] ??= {};
+          component.platforms[platform][field] = value.trim();
+        }
+      }
       for (const [impl, override] of Object.entries(impls)) {
+        if (native && NATIVE_NAMING_FIELDS.includes(impl)) { continue; }
         const current = component.platforms?.[platform]?.[impl];
         if (!current) {
           warnings.push(`override targets absent ${platform}/${impl} for "${name}"`);
@@ -542,6 +559,10 @@ export function buildComponentSlices(roster, components) {
  * override's shared slug is picked up for free. `export` comes from the roster, where an
  * entry exists only when the implementation's own name differs from the canonical one.
  *
+ * Native platform-level `page` metadata adds aliases with a `canonical` component name.
+ * Native `upstreamName` and `package` feed documentation metadata on both canonical and
+ * aliased routes. These fields do not add code availability cells.
+ *
  * Only RSP populates `export`: SWC renders by tag name, which deps/swc/components.json
  * already maps. Figma is excluded entirely: its selected source/file/node is not a code
  * implementation anything looks up here.
@@ -563,9 +584,12 @@ export function buildComponentSlices(roster, components) {
  * @param {{ name: string, sources: Record<string, string> }[]} roster
  * @param {Record<string, { package?: string }>} [rspComponents] - deps/rsp/components.json.
  * @param {Record<string, string>} [swcComponents] - deps/swc/components.json.
- * @returns {Record<string, Record<string, { docs?: string, export?: string, package?: string, docsSection?: string }>>}
+ * @param {{ name: string, platforms: object }[]} [components] - Resolved index components.
+ * @returns {Record<string, Record<string, { canonical?: string, docs?: string, export?: string, package?: string, docsSection?: string }>>}
  */
-export function buildImplComponentNames(slices, roster, rspComponents = {}, swcComponents = {}) {
+export function buildImplComponentNames(
+  slices, roster, rspComponents = {}, swcComponents = {}, components = [],
+) {
   const names = {};
   const put = (impl, slug, field, value) => {
     names[impl] = names[impl] ?? {};
@@ -589,6 +613,31 @@ export function buildImplComponentNames(slices, roster, rspComponents = {}, swcC
     if (sources.rsp !== name) { put('rsp', toSlug(name), 'export', sources.rsp); }
     const pkg = rspComponents[sources.rsp]?.package;
     if (pkg) { put('rsp', toSlug(name), 'package', pkg); }
+  }
+
+  const nativeEntries = components.flatMap(({ name, platforms }) => (
+    NATIVE_PLATFORMS.filter((platform) => platforms[platform])
+      .map((platform) => ({ name, platform, metadata: platforms[platform] }))
+  ));
+  const nativePages = new Map(nativeEntries.map(({ name, platform }) => (
+    [`${platform}/${toSlug(name)}`, name]
+  )));
+  for (const { name, platform, metadata } of nativeEntries) {
+    const { page, upstreamName, package: pkg } = metadata;
+    const canonicalSlug = toSlug(name);
+    if (page) {
+      const key = `${platform}/${page}`;
+      const existing = nativePages.get(key);
+      if (existing && existing !== name) {
+        throw new Error(`Conflicting native page "${key}": "${existing}" and "${name}"`);
+      }
+      nativePages.set(key, name);
+    }
+    for (const slug of new Set([canonicalSlug, page].filter(Boolean))) {
+      if (slug !== canonicalSlug) { put(platform, slug, 'canonical', name); }
+      if (upstreamName) { put(platform, slug, 'docs', upstreamName); }
+      if (pkg) { put(platform, slug, 'package', pkg); }
+    }
   }
 
   return names;
@@ -676,6 +725,9 @@ function main() {
   });
 
   const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
+  const implComponentNames = buildImplComponentNames(
+    slices, roster, rspComponents, swcComponents, index.components,
+  );
   const sliceWarnings = writeComponentSlices(slices);
 
   for (const warning of [...warnings, ...sliceOverrideWarnings, ...sliceWarnings]) {
@@ -686,7 +738,6 @@ function main() {
   console.log(`Wrote ${index.components.length} component(s) to ${OUTPUT_FILE}`);
   console.log(`Wrote ${slices.length} component status slice(s) to ${SLICES_DIR}`);
 
-  const implComponentNames = buildImplComponentNames(slices, roster, rspComponents, swcComponents);
   writeFileSync(IMPL_COMPONENT_NAMES_FILE, '// Generated by deps/build-status-index.js — do not edit by hand.\n'
     + `export default ${JSON.stringify(implComponentNames, null, 2)};\n`);
   const nameCount = Object.values(implComponentNames)

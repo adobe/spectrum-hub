@@ -62,7 +62,7 @@ The generated outputs feed:
 | `blocks/status-table/` | `deps/status-index.json`, filtered to components with web cells |
 | `blocks/component-status/` | Canonical `deps/status/<slug>.json` slices for automatically generated status pills |
 | `scripts/utils/figma.js` | The same canonical slices for each requested platform's selected source/file/node reference |
-| `scripts/utils/go-to-impl.js` | Canonical status slices to gate automatic actions; `deps/impl-component-names.js` for web documentation; route aliases and native URL rules for iOS/Android documentation |
+| `scripts/utils/go-to-impl.js` | Canonical status slices to gate automatic actions; `deps/impl-component-names.js` for documentation names, native page aliases, packages, and SWC Storybook sections |
 | `blocks/playground/` | `deps/impl-component-names.js` for export names, plus the raw `deps/rsp/data` and `deps/swc/data` catalogs |
 
 In automatic mode, `component-status`, `figma.js`, and `go-to-impl.js` use
@@ -83,10 +83,18 @@ automatic resolution. See
 [Authored component status](./CONTENT_AUTHORING.md#authored-component-status)
 for the row format and precedence rules.
 
-Mobile page aliases live in `scripts/utils/component-path.js`. They do not
-rename generated files or require a status rebuild. Native documentation URLs
-are resolved separately in `scripts/utils/go-to-impl.js`; they do not add native
-code cells to the status model. Automatic implementation actions require a
+Mobile page aliases and native documentation names are authored at the
+`ios`/`android` platform level in `deps/status-overrides.json`, outside the
+`figma` cell. Set `page` for the DA slug, `upstreamName` for a different
+documentation symbol, and `package` when Android's documentation package differs
+from that symbol. Rebuild to generate the native `canonical`, `docs`, and
+`package` entries in `deps/impl-component-names.js`. Canonical status filenames
+remain unchanged; `scripts/utils/component-slice.js` resolves their page aliases.
+
+Native naming metadata does not add code availability cells. Native documentation
+URLs are built in `scripts/utils/go-to-impl.js`. Native Code documentation pills
+require that platform to be present in the resolved status data.
+Automatic implementation actions require a
 successfully fetched status slice. A 404 or another fetch failure removes the
 affected action. Shared mobile pages check each platform separately, so a
 missing Android slice does not hide an iOS action whose slice exists. This
@@ -111,7 +119,7 @@ Edit these files for intentional re-mappings:
 | File | Purpose |
 | --- | --- |
 | `deps/component-aliases.json` | Reconciles source-specific names with canonical component names and documentation names |
-| `deps/status-overrides.json` | Overrides automatically detected status or link data |
+| `deps/status-overrides.json` | Overrides status or link data; supplies platform-level native page and documentation naming metadata |
 | `deps/roster-excludes.json` | Removes composition parts from web membership without excluding native designs |
 | `scripts/utils/figma-sources.js` | Registers Figma library identity and platform |
 | `deps/rsp/rsp-secondary-status.json` | Adds RSP guidance below a primary status |
@@ -249,9 +257,11 @@ models:
 | [`PLAYGROUND-CONTRACT.md`](../deps/docs/PLAYGROUND-CONTRACT.md) | Changing property controls, snippets, component names, or playground lookups |
 | [`REMOVED-DETECTION.md`](../deps/docs/REMOVED-DETECTION.md) | Changing how removed components are detected |
 
-`deps/impl-component-names.js` has optional documentation, export, package, and
-Storybook-section metadata. Its two name fields are not interchangeable:
+`deps/impl-component-names.js` has optional canonical-component, documentation,
+export, package, and Storybook-section metadata. Its name fields are not
+interchangeable:
 
+- `canonical` identifies the component whose status slice a native page alias reads.
 - `docs` names the page the implementation's own documentation site publishes it on. It
   is many-to-one: RSP's `AlertDialog`, `Dialog`, and `FullscreenDialog` all link to
   `Dialog.html`.
@@ -261,8 +271,9 @@ Storybook-section metadata. Its two name fields are not interchangeable:
 Use `docs` to build a documentation link and `export` to name the component in
 code.
 
-`package` selects RSP's S2 or shared AI documentation route. `docsSection`
-selects SWC's ordinary component or AI Toolkit pattern group in Storybook.
+`package` selects RSP's S2 or shared AI documentation route, or Android's
+documentation package suffix. `docsSection` selects SWC's ordinary component or
+AI Toolkit pattern group in Storybook.
 Neither field changes the component's status implementation.
 
 ## Automation

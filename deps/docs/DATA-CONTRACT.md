@@ -149,9 +149,12 @@ The index is emitted so a single fetch is interpretable without also reading `st
 
 The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](../build-status-index.js), so the embedded definitions never drift from the adapter.
 
-Native platform metadata is emitted when that platform has selected designs.
-Native cells contain Figma only. Native Code documentation links are resolved
-separately by `scripts/utils/go-to-impl.js`; they do not claim code availability
+Native platform sections are emitted for selected designs or explicit naming
+overrides. Figma is their only availability cell. Optional `page`, `upstreamName`,
+and `package` fields live directly under `ios`/`android`, outside `figma`, and
+carry naming metadata only. They generate native page aliases and documentation
+targets in `deps/impl-component-names.js`. Native Code documentation links are
+resolved by `scripts/utils/go-to-impl.js`; they do not claim code availability
 or derive it from Figma status. Native-only components do not get web cells or
 enter the web table's rows, counts, search results, or CSV export.
 
