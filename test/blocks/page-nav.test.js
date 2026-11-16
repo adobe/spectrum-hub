@@ -215,6 +215,23 @@ describe('page-nav block', () => {
       window.history.pushState({}, '', originalUrl);
     });
 
+    ['/mobile/components/menus', '/web/swc/components/missing-component'].forEach((pathname) => {
+      it(`keeps only Copy markdown when the automatic status slice 404s on ${pathname}`, async () => {
+        fetchStub.resolves({ ok: false, status: 404 });
+        window.history.pushState({}, '', pathname);
+        const source = mountAuthoredStatus('');
+        await initStatus(source);
+
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+
+        expect(source.isConnected).to.be.false;
+        expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+        expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+        expect(fetchStub.calledOnce).to.be.true;
+      });
+    });
+
     [
       '/web/swc/components/response-status',
       '/web/swc/patterns/conversational-ai/response-status',
@@ -263,7 +280,9 @@ describe('page-nav block', () => {
       const group = await waitForEl(el, '.page-nav-widgets');
       expect(group.querySelector('[data-widget="see-in-figma"]')).to.be.null;
       expect(group.querySelector('[data-widget="go-to-impl"]')).to.not.be.null;
-      expect(fetchStub.called).to.be.false;
+      expect(fetchStub.calledOnceWithExactly(
+        `${window.location.origin}/deps/status/response-status.json`,
+      )).to.be.true;
     });
   });
 
@@ -1192,7 +1211,9 @@ describe('page-nav block', () => {
 
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
-      expect(fetchStub.called).to.be.false;
+      expect(fetchStub.calledOnceWithExactly(
+        `${window.location.origin}/deps/status/action-button.json`,
+      )).to.be.true;
     });
 
     it('renders see-in-figma for a visitor with an active session on CDN', async () => {

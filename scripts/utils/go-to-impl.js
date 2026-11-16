@@ -2,6 +2,7 @@ import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 import { componentDocsUrl } from '../../deps/rsp/docs.js';
 import { toSlug, componentContextFromPath, componentSlugForPlatform } from './component-path.js';
+import { fetchComponentPageSlice } from './component-slice.js';
 
 const NATIVE_DOC_ALIASES = { 'toggle-button-same-content': 'toggle-button' };
 
@@ -58,25 +59,35 @@ export function resolveImplementation(
   };
 }
 
-export function resolveImplementations(pathname, upstreamName) {
+function implementationPaths(pathname) {
   const context = componentContextFromPath(pathname);
   if (context?.platform === 'mobile') {
     return ['ios', 'android'].map((platform) => (
-      resolveImplementation(`/mobile/${platform}/components/${context.slug}`, upstreamName)
+      `/mobile/${platform}/components/${context.slug}`
     ));
   }
-  const target = resolveImplementation(pathname, upstreamName);
-  return target ? [target] : [];
+  return [pathname];
 }
 
-export function decorateGoToImpl(a, span) {
+export function resolveImplementations(pathname, upstreamName) {
+  return implementationPaths(pathname)
+    .map((path) => resolveImplementation(path, upstreamName))
+    .filter(Boolean);
+}
+
+export async function decorateGoToImpl(a, span) {
   const { pathname } = window.location;
   const { impl, slug } = componentContextFromPath(pathname) ?? {};
   // `docs`, not `export`: this builds a documentation link, and several components can
   // share one page. See buildImplComponentNames in deps/build-status-index.js.
   const entry = (impl && slug) ? IMPL_COMPONENT_NAMES[impl]?.[slug] : null;
   const upstreamName = entry?.docs ?? null;
-  const targets = resolveImplementations(pathname, upstreamName);
+  const targets = (await Promise.all(implementationPaths(pathname).map(async (path) => {
+    const target = resolveImplementation(path, upstreamName);
+    if (!target) { return null; }
+    const componentData = await fetchComponentPageSlice(componentContextFromPath(path));
+    return componentData ? target : null;
+  }))).filter(Boolean);
   if (!targets.length) {
     a.remove();
     return;

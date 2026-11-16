@@ -111,6 +111,15 @@ and accessibility; the page-nav spec also checks authored action focus order.
 
 ### Documentation-link regressions
 
+`test/blocks/go-to-impl.test.js` and `test/blocks/page-nav.test.js` check that
+missing status slices suppress automatic resource actions, while Copy markdown
+remains. They cover web and mobile routes, partially missing native slices, and
+reuse of cached status requests. Run them together:
+
+```bash
+npm run test:file -- 'test/blocks/{go-to-impl,page-nav}.test.js' --concurrency 1
+```
+
 `test/blocks/go-to-impl.test.js` and `test/blocks/component-status.test.js`
 include nested Response Status Step and Suggestion Item cases using the
 committed documentation catalog. The Code pill cases also fetch the committed

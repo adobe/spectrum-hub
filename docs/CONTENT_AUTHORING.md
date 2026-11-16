@@ -189,7 +189,7 @@ Keep new block-specific composition in the closest owning block. Reserve
 
 ### Component and pattern page actions
 
-Page actions use the current route, independently of the page's template:
+Automatic page actions use the current route, independently of the page's template:
 
 | Route | Link selection |
 | --- | --- |
@@ -197,6 +197,12 @@ Page actions use the current route, independently of the page's template:
 | `/web/<impl>/patterns/<group>/<slug>` | The web implementation and final slug; nested groups are supported |
 | `/mobile/components/<slug>` | Separate iOS and Android links, using the mobile page aliases |
 | `/mobile/ios/components/<slug>` or `/mobile/android/components/<slug>` | Only the requested native platform |
+
+Automatic implementation and Figma actions require successfully fetched status
+data. If a status slice returns 404 or cannot be fetched, its automatic resource
+actions are omitted. Shared mobile pages check each platform separately, so
+actions for a platform with an available slice remain. Copy markdown and authored
+status links do not depend on generated status data.
 
 At viewport widths of 1200px or more, component pages, pattern pages, and pages
 with authored status blocks keep their page actions even without `<h2>`

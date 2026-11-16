@@ -2,6 +2,7 @@ import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
+import { fetchComponentPageSlice, resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 
 const CHILD_PATTERN_NAMES = {
   swc: {
@@ -213,25 +214,88 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
+    let sandbox;
+    let fetchStub;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true, json: async () => ({}),
+      });
+      resetComponentSliceCacheForTests();
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+      resetComponentSliceCacheForTests();
+    });
+
+    [
+      '/mobile/components/menus',
+      '/mobile/ios/components/menus',
+      '/mobile/android/components/menus',
+      '/web/swc/components/missing-component',
+    ].forEach((pathname) => {
+      it(`omits automatic documentation actions when the status slice 404s on ${pathname}`, async () => {
+        fetchStub.resolves({ ok: false, status: 404 });
+        window.history.pushState({}, '', pathname);
+        const a = makeAnchor();
+
+        await decorateGoToImpl(a, a.querySelector('span'));
+
+        expect(document.querySelectorAll('a')).to.have.lengthOf(0);
+      });
+    });
+
+    [
+      ['toast', 'Android'],
+      ['snackbar', 'iOS'],
+    ].forEach(([missingSlug, survivingPlatform]) => {
+      it(`keeps only ${survivingPlatform} actions when the other native status slice 404s`, async () => {
+        fetchStub.withArgs(`${window.location.origin}/deps/status/${missingSlug}.json`)
+          .resolves({ ok: false, status: 404 });
+        window.history.pushState({}, '', '/mobile/components/snackbars-and-toasts');
+        const a = makeAnchor();
+
+        await decorateGoToImpl(a, a.querySelector('span'));
+
+        const links = [...document.querySelectorAll('a')];
+        expect(links.map((link) => link.querySelector('span').textContent))
+          .to.deep.equal([`Go to ${survivingPlatform}`]);
+      });
+    });
+
+    it('reuses the status request already made by the pills', async () => {
+      window.history.pushState({}, '', '/mobile/components/buttons');
+      await fetchComponentPageSlice({ platform: 'mobile', slug: 'buttons' });
+      const a = makeAnchor();
+
+      await decorateGoToImpl(a, a.querySelector('span'));
+
+      expect(document.querySelectorAll('a')).to.have.lengthOf(2);
+      expect(fetchStub.calledOnceWithExactly(`${window.location.origin}/deps/status/button.json`))
+        .to.be.true;
+    });
+
     for (const [parent, slug, docsSlug] of [
       ['response-status', 'response-status-step', 'response-status'],
       ['suggestion-group', 'suggestion-item', 'suggestion-group-suggestion-item'],
     ]) {
-      it(`links nested ${slug} using the shipped documentation catalog`, () => {
+      it(`links nested ${slug} using the shipped documentation catalog`, async () => {
         window.history.pushState({}, '', `/web/swc/patterns/conversational-ai/${parent}/${slug}`);
         const a = makeAnchor();
-        decorateGoToImpl(a, a.querySelector('span'));
+        await decorateGoToImpl(a, a.querySelector('span'));
         expect(a.getAttribute('href')).to.equal(
           `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
         );
       });
     }
 
-    it('renders both native documentation actions on shared mobile pages', () => {
+    it('renders both native documentation actions on shared mobile pages', async () => {
       window.history.pushState({}, '', '/mobile/components/buttons');
       const a = makeAnchor();
       a.append(document.createElement('svg'));
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       const links = [...document.querySelectorAll('a')];
       expect(links.map((link) => link.querySelector('span').textContent))
         .to.deep.equal(['Go to iOS', 'Go to Android']);
@@ -247,12 +311,12 @@ describe('go-to-impl block', () => {
       }
     });
 
-    it('retains the supplied parent documentation alias on a nested pattern page', () => {
+    it('retains the supplied parent documentation alias on a nested pattern page', async () => {
       const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value(CHILD_PATTERN_NAMES.swc);
       try {
         window.history.pushState({}, '', '/web/swc/patterns/conversational-ai/response-status/response-status-step');
         const a = makeAnchor();
-        decorateGoToImpl(a, a.querySelector('span'));
+        await decorateGoToImpl(a, a.querySelector('span'));
         expect(a.href).to.equal(
           'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
         );
@@ -266,14 +330,14 @@ describe('go-to-impl block', () => {
       ['response-status-step', 'response-status', 'ResponseStatus'],
       ['suggestion-item', 'suggestion-group-suggestion-item', 'SuggestionGroupSuggestionItem'],
     ]) {
-      it(`links ${slug} to its published pattern documentation`, () => {
+      it(`links ${slug} to its published pattern documentation`, async () => {
         const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value({
           [slug]: { docs: upstreamName, docsSection: 'patterns-ai-toolkit' },
         });
         try {
           window.history.pushState({}, '', `/web/swc/components/${slug}`);
           const a = makeAnchor();
-          decorateGoToImpl(a, a.querySelector('span'));
+          await decorateGoToImpl(a, a.querySelector('span'));
           expect(a.getAttribute('href')).to.equal(
             `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
           );
@@ -284,26 +348,26 @@ describe('go-to-impl block', () => {
       });
     }
 
-    it('uses generated SWC AI documentation metadata for indexed components', () => {
+    it('uses generated SWC AI documentation metadata for indexed components', async () => {
       for (const [slug, story] of [
         ['message-sources', 'message-sources'],
         ['response-status', 'response-status'],
       ]) {
         window.history.pushState({}, '', `/web/swc/components/${slug}`);
         const a = makeAnchor();
-        decorateGoToImpl(a, a.querySelector('span'));
+        await decorateGoToImpl(a, a.querySelector('span'));
         expect(a.href).to.equal(
           `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${story}--docs`,
         );
       }
     });
     // upstreamName now comes from a static import of deps/build-status-index.js's build
-    // output (deps/impl-component-names.js) rather than a per-page fetch — these exercise real
-    // committed alias entries instead of stubbing a network response.
-    it('sets the SWC label and deep-links to the SWC docs in a new tab', () => {
+    // output (deps/impl-component-names.js). The fetch stub supplies only the status gate;
+    // documentation aliases still come from the committed catalog.
+    it('sets the SWC label and deep-links to the SWC docs in a new tab', async () => {
       window.history.pushState({}, '', '/web/swc/components/action-button');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.querySelector('span').textContent).to.equal('Go to SWC');
       expect(a.getAttribute('href')).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/components-action-button--docs',
@@ -313,56 +377,56 @@ describe('go-to-impl block', () => {
       expect(a.rel).to.equal('noopener noreferrer');
     });
 
-    it('uses the RSP upstream name in the deep-link and accessible label', () => {
+    it('uses the RSP upstream name in the deep-link and accessible label', async () => {
       window.history.pushState({}, '', '/web/rsp/components/action-group');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.querySelector('span').textContent).to.equal('Go to RSP');
       expect(a.getAttribute('href')).to.equal('https://react-spectrum.adobe.com/ActionButtonGroup.html');
       expect(a.getAttribute('aria-label')).to.equal('Go to RSP. Opens ActionButtonGroup in a new tab.');
     });
 
-    it('deep-links to the primary component when the current impl carries an alias', () => {
+    it('deep-links to the primary component when the current impl carries an alias', async () => {
       // deps/impl-component-names.js's swc entry for this shared slug: docs "ColorHandle".
       window.history.pushState({}, '', '/web/swc/components/color-handle-and-loupe');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.getAttribute('href')).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/components-color-handle--docs',
       );
       expect(a.getAttribute('aria-label')).to.equal('Go to SWC. Opens ColorHandle in a new tab.');
     });
 
-    it('ignores another impl\'s alias — only the current impl\'s entry applies', () => {
+    it('ignores another impl\'s alias — only the current impl\'s entry applies', async () => {
       // deps/impl-component-names.js gives "action-group" a docs name for rsp
       // (ActionButtonGroup) but not for swc, so the swc page falls back to its own
       // URL slug unchanged.
       window.history.pushState({}, '', '/web/swc/components/action-group');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.getAttribute('href')).to.equal(
         'https://spectrum-web-components.adobe.com/?path=/docs/components-action-group--docs',
       );
     });
 
-    it('still links an S2 component to its own page', () => {
+    it('still links an S2 component to its own page', async () => {
       window.history.pushState({}, '', '/web/rsp/components/action-button');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.getAttribute('href')).to.equal('https://react-spectrum.adobe.com/ActionButton.html');
     });
 
-    it('removes itself when the page is not a component page', () => {
+    it('removes itself when the page is not a component page', async () => {
       window.history.pushState({}, '', '/web/swc/get-started');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.isConnected).to.be.false;
     });
 
-    it('removes itself when the implementation is unknown', () => {
+    it('removes itself when the implementation is unknown', async () => {
       window.history.pushState({}, '', '/web/ios/components/button');
       const a = makeAnchor();
-      decorateGoToImpl(a, a.querySelector('span'));
+      await decorateGoToImpl(a, a.querySelector('span'));
       expect(a.isConnected).to.be.false;
     });
   });
