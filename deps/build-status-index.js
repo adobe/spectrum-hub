@@ -558,6 +558,8 @@ export function buildComponentSlices(roster, components) {
  * manual override — see applyOverrides), read off the already-computed slices so a `page`
  * override's shared slug is picked up for free. `export` comes from the roster, where an
  * entry exists only when the implementation's own name differs from the canonical one.
+ * The full joined catalog supplies documentation aliases and sections for excluded
+ * composition parts too; status-table exclusions must not remove documentation routing.
  *
  * Native platform-level `page` metadata adds aliases with a `canonical` component name.
  * Native `upstreamName` and `package` feed documentation metadata on both canonical and
@@ -581,7 +583,8 @@ export function buildComponentSlices(roster, components) {
  * from their catalog module paths. It is independent of the npm publishing package.
  *
  * @param {{ slug: string, data: { web: object } }[]} slices
- * @param {{ name: string, sources: Record<string, string> }[]} roster
+ * @param {{ name: string, sources: Record<string, string>, upstreamNames?: object }[]} roster
+ *   The joined catalog before composition-part exclusions.
  * @param {Record<string, { package?: string }>} [rspComponents] - deps/rsp/components.json.
  * @param {Record<string, string>} [swcComponents] - deps/swc/components.json.
  * @param {{ name: string, platforms: object }[]} [components] - Resolved index components.
@@ -604,7 +607,13 @@ export function buildImplComponentNames(
     }
   }
 
-  for (const { name, sources } of roster) {
+  for (const { name, sources, upstreamNames = {} } of roster) {
+    const slug = toSlug(name);
+    for (const [impl, upstreamName] of Object.entries(upstreamNames)) {
+      if (getImplementationById(impl) && !names[impl]?.[slug]?.docs) {
+        put(impl, slug, 'docs', upstreamName);
+      }
+    }
     const swcPath = sources.swc && swcComponents[sources.swc.replace(/^swc-/, '')];
     if (swcPath?.startsWith('patterns/')) {
       put('swc', toSlug(name), 'docsSection', swcPath.split('/').slice(0, 2).join('-'));
@@ -726,7 +735,7 @@ function main() {
 
   const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
   const implComponentNames = buildImplComponentNames(
-    slices, roster, rspComponents, swcComponents, index.components,
+    slices, joined, rspComponents, swcComponents, index.components,
   );
   const sliceWarnings = writeComponentSlices(slices);
 

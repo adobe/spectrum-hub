@@ -299,24 +299,22 @@ Published SWC AI Toolkit components live under `patterns/ai-toolkit/` in
 `docsSection: "patterns-ai-toolkit"` from this grouping. Ordinary SWC components keep the
 default `components` group. Both use the same npm package and SWC status column.
 
-The generated section applies to implementation widgets and Code pills for
-components retained in the web roster. An `upstreamName` alias selects a shared
-or nested documentation page without changing the published tag or module path.
+Documentation metadata uses the full joined public catalog, before composition
+parts are excluded from the web status roster. An `upstreamName` alias selects a
+shared or nested documentation page without changing the published tag or module
+path. Resolved cell overrides take precedence over catalog aliases.
 
-Response Status Step and Suggestion Item have authored documentation aliases,
-but `roster-excludes.json` excludes both from web membership. Neither contributes
-`docs` or `docsSection` metadata to `impl-component-names.js`, so their aliases
-do not provide runtime documentation redirects. The current nested-page
-implementation actions therefore generate incorrect `components-...--docs`
-links instead of the required AI Toolkit Storybook links. Existing status
-slices can retain an `upstreamName`, but without `docsSection` their Code pills
-still select the wrong Storybook group.
+Response Status Step and Suggestion Item remain excluded from web membership,
+but retain their `docs` and `docsSection` metadata in `impl-component-names.js`.
+Their existing page actions and Code pills therefore use the AI Toolkit
+Storybook destinations. This does not add status-table rows or generate new
+status slices for excluded children. Automatic actions still require an
+available status slice.
 
-This is a known limitation, not supported child-page redirect behavior.
-Rebuilding alone does not fix it while metadata generation excludes these
-children. The shipped-data regressions in `test/blocks/go-to-impl.test.js` and
-`test/blocks/component-status.test.js` expose it without supplying replacement
-catalog metadata. See [Documentation-link regressions](../../docs/TESTS.md#documentation-link-regressions).
+The shipped-data regressions in `test/blocks/go-to-impl.test.js` and
+`test/blocks/component-status.test.js` check these redirects without supplying
+replacement catalog metadata. See
+[Documentation-link regressions](../../docs/TESTS.md#documentation-link-regressions).
 
 For components with the required metadata, the same resolution applies on
 `/web/<impl>/patterns/<group>/<slug>` routes,

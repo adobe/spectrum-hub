@@ -105,7 +105,7 @@ Native documentation URLs are still assembled from route rules, not checked
 against a native documentation catalog. A status slice does not establish that
 the upstream documentation destination exists. See
 [Status and link mappings](../deps/docs/STATUS-FILES.md) for the route rules,
-native naming exceptions, and excluded pattern-child limitations.
+native naming overrides, and documentation routing for excluded pattern children.
 
 Status consumers should read the generated model, not independently reinterpret
 raw RSP, SWC, or Figma status values. The playground intentionally reads raw

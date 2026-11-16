@@ -92,6 +92,27 @@ describe('SWC pattern status pipeline', () => {
       },
     });
   });
+
+  it('retains excluded child documentation without adding status rows or slices', () => {
+    const catalog = joinRosters([], tags, [], aliases);
+    const excluded = ['ResponseStatusStep', 'SuggestionItem', 'SuggestionPart'];
+    const pageRoster = filterRoster(catalog, excluded);
+    const { index: pageIndex } = buildIndex({
+      roster: pageRoster,
+      readData: (source, name) => data[source][name],
+    });
+    const { slices } = buildComponentSlices(pageRoster, pageIndex.components);
+    const names = buildImplComponentNames(slices, catalog, {}, components);
+
+    assert.deepEqual(names.swc['response-status-step'], {
+      docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit',
+    });
+    assert.deepEqual(names.swc['suggestion-item'], {
+      docs: 'SuggestionGroupSuggestionItem', docsSection: 'patterns-ai-toolkit',
+    });
+    assert.ok(pageIndex.components.every(({ name }) => !excluded.includes(name)));
+    assert.ok(slices.every(({ slug }) => !['response-status-step', 'suggestion-item'].includes(slug)));
+  });
 });
 
 describe('swcTagToPascal', () => {
@@ -803,6 +824,22 @@ describe('buildComponentSlices', () => {
 // genuinely disagree: takeover-dialog documents at Dialog but renders FullscreenDialog.
 // Collapsing them to one value shipped a bug before — see deps/docs/STATUS-FILES.md.
 describe('buildImplComponentNames', () => {
+  it('keeps resolved documentation overrides ahead of catalog aliases', () => {
+    const slices = [{
+      slug: 'response-status-step',
+      data: { web: { swc: { upstreamName: 'CustomResponseStatus' } } },
+    }];
+    const catalog = [{
+      name: 'ResponseStatusStep',
+      sources: { swc: 'swc-response-status-step' },
+      upstreamNames: { swc: 'ResponseStatus' },
+    }];
+
+    const names = buildImplComponentNames(slices, catalog);
+
+    assert.equal(names.swc['response-status-step'].docs, 'CustomResponseStatus');
+  });
+
   it('generates platform-specific page aliases and native documentation overrides', () => {
     const components = [
       { name: 'Toast', platforms: { ios: { page: 'snackbars-and-toasts' } } },

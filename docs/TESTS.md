@@ -137,11 +137,14 @@ destinations without injecting missing aliases or `docsSection` metadata.
 Run both files:
 
 ```bash
-npm run test:file -- 'test/blocks/{component-status,go-to-impl}.test.js'
+npm run test:file -- 'test/blocks/{component-status,go-to-impl}.test.js' --concurrency 1
 ```
 
 These are local routing and shipped-data checks, not live upstream link crawls.
-They expose the [excluded-child-page limitation](../deps/docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
+They guard [excluded-child documentation routing](../deps/docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
+The builder regressions also check that excluded children retain documentation
+metadata without adding status rows or slices, and that resolved overrides take
+precedence over catalog aliases.
 Keep them separate from injected-metadata unit cases: a passing fixture case
 does not prove that the shipped catalog supplies the metadata.
 

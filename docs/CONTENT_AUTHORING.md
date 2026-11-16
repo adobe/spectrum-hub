@@ -227,7 +227,7 @@ generated data. `upstreamName` and Android's optional `package` control
 documentation naming independently of Design selections. No per-component
 JavaScript mapping is needed. See
 [Status and link mappings](../deps/docs/STATUS-FILES.md#mobile-page-links) for
-examples, documentation targets, and the known excluded-child-page limitation.
+examples, documentation targets, and excluded-child documentation routing.
 
 ### Authored component status
 

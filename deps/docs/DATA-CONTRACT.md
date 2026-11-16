@@ -231,6 +231,9 @@ implementation or package. The generated `docsSection` in
 `impl-component-names.js` selects Storybook's `patterns-ai-toolkit` group instead
 of `components`. An `upstreamName` alias handles a shared or nested docs page
 without changing the real SWC tag.
+Documentation metadata comes from the full joined public catalog. Composition
+exclusions still remove status rows and newly generated slices, but do not
+remove documentation aliases, package metadata, or Storybook sections.
 
 ## Deprecation signals
 
