@@ -78,9 +78,11 @@ libraries or platforms.
 
 The builder resolves one design per platform/canonical component. A selected
 Figma cell contains `{ status, figmaSource, figmaFile, figmaPageId }`, plus any
-authored guidance or display-name redirect. `figmaPageId` is a component-set node
-ID, not a canvas/page ID. Presence resolves to Available unless overridden;
-Figma names do not supply automatic lifecycle maturity.
+authored guidance or display-name redirect. `figmaPageId` identifies the selected
+design node. Discovered references are published component-set IDs; complete
+explicit overrides can supply nodes outside that roster. Presence resolves to
+Available unless overridden; Figma names do not supply automatic lifecycle
+maturity.
 
 Legacy two-field roster rows belong to S2 Web only. Browser consumers require
 explicit source/file identity and never infer a native reference from web data.
@@ -88,7 +90,8 @@ explicit source/file identity and never infer a native reference from web data.
 `figma-secondary-status.json` also contributes names to web Figma membership
 after canonical normalization and exclusions. These authored entries can
 produce Available cells without a discovered design. Only a resolved roster
-entry supplies the source/file/node reference required for a Design link.
+entry or a complete explicit Figma override supplies the source/file/node
+reference required for a Design link.
 
 ## Adapter boundary (insurance against contract change)
 
@@ -160,8 +163,10 @@ Shared `/mobile/components/<slug>` pages resolve DA aliases per platform
 without changing canonical JSON filenames. For example, Buttons reads
 `button.json`; Snackbars and toasts reads iOS from `toast.json` and Android
 from `snackbar.json`. A missing native design renders a non-linked
-**Design not available** pill for that platform, without a Figma action.
-Native pages never use web as a fallback.
+**Design not available** pill for that platform on shared mobile pages, without
+a Figma action. Platform-specific native pages omit a missing Design pill.
+If no canonical slice can be fetched, the status block is removed. Native
+pages never use web as a fallback.
 
 Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/status-model.js)):
 
@@ -211,8 +216,12 @@ Unmatched public components remain single-implementation rows.
 **Figma selection.** Matching is platform-specific. Multiple designs resolving
 to one component on the same platform require explicit `figmaSource`,
 `figmaPageSource`, or `figmaNodeId` selectors in that platform's Figma override.
-Every supplied selector must match. Ambiguous or unmatched selections fail the
-build before output writes. All resources remain in the raw roster.
+Discovered candidates must match every supplied selector. Ambiguous selections
+fail the build before output writes. When none match, a complete explicit
+source/name/node override can supply the reference; otherwise the build fails.
+All resources remain in the raw roster. See
+[Explicit node references](../figma/README.md#explicit-node-references) for the
+validation boundary and known conflicting-selector limitation.
 
 **SWC pattern documentation.** Pattern membership does not create another code
 implementation or package. The generated `docsSection` in

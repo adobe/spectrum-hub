@@ -187,14 +187,14 @@ Block styles are unlayered, so [they override the global styles](https://develop
 | `breadcrumbs` | Automatic path navigation for component and opted-in pages |
 | `card` | General linked/content card layouts |
 | `columns` | Responsive multi-column content layout |
-| `component-status` | Implementation status assembled from generated dependency data |
+| `component-status` | Web Code/Design status pills and native Code documentation/Design pills |
 | `footer` | Loads and decorates the configured footer fragment |
 | `fragment` | Fetches reusable content and recursively runs the page lifecycle |
 | `header` | Loads header navigation, IMS controls, and responsive behavior |
 | `hero` | Authored hero with foreground and optional image/video background |
 | `media` | Scheme-aware media with authored size and opacity variants |
 | `page-hero` | Metadata-driven page heading and component status composition |
-| `page-nav` | In-page navigation derived from page headings |
+| `page-nav` | Desktop heading navigation and route-aware page actions, including pages without second-level headings |
 | `playground` | Interactive component demonstration driven by generated contracts |
 | `profile` | Link-triggered account/profile control |
 | `search` | Link-triggered Algolia search interface |

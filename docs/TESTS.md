@@ -89,6 +89,25 @@ accessibility fixtures belong in `test/a11y/fixtures/` and must follow
 [`test/a11y/README.md`](../test/a11y/README.md). Do not move small unit-test
 markup into a shared HTML file only to reduce line count.
 
+### Documentation-link regressions
+
+`test/blocks/go-to-impl.test.js` and `test/blocks/component-status.test.js`
+include nested Response Status Step and Suggestion Item cases using the
+committed documentation catalog. The Code pill cases also fetch the committed
+`deps/status/<slug>.json` slices. They assert the expected AI Toolkit Storybook
+destinations without injecting missing aliases or `docsSection` metadata.
+
+Run both files:
+
+```bash
+npm run test:file -- 'test/blocks/{component-status,go-to-impl}.test.js'
+```
+
+These are local routing and shipped-data checks, not live upstream link crawls.
+They expose the [excluded-child-page limitation](../deps/docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
+Keep them separate from injected-metadata unit cases: a passing fixture case
+does not prove that the shipped catalog supplies the metadata.
+
 ## Accessibility tests
 
 `test/a11y/` uses Playwright to run:
