@@ -59,7 +59,16 @@ block, rather than a `templates/` registry:
 - `scripts/scripts.js` reads page metadata and creates universal page structures such
   as the automatic page hero and breadcrumbs.
 - A parent block can create a child block and call `loadBlock`. For example,
-  `page-hero` creates `component-status` for component pages.
+  `page-hero` creates an empty `component-status` for `template: component`
+  pages when no status block is provided in the main content. Authored
+  instances stay where placed and suppress the automatic hero status block,
+  even if their rows are invalid or hidden by audience restrictions.
+
+`component-status` supports both composition modes. Empty blocks use automatic
+route-based resolution; authored rows supply pills and linked page-nav actions
+through `scripts/utils/authored-status.js`. See
+[Authored component status](../../../docs/CONTENT_AUTHORING.md#authored-component-status)
+for the authoring contract.
 
 Keep block-specific composition in the closest owning block. Add logic to
 `scripts.js` only when it is genuinely universal page setup; use the
