@@ -39,11 +39,15 @@ Per-component file `deps/rsp/data/<Component>.json` has the shape `{ props: [...
 
 #### Prerelease status
 
-The docs render a badge from `export const version` in `packages/dev/s2-docs/pages/s2/*.mdx`, and
-`extract-doc-status.js` reads it. In the current committed extraction, `SideNav` is
-`alpha`; the other extracted components are `stable` or have no published doc status.
-The status model therefore treats `alpha`/`beta`/`rc` as valid values without assuming
-that every one is present in a given snapshot.
+`extract-doc-status.js` reads prerelease badges from each S2 component's
+documentation page or the shared `/ai-components.html` page for
+`@react-spectrum/ai`. A page with no prerelease badge resolves to `stable`.
+When an HTML page returns 404, the extractor also checks its source MDX for
+`export const version`. If no usable documentation is available, the extracted
+component has no `status` field.
+
+The status model maps `alpha`, `beta`, and `rc` to Available with `Alpha`, `Beta`,
+or `RC` context. Prerelease status applies to both S2 and AI package components.
 
 ### Spectrum Web Components (SWC)
 
@@ -80,6 +84,11 @@ Figma names do not supply automatic lifecycle maturity.
 
 Legacy two-field roster rows belong to S2 Web only. Browser consumers require
 explicit source/file identity and never infer a native reference from web data.
+
+`figma-secondary-status.json` also contributes names to web Figma membership
+after canonical normalization and exclusions. These authored entries can
+produce Available cells without a discovered design. Only a resolved roster
+entry supplies the source/file/node reference required for a Design link.
 
 ## Adapter boundary (insurance against contract change)
 

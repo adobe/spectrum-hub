@@ -33,9 +33,9 @@ Toolkit, iOS, and Android libraries:
 ```mermaid
 flowchart TD
     accTitle: How implementation data becomes the combined status model
-    accDescr: React Spectrum S2 and AI Toolkit produce the RSP catalog. Spectrum Web Components produces the SWC catalog, including AI Toolkit patterns. Four platform-specific Figma libraries feed one source-qualified roster. The builder combines these with authored mappings to write the index, component slices, and implementation-name map.
+    accDescr: The @react-spectrum/s2 and @react-spectrum/ai packages supply the RSP code catalog. Spectrum Web Components supplies the SWC code catalog, including AI Toolkit patterns. The Figma S2 Web, Spectrum AI Toolkit, iOS, and Android libraries supply design data independently of the code catalogs. The builder combines these sources with authored mappings to write the index, component slices, and implementation-name map.
 
-    rsp["React Spectrum S2 and AI Toolkit<br/>packages and types"]
+    rsp["@react-spectrum/s2 and @react-spectrum/ai<br/>packages and types"]
     swc["Spectrum Web Components<br/>manifest and types"]
     figma["Figma S2 Web, AI Toolkit,<br/>iOS, and Android libraries"]
 
@@ -88,7 +88,7 @@ Edit these files for intentional re-mappings:
 | `scripts/utils/figma-sources.js` | Registers Figma library identity and platform |
 | `deps/rsp/rsp-secondary-status.json` | Adds RSP guidance below a primary status |
 | `deps/swc/swc-secondary-status.json` | Adds SWC guidance below a primary status |
-| `deps/figma/figma-secondary-status.json` | Adds Figma guidance below a primary status |
+| `deps/figma/figma-secondary-status.json` | Adds web Figma guidance and contributes names to web Figma membership; does not supply node references |
 
 After editing any of these, regenerate and inspect the combined outputs:
 
@@ -124,10 +124,11 @@ When generated output looks wrong, fix the authored mapping, extractor, status
 model, or upstream source that produced it. A direct output edit will disappear
 on the next scheduled extraction.
 
-## React Spectrum S2 extraction
+## React Spectrum extraction
 
-`deps/rsp/` discovers published S2 components, follows their TypeScript
-declaration graphs, and uses the TypeScript checker (`deps/rsp/build-ts-checker.js`) to resolve inherited props,
+`deps/rsp/` discovers components from `@react-spectrum/s2` and
+`@react-spectrum/ai`, follows their TypeScript declaration graphs, and uses the
+TypeScript checker (`deps/rsp/build-ts-checker.js`) to resolve inherited props,
 unions, and `Omit`/`Pick` behavior.
 
 Run:
@@ -184,7 +185,8 @@ and explicit selections within each platform. Native design availability does
 not imply native code support or create web-table rows.
 
 Read [deps/figma/README.md](../deps/figma/README.md) for credential scope, file
-access, selection rules, and the manual read-only Actions validation workflow.
+access, selection rules, and the scheduled and manually dispatched read-only
+Actions validation workflow.
 
 ## Combined status build
 
@@ -228,9 +230,8 @@ Storybook-section metadata. Its two name fields are not interchangeable:
 - `export` names what to import and render. It is one-to-one: `FullscreenDialog` is its
   own component even though its docs redirect to `Dialog`'s page.
 
-Collapsing the two fields into one value has shipped a bug before. Read the field that
-answers your question: `docs` to build a documentation link, `export` to name the
-component in code.
+Use `docs` to build a documentation link and `export` to name the component in
+code.
 
 `package` selects RSP's S2 or shared AI documentation route. `docsSection`
 selects SWC's ordinary component or AI Toolkit pattern group in Storybook.
@@ -243,10 +244,11 @@ commit changes to bot-owned branches, and create or update pull requests. The
 status build runs after source extraction so each pull request keeps the source
 data and combined outputs synchronized.
 
-Figma uses a separate manually dispatched validation workflow. It requires a
-configured secret, runs default-branch code, and reports changes without writing
-to the repository. Local authenticated discovery is the initial validation path
-for an unmerged feature branch.
+Figma validation runs daily at 08:15 UTC and supports manual dispatch through
+`.github/workflows/validate-figma-discovery.yml`. It requires `FIGMA_TOKEN`,
+runs default-branch code, and reports generated changes without committing,
+pushing, or opening a pull request. Use local authenticated discovery to validate
+an unmerged feature branch.
 
 When an automation diff is unexpectedly large:
 

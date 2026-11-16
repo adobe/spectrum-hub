@@ -162,9 +162,12 @@ Figma presence maps to Available unless overridden. Names containing
 
 ## Secondary guidance and verification
 
-`figma-secondary-status.json` is authored web-only guidance, not a discovery
-roster or a source selector. See [STATUS-FILES.md](../docs/STATUS-FILES.md) for
-the complete authoring map.
+`figma-secondary-status.json` supplies authored web-only guidance. The builder
+also adds its names to web Figma membership after canonical normalization and
+exclusions. An overlay entry can produce an Available Figma cell without a
+discovered design. It does not supply a source/file/node reference or a source
+selector; a Design link requires a resolved design from `components.json`.
+See [STATUS-FILES.md](../docs/STATUS-FILES.md) for the complete authoring map.
 
 Credential-free checks:
 

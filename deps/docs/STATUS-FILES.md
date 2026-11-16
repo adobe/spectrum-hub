@@ -58,7 +58,8 @@ has no comments. Run `node deps/build-status-index.js` to regenerate them.
 | [`deps/status-overrides.json`](../status-overrides.json) | canonical name → platform → impl | Manual status override, applied last — wins over anything auto-detected. |
 | [`scripts/utils/figma-sources.js`](../../scripts/utils/figma-sources.js) | stable source ID | Figma library label, platform, file key, and URL name, shared by discovery and browser links. |
 | [`deps/roster-excludes.json`](../roster-excludes.json) | — (flat list) | Canonical names to drop from web membership across sources. Native design membership is independent. |
-| `deps/rsp/rsp-secondary-status.json`, `deps/swc/swc-secondary-status.json`, `deps/figma/figma-secondary-status.json` | canonical name | Per-implementation secondary guidance text shown under the primary status badge. |
+| `deps/rsp/rsp-secondary-status.json`, `deps/swc/swc-secondary-status.json` | display name, normalized to canonical name | Per-implementation secondary guidance text shown under the primary status badge. |
+| `deps/figma/figma-secondary-status.json` | display name, normalized to canonical name | Web Figma guidance and membership. Names contribute Figma presence even without a discovered design; node references require a resolved roster entry. |
 
 ### Generated extraction inputs
 
@@ -196,8 +197,11 @@ Published SWC AI Toolkit components live under `patterns/ai-toolkit/` in
 `docsSection: "patterns-ai-toolkit"` from this grouping. Ordinary SWC components keep the
 default `components` group. Both use the same npm package and SWC status column.
 
-The generated section applies to implementation widgets and Code pills.
-`upstreamName` still selects a different documentation slug when necessary:
-Response Status Step links to Response Status's page; Suggestion Item links to
-the nested `suggestion-group-suggestion-item` page. Neither redirect changes
-the real tag used by the playground.
+The generated section applies to implementation widgets and Code pills for
+components retained in the web roster. An `upstreamName` alias selects a shared
+or nested documentation page without changing the published tag or module path.
+
+Response Status Step and Suggestion Item have authored documentation aliases,
+but `roster-excludes.json` excludes both from web membership. Neither contributes
+`docs` or `docsSection` metadata to `impl-component-names.js`, so their aliases
+do not provide runtime documentation redirects.
