@@ -2,7 +2,7 @@ import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
-4
+
 // TODO: Once mobile-status-regen generates metadata for excluded components, verify these
 // child-page links against the generated catalog as well as the unit fixtures.
 const CHILD_PATTERN_NAMES = {

@@ -26,8 +26,9 @@ to avoid loading unused components.
 
 ## Component data flow
 
-Spectrum Hub combines implementation data from React Spectrum S2 and AI Toolkit
-(RSP), Spectrum Web Components (SWC), and platform-specific Figma libraries:
+Spectrum Hub combines code implementation data from React Spectrum (RSP) and
+Spectrum Web Components (SWC) with design data from the Figma S2 Web, Spectrum AI
+Toolkit, iOS, and Android libraries:
 
 ```mermaid
 flowchart TD
