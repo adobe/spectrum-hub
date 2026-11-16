@@ -170,6 +170,15 @@ runtime reads these keys:
 | `light-bg` | Background image used for the light color scheme. |
 | `dark-bg` | Background image used for the dark color scheme. |
 | `audience` | Used by the production edge to classify private pages. |
+| `card-title` | A card-grid-item's display title. |
+| `card-description` | A card-grid-item's description. |
+| `card-steward` | The person shepherding a certain pattern. |
+| `card-design-resources` | Internal Adobe links to design resources for a particular pattern. |
+| `card-contact` | Internal Adobe Slack channels or support routes. |
+| `card-image` | A card-grid-item's image. |
+| `card-subject` | A card-grid-item's subject. |
+| `card-team` | The team who owns a certain pattern. |
+| `card-category` | A card-grid-item's category. |
 
 Metadata values are strings. Check the consuming code before inventing a new
 value or assuming a truthy value has special semantics.
@@ -186,30 +195,6 @@ owners below, rather than a `templates/` registry:
 
 Keep new block-specific composition in the closest owning block. Reserve
 `scripts.js` for page setup that is genuinely universal.
-
-### Component and pattern page actions
-
-Page actions use the current route, independently of the page's template:
-
-| Route | Link selection |
-| --- | --- |
-| `/web/<impl>/components/<slug>` | The web implementation and component slug |
-| `/web/<impl>/patterns/<group>/<slug>` | The web implementation and final slug; nested groups are supported |
-| `/mobile/components/<slug>` | Separate iOS and Android links, using the mobile page aliases |
-| `/mobile/ios/components/<slug>` or `/mobile/android/components/<slug>` | Only the requested native platform |
-
-At viewport widths of 1200px or more, component and pattern pages keep their
-page actions even without `<h2>` headings. The navigation is labeled **Page
-actions** in that case, with no empty table of contents. Below that breakpoint,
-page-nav is absent. `pagenav: off` and the marketing template still disable it.
-
-Route recognition does not create a page hero or status block. Automatic status
-composition still requires `template: component`. Native **Code documentation**
-pills link to documentation, not measured code availability. Design pills and
-Figma actions follow the existing private-audience rules.
-
-See [Status and link mappings](../deps/docs/STATUS-FILES.md) for mobile aliases,
-documentation targets, and the known excluded-child-page limitation.
 
 ## Fragments
 

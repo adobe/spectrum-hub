@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { figmaNodeUrl, decorateSeeInFigma } from '../../scripts/utils/figma.js';
+import { figmaNodeUrl, getFigmaLinks, decorateSeeInFigma } from '../../scripts/utils/figma.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 import { FIGMA_SOURCES } from '../../scripts/utils/figma-sources.js';
 import { getConfig } from '../../scripts/ak.js';
@@ -23,6 +23,20 @@ describe('figma block', () => {
 
   afterEach(() => {
     logStub.restore();
+  });
+
+  it('resolves the selected native design from parsed context without a pathname', () => {
+    const context = { platform: 'mobile', impl: null, slug: 'buttons' };
+    const data = Object.fromEntries(FIGMA_SOURCES.map((source) => [
+      source.platform,
+      { figma: { figmaSource: source.id, figmaFile: source.fileKey, figmaPageId: '1:2' } },
+    ]));
+    const links = getFigmaLinks(context, data, ['android']);
+    expect(links).to.have.lengthOf(1);
+    expect(links[0].platform).to.equal('android');
+    expect(links[0].href).to.equal(
+      'https://www.figma.com/design/Yzbd4jgLTo6KhEPZKwv1WA/S2---Android?node-id=1-2&m=dev',
+    );
   });
 
   describe('figmaNodeUrl — Figma page id → dev-mode URL', () => {

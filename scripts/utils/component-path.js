@@ -6,6 +6,13 @@
  * (deps/build-status-index.js) — one definition instead of each consumer hand-copying it.
  */
 
+export const NATIVE_PLATFORMS = { ios: 'iOS', android: 'Android' };
+
+export function platformsForContext(context) {
+  if (!context) { return []; }
+  return context.platform === 'mobile' ? Object.keys(NATIVE_PLATFORMS) : [context.platform];
+}
+
 /**
  * `ActionButton` -> `action-button`: the kebab slug used in component-page URLs
  * (`/web/<impl>/components/<slug>`) and in the per-component status file names
@@ -19,17 +26,6 @@ export function toSlug(name) {
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
     .toLowerCase();
-}
-
-const MOBILE_PAGE_COMPONENTS = {
-  buttons: { ios: 'button', android: 'button' },
-  switches: { ios: 'switch', android: 'switch' },
-  'snackbars-and-toasts': { ios: 'toast', android: 'snackbar' },
-  'toggle-buttons': { ios: 'toggle-button', android: 'toggle-button-same-content' },
-};
-
-export function componentSlugForPlatform(slug, platform) {
-  return MOBILE_PAGE_COMPONENTS[slug]?.[platform] ?? slug;
 }
 
 function patternContextFromParts(parts) {

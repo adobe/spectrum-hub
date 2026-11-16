@@ -67,14 +67,45 @@ const WIDGETS = [
   },
 ];
 
+function authoredWidgets(blocks) {
+  return [...blocks].flatMap(([block, resources]) => {
+    const isPublic = Boolean(block.closest('.audience-public'));
+    const isPrivate = Boolean(block.closest('.audience-private'));
+    return resources.flatMap(({ kind, text, link }) => {
+      if (!link) { return []; }
+      const name = kind === 'design' ? 'see-in-figma' : 'go-to-impl';
+      const widget = WIDGETS.find((entry) => entry.name === name);
+      return [{
+        ...widget,
+        public: isPublic,
+        private: isPrivate || widget.private,
+        label: text,
+        href: link.href,
+        decorate: (anchor) => {
+          anchor.href = link.href;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener noreferrer';
+          anchor.setAttribute('aria-label', `${text}. Opens ${link.dest} in a new tab.`);
+        },
+      }];
+    });
+  });
+}
+
 // Builds and decorates the URL-appropriate widget buttons/links and appends
 // them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
   const isComponentPage = isComponentPath(window.location.pathname);
   const isPatternsPage = isPatternsPath(window.location.pathname);
-  const candidates = WIDGETS.filter(
-    (widget) => shouldRenderWidget(widget, isComponentPage, isPatternsPage),
-  );
+  const page = document.querySelector('main');
+  let authored;
+  if (page?.querySelector('.component-status') || page?.hasAttribute('data-authored-component-status')) {
+    const { getAuthoredStatusBlocks } = await import('../../scripts/utils/authored-status.js');
+    authored = getAuthoredStatusBlocks(page);
+  }
+  const candidates = authored?.size
+    ? [...WIDGETS.filter((widget) => GLOBAL_WIDGETS.has(widget.name)), ...authoredWidgets(authored)]
+    : WIDGETS.filter((widget) => shouldRenderWidget(widget, isComponentPage, isPatternsPage));
   if (!candidates.length) { return; }
 
   const group = document.createElement('div');
@@ -86,15 +117,31 @@ async function renderWidgets(el) {
   );
   group.append(...elements);
 
-  await Promise.all(candidates.map(({ private: isPrivate }, i) => (
-    isPrivate ? removeForAudience({ privateEl: elements[i] }) : undefined
+  await Promise.all(candidates.map(({ public: isPublic, private: isPrivate }, i) => (
+    isPublic || isPrivate ? removeForAudience({
+      publicEl: isPublic ? elements[i] : null,
+      privateEl: isPrivate ? elements[i] : null,
+    }) : undefined
   )));
 
   const survivingWidgets = candidates
     .map((widget, i) => ({ ...widget, element: elements[i] }))
     .filter(({ element }) => group.contains(element));
+  const seen = new Set();
+  const uniqueWidgets = survivingWidgets.filter(({
+    name, label, href, element,
+  }) => {
+    if (!href) { return true; }
+    const key = JSON.stringify([name, label, href]);
+    if (seen.has(key)) {
+      element.remove();
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
   await Promise.all(
-    survivingWidgets.map(({ decorate, element }) => decorate(element)),
+    uniqueWidgets.map(({ decorate, element }) => decorate(element)),
   );
 
   if (!group.children.length) { return; }
@@ -247,7 +294,8 @@ function navigateToHeading(heading) {
   const headings = [...document.querySelectorAll('main h2')];
   if (!headings.length
     && !isComponentPath(window.location.pathname)
-    && !isPatternsPath(window.location.pathname)) {
+    && !isPatternsPath(window.location.pathname)
+    && !document.querySelector('main .component-status, main[data-authored-component-status]')) {
     return;
   }
 

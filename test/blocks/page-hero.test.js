@@ -109,6 +109,36 @@ describe('page-hero block', () => {
     return div;
   }
 
+  function authoredStatusBlock() {
+    const el = document.createElement('div');
+    el.className = 'component-status';
+    el.innerHTML = `
+      <div><div>Code deprecated</div><div><a href="/legacy">Legacy implementation</a></div></div>
+    `;
+    return el;
+  }
+
+  for (const template of [undefined, 'component']) {
+    it(`initializes an authored status nested in a ${template ?? 'non-component'} hero`, async () => {
+      const fetch = stubStatusFetch();
+      window.history.pushState({}, '', '/content/manual-status');
+      const init = await loadPageHero({ template });
+      const manualStatus = authoredStatusBlock();
+      const el = mount([heading(), manualStatus]);
+
+      init(el);
+
+      expect(el.querySelectorAll('.component-status')).to.have.lengthOf(1);
+      expect(manualStatus.dataset.blockName).to.equal('component-status');
+      await waitFor(
+        () => manualStatus.querySelector('.component-status-pill'),
+        'the authored status pill',
+      );
+      expect(manualStatus.textContent.trim()).to.equal('Code deprecated');
+      expect(fetch.called).to.be.false;
+    });
+  }
+
   describe('without a heading', () => {
     it('replaces the block content with a "No heading found" message', async () => {
       const init = await loadPageHero();
@@ -183,6 +213,30 @@ describe('page-hero block', () => {
   });
 
   describe('on a component page', () => {
+    it('does not insert an automatic status when another section provides one', async () => {
+      const fetch = stubStatusFetch();
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero({ template: 'component', description: 'A clickable action.' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const heroSection = document.createElement('div');
+      const manualSection = document.createElement('div');
+      const manualStatus = authoredStatusBlock();
+      heroSection.append(el);
+      manualSection.append(manualStatus);
+      main.append(heroSection, manualSection);
+      document.body.append(main);
+
+      init(el);
+
+      expect(main.querySelectorAll('.component-status')).to.have.lengthOf(1);
+      expect(el.querySelector('.component-status')).to.be.null;
+      expect(el.querySelector('.description').textContent).to.equal('A clickable action.');
+      expect(manualStatus.parentElement).to.equal(manualSection);
+      expect(manualStatus.dataset.blockName).to.be.undefined;
+      expect(fetch.called).to.be.false;
+    });
+
     it('appends the description from metadata after the heading', async () => {
       stubStatusFetch();
       window.history.pushState({}, '', COMPONENT_PATH);

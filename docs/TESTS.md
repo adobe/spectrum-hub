@@ -78,6 +78,9 @@ Prefer testing observable block output and focused helper behavior. Reset the
 DOM, stubs, local storage, and imported state between cases so results do not
 depend on execution order.
 
+Run suites that share authentication cookies serially with `--concurrency 1`
+to prevent interference between browser suites.
+
 Use inline DOM setup in `*.test.js` for focused block and helper behavior. Keep
 the markup near the assertion, and extract a local helper when several cases
 share the same authored shape.
@@ -88,45 +91,6 @@ behavior requires a real page load or the full decoration pipeline. Playwright
 accessibility fixtures belong in `test/a11y/fixtures/` and must follow
 [`test/a11y/README.md`](../test/a11y/README.md). Do not move small unit-test
 markup into a shared HTML file only to reduce line count.
-
-### Authored status pills and page actions
-
-`test/blocks/component-status.test.js`, `test/blocks/page-hero.test.js`, and
-`test/blocks/page-nav.test.js` cover authored status rows and the automatic
-fallback. The shared parser in `scripts/utils/authored-status.js` supplies both
-pills and navigation actions. Cases cover preserved labels, optional links,
-multiple instances, audience restrictions, and either initialization order.
-They also check that authored resources replace automatic actions, including
-when every authored row is unlinked, invalid, or hidden.
-
-Run the three files together:
-
-```bash
-npm run test:file -- 'test/blocks/{component-status,page-hero,page-nav}.test.js' --concurrency 1
-```
-
-Run these files serially to isolate the shared authentication cookie between
-browser suites. The corresponding specs in `test/a11y/blocks/` cover semantics
-and accessibility; the page-nav spec also checks authored action focus order.
-
-### Documentation-link regressions
-
-`test/blocks/go-to-impl.test.js` and `test/blocks/component-status.test.js`
-include nested Response Status Step and Suggestion Item cases using the
-committed documentation catalog. The Code pill cases also fetch the committed
-`deps/status/<slug>.json` slices. They assert the expected AI Toolkit Storybook
-destinations without injecting missing aliases or `docsSection` metadata.
-
-Run both files:
-
-```bash
-npm run test:file -- 'test/blocks/{component-status,go-to-impl}.test.js'
-```
-
-These are local routing and shipped-data checks, not live upstream link crawls.
-They expose the [excluded-child-page limitation](../deps/docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
-Keep them separate from injected-metadata unit cases: a passing fixture case
-does not prove that the shipped catalog supplies the metadata.
 
 ## Accessibility tests
 
@@ -220,8 +184,7 @@ metadata, so each is asserted on a page representative of how it ships:
 `/` is the marketing template, the only one that carries the audience-gated
 banner. `/web/rsp/components/button` uses the `component` template and verifies
 the automatic hero, breadcrumbs, and status pills when no status block is
-provided. Authored status behavior is covered separately by the
-[authored status pills and page actions tests](#authored-status-pills-and-page-actions).
+provided.
 
 ### Page error capture
 

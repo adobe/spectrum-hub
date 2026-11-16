@@ -17,7 +17,12 @@ Table columns are opt-out, not opt-in: an unrecognised row key is appended as a 
 
 - RSP: doc maturity from the S2 docs site ([react-spectrum.adobe.com](https://react-spectrum.adobe.com)), fetched live by `extract-doc-status.js`; props resolved from `@react-spectrum/s2` `.d.ts` files on unpkg/jsDelivr with the TypeScript compiler and type checker.
 - SWC: the published `@adobe/spectrum-wc` Custom Elements Manifest, fetched from the `latest` distribution tag by `extract-cem-components.js`. The extractor records the resolved concrete package version in `deps/swc/version.json`, and `discover-components.js` generates `components.json` from the same published CEM.
-- RSP AI Toolkit: `package: "ai"` entries in `deps/rsp/components.json` resolve props from `@react-spectrum/ai` and maturity from its shared documentation page. They remain part of the RSP implementation, not a separate status column.
+- AI Toolkit: For RSP, `package: "ai"` entries in `deps/rsp/components.json`
+  resolve props from `@react-spectrum/ai` and maturity from its shared
+  documentation page. For SWC, pattern entries are discovered from `patterns/`
+  module paths in the published CEM, with props and maturity resolved by the SWC
+  pipeline. Toolkit entries remain part of their respective implementations,
+  not a separate status column.
 - Figma: published component sets from the S2 Web, Spectrum AI Toolkit, S2 iOS, and S2 Android libraries. The source registry, authentication, and roster schema are documented in [deps/figma/README.md](../figma/README.md).
 
 ## Summary
@@ -149,9 +154,12 @@ The index is emitted so a single fetch is interpretable without also reading `st
 
 The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](../build-status-index.js), so the embedded definitions never drift from the adapter.
 
-Native platform metadata is emitted when that platform has selected designs.
-Native cells contain Figma only. Native Code documentation links are resolved
-separately by `scripts/utils/go-to-impl.js`; they do not claim code availability
+Native platform sections are emitted for selected designs or explicit naming
+overrides. Figma is their only availability cell. Optional `page`, `upstreamName`,
+and `package` fields live directly under `ios`/`android`, outside `figma`, and
+carry naming metadata only. They generate native page aliases and documentation
+targets in `deps/impl-component-names.js`. Native Code documentation links are
+resolved by `scripts/utils/go-to-impl.js`; they do not claim code availability
 or derive it from Figma status. Native-only components do not get web cells or
 enter the web table's rows, counts, search results, or CSV export.
 
@@ -228,6 +236,9 @@ implementation or package. The generated `docsSection` in
 `impl-component-names.js` selects Storybook's `patterns-ai-toolkit` group instead
 of `components`. An `upstreamName` alias handles a shared or nested docs page
 without changing the real SWC tag.
+Documentation metadata comes from the full joined public catalog. Composition
+exclusions still remove status rows and newly generated slices, but do not
+remove documentation aliases, package metadata, or Storybook sections.
 
 ## Deprecation signals
 

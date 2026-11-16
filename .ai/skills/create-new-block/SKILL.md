@@ -66,9 +66,7 @@ block, rather than a `templates/` registry:
 
 `component-status` supports both composition modes. Empty blocks use automatic
 route-based resolution; authored rows supply pills and linked page-nav actions
-through `scripts/utils/authored-status.js`. See
-[Authored component status](../../../docs/CONTENT_AUTHORING.md#authored-component-status)
-for the authoring contract.
+through the [shared parser](../../../scripts/utils/authored-status.js).
 
 Keep block-specific composition in the closest owning block. Add logic to
 `scripts.js` only when it is genuinely universal page setup; use the

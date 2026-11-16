@@ -1,5 +1,7 @@
 import { fetchComponentPageSlice } from './component-slice.js';
-import { componentContextFromPath } from './component-path.js';
+import {
+  componentContextFromPath, platformsForContext, NATIVE_PLATFORMS,
+} from './component-path.js';
 import { FIGMA_SOURCES } from './figma-sources.js';
 import { getImplementationById } from './implementations.js';
 import { getConfig } from '../ak.js';
@@ -19,15 +21,11 @@ export function figmaNodeUrl(figmaPageId, sourceId, fileKey) {
   return `https://www.figma.com/design/${source.fileKey}/${source.urlName}?node-id=${nodeId}&m=dev`;
 }
 
-export const NATIVE_PLATFORMS = { ios: 'iOS', android: 'Android' };
-
 /** Both Design widgets consume the same platform-specific, build-selected references. */
-export function getFigmaLinks(pathname, componentData) {
-  const context = componentContextFromPath(pathname);
+export function getFigmaLinks(context, componentData, platforms = platformsForContext(context)) {
   if (!context || (context.platform === 'web' && !getImplementationById(context.impl))) {
     return [];
   }
-  const platforms = context.platform === 'mobile' ? Object.keys(NATIVE_PLATFORMS) : [context.platform];
   return platforms.flatMap((platform) => {
     const cell = componentData?.[platform]?.figma;
     if (!cell?.figmaPageId) { return []; }
@@ -45,8 +43,9 @@ export function getFigmaLinks(pathname, componentData) {
 
 export async function decorateSeeInFigma(a, span) {
   const context = componentContextFromPath(window.location.pathname);
-  const componentData = context ? await fetchComponentPageSlice(context) : null;
-  const links = getFigmaLinks(window.location.pathname, componentData);
+  const platforms = platformsForContext(context);
+  const componentData = context ? await fetchComponentPageSlice(context, platforms) : null;
+  const links = getFigmaLinks(context, componentData, platforms);
   if (!links.length) {
     a.remove();
     return;

@@ -1,7 +1,12 @@
 import { getConfig } from '../ak.js';
-import { componentSlugForPlatform } from './component-path.js';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
+import { toSlug, platformsForContext } from './component-path.js';
 
 const cache = new Map();
+
+export function componentSlugForPlatform(slug, platform, componentNames = IMPL_COMPONENT_NAMES) {
+  return toSlug(componentNames[platform]?.[slug]?.canonical ?? slug);
+}
 
 async function fetchSlice(slug) {
   const { codeBase = '' } = getConfig();
@@ -32,9 +37,9 @@ export function fetchComponentSlice(slug) {
 }
 
 /** Resolves mobile DA aliases without renaming or mixing canonical component slices. */
-export async function fetchComponentPageSlice({ slug, platform }) {
+export async function fetchComponentPageSlice(context, platforms = platformsForContext(context)) {
+  const { slug, platform } = context;
   if (platform === 'web') { return fetchComponentSlice(slug); }
-  const platforms = platform === 'mobile' ? ['ios', 'android'] : [platform];
   const slices = await Promise.all(platforms.map((nativePlatform) => (
     fetchComponentSlice(componentSlugForPlatform(slug, nativePlatform))
   )));

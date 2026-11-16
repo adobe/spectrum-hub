@@ -91,7 +91,55 @@ export default {
     "ai-button": {
       "package": "ai"
     },
+    "attach-file-menu-item": {
+      "package": "ai"
+    },
+    "attachment": {
+      "package": "ai"
+    },
+    "attachment-grid": {
+      "package": "ai"
+    },
+    "attachment-grid-item": {
+      "package": "ai"
+    },
+    "attachment-list": {
+      "package": "ai"
+    },
+    "attachment-preview": {
+      "package": "ai"
+    },
+    "chat": {
+      "package": "ai"
+    },
+    "command-menu-item": {
+      "package": "ai"
+    },
+    "execution-trace": {
+      "package": "ai"
+    },
+    "execution-trace-item": {
+      "package": "ai"
+    },
+    "insert-menu-button": {
+      "package": "ai"
+    },
+    "insert-text-menu-item": {
+      "package": "ai"
+    },
+    "insert-token-menu-item": {
+      "package": "ai"
+    },
     "message-feedback": {
+      "package": "ai"
+    },
+    "message-source": {
+      "package": "ai"
+    },
+    "message-suggestion": {
+      "package": "ai"
+    },
+    "number-badge": {
       "package": "ai"
     },
     "pixel-loader": {
@@ -100,7 +148,37 @@ export default {
     "prompt-field": {
       "package": "ai"
     },
+    "prompt-field-attachment-list": {
+      "package": "ai"
+    },
+    "prompt-field-submit-button": {
+      "package": "ai"
+    },
+    "prompt-field-toolbar": {
+      "package": "ai"
+    },
+    "prompt-field-voice-button": {
+      "package": "ai"
+    },
+    "prompt-token": {
+      "package": "ai"
+    },
+    "prompt-token-field": {
+      "package": "ai"
+    },
     "response-status": {
+      "package": "ai"
+    },
+    "response-status-panel": {
+      "package": "ai"
+    },
+    "response-status-title": {
+      "package": "ai"
+    },
+    "source-list-item": {
+      "package": "ai"
+    },
+    "thread-load-more-item": {
       "package": "ai"
     },
     "toast": {
@@ -138,10 +216,21 @@ export default {
     "response-status": {
       "docsSection": "patterns-ai-toolkit"
     },
+    "response-status-step": {
+      "docs": "ResponseStatus",
+      "docsSection": "patterns-ai-toolkit"
+    },
     "suggestion-group": {
       "docsSection": "patterns-ai-toolkit"
     },
+    "suggestion-item": {
+      "docs": "SuggestionGroupSuggestionItem",
+      "docsSection": "patterns-ai-toolkit"
+    },
     "system-message": {
+      "docsSection": "patterns-ai-toolkit"
+    },
+    "upload-attachment": {
       "docsSection": "patterns-ai-toolkit"
     },
     "user-message": {

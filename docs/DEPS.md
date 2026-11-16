@@ -62,35 +62,14 @@ The generated outputs feed:
 | `blocks/status-table/` | `deps/status-index.json`, filtered to components with web cells |
 | `blocks/component-status/` | Canonical `deps/status/<slug>.json` slices for automatically generated status pills |
 | `scripts/utils/figma.js` | The same canonical slices for each requested platform's selected source/file/node reference |
-| `scripts/utils/go-to-impl.js` | `deps/impl-component-names.js` for web documentation; route aliases and native URL rules for iOS/Android documentation |
+| `scripts/utils/go-to-impl.js` | Canonical status slices to gate automatic actions; `deps/impl-component-names.js` for documentation names, native page aliases, packages, and SWC Storybook sections |
 | `blocks/playground/` | `deps/impl-component-names.js` for export names, plus the raw `deps/rsp/data` and `deps/swc/data` catalogs |
 
-In automatic mode, `component-status` and `figma.js` use `fetchComponentPageSlice` in
-`scripts/utils/component-slice.js`. Fetches are memoized per canonical slug for
-the page's lifetime. Shared mobile pages can combine two slices: Snackbars and
-toasts reads iOS from `toast.json` and Android from `snackbar.json`. Both
-consumers see the same override-resolved references, so a `figmaPageSource`
-override applies to the Figma action and Design pill alike.
-
-Authored status rows bypass generated status and link resolution.
-`scripts/utils/authored-status.js` supplies the shared row models to
-`component-status` and `page-nav`. Their authored resources replace the entire
-automatic implementation and Figma action set, even when no linked or
-audience-visible rows remain. Design pills and actions still follow the
-private-audience rules. Empty blocks and pages without authored rows retain
-automatic resolution. See
-[Authored component status](./CONTENT_AUTHORING.md#authored-component-status)
-for the row format and precedence rules.
-
-Mobile page aliases live in `scripts/utils/component-path.js`. They do not
-rename generated files or require a status rebuild. Native documentation URLs
-are resolved separately in `scripts/utils/go-to-impl.js`; they do not add native
-code cells to the status model. Automatic native actions do not depend on a
-visible status pill or a fetched status slice. Their URLs are assembled from
-route rules, not checked against a native documentation catalog, so a rendered
-action does not establish that its destination exists. See
-[Status and link mappings](../deps/docs/STATUS-FILES.md) for the route rules,
-native naming exceptions, and excluded pattern-child limitations.
+Automatic status and resource-link consumers share canonical component slices,
+cached per slug for the page's lifetime. Authored status rows bypass generated
+status and link resolution. See
+[Status and link mappings](../deps/docs/STATUS-FILES.md) for mapping inputs and
+resolution rules.
 
 Status consumers should read the generated model, not independently reinterpret
 raw RSP, SWC, or Figma status values. The playground intentionally reads raw
@@ -104,7 +83,7 @@ Edit these files for intentional re-mappings:
 | File | Purpose |
 | --- | --- |
 | `deps/component-aliases.json` | Reconciles source-specific names with canonical component names and documentation names |
-| `deps/status-overrides.json` | Overrides automatically detected status or link data |
+| `deps/status-overrides.json` | Overrides status or link data; supplies platform-level native page and documentation naming metadata |
 | `deps/roster-excludes.json` | Removes composition parts from web membership without excluding native designs |
 | `scripts/utils/figma-sources.js` | Registers Figma library identity and platform |
 | `deps/rsp/rsp-secondary-status.json` | Adds RSP guidance below a primary status |
@@ -242,9 +221,11 @@ models:
 | [`PLAYGROUND-CONTRACT.md`](../deps/docs/PLAYGROUND-CONTRACT.md) | Changing property controls, snippets, component names, or playground lookups |
 | [`REMOVED-DETECTION.md`](../deps/docs/REMOVED-DETECTION.md) | Changing how removed components are detected |
 
-`deps/impl-component-names.js` has optional documentation, export, package, and
-Storybook-section metadata. Its two name fields are not interchangeable:
+`deps/impl-component-names.js` has optional canonical-component, documentation,
+export, package, and Storybook-section metadata. Its name fields are not
+interchangeable:
 
+- `canonical` identifies the component whose status slice a native page alias reads.
 - `docs` names the page the implementation's own documentation site publishes it on. It
   is many-to-one: RSP's `AlertDialog`, `Dialog`, and `FullscreenDialog` all link to
   `Dialog.html`.
@@ -254,8 +235,9 @@ Storybook-section metadata. Its two name fields are not interchangeable:
 Use `docs` to build a documentation link and `export` to name the component in
 code.
 
-`package` selects RSP's S2 or shared AI documentation route. `docsSection`
-selects SWC's ordinary component or AI Toolkit pattern group in Storybook.
+`package` selects RSP's S2 or shared AI documentation route, or Android's
+documentation package suffix. `docsSection` selects SWC's ordinary component or
+AI Toolkit pattern group in Storybook.
 Neither field changes the component's status implementation.
 
 ## Automation
