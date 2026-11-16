@@ -167,6 +167,25 @@ describe('component-status block', () => {
   });
 
   describe('buildPills — Code pill link', () => {
+    for (const [parent, slug, docsSlug] of [
+      ['response-status', 'response-status-step', 'response-status'],
+      ['suggestion-group', 'suggestion-item', 'suggestion-group-suggestion-item'],
+    ]) {
+      it(`links nested ${slug}'s Code pill using shipped status and documentation data`, async () => {
+        const response = await fetch(`/deps/status/${slug}.json`);
+        expect(response.ok, `status slice for ${slug}`).to.be.true;
+        const pills = buildPills(
+          `/web/swc/patterns/conversational-ai/${parent}/${slug}`,
+          await response.json(),
+        );
+        const code = pills.find((pill) => pill.dataset.kind === 'dev');
+        expect(code).to.exist;
+        expect(code.getAttribute('href')).to.equal(
+          `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
+        );
+      });
+    }
+
     it('shares pattern documentation metadata and the selected AI Toolkit design with widgets', () => {
       const source = FIGMA_SOURCES.find(({ id }) => id === 'ai-toolkit');
       const metadata = sinon.stub(IMPL_COMPONENT_NAMES, 'swc').value({

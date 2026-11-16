@@ -3,8 +3,6 @@ import sinon from 'sinon';
 import { resolveImplementation, decorateGoToImpl } from '../../scripts/utils/go-to-impl.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 
-// TODO: Once mobile-status-regen generates metadata for excluded components, verify these
-// child-page links against the generated catalog as well as the unit fixtures.
 const CHILD_PATTERN_NAMES = {
   swc: {
     'response-status-step': { docs: 'ResponseStatus', docsSection: 'patterns-ai-toolkit' },
@@ -215,6 +213,20 @@ describe('go-to-impl block', () => {
   });
 
   describe('decorateGoToImpl', () => {
+    for (const [parent, slug, docsSlug] of [
+      ['response-status', 'response-status-step', 'response-status'],
+      ['suggestion-group', 'suggestion-item', 'suggestion-group-suggestion-item'],
+    ]) {
+      it(`links nested ${slug} using the shipped documentation catalog`, () => {
+        window.history.pushState({}, '', `/web/swc/patterns/conversational-ai/${parent}/${slug}`);
+        const a = makeAnchor();
+        decorateGoToImpl(a, a.querySelector('span'));
+        expect(a.getAttribute('href')).to.equal(
+          `https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-${docsSlug}--docs`,
+        );
+      });
+    }
+
     it('renders both native documentation actions on shared mobile pages', () => {
       window.history.pushState({}, '', '/mobile/components/buttons');
       const a = makeAnchor();
