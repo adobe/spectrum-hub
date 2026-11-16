@@ -22,7 +22,8 @@
       "figmaSource": "s2-android",
       "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
       "figmaPageId": "2002:3805"
-    }
+    },
+    "page": "buttons"
   },
   "ios": {
     "figma": {
@@ -30,6 +31,7 @@
       "figmaSource": "s2-ios",
       "figmaFile": "OQExiy8bX0pRqee71eAWX6",
       "figmaPageId": "3956:67276"
-    }
+    },
+    "page": "buttons"
   }
 }

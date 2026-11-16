@@ -351,7 +351,8 @@
             "figmaSource": "s2-android",
             "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
             "figmaPageId": "2002:3805"
-          }
+          },
+          "page": "buttons"
         },
         "ios": {
           "figma": {
@@ -359,7 +360,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "3956:67276"
-          }
+          },
+          "page": "buttons"
         }
       }
     },
@@ -1330,6 +1332,18 @@
             "status": "available",
             "context": "Stable"
           }
+        },
+        "ios": {
+          "figma": {
+            "status": "available",
+            "figmaPageSource": "Menu",
+            "note": "Use the iOS 26 Menu Elements design.",
+            "figmaSource": "s2-ios",
+            "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+            "figmaPageId": "5890:12308"
+          },
+          "page": "menus",
+          "upstreamName": "spmenu"
         }
       }
     },
@@ -1562,7 +1576,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "4562:33703"
-          }
+          },
+          "page": "pickers"
         }
       }
     },
@@ -1617,7 +1632,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "4559:30705"
-          }
+          },
+          "page": "pop-up-buttons"
         }
       }
     },
@@ -1905,7 +1921,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "17605:7445"
-          }
+          },
+          "page": "sliders"
         }
       }
     },
@@ -1933,7 +1950,10 @@
             "figmaSource": "s2-android",
             "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
             "figmaPageId": "3279:5329"
-          }
+          },
+          "page": "snackbars-and-toasts",
+          "upstreamName": "SnackbarHost",
+          "package": "snackbar"
         }
       }
     },
@@ -2170,7 +2190,8 @@
             "figmaSource": "s2-android",
             "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
             "figmaPageId": "3984:38444"
-          }
+          },
+          "page": "switches"
         },
         "ios": {
           "figma": {
@@ -2179,7 +2200,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "11368:7100"
-          }
+          },
+          "page": "switches"
         }
       }
     },
@@ -2423,7 +2445,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "7499:17007"
-          }
+          },
+          "page": "snackbars-and-toasts"
         }
       }
     },
@@ -2437,7 +2460,8 @@
             "figmaSource": "s2-ios",
             "figmaFile": "OQExiy8bX0pRqee71eAWX6",
             "figmaPageId": "5703:13400"
-          }
+          },
+          "page": "toggle-buttons"
         }
       }
     },
@@ -2465,7 +2489,9 @@
             "figmaSource": "s2-android",
             "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
             "figmaPageId": "3987:38598"
-          }
+          },
+          "page": "toggle-buttons",
+          "upstreamName": "ToggleButton"
         }
       }
     },
