@@ -1,18 +1,21 @@
 /**
- * Per-component Dev + Design status pills.
+ * Per-component Code and Design pills.
  *
- * An author-placed block (mirrors blocks/breadcrumbs): a `<div class="component-status">`
- * dropped anywhere in the page's content. Web pages show Code and Design pills.
- * Mobile pages show native Code documentation links and platform-specific Design statuses.
+ * Authored rows preserve their label text, with a Code/Design kind, an existing
+ * status, and an optional link on any page. Linked rows also supply page-nav actions.
+ * Empty blocks use the current route and generated status data. Page-hero creates an
+ * empty block for pages with `template: component` when no status block is provided.
+ *
+ * In automatic mode, web pages show Code and Design statuses. Mobile pages show native
+ * Code documentation links and platform-specific Design statuses.
  * Native documentation links do not claim code availability; no native code status is ingested.
- * Each pill has a per-status icon and a "<kind> <status>" label.
  *
- * Data comes from a per-component build-time slice (deps/status/<slug>.json, written by
+ * Automatic data comes from a build-time slice (deps/status/<slug>.json, written by
  * deps/build-status-index.js) rather than the whole combined index — one small, targeted
  * fetch instead of downloading and searching the full multi-KB roster. Shared mobile pages
- * can resolve a different canonical slice per platform. Labels bind to the
- * unified STATUSES model so they never drift from the adapter. When the path doesn't
- * resolve to an indexed component the block removes its own element (render nothing).
+ * can resolve a different canonical slice per platform. Status matching uses the
+ * unified STATUSES model. In automatic mode, the block removes itself on unsupported
+ * routes or when no status slice can be fetched.
  */
 
 import { STATUSES } from '../../scripts/utils/status-model.js';
@@ -23,15 +26,9 @@ import { getFigmaLinks, NATIVE_PLATFORMS } from '../../scripts/utils/figma.js';
 import { componentContextFromPath } from '../../scripts/utils/component-path.js';
 import { fetchComponentPageSlice } from '../../scripts/utils/component-slice.js';
 import { getConfig, removeForAudience } from '../../scripts/ak.js';
+import { STATUS_PILLS, getAuthoredStatusBlocks } from '../../scripts/utils/authored-status.js';
 
 const NOT_AVAILABLE = 'not-available';
-
-// The two pills. `column` overrides the index column looked up; when absent the
-// pill uses the current code implementation from the path (the Development/Code pill).
-const PILLS = [
-  { kind: 'dev', label: 'Code' },
-  { kind: 'design', label: 'Design', column: 'figma' },
-];
 
 // The s2-icon glyph per unified status.
 const STATUS_ICONS = {
@@ -58,13 +55,16 @@ export function resolveContext(pathname) {
 }
 
 /**
- * One status pill: a per-status icon + "<kind> <status>" label. Rendered as an
+ * One status pill with a per-status icon and a generated or authored label. Rendered as an
  * external link when `link` resolves, otherwise a static span. An absent cell
  * (e.g. Development on a design-only component) renders as Not available.
  */
-function buildPill({ kind, label: prefix, documentation = false }, cell, link) {
+function buildPill({
+  kind, label: prefix, documentation = false, text: authoredText,
+}, cell, link) {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
-  const text = `${prefix} ${documentation ? 'documentation' : status.label.toLowerCase()}`;
+  const text = authoredText
+    ?? `${prefix} ${documentation ? 'documentation' : status.label.toLowerCase()}`;
 
   const pill = document.createElement(link ? 'a' : 'span');
   pill.className = 'component-status-pill';
@@ -74,9 +74,8 @@ function buildPill({ kind, label: prefix, documentation = false }, cell, link) {
     pill.href = link.href;
     pill.target = '_blank';
     pill.rel = 'noopener noreferrer';
-    // Link text is just the status; name the destination and the new tab so the
-    // link's purpose is clear (WCAG 2.4.4). The visible label stays in the name
-    // (WCAG 2.5.3 Label in Name).
+    // Name the destination and new tab (WCAG 2.4.4), keeping the visible label
+    // in the accessible name (WCAG 2.5.3 Label in Name).
     pill.setAttribute('aria-label', `${text}. Opens ${link.dest} in a new tab.`);
   }
 
@@ -138,20 +137,30 @@ export function buildPills(pathname, componentData) {
     design: figmaLink ? { href: figmaLink.href, dest: 'Figma' } : null,
   };
 
-  return PILLS
+  return STATUS_PILLS
     .map((pill) => buildPill(pill, cells?.[pill.column ?? context.impl], links[pill.kind]))
     .filter(Boolean);
 }
 
 export default async function init(el) {
-  const context = resolveContext(window.location.pathname);
-  if (!context) {
-    el.remove();
-    return;
+  const page = el.closest('main');
+  const authored = getAuthoredStatusBlocks(page ?? el).get(el);
+  let pills;
+  if (authored) {
+    // Preserve authored intent if audience filtering removes this block before the hero loads.
+    if (page) { page.dataset.authoredComponentStatus = ''; }
+    pills = authored.map((resource) => (
+      buildPill(resource, { status: resource.status }, resource.link)
+    ));
+  } else {
+    const context = resolveContext(window.location.pathname);
+    if (!context) {
+      el.remove();
+      return;
+    }
+    const componentData = await fetchComponentPageSlice(context);
+    pills = buildPills(window.location.pathname, componentData);
   }
-
-  const componentData = await fetchComponentPageSlice(context);
-  const pills = buildPills(window.location.pathname, componentData);
   if (!pills.length) {
     el.remove();
     return;
@@ -173,7 +182,7 @@ export default async function init(el) {
     return;
   }
 
-  el.setAttribute('role', 'group');
-  el.setAttribute('aria-label', 'Component status');
+  if (!el.hasAttribute('role')) { el.setAttribute('role', 'group'); }
+  if (!el.hasAttribute('aria-label')) { el.setAttribute('aria-label', 'Component status'); }
   el.replaceChildren(...visiblePills);
 }

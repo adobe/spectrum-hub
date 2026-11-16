@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
 import { setConfig } from '../../scripts/ak.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+import initStatus from '../../blocks/component-status/component-status.js';
 
 const SAFE_CONFIG = {
   hostnames: ['authorkit.dev'],
@@ -31,6 +32,18 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
     main.append(h2);
   });
   document.body.append(main);
+}
+
+function mountAuthoredStatus(rows = `
+  <div><div>iOS code available</div><div><a href="/authored-code">iOS documentation</a></div></div>
+  <div><div>iOS design experimental</div><div><a href="https://www.figma.com/design/authored">iOS design</a></div></div>
+  <div><div>Android code not available</div><div></div></div>
+`) {
+  const block = document.createElement('div');
+  block.className = 'component-status';
+  block.innerHTML = rows;
+  document.querySelector('main').append(block);
+  return block;
 }
 
 // page-nav.js has no init export: a top-level IIFE builds its own <nav> and
@@ -903,6 +916,167 @@ describe('page-nav block', () => {
     });
   });
 
+  describe('authored status actions', () => {
+    let originalUrl;
+    let fetchStub;
+    let mql;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      mql = stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true, json: async () => ({ web: {} }),
+      });
+      resetComponentSliceCacheForTests();
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      makeDOM();
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    [false, true].forEach((statusFirst) => {
+      it(`uses authored links instead of automatic actions when ${statusFirst ? 'pills' : 'navigation'} initialize first`, async () => {
+        const source = mountAuthoredStatus();
+        if (statusFirst) { await initStatus(source); }
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        if (!statusFirst) { await initStatus(source); }
+
+        const links = [...group.querySelectorAll('a')];
+        expect(links.map((link) => link.textContent.trim()))
+          .to.deep.equal(['iOS code available', 'iOS design experimental']);
+        expect(links.map((link) => link.getAttribute('href'))).to.deep.equal([
+          `${window.location.origin}/authored-code`, 'https://www.figma.com/design/authored',
+        ]);
+        expect(links.map((link) => link.getAttribute('aria-label'))).to.deep.equal([
+          'iOS code available. Opens iOS documentation in a new tab.',
+          'iOS design experimental. Opens iOS design in a new tab.',
+        ]);
+        expect(links.every((link) => link.target === '_blank'
+          && link.rel === 'noopener noreferrer')).to.be.true;
+        expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+        expect(source.querySelectorAll('.component-status-pill')).to.have.lengthOf(3);
+        expect(fetchStub.called).to.be.false;
+      });
+    });
+
+    ['/patterns/conversational-ai/manual', '/guidance/manual'].forEach((pathname) => {
+      it(`renders authored actions without headings on ${pathname}`, async () => {
+        document.querySelectorAll('main h2').forEach((heading) => heading.remove());
+        window.history.pushState({}, '', pathname);
+        mountAuthoredStatus();
+
+        const nav = await loadPageNav();
+
+        expect(nav).to.not.be.null;
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        expect(nav.getAttribute('aria-label')).to.equal('Page actions');
+        expect(group.querySelectorAll('a')).to.have.lengthOf(2);
+        expect(fetchStub.called).to.be.false;
+      });
+    });
+
+    it('keeps unlinked pills informational without restoring automatic actions', async () => {
+      const source = mountAuthoredStatus(`
+        <div><div>iOS code not available</div><div></div></div>
+      `);
+      await initStatus(source);
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(source.querySelector('.component-status-pill').tagName).to.equal('SPAN');
+      expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+      expect(group.querySelectorAll('[data-widget]')).to.have.lengthOf(1);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('omits unsafe authored links and retains authored precedence after their block is removed', async () => {
+      const log = sandbox.spy();
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false, log });
+      const source = mountAuthoredStatus(`
+        <div><div>Code available</div><div><a href="javascript:alert(1)">Unsafe</a></div></div>
+      `);
+      await initStatus(source);
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(source.isConnected).to.be.false;
+      expect(log.calledOnce).to.be.true;
+      expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('hides authored Design actions from anonymous CDN visitors but keeps authored Code', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      const source = mountAuthoredStatus();
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      await initStatus(source);
+
+      expect([...group.querySelectorAll('a')].map((link) => link.textContent.trim()))
+        .to.deep.equal(['iOS code available']);
+      expect(source.querySelector('[data-kind="design"]')).to.be.null;
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('does not restore automatic actions after audience filtering removes every authored pill', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      const source = mountAuthoredStatus(`
+        <div><div>iOS design available</div><div><a href="/private-design">Design</a></div></div>
+      `);
+      await initStatus(source);
+      expect(source.isConnected).to.be.false;
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('combines multiple authored blocks in document order without repeating identical actions', async () => {
+      const first = mountAuthoredStatus(`
+        <div><div>iOS code available</div><div><a href="/ios">iOS</a></div></div>
+      `);
+      const second = mountAuthoredStatus(`
+        <div><div>iOS code available</div><div><a href="/ios">iOS</a></div></div>
+        <div><div>Android code available</div><div><a href="/android">Android</a></div></div>
+      `);
+      await initStatus(second);
+      await initStatus(first);
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect([...group.querySelectorAll('a')].map((link) => link.textContent.trim()))
+        .to.deep.equal(['iOS code available', 'Android code available']);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('defers authored actions below desktop and does not duplicate them on breakpoint changes', async () => {
+      mountAuthoredStatus();
+      mql.dispatch(false);
+      expect(await loadPageNav()).to.be.null;
+      expect(fetchStub.called).to.be.false;
+
+      mql.dispatch(true);
+      const nav = document.querySelector('nav.page-nav');
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      mql.dispatch(false);
+      mql.dispatch(true);
+
+      expect(nav.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+      expect(group.querySelectorAll('a')).to.have.lengthOf(2);
+      expect(fetchStub.called).to.be.false;
+    });
+  });
+
   // page-nav builds and decorates its widgets directly (no fragment, no
   // action-button dispatch) — each widget's own decoration is lazily loaded
   // from its code-split block module (copy-md.js / go-to-impl.js / figma.js).
@@ -1036,6 +1210,20 @@ describe('page-nav block', () => {
       const group = await waitForEl(el, '.page-nav-widgets');
 
       expect(group.querySelector('[data-widget="see-in-figma"]')).to.not.be.null;
+
+      el.remove();
+      document.querySelector('main').remove();
+      makeDOM({ h2Texts: [] });
+      window.history.pushState({}, '', '/patterns/authored');
+      const source = mountAuthoredStatus();
+      fetchStub.resetHistory();
+      await initStatus(source);
+      const authoredNav = await loadPageNav();
+      const authoredGroup = await waitForEl(authoredNav, '.page-nav-widgets');
+      expect(authoredGroup.querySelector('[data-widget="see-in-figma"]')?.textContent.trim())
+        .to.equal('iOS design experimental');
+      expect(source.querySelector('[data-kind="design"]')).to.not.be.null;
+      expect(fetchStub.called).to.be.false;
     });
   });
 });

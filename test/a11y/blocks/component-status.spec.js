@@ -17,6 +17,82 @@ const block = {
   ],
 };
 
+for (const colorScheme of ['light', 'dark']) {
+  test(`${block.name} authored rows in ${colorScheme} mode have no WCAG 2.2 AA violations`, async ({ page, makeAxeBuilder }) => {
+    await page.emulateMedia({ colorScheme });
+    const statusRequests = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/deps/status/')) { statusRequests.push(request.url()); }
+    });
+    await gotoBlock(page, {
+      ...block, path: `${block.path}?authored`, routes: [],
+    });
+
+    const results = await makeAxeBuilder().analyze();
+    expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+    expect(statusRequests).toHaveLength(0);
+    await expect(page.locator('.component-status-pill')).toHaveCount(3);
+    const links = page.locator('.component-status a');
+    await expect(links).toHaveCount(2);
+    for (const link of await links.all()) {
+      await expect(link).toHaveAttribute('target', '_blank');
+      await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
+    await page.keyboard.press('Tab');
+    await expect(links.nth(0)).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(links.nth(1)).toBeFocused();
+  });
+}
+
+test(`${block.name} authored rows match their expected accessibility tree`, async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'ARIA tree is browser/viewport-agnostic');
+  await gotoBlock(page, { ...block, path: `${block.path}?authored`, routes: [] });
+
+  await expect(page.locator('.component-status')).toMatchAriaSnapshot(`
+    - group "Component status":
+      - link "Android code available. Opens Android Switch documentation in a new tab.":
+        - /url: https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html
+        - text: ""
+      - link "iOS design available. Opens iOS Switch design in a new tab.":
+        - /url: https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=11371-7857&m=dev
+        - text: ""
+      - text: iOS code not available
+  `);
+});
+
+test(`${block.name} audience-hidden authored rows do not trigger automatic hero replacement`, async ({ page }) => {
+  await gotoBlock(page, { ...block, path: `${block.path}?authored` });
+  await page.evaluate(async () => {
+    const [{ setConfig }, { default: initStatus }] = await Promise.all([
+      import(new URL('/scripts/ak.js', location.origin).href),
+      import(new URL('/blocks/component-status/component-status.js', location.origin).href),
+    ]);
+    setConfig({ components: [], cdnEnv: true });
+    const main = document.createElement('main');
+    main.innerHTML = `
+      <div class="section">
+        <div class="page-hero"><h1>Switch</h1></div>
+        <div class="component-status">
+          <div><div>Design available</div><div></div></div>
+        </div>
+      </div>
+    `;
+    document.querySelector('main').replaceWith(main);
+    const meta = document.createElement('meta');
+    meta.name = 'template';
+    meta.content = 'component';
+    document.head.append(meta);
+    history.pushState({}, '', '/web/swc/components/button');
+    await initStatus(document.querySelector('.component-status'));
+    const { default: initHero } = await import(new URL('/blocks/page-hero/page-hero.js', location.origin).href);
+    initHero(document.querySelector('.page-hero'));
+  });
+
+  await expect(page.locator('.page-hero .description')).toHaveCount(1);
+  await expect(page.locator('.component-status')).toHaveCount(0);
+});
+
 test(`${block.name} shared mobile page exposes separate accessible native Design links`, async ({ page, makeAxeBuilder }, testInfo) => {
   await gotoBlock(page, {
     ...block,

@@ -198,18 +198,76 @@ Page actions use the current route, independently of the page's template:
 | `/mobile/components/<slug>` | Separate iOS and Android links, using the mobile page aliases |
 | `/mobile/ios/components/<slug>` or `/mobile/android/components/<slug>` | Only the requested native platform |
 
-At viewport widths of 1200px or more, component and pattern pages keep their
-page actions even without `<h2>` headings. The navigation is labeled **Page
-actions** in that case, with no empty table of contents. Below that breakpoint,
-page-nav is absent. `pagenav: off` and the marketing template still disable it.
+At viewport widths of 1200px or more, component pages, pattern pages, and pages
+with authored status blocks keep their page actions even without `<h2>`
+headings. The navigation is labeled **Page actions** in that case, with no empty
+table of contents. Below that breakpoint, page-nav is absent. `pagenav: off` and
+the marketing template still disable it.
 
 Route recognition does not create a page hero or status block. Automatic status
-composition still requires `template: component`. Native **Code documentation**
-pills link to documentation, not measured code availability. Design pills and
-Figma actions follow the existing private-audience rules.
+composition still requires `template: component`. When no `component-status`
+block is provided in the main content, `page-hero` creates an empty one and
+resolves its component and platform from the current URL. An empty block
+removes itself on unsupported routes or when no component status slice can be
+fetched. Automatically generated native **Code documentation** pills link to
+documentation, not measured code availability. Design pills and Figma actions
+follow the existing private-audience rules.
 
 See [Status and link mappings](../deps/docs/STATUS-FILES.md) for mobile aliases,
 documentation targets, and the known excluded-child-page limitation.
+
+### Authored component status
+
+Add a two-column `Component status` block table to provide status pills on any
+page, independently of its route or template:
+
+| Component status | |
+| --- | --- |
+| Android code available | [Android Switch documentation](https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html) |
+| iOS design available | [iOS Switch design](https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=11371-7857&m=dev) |
+| iOS code not available | |
+
+The first cell supplies the pill's text. The block preserves its wording and
+capitalization as plain text, trimming surrounding whitespace. Include either
+`code` or `design` as a whole word and exactly one of these status phrases:
+`available`, `experimental`, `not available`, `deprecated`, or `removed`. These
+can appear anywhere in the label. For example, `iOS code available` and
+`Code not available on iOS` both work. Matching ignores capitalization and
+repeated whitespace. Labels containing both kinds or multiple statuses are
+ambiguous and are rejected.
+
+The second cell contains one link, or is empty for a non-interactive pill.
+Links must resolve to an HTTP or HTTPS URL; relative links are supported.
+Link text names the destination in the pill's accessible label. Linked pills
+open in a new tab.
+
+Authored rows use the same status icons and Design audience rules as automatic
+pills, but retain their authored text and do not fetch generated status data.
+Authors are responsible for the status claims and destinations they supply.
+Design pills remain private on the production CDN, including when their links
+are authored manually.
+
+An authored block stays where it is placed and suppresses the automatic hero
+status block for that page. Multiple authored instances are supported.
+`page-hero` initializes status blocks nested inside it; standalone blocks use
+normal block loading. Existing component pages without an authored block keep
+their automatic hero status pills.
+
+Linked rows also become page-nav actions with the same authored text and URL.
+Unlinked rows remain informational pills and do not create navigation actions.
+Design actions follow the same private-audience restrictions as Design pills.
+This works on any route, including top-level `/patterns/...` pages.
+
+Authored rows replace the entire automatic implementation and Figma action set,
+not just matching individual actions. Automatic actions do not return when all
+authored rows are unlinked, invalid, or hidden for the visitor. Copy markdown
+remains available. Multiple blocks contribute actions in document order;
+identical kind, label, and URL combinations appear only once in page-nav.
+Pages without authored rows retain their existing automatic page actions.
+
+Malformed rows are logged and omitted. Valid rows in the same block still
+render. A block with no valid or audience-visible pills removes itself, without
+falling back to generated data.
 
 ## Fragments
 
