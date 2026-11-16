@@ -236,5 +236,59 @@ export default {
     "user-message": {
       "docsSection": "patterns-ai-toolkit"
     }
+  },
+  "ios": {
+    "buttons": {
+      "canonical": "Button"
+    },
+    "menu": {
+      "docs": "spmenu"
+    },
+    "menus": {
+      "canonical": "Menu",
+      "docs": "spmenu"
+    },
+    "pickers": {
+      "canonical": "Picker"
+    },
+    "pop-up-buttons": {
+      "canonical": "PopUpButton"
+    },
+    "sliders": {
+      "canonical": "Slider"
+    },
+    "switches": {
+      "canonical": "Switch"
+    },
+    "snackbars-and-toasts": {
+      "canonical": "Toast"
+    },
+    "toggle-buttons": {
+      "canonical": "ToggleButton"
+    }
+  },
+  "android": {
+    "buttons": {
+      "canonical": "Button"
+    },
+    "snackbar": {
+      "docs": "SnackbarHost",
+      "package": "snackbar"
+    },
+    "snackbars-and-toasts": {
+      "canonical": "Snackbar",
+      "docs": "SnackbarHost",
+      "package": "snackbar"
+    },
+    "switches": {
+      "canonical": "Switch"
+    },
+    "toggle-button-same-content": {
+      "docs": "ToggleButton"
+    },
+    "toggle-buttons": {
+      "canonical": "ToggleButtonSameContent",
+      "docs": "ToggleButton"
+    }
   }
 };

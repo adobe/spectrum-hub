@@ -5,6 +5,9 @@
       "figmaSource": "s2-android",
       "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
       "figmaPageId": "3279:5329"
-    }
+    },
+    "page": "snackbars-and-toasts",
+    "upstreamName": "SnackbarHost",
+    "package": "snackbar"
   }
 }

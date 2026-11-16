@@ -20,7 +20,8 @@
       "figmaSource": "s2-android",
       "figmaFile": "Yzbd4jgLTo6KhEPZKwv1WA",
       "figmaPageId": "3984:38444"
-    }
+    },
+    "page": "switches"
   },
   "ios": {
     "figma": {
@@ -29,6 +30,7 @@
       "figmaSource": "s2-ios",
       "figmaFile": "OQExiy8bX0pRqee71eAWX6",
       "figmaPageId": "11368:7100"
-    }
+    },
+    "page": "switches"
   }
 }
