@@ -89,6 +89,45 @@ accessibility fixtures belong in `test/a11y/fixtures/` and must follow
 [`test/a11y/README.md`](../test/a11y/README.md). Do not move small unit-test
 markup into a shared HTML file only to reduce line count.
 
+### Authored status pills and page actions
+
+`test/blocks/component-status.test.js`, `test/blocks/page-hero.test.js`, and
+`test/blocks/page-nav.test.js` cover authored status rows and the automatic
+fallback. The shared parser in `scripts/utils/authored-status.js` supplies both
+pills and navigation actions. Cases cover preserved labels, optional links,
+multiple instances, audience restrictions, and either initialization order.
+They also check that authored resources replace automatic actions, including
+when every authored row is unlinked, invalid, or hidden.
+
+Run the three files together:
+
+```bash
+npm run test:file -- 'test/blocks/{component-status,page-hero,page-nav}.test.js' --concurrency 1
+```
+
+Run these files serially to isolate the shared authentication cookie between
+browser suites. The corresponding specs in `test/a11y/blocks/` cover semantics
+and accessibility; the page-nav spec also checks authored action focus order.
+
+### Documentation-link regressions
+
+`test/blocks/go-to-impl.test.js` and `test/blocks/component-status.test.js`
+include nested Response Status Step and Suggestion Item cases using the
+committed documentation catalog. The Code pill cases also fetch the committed
+`deps/status/<slug>.json` slices. They assert the expected AI Toolkit Storybook
+destinations without injecting missing aliases or `docsSection` metadata.
+
+Run both files:
+
+```bash
+npm run test:file -- 'test/blocks/{component-status,go-to-impl}.test.js'
+```
+
+These are local routing and shipped-data checks, not live upstream link crawls.
+They expose the [excluded-child-page limitation](../deps/docs/STATUS-FILES.md#docssection-which-swc-storybook-group-documents-it).
+Keep them separate from injected-metadata unit cases: a passing fixture case
+does not prove that the shipped catalog supplies the metadata.
+
 ## Accessibility tests
 
 `test/a11y/` uses Playwright to run:
@@ -146,9 +185,10 @@ ID is normalized from `heading-6-size-xxl` to `heading-6`.
 
 ### Automatically composed blocks
 
-`test/e2e/auto-blocks.spec.js` covers the blocks no author places. A Pattern
-Library route cannot reach them, because the page lifecycle decides them from
-the template and page metadata rather than from authored content.
+`test/e2e/auto-blocks.spec.js` covers automatic block composition. These cases
+exercise the page lifecycle's template and metadata decisions, rather than
+placing each block explicitly on a Pattern Library route. Some blocks, such as
+`component-status`, also support authored instances.
 
 The global shell is asserted on `/content/voice-and-tone`, an interior
 documentation page that composes the fullest version of it:
@@ -167,8 +207,8 @@ element — a `button`, a `se-profile` — proves `scripts.js` replaced the auth
 anchor rather than merely leaving it in place. The profile has a separate
 contract because affected deployed branch origins cannot initialize IMS.
 
-The remaining blocks depend on a template or on page metadata, so each is
-asserted on a page representative of how it ships:
+The remaining automatic composition cases depend on a template or on page
+metadata, so each is asserted on a page representative of how it ships:
 
 | Block | Route | Expected hook |
 | --- | --- | --- |
@@ -178,8 +218,10 @@ asserted on a page representative of how it ships:
 | `component-status` | `/web/rsp/components/button` | `.component-status[role="group"]` |
 
 `/` is the marketing template, the only one that carries the audience-gated
-banner. `/web/rsp/components/button` is the `component` template, the only one
-that builds a page hero, its breadcrumbs, and the status pills.
+banner. `/web/rsp/components/button` uses the `component` template and verifies
+the automatic hero, breadcrumbs, and status pills when no status block is
+provided. Authored status behavior is covered separately by the
+[authored status pills and page actions tests](#authored-status-pills-and-page-actions).
 
 ### Page error capture
 

@@ -27,7 +27,7 @@ Adding a library starts here, not with another discovery script.
 | --- | --- |
 | `fetch-figma-components.js` | Requests one file's published `component_sets`, validates the response and entry identities, and excludes names starting with `.`. |
 | `discover-components.js` | Fetches every registered source, validates per-source counts and duplicate node identities, sorts deterministically, and atomically replaces `components.json`. |
-| `resolve-components.js` | Resolves source-qualified aliases and selects one design per platform/canonical component. Ambiguous or unmatched selections fail the index build. |
+| `resolve-components.js` | Resolves source-qualified aliases and selects one design per platform/canonical component, including complete explicit node references. Ambiguous or unresolved selections fail the index build. |
 
 The [Figma endpoint](https://developers.figma.com/docs/rest-api/component-endpoints/#get-file-component-sets-endpoint)
 returns **published component sets** from a library's main file. It does not
@@ -126,8 +126,8 @@ source-qualified canonical names. Existing `figma[displayName]` aliases apply
 only to S2 Web. Matching never crosses platforms.
 
 When multiple designs match one canonical component on the same platform,
-select explicitly in `status-overrides.json`. Every supplied selector must
-match:
+select explicitly in `status-overrides.json`. Discovered candidates are
+filtered by every supplied selector:
 
 ```json
 {
@@ -147,10 +147,27 @@ match:
 `figmaPageSource` optionally selects an exact display name, including a different
 canonical component's design. `figmaNodeId` selects a node; it is written to
 generated output as `figmaPageId`. A selection neither renames nor removes raw
-resources from the roster. No match or multiple remaining candidates is an
-error, never a last-file-wins choice. A complete `figmaSource`, `figmaPageSource`,
-and `figmaNodeId` override can also reference a node outside the discovered roster.
-The source must match the platform. This does not change discovery.
+resources from the roster. Multiple remaining candidates fail the build,
+never a last-file-wins choice.
+
+### Explicit node references
+
+If no discovered candidate matches, a complete `figmaSource`, `figmaPageSource`,
+and `figmaNodeId` override can supply the reference directly. The source must
+be registered for the requested platform, the name must be a non-empty string,
+and the node ID must use the numeric `123:456` format. The file key comes from
+the source registry. An incomplete unmatched selection fails the build.
+
+iOS Switch uses this path for `Switch (list)` in `s2-ios`, node `11368:7100`.
+The override does not add a resource to discovery. The builder does not call
+Figma to verify the node's existence or name; verify the target in Figma before
+publishing it.
+
+**Known validation limitation:** The fallback also accepts a complete override
+whose name conflicts with an already discovered source/node identity. It does
+not currently distinguish that conflict from an undiscovered node.
+
+### Platform links
 
 The selected platform Figma cell carries `figmaSource`, `figmaFile`, and
 `figmaPageId` in both the index and its component slice. Web component routes read
@@ -162,8 +179,10 @@ status table remains web-only.
 
 Shared `/mobile/components/<slug>` pages show separate iOS and Android Design
 pills and Figma actions for the native references present in the slice.
-A missing native design shows a non-linked **Design not available** pill for
-that platform, without a Figma action.
+A missing native platform cell on a shared page shows a non-linked
+**Design not available** pill for that platform, without a Figma action.
+Platform-specific native pages omit a missing Design pill. If no canonical
+slice can be fetched, the status block removes itself.
 Mobile DA aliases in `scripts/utils/component-path.js` resolve each platform's
 canonical component. For example, `/mobile/components/buttons` reads
 `deps/status/button.json`, not a DA-named `buttons.json`. These aliases do not
@@ -178,7 +197,8 @@ Figma presence maps to Available unless overridden. Names containing
 also adds its names to web Figma membership after canonical normalization and
 exclusions. An overlay entry can produce an Available Figma cell without a
 discovered design. It does not supply a source/file/node reference or a source
-selector; a Design link requires a resolved design from `components.json`.
+selector; a Design link requires a selected discovered resource or a complete
+explicit node override.
 See [STATUS-FILES.md](../docs/STATUS-FILES.md) for the complete authoring map.
 
 Credential-free checks:
@@ -187,6 +207,7 @@ Credential-free checks:
 node --test test/extractions/figma-*.node.test.js test/extractions/build-status-index.node.test.js
 ```
 
-These fixtures prove validation, failure safety, matching, and output contracts.
-Only authenticated discovery proves access to the live files, their current
-published sets, and their real names and node IDs.
+These fixtures cover discovered-resource validation, failure safety, matching,
+and output contracts. Authenticated discovery verifies access to live files
+and their current published sets. Explicit node overrides require separate
+verification in Figma; discovery does not validate them.

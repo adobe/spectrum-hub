@@ -187,6 +187,30 @@ owners below, rather than a `templates/` registry:
 Keep new block-specific composition in the closest owning block. Reserve
 `scripts.js` for page setup that is genuinely universal.
 
+### Component and pattern page actions
+
+Page actions use the current route, independently of the page's template:
+
+| Route | Link selection |
+| --- | --- |
+| `/web/<impl>/components/<slug>` | The web implementation and component slug |
+| `/web/<impl>/patterns/<group>/<slug>` | The web implementation and final slug; nested groups are supported |
+| `/mobile/components/<slug>` | Separate iOS and Android links, using the mobile page aliases |
+| `/mobile/ios/components/<slug>` or `/mobile/android/components/<slug>` | Only the requested native platform |
+
+At viewport widths of 1200px or more, component and pattern pages keep their
+page actions even without `<h2>` headings. The navigation is labeled **Page
+actions** in that case, with no empty table of contents. Below that breakpoint,
+page-nav is absent. `pagenav: off` and the marketing template still disable it.
+
+Route recognition does not create a page hero or status block. Automatic status
+composition still requires `template: component`. Native **Code documentation**
+pills link to documentation, not measured code availability. Design pills and
+Figma actions follow the existing private-audience rules.
+
+See [Status and link mappings](../deps/docs/STATUS-FILES.md) for mobile aliases,
+documentation targets, and the known excluded-child-page limitation.
+
 ## Fragments
 
 Fragments are separately authored documents reused across pages. A fragment

@@ -76,7 +76,7 @@ builder. Do not hand-edit them either.
 | File | Role |
 | --- | --- |
 | [`deps/build-status-index.js`](../build-status-index.js) | The orchestrator. Joins rosters, resolves statuses, applies secondary guidance then overrides, writes every generated output below. |
-| [`deps/figma/resolve-components.js`](../figma/resolve-components.js) | Resolves source-qualified aliases and explicit selections per platform. Rejects invalid identities, ambiguous matches, and unmatched selections before the builder writes outputs. |
+| [`deps/figma/resolve-components.js`](../figma/resolve-components.js) | Resolves source-qualified aliases and explicit selections per platform, including complete explicit node references. Rejects invalid roster identities, ambiguous matches, and selections that cannot be resolved. |
 | [`scripts/utils/extraction-status.js`](../../scripts/utils/extraction-status.js) | Parses a raw RSP/SWC extraction file's shape (RSP is `{props, status?}`, SWC is a flat prop array) into props + a raw status value. Not the unified vocabulary — just shape-normalization. |
 | [`scripts/utils/status-model.js`](../../scripts/utils/status-model.js) | Defines the unified status vocabulary (`STATUSES`: available/experimental/deprecated/removed/not-available) and maps each source's raw status value onto it. |
 
@@ -149,14 +149,17 @@ These selectors live on `overrides[canonicalName][platform].figma`:
 | Selector | Meaning |
 | --- | --- |
 | `figmaSource` | Registered library ID, such as `ai-toolkit` or `s2-ios`. |
-| `figmaPageSource` | Exact display name in the roster. Can redirect to another component's design on the same platform. |
-| `figmaNodeId` | Exact component-set node ID, useful for repeated names or versioned variants. |
+| `figmaPageSource` | Exact discovered display name, or the authored name for a complete explicit node reference. Can redirect to another component's design on the same platform. |
+| `figmaNodeId` | Exact design node ID, useful for repeated names, versioned variants, or an explicit reference outside the roster. |
 
-Every supplied selector must match. No match or multiple remaining candidates
-fails the build, rather than picking the last file or publishing a guessed link.
-The selection preserves all raw resources in `deps/figma/components.json`.
-Supplying all three fields also permits an explicit node outside that roster,
-such as iOS `Switch (list)` (`s2-ios`, `11368:7100`), without changing discovery.
+Discovered candidates must match every supplied selector. Multiple remaining
+candidates fail the build. If none match, a complete source/name/node override
+can supply an explicit reference, such as iOS `Switch (list)` (`s2-ios`,
+`11368:7100`), without changing discovery. Incomplete unmatched selections fail
+the build. The selection preserves all raw resources in
+`deps/figma/components.json`. See
+[Explicit node references](../figma/README.md#explicit-node-references) for
+validation requirements and the known conflicting-selector limitation.
 
 The generated Figma cell carries `figmaSource`, `figmaFile`, and `figmaPageId`
 together. `figmaNodeId` is the authored selector; `figmaPageId` is the historical
@@ -168,14 +171,18 @@ designs by node ID. These selections never enter `impl-component-names.js`.
 Both the Design pill and "See in Figma" widget use the platform's same selected
 reference. Native routes do not fall back to web.
 
+## Mobile page links
+
 Mobile DA page aliases live in `scripts/utils/component-path.js`. They resolve
 canonical component slices without renaming JSON files or changing the index.
 For example, `/mobile/components/buttons` reads `deps/status/button.json`.
 `/mobile/components/buttons` shows separate **iOS Design** and **Android Design**
 pills and matching **See iOS in Figma** and **See Android in Figma** actions.
-A missing native design gets a non-linked **Design not available** pill for
-that platform, not a web fallback. Its Figma action is omitted. Both platforms'
-Design pills remain private under the existing audience rules.
+On shared mobile pages, a missing native platform cell gets a non-linked
+**Design not available** pill for that platform, not a web fallback. Its Figma
+action is omitted. Both platforms' Design pills remain private under the
+existing audience rules. Platform-specific native pages omit a missing Design
+pill. If no canonical slice can be fetched, the status block removes itself.
 
 The authored mobile routes resolve these components:
 
@@ -191,13 +198,19 @@ from each canonical slice. Fetches are cached, so two platforms sharing one
 component do not fetch it twice. Android Toggle buttons uses the same-content
 design, not the distinct-content or icon variants.
 
+### Native Code documentation
+
 Mobile pages also show **Code documentation** pills and **Go to iOS** /
 **Go to Android** actions. Both use `scripts/utils/go-to-impl.js`. iOS documentation
 uses the canonical component name without hyphens. Android uses that name for the
 package and `-spectrum-<kebab-name>.html` for the symbol. Snackbar links to
-`-spectrum-snackbar-host.html`; Toggle button design variants share the
-`togglebutton/-spectrum-toggle-button.html` documentation. These are documentation
-links, not native code availability statuses. No native extraction is required.
+`-spectrum-snackbar-host.html`. Android Toggle buttons maps its selected
+`toggle-button-same-content` design to
+`togglebutton/-spectrum-toggle-button.html`. These are documentation links, not
+native code availability statuses: the pills have no `data-status` attribute.
+No native extraction is required. Native documentation actions do not require a
+Figma reference and remain available to anonymous visitors when Design links
+are removed by audience gating.
 
 See [Figma discovery](../figma/README.md) for registry changes, authentication,
 source-qualified aliases, and live validation.
@@ -238,16 +251,28 @@ or nested documentation page without changing the published tag or module path.
 Response Status Step and Suggestion Item have authored documentation aliases,
 but `roster-excludes.json` excludes both from web membership. Neither contributes
 `docs` or `docsSection` metadata to `impl-component-names.js`, so their aliases
-do not provide runtime documentation redirects.
+do not provide runtime documentation redirects. The current nested-page
+implementation actions therefore generate incorrect `components-...--docs`
+links instead of the required AI Toolkit Storybook links. Existing status
+slices can retain an `upstreamName`, but without `docsSection` their Code pills
+still select the wrong Storybook group.
 
-The same metadata applies on `/web/<impl>/patterns/<group>/<slug>` routes,
+This is a known limitation, not supported child-page redirect behavior.
+Rebuilding alone does not fix it while metadata generation excludes these
+children. The shipped-data regressions in `test/blocks/go-to-impl.test.js` and
+`test/blocks/component-status.test.js` expose it without supplying replacement
+catalog metadata. See [Documentation-link regressions](../../docs/TESTS.md#documentation-link-regressions).
+
+For components with the required metadata, the same resolution applies on
+`/web/<impl>/patterns/<group>/<slug>` routes,
 including nested groups. The final slug selects the component's status slice.
 The site's route group does not determine the Storybook group: a page under
 `conversational-ai` still links to the CEM-derived `patterns-ai-toolkit` section.
 Implementation widgets and Code pills share this resolution. Design widgets
 and pills use the selected platform Figma reference, including AI Toolkit.
+Recognizing a route does not add its component to the generated roster.
 
 Component and pattern pages without second-level headings retain their
 desktop page-nav actions under the accessible label **Page actions**. They do
 not render an empty table of contents or start a scroll observer. Design links
-remain private, and page-nav remains absent below the desktop breakpoint.
+remain private, and page-nav remains absent below 1200px.

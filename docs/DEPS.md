@@ -60,16 +60,37 @@ The generated outputs feed:
 | Consumer | Reads |
 | --- | --- |
 | `blocks/status-table/` | `deps/status-index.json`, filtered to components with web cells |
-| `blocks/component-status/` | `deps/status/<slug>.json`, for one component's status pills |
-| `scripts/utils/figma.js` | `deps/status/<slug>.json`, for the page platform's selected source/file/node reference |
-| `scripts/utils/go-to-impl.js` | `deps/impl-component-names.js`, for upstream documentation links |
+| `blocks/component-status/` | Canonical `deps/status/<slug>.json` slices for automatically generated status pills |
+| `scripts/utils/figma.js` | The same canonical slices for each requested platform's selected source/file/node reference |
+| `scripts/utils/go-to-impl.js` | `deps/impl-component-names.js` for web documentation; route aliases and native URL rules for iOS/Android documentation |
 | `blocks/playground/` | `deps/impl-component-names.js` for export names, plus the raw `deps/rsp/data` and `deps/swc/data` catalogs |
 
-`component-status` and `figma.js` read the same per-component slice, but it is fetched
-once: `scripts/utils/component-slice.js` memoizes `deps/status/<slug>.json` by slug for
-the page's lifetime. Reading it through that helper also means both see the same
-override-resolved data, so a `figmaPageSource` override in `deps/status-overrides.json`
-applies to the link and the pills alike.
+In automatic mode, `component-status` and `figma.js` use `fetchComponentPageSlice` in
+`scripts/utils/component-slice.js`. Fetches are memoized per canonical slug for
+the page's lifetime. Shared mobile pages can combine two slices: Snackbars and
+toasts reads iOS from `toast.json` and Android from `snackbar.json`. Both
+consumers see the same override-resolved references, so a `figmaPageSource`
+override applies to the Figma action and Design pill alike.
+
+Authored status rows bypass generated status and link resolution.
+`scripts/utils/authored-status.js` supplies the shared row models to
+`component-status` and `page-nav`. Their authored resources replace the entire
+automatic implementation and Figma action set, even when no linked or
+audience-visible rows remain. Design pills and actions still follow the
+private-audience rules. Empty blocks and pages without authored rows retain
+automatic resolution. See
+[Authored component status](./CONTENT_AUTHORING.md#authored-component-status)
+for the row format and precedence rules.
+
+Mobile page aliases live in `scripts/utils/component-path.js`. They do not
+rename generated files or require a status rebuild. Native documentation URLs
+are resolved separately in `scripts/utils/go-to-impl.js`; they do not add native
+code cells to the status model. Automatic native actions do not depend on a
+visible status pill or a fetched status slice. Their URLs are assembled from
+route rules, not checked against a native documentation catalog, so a rendered
+action does not establish that its destination exists. See
+[Status and link mappings](../deps/docs/STATUS-FILES.md) for the route rules,
+native naming exceptions, and excluded pattern-child limitations.
 
 Status consumers should read the generated model, not independently reinterpret
 raw RSP, SWC, or Figma status values. The playground intentionally reads raw
