@@ -749,8 +749,7 @@ describe('buildComponentSlices', () => {
     );
     assert.equal(slices[0].data.web.figma.figmaPageId, '1:1');
     assert.equal(slices[0].data.web.figma.figmaSource, 's2-web');
-    // TODO(cache-rollout): Restore the final schema assertion in the third rollout branch.
-    assert.equal(slices[0].data.figmaPageId, '1:1');
+    assert.equal(slices[0].data.figmaPageId, undefined);
     assert.deepEqual(warnings, []);
   });
 

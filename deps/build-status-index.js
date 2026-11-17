@@ -525,16 +525,13 @@ function sharedPageSlug(component) {
 export function buildComponentSlices(roster, components) {
   const slices = components.flatMap((component) => {
     const { name } = component;
-    const { web, ...native } = component.platforms;
-    // TODO(cache-rollout): Remove the legacy field after cached old consumers expire.
-    const legacy = web?.figma?.figmaSource === 's2-web'
-      ? { figmaPageId: web.figma.figmaPageId } : {};
-    const data = { ...component.platforms, ...legacy };
+    const data = component.platforms;
     const sharedSlug = sharedPageSlug(component);
     const slug = toSlug(name);
+    const { web, ...native } = data;
     if (sharedSlug && sharedSlug !== slug && Object.keys(native).length) {
       return [
-        { slug: sharedSlug, data: { web, ...legacy }, shared: true },
+        { slug: sharedSlug, data: { web }, shared: true },
         { slug, data: native, shared: false },
       ];
     }

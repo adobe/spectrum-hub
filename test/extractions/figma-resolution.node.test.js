@@ -142,7 +142,6 @@ describe('platform-specific Figma resolution', () => {
     const { slices } = buildComponentSlices([], index.components, []);
     assert.equal(slices[0]?.data.web.figma.figmaSource, 's2-web');
     assert.equal(slices[0]?.data.ios.figma.figmaSource, 's2-ios');
-    // TODO(cache-rollout): Restore the final schema assertion in the third rollout branch.
-    assert.equal(slices[0]?.data.figmaPageId, '1:1');
+    assert.equal(slices[0]?.data.figmaPageId, undefined);
   });
 });
