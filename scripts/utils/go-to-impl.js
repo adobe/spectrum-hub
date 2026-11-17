@@ -81,7 +81,9 @@ export async function decorateGoToImpl(a, span) {
         target.context,
         [target.context.platform],
       );
-      return componentData ? target : null;
+      const available = target.context.platform === 'web'
+        ? componentData : componentData?.[target.context.platform];
+      return available ? target : null;
     }),
   )).filter(Boolean);
   if (!targets.length) {

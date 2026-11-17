@@ -159,8 +159,9 @@ overrides. Figma is their only availability cell. Optional `page`, `upstreamName
 and `package` fields live directly under `ios`/`android`, outside `figma`, and
 carry naming metadata only. They generate native page aliases and documentation
 targets in `deps/impl-component-names.js`. Native Code documentation links are
-resolved by `scripts/utils/go-to-impl.js`; they do not claim code availability
-or derive it from Figma status. Native-only components do not get web cells or
+resolved by `scripts/utils/go-to-impl.js`. Native Code pills temporarily use
+documentation-link availability as their status, independently of Figma status.
+No native Code status is ingested. Native-only components do not get web cells or
 enter the web table's rows, counts, search results, or CSV export.
 
 Each `deps/status/<slug>.json` contains the component's platform sections

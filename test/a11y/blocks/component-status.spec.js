@@ -90,7 +90,11 @@ test(`${block.name} audience-hidden authored rows do not trigger automatic hero 
   });
 
   await expect(page.locator('.page-hero .description')).toHaveCount(1);
-  await expect(page.locator('.component-status')).toHaveCount(0);
+  await expect(page.locator('.page-hero .component-status')).toHaveCount(0);
+  const status = page.locator('.component-status');
+  await expect(status).toHaveCount(1);
+  await expect(status).toBeEmpty();
+  await expect(status).toBeHidden();
 });
 
 test(`${block.name} shared mobile page exposes separate accessible native Design links`, async ({ page, makeAxeBuilder }, testInfo) => {
@@ -128,10 +132,10 @@ test(`${block.name} shared mobile page exposes separate accessible native Design
   if (testInfo.project.name === 'chromium') {
     await expect(page.locator('.component-status')).toMatchAriaSnapshot(`
       - group "Component status":
-        - link "iOS Code documentation. Opens iOS documentation in a new tab.":
+        - link "iOS Code available. Opens iOS documentation in a new tab.":
           - /url: https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button
           - text: ""
-        - link "Android Code documentation. Opens Android documentation in a new tab.":
+        - link "Android Code available. Opens Android documentation in a new tab.":
           - /url: https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html
           - text: ""
         - link "iOS Design available. Opens iOS Figma in a new tab.":
@@ -144,7 +148,7 @@ test(`${block.name} shared mobile page exposes separate accessible native Design
   }
 });
 
-test(`${block.name} shared mobile page omits documentation for a missing platform`, async ({ page, makeAxeBuilder }, testInfo) => {
+test(`${block.name} shared mobile page shows unavailable Code without a corresponding page-nav action`, async ({ page, makeAxeBuilder }, testInfo) => {
   await gotoBlock(page, {
     ...block,
     path: `${block.path}?platform=mobile&component=switches`,
@@ -163,15 +167,28 @@ test(`${block.name} shared mobile page omits documentation for a missing platfor
       }),
     }],
   });
+  await expect(page.getByText('iOS Code not available', { exact: true })).toBeVisible();
   await expect(page.getByText('iOS Design not available')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'iOS Code documentation', exact: false })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /^iOS Code/ })).toHaveCount(0);
   await expect(page.locator('.component-status a')).toHaveCount(2);
+  if (testInfo.project.name === 'chromium') {
+    await page.evaluate(async () => {
+      const heading = document.createElement('h1');
+      heading.textContent = 'Switch';
+      document.querySelector('main').prepend(heading);
+      await import(new URL('/blocks/page-nav/page-nav.js', location.origin).href);
+    });
+    const nav = page.getByRole('navigation', { name: 'Page actions' });
+    await expect(nav.getByRole('link', { name: /^Go to / })).toHaveText('Go to Android');
+    await expect(nav.getByRole('button', { name: 'Copy markdown' })).toBeVisible();
+  }
   const results = await makeAxeBuilder().analyze();
   expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
   if (testInfo.project.name === 'chromium') {
     await expect(page.locator('.component-status')).toMatchAriaSnapshot(`
       - group "Component status":
-        - link "Android Code documentation. Opens Android documentation in a new tab.":
+        - text: iOS Code not available
+        - link "Android Code available. Opens Android documentation in a new tab.":
           - /url: https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html
           - text: ""
         - text: iOS Design not available
@@ -209,7 +226,7 @@ for (const source of FIGMA_SOURCES.filter(({ platform }) => platform !== 'web'))
         : 'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html';
       await expect(page.locator('.component-status')).toMatchAriaSnapshot(`
         - group "Component status":
-          - link "${label} Code documentation. Opens ${label} documentation in a new tab.":
+          - link "${label} Code available. Opens ${label} documentation in a new tab.":
             - /url: ${docs}
             - text: ""
           - link "Design available. Opens Figma in a new tab.":

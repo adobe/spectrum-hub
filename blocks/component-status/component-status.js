@@ -3,13 +3,14 @@
  *
  * Authored rows preserve their label text, with a Code/Design kind, an existing
  * status, and an optional link on any page. Linked rows also supply page-nav actions.
+ * Authored component-status elements without visible pills stay hidden and empty
+ * so fragment insertion still suppresses automatic pills and page-nav actions.
  * Empty blocks use the current route and generated status data. Page-hero creates an
  * empty block for pages with `template: component` when no status block is provided.
  *
- * In automatic mode, web pages show Code and Design statuses. Mobile pages show native
- * Code documentation links only for platforms with resolved status data, plus
- * platform-specific Design statuses.
- * Native documentation links do not claim code availability; no native code status is ingested.
+ * In automatic mode, web and mobile pages show Code and Design statuses. Native Code
+ * temporarily uses documentation-link availability, not an ingested code status.
+ * Missing native documentation targets render unlinked Code not available pills.
  *
  * Automatic data comes from a build-time slice (deps/status/<slug>.json, written by
  * deps/build-status-index.js) rather than the whole combined index — one small, targeted
@@ -29,7 +30,9 @@ import {
 } from '../../scripts/utils/component-path.js';
 import { fetchComponentPageSlice } from '../../scripts/utils/component-slice.js';
 import { getConfig, removeForAudience } from '../../scripts/ak.js';
-import { STATUS_PILLS, getAuthoredStatusBlocks } from '../../scripts/utils/authored-status.js';
+import {
+  STATUS_PILLS, getAuthoredStatusBlocks, observeAuthoredStatusBlocks,
+} from '../../scripts/utils/authored-status.js';
 
 const NOT_AVAILABLE = 'not-available';
 
@@ -63,16 +66,15 @@ export function resolveContext(pathname) {
  * (e.g. Development on a design-only component) renders as Not available.
  */
 function buildPill({
-  kind, label: prefix, documentation = false, text: authoredText,
+  kind, label: prefix, text: authoredText,
 }, cell, link) {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
-  const text = authoredText
-    ?? `${prefix} ${documentation ? 'documentation' : status.label.toLowerCase()}`;
+  const text = authoredText ?? `${prefix} ${status.label.toLowerCase()}`;
 
   const pill = document.createElement(link ? 'a' : 'span');
   pill.className = 'component-status-pill';
   pill.dataset.kind = kind;
-  if (!documentation) { pill.dataset.status = status.id; }
+  pill.dataset.status = status.id;
   if (link) {
     pill.href = link.href;
     pill.target = '_blank';
@@ -82,7 +84,7 @@ function buildPill({
     pill.setAttribute('aria-label', `${text}. Opens ${link.dest} in a new tab.`);
   }
 
-  const icon = documentation ? 'openin' : STATUS_ICONS[status.id] ?? STATUS_ICONS[NOT_AVAILABLE];
+  const icon = STATUS_ICONS[status.id] ?? STATUS_ICONS[NOT_AVAILABLE];
   const glyph = getSvgRef(icon, 'component-status-icon');
   glyph.setAttribute('aria-hidden', 'true');
 
@@ -95,12 +97,14 @@ function buildPill({
 }
 
 function buildNativePills(context, componentData, platforms, figmaLinks) {
-  const codePlatforms = platforms.filter((platform) => componentData[platform]);
-  const code = resolveImplementations(context, codePlatforms).map((link) => buildPill(
-    { kind: 'dev', label: `${link.label} Code`, documentation: true },
-    null,
-    { href: link.href, dest: `${link.label} documentation` },
-  ));
+  const code = resolveImplementations(context, platforms).map((link) => {
+    const available = Boolean(componentData[link.context.platform]);
+    return buildPill(
+      { kind: 'dev', label: `${link.label} Code` },
+      { status: available ? 'available' : NOT_AVAILABLE },
+      available ? { href: link.href, dest: `${link.label} documentation` } : null,
+    );
+  });
   const design = platforms
     .filter((platform) => context.platform === 'mobile' || componentData[platform]?.figma)
     .map((platform) => {
@@ -154,6 +158,10 @@ export default async function init(el) {
       buildPill(resource, { status: resource.status }, resource.link)
     ));
   } else {
+    if (authored.size) {
+      el.remove();
+      return;
+    }
     const context = resolveContext(window.location.pathname);
     if (!context) {
       el.remove();
@@ -163,11 +171,6 @@ export default async function init(el) {
     const componentData = await fetchComponentPageSlice(context, platforms);
     pills = buildPills(context, componentData, platforms);
   }
-  if (!pills.length) {
-    el.remove();
-    return;
-  }
-
   const fragment = document.createDocumentFragment();
   fragment.append(...pills);
   const designPills = [...fragment.querySelectorAll('[data-kind="design"]')];
@@ -180,6 +183,15 @@ export default async function init(el) {
   const visiblePills = [...fragment.children];
 
   if (!visiblePills.length) {
+    if (authored.has(el)) {
+      el.replaceChildren();
+      el.hidden = true;
+    } else {
+      el.remove();
+    }
+    return;
+  }
+  if (!authored.has(el) && page && getAuthoredStatusBlocks(page).size) {
     el.remove();
     return;
   }
@@ -187,4 +199,10 @@ export default async function init(el) {
   if (!el.hasAttribute('role')) { el.setAttribute('role', 'group'); }
   if (!el.hasAttribute('aria-label')) { el.setAttribute('aria-label', 'Component status'); }
   el.replaceChildren(...visiblePills);
+  if (!authored.has(el) && page) {
+    const stopObserving = observeAuthoredStatusBlocks(page, () => {
+      el.remove();
+      stopObserving();
+    });
+  }
 }

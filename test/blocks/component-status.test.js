@@ -69,21 +69,48 @@ describe('component-status block', () => {
     const context = { platform: 'mobile', impl: null, slug: 'buttons' };
     const pills = buildPills(context, MOBILE_BUTTON, ['ios']);
     expect(pills.map((pill) => pill.textContent.trim()))
-      .to.deep.equal(['iOS Code documentation', 'iOS Design available']);
+      .to.deep.equal(['iOS Code available', 'iOS Design available']);
     expect(pills.every((pill) => pill.href.includes('OQExiy8bX0pRqee71eAWX6')
       || pill.href.includes('/documentation/spectrumcomponents/button'))).to.be.true;
   });
 
-  it('renders native Code documentation links without inferring availability from Figma', () => {
+  it('renders native Code availability from documentation links', () => {
     const pills = buildPillsForPath('/mobile/components/buttons', MOBILE_BUTTON);
     const code = pills.filter((pill) => pill.dataset.kind === 'dev');
     expect(code.map((pill) => pill.textContent.trim()))
-      .to.deep.equal(['iOS Code documentation', 'Android Code documentation']);
+      .to.deep.equal(['iOS Code available', 'Android Code available']);
     expect(code.map((pill) => pill.href)).to.deep.equal([
       'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
       'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
     ]);
-    expect(code.every((pill) => !pill.hasAttribute('data-status'))).to.be.true;
+    expect(code.every((pill) => pill.dataset.status === 'available')).to.be.true;
+    expect(code.every((pill) => pill.querySelector('use').getAttribute('href')
+      .includes('s2-icon-checkmarkcircle-20-n.svg'))).to.be.true;
+  });
+
+  it('shows an unlinked native Code pill when only the other platform has documentation', () => {
+    const code = buildPillsForPath('/mobile/components/menus', {
+      ios: { page: 'menus', upstreamName: 'spmenu' },
+    }).filter((pill) => pill.dataset.kind === 'dev');
+
+    expect(code.map((pill) => pill.textContent.trim()))
+      .to.deep.equal(['iOS Code available', 'Android Code not available']);
+    expect(code.map((pill) => pill.dataset.status)).to.deep.equal(['available', 'not-available']);
+    expect(code[0].tagName).to.equal('A');
+    expect(code[1].tagName).to.equal('SPAN');
+    expect(code[1].hasAttribute('href')).to.be.false;
+    expect(code[1].querySelector('use').getAttribute('href'))
+      .to.include('s2-icon-closecircle-20-n.svg');
+  });
+
+  it('does not use native Figma maturity as the temporary Code status', () => {
+    const code = buildPillsForPath('/mobile/components/buttons', {
+      ios: { figma: { status: 'experimental' } },
+      android: { figma: { status: 'not-available' } },
+    }).filter((pill) => pill.dataset.kind === 'dev');
+
+    expect(code.map((pill) => pill.textContent.trim()))
+      .to.deep.equal(['iOS Code available', 'Android Code available']);
   });
 
   describe('native Design pills', () => {
@@ -156,11 +183,14 @@ describe('component-status block', () => {
       });
     }
 
-    it('does not offer native documentation using only web status data', () => {
+    it('shows native Code as unavailable using only web status data', () => {
       const pills = buildPillsForPath('/mobile/ios/components/button', {
         web: { figma: { status: 'available' } },
       });
-      expect(pills).to.have.lengthOf(0);
+      expect(pills).to.have.lengthOf(1);
+      expect(pills[0].textContent.trim()).to.equal('iOS Code not available');
+      expect(pills[0].dataset.status).to.equal('not-available');
+      expect(pills[0].tagName).to.equal('SPAN');
     });
 
     it('offers native documentation with naming metadata but no Figma or code status', () => {
@@ -169,8 +199,8 @@ describe('component-status block', () => {
         web: { figma: { status: 'available' } },
       });
       expect(pills).to.have.lengthOf(1);
-      expect(pills[0].textContent.trim()).to.equal('iOS Code documentation');
-      expect(pills[0].hasAttribute('data-status')).to.be.false;
+      expect(pills[0].textContent.trim()).to.equal('iOS Code available');
+      expect(pills[0].dataset.status).to.equal('available');
     });
   });
 
@@ -569,7 +599,35 @@ describe('component-status block', () => {
         expect(authored.querySelectorAll('.component-status-pill')).to.have.lengthOf(1);
         expect(authored.querySelector('.component-status-label')?.textContent)
           .to.equal('iOS code experimental');
+        expect(automatic.isConnected).to.be.false;
         expect(window.fetch.called).to.be.false;
+      });
+
+      it('does not render a pending automatic status after authored rows arrive', async () => {
+        let respond;
+        window.fetch.returns(new Promise((resolve) => { respond = resolve; }));
+        const main = document.createElement('main');
+        const automatic = document.createElement('div');
+        automatic.className = 'component-status';
+        main.append(automatic);
+        document.body.append(main);
+        const automaticReady = init(automatic);
+        const authored = mountAuthored(`
+          <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+        `);
+        main.append(authored);
+        await init(authored);
+        respond({
+          ok: true,
+          json: async () => ({ web: { rsp: { status: 'available' } } }),
+        });
+
+        await automaticReady;
+
+        expect(automatic.isConnected).to.be.false;
+        expect(main.querySelectorAll('.component-status-pill')).to.have.lengthOf(1);
+        expect(main.querySelector('.component-status-label')?.textContent)
+          .to.equal('Code deprecated');
       });
 
       [
@@ -603,7 +661,7 @@ describe('component-status block', () => {
         });
       });
 
-      it('removes an invalid-only block without falling back to generated data', async () => {
+      it('retains an empty hidden authored component-status when every row is invalid', async () => {
         const log = sandbox.spy();
         setConfig({ ...SAFE_CONFIG, log });
         const el = mountAuthored('<div><div>Code ready</div><div></div></div>');
@@ -611,7 +669,23 @@ describe('component-status block', () => {
         await init(el);
 
         expect(log.calledOnce).to.be.true;
-        expect(el.isConnected).to.be.false;
+        expect(el.isConnected).to.be.true;
+        expect(el.hidden).to.be.true;
+        expect(el.childNodes).to.have.lengthOf(0);
+        expect(window.fetch.called).to.be.false;
+      });
+
+      it('retains an empty hidden authored component-status when audience filtering hides every pill', async () => {
+        setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+        const el = mountAuthored(`
+          <div><div>Design available</div><div><a href="/private-design">Design</a></div></div>
+        `);
+
+        await init(el);
+
+        expect(el.isConnected).to.be.true;
+        expect(el.hidden).to.be.true;
+        expect(el.childNodes).to.have.lengthOf(0);
         expect(window.fetch.called).to.be.false;
       });
 
@@ -638,7 +712,7 @@ describe('component-status block', () => {
       ['snackbars-and-toasts', 'toast', 'Android'],
       ['snackbars-and-toasts', 'snackbar', 'iOS'],
     ]) {
-      it(`keeps only ${survivingPlatform} documentation on ${page} when the other status slice 404s`, async () => {
+      it(`keeps unavailable Code pills on ${page} when only ${survivingPlatform} documentation resolves`, async () => {
         window.history.pushState({}, '', `/mobile/components/${page}`);
         window.fetch.callsFake(async (url) => (url.endsWith(`/${missingSlug}.json`)
           ? { ok: false, status: 404 }
@@ -650,7 +724,11 @@ describe('component-status block', () => {
 
         const code = [...el.querySelectorAll('[data-kind="dev"]')];
         expect(code.map((pill) => pill.textContent.trim()))
-          .to.deep.equal([`${survivingPlatform} Code documentation`]);
+          .to.deep.equal(['iOS', 'Android'].map((platform) => (
+            `${platform} Code ${platform === survivingPlatform ? 'available' : 'not available'}`
+          )));
+        expect(code.filter((pill) => pill.tagName === 'A').map((pill) => pill.textContent.trim()))
+          .to.deep.equal([`${survivingPlatform} Code available`]);
         expect(el.querySelectorAll('[data-kind="design"]')).to.have.lengthOf(2);
       });
     }

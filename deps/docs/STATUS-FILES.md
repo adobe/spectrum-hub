@@ -243,8 +243,9 @@ design, not the distinct-content or icon variants.
 
 ### Native Code documentation
 
-Mobile pages also show **Code documentation** pills and **Go to iOS** /
-**Go to Android** actions. Both use `scripts/utils/go-to-impl.js`. iOS documentation
+Mobile pages also show **iOS Code available** / **Android Code available** pills
+and **Go to iOS** / **Go to Android** actions. Both use
+`scripts/utils/go-to-impl.js`. iOS documentation
 uses the documentation name without hyphens, falling back to the canonical
 component name. Android uses `-spectrum-<kebab-name>.html` for the documentation
 symbol and its hyphen-free name for the package, unless `package` overrides it.
@@ -252,17 +253,23 @@ Snackbar's `upstreamName: "SnackbarHost"` and `package: "snackbar"` produce
 `snackbar/-spectrum-snackbar-host.html`. Android Toggle buttons uses
 `upstreamName: "ToggleButton"` with the canonical `ToggleButtonSameContent`
 design to produce `togglebutton/-spectrum-toggle-button.html`.
-These are documentation links, not
-native code availability statuses: the pills have no `data-status` attribute.
-No native extraction is required. Native documentation actions do not require a
-Figma reference and remain available to anonymous visitors when Design links
+Native Code pills temporarily use documentation-link availability as their
+status. A resolved documentation target renders an **available** pill with
+`data-status="available"`; a missing target renders an unlinked
+**Code not available** pill with `data-status="not-available"`.
+This is not an ingested native Code status and does not use Figma maturity.
+Authors can use authored `component-status` rows to provide explicit statuses.
+Native documentation actions do not require a Figma reference and remain
+available to anonymous visitors when Design links
 are removed by audience gating.
 
-Native Code documentation pills require their platform's resolved status data.
-Automatic documentation actions require a successfully fetched canonical status
-slice. A 404 or fetch failure removes that platform's documentation pill and
-action without hiding another platform whose slice exists. Shared-page
-**Design not available** pills remain informational.
+Native documentation targets require their platform's resolved status data,
+including naming-only metadata. A missing platform, 404, or fetch failure leaves
+an informational **Code not available** pill and omits that platform's
+documentation action without hiding another platform whose slice exists.
+If none of the requested slices can be fetched, the automatic `component-status`
+element removes itself. Shared-page **Design not available** pills remain
+informational.
 Requests are cached across pills and actions.
 This does not validate upstream documentation URLs. Authored status links and
 Copy markdown do not depend on these generated mappings.

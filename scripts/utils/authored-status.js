@@ -8,6 +8,7 @@ export const STATUS_PILLS = [
 
 const sources = new WeakMap();
 const snapshots = new WeakMap();
+const observers = new WeakMap();
 
 function parseRows(el) {
   const rows = [...el.children];
@@ -65,11 +66,46 @@ function readSource(block) {
 export function getAuthoredStatusBlocks(root) {
   if (!snapshots.has(root)) { snapshots.set(root, new Map()); }
   const snapshot = snapshots.get(root);
+  const ordered = new Map();
   const blocks = root.matches('main')
     ? [...root.querySelectorAll('.component-status')] : [root];
   blocks.forEach((block) => {
     const source = readSource(block);
-    if (source.mode === 'authored') { snapshot.set(block, source.rows); }
+    if (source.mode === 'authored') {
+      snapshot.set(block, source.rows);
+      ordered.set(block, source.rows);
+    }
   });
-  return new Map(snapshot);
+  if (root.matches('main') && snapshot.size) { root.dataset.authoredComponentStatus = ''; }
+  return new Map([...ordered, ...snapshot]);
+}
+
+/** Share one observer per page; ignore pill decoration and unrelated DOM changes. */
+export function observeAuthoredStatusBlocks(page, onChange) {
+  if (!observers.has(page)) {
+    const listeners = new Set();
+    let sourceCount = getAuthoredStatusBlocks(page).size;
+    const observer = new MutationObserver((records) => {
+      const statusAdded = records.some(({ addedNodes }) => [...addedNodes].some((node) => (
+        node.nodeType === Node.ELEMENT_NODE
+        && (node.matches('.component-status') || node.querySelector('.component-status'))
+      )));
+      if (!statusAdded) { return; }
+      const authored = getAuthoredStatusBlocks(page);
+      if (authored.size === sourceCount) { return; }
+      sourceCount = authored.size;
+      listeners.forEach((listener) => listener());
+    });
+    observer.observe(page, { childList: true, subtree: true });
+    observers.set(page, { observer, listeners });
+  }
+  const { observer, listeners } = observers.get(page);
+  listeners.add(onChange);
+  return () => {
+    listeners.delete(onChange);
+    if (!listeners.size) {
+      observer.disconnect();
+      observers.delete(page);
+    }
+  };
 }

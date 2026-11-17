@@ -1009,6 +1009,164 @@ describe('page-nav block', () => {
       expect(fetchStub.calledOnceWithExactly('/fragments/status')).to.be.true;
     });
 
+    ['copy-markdown', 'go-to-impl'].forEach((focusedWidget) => {
+      it(`replaces automatic actions with a late fragment while preserving ${focusedWidget} focus`, async () => {
+        const log = sandbox.spy();
+        setConfig({
+          ...SAFE_CONFIG, cdnEnv: false, linkBlocks: [], log,
+        });
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        const contents = nav.querySelector(':scope > ul');
+        const copy = group.querySelector('[data-widget="copy-markdown"]');
+        group.querySelector(`[data-widget="${focusedWidget}"]`).focus();
+        fetchStub.resetHistory();
+        fetchStub.withArgs('/fragments/late-status').resolves(new Response(`
+          <main><div><div class="component-status">
+            <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+          </div></div></main>
+        `));
+        const { loadFragment } = await import('../../blocks/fragment/fragment.js');
+        const { fragment } = await loadFragment('/fragments/late-status');
+        expect(group.querySelector('[data-widget="go-to-impl"]').textContent.trim())
+          .to.equal('Go to SWC');
+
+        document.querySelector('main').append(fragment);
+        await waitFor(() => group.querySelector('a')?.textContent.trim() === 'Code deprecated');
+
+        expect(nav.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+        expect(nav.querySelector('.page-nav-widgets')).to.equal(group);
+        expect(nav.querySelector(':scope > ul')).to.equal(contents);
+        expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
+        expect(group.querySelectorAll('a')).to.have.lengthOf(1);
+        expect(group.querySelector('a').href).to.equal(`${window.location.origin}/legacy`);
+        expect(document.activeElement).to.equal(
+          focusedWidget === 'copy-markdown' ? copy : group.querySelector('a'),
+        );
+        expect(log.called).to.be.false;
+        expect(fetchStub.calledOnceWithExactly('/fragments/late-status')).to.be.true;
+      });
+    });
+
+    [
+      ['informational', '<div><div>Code not available</div><div></div></div>'],
+      ['invalid', '<div><div>Code ready</div><div></div></div>'],
+      ['audience-hidden', '<div><div>Design available</div><div><a href="/private-design">Design</a></div></div>'],
+    ].forEach(([description, rows]) => {
+      it(`removes automatic actions for a late ${description} source without restoring fallback`, async () => {
+        const log = sandbox.spy();
+        setConfig({ ...SAFE_CONFIG, cdnEnv: true, log });
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        const copy = group.querySelector('[data-widget="copy-markdown"]');
+        group.querySelector('[data-widget="go-to-impl"]').focus();
+        fetchStub.resetHistory();
+        const source = mountAuthoredStatus(rows);
+
+        await initStatus(source);
+        await waitFor(() => group.querySelectorAll('a').length === 0);
+
+        expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
+        expect(document.activeElement).to.equal(copy);
+        expect(fetchStub.called).to.be.false;
+        expect(log.callCount).to.equal(description === 'invalid' ? 1 : 0);
+      });
+    });
+
+    [
+      ['invalid', '<div><div>Code ready</div><div></div></div>'],
+      ['audience-hidden', '<div><div>Design available</div><div><a href="/private-design">Design</a></div></div>'],
+    ].forEach(([description, rows]) => {
+      [false, true].forEach((navFirst) => {
+        it(`suppresses automatic actions for a fragment's ${description} component-status when navigation loads ${navFirst ? 'first' : 'last'}`, async () => {
+          const log = sandbox.spy();
+          setConfig({
+            ...SAFE_CONFIG, cdnEnv: true, linkBlocks: [], log,
+          });
+          let nav;
+          let group;
+          let copy;
+          if (navFirst) {
+            nav = await loadPageNav();
+            group = await waitForEl(nav, '.page-nav-widgets');
+            copy = group.querySelector('[data-widget="copy-markdown"]');
+            expect(group.querySelector('[data-widget="go-to-impl"]')).not.to.be.null;
+            copy.focus();
+          }
+          fetchStub.resetHistory();
+          fetchStub.withArgs('/fragments/empty-status').resolves(new Response(`
+            <main><div><div class="component-status">${rows}</div></div></main>
+          `));
+          const { loadFragment } = await import('../../blocks/fragment/fragment.js');
+          const { fragment } = await loadFragment('/fragments/empty-status');
+          document.querySelector('main').append(fragment);
+          if (!navFirst) {
+            nav = await loadPageNav();
+            group = await waitForEl(nav, '.page-nav-widgets');
+          }
+
+          await waitFor(() => group.querySelectorAll('a').length === 0);
+
+          expect(group.querySelectorAll('[data-widget]')).to.have.lengthOf(1);
+          expect(group.querySelector('[data-widget="copy-markdown"]')).not.to.be.null;
+          if (navFirst) {
+            expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
+            expect(document.activeElement).to.equal(copy);
+          }
+          expect(log.callCount).to.equal(description === 'invalid' ? 1 : 0);
+          expect(fetchStub.calledOnceWithExactly('/fragments/empty-status')).to.be.true;
+        });
+      });
+    });
+
+    it('does not append stale automatic actions after a late authored render finishes first', async () => {
+      let respond;
+      fetchStub.returns(new Promise((resolve) => { respond = resolve; }));
+      const nav = await loadPageNav();
+      await waitFor(() => fetchStub.called);
+      const source = mountAuthoredStatus(`
+        <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+      `);
+      await initStatus(source);
+      await waitFor(() => nav.querySelector('a[href$="/legacy"]'));
+
+      respond({ ok: true, json: async () => ({ web: {} }) });
+      await new Promise(requestAnimationFrame);
+
+      expect(nav.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+      expect([...nav.querySelectorAll('.page-nav-widgets a')].map((link) => link.href))
+        .to.deep.equal([`${window.location.origin}/legacy`]);
+      expect(nav.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+    });
+
+    it('combines newly inserted sources in document order without duplicate actions', async () => {
+      const last = mountAuthoredStatus(`
+        <div><div>Code available</div><div><a href="/last">Last code</a></div></div>
+      `);
+      await initStatus(last);
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      const first = mountAuthoredStatus(`
+        <div><div>Code deprecated</div><div><a href="/first">First code</a></div></div>
+        <div><div>Code available</div><div><a href="/last">Last code</a></div></div>
+      `);
+      last.before(first);
+
+      await initStatus(first);
+      await waitFor(() => group.querySelectorAll('a').length === 2);
+
+      expect([...group.querySelectorAll('a')].map((link) => link.href)).to.deep.equal([
+        `${window.location.origin}/first`, `${window.location.origin}/last`,
+      ]);
+      const firstLink = group.querySelector('a');
+      const unrelated = document.createElement('p');
+      unrelated.textContent = 'Unrelated content';
+      document.querySelector('main').append(unrelated);
+      await new Promise(requestAnimationFrame);
+      expect(group.querySelector('a')).to.equal(firstLink);
+      expect(fetchStub.called).to.be.false;
+    });
+
     [
       [false, false], [false, true], [true, false], [true, true],
     ].forEach(([cdnEnv, inherited]) => {
@@ -1088,13 +1246,14 @@ describe('page-nav block', () => {
       expect(fetchStub.called).to.be.false;
     });
 
-    it('omits unsafe authored links and retains authored precedence after their block is removed', async () => {
+    it('omits unsafe links and retains authored component-status precedence after manual removal', async () => {
       const log = sandbox.spy();
       setConfig({ ...SAFE_CONFIG, cdnEnv: false, log });
       const source = mountAuthoredStatus(`
         <div><div>Code available</div><div><a href="javascript:alert(1)">Unsafe</a></div></div>
       `);
       await initStatus(source);
+      source.remove();
 
       const nav = await loadPageNav();
       const group = await waitForEl(nav, '.page-nav-widgets');
@@ -1124,7 +1283,9 @@ describe('page-nav block', () => {
         <div><div>iOS design available</div><div><a href="/private-design">Design</a></div></div>
       `);
       await initStatus(source);
-      expect(source.isConnected).to.be.false;
+      expect(source.isConnected).to.be.true;
+      expect(source.hidden).to.be.true;
+      expect(source.childNodes).to.have.lengthOf(0);
 
       const nav = await loadPageNav();
       const group = await waitForEl(nav, '.page-nav-widgets');

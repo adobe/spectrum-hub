@@ -255,7 +255,7 @@ describe('go-to-impl block', () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       fetchStub = sandbox.stub(window, 'fetch').resolves({
-        ok: true, json: async () => ({}),
+        ok: true, json: async () => ({ web: {}, ios: { page: 'buttons' }, android: { page: 'buttons' } }),
       });
       resetComponentSliceCacheForTests();
     });
@@ -297,6 +297,24 @@ describe('go-to-impl block', () => {
         await decorateGoToImpl(a, a.querySelector('span'));
 
         expect(document.querySelectorAll('a')).to.have.lengthOf(0);
+      });
+    });
+
+    [
+      ['/mobile/components/slider', ['Go to iOS']],
+      ['/mobile/android/components/slider', []],
+    ].forEach(([pathname, expected]) => {
+      it(`omits native documentation actions for a missing platform on ${pathname}`, async () => {
+        fetchStub.resolves({
+          ok: true, json: async () => ({ ios: { page: 'sliders' } }),
+        });
+        window.history.pushState({}, '', pathname);
+        const a = makeAnchor();
+
+        await decorateGoToImpl(a, a.querySelector('span'));
+
+        expect([...document.querySelectorAll('a')].map((link) => link.textContent))
+          .to.deep.equal(expected);
       });
     });
 

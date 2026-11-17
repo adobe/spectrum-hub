@@ -2,6 +2,7 @@ import { normalizeHeadingId, removeForAudience } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
+const widgetRenders = new WeakMap();
 
 export function isComponentPath(pathname) {
   return pathname.split('/').includes('components');
@@ -95,18 +96,28 @@ function authoredWidgets(blocks) {
 // Builds and decorates the URL-appropriate widget buttons/links and appends
 // them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
+  const firstRender = !widgetRenders.has(el);
+  const renderToken = Symbol('widget render');
+  widgetRenders.set(el, renderToken);
   const isComponentPage = isComponentPath(window.location.pathname);
   const isPatternsPage = isPatternsPath(window.location.pathname);
   const page = document.querySelector('main');
   let authored;
-  if (page?.querySelector('.component-status') || page?.hasAttribute('data-authored-component-status')) {
-    const { getAuthoredStatusBlocks } = await import('../../scripts/utils/authored-status.js');
+  if (page) {
+    const { getAuthoredStatusBlocks, observeAuthoredStatusBlocks } = await import('../../scripts/utils/authored-status.js');
+    if (firstRender) {
+      observeAuthoredStatusBlocks(page, () => renderWidgets(el));
+    }
     authored = getAuthoredStatusBlocks(page);
   }
-  const candidates = authored?.size
+  const existingGroup = el.querySelector('.page-nav-widgets');
+  const widgets = authored?.size
     ? [...WIDGETS.filter((widget) => GLOBAL_WIDGETS.has(widget.name)), ...authoredWidgets(authored)]
     : WIDGETS.filter((widget) => shouldRenderWidget(widget, isComponentPage, isPatternsPage));
-  if (!candidates.length) { return; }
+  const candidates = widgets.filter((widget) => (
+    !existingGroup || !GLOBAL_WIDGETS.has(widget.name)
+  ));
+  if (!candidates.length && !existingGroup) { return; }
 
   const group = document.createElement('div');
   group.className = 'page-nav-widgets';
@@ -144,8 +155,21 @@ async function renderWidgets(el) {
     uniqueWidgets.map(({ decorate, element }) => decorate(element)),
   );
 
-  if (!group.children.length) { return; }
-  el.append(group);
+  if (widgetRenders.get(el) !== renderToken) { return; }
+  if (!existingGroup) {
+    if (group.children.length) { el.append(group); }
+    return;
+  }
+  const focusedWidget = existingGroup.querySelector('[data-widget]:focus')?.dataset.widget;
+  [...existingGroup.children]
+    .filter((widget) => !GLOBAL_WIDGETS.has(widget.dataset.widget))
+    .forEach((widget) => widget.remove());
+  existingGroup.append(...group.children);
+  if (focusedWidget && !GLOBAL_WIDGETS.has(focusedWidget)) {
+    const focusTarget = existingGroup.querySelector(`[data-widget="${focusedWidget}"]`)
+      ?? existingGroup.querySelector('[data-widget="copy-markdown"]');
+    focusTarget?.focus({ preventScroll: true });
+  }
 }
 
 function slugify(text) {
