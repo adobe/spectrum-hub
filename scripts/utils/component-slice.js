@@ -1,6 +1,14 @@
 import { getConfig } from '../ak.js';
+import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
+import { toSlug } from './component-path.js';
+// TODO(cache-rollout): Restore named imports after cached pre-preparation modules expire.
+import * as componentPath from './component-path.js';
 
 const cache = new Map();
+
+export function componentSlugForPlatform(slug, platform, componentNames = IMPL_COMPONENT_NAMES) {
+  return toSlug(componentNames[platform]?.[slug]?.canonical ?? slug);
+}
 
 async function fetchSlice(slug) {
   const { codeBase = '' } = getConfig();
@@ -21,13 +29,30 @@ async function fetchSlice(slug) {
  * slug from the same URL on the same page load, so this avoids a duplicate fetch.
  *
  * @param {string} slug
- * @returns {Promise<{ web: object, figmaPageId?: string } | null>}
+ * @returns {Promise<{ web?: object, ios?: object, android?: object } | null>}
  */
 export function fetchComponentSlice(slug) {
   if (!cache.has(slug)) {
     cache.set(slug, fetchSlice(slug));
   }
   return cache.get(slug);
+}
+
+/** Resolves mobile DA aliases without renaming or mixing canonical component slices. */
+export async function fetchComponentPageSlice(
+  context,
+  platforms = componentPath.platformsForContext(context),
+) {
+  const { slug, platform } = context;
+  if (platform === 'web') { return fetchComponentSlice(slug); }
+  const slices = await Promise.all(platforms.map((nativePlatform) => (
+    fetchComponentSlice(componentSlugForPlatform(slug, nativePlatform))
+  )));
+  if (slices.every((slice) => !slice)) { return null; }
+  return Object.fromEntries(platforms.flatMap((nativePlatform, index) => {
+    const cells = slices[index]?.[nativePlatform];
+    return cells ? [[nativePlatform, cells]] : [];
+  }));
 }
 
 /** Test-only: clears the module-scoped cache between tests. */
