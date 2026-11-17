@@ -6,7 +6,7 @@
  * unified status through the adapter, layers on the per-implementation secondary-status
  * guidance and the manual override file, and writes a single `deps/status-index.json`
  * that downstream surfaces bind to — plus one small `deps/status/<slug>.json` per
- * component (its web cells + Figma node id) for blocks/component-status.js, so a single
+ * component (its platform cells and selected Figma references) for blocks/component-status.js, so a single
  * component page's status pills don't need to fetch and search the whole index — and
  * `deps/impl-component-names.js`, a tiny per-implementation slug → { docs, export }
  * lookup statically imported (no fetch) by scripts/utils/go-to-impl.js and the playground.
@@ -41,6 +41,7 @@ import { getComponentStatus } from '../scripts/utils/extraction-status.js';
 import { STATUSES, getUnifiedStatus } from '../scripts/utils/status-model.js';
 import { getImplementationById } from '../scripts/utils/implementations.js';
 import { toSlug } from '../scripts/utils/component-path.js';
+import { resolveFigmaComponents } from './figma/resolve-components.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_FILE = join(__dirname, 'status-index.json');
@@ -50,9 +51,11 @@ const OVERRIDES_FILE = join(__dirname, 'status-overrides.json');
 const EXCLUDES_FILE = join(__dirname, 'roster-excludes.json');
 const IMPL_COMPONENT_NAMES_FILE = join(__dirname, 'impl-component-names.js');
 
-// The single platform surfaced today. New platforms are additive (see the memory /
-// data-contract notes); each brings its own roster + columns.
+// Code implementations and the combined status table are web-only. Native platforms
+// contribute design references without inventing code availability.
 const PLATFORM = 'web';
+const NATIVE_PLATFORMS = ['ios', 'android'];
+const NATIVE_NAMING_FIELDS = ['page', 'upstreamName', 'package'];
 
 // The status table's web columns, in display order. Figma is a design source; its label
 // lives here (not in the shared code-implementation registry). RSP/SWC labels are sourced
@@ -99,7 +102,7 @@ const SMALL_WORDS = new Set(['and', 'or', 'of', 'the', 'to', 'a', 'an', 'for', '
  */
 export function normalizeName(name) {
   return name
-    .replace(/[()+]/g, ' ')
+    .replace(/[(),+]/g, ' ')
     .split(/[\s-]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -314,6 +317,7 @@ export function applySecondaries(components, secondaries = {}) {
  * status is accurate but no component page exists yet — suppresses the status-table link),
  * and a `note` provenance field. Redundant, unknown-component, unknown-implementation, and
  * unknown-status overrides are warned about but do not abort the build.
+ * Native platforms also accept naming metadata outside their Figma cell, without a status.
  *
  * @param {object[]} components
  * @param {object} overrides
@@ -331,7 +335,21 @@ export function applyOverrides(components, overrides = {}) {
     }
 
     for (const [platform, impls] of Object.entries(platforms)) {
+      const native = NATIVE_PLATFORMS.includes(platform);
+      if (native) {
+        for (const field of NATIVE_NAMING_FIELDS) {
+          if (!Object.hasOwn(impls, field)) { continue; }
+          const value = impls[field];
+          if (typeof value !== 'string' || !value.trim()
+            || (field === 'page' && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value))) {
+            throw new Error(`Invalid ${platform} ${field} override for "${name}"`);
+          }
+          component.platforms[platform] ??= {};
+          component.platforms[platform][field] = value.trim();
+        }
+      }
       for (const [impl, override] of Object.entries(impls)) {
+        if (native && NATIVE_NAMING_FIELDS.includes(impl)) { continue; }
         const current = component.platforms?.[platform]?.[impl];
         if (!current) {
           warnings.push(`override targets absent ${platform}/${impl} for "${name}"`);
@@ -347,6 +365,8 @@ export function applyOverrides(components, overrides = {}) {
           && (current.hasPage ?? true) === hasPage
           && (current.page ?? null) === (override.page ?? null)
           && (current.upstreamName ?? null) === (override.upstreamName ?? null)
+          && !override.figmaSource
+          && !override.figmaNodeId
           && (current.figmaPageSource ?? null) === (override.figmaPageSource ?? null)) {
           warnings.push(`redundant override for "${name}" ${platform}/${impl} (already ${override.status})`);
         }
@@ -399,8 +419,21 @@ export function statusLegend() {
  */
 export function buildIndex({
   roster, readData, columns = WEB_COLUMNS, overrides = {}, secondaries = {},
+  figmaRoster, aliases = {}, excludes = [],
 }) {
-  const components = roster.map(({ name, sources, upstreamNames = {} }) => {
+  const designs = figmaRoster ? resolveFigmaComponents(figmaRoster, {
+    aliases, overrides, excludes, canonicalize: canonicalNameForFigma,
+  }) : [];
+  const webRoster = new Map(filterRoster(roster, excludes).map((entry) => [
+    entry.name, { ...entry, sources: { ...entry.sources } },
+  ]));
+  for (const { name, platform, design } of designs) {
+    if (platform !== 'web') { continue; }
+    const entry = webRoster.get(name) ?? { name, sources: {} };
+    entry.sources.figma = design.name;
+    webRoster.set(name, entry);
+  }
+  const components = [...webRoster.values()].map(({ name, sources, upstreamNames = {} }) => {
     const web = {};
     for (const { id } of columns) {
       const sourceName = sources[id];
@@ -424,12 +457,37 @@ export function buildIndex({
     return { name, label: displayLabel(name, sources), platforms: { [PLATFORM]: web } };
   });
 
+  const byName = new Map(components.map((component) => [component.name, component]));
+  const nativePlatforms = new Set();
+  for (const { name, platform, design } of designs) {
+    if (platform === 'web') { continue; }
+    nativePlatforms.add(platform);
+    const component = byName.get(name) ?? {
+      name, label: displayLabel(name, { figma: design.name }), platforms: {},
+    };
+    component.platforms[platform] = { figma: { status: 'available' } };
+    if (!byName.has(name)) { components.push(component); }
+    byName.set(name, component);
+  }
   const secondaryWarnings = applySecondaries(components, secondaries);
   const { warnings: overrideWarnings } = applyOverrides(components, overrides);
+  for (const { name, platform, design } of designs) {
+    Object.assign(byName.get(name).platforms[platform].figma, {
+      figmaSource: design.source,
+      figmaFile: design.figmaFile,
+      figmaPageId: design.figmaPageId,
+    });
+  }
+  components.sort((a, b) => a.name.localeCompare(b.name));
 
   const index = {
     statuses: statusLegend(),
-    implementations: { [PLATFORM]: columns },
+    implementations: {
+      [PLATFORM]: columns,
+      ...Object.fromEntries([...nativePlatforms].sort().map((platform) => [
+        platform, [{ id: 'figma', label: 'Figma' }],
+      ])),
+    },
     components,
   };
   return { index, warnings: [...secondaryWarnings, ...overrideWarnings] };
@@ -444,7 +502,7 @@ function sharedPageSlug(component) {
 
 /**
  * Builds the per-component status slices blocks/component-status.js and go-to-impl.js fetch:
- * one small file per component (`{ web, figmaPageId? }`) instead of the whole index, so a
+ * one small file per component (`{ web?, ios?, android? }`) instead of the whole index, so a
  * component page's status pills need a single small fetch rather than parsing the full
  * multi-KB index and searching a separate Figma roster client-side. Each cell's own
  * `upstreamName` (buildIndex's auto-derived alias, or a manual override — see
@@ -458,34 +516,27 @@ function sharedPageSlug(component) {
  * @param {{ name: string, sources: Record<string, string> }[]} roster
  * @param {{ name: string, platforms: object }[]} components - buildIndex's output components
  *   (same canonical names as roster, resolved cells already applied).
- * @param {{ name: string, figmaPageId: string }[]} figmaRoster
- * @returns {{ slices: { slug: string, data: { web: object, figmaPageId?: string }, shared: boolean }[], warnings: string[] }}
+ * Native slices retain their canonical slug even when web redirects to a shared page.
+ *
+ * @returns {{ slices: { slug: string, data: object, shared: boolean }[], warnings: string[] }}
  */
-export function buildComponentSlices(roster, components, figmaRoster) {
-  const figmaPageIdByName = new Map(figmaRoster.map((entry) => [entry.name, entry.figmaPageId]));
-  const componentByName = new Map(components.map((component) => [component.name, component]));
-  const warnings = [];
-
-  const slices = roster.map(({ name, sources }) => {
-    const component = componentByName.get(name);
-    // `web.figma.figmaPageSource` (an override — see applyOverrides) names which Figma
-    // roster entry supplies this component's node id: Calendar borrows Date and time
-    // field's page, Cards pins one of its six variant pages. It does not change which
-    // Figma name or status this component's own roster membership came from. Distinct
-    // from `upstreamName`, which is a display name used to build a doc URL.
-    const pageSource = component.platforms[PLATFORM]?.figma?.figmaPageSource;
-    const figmaSourceName = pageSource ?? sources.figma;
-    const figmaPageId = figmaSourceName ? figmaPageIdByName.get(figmaSourceName) : undefined;
-    if (pageSource && !figmaPageId) {
-      warnings.push(`figma figmaPageSource override for "${name}" targets unmatched Figma roster entry "${pageSource}"`);
-    }
-    const data = { web: component.platforms[PLATFORM] };
-    if (figmaPageId) { data.figmaPageId = figmaPageId; }
+export function buildComponentSlices(roster, components) {
+  const slices = components.flatMap((component) => {
+    const { name } = component;
+    const data = component.platforms;
     const sharedSlug = sharedPageSlug(component);
-    return { slug: sharedSlug ?? toSlug(name), data, shared: Boolean(sharedSlug) };
+    const slug = toSlug(name);
+    const { web, ...native } = data;
+    if (sharedSlug && sharedSlug !== slug && Object.keys(native).length) {
+      return [
+        { slug: sharedSlug, data: { web }, shared: true },
+        { slug, data: native, shared: false },
+      ];
+    }
+    return [{ slug: sharedSlug ?? slug, data, shared: Boolean(sharedSlug) }];
   });
 
-  return { slices, warnings };
+  return { slices, warnings: [] };
 }
 
 /**
@@ -507,10 +558,15 @@ export function buildComponentSlices(roster, components, figmaRoster) {
  * manual override — see applyOverrides), read off the already-computed slices so a `page`
  * override's shared slug is picked up for free. `export` comes from the roster, where an
  * entry exists only when the implementation's own name differs from the canonical one.
+ * The full joined catalog supplies documentation aliases and sections for excluded
+ * composition parts too; status-table exclusions must not remove documentation routing.
+ *
+ * Native platform-level `page` metadata adds aliases with a `canonical` component name.
+ * Native `upstreamName` and `package` feed documentation metadata on both canonical and
+ * aliased routes. These fields do not add code availability cells.
  *
  * Only RSP populates `export`: SWC renders by tag name, which deps/swc/components.json
- * already maps. Figma is excluded entirely — its redirect field is `figmaPageSource`
- * (selecting buildComponentSlices' figmaPageId lookup, see there), not a code
+ * already maps. Figma is excluded entirely: its selected source/file/node is not a code
  * implementation anything looks up here.
  *
  * Written to `deps/impl-component-names.js` as a plain `export default {...}` module, not
@@ -527,12 +583,16 @@ export function buildComponentSlices(roster, components, figmaRoster) {
  * from their catalog module paths. It is independent of the npm publishing package.
  *
  * @param {{ slug: string, data: { web: object } }[]} slices
- * @param {{ name: string, sources: Record<string, string> }[]} roster
+ * @param {{ name: string, sources: Record<string, string>, upstreamNames?: object }[]} roster
+ *   The joined catalog before composition-part exclusions.
  * @param {Record<string, { package?: string }>} [rspComponents] - deps/rsp/components.json.
  * @param {Record<string, string>} [swcComponents] - deps/swc/components.json.
- * @returns {Record<string, Record<string, { docs?: string, export?: string, package?: string, docsSection?: string }>>}
+ * @param {{ name: string, platforms: object }[]} [components] - Resolved index components.
+ * @returns {Record<string, Record<string, { canonical?: string, docs?: string, export?: string, package?: string, docsSection?: string }>>}
  */
-export function buildImplComponentNames(slices, roster, rspComponents = {}, swcComponents = {}) {
+export function buildImplComponentNames(
+  slices, roster, rspComponents = {}, swcComponents = {}, components = [],
+) {
   const names = {};
   const put = (impl, slug, field, value) => {
     names[impl] = names[impl] ?? {};
@@ -547,7 +607,13 @@ export function buildImplComponentNames(slices, roster, rspComponents = {}, swcC
     }
   }
 
-  for (const { name, sources } of roster) {
+  for (const { name, sources, upstreamNames = {} } of roster) {
+    const slug = toSlug(name);
+    for (const [impl, upstreamName] of Object.entries(upstreamNames)) {
+      if (getImplementationById(impl) && !names[impl]?.[slug]?.docs) {
+        put(impl, slug, 'docs', upstreamName);
+      }
+    }
     const swcPath = sources.swc && swcComponents[sources.swc.replace(/^swc-/, '')];
     if (swcPath?.startsWith('patterns/')) {
       put('swc', toSlug(name), 'docsSection', swcPath.split('/').slice(0, 2).join('-'));
@@ -556,6 +622,31 @@ export function buildImplComponentNames(slices, roster, rspComponents = {}, swcC
     if (sources.rsp !== name) { put('rsp', toSlug(name), 'export', sources.rsp); }
     const pkg = rspComponents[sources.rsp]?.package;
     if (pkg) { put('rsp', toSlug(name), 'package', pkg); }
+  }
+
+  const nativeEntries = components.flatMap(({ name, platforms }) => (
+    NATIVE_PLATFORMS.filter((platform) => platforms[platform])
+      .map((platform) => ({ name, platform, metadata: platforms[platform] }))
+  ));
+  const nativePages = new Map(nativeEntries.map(({ name, platform }) => (
+    [`${platform}/${toSlug(name)}`, name]
+  )));
+  for (const { name, platform, metadata } of nativeEntries) {
+    const { page, upstreamName, package: pkg } = metadata;
+    const canonicalSlug = toSlug(name);
+    if (page) {
+      const key = `${platform}/${page}`;
+      const existing = nativePages.get(key);
+      if (existing && existing !== name) {
+        throw new Error(`Conflicting native page "${key}": "${existing}" and "${name}"`);
+      }
+      nativePages.set(key, name);
+    }
+    for (const slug of new Set([canonicalSlug, page].filter(Boolean))) {
+      if (slug !== canonicalSlug) { put(platform, slug, 'canonical', name); }
+      if (upstreamName) { put(platform, slug, 'docs', upstreamName); }
+      if (pkg) { put(platform, slug, 'package', pkg); }
+    }
   }
 
   return names;
@@ -616,10 +707,7 @@ function main() {
   const overrides = readJson(OVERRIDES_FILE, {});
   const excludes = readJson(EXCLUDES_FILE, []);
 
-  const figmaNames = [...new Set([
-    ...figmaRoster.map((component) => component.name),
-    ...figmaOverlay.map((entry) => entry.name),
-  ])];
+  const figmaNames = [...new Set(figmaOverlay.map((entry) => entry.name))];
   const swcTags = excludeInternalSwc(
     swcComponentTags(swcComponents),
     (tag) => readExtraction('swc', tag),
@@ -629,7 +717,7 @@ function main() {
 
   // Fail-closed guard: an empty roster means an upstream extraction produced nothing.
   // Refuse to overwrite a good index with an empty one (see deps/docs/REMOVED-DETECTION.md).
-  if (!roster.length) {
+  if (!roster.length && !figmaRoster.length) {
     console.error('Refusing to write an empty status index — every roster is empty.');
     process.exit(1);
   }
@@ -642,9 +730,13 @@ function main() {
 
   const { index, warnings } = buildIndex({
     roster, readData: readExtraction, overrides, secondaries,
+    figmaRoster, aliases, excludes,
   });
 
   const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
+  const implComponentNames = buildImplComponentNames(
+    slices, joined, rspComponents, swcComponents, index.components,
+  );
   const sliceWarnings = writeComponentSlices(slices);
 
   for (const warning of [...warnings, ...sliceOverrideWarnings, ...sliceWarnings]) {
@@ -655,7 +747,6 @@ function main() {
   console.log(`Wrote ${index.components.length} component(s) to ${OUTPUT_FILE}`);
   console.log(`Wrote ${slices.length} component status slice(s) to ${SLICES_DIR}`);
 
-  const implComponentNames = buildImplComponentNames(slices, roster, rspComponents, swcComponents);
   writeFileSync(IMPL_COMPONENT_NAMES_FILE, '// Generated by deps/build-status-index.js — do not edit by hand.\n'
     + `export default ${JSON.stringify(implComponentNames, null, 2)};\n`);
   const nameCount = Object.values(implComponentNames)

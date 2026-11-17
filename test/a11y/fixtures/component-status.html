@@ -6,6 +6,7 @@
   <title>Component-status block fixture</title>
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/blocks/component-status/component-status.css">
+  <link rel="stylesheet" href="/blocks/page-nav/page-nav.css">
 </head>
 <body>
   <main id="main-content">
@@ -13,12 +14,52 @@
       <div class="component-status"></div>
     </div>
   </main>
+  <template id="authored-status">
+    <div class="component-status">
+      <div>
+        <div>Android code available</div>
+        <div><a href="https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html">Android Switch documentation</a></div>
+      </div>
+      <div>
+        <div>iOS design available</div>
+        <div><a href="https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=11371-7857&amp;m=dev">iOS Switch design</a></div>
+      </div>
+      <div>
+        <div>iOS code not available</div>
+        <div></div>
+      </div>
+    </div>
+  </template>
   <script type="module">
-    // resolveContext needs a real /web/<impl>/components/<slug> path — this fixture's own
-    // served URL doesn't look like one, so rewrite it before init() reads window.location.
-    history.pushState({}, '', '/web/swc/components/button');
+    import { setConfig } from '/scripts/ak.js';
     import init from '/blocks/component-status/component-status.js';
-    document.querySelectorAll('.component-status').forEach(init);
+
+    const params = new URLSearchParams(location.search);
+    const platform = params.get('platform');
+    const root = platform === 'mobile' ? '/mobile'
+      : ['ios', 'android'].includes(platform) ? `/mobile/${platform}` : '/web/swc';
+    const component = params.get('component') || 'button';
+    if (params.has('authored')) {
+      document.querySelector('.section').replaceChildren(
+        document.querySelector('#authored-status').content.cloneNode(true),
+      );
+    } else {
+      history.pushState({}, '', `${root}/components/${component}`);
+    }
+    if (params.has('nav')) {
+      const heading = document.createElement('h1');
+      heading.textContent = 'Authored pattern';
+      document.querySelector('.section').prepend(heading);
+      setConfig({ components: [], cdnEnv: false });
+      history.replaceState({}, '', '/patterns/conversational-ai/authored');
+    }
+    if (params.has('nav-first')) {
+      await import('/blocks/page-nav/page-nav.js');
+    }
+    await Promise.all([...document.querySelectorAll('.component-status')].map(init));
+    if (params.has('nav') && !params.has('nav-first')) {
+      await import('/blocks/page-nav/page-nav.js');
+    }
   </script>
 </body>
 </html>

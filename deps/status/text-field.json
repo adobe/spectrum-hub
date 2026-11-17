@@ -1,7 +1,11 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaPageSource": "Text field (In-line)",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "9991:3022"
     },
     "rsp": {
       "status": "available",
@@ -11,6 +15,5 @@
       "status": "available",
       "context": "Stable"
     }
-  },
-  "figmaPageId": "9915:1457"
+  }
 }

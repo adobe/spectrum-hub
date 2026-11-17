@@ -1,7 +1,10 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "10026:6635"
     },
     "rsp": {
       "status": "available",
@@ -11,6 +14,5 @@
       "status": "available",
       "context": "Stable"
     }
-  },
-  "figmaPageId": "10026:3827"
+  }
 }

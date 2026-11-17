@@ -4,6 +4,10 @@
   align-items: center;
   gap: var(--s2-spacing-100);
   min-block-size: var(--se-component-m-height);
+
+  &[hidden] {
+    display: none;
+  }
 }
 
 .component-status-pill {

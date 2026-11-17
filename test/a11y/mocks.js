@@ -72,8 +72,15 @@ export const eventFragment = `<main>
 
 // The per-component status slice component-status/page-hero fetch (deps/status/<slug>.json).
 export const statusSlice = JSON.stringify({
-  web: { swc: { status: 'available' }, figma: { status: 'experimental' } },
-  figmaPageId: '9230:3620',
+  web: {
+    swc: { status: 'available' },
+    figma: {
+      status: 'experimental',
+      figmaSource: 's2-web',
+      figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q',
+      figmaPageId: '9230:3620',
+    },
+  },
 });
 
 // A minimal build-time status index (deps/status-index.json) for status-table.

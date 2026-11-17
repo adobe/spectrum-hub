@@ -1,7 +1,10 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "10095:8886"
     },
     "rsp": {
       "status": "available",
@@ -12,5 +15,16 @@
       "context": "Stable"
     }
   },
-  "figmaPageId": "10095:400"
+  "ios": {
+    "figma": {
+      "status": "available",
+      "figmaPageSource": "Menu",
+      "note": "Use the iOS 26 Menu Elements design.",
+      "figmaSource": "s2-ios",
+      "figmaFile": "OQExiy8bX0pRqee71eAWX6",
+      "figmaPageId": "5890:12308"
+    },
+    "page": "menus",
+    "upstreamName": "spmenu"
+  }
 }

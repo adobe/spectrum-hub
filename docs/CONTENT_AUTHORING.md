@@ -170,6 +170,15 @@ runtime reads these keys:
 | `light-bg` | Background image used for the light color scheme. |
 | `dark-bg` | Background image used for the dark color scheme. |
 | `audience` | Used by the production edge to classify private pages. |
+| `card-title` | A card-grid-item's display title. |
+| `card-description` | A card-grid-item's description. |
+| `card-steward` | The person shepherding a certain pattern. |
+| `card-design-resources` | Internal Adobe links to design resources for a particular pattern. |
+| `card-contact` | Internal Adobe Slack channels or support routes. |
+| `card-image` | A card-grid-item's image. |
+| `card-subject` | A card-grid-item's subject. |
+| `card-team` | The team who owns a certain pattern. |
+| `card-category` | A card-grid-item's category. |
 
 Metadata values are strings. Check the consuming code before inventing a new
 value or assuming a truthy value has special semantics.

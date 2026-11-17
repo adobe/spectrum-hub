@@ -78,6 +78,9 @@ Prefer testing observable block output and focused helper behavior. Reset the
 DOM, stubs, local storage, and imported state between cases so results do not
 depend on execution order.
 
+Run suites that share authentication cookies serially with `--concurrency 1`
+to prevent interference between browser suites.
+
 Use inline DOM setup in `*.test.js` for focused block and helper behavior. Keep
 the markup near the assertion, and extract a local helper when several cases
 share the same authored shape.
@@ -146,9 +149,10 @@ ID is normalized from `heading-6-size-xxl` to `heading-6`.
 
 ### Automatically composed blocks
 
-`test/e2e/auto-blocks.spec.js` covers the blocks no author places. A Pattern
-Library route cannot reach them, because the page lifecycle decides them from
-the template and page metadata rather than from authored content.
+`test/e2e/auto-blocks.spec.js` covers automatic block composition. These cases
+exercise the page lifecycle's template and metadata decisions, rather than
+placing each block explicitly on a Pattern Library route. Some blocks, such as
+`component-status`, also support authored instances.
 
 The global shell is asserted on `/content/voice-and-tone`, an interior
 documentation page that composes the fullest version of it:
@@ -167,8 +171,8 @@ element — a `button`, a `se-profile` — proves `scripts.js` replaced the auth
 anchor rather than merely leaving it in place. The profile has a separate
 contract because affected deployed branch origins cannot initialize IMS.
 
-The remaining blocks depend on a template or on page metadata, so each is
-asserted on a page representative of how it ships:
+The remaining automatic composition cases depend on a template or on page
+metadata, so each is asserted on a page representative of how it ships:
 
 | Block | Route | Expected hook |
 | --- | --- | --- |
@@ -178,8 +182,9 @@ asserted on a page representative of how it ships:
 | `component-status` | `/web/rsp/components/button` | `.component-status[role="group"]` |
 
 `/` is the marketing template, the only one that carries the audience-gated
-banner. `/web/rsp/components/button` is the `component` template, the only one
-that builds a page hero, its breadcrumbs, and the status pills.
+banner. `/web/rsp/components/button` uses the `component` template and verifies
+the automatic hero, breadcrumbs, and status pills when no status block is
+provided.
 
 ### Page error capture
 
