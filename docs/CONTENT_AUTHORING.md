@@ -214,10 +214,49 @@ decoration and surrounding styles can change the result.
 | `/tools/widgets/search-bar` | `search` |
 | `/tools/widgets/profile` | `profile` |
 | `/fragments/` | `fragment` |
-| `https://www.youtube` | `youtube` |
+| `https://www.youtube` | `video` |
+| `https://youtu.be` | `video` |
+| `https://video.tv.adobe.com` | `video` |
 
 The first class added to the link becomes the block name. Add a new pattern only
 for a link-driven feature; ordinary authored blocks need no registry entry.
+
+## Videos
+
+A video link on its own line becomes a `video` block. The block shows the
+video's thumbnail with a play button and loads the player only when a reader
+activates it, so a page with a video costs no more than a page with an image
+until someone presses play.
+
+Two providers are supported:
+
+| Provider | Link to paste |
+| --- | --- |
+| YouTube | A watch, share, embed, or shorts URL, such as `https://www.youtube.com/watch?v=VIDEO_ID` |
+| Adobe Video Publishing Cloud | The video's page URL, such as `https://video.tv.adobe.com/v/3503885/` |
+
+Give the link text that names the video. That text becomes the play button's
+label and the player's title, which is what a screen reader announces. A link
+left as a raw URL falls back to the title the provider reports.
+
+Player options already on an Adobe link are kept, so a URL ending in
+`?t=30&learn=on` starts the video 30 seconds in with the Learn panel open.
+Captions are turned on and the in-player title is hidden unless the link sets
+`captions` or `hidetitle` itself.
+
+To add a transcript or supply a custom thumbnail, author a `video` table
+instead of a bare link:
+
+| video | |
+| --- | --- |
+| Video URL | [Author Kit in five minutes](https://www.youtube.com/watch?v=VIDEO_ID) |
+| Transcript | The transcript text, as one or more paragraphs. |
+| Poster | An image to show in place of the provider's thumbnail. |
+
+Only the `Video URL` row is required, and `Youtube URL` works as an alias for
+it. A transcript renders as a closed "View transcript" disclosure below the
+video and stays available after the player loads. A URL that holds no playable
+video id is left out of the page rather than rendered broken.
 
 ## Audience-aware content
 

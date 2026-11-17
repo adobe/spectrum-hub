@@ -17,7 +17,7 @@ import {
 // Minimal config that won't throw inside decorateLink / loadBlock
 const SAFE_CONFIG = {
   hostnames: ['authorkit.dev'],
-  linkBlocks: [{ fragment: '/fragments/' }, { youtube: 'https://www.youtube' }],
+  linkBlocks: [{ fragment: '/fragments/' }, { video: 'https://www.youtube' }],
   components: [],
   locales: { '': { lang: 'en' } },
 };

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" class="spectrum-edge">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video block fixture</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/blocks/video/video.css">
+</head>
+<body>
+  <main id="main-content">
+    <div class="section">
+      <!-- Link authored: the auto-block puts the block class on the anchor. -->
+      <p>
+        <a class="video auto-block" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+          Getting started with Author Kit
+        </a>
+      </p>
+
+      <!-- Table authored: raw row -> cell shape, with a transcript. -->
+      <div class="video-wrapper table-authored">
+        <div class="video">
+          <div>
+            <div>Video URL</div>
+            <div><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Author Kit in five minutes</a></div>
+          </div>
+          <div>
+            <div>Transcript</div>
+            <div>
+              <p>Welcome to Author Kit.</p>
+              <p>This block renders a poster until you ask for the player.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adobe Video Publishing Cloud, with authored player params. -->
+      <div class="video-wrapper adobe-authored">
+        <div class="video">
+          <div>
+            <div>Video URL</div>
+            <div><a href="https://video.tv.adobe.com/v/3503885/?learn=on">Spectrum 2 in five minutes</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import init from '/blocks/video/video.js';
+    document.querySelectorAll('.video').forEach(init);
+  </script>
+</body>
+</html>

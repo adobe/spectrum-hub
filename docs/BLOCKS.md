@@ -121,7 +121,8 @@ This project has a central block registry spreadsheet in DA at `docs/library/blo
 | `/tools/widgets/profile` | `profile` |
 | `/fragments/` | `fragment` |
 | `/schedules/` | Reserved `schedule` block name; no local block implementation is currently present |
-| YouTube URLs | `youtube` |
+| YouTube URLs | `video` |
+| Adobe Video Publishing Cloud URLs | `video` |
 
 Use this mechanism only when the content contract is naturally a link.
 
@@ -204,7 +205,7 @@ Block styles are unlayered, so [they override the global styles](https://develop
 | `table` | General authored table decoration |
 | `tabs` | SWC tab groups built from labels and the following page or fragment sections |
 | `usage` | Recommended/not-recommended media guidance panels |
-| `youtube` | Link-triggered embedded YouTube player |
+| `video` | YouTube or Adobe Video Publishing Cloud poster facade that loads the player on activation; link or table authored |
 
 Read the implementation before changing an authored contract. Some blocks
 support multiple shapes or infer behavior from row counts, icons, and variant

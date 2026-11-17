@@ -1,0 +1,191 @@
+.video {
+  /* A letterbox reads as a dark surface in either scheme, so both branches
+     resolve to a near-black rather than flipping with the color scheme. */
+  --video-stage-background: light-dark(var(--s2-gray-1000), var(--s2-gray-25));
+
+  /* The icon sits on video imagery, not on the page surface, so it stays
+     light in both schemes instead of inverting with the color scheme. */
+  --video-play-icon-color: light-dark(var(--s2-gray-25), var(--s2-gray-1000));
+  --video-transcript-hover: rgb(from var(--s2-gray-900) r g b / 8%);
+  --video-play-icon-size: 2.5rem;
+  --video-play-icon-svg-size: 0.75rem;
+  --video-play-icon-radius: var(--s2-corner-radius-300);
+  --video-play-icon-blur: 4px;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2-spacing-100);
+
+  .video-stage {
+    width: 100%;
+  }
+
+  .video-poster,
+  .video-player {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--s2-corner-radius-500);
+    background-color: var(--video-stage-background);
+  }
+
+  /* Clip the image, not the button, so the focus ring is never cropped. */
+  .video-media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .video-poster {
+    padding: 0;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  .video-poster :is(img, picture) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .video-poster img {
+    object-fit: cover;
+  }
+
+  .video-poster:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+    outline-offset: 2px;
+  }
+
+  .video-play-icon {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: var(--video-play-icon-size);
+    height: var(--video-play-icon-size);
+    border-radius: var(--video-play-icon-radius);
+    background: rgb(0 0 0 / 25%);
+    backdrop-filter: blur(var(--video-play-icon-blur));
+    color: var(--video-play-icon-color);
+    pointer-events: none;
+
+    svg {
+      width: var(--video-play-icon-svg-size);
+      height: var(--video-play-icon-svg-size);
+
+      /* Nudge the triangle so its visual mass sits on the circle's center. */
+      margin-inline-start: calc(var(--video-play-icon-size) * 0.03);
+    }
+  }
+
+  @media (width >= 768px) {
+    .video-play-icon {
+      --video-play-icon-size: 5rem;
+      --video-play-icon-svg-size: 1.875rem;
+      --video-play-icon-radius: var(--s2-corner-radius-800);
+      --video-play-icon-blur: 8px;
+    }
+  }
+
+  .video-player {
+    overflow: hidden;
+  }
+
+  .video-player iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .video-player iframe:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+
+    /* Inset, so the player's overflow clip does not eat the ring. */
+    outline-offset: -3px;
+  }
+
+  .video-transcript {
+    width: 100%;
+  }
+
+  .video-transcript summary {
+    display: flex;
+    align-items: center;
+    min-block-size: var(--se-component-m-height);
+    padding-block: 7px;
+    padding-inline: 10px;
+    border-radius: var(--s2-corner-radius-500);
+    color: var(--s2-gray-900);
+    font-size: var(--s2-body-size-s);
+    line-height: var(--s2-body-line-height);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .video-transcript summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .video-transcript summary::marker {
+    content: '';
+  }
+
+  .video-transcript summary:hover {
+    background-color: var(--video-transcript-hover);
+  }
+
+  .video-transcript summary:focus-visible {
+    outline: var(--se-focus-indicator-width) solid var(--s2-blue-900);
+    outline-offset: 2px;
+  }
+
+  .video-transcript-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 10px;
+    height: 10px;
+    margin-inline-end: 10px;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .video-transcript[open] .video-transcript-icon {
+    transform: rotate(90deg);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .video-transcript-icon {
+      transition: transform 0.2s ease;
+    }
+  }
+
+  .video-transcript-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2-spacing-300);
+    padding: var(--s2-spacing-300);
+    border-radius: var(--s2-corner-radius-500);
+    color: var(--se-body-color);
+  }
+
+  .video-transcript-panel :is(p, li) {
+    margin: 0;
+    font-size: var(--s2-body-size-s);
+    line-height: var(--s2-body-line-height);
+  }
+}

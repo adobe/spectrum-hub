@@ -25,7 +25,7 @@ test(`${block.name} block matches its expected accessibility tree`, async ({ pag
 ```
 
 - **Gate by `testInfo.project.name`, not the `browserName` fixture.** `Mobile Chrome` also runs on the Chromium *engine*, so `browserName !== 'chromium'` alone lets it slip through as a redundant second run of a check that's supposed to be identical everywhere.
-- **`ariaRoot`** is an optional field on the `block` config object giving the root locator selector; defaults to `` `.${block.name}` ``. Override it when the block replaces its root with something else on init — a custom element (`profile` → `se-profile`, `search` → `sh-search`, `youtube` → `.video`) or an id instead of a class (`sitenav` → `#sitenav`, since `getSiteNav()` builds `<div id="sitenav">`).
+- **`ariaRoot`** is an optional field on the `block` config object giving the root locator selector; defaults to `` `.${block.name}` ``. Override it when the block replaces its root with something else on init — a custom element (`profile` → `se-profile`, `search` → `sh-search`, `video` → `.video-wrapper .video`, since the fixture also holds a link-authored instance) or an id instead of a class (`sitenav` → `#sitenav`, since `getSiteNav()` builds `<div id="sitenav">`).
 - **Snapshots are inline template-literal strings**, not external `.aria.yml` files — this keeps the expected tree visible directly in the PR diff instead of a separate baseline file to review.
 - **Generate or update** a snapshot with:
   ```bash

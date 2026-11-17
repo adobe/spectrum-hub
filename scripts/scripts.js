@@ -16,7 +16,9 @@ const linkBlocks = [
   { profile: '/tools/widgets/profile' },
   { fragment: '/fragments/' },
   { schedule: '/schedules/' },
-  { youtube: 'https://www.youtube' },
+  { video: 'https://www.youtube' },
+  { video: 'https://youtu.be' },
+  { video: 'https://video.tv.adobe.com' },
 ];
 
 // Blocks that do not need their own styles
