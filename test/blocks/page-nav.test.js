@@ -33,21 +33,21 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
   document.body.append(main);
 }
 
-// page-nav.js has no init export: a top-level IIFE builds its own <nav> and
+// page-nav.js has no init export: a top-level initializer builds its own <nav> and
 // appends it to the body on import. Importing the module *is* the decoration,
 // so every test sets up the DOM and its stubs first, then imports. A unique
-// query string defeats the module cache so the IIFE re-runs each time (only
+// query string defeats the module cache so the initializer re-runs each time (only
 // page-nav.js itself re-executes; its dependencies stay cached).
 let runCount = 0;
 async function loadPageNav() {
   runCount += 1;
   await import(`../../blocks/page-nav/page-nav.js?run=${runCount}`);
-  // Null below the desktop breakpoint, where the IIFE detaches the nav.
+  // Null below the desktop breakpoint, where the initializer detaches the nav.
   return document.querySelector('nav.page-nav');
 }
 
-// The IIFE kicks off widget rendering without awaiting it, so an import
-// resolving only means the synchronous work (TOC, ids, breakpoint) is done.
+// The initializer kicks off widget rendering without awaiting it, so an import
+// resolving only means the audience filtering and TOC setup are done.
 // Widget tests wait for the group the async pass appends last.
 function waitForEl(root, selector, timeout = 2000) {
   return new Promise((resolve, reject) => {
@@ -170,6 +170,59 @@ describe('page-nav block', () => {
       makeDOM({ h2Texts: [] });
       const el = await loadPageNav();
       expect(el).to.be.null;
+    });
+  });
+
+  describe('audience-gated headings', () => {
+    [
+      { cdnEnv: true, audience: 'public', excluded: 'private' },
+      { cdnEnv: false, audience: 'private', excluded: 'public' },
+    ].forEach(({ cdnEnv, audience, excluded }) => {
+      it(`only targets ${audience} and shared headings ${cdnEnv ? 'on CDN anonymously' : 'in preview'}`, async () => {
+        setConfig({ ...SAFE_CONFIG, cdnEnv });
+        stubMatchMedia(sandbox, true);
+        const observer = stubIntersectionObserver(sandbox);
+        document.body.innerHTML = `
+          <main>
+            <div>
+              <h1>Page Title</h1>
+              <div class="columns audience-${excluded}">
+                <div><div><h2 id="details">Excluded details</h2></div></div>
+              </div>
+              <div class="columns audience-${audience}">
+                <div><div><h2 id="details">Visible details</h2></div></div>
+              </div>
+              <h2>Shared details</h2>
+            </div>
+          </main>
+        `;
+
+        const el = await loadPageNav();
+
+        expect([...el.querySelectorAll('ul a')].map((a) => a.textContent))
+          .to.deep.equal(['Visible details', 'Shared details']);
+        expect(el.querySelector('ul a').getAttribute('href')).to.equal('#details');
+        expect(document.querySelector(`.audience-${excluded}`)).to.be.null;
+        expect(observer.targets.map((heading) => heading.textContent))
+          .to.deep.equal(['Visible details', 'Shared details', 'Page Title']);
+      });
+    });
+
+    it('omits the nav when audience filtering removes every h2', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      stubMatchMedia(sandbox, true);
+      document.body.innerHTML = `
+        <main>
+          <div>
+            <h1>Page Title</h1>
+            <div class="columns audience-private">
+              <div><div><h2>Private details</h2></div></div>
+            </div>
+          </div>
+        </main>
+      `;
+
+      expect(await loadPageNav()).to.be.null;
     });
   });
 
@@ -894,20 +947,33 @@ describe('page-nav block', () => {
       expect(fetchStub.called).to.be.false;
     });
 
-    it('renders see-in-figma for a visitor with an active session on CDN', async () => {
+    it('keeps private headings and see-in-figma for a visitor with an active session on CDN', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: true });
       setSessionHint();
       window.adobeIMS = {
         getAccessToken: () => ({ token: 'test-token' }),
         getProfile: async () => ({ email: 'developer@example.com' }),
       };
+      document.querySelector('main').insertAdjacentHTML('beforeend', `
+        <div class="columns audience-public">
+          <div><div><h2 id="details">Public details</h2></div></div>
+        </div>
+        <div class="columns audience-private">
+          <div><div><h2 id="details">Private details</h2></div></div>
+        </div>
+      `);
       window.history.pushState({}, '', '/web/swc/components/action-button');
 
-      const el = await loadPageNav();
+      const navPromise = loadPageNav();
       await waitFor(() => window.adobeid?.onReady);
       await window.adobeid.onReady();
+      const el = await navPromise;
       const group = await waitForEl(el, '.page-nav-widgets');
 
+      expect([...el.querySelectorAll('ul a')].map((a) => a.textContent))
+        .to.deep.equal(['Section One', 'Section Two', 'Private details']);
+      expect(el.querySelector('a[href="#details"]')).to.not.be.null;
+      expect(document.querySelector('.audience-public')).to.be.null;
       expect(group.querySelector('[data-widget="see-in-figma"]')).to.not.be.null;
     });
   });
