@@ -2,8 +2,11 @@
   "web": {
     "figma": {
       "status": "available",
-      "figmaPageSource": "Cards (Asset)",
-      "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      "figmaPageSource": "Card (Asset)",
+      "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma.",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "10182:7201"
     },
     "rsp": {
       "status": "available",
@@ -16,5 +19,5 @@
       "upstreamName": "Card"
     }
   },
-  "figmaPageId": "10182:4354"
+  "figmaPageId": "10182:7201"
 }

@@ -161,6 +161,42 @@ describe('status-table block', () => {
     });
   }
 
+  it('keeps native-only components out of every web table surface', async () => {
+    stubFetchOk({
+      ...MOCK_INDEX,
+      components: [...MOCK_INDEX.components, {
+        name: 'NativeOnly',
+        label: 'Native Only',
+        platforms: { ios: { figma: { status: 'deprecated' } } },
+      }, {
+        name: 'NativeAndroid',
+        label: 'Native Android',
+        platforms: { android: { figma: { status: 'available' } } },
+      }],
+    });
+    const el = makeEl();
+    await init(el);
+    expect(el.querySelectorAll('tbody tr')).to.have.lengthOf(MOCK_INDEX.components.length);
+    expect(el.querySelector('.status-table-card[data-status="deprecated"]')).to.be.null;
+    const clock = sandbox.useFakeTimers();
+    const input = el.querySelector('.status-table-search');
+    input.value = 'native';
+    input.dispatchEvent(new Event('input'));
+    clock.tick(300);
+    expect(el.querySelector('[role="status"]').textContent).to.equal('Table filtered to 0 components.');
+    let download;
+    sandbox.stub(URL, 'createObjectURL').callsFake((blob) => {
+      download = blob;
+      return 'blob:mock';
+    });
+    sandbox.stub(URL, 'revokeObjectURL');
+    sandbox.stub(window.HTMLAnchorElement.prototype, 'click');
+    el.querySelector('.status-table-export').click();
+    const csv = await download.text();
+    expect(csv).not.to.contain('Native Only');
+    expect(csv).not.to.contain('Native Android');
+  });
+
   describe('data source', () => {
     it('fetches the build-time status index by default', async () => {
       const stub = stubFetchOk();

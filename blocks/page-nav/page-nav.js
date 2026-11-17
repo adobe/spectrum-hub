@@ -2,13 +2,18 @@ import { normalizeHeadingId, removeForAudience } from '../../scripts/ak.js';
 
 // Widgets shown on every interior page.
 const GLOBAL_WIDGETS = new Set(['copy-markdown']);
+const widgetRenders = new WeakMap();
 
 export function isComponentPath(pathname) {
   return pathname.split('/').includes('components');
 }
 
-export function shouldRenderWidget(widget, isComponentPage) {
-  return isComponentPage || GLOBAL_WIDGETS.has(widget.name);
+function isPatternsPath(pathname) {
+  return pathname.split('/').includes('patterns');
+}
+
+export function shouldRenderWidget(widget, isComponentPage, isPatternsPage = false) {
+  return isComponentPage || isPatternsPage || GLOBAL_WIDGETS.has(widget.name);
 }
 
 function makeWidgetElement(tag, name, label, icon, getSvgRef) {
@@ -63,14 +68,56 @@ const WIDGETS = [
   },
 ];
 
+function authoredWidgets(blocks) {
+  return [...blocks].flatMap(([block, resources]) => {
+    const isPublic = Boolean(block.closest('.audience-public'));
+    const isPrivate = Boolean(block.closest('.audience-private'));
+    return resources.flatMap(({ kind, text, link }) => {
+      if (!link) { return []; }
+      const name = kind === 'design' ? 'see-in-figma' : 'go-to-impl';
+      const widget = WIDGETS.find((entry) => entry.name === name);
+      return [{
+        ...widget,
+        public: isPublic,
+        private: isPrivate || widget.private,
+        label: text,
+        href: link.href,
+        decorate: (anchor) => {
+          anchor.href = link.href;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener noreferrer';
+          anchor.setAttribute('aria-label', `${text}. Opens ${link.dest} in a new tab.`);
+        },
+      }];
+    });
+  });
+}
+
 // Builds and decorates the URL-appropriate widget buttons/links and appends
 // them below the nav's table of contents. Widgets decorate themselves away
 async function renderWidgets(el) {
+  const firstRender = !widgetRenders.has(el);
+  const renderToken = Symbol('widget render');
+  widgetRenders.set(el, renderToken);
   const isComponentPage = isComponentPath(window.location.pathname);
-  const candidates = WIDGETS.filter(
-    (widget) => shouldRenderWidget(widget, isComponentPage),
-  );
-  if (!candidates.length) { return; }
+  const isPatternsPage = isPatternsPath(window.location.pathname);
+  const page = document.querySelector('main');
+  let authored;
+  if (page) {
+    const { getAuthoredStatusBlocks, observeAuthoredStatusBlocks } = await import('../../scripts/utils/authored-status.js');
+    if (firstRender) {
+      observeAuthoredStatusBlocks(page, () => renderWidgets(el));
+    }
+    authored = getAuthoredStatusBlocks(page);
+  }
+  const existingGroup = el.querySelector('.page-nav-widgets');
+  const widgets = authored?.size
+    ? [...WIDGETS.filter((widget) => GLOBAL_WIDGETS.has(widget.name)), ...authoredWidgets(authored)]
+    : WIDGETS.filter((widget) => shouldRenderWidget(widget, isComponentPage, isPatternsPage));
+  const candidates = widgets.filter((widget) => (
+    !existingGroup || !GLOBAL_WIDGETS.has(widget.name)
+  ));
+  if (!candidates.length && !existingGroup) { return; }
 
   const group = document.createElement('div');
   group.className = 'page-nav-widgets';
@@ -81,19 +128,48 @@ async function renderWidgets(el) {
   );
   group.append(...elements);
 
-  await Promise.all(candidates.map(({ private: isPrivate }, i) => (
-    isPrivate ? removeForAudience({ privateEl: elements[i] }) : undefined
+  await Promise.all(candidates.map(({ public: isPublic, private: isPrivate }, i) => (
+    isPublic || isPrivate ? removeForAudience({
+      publicEl: isPublic ? elements[i] : null,
+      privateEl: isPrivate ? elements[i] : null,
+    }) : undefined
   )));
 
   const survivingWidgets = candidates
     .map((widget, i) => ({ ...widget, element: elements[i] }))
     .filter(({ element }) => group.contains(element));
+  const seen = new Set();
+  const uniqueWidgets = survivingWidgets.filter(({
+    name, label, href, element,
+  }) => {
+    if (!href) { return true; }
+    const key = JSON.stringify([name, label, href]);
+    if (seen.has(key)) {
+      element.remove();
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
   await Promise.all(
-    survivingWidgets.map(({ decorate, element }) => decorate(element)),
+    uniqueWidgets.map(({ decorate, element }) => decorate(element)),
   );
 
-  if (!group.children.length) { return; }
-  el.append(group);
+  if (widgetRenders.get(el) !== renderToken) { return; }
+  if (!existingGroup) {
+    if (group.children.length) { el.append(group); }
+    return;
+  }
+  const focusedWidget = existingGroup.querySelector('[data-widget]:focus')?.dataset.widget;
+  [...existingGroup.children]
+    .filter((widget) => !GLOBAL_WIDGETS.has(widget.dataset.widget))
+    .forEach((widget) => widget.remove());
+  existingGroup.append(...group.children);
+  if (focusedWidget && !GLOBAL_WIDGETS.has(focusedWidget)) {
+    const focusTarget = existingGroup.querySelector(`[data-widget="${focusedWidget}"]`)
+      ?? existingGroup.querySelector('[data-widget="copy-markdown"]');
+    focusTarget?.focus({ preventScroll: true });
+  }
 }
 
 function slugify(text) {
@@ -240,7 +316,10 @@ function navigateToHeading(heading) {
 
 (() => {
   const headings = [...document.querySelectorAll('main h2')];
-  if (!headings.length) {
+  if (!headings.length
+    && !isComponentPath(window.location.pathname)
+    && !isPatternsPath(window.location.pathname)
+    && !document.querySelector('main .component-status, main[data-authored-component-status]')) {
     return;
   }
 
@@ -269,7 +348,7 @@ function navigateToHeading(heading) {
     resume,
   } = scrollSpy;
 
-  const lastId = headings[headings.length - 1].id;
+  const lastId = headings.at(-1)?.id ?? null;
   // Resolved against our own collected headings rather than a document-wide
   // getElementById: some other element elsewhere on the page (e.g. the sitenav,
   // which slugifies its own category names into ids the same way) can happen to
@@ -284,7 +363,7 @@ function navigateToHeading(heading) {
     }
     pageNav = document.createElement('nav');
     pageNav.className = 'page-nav';
-    pageNav.setAttribute('aria-label', 'On this page');
+    pageNav.setAttribute('aria-label', headings.length ? 'On this page' : 'Page actions');
     pageNav.dataset.pageNav = 'ready';
     const list = document.createElement('ul');
     headings.forEach((heading) => {
@@ -310,7 +389,9 @@ function navigateToHeading(heading) {
       list.append(li);
       linkById.set(heading.id, link);
     });
-    pageNav.append(list);
+    if (headings.length) {
+      pageNav.append(list);
+    }
     syncActive();
     return pageNav;
   };
@@ -321,7 +402,9 @@ function navigateToHeading(heading) {
       if (placeholder.parentNode) {
         placeholder.replaceWith(nav);
       }
-      scrollSpy.start();
+      if (headings.length) {
+        scrollSpy.start();
+      }
       if (!widgetsStarted) {
         widgetsStarted = true;
         renderWidgets(nav);

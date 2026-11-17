@@ -1,6 +1,6 @@
-import { fetchComponentSlice } from './component-slice.js';
 // TODO(cache-rollout): Restore named imports after cached pre-preparation modules expire.
 import * as componentPath from './component-path.js';
+import * as componentSlice from './component-slice.js';
 import { FIGMA_SOURCES } from './figma-sources.js';
 import { getImplementationById } from './implementations.js';
 import { getConfig } from '../ak.js';
@@ -57,23 +57,25 @@ export function getFigmaLinks(
   });
 }
 
-// TODO(cache-rollout): Activate the platform-aware decorator in the second rollout branch.
 export async function decorateSeeInFigma(a, span) {
-  const parts = window.location.pathname.split('/').filter(Boolean);
-  const idx = parts.indexOf('components');
-  const componentSlug = idx >= 1 ? parts[idx + 1] ?? null : null;
-  const componentData = componentSlug ? await fetchComponentSlice(componentSlug) : null;
-  const href = figmaNodeUrl(componentData?.figmaPageId);
-  if (!href) {
+  const context = componentPath.componentContextFromPath(window.location.pathname);
+  const platforms = componentPath.platformsForContext(context);
+  const componentData = context
+    ? await componentSlice.fetchComponentPageSlice(context, platforms) : null;
+  const links = getFigmaLinks(context, componentData, platforms);
+  if (!links.length) {
     a.remove();
     return;
   }
-  a.href = href;
-  a.setAttribute(
-    'aria-label',
-    `See in Figma. Opens ${componentData.web?.figma?.figmaPageSource ?? componentSlug} in a new tab.`,
-  );
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  span.textContent = 'See in Figma';
+  const anchors = links.map((link, index) => {
+    const anchor = index === 0 ? a : a.cloneNode(true);
+    const text = context.platform === 'mobile' ? `See ${link.label} in Figma` : 'See in Figma';
+    anchor.href = link.href;
+    anchor.setAttribute('aria-label', `${text}. Opens ${link.name} in a new tab.`);
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    (index === 0 ? span : anchor.querySelector('span')).textContent = text;
+    return anchor;
+  });
+  a.replaceWith(...anchors);
 }

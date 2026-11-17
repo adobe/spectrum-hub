@@ -1,7 +1,8 @@
 {
   "web": {
     "figma": {
-      "status": "not-available"
+      "status": "available",
+      "note": "Standalone component in Spectrum AI Toolkit; component-set discovery does not include it."
     },
     "rsp": {
       "status": "not-available"

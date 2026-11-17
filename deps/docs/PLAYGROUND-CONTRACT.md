@@ -102,7 +102,10 @@ do not preserve a point-in-time total here unless an automated check also mainta
 - the esm.sh import and the code disclosure's tag name (RSP);
 - the `deps/rsp/data/{Component}.json` filename.
 
-Overrides are declared only where the names actually diverge — 13 of 121 RSP components — in the `export` field of the generated [`deps/impl-component-names.js`](../impl-component-names.js) (`action-group` → `ActionButtonGroup`, `table` → `TableView`).
+The `export` field in generated
+[`deps/impl-component-names.js`](../impl-component-names.js) records a name only
+when the RSP export differs from the canonical name. Examples include
+`action-group` mapping to `ActionButtonGroup` and `table` mapping to `TableView`.
 
 Keying route-owned resources by the export name creates two keys that must remain in
 sync. Keep snippets, trigger metadata, shell sizing, and workbook rows keyed by the

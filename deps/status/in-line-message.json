@@ -1,0 +1,19 @@
+{
+  "web": {
+    "figma": {
+      "status": "available",
+      "figmaSource": "ai-toolkit",
+      "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+      "figmaPageId": "23851:4051"
+    },
+    "rsp": {
+      "status": "available",
+      "context": "Alpha",
+      "upstreamName": "Alert",
+      "secondary": "Use alert"
+    },
+    "swc": {
+      "status": "not-available"
+    }
+  }
+}
