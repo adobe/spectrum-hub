@@ -1,7 +1,8 @@
 {
   "web": {
     "figma": {
-      "status": "available",
+      "status": "deprecated",
+      "figmaPageSource": "🚫 Prompt field (Deprecated)",
       "figmaSource": "ai-toolkit",
       "figmaFile": "3WdX799d7ptEVA6RuTESXs",
       "figmaPageId": "2574:10553"

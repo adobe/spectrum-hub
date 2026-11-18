@@ -271,5 +271,23 @@
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
       }
     }
+  },
+  "PromptFieldDeprecated": {
+    "web": {
+      "figma": {
+        "status": "deprecated",
+        "figmaSource": "ai-toolkit",
+        "figmaPageSource": "🚫 Prompt field (Deprecated)"
+      }
+    }
+  },
+  "UserMessageDeprecated": {
+    "web": {
+      "figma": {
+        "status": "deprecated",
+        "figmaSource": "ai-toolkit",
+        "figmaPageSource": "🚫 User message (Deprecated)"
+      }
+    }
   }
 }
