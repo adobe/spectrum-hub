@@ -35,9 +35,11 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
 }
 
 function mountAuthoredStatus(rows = `
-  <div><div>iOS code available</div><div><a href="/authored-code">iOS documentation</a></div></div>
-  <div><div>iOS design experimental</div><div><a href="https://www.figma.com/design/authored">iOS design</a></div></div>
-  <div><div>Android code not available</div><div></div></div>
+  <div>
+    <div><a href="/authored-code">iOS GitHub repo: Menu</a></div>
+    <div><a href="https://www.figma.com/design/authored">iOS Figma: Menu</a></div>
+    <div>Android code not available</div>
+  </div>
 `) {
   const block = document.createElement('div');
   block.className = 'component-status';
@@ -968,20 +970,35 @@ describe('page-nav block', () => {
 
         const links = [...group.querySelectorAll('a')];
         expect(links.map((link) => link.textContent.trim()))
-          .to.deep.equal(['iOS code available', 'iOS design experimental']);
+          .to.deep.equal(['iOS GitHub repo: Menu', 'iOS Figma: Menu']);
         expect(links.map((link) => link.getAttribute('href'))).to.deep.equal([
           `${window.location.origin}/authored-code`, 'https://www.figma.com/design/authored',
         ]);
-        expect(links.map((link) => link.getAttribute('aria-label'))).to.deep.equal([
-          'iOS code available. Opens iOS documentation in a new tab.',
-          'iOS design experimental. Opens iOS design in a new tab.',
-        ]);
-        expect(links.every((link) => link.target === '_blank'
-          && link.rel === 'noopener noreferrer')).to.be.true;
+        expect(links.every((link) => link.dataset.widget === 'authored')).to.be.true;
+        expect(links.every((link) => !link.querySelector('svg'))).to.be.true;
+        expect(links.every((link) => !link.hasAttribute('target')
+          && !link.hasAttribute('aria-label'))).to.be.true;
         expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
         expect(source.querySelectorAll('.component-status-pill')).to.have.lengthOf(3);
         expect(fetchStub.called).to.be.false;
       });
+    });
+
+    it('reuses authored link content and attributes without generating an icon', async () => {
+      const source = mountAuthoredStatus(`
+        <div><div><a href="/resource" target="_blank" rel="noopener" aria-label="Custom resource"><span class="icon" aria-hidden="true"><svg><path d="M0 0h10v10z"></path></svg></span><strong>Explore this resource</strong></a></div></div>
+      `);
+      const authoredLink = source.querySelector('a');
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      const action = group.querySelector('a');
+
+      expect(action.dataset.widget).to.equal('authored');
+      expect(action.innerHTML).to.equal(authoredLink.innerHTML);
+      expect(action.getAttribute('aria-label')).to.equal('Custom resource');
+      expect(action.target).to.equal('_blank');
+      expect(action.rel).to.equal('noopener');
+      expect(action.querySelectorAll('svg')).to.have.lengthOf(1);
     });
 
     it('retains authored actions when a decorated fragment moves into the page', async () => {
@@ -991,7 +1008,7 @@ describe('page-nav block', () => {
       });
       fetchStub.withArgs('/fragments/status').resolves(new Response(`
         <main><div><div class="component-status">
-          <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+          <div><div><a href="/legacy">Code deprecated</a></div></div>
         </div></div></main>
       `));
       const { loadFragment } = await import('../../blocks/fragment/fragment.js');
@@ -1001,9 +1018,9 @@ describe('page-nav block', () => {
       const nav = await loadPageNav();
       const group = await waitForEl(nav, '.page-nav-widgets');
 
-      expect(group.querySelector('[data-widget="go-to-impl"]')?.getAttribute('href'))
+      expect(group.querySelector('[data-widget="authored"]')?.getAttribute('href'))
         .to.equal(`${window.location.origin}/legacy`);
-      expect(fragment.querySelector('.component-status-label')?.textContent)
+      expect(fragment.querySelector('.component-status-pill')?.textContent)
         .to.equal('Code deprecated');
       expect(log.called).to.be.false;
       expect(fetchStub.calledOnceWithExactly('/fragments/status')).to.be.true;
@@ -1023,7 +1040,7 @@ describe('page-nav block', () => {
         fetchStub.resetHistory();
         fetchStub.withArgs('/fragments/late-status').resolves(new Response(`
           <main><div><div class="component-status">
-            <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+            <div><div><a href="/legacy">Code deprecated</a></div></div>
           </div></div></main>
         `));
         const { loadFragment } = await import('../../blocks/fragment/fragment.js');
@@ -1049,9 +1066,9 @@ describe('page-nav block', () => {
     });
 
     [
-      ['informational', '<div><div>Code not available</div><div></div></div>'],
-      ['invalid', '<div><div>Code ready</div><div></div></div>'],
-      ['audience-hidden', '<div><div>Design available</div><div><a href="/private-design">Design</a></div></div>'],
+      ['informational', '<div><div>Code not available</div></div>'],
+      ['invalid', '<div></div>'],
+      ['empty', '<div><div></div></div>'],
     ].forEach(([description, rows]) => {
       it(`removes automatic actions for a late ${description} source without restoring fallback`, async () => {
         const log = sandbox.spy();
@@ -1064,6 +1081,7 @@ describe('page-nav block', () => {
         const source = mountAuthoredStatus(rows);
 
         await initStatus(source);
+        await decorateAudience(document);
         await waitFor(() => group.querySelectorAll('a').length === 0);
 
         expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
@@ -1074,8 +1092,8 @@ describe('page-nav block', () => {
     });
 
     [
-      ['invalid', '<div><div>Code ready</div><div></div></div>'],
-      ['audience-hidden', '<div><div>Design available</div><div><a href="/private-design">Design</a></div></div>'],
+      ['invalid', '<div></div>'],
+      ['empty', '<div><div></div></div>'],
     ].forEach(([description, rows]) => {
       [false, true].forEach((navFirst) => {
         it(`suppresses automatic actions for a fragment's ${description} component-status when navigation loads ${navFirst ? 'first' : 'last'}`, async () => {
@@ -1125,7 +1143,7 @@ describe('page-nav block', () => {
       const nav = await loadPageNav();
       await waitFor(() => fetchStub.called);
       const source = mountAuthoredStatus(`
-        <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+        <div><div><a href="/legacy">Code deprecated</a></div></div>
       `);
       await initStatus(source);
       await waitFor(() => nav.querySelector('a[href$="/legacy"]'));
@@ -1141,14 +1159,14 @@ describe('page-nav block', () => {
 
     it('combines newly inserted sources in document order without duplicate actions', async () => {
       const last = mountAuthoredStatus(`
-        <div><div>Code available</div><div><a href="/last">Last code</a></div></div>
+        <div><div><a href="/last">Code available</a></div></div>
       `);
       await initStatus(last);
       const nav = await loadPageNav();
       const group = await waitForEl(nav, '.page-nav-widgets');
       const first = mountAuthoredStatus(`
-        <div><div>Code deprecated</div><div><a href="/first">First code</a></div></div>
-        <div><div>Code available</div><div><a href="/last">Last code</a></div></div>
+        <div><div><a href="/first">Code deprecated</a></div></div>
+        <div><div><a href="/last">Code available</a></div></div>
       `);
       last.before(first);
 
@@ -1174,8 +1192,8 @@ describe('page-nav block', () => {
         it(`filters ${inherited ? 'inherited' : 'direct'} source audiences before deduplicating ${cdnEnv ? 'anonymous CDN' : 'local'} actions when ${statusFirst ? 'pills' : 'navigation'} initialize first`, async () => {
           setConfig({ ...SAFE_CONFIG, cdnEnv });
           const hidden = mountAuthoredStatus(`
-            <div><div>Code available</div><div><a href="/shared-code">Shared code</a></div></div>
-            <div><div>Code deprecated</div><div><a href="/hidden-code">Hidden code</a></div></div>
+            <div><div><a href="/shared-code">Code available</a></div></div>
+            <div><div><a href="/hidden-code">Code deprecated</a></div></div>
           `);
           const hiddenContainer = inherited ? document.createElement('div') : hidden;
           if (inherited) {
@@ -1184,8 +1202,8 @@ describe('page-nav block', () => {
           }
           hiddenContainer.classList.add(cdnEnv ? 'audience-private' : 'audience-public');
           const visible = mountAuthoredStatus(`
-            <div><div>Code available</div><div><a href="/shared-code">Shared code</a></div></div>
-            <div><div>Code experimental</div><div><a href="/visible-code">Visible code</a></div></div>
+            <div><div><a href="/shared-code">Code available</a></div></div>
+            <div><div><a href="/visible-code">Code experimental</a></div></div>
           `);
           const wrapper = document.createElement('div');
           wrapper.className = cdnEnv ? 'audience-public' : 'audience-private';
@@ -1233,14 +1251,14 @@ describe('page-nav block', () => {
 
     it('keeps unlinked pills informational without restoring automatic actions', async () => {
       const source = mountAuthoredStatus(`
-        <div><div>iOS code not available</div><div></div></div>
+        <div><div>iOS code not available</div></div>
       `);
       await initStatus(source);
 
       const nav = await loadPageNav();
       const group = await waitForEl(nav, '.page-nav-widgets');
 
-      expect(source.querySelector('.component-status-pill').tagName).to.equal('SPAN');
+      expect(source.querySelector('.component-status-pill').querySelector('a')).to.be.null;
       expect(group.querySelectorAll('a')).to.have.lengthOf(0);
       expect(group.querySelectorAll('[data-widget]')).to.have.lengthOf(1);
       expect(fetchStub.called).to.be.false;
@@ -1250,7 +1268,7 @@ describe('page-nav block', () => {
       const log = sandbox.spy();
       setConfig({ ...SAFE_CONFIG, cdnEnv: false, log });
       const source = mountAuthoredStatus(`
-        <div><div>Code available</div><div><a href="javascript:alert(1)">Unsafe</a></div></div>
+        <div><div><a href="javascript:alert(1)">Code available</a></div></div>
       `);
       await initStatus(source);
       source.remove();
@@ -1264,7 +1282,7 @@ describe('page-nav block', () => {
       expect(fetchStub.called).to.be.false;
     });
 
-    it('hides authored Design actions from anonymous CDN visitors but keeps authored Code', async () => {
+    it('does not infer Design restrictions for authored actions on CDN pages', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: true });
       const source = mountAuthoredStatus();
       const nav = await loadPageNav();
@@ -1272,20 +1290,20 @@ describe('page-nav block', () => {
       await initStatus(source);
 
       expect([...group.querySelectorAll('a')].map((link) => link.textContent.trim()))
-        .to.deep.equal(['iOS code available']);
-      expect(source.querySelector('[data-kind="design"]')).to.be.null;
+        .to.deep.equal(['iOS GitHub repo: Menu', 'iOS Figma: Menu']);
+      expect(source.querySelectorAll('[data-kind="authored"]')).to.have.lengthOf(3);
       expect(fetchStub.called).to.be.false;
     });
 
-    it('does not restore automatic actions after audience filtering removes every authored pill', async () => {
+    it('does not restore automatic actions after explicit audience filtering removes the authored block', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: true });
       const source = mountAuthoredStatus(`
-        <div><div>iOS design available</div><div><a href="/private-design">Design</a></div></div>
+        <div><div><a href="/private-design">iOS design available</a></div></div>
       `);
+      source.classList.add('audience-private');
       await initStatus(source);
-      expect(source.isConnected).to.be.true;
-      expect(source.hidden).to.be.true;
-      expect(source.childNodes).to.have.lengthOf(0);
+      await decorateAudience(document);
+      expect(source.isConnected).to.be.false;
 
       const nav = await loadPageNav();
       const group = await waitForEl(nav, '.page-nav-widgets');
@@ -1296,11 +1314,11 @@ describe('page-nav block', () => {
 
     it('combines multiple authored blocks in document order without repeating identical actions', async () => {
       const first = mountAuthoredStatus(`
-        <div><div>iOS code available</div><div><a href="/ios">iOS</a></div></div>
+        <div><div><a href="/ios">iOS code available</a></div></div>
       `);
       const second = mountAuthoredStatus(`
-        <div><div>iOS code available</div><div><a href="/ios">iOS</a></div></div>
-        <div><div>Android code available</div><div><a href="/android">Android</a></div></div>
+        <div><div><a href="/ios">iOS code available</a></div></div>
+        <div><div><a href="/android">Android code available</a></div></div>
       `);
       await initStatus(second);
       await initStatus(first);
@@ -1476,9 +1494,9 @@ describe('page-nav block', () => {
       await initStatus(source);
       const authoredNav = await loadPageNav();
       const authoredGroup = await waitForEl(authoredNav, '.page-nav-widgets');
-      expect(authoredGroup.querySelector('[data-widget="see-in-figma"]')?.textContent.trim())
-        .to.equal('iOS design experimental');
-      expect(source.querySelector('[data-kind="design"]')).to.not.be.null;
+      expect([...authoredGroup.querySelectorAll('[data-widget="authored"]')]
+        .map((link) => link.textContent.trim())).to.deep.equal(['iOS GitHub repo: Menu', 'iOS Figma: Menu']);
+      expect(source.querySelectorAll('[data-kind="authored"]')).to.have.lengthOf(3);
       expect(fetchStub.called).to.be.false;
     });
   });

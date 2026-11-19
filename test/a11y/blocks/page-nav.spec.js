@@ -24,12 +24,13 @@ for (const colorScheme of ['light', 'dark']) {
     const nav = page.getByRole('navigation', { name: 'Page actions' });
     const links = nav.getByRole('link');
     await expect(links).toHaveCount(2);
-    await expect(links.nth(0)).toHaveText('Android code available');
-    await expect(links.nth(1)).toHaveText('iOS design available');
-    await expect(nav.getByText('iOS code not available')).toHaveCount(0);
+    await expect(links.nth(0)).toHaveText('iOS Figma: Menu');
+    await expect(links.nth(1)).toHaveText('iOS GitHub repo: Menu');
+    await expect(nav.getByText('Android Code not available')).toHaveCount(0);
+    await expect(nav.getByText('Android Design Not available')).toHaveCount(0);
     for (const link of await links.all()) {
-      await expect(link).toHaveAttribute('target', '_blank');
-      await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      await expect(link).not.toHaveAttribute('target');
+      await expect(link).not.toHaveAttribute('aria-label');
     }
     const focusOrder = [
       ...await page.locator('.component-status a').all(),
@@ -58,14 +59,10 @@ test(`${block.name} authored actions match their expected accessibility tree`, a
       - button "Copy markdown":
         - img
         - text: Copy markdown
-      - link "Android code available. Opens Android Switch documentation in a new tab.":
-        - /url: https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html
-        - img
-        - text: Android code available
-      - link "iOS design available. Opens iOS Switch design in a new tab.":
-        - /url: https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=11371-7857&m=dev
-        - img
-        - text: iOS design available
+      - 'link "iOS Figma: Menu"':
+        - /url: https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=2595-2573
+      - 'link "iOS GitHub repo: Menu"':
+        - /url: https://github.com/OneAdobe/spectrum-ios/tree/main/Sources/SpectrumComponents/Menu
   `);
 });
 
@@ -114,17 +111,17 @@ test(`${block.name} heading-free pattern page has accessible actions`, async ({ 
 [
   {
     description: 'linked',
-    rows: '<div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>',
+    rows: '<div><div><a href="/legacy">Code deprecated</a></div></div>',
     cdnEnv: false,
   },
   {
     description: 'invalid',
-    rows: '<div><div>Code ready</div><div></div></div>',
+    rows: '<div></div>',
     cdnEnv: false,
   },
   {
-    description: 'audience-hidden',
-    rows: '<div><div>Design available</div><div><a href="/private-design">Design</a></div></div>',
+    description: 'empty',
+    rows: '<div><div></div></div>',
     cdnEnv: true,
   },
 ].forEach(({ description, rows, cdnEnv }) => {
@@ -197,7 +194,8 @@ test(`${block.name} heading-free pattern page has accessible actions`, async ({ 
       releaseFragment();
       await page.evaluate(() => window.areaReady);
 
-      await expect(page.locator('.page-hero .component-status')).toHaveCount(0);
+      await expect(page.locator('.page-hero .component-status')).toHaveCount(1);
+      await expect(page.locator('main .component-status')).toHaveCount(1);
       await expect(copy).toBeFocused();
       if (description === 'linked') {
         await expect(nav.getByRole('link')).toHaveText('Code deprecated');
@@ -209,10 +207,8 @@ test(`${block.name} heading-free pattern page has accessible actions`, async ({ 
         - button "Copy markdown":
           - img
           - text: Copy markdown
-        - link "Code deprecated. Opens Legacy code in a new tab.":
+        - link "Code deprecated":
           - /url: http://localhost:3001/legacy
-          - img
-          - text: Code deprecated
     `);
       } else {
         await expect(nav.getByRole('link')).toHaveCount(0);
@@ -228,7 +224,7 @@ test(`${block.name} heading-free pattern page has accessible actions`, async ({ 
       `);
       }
       expect(await page.evaluate(() => window.statusErrors)).toEqual(description === 'invalid'
-        ? ['Invalid component-status row 1: expected one Code/Design kind, one status, and an optional HTTP(S) link.']
+        ? ['Invalid component-status row 1: expected status cells.']
         : []);
       const results = await makeAxeBuilder().analyze();
       expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
@@ -282,6 +278,7 @@ test(`${block.name} clears the fixed header and avoids hidden desktop work`, asy
         '/scripts/utils/go-to-impl.js',
         '/scripts/utils/figma.js',
         '/scripts/utils/authored-status.js',
+        '/scripts/utils/authored-status-cell.js',
       ];
       expect(requests.some((pathname) => desktopOnlyModules.includes(pathname))).toBe(false);
     }

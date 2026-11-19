@@ -149,6 +149,45 @@ Only the owning block adds that layer, so do not expect it in another block's ma
 The `tabindex` and `page-nav-target` on the heading come from the `page-nav` block rather
 than from section decoration.
 
+## Component status
+
+In a `component-status` table, put each resource in its own cell. Use the
+resource's descriptive text as the link text. For an unavailable resource,
+provide plain text instead.
+
+```html
+<div class="component-status">
+  <div>
+    <div><a href="https://www.figma.com/design/example">iOS Figma: Menu</a></div>
+    <div><a href="https://github.com/OneAdobe/spectrum-ios/tree/main/Sources/SpectrumComponents/Menu">iOS GitHub repo: Menu</a></div>
+    <div>Android Code not available</div>
+    <div>Android Design Not available</div>
+  </div>
+</div>
+```
+
+Each cell becomes one status pill, in authored order across rows. Do not split
+a label and its URL into separate cells. Existing two-cell label/URL rows must
+be converted to this format.
+
+Authored content is rendered as provided, including formatting, links, and
+optional icons. No particular words or status labels are required, and the block
+does not add icons or infer availability. Each pill receives
+`data-status="authored"` and `data-kind="authored"`.
+
+Links also supply page-nav actions with the author's content and link attributes.
+The block does not add a new-tab target or replace an authored accessible label.
+Links must use HTTP(S); invalid cells are logged and omitted.
+
+Use explicit block or section audience settings to restrict visibility.
+Authored labels such as "Design" or "Figma" do not trigger automatic filtering.
+Leave the block empty to use automatic, route-derived statuses and icons instead.
+
+On pages with `template: component`, all authored status blocks move into the
+page hero below its description, in authoring order. This includes blocks loaded
+from fragments. Explicit block and section audience settings remain in effect.
+On other pages, authored status blocks stay where they are placed.
+
 ## Page metadata
 
 Metadata is authored with the page and delivered as `<meta>` elements. The

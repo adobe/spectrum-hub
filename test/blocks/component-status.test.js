@@ -5,7 +5,6 @@ import { setConfig } from '../../scripts/ak.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
 import { FIGMA_SOURCES } from '../../scripts/utils/figma-sources.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
-import { STATUSES } from '../../scripts/utils/status-model.js';
 
 function buildPillsForPath(pathname, componentData) {
   return buildPills(resolveContext(pathname), componentData);
@@ -465,12 +464,8 @@ describe('component-status block', () => {
     describe('authored rows', () => {
       function mountAuthored(rows = `
         <div>
-          <div>Code available</div>
-          <div><a href="https://example.com/switch">https://example.com/switch</a></div>
-        </div>
-        <div>
-          <div>Design available</div>
-          <div><a href="https://www.figma.com/design/example?node-id=1-2&amp;m=dev">Switch design</a></div>
+          <div><a href="https://example.com/switch">Code available</a></div>
+          <div><a href="https://www.figma.com/design/example?node-id=1-2&amp;m=dev">Design available</a></div>
         </div>
       `) {
         const el = document.createElement('div');
@@ -491,23 +486,78 @@ describe('component-status block', () => {
         expect(el.getAttribute('role')).to.equal('group');
         expect(pills.map((pill) => pill.textContent.trim()))
           .to.deep.equal(['Code available', 'Design available']);
-        expect(pills.map((pill) => pill.href)).to.deep.equal([
+        expect(pills.map((pill) => pill.querySelector('a').href)).to.deep.equal([
           'https://example.com/switch',
           'https://www.figma.com/design/example?node-id=1-2&m=dev',
         ]);
         for (const pill of pills) {
-          expect(pill.dataset.status).to.equal('available');
-          expect(pill.target).to.equal('_blank');
-          expect(pill.rel).to.equal('noopener noreferrer');
-          expect(pill.getAttribute('aria-label')).to.contain(pill.textContent.trim());
-          expect(pill.getAttribute('aria-label')).to.contain('in a new tab');
+          expect(pill.dataset.status).to.equal('authored');
+          expect(pill.dataset.kind).to.equal('authored');
+          expect(pill.querySelector('svg')).to.be.null;
         }
         expect(window.fetch.called).to.be.false;
       });
 
-      it('uses authored statuses instead of generated data on a component route', async () => {
+      it('renders each cell in the single-row authoring pattern as its own pill', async () => {
         const el = mountAuthored(`
-          <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+          <div>
+            <div><p><a href="https://www.figma.com/design/example?node-id=2595-2573">iOS Figma: Menu</a></p></div>
+            <div><a href="https://github.com/OneAdobe/spectrum-ios/tree/main/Sources/SpectrumComponents/Menu">iOS GitHub repo: Menu</a></div>
+            <div>Android Code not available</div>
+            <div>Android Design Not available</div>
+          </div>
+        `);
+
+        await init(el);
+
+        const pills = [...el.querySelectorAll('.component-status-pill')];
+        expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal([
+          'iOS Figma: Menu', 'iOS GitHub repo: Menu',
+          'Android Code not available', 'Android Design Not available',
+        ]);
+        expect(pills.map((pill) => [pill.dataset.kind, pill.dataset.status])).to.deep.equal([
+          ['authored', 'authored'], ['authored', 'authored'],
+          ['authored', 'authored'], ['authored', 'authored'],
+        ]);
+        expect(pills[0].querySelector('a').href).to.equal('https://www.figma.com/design/example?node-id=2595-2573');
+        expect(pills[1].querySelector('a').href).to.equal('https://github.com/OneAdobe/spectrum-ios/tree/main/Sources/SpectrumComponents/Menu');
+        expect(pills.slice(2).every((pill) => !pill.querySelector('a'))).to.be.true;
+        expect(window.fetch.called).to.be.false;
+      });
+
+      it('preserves arbitrary authored content and icons without interpreting labels', async () => {
+        const el = mountAuthored(`
+          <div>
+            <div><p><a href="/resource" target="_blank" rel="noopener" aria-label="Custom resource"><span class="icon" aria-hidden="true"><svg><path d="M0 0h10v10z"></path></svg></span><strong>Explore this resource</strong></a></p></div>
+            <div><p>Still being explored</p></div>
+            <div>Code and Design available but deprecated</div>
+          </div>
+        `);
+        const link = el.querySelector('a');
+        const icon = link.querySelector('.icon');
+        const markup = link.outerHTML;
+        const log = sandbox.spy();
+        setConfig({ ...SAFE_CONFIG, log });
+
+        await init(el);
+        await init(el);
+
+        expect(el.querySelector('a')).to.equal(link);
+        expect(el.querySelector('.icon')).to.equal(icon);
+        expect(link.outerHTML).to.equal(markup);
+        expect(el.querySelectorAll('svg')).to.have.lengthOf(1);
+        expect([...el.children].map((pill) => pill.textContent.trim())).to.deep.equal([
+          'Explore this resource', 'Still being explored', 'Code and Design available but deprecated',
+        ]);
+        expect([...el.children].every((pill) => pill.dataset.status === 'authored'
+          && pill.dataset.kind === 'authored')).to.be.true;
+        expect(log.called).to.be.false;
+        expect(window.fetch.called).to.be.false;
+      });
+
+      it('does not fetch generated data for authored content on a component route', async () => {
+        const el = mountAuthored(`
+          <div><div><a href="/legacy">Code deprecated</a></div></div>
         `);
 
         await init(el);
@@ -515,60 +565,15 @@ describe('component-status block', () => {
         const pill = el.querySelector('.component-status-pill');
         expect(el.children).to.have.lengthOf(1);
         expect(pill.textContent.trim()).to.equal('Code deprecated');
-        expect(pill.dataset.status).to.equal('deprecated');
-        expect(pill.getAttribute('href')).to.equal(`${window.location.origin}/legacy`);
-        expect(window.fetch.called).to.be.false;
-      });
-
-      it('preserves authored text while recognizing kind and status anywhere in the label', async () => {
-        const cases = [
-          ['iOS code available', 'dev', 'available'],
-          ['Experimental Android code', 'dev', 'experimental'],
-          ['Code not available on iOS', 'dev', 'not-available'],
-          ['iOS Design available', 'design', 'available'],
-        ];
-        const el = mountAuthored(cases.map(([text]) => `
-          <div><div>${text}</div><div><a href="/resource">Resource</a></div></div>
-        `).join(''));
-
-        await init(el);
-
-        const pills = [...el.querySelectorAll('.component-status-pill')];
-        expect(pills.map((pill) => pill.querySelector('.component-status-label').textContent))
-          .to.deep.equal(cases.map(([text]) => text));
-        expect(pills.map((pill) => [pill.dataset.kind, pill.dataset.status]))
-          .to.deep.equal(cases.map(([, kind, status]) => [kind, status]));
-        expect(pills.map((pill) => pill.getAttribute('aria-label')))
-          .to.deep.equal(cases.map(([text]) => `${text}. Opens Resource in a new tab.`));
-        expect(window.fetch.called).to.be.false;
-      });
-
-      it('renders every existing Code and Design status without requiring links', async () => {
-        window.history.pushState({}, '', '/content/manual-status');
-        const statuses = Object.values(STATUSES);
-        const el = mountAuthored(['Code', 'Design'].flatMap((kind) => statuses.map((status) => (
-          `<div><div><p> ${kind.toUpperCase()}   ${status.label.toUpperCase()} </p></div><div></div></div>`
-        ))).join(''));
-
-        await init(el);
-
-        const pills = [...el.querySelectorAll('.component-status-pill')];
-        expect(pills.map((pill) => pill.textContent.trim())).to.deep.equal(
-          ['Code', 'Design'].flatMap((kind) => statuses.map((status) => (
-            `${kind.toUpperCase()}   ${status.label.toUpperCase()}`
-          ))),
-        );
-        expect(pills.map((pill) => pill.dataset.status))
-          .to.deep.equal([...statuses, ...statuses].map((status) => status.id));
-        expect(pills.every((pill) => pill.tagName === 'SPAN')).to.be.true;
-        expect(pills.every((pill) => pill.querySelector('svg[aria-hidden="true"]'))).to.be.true;
+        expect(pill.dataset.status).to.equal('authored');
+        expect(pill.querySelector('a').getAttribute('href')).to.equal('/legacy');
         expect(window.fetch.called).to.be.false;
       });
 
       it('keeps multiple authored instances independent and preserves an authored group name', async () => {
         const first = mountAuthored();
         const second = mountAuthored(`
-          <div><div>Code experimental</div><div></div></div>
+          <div><div>Code experimental</div></div>
         `);
         second.setAttribute('aria-label', 'Experimental implementation');
 
@@ -591,13 +596,13 @@ describe('component-status block', () => {
         window.fetch.resetHistory();
 
         const authored = mountAuthored(`
-          <div><div>iOS code experimental</div><div><a href="/experimental">Experimental code</a></div></div>
+          <div><div><a href="/experimental">iOS code experimental</a></div></div>
         `);
         main.append(authored);
         await init(authored);
 
         expect(authored.querySelectorAll('.component-status-pill')).to.have.lengthOf(1);
-        expect(authored.querySelector('.component-status-label')?.textContent)
+        expect(authored.querySelector('.component-status-pill')?.textContent)
           .to.equal('iOS code experimental');
         expect(automatic.isConnected).to.be.false;
         expect(window.fetch.called).to.be.false;
@@ -613,7 +618,7 @@ describe('component-status block', () => {
         document.body.append(main);
         const automaticReady = init(automatic);
         const authored = mountAuthored(`
-          <div><div>Code deprecated</div><div><a href="/legacy">Legacy code</a></div></div>
+          <div><div><a href="/legacy">Code deprecated</a></div></div>
         `);
         main.append(authored);
         await init(authored);
@@ -626,30 +631,21 @@ describe('component-status block', () => {
 
         expect(automatic.isConnected).to.be.false;
         expect(main.querySelectorAll('.component-status-pill')).to.have.lengthOf(1);
-        expect(main.querySelector('.component-status-label')?.textContent)
+        expect(main.querySelector('.component-status-pill')?.textContent)
           .to.equal('Code deprecated');
       });
 
       [
-        ['an unknown kind', '<div><div>Development available</div><div></div></div>'],
-        ['an unknown status', '<div><div>Code ready</div><div></div></div>'],
-        ['a partial kind', '<div><div>Codec available</div><div></div></div>'],
-        ['a partial status', '<div><div>Code unavailable</div><div></div></div>'],
-        ['ambiguous kinds', '<div><div>Code and Design available</div><div></div></div>'],
-        ['ambiguous statuses', '<div><div>Code available but deprecated</div><div></div></div>'],
-        ['a missing cell', '<div><div>Code available</div></div>'],
-        ['an extra cell', '<div><div>Code available</div><div></div><div>extra</div></div>'],
-        ['plain text instead of a link', '<div><div>Code available</div><div>https://example.com</div></div>'],
-        ['multiple links', '<div><div>Code available</div><div><a href="/one">One</a><a href="/two">Two</a></div></div>'],
-        ['a missing href', '<div><div>Code available</div><div><a>Missing</a></div></div>'],
-        ['an empty href', '<div><div>Code available</div><div><a href="">Empty</a></div></div>'],
-        ['a script URL', '<div><div>Code available</div><div><a href="javascript:alert(1)">Unsafe</a></div></div>'],
-        ['a data URL', '<div><div>Code available</div><div><a href="data:text/html,test">Unsafe</a></div></div>'],
+        ['a missing cell', '<div></div>'],
+        ['a missing href', '<div><div><a>Code available</a></div></div>'],
+        ['an empty href', '<div><div><a href="">Code available</a></div></div>'],
+        ['a script URL', '<div><div><a href="javascript:alert(1)">Code available</a></div></div>'],
+        ['a data URL', '<div><div><a href="data:text/html,test">Code available</a></div></div>'],
       ].forEach(([description, row]) => {
         it(`logs and omits ${description} without discarding valid authored rows`, async () => {
           const log = sandbox.spy();
           setConfig({ ...SAFE_CONFIG, log });
-          const el = mountAuthored(`${row}<div><div>Code not available</div><div></div></div>`);
+          const el = mountAuthored(`${row}<div><div>Code not available</div></div>`);
 
           await init(el);
 
@@ -664,7 +660,7 @@ describe('component-status block', () => {
       it('retains an empty hidden authored component-status when every row is invalid', async () => {
         const log = sandbox.spy();
         setConfig({ ...SAFE_CONFIG, log });
-        const el = mountAuthored('<div><div>Code ready</div><div></div></div>');
+        const el = mountAuthored('<div></div>');
 
         await init(el);
 
@@ -675,33 +671,19 @@ describe('component-status block', () => {
         expect(window.fetch.called).to.be.false;
       });
 
-      it('retains an empty hidden authored component-status when audience filtering hides every pill', async () => {
-        setConfig({ ...SAFE_CONFIG, cdnEnv: true });
-        const el = mountAuthored(`
-          <div><div>Design available</div><div><a href="/private-design">Design</a></div></div>
-        `);
-
-        await init(el);
-
-        expect(el.isConnected).to.be.true;
-        expect(el.hidden).to.be.true;
-        expect(el.childNodes).to.have.lengthOf(0);
-        expect(window.fetch.called).to.be.false;
-      });
-
       for (const cdnEnv of [false, true]) {
-        it(`${cdnEnv ? 'hides' : 'retains'} authored Design for an anonymous ${cdnEnv ? 'CDN' : 'local'} visitor`, async () => {
+        it(`does not infer audience restrictions for authored content on ${cdnEnv ? 'CDN' : 'local'} pages`, async () => {
           setConfig({ ...SAFE_CONFIG, cdnEnv });
           window.history.pushState({}, '', '/content/manual-status');
           const el = mountAuthored(`
-            <div><div>iOS code available</div><div></div></div>
-            <div><div>iOS design available</div><div></div></div>
+            <div><div>iOS code available</div></div>
+            <div><div>iOS design available</div></div>
           `);
 
           await init(el);
 
-          expect(el.querySelectorAll('[data-kind="dev"]')).to.have.lengthOf(1);
-          expect(el.querySelectorAll('[data-kind="design"]')).to.have.lengthOf(cdnEnv ? 0 : 1);
+          expect(el.querySelectorAll('[data-kind="authored"]')).to.have.lengthOf(2);
+          expect(el.textContent).to.include('iOS design available');
           expect(window.fetch.called).to.be.false;
         });
       }
@@ -784,10 +766,10 @@ describe('component-status block', () => {
       window.history.pushState({}, '', '/content/manual-status');
       const authoredEl = document.createElement('div');
       authoredEl.innerHTML = `
-        <div><div>iOS design available</div><div><a href="https://www.figma.com/design/example">Switch design</a></div></div>
+        <div><div><a href="https://www.figma.com/design/example">iOS design available</a></div></div>
       `;
       await init(authoredEl);
-      expect(authoredEl.querySelector('[data-kind="design"]')?.textContent.trim())
+      expect(authoredEl.querySelector('[data-kind="authored"]')?.textContent.trim())
         .to.equal('iOS design available');
     });
 

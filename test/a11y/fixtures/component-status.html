@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/blocks/component-status/component-status.css">
   <link rel="stylesheet" href="/blocks/page-nav/page-nav.css">
+  <link rel="stylesheet" href="/blocks/page-hero/page-hero.css">
 </head>
 <body>
   <main id="main-content">
@@ -17,16 +18,10 @@
   <template id="authored-status">
     <div class="component-status">
       <div>
-        <div>Android code available</div>
-        <div><a href="https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.switch/-spectrum-switch.html">Android Switch documentation</a></div>
-      </div>
-      <div>
-        <div>iOS design available</div>
-        <div><a href="https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=11371-7857&amp;m=dev">iOS Switch design</a></div>
-      </div>
-      <div>
-        <div>iOS code not available</div>
-        <div></div>
+        <div><p><a href="https://www.figma.com/design/OQExiy8bX0pRqee71eAWX6/S2---iOS?node-id=2595-2573">iOS Figma: Menu</a></p></div>
+        <div><a href="https://github.com/OneAdobe/spectrum-ios/tree/main/Sources/SpectrumComponents/Menu">iOS GitHub repo: Menu</a></div>
+        <div>Android Code not available</div>
+        <div>Android Design Not available</div>
       </div>
     </div>
   </template>
@@ -55,6 +50,21 @@
     }
     if (params.has('nav-first')) {
       await import('/blocks/page-nav/page-nav.js');
+    }
+    if (params.has('hero')) {
+      const meta = document.createElement('meta');
+      meta.name = 'template';
+      meta.content = 'component';
+      document.head.append(meta);
+      const hero = document.createElement('div');
+      hero.className = 'page-hero';
+      const heading = document.createElement('h1');
+      heading.textContent = 'Menu';
+      hero.append(heading);
+      document.querySelector('.section').prepend(hero);
+      setConfig({ components: [], cdnEnv: false });
+      const { default: initHero } = await import('/blocks/page-hero/page-hero.js');
+      initHero(hero);
     }
     await Promise.all([...document.querySelectorAll('.component-status')].map(init));
     if (params.has('nav') && !params.has('nav-first')) {

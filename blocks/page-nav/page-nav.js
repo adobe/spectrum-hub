@@ -16,10 +16,11 @@ export function shouldRenderWidget(widget, isComponentPage, isPatternsPage = fal
   return isComponentPage || isPatternsPage || GLOBAL_WIDGETS.has(widget.name);
 }
 
-function makeWidgetElement(tag, name, label, icon, getSvgRef) {
-  const widgetEl = document.createElement(tag);
-  widgetEl.className = 'action-button action-button-quiet';
+function makeWidgetElement(tag, name, label, icon, getSvgRef, source) {
+  const widgetEl = source ? source.cloneNode(true) : document.createElement(tag);
+  widgetEl.classList.add('action-button', 'action-button-quiet');
   widgetEl.dataset.widget = name;
+  if (source) { return widgetEl; }
   widgetEl.append(getSvgRef(icon, 'icon'));
   const span = document.createElement('span');
   span.textContent = label;
@@ -72,24 +73,20 @@ function authoredWidgets(blocks) {
   return [...blocks].flatMap(([block, resources]) => {
     const isPublic = Boolean(block.closest('.audience-public'));
     const isPrivate = Boolean(block.closest('.audience-private'));
-    return resources.flatMap(({ kind, text, link }) => {
-      if (!link) { return []; }
-      const name = kind === 'design' ? 'see-in-figma' : 'go-to-impl';
-      const widget = WIDGETS.find((entry) => entry.name === name);
-      return [{
-        ...widget,
+    return resources.flatMap((cell) => [...cell.querySelectorAll('a')].map((link) => (
+      {
+        name: 'authored',
+        tag: 'a',
+        source: link,
         public: isPublic,
-        private: isPrivate || widget.private,
-        label: text,
+        private: isPrivate,
+        label: link.textContent.trim(),
         href: link.href,
         decorate: (anchor) => {
           anchor.href = link.href;
-          anchor.target = '_blank';
-          anchor.rel = 'noopener noreferrer';
-          anchor.setAttribute('aria-label', `${text}. Opens ${link.dest} in a new tab.`);
         },
-      }];
-    });
+      }
+    )));
   });
 }
 
@@ -104,7 +101,7 @@ async function renderWidgets(el) {
   const page = document.querySelector('main');
   let authored;
   if (page) {
-    const { getAuthoredStatusBlocks, observeAuthoredStatusBlocks } = await import('../../scripts/utils/authored-status.js');
+    const { getAuthoredStatusBlocks, observeAuthoredStatusBlocks } = await import('../../scripts/utils/authored-status-cell.js');
     if (firstRender) {
       observeAuthoredStatusBlocks(page, () => renderWidgets(el));
     }
@@ -124,7 +121,9 @@ async function renderWidgets(el) {
   const { getSvgRef } = await import('../../scripts/utils/svg.js');
 
   const elements = candidates.map(
-    ({ tag, name, label, icon }) => makeWidgetElement(tag, name, label, icon, getSvgRef),
+    ({
+      tag, name, label, icon, source,
+    }) => makeWidgetElement(tag, name, label, icon, getSvgRef, source),
   );
   group.append(...elements);
 
@@ -167,6 +166,7 @@ async function renderWidgets(el) {
   existingGroup.append(...group.children);
   if (focusedWidget && !GLOBAL_WIDGETS.has(focusedWidget)) {
     const focusTarget = existingGroup.querySelector(`[data-widget="${focusedWidget}"]`)
+      ?? existingGroup.querySelector('[data-widget="authored"]')
       ?? existingGroup.querySelector('[data-widget="copy-markdown"]');
     focusTarget?.focus({ preventScroll: true });
   }

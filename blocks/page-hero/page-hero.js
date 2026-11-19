@@ -20,7 +20,7 @@ export default function init(el) {
   const desc = document.createElement('p');
   desc.className = 'description';
   desc.textContent = getMetadata('description') ?? 'No description found in metadata.';
-  el.append(desc);
+  h1.after(desc);
 
   const page = el.closest('main') ?? el;
   if (page.hasAttribute('data-authored-component-status')

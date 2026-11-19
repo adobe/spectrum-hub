@@ -187,7 +187,7 @@ Block styles are unlayered, so [they override the global styles](https://develop
 | `breadcrumbs` | Automatic path navigation for component and opted-in pages |
 | `card` | General linked/content card layouts |
 | `columns` | Responsive multi-column content layout |
-| `component-status` | Authored Code/Design status rows whose links also supply page actions, or automatic route-derived pills when empty |
+| `component-status` | One resource per authored cell, with links that also supply page actions, or automatic route-derived pills when empty. Authored blocks move into the hero on component-template pages. See [Component status authoring](./CONTENT_AUTHORING.md#component-status). |
 | `footer` | Loads and decorates the configured footer fragment |
 | `fragment` | Fetches reusable content and recursively runs the page lifecycle |
 | `header` | Loads header navigation, IMS controls, and responsive behavior |

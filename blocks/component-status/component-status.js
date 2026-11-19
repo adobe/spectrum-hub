@@ -1,8 +1,8 @@
 /**
  * Per-component Code and Design pills.
  *
- * Authored rows preserve their label text, with a Code/Design kind, an existing
- * status, and an optional link on any page. Linked rows also supply page-nav actions.
+ * Authored cells retain their content, links, and optional icons without
+ * interpreting labels or statuses. Linked cells also supply page-nav actions.
  * Authored component-status elements without visible pills stay hidden and empty
  * so fragment insertion still suppresses automatic pills and page-nav actions.
  * Empty blocks use the current route and generated status data. Page-hero creates an
@@ -29,12 +29,17 @@ import {
   componentContextFromPath, platformsForContext, NATIVE_PLATFORMS,
 } from '../../scripts/utils/component-path.js';
 import { fetchComponentPageSlice } from '../../scripts/utils/component-slice.js';
-import { getConfig, removeForAudience } from '../../scripts/ak.js';
+import { getConfig, getMetadata, removeForAudience } from '../../scripts/ak.js';
 import {
-  STATUS_PILLS, getAuthoredStatusBlocks, observeAuthoredStatusBlocks,
-} from '../../scripts/utils/authored-status.js';
+  getAuthoredStatusBlocks, observeAuthoredStatusBlocks,
+} from '../../scripts/utils/authored-status-cell.js';
 
 const NOT_AVAILABLE = 'not-available';
+const STATUS_PILLS = [
+  { kind: 'dev', label: 'Code' },
+  { kind: 'design', label: 'Design', column: 'figma' },
+];
+const authoredPositions = new WeakMap();
 
 // The s2-icon glyph per unified status.
 const STATUS_ICONS = {
@@ -61,15 +66,13 @@ export function resolveContext(pathname) {
 }
 
 /**
- * One status pill with a per-status icon and a generated or authored label. Rendered as an
+ * One automatic status pill with a per-status icon and generated label. Rendered as an
  * external link when `link` resolves, otherwise a static span. An absent cell
  * (e.g. Development on a design-only component) renders as Not available.
  */
-function buildPill({
-  kind, label: prefix, text: authoredText,
-}, cell, link) {
+function buildPill({ kind, label: prefix }, cell, link) {
   const status = STATUSES[cell?.status] ?? STATUSES[NOT_AVAILABLE];
-  const text = authoredText ?? `${prefix} ${status.label.toLowerCase()}`;
+  const text = `${prefix} ${status.label.toLowerCase()}`;
 
   const pill = document.createElement(link ? 'a' : 'span');
   pill.className = 'component-status-pill';
@@ -147,6 +150,44 @@ export function buildPills(context, componentData, platforms = platformsForConte
     : buildNativePills(context, componentData, platforms, figmaLinks);
 }
 
+function placeAuthoredStatus(el) {
+  if (getMetadata('template') !== 'component') { return; }
+  const page = el.closest('main') ?? document.querySelector('main');
+  const hero = page?.querySelector('.page-hero') ?? el.closest('.page-hero');
+  if (!hero) { return; }
+
+  const place = () => {
+    if (!(page ?? hero).contains(el)) { return false; }
+    if (el.parentElement === hero && authoredPositions.has(el)) { return true; }
+    for (const audience of ['audience-public', 'audience-private']) {
+      if (el.closest(`.${audience}`)) { el.classList.add(audience); }
+    }
+    // Keep a source marker so late fragments retain their authoring order.
+    let position = authoredPositions.get(el);
+    if (!position) {
+      position = document.createComment('component-status source');
+      el.before(position);
+      authoredPositions.set(el, position);
+    }
+    const placed = [...hero.children]
+      .filter((block) => block !== el && authoredPositions.has(block));
+    const following = placed.find((block) => (
+      position.compareDocumentPosition(authoredPositions.get(block))
+        === Node.DOCUMENT_POSITION_FOLLOWING
+    ));
+    const previous = placed.at(-1) ?? hero.querySelector(':scope > .description');
+    hero.insertBefore(el, following ?? previous?.nextElementSibling ?? null);
+    return true;
+  };
+
+  if (!place()) {
+    // Fragments decorate outside main before being inserted into the page.
+    const stopObserving = observeAuthoredStatusBlocks(page, () => {
+      if (place()) { stopObserving(); }
+    });
+  }
+}
+
 export default async function init(el) {
   const page = el.closest('main');
   const authored = getAuthoredStatusBlocks(page ?? el);
@@ -154,9 +195,12 @@ export default async function init(el) {
   if (authored.has(el)) {
     // Preserve authored intent if audience filtering removes this block before the hero loads.
     if (page) { page.dataset.authoredComponentStatus = ''; }
-    pills = authored.get(el).map((resource) => (
-      buildPill(resource, { status: resource.status }, resource.link)
-    ));
+    pills = authored.get(el);
+    pills.forEach((pill) => {
+      pill.classList.add('component-status-pill');
+      pill.dataset.kind = 'authored';
+      pill.dataset.status = 'authored';
+    });
   } else {
     if (authored.size) {
       el.remove();
@@ -173,7 +217,7 @@ export default async function init(el) {
   }
   const fragment = document.createDocumentFragment();
   fragment.append(...pills);
-  const designPills = [...fragment.querySelectorAll('[data-kind="design"]')];
+  const designPills = authored.has(el) ? [] : [...fragment.querySelectorAll('[data-kind="design"]')];
   try {
     await Promise.all(designPills.map((privateEl) => removeForAudience({ privateEl })));
   } catch (error) {
@@ -186,6 +230,7 @@ export default async function init(el) {
     if (authored.has(el)) {
       el.replaceChildren();
       el.hidden = true;
+      placeAuthoredStatus(el);
     } else {
       el.remove();
     }
@@ -199,7 +244,9 @@ export default async function init(el) {
   if (!el.hasAttribute('role')) { el.setAttribute('role', 'group'); }
   if (!el.hasAttribute('aria-label')) { el.setAttribute('aria-label', 'Component status'); }
   el.replaceChildren(...visiblePills);
-  if (!authored.has(el) && page) {
+  if (authored.has(el)) {
+    placeAuthoredStatus(el);
+  } else if (page) {
     const stopObserving = observeAuthoredStatusBlocks(page, () => {
       el.remove();
       stopObserving();
