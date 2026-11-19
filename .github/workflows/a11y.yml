@@ -27,7 +27,22 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # aem up proxies to a Site Authentication origin; without a token every request
+      # 401s and the suite fails as misleading timeouts, not as an auth error.
+      - name: Check the site token is available
+        env:
+          AEM_SITE_TOKEN: ${{ secrets.AEM_SITE_TOKEN }}
+        run: |
+          if [ -z "$AEM_SITE_TOKEN" ]; then
+            echo "::error::AEM_SITE_TOKEN is not set. Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      # Via env, not --site-token, so the token stays out of the process list.
+      # yargs maps AEM_SITE_TOKEN -> --site-token (cli.js: .env('AEM_')).
       - name: Run accessibility tests
+        env:
+          AEM_SITE_TOKEN: ${{ secrets.AEM_SITE_TOKEN }}
         run: npm run test:a11y
 
       - name: Upload Playwright report
