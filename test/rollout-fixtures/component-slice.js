@@ -4,6 +4,8 @@ import { toSlug } from './component-path.js';
 import * as componentPath from './component-path.js';
 
 // Cached preparation helper; the new APIs were still dormant.
+// TODO(cache-rollout): Delete with test/blocks/cache-rollout.test.js in figma-rollout-3-cleanup
+// after the documented cache-retirement gates are met.
 const cache = new Map();
 
 export function componentSlugForPlatform(slug, platform, componentNames = IMPL_COMPONENT_NAMES) {

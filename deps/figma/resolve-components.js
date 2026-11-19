@@ -10,6 +10,8 @@ export function resolveFigmaComponents(rows, {
   const excluded = new Set(excludes);
   const identities = new Set();
   const entries = rows.map((row) => {
+    // TODO(cache-rollout): Remove two-field S2 Web normalization in figma-rollout-3-cleanup
+    // after migrating legacy roster fixtures and updating the documented input contract.
     const legacy = row.source === undefined && row.platform === undefined
       && row.figmaFile === undefined;
     const source = FIGMA_SOURCES.find((entry) => entry.id === (legacy ? 's2-web' : row.source));

@@ -1,7 +1,7 @@
 import { getConfig } from '../ak.js';
 
-// TODO(cache-rollout): Consolidate with authored-status.js in figma-rollout-3-cleanup
-// after cached descriptor-based consumers expire. Keep this distinct module URL until then.
+// TODO(cache-rollout): Remove the descriptor-only authored-status.js in figma-rollout-3-cleanup
+// after cached consumers retire. Keep this module URL and cell-node contract; retire this note.
 const sources = new WeakMap();
 const snapshots = new WeakMap();
 const observers = new WeakMap();

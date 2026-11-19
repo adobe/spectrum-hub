@@ -40,6 +40,8 @@ describe('figma block', () => {
   });
 
   describe('figmaNodeUrl — Figma page id → dev-mode URL', () => {
+    // TODO(cache-rollout): Replace this implicit S2 Web call with explicit source/file
+    // arguments in figma-rollout-3-cleanup when the cached one-argument contract retires.
     it('builds a dev-mode URL with the node id hyphenated', () => {
       expect(figmaNodeUrl('9230:3620')).to.equal(
         'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',

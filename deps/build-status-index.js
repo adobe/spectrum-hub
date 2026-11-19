@@ -520,6 +520,8 @@ function sharedPageSlug(component) {
  *
  * @returns {{ slices: { slug: string, data: object, shared: boolean }[], warnings: string[] }}
  */
+// TODO(cache-rollout): In figma-rollout-3-cleanup, drop the unused roster parameter,
+// obsolete third arguments at callers, and always-empty slice warnings/caller/test plumbing.
 export function buildComponentSlices(roster, components) {
   const slices = components.flatMap((component) => {
     const { name } = component;
@@ -666,6 +668,8 @@ export function buildImplComponentNames(
  * @param {{ slug: string, data: object, shared: boolean }[]} slices
  * @returns {string[]} warnings
  */
+// TODO(cache-rollout): Audit retained slices against live routes in figma-rollout-3-cleanup.
+// Prune only verified unused files after cache retirement, not every slice absent from the index.
 export function writeComponentSlices(slices) {
   const warnings = [];
   const seen = new Set();

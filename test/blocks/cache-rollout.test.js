@@ -5,7 +5,8 @@ import * as componentSlice from '../../scripts/utils/component-slice.js';
 import * as figma from '../../scripts/utils/figma.js';
 import * as implementation from '../../scripts/utils/go-to-impl.js';
 
-// TODO(cache-rollout): Remove this transition suite in the third rollout branch.
+// TODO(cache-rollout): Remove this suite and both test/rollout-fixtures provider modules
+// in figma-rollout-3-cleanup after the documented cache-retirement gates are met.
 const fetchSource = window.fetch.bind(window);
 const objectUrls = [];
 

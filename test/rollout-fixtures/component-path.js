@@ -1,4 +1,6 @@
 // Cached preparation helper, before pattern parsing was activated.
+// TODO(cache-rollout): Delete with test/blocks/cache-rollout.test.js in figma-rollout-3-cleanup
+// after the documented cache-retirement gates are met.
 export const NATIVE_PLATFORMS = { ios: 'iOS', android: 'Android' };
 
 export function platformsForContext(context) {

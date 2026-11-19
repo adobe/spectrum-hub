@@ -119,6 +119,9 @@ source ID, display name, then node ID. `figmaPageId` is the component-set node I
 not the Figma canvas/page ID. Its historical field name remains for compatibility.
 Legacy rows containing only `name` and `figmaPageId` are read as S2 Web only.
 
+<!-- TODO(cache-rollout): Remove this legacy-row exception with the resolver
+normalization after fixture migration in figma-rollout-3-cleanup. -->
+
 ## Matching and selected references
 
 `component-aliases.json` supports `figmaSources[sourceId][displayName]` for

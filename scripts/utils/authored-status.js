@@ -1,6 +1,8 @@
 import { getConfig } from '../ak.js';
 import { STATUSES } from './status-model.js';
 
+// TODO(cache-rollout): Remove this descriptor-only module in figma-rollout-3-cleanup
+// after its cached consumers retire. Keep the live authored-status-cell.js URL unchanged.
 export const STATUS_PILLS = [
   { kind: 'dev', label: 'Code' },
   { kind: 'design', label: 'Design', column: 'figma' },

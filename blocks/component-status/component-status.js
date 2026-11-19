@@ -176,6 +176,8 @@ function placeAuthoredStatus(el) {
         === Node.DOCUMENT_POSITION_FOLLOWING
     ));
     const previous = placed.at(-1) ?? hero.querySelector(':scope > .description');
+    // TODO(cache-rollout): In figma-rollout-3-cleanup, prevent source-only wrappers/sections
+    // from reserving spacing/dividers without losing source markers or late-fragment ordering.
     hero.insertBefore(el, following ?? previous?.nextElementSibling ?? null);
     return true;
   };

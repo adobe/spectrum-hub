@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { buildComponentSlices } from '../../deps/build-status-index.js';
 
-// TODO(cache-rollout): Remove legacy-output assertions in the third rollout branch.
+// TODO(cache-rollout): Remove this suite with the legacy root field in figma-rollout-3-cleanup.
+// Retain shared-web/native isolation coverage in the permanent extraction suites.
 describe('transitional status slices', () => {
   const webFigma = {
     status: 'available',
