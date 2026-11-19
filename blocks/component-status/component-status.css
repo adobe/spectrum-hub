@@ -4,10 +4,15 @@
   align-items: center;
   gap: var(--s2-spacing-100);
   min-block-size: var(--se-component-m-height);
+
+  &[hidden] {
+    display: none;
+  }
 }
 
-.component-status-pill {
-  display: inline-flex;
+.component-status .component-status-pill,
+.component-status .component-status-pill a {
+  display: flex;
   align-items: center;
   gap: var(--s2-spacing-75);
   padding-inline: var(--s2-spacing-200);
@@ -20,11 +25,18 @@
   color: var(--s2-gray-900);
   white-space: nowrap;
   text-decoration: none;
+
+  & p {
+    margin: 0;
+    color: inherit;
+    max-inline-size: none;
+  }
 }
 
 /* Only the linked pills are interactive (a component with no docs/Figma target
 falls back to a static span). */
-a.component-status-pill {
+a.component-status-pill,
+.component-status-pill a {
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
 
@@ -36,6 +48,10 @@ a.component-status-pill {
     outline: var(--se-focus-indicator-width, 2px) solid var(--s2-blue-900);
     outline-offset: var(--s2-spacing-50);
   }
+}
+
+.component-status .component-status-pill:has(a) {
+  padding-inline: 0;
 }
 
 .component-status-icon {

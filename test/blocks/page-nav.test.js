@@ -1,8 +1,9 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { isComponentPath, shouldRenderWidget } from '../../blocks/page-nav/page-nav.js';
-import { setConfig } from '../../scripts/ak.js';
+import { decorateAudience, setConfig } from '../../scripts/ak.js';
 import { resetComponentSliceCacheForTests } from '../../scripts/utils/component-slice.js';
+import initStatus from '../../blocks/component-status/component-status.js';
 
 const SAFE_CONFIG = {
   hostnames: ['authorkit.dev'],
@@ -31,6 +32,20 @@ function makeDOM({ h1Text = 'Page Title', h2Texts = ['Section One', 'Section Two
     main.append(h2);
   });
   document.body.append(main);
+}
+
+function mountAuthoredStatus(rows = `
+  <div>
+    <div><a href="/authored-code">iOS GitHub repo: Menu</a></div>
+    <div><a href="https://www.figma.com/design/authored">iOS Figma: Menu</a></div>
+    <div>Android code not available</div>
+  </div>
+`) {
+  const block = document.createElement('div');
+  block.className = 'component-status';
+  block.innerHTML = rows;
+  document.querySelector('main').append(block);
+  return block;
 }
 
 // page-nav.js has no init export: a top-level IIFE builds its own <nav> and
@@ -170,6 +185,107 @@ describe('page-nav block', () => {
       makeDOM({ h2Texts: [] });
       const el = await loadPageNav();
       expect(el).to.be.null;
+    });
+  });
+
+  describe('component and pattern pages without h2 headings', () => {
+    let originalUrl;
+    let mql;
+    let observer;
+    let fetchStub;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      mql = stubMatchMedia(sandbox, true);
+      observer = stubIntersectionObserver(sandbox);
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true,
+        json: async () => ({
+          web: {
+            figma: {
+              figmaSource: 'ai-toolkit', figmaFile: '3WdX799d7ptEVA6RuTESXs', figmaPageId: '1:2',
+            },
+          },
+        }),
+      });
+      resetComponentSliceCacheForTests();
+      makeDOM({ h2Texts: [] });
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    ['/mobile/components/menus', '/web/swc/components/missing-component'].forEach((pathname) => {
+      it(`keeps only Copy markdown when the automatic status slice 404s on ${pathname}`, async () => {
+        fetchStub.resolves({ ok: false, status: 404 });
+        window.history.pushState({}, '', pathname);
+        const source = mountAuthoredStatus('');
+        await initStatus(source);
+
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+
+        expect(source.isConnected).to.be.false;
+        expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+        expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+        expect(fetchStub.called).to.be.true;
+        expect(fetchStub.callCount).to.equal(new Set(fetchStub.args.map(([url]) => url)).size);
+      });
+    });
+
+    [
+      '/web/swc/components/response-status',
+      '/web/swc/patterns/conversational-ai/response-status',
+    ].forEach((pathname) => {
+      it(`renders accessible page actions and selected links on ${pathname}`, async () => {
+        window.history.pushState({}, '', pathname);
+        const el = await loadPageNav();
+        expect(el).to.not.be.null;
+        const group = await waitForEl(el, '.page-nav-widgets');
+        expect(el.getAttribute('aria-label')).to.equal('Page actions');
+        expect(el.querySelector(':scope > ul')).to.be.null;
+        expect(observer.count).to.equal(0);
+        expect([...group.querySelectorAll('[data-widget]')].map((widget) => widget.dataset.widget))
+          .to.deep.equal(['copy-markdown', 'go-to-impl', 'see-in-figma']);
+        expect(group.querySelector('[data-widget="go-to-impl"]').href).to.equal(
+          'https://spectrum-web-components.adobe.com/?path=/docs/patterns-ai-toolkit-response-status--docs',
+        );
+        expect(group.querySelector('[data-widget="see-in-figma"]').href).to.equal(
+          'https://www.figma.com/design/3WdX799d7ptEVA6RuTESXs/Spectrum-AI-Toolkit?node-id=1-2&m=dev',
+        );
+      });
+    });
+
+    it('defers widgets below the desktop breakpoint and does not duplicate them on return', async () => {
+      window.history.pushState({}, '', '/web/swc/patterns/ai-toolkit/response-status');
+      mql.dispatch(false);
+      expect(await loadPageNav()).to.be.null;
+      expect(fetchStub.called).to.be.false;
+      mql.dispatch(true);
+      const el = document.querySelector('nav.page-nav');
+      expect(el).to.not.be.null;
+      await waitForEl(el, '.page-nav-widgets');
+      mql.dispatch(false);
+      expect(document.querySelector('nav.page-nav')).to.be.null;
+      mql.dispatch(true);
+      expect(document.querySelector('nav.page-nav')).to.equal(el);
+      expect(el.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+      expect(observer.count).to.equal(0);
+    });
+
+    it('keeps the pattern Design widget private on CDN', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      window.history.pushState({}, '', '/web/swc/patterns/ai-toolkit/response-status');
+      const el = await loadPageNav();
+      expect(el).to.not.be.null;
+      const group = await waitForEl(el, '.page-nav-widgets');
+      expect(group.querySelector('[data-widget="see-in-figma"]')).to.be.null;
+      expect(group.querySelector('[data-widget="go-to-impl"]')).to.not.be.null;
+      expect(fetchStub.calledOnceWithExactly(
+        `${window.location.origin}/deps/status/response-status.json`,
+      )).to.be.true;
     });
   });
 
@@ -812,8 +928,424 @@ describe('page-nav block', () => {
       expect(shouldRenderWidget(seeInFigma, true)).to.be.true;
     });
 
+    it('offers implementation and private Design widgets on pattern pages', () => {
+      expect(shouldRenderWidget(goToImpl, false, true)).to.be.true;
+      expect(shouldRenderWidget(seeInFigma, false, true)).to.be.true;
+    });
+
     it('still requires the URL gate for a private widget', () => {
       expect(shouldRenderWidget(seeInFigma, false)).to.be.false;
+    });
+  });
+
+  describe('authored status actions', () => {
+    let originalUrl;
+    let fetchStub;
+    let mql;
+
+    beforeEach(() => {
+      originalUrl = window.location.pathname + window.location.search + window.location.hash;
+      mql = stubMatchMedia(sandbox, true);
+      stubIntersectionObserver(sandbox);
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false });
+      fetchStub = sandbox.stub(window, 'fetch').resolves({
+        ok: true, json: async () => ({ web: {} }),
+      });
+      resetComponentSliceCacheForTests();
+      window.history.pushState({}, '', '/web/swc/components/action-button');
+      makeDOM();
+    });
+
+    afterEach(() => {
+      window.history.pushState({}, '', originalUrl);
+    });
+
+    [false, true].forEach((statusFirst) => {
+      it(`uses authored links instead of automatic actions when ${statusFirst ? 'pills' : 'navigation'} initialize first`, async () => {
+        const source = mountAuthoredStatus();
+        if (statusFirst) { await initStatus(source); }
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        if (!statusFirst) { await initStatus(source); }
+
+        const links = [...group.querySelectorAll('a')];
+        expect(links.map((link) => link.textContent.trim()))
+          .to.deep.equal(['iOS GitHub repo: Menu', 'iOS Figma: Menu']);
+        expect(links.map((link) => link.getAttribute('href'))).to.deep.equal([
+          `${window.location.origin}/authored-code`, 'https://www.figma.com/design/authored',
+        ]);
+        expect(links.every((link) => link.dataset.widget === 'authored')).to.be.true;
+        expect(links.every((link) => !link.querySelector('svg'))).to.be.true;
+        expect(links.every((link) => !link.hasAttribute('target')
+          && !link.hasAttribute('aria-label'))).to.be.true;
+        expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+        expect(source.querySelectorAll('.component-status-pill')).to.have.lengthOf(3);
+        expect(fetchStub.called).to.be.false;
+      });
+    });
+
+    it('reuses authored link content and attributes without generating an icon', async () => {
+      const source = mountAuthoredStatus(`
+        <div><div><a href="/resource" target="_blank" rel="noopener" aria-label="Custom resource"><span class="icon" aria-hidden="true"><svg><path d="M0 0h10v10z"></path></svg></span><strong>Explore this resource</strong></a></div></div>
+      `);
+      const authoredLink = source.querySelector('a');
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      const action = group.querySelector('a');
+
+      expect(action.dataset.widget).to.equal('authored');
+      expect(action.innerHTML).to.equal(authoredLink.innerHTML);
+      expect(action.getAttribute('aria-label')).to.equal('Custom resource');
+      expect(action.target).to.equal('_blank');
+      expect(action.rel).to.equal('noopener');
+      expect(action.querySelectorAll('svg')).to.have.lengthOf(1);
+    });
+
+    it('retains authored actions when a decorated fragment moves into the page', async () => {
+      const log = sandbox.spy();
+      setConfig({
+        ...SAFE_CONFIG, cdnEnv: false, linkBlocks: [], log,
+      });
+      fetchStub.withArgs('/fragments/status').resolves(new Response(`
+        <main><div><div class="component-status">
+          <div><div><a href="/legacy">Code deprecated</a></div></div>
+        </div></div></main>
+      `));
+      const { loadFragment } = await import('../../blocks/fragment/fragment.js');
+      const { fragment } = await loadFragment('/fragments/status');
+      document.querySelector('main').append(fragment);
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(group.querySelector('[data-widget="authored"]')?.getAttribute('href'))
+        .to.equal(`${window.location.origin}/legacy`);
+      expect(fragment.querySelector('.component-status-pill')?.textContent)
+        .to.equal('Code deprecated');
+      expect(log.called).to.be.false;
+      expect(fetchStub.calledOnceWithExactly('/fragments/status')).to.be.true;
+    });
+
+    ['copy-markdown', 'go-to-impl'].forEach((focusedWidget) => {
+      it(`replaces automatic actions with a late fragment while preserving ${focusedWidget} focus`, async () => {
+        const log = sandbox.spy();
+        setConfig({
+          ...SAFE_CONFIG, cdnEnv: false, linkBlocks: [], log,
+        });
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        const contents = nav.querySelector(':scope > ul');
+        const copy = group.querySelector('[data-widget="copy-markdown"]');
+        group.querySelector(`[data-widget="${focusedWidget}"]`).focus();
+        fetchStub.resetHistory();
+        fetchStub.withArgs('/fragments/late-status').resolves(new Response(`
+          <main><div><div class="component-status">
+            <div><div><a href="/legacy">Code deprecated</a></div></div>
+          </div></div></main>
+        `));
+        const { loadFragment } = await import('../../blocks/fragment/fragment.js');
+        const { fragment } = await loadFragment('/fragments/late-status');
+        expect(group.querySelector('[data-widget="go-to-impl"]').textContent.trim())
+          .to.equal('Go to SWC');
+
+        document.querySelector('main').append(fragment);
+        await waitFor(() => group.querySelector('a')?.textContent.trim() === 'Code deprecated');
+
+        expect(nav.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+        expect(nav.querySelector('.page-nav-widgets')).to.equal(group);
+        expect(nav.querySelector(':scope > ul')).to.equal(contents);
+        expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
+        expect(group.querySelectorAll('a')).to.have.lengthOf(1);
+        expect(group.querySelector('a').href).to.equal(`${window.location.origin}/legacy`);
+        expect(document.activeElement).to.equal(
+          focusedWidget === 'copy-markdown' ? copy : group.querySelector('a'),
+        );
+        expect(log.called).to.be.false;
+        expect(fetchStub.calledOnceWithExactly('/fragments/late-status')).to.be.true;
+      });
+    });
+
+    [
+      ['informational', '<div><div>Code not available</div></div>'],
+      ['invalid', '<div></div>'],
+      ['empty', '<div><div></div></div>'],
+    ].forEach(([description, rows]) => {
+      it(`removes automatic actions for a late ${description} source without restoring fallback`, async () => {
+        const log = sandbox.spy();
+        setConfig({ ...SAFE_CONFIG, cdnEnv: true, log });
+        const nav = await loadPageNav();
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        const copy = group.querySelector('[data-widget="copy-markdown"]');
+        group.querySelector('[data-widget="go-to-impl"]').focus();
+        fetchStub.resetHistory();
+        const source = mountAuthoredStatus(rows);
+
+        await initStatus(source);
+        await decorateAudience(document);
+        await waitFor(() => group.querySelectorAll('a').length === 0);
+
+        expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
+        expect(document.activeElement).to.equal(copy);
+        expect(fetchStub.called).to.be.false;
+        expect(log.callCount).to.equal(description === 'invalid' ? 1 : 0);
+      });
+    });
+
+    [
+      ['invalid', '<div></div>'],
+      ['empty', '<div><div></div></div>'],
+    ].forEach(([description, rows]) => {
+      [false, true].forEach((navFirst) => {
+        it(`suppresses automatic actions for a fragment's ${description} component-status when navigation loads ${navFirst ? 'first' : 'last'}`, async () => {
+          const log = sandbox.spy();
+          setConfig({
+            ...SAFE_CONFIG, cdnEnv: true, linkBlocks: [], log,
+          });
+          let nav;
+          let group;
+          let copy;
+          if (navFirst) {
+            nav = await loadPageNav();
+            group = await waitForEl(nav, '.page-nav-widgets');
+            copy = group.querySelector('[data-widget="copy-markdown"]');
+            expect(group.querySelector('[data-widget="go-to-impl"]')).not.to.be.null;
+            copy.focus();
+          }
+          fetchStub.resetHistory();
+          fetchStub.withArgs('/fragments/empty-status').resolves(new Response(`
+            <main><div><div class="component-status">${rows}</div></div></main>
+          `));
+          const { loadFragment } = await import('../../blocks/fragment/fragment.js');
+          const { fragment } = await loadFragment('/fragments/empty-status');
+          document.querySelector('main').append(fragment);
+          if (!navFirst) {
+            nav = await loadPageNav();
+            group = await waitForEl(nav, '.page-nav-widgets');
+          }
+
+          await waitFor(() => group.querySelectorAll('a').length === 0);
+
+          expect(group.querySelectorAll('[data-widget]')).to.have.lengthOf(1);
+          expect(group.querySelector('[data-widget="copy-markdown"]')).not.to.be.null;
+          if (navFirst) {
+            expect(group.querySelector('[data-widget="copy-markdown"]')).to.equal(copy);
+            expect(document.activeElement).to.equal(copy);
+          }
+          expect(log.callCount).to.equal(description === 'invalid' ? 1 : 0);
+          expect(fetchStub.calledOnceWithExactly('/fragments/empty-status')).to.be.true;
+        });
+      });
+    });
+
+    it('does not append stale automatic actions after a late authored render finishes first', async () => {
+      let respond;
+      fetchStub.returns(new Promise((resolve) => { respond = resolve; }));
+      const nav = await loadPageNav();
+      await waitFor(() => fetchStub.called);
+      const source = mountAuthoredStatus(`
+        <div><div><a href="/legacy">Code deprecated</a></div></div>
+      `);
+      await initStatus(source);
+      await waitFor(() => nav.querySelector('a[href$="/legacy"]'));
+
+      respond({ ok: true, json: async () => ({ web: {} }) });
+      await new Promise(requestAnimationFrame);
+
+      expect(nav.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+      expect([...nav.querySelectorAll('.page-nav-widgets a')].map((link) => link.href))
+        .to.deep.equal([`${window.location.origin}/legacy`]);
+      expect(nav.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+    });
+
+    it('combines newly inserted sources in document order without duplicate actions', async () => {
+      const last = mountAuthoredStatus(`
+        <div><div><a href="/last">Code available</a></div></div>
+      `);
+      await initStatus(last);
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      const first = mountAuthoredStatus(`
+        <div><div><a href="/first">Code deprecated</a></div></div>
+        <div><div><a href="/last">Code available</a></div></div>
+      `);
+      last.before(first);
+
+      await initStatus(first);
+      await waitFor(() => group.querySelectorAll('a').length === 2);
+
+      expect([...group.querySelectorAll('a')].map((link) => link.href)).to.deep.equal([
+        `${window.location.origin}/first`, `${window.location.origin}/last`,
+      ]);
+      const firstLink = group.querySelector('a');
+      const unrelated = document.createElement('p');
+      unrelated.textContent = 'Unrelated content';
+      document.querySelector('main').append(unrelated);
+      await new Promise(requestAnimationFrame);
+      expect(group.querySelector('a')).to.equal(firstLink);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    [
+      [false, false], [false, true], [true, false], [true, true],
+    ].forEach(([cdnEnv, inherited]) => {
+      [false, true].forEach((statusFirst) => {
+        it(`filters ${inherited ? 'inherited' : 'direct'} source audiences before deduplicating ${cdnEnv ? 'anonymous CDN' : 'local'} actions when ${statusFirst ? 'pills' : 'navigation'} initialize first`, async () => {
+          setConfig({ ...SAFE_CONFIG, cdnEnv });
+          const hidden = mountAuthoredStatus(`
+            <div><div><a href="/shared-code">Code available</a></div></div>
+            <div><div><a href="/hidden-code">Code deprecated</a></div></div>
+          `);
+          const hiddenContainer = inherited ? document.createElement('div') : hidden;
+          if (inherited) {
+            hidden.replaceWith(hiddenContainer);
+            hiddenContainer.append(hidden);
+          }
+          hiddenContainer.classList.add(cdnEnv ? 'audience-private' : 'audience-public');
+          const visible = mountAuthoredStatus(`
+            <div><div><a href="/shared-code">Code available</a></div></div>
+            <div><div><a href="/visible-code">Code experimental</a></div></div>
+          `);
+          const wrapper = document.createElement('div');
+          wrapper.className = cdnEnv ? 'audience-public' : 'audience-private';
+          visible.replaceWith(wrapper);
+          wrapper.append(visible);
+          if (statusFirst) {
+            await decorateAudience(document);
+            await initStatus(visible);
+          }
+
+          const nav = await loadPageNav();
+          const group = await waitForEl(nav, '.page-nav-widgets');
+          if (!statusFirst) {
+            expect(hidden.isConnected).to.be.true;
+            await decorateAudience(document);
+            await initStatus(visible);
+          }
+
+          expect(hidden.isConnected).to.be.false;
+          expect([...group.querySelectorAll('a')].map((link) => link.getAttribute('href')))
+            .to.deep.equal([
+              `${window.location.origin}/shared-code`, `${window.location.origin}/visible-code`,
+            ]);
+          expect(group.querySelectorAll('[data-widget="copy-markdown"]')).to.have.lengthOf(1);
+          expect(fetchStub.called).to.be.false;
+        });
+      });
+    });
+
+    ['/patterns/conversational-ai/manual', '/guidance/manual'].forEach((pathname) => {
+      it(`renders authored actions without headings on ${pathname}`, async () => {
+        document.querySelectorAll('main h2').forEach((heading) => heading.remove());
+        window.history.pushState({}, '', pathname);
+        mountAuthoredStatus();
+
+        const nav = await loadPageNav();
+
+        expect(nav).to.not.be.null;
+        const group = await waitForEl(nav, '.page-nav-widgets');
+        expect(nav.getAttribute('aria-label')).to.equal('Page actions');
+        expect(group.querySelectorAll('a')).to.have.lengthOf(2);
+        expect(fetchStub.called).to.be.false;
+      });
+    });
+
+    it('keeps unlinked pills informational without restoring automatic actions', async () => {
+      const source = mountAuthoredStatus(`
+        <div><div>iOS code not available</div></div>
+      `);
+      await initStatus(source);
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(source.querySelector('.component-status-pill').querySelector('a')).to.be.null;
+      expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+      expect(group.querySelectorAll('[data-widget]')).to.have.lengthOf(1);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('omits unsafe links and retains authored component-status precedence after manual removal', async () => {
+      const log = sandbox.spy();
+      setConfig({ ...SAFE_CONFIG, cdnEnv: false, log });
+      const source = mountAuthoredStatus(`
+        <div><div><a href="javascript:alert(1)">Code available</a></div></div>
+      `);
+      await initStatus(source);
+      source.remove();
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(source.isConnected).to.be.false;
+      expect(log.calledOnce).to.be.true;
+      expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('does not infer Design restrictions for authored actions on CDN pages', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      const source = mountAuthoredStatus();
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      await initStatus(source);
+
+      expect([...group.querySelectorAll('a')].map((link) => link.textContent.trim()))
+        .to.deep.equal(['iOS GitHub repo: Menu', 'iOS Figma: Menu']);
+      expect(source.querySelectorAll('[data-kind="authored"]')).to.have.lengthOf(3);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('does not restore automatic actions after explicit audience filtering removes the authored block', async () => {
+      setConfig({ ...SAFE_CONFIG, cdnEnv: true });
+      const source = mountAuthoredStatus(`
+        <div><div><a href="/private-design">iOS design available</a></div></div>
+      `);
+      source.classList.add('audience-private');
+      await initStatus(source);
+      await decorateAudience(document);
+      expect(source.isConnected).to.be.false;
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect(group.querySelectorAll('a')).to.have.lengthOf(0);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('combines multiple authored blocks in document order without repeating identical actions', async () => {
+      const first = mountAuthoredStatus(`
+        <div><div><a href="/ios">iOS code available</a></div></div>
+      `);
+      const second = mountAuthoredStatus(`
+        <div><div><a href="/ios">iOS code available</a></div></div>
+        <div><div><a href="/android">Android code available</a></div></div>
+      `);
+      await initStatus(second);
+      await initStatus(first);
+
+      const nav = await loadPageNav();
+      const group = await waitForEl(nav, '.page-nav-widgets');
+
+      expect([...group.querySelectorAll('a')].map((link) => link.textContent.trim()))
+        .to.deep.equal(['iOS code available', 'Android code available']);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('defers authored actions below desktop and does not duplicate them on breakpoint changes', async () => {
+      mountAuthoredStatus();
+      mql.dispatch(false);
+      expect(await loadPageNav()).to.be.null;
+      expect(fetchStub.called).to.be.false;
+
+      mql.dispatch(true);
+      const nav = document.querySelector('nav.page-nav');
+      const group = await waitForEl(nav, '.page-nav-widgets');
+      mql.dispatch(false);
+      mql.dispatch(true);
+
+      expect(nav.querySelectorAll('.page-nav-widgets')).to.have.lengthOf(1);
+      expect(group.querySelectorAll('a')).to.have.lengthOf(2);
+      expect(fetchStub.called).to.be.false;
     });
   });
 
@@ -829,7 +1361,13 @@ describe('page-nav block', () => {
       stubMatchMedia(sandbox, true);
       fetchStub = sandbox.stub(window, 'fetch').resolves({
         ok: true,
-        json: async () => ({ web: {}, figmaPageId: '9230:3620' }),
+        json: async () => ({
+          web: {
+            figma: {
+              figmaSource: 's2-web', figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q', figmaPageId: '9230:3620',
+            },
+          },
+        }),
       });
       resetComponentSliceCacheForTests();
       makeDOM();
@@ -872,6 +1410,41 @@ describe('page-nav block', () => {
       expect(fetchStub.called).to.be.false;
     });
 
+    [false, true].forEach((cdnEnv) => {
+      it(`${cdnEnv ? 'hides' : 'renders'} both native Figma actions on the shared mobile page ${cdnEnv ? 'for anonymous CDN visitors' : 'locally'}`, async () => {
+        setConfig({ ...SAFE_CONFIG, cdnEnv });
+        fetchStub.resolves({
+          ok: true,
+          json: async () => ({
+            ios: {
+              figma: {
+                figmaSource: 's2-ios', figmaFile: 'OQExiy8bX0pRqee71eAWX6', figmaPageId: '3956:67276',
+              },
+            },
+            android: {
+              figma: {
+                figmaSource: 's2-android', figmaFile: 'Yzbd4jgLTo6KhEPZKwv1WA', figmaPageId: '2002:3805',
+              },
+            },
+          }),
+        });
+        window.history.pushState({}, '', '/mobile/components/buttons');
+        const el = await loadPageNav();
+        const group = await waitForEl(el, '.page-nav-widgets');
+        const links = [...group.querySelectorAll('[data-widget="see-in-figma"]')];
+        expect(links.map((link) => link.textContent.trim())).to.deep.equal(
+          cdnEnv ? [] : ['See iOS in Figma', 'See Android in Figma'],
+        );
+        const docs = [...group.querySelectorAll('[data-widget="go-to-impl"]')];
+        expect(docs.map((link) => link.textContent.trim()))
+          .to.deep.equal(['Go to iOS', 'Go to Android']);
+        expect(docs.map((link) => link.href)).to.deep.equal([
+          'https://reimagined-adventure-9p6zm5p.pages.github.io/documentation/spectrumcomponents/button',
+          'https://crispy-carnival-2qj6mnv.pages.github.io/spectrum_components/com.adobe.spectrum.components.button/-spectrum-button.html',
+        ]);
+      });
+    });
+
     it('drops a component-only widget that decorates itself away (no Figma entry)', async () => {
       setConfig({ ...SAFE_CONFIG, cdnEnv: false });
       fetchStub.resolves({ ok: true, json: async () => ({ web: {} }) });
@@ -891,7 +1464,9 @@ describe('page-nav block', () => {
 
       const rendered = [...group.querySelectorAll('[data-widget]')].map((w) => w.dataset.widget);
       expect(rendered).to.deep.equal(['copy-markdown', 'go-to-impl']);
-      expect(fetchStub.called).to.be.false;
+      expect(fetchStub.calledOnceWithExactly(
+        `${window.location.origin}/deps/status/action-button.json`,
+      )).to.be.true;
     });
 
     it('renders see-in-figma for a visitor with an active session on CDN', async () => {
@@ -909,6 +1484,20 @@ describe('page-nav block', () => {
       const group = await waitForEl(el, '.page-nav-widgets');
 
       expect(group.querySelector('[data-widget="see-in-figma"]')).to.not.be.null;
+
+      el.remove();
+      document.querySelector('main').remove();
+      makeDOM({ h2Texts: [] });
+      window.history.pushState({}, '', '/patterns/authored');
+      const source = mountAuthoredStatus();
+      fetchStub.resetHistory();
+      await initStatus(source);
+      const authoredNav = await loadPageNav();
+      const authoredGroup = await waitForEl(authoredNav, '.page-nav-widgets');
+      expect([...authoredGroup.querySelectorAll('[data-widget="authored"]')]
+        .map((link) => link.textContent.trim())).to.deep.equal(['iOS GitHub repo: Menu', 'iOS Figma: Menu']);
+      expect(source.querySelectorAll('[data-kind="authored"]')).to.have.lengthOf(3);
+      expect(fetchStub.called).to.be.false;
     });
   });
 });

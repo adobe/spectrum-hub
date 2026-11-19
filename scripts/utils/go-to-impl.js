@@ -75,22 +75,37 @@ export function resolveImplementations(
   });
 }
 
-// TODO(cache-rollout): Activate the platform-aware decorator in the second rollout branch.
-export function decorateGoToImpl(a, span) {
-  const { pathname } = window.location;
-  const { impl, slug } = implAndSlugFromPath(pathname);
+export async function decorateGoToImpl(a, span) {
+  const context = componentPath.componentContextFromPath(window.location.pathname);
+  const platforms = componentPath.platformsForContext(context);
+  const { impl, slug } = context ?? {};
   // `docs`, not `export`: this builds a documentation link, and several components can
   // share one page. See buildImplComponentNames in deps/build-status-index.js.
   const entry = (impl && slug) ? IMPL_COMPONENT_NAMES[impl]?.[slug] : null;
-  const upstreamName = entry?.docs ?? null;
-  const target = resolveImplementation(pathname, upstreamName);
-  if (!target) {
+  const upstreamName = entry?.docs;
+  const targets = (await Promise.all(
+    resolveImplementations(context, platforms).map(async (target) => {
+      const componentData = await componentSlice.fetchComponentPageSlice(
+        target.context,
+        [target.context.platform],
+      );
+      const available = target.context.platform === 'web'
+        ? componentData : componentData?.[target.context.platform];
+      return available ? target : null;
+    }),
+  )).filter(Boolean);
+  if (!targets.length) {
     a.remove();
     return;
   }
-  a.href = target.href;
-  a.setAttribute('aria-label', `Go to ${target.label}. Opens ${upstreamName ?? slug} in a new tab.`);
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  span.textContent = `Go to ${target.label}`;
+  const anchors = targets.map((target, index) => {
+    const anchor = index === 0 ? a : a.cloneNode(true);
+    anchor.href = target.href;
+    anchor.setAttribute('aria-label', `Go to ${target.label}. Opens ${upstreamName ?? slug} in a new tab.`);
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    (index === 0 ? span : anchor.querySelector('span')).textContent = `Go to ${target.label}`;
+    return anchor;
+  });
+  a.replaceWith(...anchors);
 }

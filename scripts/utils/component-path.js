@@ -37,8 +37,8 @@ function patternContextFromParts(parts) {
 /**
  * The URL's impl segment (e.g. `rsp`/`swc`) and component slug from a
  * `/…/<impl>/components/<slug>` pathname — raw and unvalidated; callers decide whether the
- * impl segment is a real registered implementation. Both are `null` when the path has no
- * `components` segment.
+ * impl segment is a real registered implementation. Nested web pattern routes use the
+ * final slug after the group. Both are `null` when neither route shape matches.
  *
  * @param {string} pathname
  * @returns {{ impl: string|null, slug: string|null }}
@@ -46,8 +46,10 @@ function patternContextFromParts(parts) {
 export function implAndSlugFromPath(pathname) {
   const parts = pathname.split('/').filter(Boolean);
   const idx = parts.indexOf('components');
-  // TODO(cache-rollout): Enable pattern parsing with the feature activation branch.
-  if (idx < 1) { return { impl: null, slug: null }; }
+  if (idx < 1) {
+    const context = patternContextFromParts(parts);
+    return { impl: context?.impl ?? null, slug: context?.slug ?? null };
+  }
   return { impl: parts[idx - 1] ?? null, slug: parts[idx + 1] ?? null };
 }
 

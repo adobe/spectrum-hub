@@ -1,4 +1,4 @@
-# RSP / SWC data contract
+# Component data contract
 
 This is the data contract for the status model and combined index, including the
 deprecation and preview signals available upstream. Keep it current as the mapping,
@@ -17,6 +17,13 @@ Table columns are opt-out, not opt-in: an unrecognised row key is appended as a 
 
 - RSP: doc maturity from the S2 docs site ([react-spectrum.adobe.com](https://react-spectrum.adobe.com)), fetched live by `extract-doc-status.js`; props resolved from `@react-spectrum/s2` `.d.ts` files on unpkg/jsDelivr with the TypeScript compiler and type checker.
 - SWC: the published `@adobe/spectrum-wc` Custom Elements Manifest, fetched from the `latest` distribution tag by `extract-cem-components.js`. The extractor records the resolved concrete package version in `deps/swc/version.json`, and `discover-components.js` generates `components.json` from the same published CEM.
+- AI Toolkit: For RSP, `package: "ai"` entries in `deps/rsp/components.json`
+  resolve props from `@react-spectrum/ai` and maturity from its shared
+  documentation page. For SWC, pattern entries are discovered from `patterns/`
+  module paths in the published CEM, with props and maturity resolved by the SWC
+  pipeline. Toolkit entries remain part of their respective implementations,
+  not a separate status column.
+- Figma: published component sets from the S2 Web, Spectrum AI Toolkit, S2 iOS, and S2 Android libraries. The source registry, authentication, and roster schema are documented in [deps/figma/README.md](../figma/README.md).
 
 ## Summary
 
@@ -32,16 +39,20 @@ Per-component file `deps/rsp/data/<Component>.json` has the shape `{ props: [...
 
 | Field | Source | Values | Notes |
 | ----- | ------ | ------ | ----- |
-| `status` (top-level) | S2 docs site, not the package types | `stable` \| `alpha` \| `beta` \| `rc` \| *(absent)* | Doc maturity. Absent means no published doc page for that name. |
+| `status` (top-level) | Implementation docs, not the package types | `stable` \| `alpha` \| `beta` \| `rc` \| *(absent)* | Doc maturity. The AI cohort shares one documentation page; S2 uses component pages. |
 | `props[]` | `.d.ts` resolved with a TypeScript `Program` and `TypeChecker` | prop rows | Includes inherited and transformed property graphs that regex parsing could not resolve. [See the RSP README](../rsp/README.md). |
 
 #### Prerelease status
 
-The docs render a badge from `export const version` in `packages/dev/s2-docs/pages/s2/*.mdx`, and
-`extract-doc-status.js` reads it. In the current committed extraction, `SideNav` is
-`alpha`; the other extracted components are `stable` or have no published doc status.
-The status model therefore treats `alpha`/`beta`/`rc` as valid values without assuming
-that every one is present in a given snapshot.
+`extract-doc-status.js` reads prerelease badges from each S2 component's
+documentation page or the shared `/ai-components.html` page for
+`@react-spectrum/ai`. A page with no prerelease badge resolves to `stable`.
+When an HTML page returns 404, the extractor also checks its source MDX for
+`export const version`. If no usable documentation is available, the extracted
+component has no `status` field.
+
+The status model maps `alpha`, `beta`, and `rc` to Available with `Alpha`, `Beta`,
+or `RC` context. Prerelease status applies to both S2 and AI package components.
 
 ### Spectrum Web Components (SWC)
 
@@ -49,7 +60,7 @@ Per-component file `deps/swc/data/swc-<tag>.json` is a flat array of prop rows. 
 
 | Field | Source | Values | Notes |
 | ----- | ------ | ------ | ----- |
-| `status` (per row) | CEM declaration `status` | `internal` \| `preview` \| `deprecated` \| *(absent)* | Only `internal` is emitted today. Absent means public/stable. `preview`/`deprecated` are supported declaration-status values with no current occurrence — see below. |
+| `status` (per row) | CEM declaration `status` | `internal` \| `preview` \| `deprecated` \| *(absent)* | Absent means public/stable. These are supported lifecycle values, independent of the package release channel. |
 | `since` (per row) | CEM declaration `since` | e.g. `0.0.1`, `2.0.0` | Copied onto rows in the committed component catalogs. A declaration with no extracted attributes produces no rows on which to preserve it. |
 | rows | CEM declaration `attributes` | attribute rows | Structured — no TS parsing. |
 
@@ -59,7 +70,33 @@ Per-component file `deps/swc/data/swc-<tag>.json` is a flat array of prop rows. 
 
 In the CEM, `status` and `since` are **declaration-level** component fields. `extract-cem-components.js` copies them onto every attribute row, and the adapter derives component status from those copied values. Reading declaration metadata directly instead would remove this round-trip.
 
-**Caveat: name collision.** At least one component (`swc-message-feedback`) has a *functional* attribute literally named `status` (`'positive' | 'negative'`). This is unrelated to lifecycle maturity. Any status resolution must key on the **declaration** `status`, never a member named `status`. Pattern members enter the joined roster alongside ordinary components, so this distinction applies to both.
+**Caveat: name collision.** `swc-message-feedback` and `swc-response-status` have
+functional attributes named `status`. These describe feedback or response state,
+not lifecycle maturity. Status resolution reads the copied **declaration**
+metadata, never a row's `attribute`, `property`, or functional option values.
+
+### Figma
+
+The raw roster preserves `{ source, platform, figmaFile, name, figmaPageId }`.
+Source and node identify a resource. Its display name alone is not unique across
+libraries or platforms.
+
+The builder resolves one design per platform/canonical component. A selected
+Figma cell contains `{ status, figmaSource, figmaFile, figmaPageId }`, plus any
+authored guidance or display-name redirect. `figmaPageId` identifies the selected
+design node. Discovered references are published component-set IDs; complete
+explicit overrides can supply nodes outside that roster. Presence resolves to
+Available unless overridden; Figma names do not supply automatic lifecycle
+maturity.
+
+Legacy two-field roster rows belong to S2 Web only. Browser consumers require
+explicit source/file identity and never infer a native reference from web data.
+
+`figma-secondary-status.json` also contributes names to web Figma membership
+after canonical normalization and exclusions. These authored entries can
+produce Available cells without a discovered design. Only a resolved roster
+entry or a complete explicit Figma override supplies the source/file/node
+reference required for a Design link.
 
 ## Adapter boundary (insurance against contract change)
 
@@ -90,18 +127,55 @@ The index is emitted so a single fetch is interpretable without also reading `st
     "available": { "label": "Available", "definition": "Ready for use. Fidelity may vary." }
     // …experimental, not-available, deprecated, removed
   },
-  "implementations": { "web": [ { "id": "figma", "label": "Figma" }, /* … */ ] },
+  "implementations": {
+    "web": [ { "id": "figma", "label": "Figma" }, /* RSP, SWC */ ],
+    "ios": [ { "id": "figma", "label": "Figma" } ],
+    "android": [ { "id": "figma", "label": "Figma" } ]
+  },
   "components": [
     {
-      "name": "ActionButton",
-      "label": "Action Button",
-      "platforms": { "web": { "figma": { "status": "available" }, /* … */ } }
+      "name": "PromptField",
+      "label": "Prompt Field",
+      "platforms": {
+        "web": {
+          "figma": {
+            "status": "available",
+            "figmaSource": "ai-toolkit",
+            "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+            "figmaPageId": "24045:20181"
+          }
+          // RSP and SWC code cells are emitted here too.
+        }
+      }
     }
   ]
 }
 ```
 
 The `statuses` legend is generated from `STATUSES` by `statusLegend()` in [build-status-index.js](../build-status-index.js), so the embedded definitions never drift from the adapter.
+
+Native platform sections are emitted for selected designs or explicit naming
+overrides. Figma is their only availability cell. Optional `page`, `upstreamName`,
+and `package` fields live directly under `ios`/`android`, outside `figma`, and
+carry naming metadata only. They generate native page aliases and documentation
+targets in `deps/impl-component-names.js`. Native Code documentation links are
+resolved by `scripts/utils/go-to-impl.js`. Native Code pills temporarily use
+documentation-link availability as their status, independently of Figma status.
+No native Code status is ingested. Native-only components do not get web cells or
+enter the web table's rows, counts, search results, or CSV export.
+
+Each `deps/status/<slug>.json` contains the component's platform sections
+directly, such as `{ web, ios, android }`. Figma references live inside each
+platform's `figma` cell, not at slice level. A shared web page override changes
+the web slice slug without moving a native slice from its canonical slug.
+Shared `/mobile/components/<slug>` pages resolve DA aliases per platform
+without changing canonical JSON filenames. For example, Buttons reads
+`button.json`; Snackbars and toasts reads iOS from `toast.json` and Android
+from `snackbar.json`. A missing native design renders a non-linked
+**Design not available** pill for that platform on shared mobile pages, without
+a Figma action. Platform-specific native pages omit a missing Design pill.
+If no canonical slice can be fetched, the status block is removed. Native
+pages never use web as a fallback.
 
 Current mapping (`SOURCE_MAPPINGS` in [status-model.js](../../scripts/utils/status-model.js)):
 
@@ -122,27 +196,50 @@ RSP's `alpha`/`beta`/`rc` all resolve to Available (with their own Level 2 conte
 
 ## Name-matching and canonical join
 
-The two rosters differ in shape and, more importantly, in **membership**.
+The source rosters differ in shape and membership:
 
-- RSP allow list ([deps/rsp/components.json](../rsp/components.json)): 121 `PascalCase` keys.
-- SWC allow list ([deps/swc/components.json](../swc/components.json)): bare name → module subpath, generated by `discover-components.js` from the CEM. `build-status-index.js` applies lifecycle and reviewed roster exclusions before publishing the joined roster.
+- RSP ([deps/rsp/components.json](../rsp/components.json)): PascalCase export keys, with package metadata for the AI cohort.
+- SWC ([deps/swc/components.json](../swc/components.json)): bare tag name to published module subpath, including `components/` and `patterns/ai-toolkit/`.
+- Figma ([deps/figma/components.json](../figma/components.json)): source/platform/file/node-qualified resources, including designs without a code peer.
 
 **Roster selection (`build-status-index.js`):**
 
-1. **`swcComponentTags`** includes every discovered tag, whether its module lives under `components/` or `patterns/`. Published AI Toolkit members contribute to the same SWC column as ordinary components.
-2. **`excludeInternalSwc`** drops any tag whose resolved status is `internal` from the SWC contribution before the join. An internal SWC primitive does not surface as an Experimental SWC cell. If the same canonical name ships from RSP or Figma, that row still exists, with SWC reading Not available.
-3. **`filterRoster`** applies the reviewed canonical exclusions in `deps/roster-excludes.json` after the join. A listed composition part is removed from every source at once.
+1. **`swcComponentTags`** converts every discovered SWC name to a tag. Published
+   AI Toolkit patterns are included, not filtered by their module directory.
+2. **`excludeInternalSwc`** removes a tag only when its extraction resolves to
+   `internal`. A corresponding RSP or Figma component can still create the row.
+3. **`roster-excludes.json`** removes reviewed composition parts from web
+   membership across sources. These web exclusions do not remove native designs.
 
 **Approach to name-matching:**
 
 1. **Mechanical normalization** — strip the `swc-` prefix and convert kebab → Pascal (`swc-action-button` → `ActionButton`). This resolves the majority of joins.
-2. **Alias file — [deps/component-aliases.json](../component-aliases.json)**, keyed per source (`rsp`, `swc`, `figma`; see `canonicalNameForRsp`/`canonicalNameForSwc`/`canonicalNameForFigma`), for genuine mismatches where normalization is wrong or ambiguous, such as `swc-card` joining the canonical `Cards` row.
+2. **Alias file — [deps/component-aliases.json](../component-aliases.json)** handles genuine mismatches. RSP/SWC use their implementation maps. Figma uses `figmaSources[sourceId][displayName]`; legacy `figma` aliases apply only to S2 Web.
 3. **Unmatched entries are single-implementation rows, not errors.** The index carries them with data present for one impl only.
 
 **Roster scope.** Pattern membership alone does not exclude a published component.
 Empty attribute arrays are valid for slot-only components and do not imply
 unavailability. Internal status and reviewed composition-part exclusions still apply.
 Unmatched public components remain single-implementation rows.
+
+**Figma selection.** Matching is platform-specific. Multiple designs resolving
+to one component on the same platform require explicit `figmaSource`,
+`figmaPageSource`, or `figmaNodeId` selectors in that platform's Figma override.
+Discovered candidates must match every supplied selector. Ambiguous selections
+fail the build before output writes. When none match, a complete explicit
+source/name/node override can supply the reference; otherwise the build fails.
+All resources remain in the raw roster. See
+[Explicit node references](../figma/README.md#explicit-node-references) for the
+validation boundary and known conflicting-selector limitation.
+
+**SWC pattern documentation.** Pattern membership does not create another code
+implementation or package. The generated `docsSection` in
+`impl-component-names.js` selects Storybook's `patterns-ai-toolkit` group instead
+of `components`. An `upstreamName` alias handles a shared or nested docs page
+without changing the real SWC tag.
+Documentation metadata comes from the full joined public catalog. Composition
+exclusions still remove status rows and newly generated slices, but do not
+remove documentation aliases, package metadata, or Storybook sections.
 
 ## Deprecation signals
 
@@ -159,7 +256,9 @@ Capturing `@deprecated` from `.d.ts` would be a small parser change, but it woul
 ### SWC — field not populated
 
 - The CEM specification supports a separate `deprecated` field on declarations and members, but the current published manifest contains **zero `deprecated` fields**.
-- The lifecycle metadata currently observed by the extractor is declaration-level `status` (only `internal`, on `swc-icon` and `swc-ui-icon`) and `since`.
+- The extractor reads declaration-level `status` and `since`. The committed catalog
+  can contain public components without an explicit declaration `status`; do not
+  infer `internal` from an old snapshot or a component's name.
 - **Partially wired, unfed:** the runtime resolves `preview` and `deprecated` when the CEM declaration's `status` field carries those values. `getSwcComponentStatus` in `extraction-status.js` surfaces a uniform copied declaration status, and `SOURCE_MAPPINGS.swc` maps both values. The extractor does **not** currently read the CEM specification's separate `deprecated` field, so that form would require an extractor change.
 
 The current automatic path is therefore specifically `declaration.status =

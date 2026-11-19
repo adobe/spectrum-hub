@@ -1,7 +1,10 @@
 {
   "web": {
     "figma": {
-      "status": "not-available"
+      "status": "available",
+      "figmaSource": "ai-toolkit",
+      "figmaFile": "3WdX799d7ptEVA6RuTESXs",
+      "figmaPageId": "25161:22075"
     },
     "rsp": {
       "status": "available",

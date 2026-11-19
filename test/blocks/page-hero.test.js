@@ -1,13 +1,20 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { setConfig } from '../../scripts/ak.js';
+import { loadBlock, setConfig } from '../../scripts/ak.js';
 
 const COMPONENT_PATH = '/web/swc/components/button';
 
 // The per-component status slice component-status fetches (deps/status/<slug>.json).
 const STATUS_SLICE = {
-  web: { swc: { status: 'available' }, figma: { status: 'experimental' } },
-  figmaPageId: '9230:3620',
+  web: {
+    swc: { status: 'available' },
+    figma: {
+      status: 'experimental',
+      figmaSource: 's2-web',
+      figmaFile: 'xHBWBBIe2eo5vwoCeNrC4Q',
+      figmaPageId: '9230:3620',
+    },
+  },
 };
 
 function setMeta(name, content) {
@@ -102,6 +109,36 @@ describe('page-hero block', () => {
     return div;
   }
 
+  function authoredStatusBlock() {
+    const el = document.createElement('div');
+    el.className = 'component-status';
+    el.innerHTML = `
+      <div><div><a href="/legacy">Code deprecated</a></div></div>
+    `;
+    return el;
+  }
+
+  for (const template of [undefined, 'component']) {
+    it(`initializes an authored status nested in a ${template ?? 'non-component'} hero`, async () => {
+      const fetch = stubStatusFetch();
+      window.history.pushState({}, '', '/content/manual-status');
+      const init = await loadPageHero({ template });
+      const manualStatus = authoredStatusBlock();
+      const el = mount([heading(), manualStatus]);
+
+      init(el);
+
+      expect(el.querySelectorAll('.component-status')).to.have.lengthOf(1);
+      expect(manualStatus.dataset.blockName).to.equal('component-status');
+      await waitFor(
+        () => manualStatus.querySelector('.component-status-pill'),
+        'the authored status pill',
+      );
+      expect(manualStatus.textContent.trim()).to.equal('Code deprecated');
+      expect(fetch.called).to.be.false;
+    });
+  }
+
   describe('without a heading', () => {
     it('replaces the block content with a "No heading found" message', async () => {
       const init = await loadPageHero();
@@ -146,6 +183,23 @@ describe('page-hero block', () => {
       expect(el.querySelector('.component-status')).to.be.null;
     });
 
+    it('leaves authored statuses outside the hero on non-component pages', async () => {
+      const init = await loadPageHero();
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const section = document.createElement('div');
+      const status = authoredStatusBlock();
+      section.append(el, status);
+      main.append(section);
+      document.body.append(main);
+
+      init(el);
+      await loadBlock(status);
+
+      expect(status.parentElement).to.equal(section);
+      expect(el.querySelector('.component-status')).to.be.null;
+    });
+
     it('still loads a nested breadcrumbs child (calls its real init)', async () => {
       window.history.pushState({}, '', COMPONENT_PATH);
       const init = await loadPageHero();
@@ -176,6 +230,124 @@ describe('page-hero block', () => {
   });
 
   describe('on a component page', () => {
+    it('moves an authored status from another section after it decorates without generating automatic pills', async () => {
+      const fetch = stubStatusFetch();
+      window.history.pushState({}, '', COMPONENT_PATH);
+      const init = await loadPageHero({ template: 'component', description: 'A clickable action.' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const heroSection = document.createElement('div');
+      const manualSection = document.createElement('div');
+      const manualStatus = authoredStatusBlock();
+      heroSection.append(el);
+      manualSection.append(manualStatus);
+      main.append(heroSection, manualSection);
+      document.body.append(main);
+
+      init(el);
+
+      expect(main.querySelectorAll('.component-status')).to.have.lengthOf(1);
+      expect(el.querySelector('.component-status')).to.be.null;
+      expect(el.querySelector('.description').textContent).to.equal('A clickable action.');
+      expect(manualStatus.parentElement).to.equal(manualSection);
+      expect(manualStatus.dataset.blockName).to.be.undefined;
+
+      const link = manualStatus.querySelector('a');
+      await loadBlock(manualStatus);
+
+      expect(manualStatus.parentElement).to.equal(el);
+      expect(manualStatus.previousElementSibling).to.equal(el.querySelector('.description'));
+      expect(manualStatus.querySelector('a')).to.equal(link);
+      expect(fetch.called).to.be.false;
+    });
+
+    it('keeps all authored statuses in authoring order and retains inherited audience settings', async () => {
+      const fetch = stubStatusFetch();
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const section = document.createElement('div');
+      const privateSection = document.createElement('div');
+      privateSection.className = 'audience-private';
+      const publicSection = document.createElement('div');
+      publicSection.className = 'audience-public';
+      const first = authoredStatusBlock();
+      const second = authoredStatusBlock();
+      section.append(el);
+      privateSection.append(first);
+      publicSection.append(second);
+      main.append(section, privateSection, publicSection);
+      document.body.append(main);
+
+      init(el);
+      await loadBlock(second);
+      await loadBlock(first);
+
+      expect([...el.querySelectorAll('.component-status')]).to.deep.equal([first, second]);
+      expect(first.previousElementSibling).to.equal(el.querySelector('.description'));
+      expect(first.classList.contains('audience-private')).to.be.true;
+      expect(second.classList.contains('audience-public')).to.be.true;
+      expect(main.querySelectorAll('.component-status')).to.have.lengthOf(2);
+      expect(fetch.called).to.be.false;
+    });
+
+    it('places an already-nested authored status after the description', async () => {
+      const init = await loadPageHero({ template: 'component' });
+      const status = authoredStatusBlock();
+      const el = mount([heading(), status]);
+
+      init(el);
+      await waitFor(() => status.querySelector('.component-status-pill'), 'the authored pill');
+
+      expect(status.previousElementSibling).to.equal(el.querySelector('.description'));
+    });
+
+    it('retains the audience of a status nested in a hero content wrapper', async () => {
+      const init = await loadPageHero({ template: 'component' });
+      const status = authoredStatusBlock();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'audience-private';
+      wrapper.append(status);
+      const el = mount([heading(), wrapper]);
+      const main = document.createElement('main');
+      main.append(el);
+      document.body.append(main);
+
+      init(el);
+      await waitFor(() => status.querySelector('.component-status-pill'), 'the nested authored pill');
+
+      expect(status.classList.contains('audience-private')).to.be.true;
+      expect(status.previousElementSibling).to.equal(el.querySelector('.description'));
+    });
+
+    it('keeps a late fragment before statuses authored in later sections', async () => {
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const heroSection = document.createElement('div');
+      const fragmentSection = document.createElement('div');
+      const laterSection = document.createElement('div');
+      const later = authoredStatusBlock();
+      heroSection.append(el);
+      laterSection.append(later);
+      main.append(heroSection, fragmentSection, laterSection);
+      document.body.append(main);
+      init(el);
+      await loadBlock(later);
+      const fragment = document.createElement('div');
+      const earlier = authoredStatusBlock();
+      fragment.append(earlier);
+      document.body.append(fragment);
+      await loadBlock(earlier);
+
+      fragmentSection.append(fragment);
+      await waitFor(() => earlier.parentElement === el, 'the late fragment in the hero');
+
+      const statuses = [...el.querySelectorAll('.component-status')];
+      expect(statuses[0]).to.equal(earlier);
+      expect(statuses[1]).to.equal(later);
+    });
+
     it('appends the description from metadata after the heading', async () => {
       stubStatusFetch();
       window.history.pushState({}, '', COMPONENT_PATH);

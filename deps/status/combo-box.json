@@ -1,7 +1,11 @@
 {
   "web": {
     "figma": {
-      "status": "available"
+      "status": "available",
+      "figmaPageSource": "Combo box (In-line)",
+      "figmaSource": "s2-web",
+      "figmaFile": "xHBWBBIe2eo5vwoCeNrC4Q",
+      "figmaPageId": "10101:87558"
     },
     "rsp": {
       "status": "available",
@@ -11,5 +15,5 @@
       "status": "not-available"
     }
   },
-  "figmaPageId": "10101:81448"
+  "figmaPageId": "10101:87558"
 }

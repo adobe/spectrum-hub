@@ -5,7 +5,8 @@ import * as componentSlice from '../../scripts/utils/component-slice.js';
 import * as figma from '../../scripts/utils/figma.js';
 import * as implementation from '../../scripts/utils/go-to-impl.js';
 
-// TODO(cache-rollout): Remove this transition suite in the third rollout branch.
+// TODO(cache-rollout): Remove this suite and both test/rollout-fixtures provider modules
+// in figma-rollout-3-cleanup after the documented cache-retirement gates are met.
 const fetchSource = window.fetch.bind(window);
 const objectUrls = [];
 
@@ -105,6 +106,54 @@ describe('cache rollout compatibility', () => {
       platform: 'web', impl: 'swc', slug: 'button',
     })).to.deep.equal(data);
     expect(fetchStub.firstCall.args[0]).to.contain('/deps/status/button.json');
+  });
+
+  it('preserves the prepared authored-status data contract for cached consumers', async () => {
+    const prepared = await import('../../scripts/utils/authored-status.js');
+    const block = document.createElement('div');
+    block.className = 'component-status';
+    block.innerHTML = `
+      <div>
+        <div>Code available</div>
+        <div><a href="https://example.com/code">Documentation</a></div>
+      </div>
+    `;
+    document.body.append(block);
+
+    const resources = prepared.getAuthoredStatusBlocks(block).get(block);
+
+    expect(resources).to.have.lengthOf(1);
+    expect(resources[0]).to.include({ kind: 'dev', text: 'Code available', status: 'available' });
+    expect(resources[0].link.href).to.equal('https://example.com/code');
+    expect(prepared.STATUS_PILLS.find((pill) => pill.kind === resources[0].kind).label)
+      .to.equal('Code');
+  });
+
+  it('renders current authored content with the prepared status provider cached', async () => {
+    const prepared = await moduleUrl('/scripts/utils/authored-status.js');
+    const { default: init } = await import(await moduleUrl(
+      '/blocks/component-status/component-status.js',
+      { '/scripts/utils/authored-status.js': prepared },
+    ));
+    const block = document.createElement('div');
+    block.className = 'component-status';
+    block.innerHTML = `
+      <div>
+        <div><p><a href="https://example.com/menu"><strong>Explore Menu</strong></a></p></div>
+        <div>Android resources coming soon</div>
+      </div>
+    `;
+    document.body.append(block);
+    const link = block.querySelector('a');
+
+    await init(block);
+
+    expect(block.querySelectorAll('.component-status-pill')).to.have.lengthOf(2);
+    expect(block.querySelector('a')).to.equal(link);
+    expect(link.textContent).to.equal('Explore Menu');
+    expect(link.querySelector('strong')).not.to.be.null;
+    expect(block.children[1].textContent).to.equal('Android resources coming soon');
+    expect(fetchStub.called).to.be.false;
   });
 
   ['path', 'slice', 'both'].forEach((providers) => {

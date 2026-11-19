@@ -1,4 +1,84 @@
 {
+  "ActionBar": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Action bar (light theme)"
+      }
+    }
+  },
+  "Button": {
+    "ios": {
+      "page": "buttons"
+    },
+    "android": {
+      "page": "buttons"
+    },
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Button"
+      }
+    }
+  },
+  "ComboBox": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Combo box (In-line)"
+      }
+    }
+  },
+  "NumberField": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Number field (In-line)"
+      }
+    }
+  },
+  "Slider": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Slider (Range)"
+      }
+    },
+    "ios": {
+      "page": "sliders"
+    }
+  },
+  "SystemMessage": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "note": "Standalone component in Spectrum AI Toolkit; component-set discovery does not include it."
+      }
+    }
+  },
+  "TextArea": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Text area (In-line)"
+      }
+    }
+  },
+  "TextField": {
+    "web": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Text field (In-line)"
+      }
+    }
+  },
   "RadioButton": {
     "web": {
       "rsp": {
@@ -6,6 +86,86 @@
         "context": "Stable",
         "note": "A radio button is not a standalone component; it mirrors Radio Group's availability."
       }
+    }
+  },
+  "Menu": {
+    "ios": {
+      "page": "menus",
+      "upstreamName": "spmenu",
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaPageSource": "Menu",
+        "figmaNodeId": "5890:12308",
+        "note": "Use the iOS 26 Menu Elements design."
+      }
+    }
+  },
+  "MenuItem": {
+    "ios": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaNodeId": "5890:12360",
+        "note": "Use the iOS 26 Menu Elements design."
+      }
+    }
+  },
+  "MenuHeader": {
+    "ios": {
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaNodeId": "5890:12355",
+        "note": "Use the iOS 26 Menu Elements design."
+      }
+    }
+  },
+  "Picker": {
+    "ios": {
+      "page": "pickers"
+    }
+  },
+  "PopUpButton": {
+    "ios": {
+      "page": "pop-up-buttons"
+    }
+  },
+  "Switch": {
+    "ios": {
+      "page": "switches",
+      "figma": {
+        "status": "available",
+        "figmaSource": "s2-ios",
+        "figmaPageSource": "Switch (list)",
+        "figmaNodeId": "11368:7100"
+      }
+    },
+    "android": {
+      "page": "switches"
+    }
+  },
+  "Toast": {
+    "ios": {
+      "page": "snackbars-and-toasts"
+    }
+  },
+  "Snackbar": {
+    "android": {
+      "page": "snackbars-and-toasts",
+      "upstreamName": "SnackbarHost",
+      "package": "snackbar"
+    }
+  },
+  "ToggleButton": {
+    "ios": {
+      "page": "toggle-buttons"
+    }
+  },
+  "ToggleButtonSameContent": {
+    "android": {
+      "page": "toggle-buttons",
+      "upstreamName": "ToggleButton"
     }
   },
   "FieldLabel": {
@@ -68,6 +228,10 @@
         "context": "Stable",
         "page": "color-handle-and-loupe",
         "upstreamName": "ColorHandle"
+      },
+      "figma": {
+        "status": "available",
+        "note": "See color handle."
       }
     }
   },
@@ -102,8 +266,27 @@
     "web": {
       "figma": {
         "status": "available",
-        "figmaPageSource": "Cards (Asset)",
+        "figmaSource": "s2-web",
+        "figmaPageSource": "Card (Asset)",
         "note": "Cards has six Figma variant pages; Asset is the canonical one linked from See in Figma."
+      }
+    }
+  },
+  "PromptFieldDeprecated": {
+    "web": {
+      "figma": {
+        "status": "deprecated",
+        "figmaSource": "ai-toolkit",
+        "figmaPageSource": "🚫 Prompt field (Deprecated)"
+      }
+    }
+  },
+  "UserMessageDeprecated": {
+    "web": {
+      "figma": {
+        "status": "deprecated",
+        "figmaSource": "ai-toolkit",
+        "figmaPageSource": "🚫 User message (Deprecated)"
       }
     }
   }
