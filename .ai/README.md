@@ -39,7 +39,7 @@ the updated skills.
 | Skill | Purpose | Invoke when |
 | --- | --- | --- |
 | [Contributor onboarding](./skills/contributor-onboarding/SKILL.md) | Orient new and returning contributors, including the core page lifecycle and repository ownership boundaries | Joining the repository, setting up locally, or asking where and how to make a change |
-| [Code review](./skills/code-review/SKILL.md) | Review local changes and GitHub pull request diffs for actionable defects and concrete maintainability or test risks | Reviewing code before merge or delivery |
+| [Code review](./skills/code-review/SKILL.md) | Review local changes and GitHub pull request diffs for actionable defects and concrete maintainability or test risks, audit CSS for design-token use and JavaScript for reuse of existing code, and capture before-and-after screenshots for the pull request description | Reviewing code before merge or delivery |
 | [Create a new block](./skills/create-new-block/SKILL.md) | Apply the EDS block structure, `init(el)` contract, authoring modes, and required tests | Scaffolding or implementing a block |
 | [Accessibility compliance](./skills/accessibility-compliance/SKILL.md) | Implement and audit WCAG 2.2 semantics, interaction, focus, motion, and mobile behavior | Building or reviewing accessible interfaces |
 | [Stylesheet conventions](./skills/stylesheet-conventions/SKILL.md) | Apply repository CSS organization, tokens, schemes, class naming, and responsive conventions | Adding or changing CSS |
