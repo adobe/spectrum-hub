@@ -10,11 +10,8 @@ import { getConfig } from '../ak.js';
 // ("9230-3620").
 export function figmaNodeUrl(figmaPageId, sourceId, fileKey) {
   if (!figmaPageId) { return null; }
-  // TODO(cache-rollout): Require explicit source/file arguments in figma-rollout-3-cleanup
-  // after cached callers using the implicit S2 Web contract retire.
-  const id = sourceId === undefined ? 's2-web' : sourceId;
-  const source = FIGMA_SOURCES.find((entry) => entry.id === id);
-  if (!source || (fileKey !== undefined && fileKey !== source.fileKey)
+  const source = FIGMA_SOURCES.find((entry) => entry.id === sourceId);
+  if (!source || fileKey !== source.fileKey
     || typeof figmaPageId !== 'string' || !/^\d+:\d+$/.test(figmaPageId)) {
     getConfig().log(new Error(`Invalid Figma source/file/node reference: ${sourceId}`));
     return null;

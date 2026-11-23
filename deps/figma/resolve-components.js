@@ -10,13 +10,8 @@ export function resolveFigmaComponents(rows, {
   const excluded = new Set(excludes);
   const identities = new Set();
   const entries = rows.map((row) => {
-    // TODO(cache-rollout): Remove two-field S2 Web normalization in figma-rollout-3-cleanup
-    // after migrating legacy roster fixtures and updating the documented input contract.
-    const legacy = row.source === undefined && row.platform === undefined
-      && row.figmaFile === undefined;
-    const source = FIGMA_SOURCES.find((entry) => entry.id === (legacy ? 's2-web' : row.source));
-    if (!source || (!legacy && (row.platform !== source.platform
-      || row.figmaFile !== source.fileKey))
+    const source = FIGMA_SOURCES.find((entry) => entry.id === row.source);
+    if (!source || row.platform !== source.platform || row.figmaFile !== source.fileKey
       || typeof row.name !== 'string' || !row.name.trim()
       || typeof row.figmaPageId !== 'string' || !/^\d+:\d+$/.test(row.figmaPageId)) {
       throw new Error(`Invalid Figma source/file/platform/node identity for "${row.name}"`);

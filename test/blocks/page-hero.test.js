@@ -230,6 +230,86 @@ describe('page-hero block', () => {
   });
 
   describe('on a component page', () => {
+    it('collapses source-only wrappers and sections without removing ordering markers', async () => {
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const heroSection = document.createElement('div');
+      heroSection.className = 'section';
+      heroSection.append(el);
+      const sourceSection = document.createElement('div');
+      sourceSection.className = 'section';
+      sourceSection.style.paddingBlock = '80px';
+      sourceSection.style.borderBlockEnd = '1px solid black';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'block-content';
+      const status = authoredStatusBlock();
+      wrapper.append(status);
+      sourceSection.append(wrapper);
+      main.append(heroSection, sourceSection);
+      document.body.append(main);
+      init(el);
+
+      await loadBlock(status);
+
+      expect(status.parentElement).to.equal(el);
+      expect(sourceSection.isConnected).to.be.true;
+      expect(wrapper.childNodes[0].nodeType).to.equal(Node.COMMENT_NODE);
+      expect(getComputedStyle(wrapper).display).to.equal('none');
+      expect(sourceSection.getBoundingClientRect().height).to.equal(0);
+      expect(getComputedStyle(heroSection).display).not.to.equal('none');
+    });
+
+    it('preserves a source section containing other content', async () => {
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const sourceSection = document.createElement('div');
+      sourceSection.className = 'section';
+      const wrapper = document.createElement('div');
+      const status = authoredStatusBlock();
+      wrapper.append(status);
+      const content = document.createElement('p');
+      content.textContent = 'Keep this documentation.';
+      sourceSection.append(wrapper, content);
+      main.append(el, sourceSection);
+      document.body.append(main);
+      init(el);
+
+      await loadBlock(status);
+
+      expect(getComputedStyle(wrapper).display).to.equal('none');
+      expect(getComputedStyle(sourceSection).display).not.to.equal('none');
+      expect(content.parentElement).to.equal(sourceSection);
+      expect(content.getBoundingClientRect().height).to.be.greaterThan(0);
+    });
+
+    it('restores source containers when late content is inserted', async () => {
+      const init = await loadPageHero({ template: 'component' });
+      const el = mount([heading()]);
+      const main = document.createElement('main');
+      const section = document.createElement('div');
+      const wrapper = document.createElement('div');
+      const status = authoredStatusBlock();
+      wrapper.append(status);
+      section.append(wrapper);
+      main.append(el, section);
+      document.body.append(main);
+      init(el);
+      await loadBlock(status);
+      expect(getComputedStyle(section).display).to.equal('none');
+
+      const content = document.createTextNode('Late fragment content.');
+      wrapper.append(content);
+      await waitFor(() => getComputedStyle(section).display !== 'none', 'restored source content');
+
+      expect(getComputedStyle(wrapper).display).not.to.equal('none');
+      expect(wrapper.textContent).to.equal('Late fragment content.');
+      content.textContent = ' ';
+      await waitFor(() => getComputedStyle(section).display === 'none', 'empty source containers');
+      expect(wrapper.firstChild.nodeType).to.equal(Node.COMMENT_NODE);
+    });
+
     it('moves an authored status from another section after it decorates without generating automatic pills', async () => {
       const fetch = stubStatusFetch();
       window.history.pushState({}, '', COMPONENT_PATH);
@@ -326,7 +406,9 @@ describe('page-hero block', () => {
       const main = document.createElement('main');
       const heroSection = document.createElement('div');
       const fragmentSection = document.createElement('div');
+      fragmentSection.className = 'section';
       const laterSection = document.createElement('div');
+      laterSection.className = 'section';
       const later = authoredStatusBlock();
       heroSection.append(el);
       laterSection.append(later);
@@ -346,6 +428,9 @@ describe('page-hero block', () => {
       const statuses = [...el.querySelectorAll('.component-status')];
       expect(statuses[0]).to.equal(earlier);
       expect(statuses[1]).to.equal(later);
+      expect(fragmentSection.isConnected).to.be.true;
+      expect(getComputedStyle(fragmentSection).display).to.equal('none');
+      expect(getComputedStyle(laterSection).display).to.equal('none');
     });
 
     it('appends the description from metadata after the heading', async () => {

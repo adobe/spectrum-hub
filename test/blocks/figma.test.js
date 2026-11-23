@@ -40,10 +40,8 @@ describe('figma block', () => {
   });
 
   describe('figmaNodeUrl — Figma page id → dev-mode URL', () => {
-    // TODO(cache-rollout): Replace this implicit S2 Web call with explicit source/file
-    // arguments in figma-rollout-3-cleanup when the cached one-argument contract retires.
     it('builds a dev-mode URL with the node id hyphenated', () => {
-      expect(figmaNodeUrl('9230:3620')).to.equal(
+      expect(figmaNodeUrl('9230:3620', 's2-web', FIGMA_SOURCES[0].fileKey)).to.equal(
         'https://www.figma.com/design/xHBWBBIe2eo5vwoCeNrC4Q/S2---Web?node-id=9230-3620&m=dev',
       );
     });
@@ -65,6 +63,14 @@ describe('figma block', () => {
       expect(figmaNodeUrl('1:2', 'unknown', 'wrong')).to.equal(null);
       expect(figmaNodeUrl('1:2', 's2-ios', FIGMA_SOURCES[0].fileKey)).to.equal(null);
       expect(logStub.callCount).to.equal(2);
+      expect(logStub.firstCall.args[0]).to.be.instanceOf(Error);
+    });
+
+    it('rejects missing source or file identity instead of inferring S2 Web', () => {
+      expect(figmaNodeUrl('1:2')).to.equal(null);
+      expect(figmaNodeUrl('1:2', 's2-ios')).to.equal(null);
+      expect(figmaNodeUrl('1:2', undefined, FIGMA_SOURCES[0].fileKey)).to.equal(null);
+      expect(logStub.callCount).to.equal(3);
       expect(logStub.firstCall.args[0]).to.be.instanceOf(Error);
     });
   });

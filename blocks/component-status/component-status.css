@@ -1,3 +1,7 @@
+.component-status-source-empty {
+  display: none;
+}
+
 .component-status {
   display: flex;
   flex-wrap: wrap;

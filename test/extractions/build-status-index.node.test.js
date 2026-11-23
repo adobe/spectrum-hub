@@ -21,6 +21,14 @@ import {
   statusLegend,
 } from '../../deps/build-status-index.js';
 import { STATUSES } from '../../scripts/utils/status-model.js';
+import { FIGMA_SOURCES } from '../../scripts/utils/figma-sources.js';
+
+function webDesign(name, figmaPageId) {
+  const source = FIGMA_SOURCES.find(({ id }) => id === 's2-web');
+  return {
+    name, figmaPageId, source: source.id, platform: source.platform, figmaFile: source.fileKey,
+  };
+}
 
 describe('SWC pattern status pipeline', () => {
   const components = {
@@ -70,7 +78,7 @@ describe('SWC pattern status pipeline', () => {
   });
 
   it('carries pattern status and documentation aliases into component slices', () => {
-    const { slices } = buildComponentSlices(roster, index.components, []);
+    const slices = buildComponentSlices(index.components);
     assert.deepEqual(slices.map(({ slug, data: slice }) => [slug, slice.web.swc]), [
       ['button', { status: 'available' }],
       ['conversation-thread', { status: 'available' }],
@@ -81,7 +89,7 @@ describe('SWC pattern status pipeline', () => {
   });
 
   it('builds pattern documentation metadata without changing ordinary component defaults', () => {
-    const { slices } = buildComponentSlices(roster, index.components, []);
+    const slices = buildComponentSlices(index.components);
     const names = buildImplComponentNames(slices, roster, {}, components);
     assert.deepEqual(names, {
       swc: {
@@ -101,7 +109,7 @@ describe('SWC pattern status pipeline', () => {
       roster: pageRoster,
       readData: (source, name) => data[source][name],
     });
-    const { slices } = buildComponentSlices(pageRoster, pageIndex.components);
+    const slices = buildComponentSlices(pageIndex.components);
     const names = buildImplComponentNames(slices, catalog, {}, components);
 
     assert.deepEqual(names.swc['response-status-step'], {
@@ -692,7 +700,7 @@ describe('buildComponentSlices', () => {
         status: 'available', figmaSource: 's2-ios', figmaFile: 'OQExiy8bX0pRqee71eAWX6', figmaPageId: '1:2',
       },
     };
-    const { slices } = buildComponentSlices([], [
+    const slices = buildComponentSlices([
       { name: 'ColorHandle', platforms: { web, ios } },
     ]);
     assert.deepEqual(slices, [
@@ -700,17 +708,13 @@ describe('buildComponentSlices', () => {
       { slug: 'color-handle', data: { ios }, shared: false },
     ]);
   });
-  const roster = [
-    { name: 'ActionButton', sources: { swc: 'swc-action-button' } },
-    { name: 'ActionGroup', sources: { swc: 'swc-action-group' } },
-  ];
   const components = [
     { name: 'ActionButton', platforms: { web: { swc: { status: 'available' } } } },
     { name: 'ActionGroup', platforms: { web: { swc: { status: 'available' } } } },
   ];
 
   it('slugs a normal component by its own name, not flagged shared', () => {
-    const { slices } = buildComponentSlices(roster, components, []);
+    const slices = buildComponentSlices(components);
     const actionButton = slices.find((s) => s.slug === 'action-button');
     assert.ok(actionButton);
     assert.equal(actionButton.shared, false);
@@ -721,7 +725,7 @@ describe('buildComponentSlices', () => {
       { name: 'ActionButton', platforms: { web: { swc: { status: 'available', page: 'action-button-and-group' } } } },
       { name: 'ActionGroup', platforms: { web: { swc: { status: 'available', page: 'action-button-and-group' } } } },
     ];
-    const { slices } = buildComponentSlices(roster, overridden, []);
+    const slices = buildComponentSlices(overridden);
     assert.deepEqual(slices.map((s) => s.slug), ['action-button-and-group', 'action-button-and-group']);
     assert.ok(slices[0].shared);
     assert.ok(slices[1].shared);
@@ -731,8 +735,7 @@ describe('buildComponentSlices', () => {
     const withOriginalName = [
       { name: 'ActionButton', platforms: { web: { rsp: { status: 'available', upstreamName: 'ActionBtn' } } } },
     ];
-    const rosterWithRsp = [{ name: 'ActionButton', sources: { rsp: 'ActionButton' } }];
-    const { slices } = buildComponentSlices(rosterWithRsp, withOriginalName, []);
+    const slices = buildComponentSlices(withOriginalName);
     assert.equal(slices[0].data.web.rsp.upstreamName, 'ActionBtn');
   });
 
@@ -741,16 +744,12 @@ describe('buildComponentSlices', () => {
     const { index } = buildIndex({
       roster: rosterWithFigma,
       readData: () => null,
-      figmaRoster: [{ name: 'Action Button', figmaPageId: '1:1' }],
+      figmaRoster: [webDesign('Action Button', '1:1')],
     });
-    const { slices, warnings } = buildComponentSlices(
-      rosterWithFigma,
-      index.components,
-    );
+    const slices = buildComponentSlices(index.components);
     assert.equal(slices[0].data.web.figma.figmaPageId, '1:1');
     assert.equal(slices[0].data.web.figma.figmaSource, 's2-web');
     assert.equal(slices[0].data.figmaPageId, undefined);
-    assert.deepEqual(warnings, []);
   });
 
   it('prefers a `web.figma.figmaPageSource` override over the roster source name', () => {
@@ -770,11 +769,10 @@ describe('buildComponentSlices', () => {
           },
         },
       },
-      figmaRoster: [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
+      figmaRoster: [webDesign('Date and time field', '10196:3411')],
     });
-    const { slices, warnings } = buildComponentSlices(rosterNoFigmaSource, index.components);
+    const slices = buildComponentSlices(index.components);
     assert.equal(slices.find((slice) => slice.slug === 'calendar').data.web.figma.figmaPageId, '10196:3411');
-    assert.deepEqual(warnings, []);
   });
 
   it('preserves an explicitly selected Figma variant in the component slice', () => {
@@ -793,13 +791,12 @@ describe('buildComponentSlices', () => {
         },
       },
       figmaRoster: [
-        { name: 'Cards (Asset)', figmaPageId: '10182:4354' },
-        { name: 'Cards (User)', figmaPageId: '10182:123493' },
+        webDesign('Cards (Asset)', '10182:4354'),
+        webDesign('Cards (User)', '10182:123493'),
       ],
     });
-    const { slices, warnings } = buildComponentSlices(rosterCards, index.components);
+    const slices = buildComponentSlices(index.components);
     assert.equal(slices[0].data.web.figma.figmaPageId, '10182:4354');
-    assert.deepEqual(warnings, []);
   });
 
   it('rejects an unmatched page source during index resolution', () => {
@@ -815,7 +812,7 @@ describe('buildComponentSlices', () => {
           },
         },
       },
-      figmaRoster: [{ name: 'Date and time field', figmaPageId: '10196:3411' }],
+      figmaRoster: [webDesign('Date and time field', '10196:3411')],
     }), /Unmatched Figma selection for web\/Calendar/);
   });
 });
@@ -872,7 +869,7 @@ describe('buildImplComponentNames', () => {
         ios: { page: 'color-handles', upstreamName: 'ColorSlider' },
       },
     }];
-    const { slices } = buildComponentSlices([], components);
+    const slices = buildComponentSlices(components);
 
     assert.deepEqual(buildImplComponentNames(slices, [], {}, {}, components), {
       ios: {
