@@ -9,9 +9,10 @@ Preserve [#178](https://github.com/adobe/spectrum-hub/pull/178) and the
 source is commit `26ea9c7821026e54ba611008684b40dc8be70cfa`; the draft PR still
 references its older head. Do not overwrite either source while extracting work.
 
-Each rollout PR targets `main`. Start the next activation branch from updated
-`main` after its prerequisite PRs merge. Do not register a PR stack or merge the
-rollout as one batch.
+The first rollout branch is based on `main`. The next branch, `pg-runtime`,
+is based on `pg-tests` at `5858e6f6d885f66b64f4ab7d0e8f98f00a99ab70`, as requested.
+It includes that baseline and isolates phase 2 in its own diff. Publication is
+not authorized yet. Do not push or open PRs until requested.
 
 The first branch, `pg-tests`, starts at
 `7b00f7b73398feea1bade1656626eade6a0d9abb`. Source commits combine production
@@ -36,6 +37,23 @@ tests and owning documentation with each implementation change.
 AI previews currently exist only on a development branch. Introduce AI with the
 RSP activation rather than implement it twice on both renderers. S2 and AI must
 share compatible S2 and React versions and the same S2 contexts within a frame.
+
+### Phase 2: additive runtime tooling
+
+Add the runtime-manifest builder, generator, fixed S2/AI source configuration,
+generated artifact, and contract tests. The manifest records concrete package
+and React versions, export entries, selected stylesheet graphs, and AI's S2
+support imports. Keep the source branch's pins when regenerating this slice.
+
+Do not change component discovery, prop extraction, daily workflows, catalogs,
+or preview consumers in this phase. Nothing imports the manifest in production.
+The existing extraction and legacy previews retain their current version
+selection. Wiring extraction to the manifest is a later activation prerequisite,
+not part of this additive branch.
+
+Regenerate with `--locked` to retain committed versions. Use `--check` to
+verify byte-for-byte reproducibility without writing the artifact. Both modes
+read published package files and fail if their graph or required CSS is missing.
 
 ## Compatibility boundaries
 
