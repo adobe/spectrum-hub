@@ -1,6 +1,7 @@
-// TODO(cache-rollout): Restore named imports after cached pre-preparation modules expire.
-import * as componentPath from './component-path.js';
-import * as componentSlice from './component-slice.js';
+import { fetchComponentPageSlice } from './component-slice.js';
+import {
+  componentContextFromPath, platformsForContext, NATIVE_PLATFORMS,
+} from './component-path.js';
 import { FIGMA_SOURCES } from './figma-sources.js';
 import { getImplementationById } from './implementations.js';
 import { getConfig } from '../ak.js';
@@ -9,11 +10,8 @@ import { getConfig } from '../ak.js';
 // ("9230-3620").
 export function figmaNodeUrl(figmaPageId, sourceId, fileKey) {
   if (!figmaPageId) { return null; }
-  // TODO(cache-rollout): Require explicit source/file arguments in figma-rollout-3-cleanup
-  // after cached callers using the implicit S2 Web contract retire.
-  const id = sourceId === undefined ? 's2-web' : sourceId;
-  const source = FIGMA_SOURCES.find((entry) => entry.id === id);
-  if (!source || (fileKey !== undefined && fileKey !== source.fileKey)
+  const source = FIGMA_SOURCES.find((entry) => entry.id === sourceId);
+  if (!source || fileKey !== source.fileKey
     || typeof figmaPageId !== 'string' || !/^\d+:\d+$/.test(figmaPageId)) {
     getConfig().log(new Error(`Invalid Figma source/file/node reference: ${sourceId}`));
     return null;
@@ -23,26 +21,12 @@ export function figmaNodeUrl(figmaPageId, sourceId, fileKey) {
 }
 
 /** Both Design widgets consume the same platform-specific, build-selected references. */
-export function getFigmaLinks(
-  context,
-  componentData,
-  platforms = componentPath.platformsForContext(context),
-) {
+export function getFigmaLinks(context, componentData, platforms = platformsForContext(context)) {
   if (!context || (context.platform === 'web' && !getImplementationById(context.impl))) {
     return [];
   }
   return platforms.flatMap((platform) => {
-    let cell = componentData?.[platform]?.figma;
-    // TODO(cache-rollout): Remove legacy Web reading after old status slices expire.
-    if (platform === 'web' && componentData?.figmaPageId
-      && !cell?.figmaSource && !cell?.figmaFile && !cell?.figmaPageId) {
-      cell = {
-        ...cell,
-        figmaSource: 's2-web',
-        figmaFile: FIGMA_SOURCES.find((entry) => entry.id === 's2-web').fileKey,
-        figmaPageId: componentData.figmaPageId,
-      };
-    }
+    const cell = componentData?.[platform]?.figma;
     if (!cell?.figmaPageId) { return []; }
     const source = FIGMA_SOURCES.find((entry) => entry.id === cell.figmaSource);
     if (!source || source.platform !== platform || !cell.figmaFile) {
@@ -51,19 +35,15 @@ export function getFigmaLinks(
     }
     const href = figmaNodeUrl(cell.figmaPageId, source.id, cell.figmaFile);
     return href ? [{
-      href,
-      name: cell.figmaPageSource ?? context.slug,
-      platform,
-      label: componentPath.NATIVE_PLATFORMS[platform],
+      href, name: cell.figmaPageSource ?? context.slug, platform, label: NATIVE_PLATFORMS[platform],
     }] : [];
   });
 }
 
 export async function decorateSeeInFigma(a, span) {
-  const context = componentPath.componentContextFromPath(window.location.pathname);
-  const platforms = componentPath.platformsForContext(context);
-  const componentData = context
-    ? await componentSlice.fetchComponentPageSlice(context, platforms) : null;
+  const context = componentContextFromPath(window.location.pathname);
+  const platforms = platformsForContext(context);
+  const componentData = context ? await fetchComponentPageSlice(context, platforms) : null;
   const links = getFigmaLinks(context, componentData, platforms);
   if (!links.length) {
     a.remove();

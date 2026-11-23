@@ -69,10 +69,10 @@ Figma presence maps to Available unless overridden. Names containing
 | `deps/impl-component-names.js` | Code implementation documentation and export metadata; no Figma selections |
 
 A selected Figma cell carries `figmaSource`, `figmaFile`, and `figmaPageId`
-together. The platform's `figma` cell is authoritative. During activation,
-slices also mirror selected S2 Web node IDs into a root-level `figmaPageId`
-for cached readers. AI Toolkit and native references never use that legacy
-field. Native availability cells describe Figma only; platform-level
+together. The platform's `figma` cell is authoritative. Generated slices no
+longer mirror selected S2 Web node IDs into a root-level `figmaPageId`.
+Retained orphan slices are pending a separate route audit. Native availability
+cells describe Figma only; platform-level
 documentation metadata does not imply native code support. The combined status
 table uses only components with web cells.
 
@@ -92,60 +92,65 @@ writer does not prune obsolete files; the index is the authoritative roster.
 
 ## Rollout cleanup: `figma-rollout-3-cleanup`
 
-Find the corresponding source annotations with `TODO(cache-rollout)`. This
-checklist tracks pending work, not permission to remove compatibility code
-during activation.
+The cleanup retires the activation compatibility contracts. Completed items
+are recorded below; orphan-slice auditing remains explicitly deferred.
 
 ### Cache-retirement gates
 
-- [ ] Record when preparation and activation reached production and confirm
-  propagation of the prepared APIs.
-- [ ] Verify expiry or invalidation of relevant browser and CDN entries,
-  including freshness and stale-serving windows under the policies that
-  applied when older assets were cached. One current response or an arbitrary
-  waiting period is not sufficient evidence.
-- [ ] Define how to retire open tabs with already-loaded module graphs and
-  which older consumers a rollback must still support. Do not rely on an
-  asset query string unless its cache-key behavior has been verified.
+The maintainer confirmed these gates on 2026-11-23 before the remaining
+compatibility code was removed. This records that confirmation, not an
+independent production audit. Detailed deployment timestamps and invalidation
+records are not included in this document.
+
+- [x] Preparation and activation propagation, including the prepared APIs.
+- [x] Retirement of relevant browser and CDN responses, including freshness
+  and stale-serving windows under the policies that applied to older assets.
+- [x] Open-tab retirement and rollback support for older consumers.
 
 ### Cache-gated removals
 
-| Location | Cleanup |
+| Location | Completed cleanup |
 | --- | --- |
-| `scripts/utils/authored-status.js` and `authored-status-cell.js` | Remove the descriptor-only module after its cached consumers retire. Keep the current cell-node contract and the `authored-status-cell.js` URL; do not rename the live helper back to the old URL. Remove its transitional note after retirement. |
-| `scripts/utils/component-slice.js`, `figma.js`, and `go-to-impl.js` | Replace namespace-import compatibility bridges with named imports once the corresponding prepared providers are guaranteed. |
-| `scripts/utils/go-to-impl.js` | Remove the pathname overload of `resolveImplementation()` and its now-unused import in this file. Keep context-based resolution. |
-| `scripts/utils/figma.js` and `test/blocks/figma.test.js` | Remove root-level S2 Web reads and the implicit source/optional-file compatibility in `figmaNodeUrl()`. Update legacy-call assertions to the explicit source/file contract. |
-| `deps/build-status-index.js` | Stop emitting root-level `figmaPageId`, then regenerate and review the index, active slices, and implementation-name map using the documented generation workflow. Do not hand-edit generated files. |
-| `test/blocks/cache-rollout.test.js` and `test/rollout-fixtures/{component-path,component-slice}.js` | Remove the transition suite and both frozen provider fixtures together. Keep permanent current-contract coverage in the owning block/helper suites. |
-| `test/extractions/cache-rollout.node.test.js` | Remove legacy-output coverage with the retired field. Preserve shared-web/native isolation coverage in the permanent extraction suites. |
-| `test/extractions/build-status-index.node.test.js` and `figma-resolution.node.test.js` | Replace transitional root-field assertions with assertions that slices have no root-level `figmaPageId`. Keep platform-specific reference assertions. |
+| `scripts/utils/authored-status.js` and `authored-status-cell.js` | Removed the descriptor-only module and transitional note. The live `authored-status-cell.js` URL and cell-node contract remain unchanged. |
+| `scripts/utils/component-slice.js`, `figma.js`, and `go-to-impl.js` | Replaced namespace-import compatibility bridges with named imports. |
+| `scripts/utils/go-to-impl.js` | Removed the pathname overload of `resolveImplementation()` and its unused import. Context-based resolution remains. |
+| `scripts/utils/figma.js` and `test/blocks/figma.test.js` | Removed root-level S2 Web reads and implicit source/optional-file compatibility. Tests cover explicit source/file identity and rejection of missing identity. |
+| `deps/build-status-index.js` | Stopped emitting root-level `figmaPageId`. Active slices match the current generator; platform references are preserved. |
+| `test/blocks/cache-rollout.test.js` and `test/rollout-fixtures/{component-path,component-slice}.js` | Removed the transition suite and both frozen provider fixtures. Permanent helper/block suites retain current-contract coverage. |
+| `test/extractions/cache-rollout.node.test.js` | Removed legacy-output coverage. Permanent extraction suites retain shared-web/native isolation coverage. |
+| `test/extractions/build-status-index.node.test.js` and `figma-resolution.node.test.js` | Assert that slices have no root-level `figmaPageId` while preserving platform-specific reference assertions. |
 
 `fetchComponentSlice()` and `implAndSlugFromPath()` still have live consumers.
 They are not removal candidates merely because older consumers also use them.
 
 ### Other cleanup
 
-- [ ] In `deps/build-status-index.js`, remove the unused `roster` parameter
+- [x] In `deps/build-status-index.js`, remove the unused `roster` parameter
   from `buildComponentSlices()`, obsolete third arguments at callers, and the
   always-empty slice-warning return and caller/test plumbing.
-- [ ] In `deps/figma/resolve-components.js`, remove two-field legacy roster
+- [x] In `deps/figma/resolve-components.js`, remove two-field legacy roster
   normalization after migrating old roster fixtures to explicit source,
   platform, and file identities. Update the legacy acceptance test in
   `test/extractions/figma-resolution.node.test.js` and remove the exception
   documented in `deps/figma/README.md`.
-- [ ] Audit retained `deps/status/` files against generated slice names and
+- [ ] **Deferred to separate orphan-JSON work:** Audit retained `deps/status/` files against generated slice names and
   live component and pattern routes. `writeComponentSlices()` does not prune.
   Absence from the current index alone does not establish that a slice is
   unused. Remove only verified unused files after the relevant cache gates.
-- [ ] In `blocks/component-status/component-status.js`, prevent source-only
+- [x] In `blocks/component-status/component-status.js`, prevent source-only
   wrappers and sections from reserving padding or dividers after authored
   statuses move into the hero. Preserve source markers needed for authoring
   order, including late fragments, and retain sections with other content.
   Add regression coverage for source-only sections and sections with
   remaining content, without weakening ordering or audience coverage.
-- [ ] Reconcile the owning documentation and remove completed
-  `TODO(cache-rollout)` annotations. Keep unresolved items tracked.
+- [x] Reconcile the owning documentation and remove completed
+  `TODO(cache-rollout)` annotations. The deferred orphan audit remains tracked
+  here and at `writeComponentSlices()`.
+
+Source-only containers remain in the DOM to preserve ordering markers. They
+reserve no padding or dividers after their authored statuses move into the
+hero. Containers with other content stay visible; late content restores
+previously empty containers without changing status order or audience classes.
 
 ## Operations and verification
 

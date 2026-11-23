@@ -1,10 +1,8 @@
 import { pascalCase } from '../../deps/rsp/playground/pascal-case.js';
 import IMPL_COMPONENT_NAMES from '../../deps/impl-component-names.js';
 import { componentDocsUrl } from '../../deps/rsp/docs.js';
-import { toSlug, implAndSlugFromPath } from './component-path.js';
-// TODO(cache-rollout): Restore named imports after cached pre-preparation modules expire.
-import * as componentPath from './component-path.js';
-import * as componentSlice from './component-slice.js';
+import { toSlug, componentContextFromPath, platformsForContext } from './component-path.js';
+import { componentSlugForPlatform, fetchComponentPageSlice } from './component-slice.js';
 
 const IMPLEMENTATIONS = {
   swc: {
@@ -36,14 +34,11 @@ const IMPLEMENTATIONS = {
  * `componentNames` can supply an independent catalog without mutating the shared import.
  */
 export function resolveImplementation(
-  pathnameOrContext,
+  context,
   upstreamName,
   pkg,
   componentNames = IMPL_COMPONENT_NAMES,
 ) {
-  // TODO(cache-rollout): Remove pathname support after cached old consumers expire.
-  const context = typeof pathnameOrContext === 'string'
-    ? { platform: 'web', ...implAndSlugFromPath(pathnameOrContext) } : pathnameOrContext;
   if (!context) { return null; }
   const { impl: implId, slug } = context;
   if (context.platform === 'web' && ['ios', 'android'].includes(implId)) { return null; }
@@ -52,7 +47,7 @@ export function resolveImplementation(
   const entry = componentNames[implId]?.[slug];
   const name = upstreamName === undefined ? entry?.docs : upstreamName;
   const canonical = context.platform === 'web'
-    ? slug : componentSlice.componentSlugForPlatform(slug, implId, componentNames);
+    ? slug : componentSlugForPlatform(slug, implId, componentNames);
   const component = name ? toSlug(name) : canonical;
   return {
     label: impl.label,
@@ -60,10 +55,7 @@ export function resolveImplementation(
   };
 }
 
-export function resolveImplementations(
-  context,
-  platforms = componentPath.platformsForContext(context),
-) {
+export function resolveImplementations(context, platforms = platformsForContext(context)) {
   return platforms.flatMap((platform) => {
     const targetContext = {
       ...context,
@@ -76,8 +68,8 @@ export function resolveImplementations(
 }
 
 export async function decorateGoToImpl(a, span) {
-  const context = componentPath.componentContextFromPath(window.location.pathname);
-  const platforms = componentPath.platformsForContext(context);
+  const context = componentContextFromPath(window.location.pathname);
+  const platforms = platformsForContext(context);
   const { impl, slug } = context ?? {};
   // `docs`, not `export`: this builds a documentation link, and several components can
   // share one page. See buildImplComponentNames in deps/build-status-index.js.
@@ -85,7 +77,7 @@ export async function decorateGoToImpl(a, span) {
   const upstreamName = entry?.docs;
   const targets = (await Promise.all(
     resolveImplementations(context, platforms).map(async (target) => {
-      const componentData = await componentSlice.fetchComponentPageSlice(
+      const componentData = await fetchComponentPageSlice(
         target.context,
         [target.context.platform],
       );

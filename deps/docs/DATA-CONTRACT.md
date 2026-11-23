@@ -89,8 +89,9 @@ explicit overrides can supply nodes outside that roster. Presence resolves to
 Available unless overridden; Figma names do not supply automatic lifecycle
 maturity.
 
-Legacy two-field roster rows belong to S2 Web only. Browser consumers require
-explicit source/file identity and never infer a native reference from web data.
+Legacy two-field roster rows are rejected. Every row requires explicit source,
+platform, and file identity. Browser link helpers also require the source and
+file; they never infer S2 Web or a native reference from incomplete data.
 
 `figma-secondary-status.json` also contributes names to web Figma membership
 after canonical normalization and exclusions. These authored entries can

@@ -133,6 +133,47 @@ test(`${block.name} authored rows match their expected accessibility tree`, asyn
   `);
 });
 
+test(`${block.name} moved authored statuses leave no source spacing and preserve late content`, async ({ page, makeAxeBuilder }) => {
+  await gotoBlock(page, { ...block, path: `${block.path}?authored&hero`, routes: [] });
+  await page.evaluate(async () => {
+    const { default: init } = await import(new URL('/blocks/component-status/component-status.js', location.origin).href);
+    document.querySelector('main').insertAdjacentHTML('beforeend', `
+      <div class="section" id="empty-source">
+        <div class="block-content">
+          <div class="component-status"><div><div>Additional resources</div></div></div>
+        </div>
+      </div>
+      <div class="section" id="content-source">
+        <div class="default-content"><h2>Documentation</h2><p>Keep this content.</p></div>
+        <div class="block-content">
+          <div class="component-status"><div><div>More resources</div></div></div>
+        </div>
+      </div>
+    `);
+    for (const status of document.querySelectorAll('#empty-source .component-status, #content-source .component-status')) {
+      await init(status);
+    }
+  });
+
+  await expect(page.locator('#empty-source')).toHaveCSS('display', 'none');
+  expect(await page.locator('#empty-source').evaluate((element) => element.getBoundingClientRect().height)).toBe(0);
+  await expect(page.getByRole('heading', { name: 'Documentation' })).toBeVisible();
+  await expect(page.locator('#content-source .block-content')).toHaveCSS('display', 'none');
+  expect(await page.locator('#empty-source .block-content').evaluate(
+    (element) => [...element.childNodes].some((node) => node.nodeType === Node.COMMENT_NODE),
+  )).toBe(true);
+
+  await page.locator('#empty-source .block-content').evaluate((element) => {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = 'Late fragment documentation.';
+    element.append(paragraph);
+  });
+  await expect(page.getByText('Late fragment documentation.')).toBeVisible();
+  await expect(page.locator('#empty-source')).toHaveCSS('display', 'block');
+  const results = await makeAxeBuilder().analyze();
+  expect(results.violations, formatViolations(results.violations)).toHaveLength(0);
+});
+
 test(`${block.name} audience-hidden authored rows do not trigger automatic hero replacement`, async ({ page }) => {
   await gotoBlock(page, { ...block, path: `${block.path}?authored` });
   await page.evaluate(async () => {

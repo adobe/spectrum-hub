@@ -171,6 +171,9 @@ validation requirements and the known conflicting-selector limitation.
 The generated Figma cell carries `figmaSource`, `figmaFile`, and `figmaPageId`
 together. `figmaNodeId` is the authored selector; `figmaPageId` is the historical
 output name for the selected node ID. Neither is a Figma canvas/page ID.
+`figmaNodeUrl(figmaPageId, sourceId, fileKey)` requires all three values and
+rejects missing or mismatched source/file identity. Generated slices do not
+mirror the node ID at their root.
 
 Existing examples include Calendar redirecting to `Date and time field`, Cards
 selecting `Card (Asset)`, and iOS Menu, Menu Item, and Menu Header selecting

@@ -117,10 +117,8 @@ The generated array preserves every usable resource's identity:
 Identity is **source plus node ID**, not display name. Sort order is platform,
 source ID, display name, then node ID. `figmaPageId` is the component-set node ID,
 not the Figma canvas/page ID. Its historical field name remains for compatibility.
-Legacy rows containing only `name` and `figmaPageId` are read as S2 Web only.
-
-<!-- TODO(cache-rollout): Remove this legacy-row exception with the resolver
-normalization after fixture migration in figma-rollout-3-cleanup. -->
+Every row must provide the registered source, matching platform and file key,
+name, and node ID. Legacy two-field rows and incomplete identities are rejected.
 
 ## Matching and selected references
 

@@ -40,6 +40,7 @@ const STATUS_PILLS = [
   { kind: 'design', label: 'Design', column: 'figma' },
 ];
 const authoredPositions = new WeakMap();
+const authoredSourceContainers = new WeakMap();
 
 // The s2-icon glyph per unified status.
 const STATUS_ICONS = {
@@ -150,6 +151,32 @@ export function buildPills(context, componentData, platforms = platformsForConte
     : buildNativePills(context, componentData, platforms, figmaLinks);
 }
 
+function collapseAuthoredSource(position, hero) {
+  const root = hero.closest('main') ?? hero;
+  if (position.parentElement === hero) { return; }
+  if (!authoredSourceContainers.has(root)) {
+    const containers = new Set();
+    const hasContent = (container) => [...container.childNodes].some((node) => (
+      node.nodeType === Node.TEXT_NODE ? Boolean(node.textContent.trim())
+        : node.nodeType === Node.ELEMENT_NODE
+          && (!containers.has(node) || hasContent(node))
+    ));
+    const update = () => containers.forEach((container) => {
+      container.classList.toggle('component-status-source-empty', !hasContent(container));
+    });
+    const observer = new MutationObserver(update);
+    observer.observe(root, { childList: true, characterData: true, subtree: true });
+    authoredSourceContainers.set(root, { containers, update });
+  }
+  const { containers, update } = authoredSourceContainers.get(root);
+  for (let container = position.parentElement;
+    container && container !== hero && container !== root;
+    container = container.parentElement) {
+    containers.add(container);
+  }
+  update();
+}
+
 function placeAuthoredStatus(el) {
   if (getMetadata('template') !== 'component') { return; }
   const page = el.closest('main') ?? document.querySelector('main');
@@ -176,9 +203,8 @@ function placeAuthoredStatus(el) {
         === Node.DOCUMENT_POSITION_FOLLOWING
     ));
     const previous = placed.at(-1) ?? hero.querySelector(':scope > .description');
-    // TODO(cache-rollout): In figma-rollout-3-cleanup, prevent source-only wrappers/sections
-    // from reserving spacing/dividers without losing source markers or late-fragment ordering.
     hero.insertBefore(el, following ?? previous?.nextElementSibling ?? null);
+    collapseAuthoredSource(position, hero);
     return true;
   };
 

@@ -277,7 +277,6 @@ test(`${block.name} clears the fixed header and avoids hidden desktop work`, asy
         '/scripts/utils/copy-md.js',
         '/scripts/utils/go-to-impl.js',
         '/scripts/utils/figma.js',
-        '/scripts/utils/authored-status.js',
         '/scripts/utils/authored-status-cell.js',
       ];
       expect(requests.some((pathname) => desktopOnlyModules.includes(pathname))).toBe(false);

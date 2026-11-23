@@ -513,35 +513,27 @@ function sharedPageSlug(component) {
  * documented on one page), the slice is written at that shared slug instead — `shared`
  * flags this for writeComponentSlices, which silences the collision warning for it.
  *
- * @param {{ name: string, sources: Record<string, string> }[]} roster
  * @param {{ name: string, platforms: object }[]} components - buildIndex's output components
- *   (same canonical names as roster, resolved cells already applied).
+ *   (resolved cells already applied).
  * Native slices retain their canonical slug even when web redirects to a shared page.
  *
- * @returns {{ slices: { slug: string, data: object, shared: boolean }[], warnings: string[] }}
+ * @returns {{ slug: string, data: object, shared: boolean }[]}
  */
-// TODO(cache-rollout): In figma-rollout-3-cleanup, drop the unused roster parameter,
-// obsolete third arguments at callers, and always-empty slice warnings/caller/test plumbing.
-export function buildComponentSlices(roster, components) {
-  const slices = components.flatMap((component) => {
+export function buildComponentSlices(components) {
+  return components.flatMap((component) => {
     const { name } = component;
-    const { web, ...native } = component.platforms;
-    // TODO(cache-rollout): Remove the legacy field after cached old consumers expire.
-    const legacy = web?.figma?.figmaSource === 's2-web'
-      ? { figmaPageId: web.figma.figmaPageId } : {};
-    const data = { ...component.platforms, ...legacy };
+    const data = component.platforms;
     const sharedSlug = sharedPageSlug(component);
     const slug = toSlug(name);
+    const { web, ...native } = data;
     if (sharedSlug && sharedSlug !== slug && Object.keys(native).length) {
       return [
-        { slug: sharedSlug, data: { web, ...legacy }, shared: true },
+        { slug: sharedSlug, data: { web }, shared: true },
         { slug, data: native, shared: false },
       ];
     }
     return [{ slug: sharedSlug ?? slug, data, shared: Boolean(sharedSlug) }];
   });
-
-  return { slices, warnings: [] };
 }
 
 /**
@@ -668,8 +660,7 @@ export function buildImplComponentNames(
  * @param {{ slug: string, data: object, shared: boolean }[]} slices
  * @returns {string[]} warnings
  */
-// TODO(cache-rollout): Audit retained slices against live routes in figma-rollout-3-cleanup.
-// Prune only verified unused files after cache retirement, not every slice absent from the index.
+// Orphan-slice auditing is deferred. Preserve files until their live routes are checked.
 export function writeComponentSlices(slices) {
   const warnings = [];
   const seen = new Set();
@@ -740,13 +731,13 @@ function main() {
     figmaRoster, aliases, excludes,
   });
 
-  const { slices, warnings: sliceOverrideWarnings } = buildComponentSlices(roster, index.components, figmaRoster);
+  const slices = buildComponentSlices(index.components);
   const implComponentNames = buildImplComponentNames(
     slices, joined, rspComponents, swcComponents, index.components,
   );
   const sliceWarnings = writeComponentSlices(slices);
 
-  for (const warning of [...warnings, ...sliceOverrideWarnings, ...sliceWarnings]) {
+  for (const warning of [...warnings, ...sliceWarnings]) {
     console.warn(`warning: ${warning}`);
   }
 

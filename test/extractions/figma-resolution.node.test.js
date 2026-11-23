@@ -117,12 +117,13 @@ describe('platform-specific Figma resolution', () => {
     assert.equal(cell(index, 'FieldLabel', 'web')?.figmaSource, 'ai-toolkit');
   });
 
-  // TODO(cache-rollout): Replace legacy-row acceptance with rejection in figma-rollout-3-cleanup
-  // after migrating the remaining roster fixtures to explicit source/platform/file identities.
-  it('treats a two-field legacy roster entry only as S2 Web', () => {
-    const index = build([{ name: 'Button', figmaPageId: '1:1' }]);
-    assert.equal(cell(index, 'Button', 'web')?.figmaSource, 's2-web');
-    assert.equal(cell(index, 'Button', 'ios'), undefined);
+  it('rejects legacy or incomplete source/platform/file identity', () => {
+    assert.throws(() => build([{ name: 'Button', figmaPageId: '1:1' }]), /Figma.*identity/i);
+    for (const field of ['source', 'platform', 'figmaFile']) {
+      const row = design('s2-web');
+      delete row[field];
+      assert.throws(() => build([row]), /Figma.*identity/i);
+    }
   });
 
   it('rejects source/file/platform disagreement', () => {
@@ -139,10 +140,9 @@ describe('platform-specific Figma resolution', () => {
 
   it('writes the same selected references into platform-specific component slices', () => {
     const index = build([design('s2-web'), design('s2-ios')]);
-    const { slices } = buildComponentSlices([], index.components, []);
+    const slices = buildComponentSlices(index.components);
     assert.equal(slices[0]?.data.web.figma.figmaSource, 's2-web');
     assert.equal(slices[0]?.data.ios.figma.figmaSource, 's2-ios');
-    // TODO(cache-rollout): Restore the final schema assertion in the third rollout branch.
-    assert.equal(slices[0]?.data.figmaPageId, '1:1');
+    assert.equal(slices[0]?.data.figmaPageId, undefined);
   });
 });
