@@ -30,12 +30,12 @@ export function notifyPreviewReady() {
 export function requestMarkup() {
   return new Promise((resolve) => {
     function onMessage(event) {
-      if (event.source !== window.parent) { return; }
+      if (event.source !== window.parent || event.origin !== window.location.origin) { return; }
       if (event.data?.type !== 'markup-response') { return; }
       window.removeEventListener('message', onMessage);
       resolve(event.data.markup ?? '');
     }
     window.addEventListener('message', onMessage);
-    window.parent.postMessage({ type: 'markup-request' }, '*');
+    window.parent.postMessage({ type: 'markup-request' }, window.location.origin);
   });
 }

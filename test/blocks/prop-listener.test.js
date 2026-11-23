@@ -114,14 +114,14 @@ describe('notifyPreviewReady', () => {
 });
 
 // window.parent === window in this top-level test page, so the response has
-// to be dispatched with an explicit `source: window` to pass requestMarkup's
-// own-parent check — a real iframe's parent is a distinct window object.
+// to carry this page's origin and an explicit `source: window` — a real
+// iframe's parent is a distinct window object.
 describe('requestMarkup', () => {
-  it('posts a markup-request to the parent frame', () => {
+  it('posts a markup-request only to a same-origin parent frame', () => {
     const postMessageSpy = sinon.stub(window.parent, 'postMessage');
     try {
       requestMarkup();
-      expect(postMessageSpy.calledWith({ type: 'markup-request' }, '*')).to.be.true;
+      expect(postMessageSpy.calledWith({ type: 'markup-request' }, window.location.origin)).to.be.true;
     } finally {
       postMessageSpy.restore();
     }
@@ -132,6 +132,7 @@ describe('requestMarkup', () => {
     window.dispatchEvent(new MessageEvent('message', {
       data: { type: 'markup-response', markup: '<swc-button>Label</swc-button>' },
       source: window,
+      origin: window.location.origin,
     }));
     expect(await promise).to.equal('<swc-button>Label</swc-button>');
   });
@@ -141,6 +142,7 @@ describe('requestMarkup', () => {
     window.dispatchEvent(new MessageEvent('message', {
       data: { type: 'markup-response', markup: null },
       source: window,
+      origin: window.location.origin,
     }));
     expect(await promise).to.equal('');
   });
@@ -152,12 +154,14 @@ describe('requestMarkup', () => {
     window.dispatchEvent(new MessageEvent('message', {
       data: { type: 'markup-response', markup: 'wrong-frame' },
       source: otherFrame.contentWindow,
+      origin: window.location.origin,
     }));
     otherFrame.remove();
     // The real response, from the true parent, still resolves the promise.
     window.dispatchEvent(new MessageEvent('message', {
       data: { type: 'markup-response', markup: 'real-markup' },
       source: window,
+      origin: window.location.origin,
     }));
     expect(await promise).to.equal('real-markup');
   });
@@ -167,11 +171,33 @@ describe('requestMarkup', () => {
     window.dispatchEvent(new MessageEvent('message', {
       data: { type: 'prop-update', property: 'variant', value: 'accent' },
       source: window,
+      origin: window.location.origin,
     }));
     window.dispatchEvent(new MessageEvent('message', {
       data: { type: 'markup-response', markup: 'the-real-one' },
       source: window,
+      origin: window.location.origin,
     }));
     expect(await promise).to.equal('the-real-one');
+  });
+
+  it('rejects markup from a parent with a different or opaque origin', async () => {
+    const differentPort = new URL(window.location.origin);
+    differentPort.port = differentPort.port === '2001' ? '2002' : '2001';
+
+    for (const origin of ['https://untrusted.example', differentPort.origin, 'null', '']) {
+      const promise = requestMarkup();
+      window.dispatchEvent(new MessageEvent('message', {
+        data: { type: 'markup-response', markup: 'untrusted-markup' },
+        source: window,
+        origin,
+      }));
+      window.dispatchEvent(new MessageEvent('message', {
+        data: { type: 'markup-response', markup: 'trusted-markup' },
+        source: window,
+        origin: window.location.origin,
+      }));
+      expect(await promise).to.equal('trusted-markup');
+    }
   });
 });

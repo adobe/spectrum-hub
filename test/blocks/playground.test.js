@@ -344,6 +344,87 @@ describe('buildSwcSnippet — composite components', () => {
   });
 });
 
+describe('buildSwcSnippet — prompt-field markup', () => {
+  let markup;
+
+  before(async () => {
+    const response = await fetch('/deps/swc/playground/snippets/prompt-field.html');
+    expect(response.ok).to.be.true;
+    markup = await response.text();
+  });
+
+  it('preserves the legal disclaimer and guidelines link in copied markup', () => {
+    const template = document.createElement('template');
+    template.innerHTML = buildSwcSnippet('swc-prompt-field', {}, markup);
+    const legal = template.content.querySelector('[slot="legal"]');
+    expect(legal.textContent.replace(/\s+/g, ' ').trim()).to.equal(
+      'Responses are generated using AI, and may be inaccurate. Check before using. AI User Guidelines',
+    );
+    expect(legal.querySelector('a').getAttribute('href')).to.equal(
+      'https://www.adobe.com/legal/licenses-terms/adobe-gen-ai-user-guidelines.html',
+    );
+  });
+
+  it('copies the placeholder without an extra quote attribute', () => {
+    const template = document.createElement('template');
+    template.innerHTML = buildSwcSnippet('swc-prompt-field', {}, markup);
+    const field = template.content.querySelector('swc-prompt-field');
+    expect(field.getAttribute('placeholder')).to.equal(
+      'Ready to get started? Ask a question, share an idea, or add a task.',
+    );
+    expect(field.hasAttribute('"')).to.be.false;
+  });
+});
+
+describe('buildSwcSnippet — AI Toolkit markup', () => {
+  it('applies conversation-turn controls to the copied turn rather than a wrapper', async () => {
+    const response = await fetch('/deps/swc/playground/snippets/conversation-turn.html');
+    expect(response.ok).to.be.true;
+    const markup = await response.text();
+    const template = document.createElement('template');
+    template.innerHTML = buildSwcSnippet('swc-conversation-turn', {
+      type: { attribute: 'type', value: 'system' },
+      accessibleLabel: { attribute: 'accessible-label', value: 'Example turn' },
+    }, markup);
+    const turn = template.content.firstElementChild;
+    expect(turn.localName).to.equal('swc-conversation-turn');
+    expect(turn.getAttribute('type')).to.equal('system');
+    expect(turn.getAttribute('accessible-label')).to.equal('Example turn');
+    expect(turn.querySelector('swc-user-message')).to.not.equal(null);
+  });
+
+  it('updates the response-status label in a standalone copied example', async () => {
+    const response = await fetch('/deps/swc/playground/snippets/response-status.html');
+    expect(response.ok).to.be.true;
+    const markup = await response.text();
+    const iframe = document.createElement('iframe');
+    iframe.srcdoc = buildSwcSnippet('swc-response-status', {}, markup);
+    const loaded = new Promise((resolve) => {
+      iframe.addEventListener('load', resolve, { once: true });
+    });
+
+    try {
+      document.body.append(iframe);
+      await loaded;
+      const status = iframe.contentDocument.querySelector('swc-response-status');
+      const label = status.querySelector('[slot="label"]');
+      for (const [value, expected] of [
+        ['complete', 'Thought for 9 seconds'],
+        ['stopped', 'You stopped the response'],
+        ['active', 'Searching repositories for Europe trips'],
+      ]) {
+        status.setAttribute('status', value);
+        await new Promise((resolve) => {
+          setTimeout(resolve);
+        });
+        expect(label.textContent).to.equal(expected);
+      }
+    } finally {
+      iframe.remove();
+    }
+  });
+});
+
 // --- buildRspSnippet ---------------------------------------------------------
 
 describe('buildRspSnippet', () => {
