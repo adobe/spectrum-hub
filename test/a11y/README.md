@@ -172,6 +172,36 @@ they need their own browser installation and development server. Run them with
 `npm run test:a11y`, or via the dedicated
 [`a11y.yml`](../../.github/workflows/a11y.yml) workflow in CI.
 
+### Playground rollout parity
+
+`blocks/playground-parity.spec.js` exercises the existing parent and real legacy
+preview documents with deterministic workbook, catalog, image, and CDN responses:
+
+```bash
+npm run test:a11y -- test/a11y/blocks/playground-parity.spec.js
+```
+
+The tests interact with the controls and inspect the props passed to the RSP
+render boundary, the SWC element's attributes/content, or the native image's
+URL/alt text. They cover frame isolation, typed values, overlay prop ownership,
+unset removal, themes, and controls changed before preview readiness. They do
+not replace the application's frame documents, message listeners, or apply
+helpers.
+
+The native variant checks use the controls. Native `staticColor` updates use
+explicit legacy `prop-update` messages to check sorting and unset removal at
+the frame boundary. On `main`, that picker exposes only "None" because the
+unset-option branch does not use curated workbook options without a catalog.
+This baseline does not claim that selecting white or black through the native
+picker works. Address that limitation separately when activating native controls.
+
+The React/RSP stand-ins expose the final render tree, and the SWC stand-ins are
+custom elements. These tests do not validate real-package styles, contexts,
+or component-specific interaction. They supplement the existing axe and ARIA
+checks; they do not replace them. AI is not active in this production baseline.
+Its real-package and nested-target checks belong to the adapter/activation
+stages of the [rollout design](../../.ai/docs/specs/2026-11-23-playground-rollout-design.md).
+
 ## File structure
 
 | Path | Purpose |
