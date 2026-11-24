@@ -61,9 +61,29 @@ Examples:
 - [discovery]:
 - [Test(component)]:
 
+## Choosing a template
+
+Match the Jira issue type to one template, and use that template whole:
+
+| Issue type | Template | Use when |
+| --- | --- | --- |
+| Bug | [Bug reporting template](#bug-reporting-template) | Existing behavior is wrong and can be reproduced |
+| Story, Task, Epic | [General issue/ticket (story) template](#general-issueticket-story-template) | The ticket produces a deliverable: a feature, refactor, spike, test, or documentation |
+
+Do not merge the two templates. A report that needs new behavior defined before anyone
+can fix it is a story, not a bug.
+
+Both templates require an overview written as a user story and acceptance criteria written
+in Given/When/Then form. Keep every heading, in the order given. When a section does not
+apply, write "None" and add a one-line reason rather than deleting the heading.
+
+Severity belongs above the description, with the title and labels, as described in
+[Description structure](#description-structure). Do not repeat severity as a section inside
+the description.
+
 ## More specific templates
 
-### General issue/ticket template
+### General issue/ticket (story) template
 
 ```
 h2. Overview
@@ -71,6 +91,9 @@ h2. Overview
 
 h2. Acceptance criteria
 (how we ensure that the work is complete)
+
+h2. Expected behavior
+(Description of what the user would expect to happen)
 
 h2. Technical notes/resources
 (any technical notes/links/etc)
@@ -85,16 +108,19 @@ h2. Design specs
 ### Bug reporting template
 
 ```
-{*}Link to original issue:{*} (Add a link to the original issue if applicable)
+{*}Link to original issue:{*} (Add a link to the original issue if applicable; otherwise omit this line)
+
+h2. Overview
+(Plain language, as a user story: who runs into this, what they expect, and what the bug costs them. Keep file paths, measurements, and stack traces out of this section — they belong in Actual behavior and Technical notes.)
 
 h2. Expected behavior
-(Description of what the user would expect to happen)
+(The observable outcome that should happen)
 
 h2. Actual behavior
-(The actual behavior observed by the user)
+(What happens instead, with the measurement, error, or report that demonstrates it)
 
 h2. Screenshots
-(Screenshots of the problem if applicable)
+(Screenshots or recordings of the problem, if applicable)
 
 h2. How can we reproduce the issue?
 
@@ -105,11 +131,19 @@ h2. How can we reproduce the issue?
 # See error
 <!-- add more reproduction steps if applicable-->
 
-h2. Sample code or abstract reproduction which illustrates the problem
-(are there any design specs/files/mock-ups we can include here? Any other design notes?)
+(Name the conditions the bug depends on: browser, operating system, viewport, signed-in state, cold or warm cache. If the bug does not reproduce everywhere, say where it does not.)
 
-h2. Severity
-(The severity of the issue according to the [documentation|https://github.com/adobe/spectrum-web-components/blob/main/CONTRIBUTING.md#issue-severity-classification])
+h2. Sample code or abstract reproduction which illustrates the problem
+(The smallest snippet, failing test, or console command that demonstrates the problem. Write "None" when the reproduction steps above are sufficient.)
+
+h2. Acceptance criteria
+(Given/When/Then clauses that define the fix. Include one criterion covering the cases that work correctly today, so the fix cannot regress them.)
+
+h2. Technical notes/resources
+(Root cause if known, file and line references, links to pull requests, RFCs, or related tickets)
+
+h2. QA
+(Steps to confirm the fix, run in each environment where the bug reproduces)
 ```
 
 ## Severity classification
@@ -119,6 +153,9 @@ h2. Severity
 - SEV3: Medium - Feature partially broken, moderate impact
 - SEV4: Low - Minor issues, minimal user impact
 - SEV5: Trivial - Cosmetic issues, no functional impact
+
+The list above is the source of truth for Spectrum Hub, adapted from the Spectrum Web
+Components [issue severity classification](https://github.com/adobe/spectrum-web-components/blob/main/CONTRIBUTING.md#issue-severity-classification).
 
 ## Best practices
 

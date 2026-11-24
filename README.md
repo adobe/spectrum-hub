@@ -19,6 +19,31 @@ Local development requires Node.js 24 and npm.
 1. Start the AEM CLI: `aem up` in the cloned folder.
 1. Open the cloned folder in your favorite code editor and build something amazing.
 
+### MCP setup for AI-assisted work
+
+Include `da-prod-mcp` as the minimum recommended MCP setup so your assistant can
+inspect Document Authoring (DA) content alongside the repository code. In VS Code,
+create a local `.vscode/mcp.json` with:
+
+```json
+{
+  "servers": {
+    "da-prod-mcp": {
+      "type": "http",
+      "url": "https://mcp.adobeaemcloud.com/adobe/mcp/da"
+    }
+  }
+}
+```
+
+This file is ignored by Git. Sign in through your MCP client using your own
+Adobe account with DA access, and never commit credentials. Require explicit
+approval before an assistant changes, previews, publishes, unpublishes, or deletes
+content.
+
+See [Configure MCP for AI-assisted work](./CONTRIBUTING.md#configure-mcp-for-ai-assisted-work)
+for the `mcpServers` format used by other clients and additional setup guidance.
+
 ## Contributing
 
 Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md) and choose the workflow that matches your change:

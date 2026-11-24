@@ -43,6 +43,50 @@ An `.env` file is needed only for workflows that call configured services, such
 as an Algolia indexer dry run. Copy `.env.example` to an untracked `.env` and
 use development credentials. Never commit credentials.
 
+### Configure MCP for AI-assisted work
+
+For AI-assisted work, include the Document Authoring MCP server,
+`da-prod-mcp`, as the minimum recommended setup. It lets your assistant inspect
+authored content in DA alongside the repository code.
+
+The repository ignores `.vscode/mcp.json` so contributors can keep their MCP
+configuration local. In VS Code, create that file with this baseline, or merge
+the server entry into your existing configuration:
+
+```json
+{
+  "servers": {
+    "da-prod-mcp": {
+      "type": "http",
+      "url": "https://mcp.adobeaemcloud.com/adobe/mcp/da"
+    }
+  }
+}
+```
+
+MCP configuration paths and schemas vary by client. Clients that use a
+top-level `mcpServers` key instead of `servers` can use this entry:
+
+```json
+{
+  "mcpServers": {
+    "da-prod-mcp": {
+      "url": "https://mcp.adobeaemcloud.com/adobe/mcp/da"
+    }
+  }
+}
+```
+
+Connect through your MCP client and complete its sign-in flow when prompted.
+Use your own Adobe account with the required DA access. Do not copy another
+contributor's credentials or commit tokens, authorization headers, or other
+secrets.
+
+The server also provides tools that change content, preview it, and publish
+it. Connecting the server is not permission for an assistant to use those
+tools. Require explicit approval before content writes, preview, publish,
+unpublish, or deletion.
+
 ### Find the owner of a change
 
 | Change | Start here |
