@@ -105,17 +105,30 @@ isolation. Ask which page to use when the diff does not point at one.
 
 Serve the working tree, then serve the merge base from a second worktree.
 Replace `<confirmed-pr-base>` with the PR's intended base ref; do not assume
-`main`.
+`main`. Choose a unique suffix for the temporary branch below.
 
 ```bash
 npx aem up --port 3001 --no-open
 ```
 
 ```bash
-REPO=$(git rev-parse --show-toplevel)
-BASE=$(git merge-base <confirmed-pr-base> HEAD)
-git worktree add -b review-before "$REPO/.worktrees/review-before" "$BASE"
-(cd "$REPO/.worktrees/review-before" && "$REPO/node_modules/.bin/aem" up --port 3002 --no-open)
+REPO=$(git rev-parse --show-toplevel) &&
+BASE=$(git merge-base "<confirmed-pr-base>" HEAD) &&
+BEFORE_BRANCH="pr-before-<unique-suffix>" &&
+BEFORE_WORKTREE="$REPO/.worktrees/$BEFORE_BRANCH" &&
+git worktree add -b "$BEFORE_BRANCH" "$BEFORE_WORKTREE" "$BASE"
+```
+
+Stop if setup fails, including a branch or path collision. Do not reuse or
+remove the colliding resource. Only after successful creation, record the exact
+branch and absolute worktree path as resources owned by this capture.
+
+Use those recorded values for `<created-before-path>` and
+`<created-before-branch>` in later commands. Shell variables may not persist
+between tool calls. Start the before server only after setup succeeds:
+
+```bash
+(cd "<created-before-path>" && "<repo-root>/node_modules/.bin/aem" up --port 3002 --no-open)
 ```
 
 Run both servers in the background. Reuse an `aem up` already listening on 3001
@@ -140,23 +153,36 @@ npx playwright screenshot --viewport-size "1280,800" --full-page \
   "http://localhost:3001/<route>" .screenshots/<name>-after.png
 ```
 
-Add `--color-scheme dark` for the dark pair and `--device "Pixel 5"` for the
-mobile pair.
-
-Then stop both servers and remove the worktree and its branch:
+Add `--color-scheme dark` for the dark pair. For the mobile pair, replace the
+desktop commands with the following. Do not retain `--viewport-size`, which
+overrides the device's mobile viewport:
 
 ```bash
-git worktree remove --force "$REPO/.worktrees/review-before"
-git branch -D review-before
+npx playwright screenshot --device "Pixel 5" --full-page \
+  "http://localhost:3002/<route>" .screenshots/<name>-mobile-before.png
+npx playwright screenshot --device "Pixel 5" --full-page \
+  "http://localhost:3001/<route>" .screenshots/<name>-mobile-after.png
 ```
+
+Stop only servers started by this capture, not reused servers. Clean up only
+the recorded worktree and branch whose creation succeeded. Use non-forced
+removal, and delete the branch only if worktree removal succeeds:
+
+```bash
+git worktree remove "<created-before-path>" &&
+git branch -d "<created-before-branch>"
+```
+
+If cleanup fails because the worktree is dirty or the branch has unmerged
+commits, preserve it and report its path and branch. Never force cleanup.
 
 Constraints for this phase:
 
 - `.worktrees/` and `.screenshots/` are ignored by Git. Never commit the images
   or the worktree.
 - Never commit, stash, or reset inside the worktree, and never touch the user's
-  checked-out branch. The `review-before` branch exists so the merge base can be
-  served, not edited, and it is deleted during cleanup.
+  checked-out branch. The temporary branch exists only to serve the merge base.
+  Remove it only through the guarded cleanup above.
 - `aem up` proxies the AEM origin, which answers anonymous requests with `401`.
   Icons, `query-index.json`, and authored content render only while the
   developer's `aem-cli` login is valid. When part of the page fails to load, say

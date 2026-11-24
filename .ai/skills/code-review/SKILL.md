@@ -63,14 +63,21 @@ Nothing enforces tokens automatically. `.stylelintrc.json` extends
 `stylelint-config-standard` and adds no token rule, so `npm run lint:css` passes
 on a hardcoded color. Read the added lines.
 
-Start from the literals the diff introduces:
+Use the same target pinned in step 1. For a branch review, start from the
+literals introduced by that branch's base range:
 
 ```bash
-git diff --unified=0 -- '*.css' \
+git diff --unified=0 <base>...HEAD -- '*.css' \
   | grep -E '^\+' \
   | grep -vE 'var\(--' \
   | grep -iE '#[0-9a-f]{3,8}|rgba?\(|hsla?\(|[0-9]+px|[0-9]+rem'
 ```
+
+For a working-tree review, replace `<base>...HEAD` with `HEAD` to include staged
+and unstaged changes, and inspect untracked CSS files separately. For a PR
+review, inspect the `.css` hunks from `gh pr diff <n>` or use the confirmed base
+range in the PR checkout. Plain `git diff` only shows unstaged changes and must
+not substitute for the pinned target.
 
 Then confirm a replacement exists before naming it in a finding:
 
