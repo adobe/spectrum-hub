@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Use for "review", "code review", "review my changes", "review this PR", "check this diff", or "is this ready to merge". Read-only review of local changes or a GitHub pull request for defects, regressions, and tests that give false confidence. Covers design-token validation for CSS changes, reuse of existing code for JavaScript changes, and before-and-after screenshots for the pull request description.
+description: Use for "review", "code review", "review my changes", "review this PR", "check this diff", or "is this ready to merge". Read-only review of local changes or a GitHub pull request for defects, regressions, and tests that give false confidence. Covers design-token validation for CSS changes and reuse of existing code for JavaScript changes.
 ---
 
 # Code Review
@@ -22,10 +22,8 @@ Do not guess a pull request's target branch.
 
 Write one sentence: what is this change trying to do? Pull it from the request, PR body, commits, or linked issue. Judge every finding against it. If you can't write it, ask before reviewing.
 
-Two phases run outside this boundary, and only after the user authorizes them:
-the [screenshot capture](#visual-evidence-for-the-pull-request) and the
-[blocking-finding fix](#blocking-finding-fix-offer). Both come after the
-findings are reported. Neither starts without an explicit selection.
+A [blocking-finding fix](#blocking-finding-fix-offer) runs outside this boundary,
+only after findings are reported and the user explicitly selects a finding.
 
 ## 3. Review
 
@@ -184,103 +182,6 @@ Order by severity, `verified` before `inferred`. Then, only if non-empty: **Ques
 No findings: write `No qualifying findings.` and any residual risks. No praise, no diff summary.
 
 ## After the review
-
-Both post-review phases are offers, not steps. Ask once, in a single prompt,
-listing the screenshot capture alongside any eligible blocking finding. The
-review stays read-only until the user selects something.
-
-### Visual evidence for the pull request
-
-Offer to capture screenshots when the diff changes what renders: block CSS,
-`styles/`, block markup or DOM construction, templates, icons, or fragments.
-Skip the offer for a diff limited to tests, documentation, tooling, or
-generated data.
-
-Capture before-and-after pairs when a previous state exists. A new block has no
-before state, so capture the after shot alone and say why. Add a second pair for
-each condition the change affects: dark scheme when color changed, mobile
-viewport when layout changed.
-
-Pick the route first. Prefer an authored page that renders the changed block.
-When no page covers it, the fixtures in `test/a11y/fixtures/` render blocks in
-isolation. Ask which page to use when the diff does not point at one.
-
-Serve the working tree, then serve the merge base from a second worktree:
-
-```bash
-npx aem up --port 3001 --no-open
-```
-
-```bash
-REPO=$(git rev-parse --show-toplevel)
-BASE=$(git merge-base origin/main HEAD)
-git worktree add -b review-before "$REPO/.worktrees/review-before" "$BASE"
-(cd "$REPO/.worktrees/review-before" && "$REPO/node_modules/.bin/aem" up --port 3002 --no-open)
-```
-
-Run both servers in the background. Reuse an `aem up` already listening on 3001
-rather than starting a second one.
-
-Create the worktree on a branch, as above, rather than with `--detach`.
-`aem up` reads the branch from the worktree's `HEAD` file, and a detached `HEAD`
-sends it down a path that does not understand linked worktrees.
-
-Both servers proxy the same content origin —
-`https://main--spectrum-hub--adobe.aem.page` — because `aem up` derives the
-origin from the `origin` remote and always uses `main`, never the local branch.
-The pair therefore differs only in the code under review, which is the point.
-
-Capture each pair at the same route, viewport, and scheme — a pair that differs
-in anything but the change proves nothing:
-
-```bash
-npx playwright screenshot --viewport-size "1280,800" --full-page \
-  "http://localhost:3002/<route>" .screenshots/<name>-before.png
-npx playwright screenshot --viewport-size "1280,800" --full-page \
-  "http://localhost:3001/<route>" .screenshots/<name>-after.png
-```
-
-Add `--color-scheme dark` for the dark pair and `--device "Pixel 5"` for the
-mobile pair.
-
-Then stop both servers and remove the worktree and its branch:
-
-```bash
-git worktree remove --force "$REPO/.worktrees/review-before"
-git branch -D review-before
-```
-
-Constraints for this phase:
-
-- `.worktrees/` and `.screenshots/` are ignored by Git. Never commit the images
-  or the worktree.
-- Never commit, stash, or reset inside the worktree, and never touch the user's
-  checked-out branch. The `review-before` branch exists so the merge base can be
-  served, not edited, and it is deleted during cleanup.
-- `aem up` proxies the AEM origin, which answers anonymous requests with `401`.
-  Icons, `query-index.json`, and authored content render only while the
-  developer's `aem-cli` login is valid. When part of the page fails to load, say
-  so with the screenshot instead of presenting a broken render as the change.
-- The after shot includes uncommitted working-tree changes. State that when the
-  review target was committed changes only.
-
-Report the absolute path of every image so the user can drag it into GitHub,
-then hand over a block they can paste into the **Screenshots (if applicable)**
-section of the pull request template:
-
-```markdown
-### Screenshots (if applicable)
-
-| Before | After |
-| --- | --- |
-| <drag `hero-before.png` here> | <drag `hero-after.png` here> |
-
-Route `/products/hero-demo` at 1280×800, light scheme.
-```
-
-Add one row per condition and name that condition under the table. GitHub
-uploads images only from the pull request author, so the images stay local
-until the user drops them in. `write-pr-descriptions` owns the rest of the body.
 
 ### Blocking-finding fix offer
 
