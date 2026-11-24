@@ -23,6 +23,12 @@ origin (protocol, hostname, and port). Cross-origin embedding cannot supply mark
 or property updates. SWC snippets can execute
 JavaScript, so their checked-in scripts are trusted site code, not user content.
 
+Conversation-turn and response-status share their state updates through
+[`snippet-state.js`](../swc/playground/snippet-state.js). The preview observes
+changes to the root's `type` and `status` attributes. The code builder applies the
+same updates before serialization, so displayed and copied HTML reflects the
+selected message, labels, descriptions, and steps without playground-only scripts.
+
 ### Prepared runtime manifest, not active input
 
 [`rsp/playground/runtime-manifest.json`](../rsp/playground/runtime-manifest.json)

@@ -10,12 +10,13 @@ source is commit `26ea9c7821026e54ba611008684b40dc8be70cfa`; the draft PR still
 references its older head. Do not overwrite either source while extracting work.
 
 The first rollout branch is based on `main`. The next branch, `pg-runtime`,
-is based on `pg-tests` at `5858e6f6d885f66b64f4ab7d0e8f98f00a99ab70`, as requested.
-It includes that baseline and isolates phase 2 in its own diff. Publication is
-not authorized yet. Do not push or open PRs until requested.
+is based on `pg-tests` at `8c6b284dece880a1e1f4000bbabd59d4fdbda1db`, as requested.
+It includes that baseline and isolates phase 2 in commit `c333739c`.
+A separate snippet-state fix follows on `pg-runtime` before phase 3.
+Publication is not authorized yet. Do not push or open PRs until requested.
 
 The first branch, `pg-tests`, starts at
-`7b00f7b73398feea1bade1656626eade6a0d9abb`. Source commits combine production
+`093e3eee9033c0233bd72e59bcb5c40874a473a6`. Source commits combine production
 changes and tests, so extract only the relevant test changes rather than apply
 the entire refactor commit.
 
@@ -54,6 +55,22 @@ not part of this additive branch.
 Regenerate with `--locked` to retain committed versions. Use `--check` to
 verify byte-for-byte reproducibility without writing the artifact. Both modes
 read published package files and fail if their graph or required CSS is missing.
+
+### Before phase 3: SWC snippet-state parity
+
+Keep the shared snippet-state helper, its legacy-preview integration, copied
+HTML updates, and dependent tests together in a separate fix on `pg-runtime`.
+The tests import the helper and assert its script-free output, so they do not
+belong on the independently runnable `pg-tests` branch.
+
+Conversation-turn and response-status use the same state updates in the live
+preview and before code serialization. Copied HTML represents the selected
+state without playground-only scripts. This fix changes the legacy SWC path,
+not the inactive runtime manifest or the new shell.
+
+The user confirmed these snippet changes are not live yet. Do not retain inline
+script fallbacks for cached previews for this slice. The general compatibility
+requirements for the later runtime rollout still apply.
 
 ## Compatibility boundaries
 

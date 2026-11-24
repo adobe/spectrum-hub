@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import * as preview from '../../deps/shared/playground/prop-listener.js';
+import { createSnippetStateUpdater } from '../../deps/swc/playground/snippet-state.js';
 
 const { listenForPropUpdates, notifyPreviewReady, requestMarkup } = preview;
 
@@ -30,7 +31,9 @@ describe('executeSnippetScripts', () => {
       mount.remove();
     }
   });
+});
 
+describe('createSnippetStateUpdater', () => {
   it('switches the conversation-turn message element and text with its type', async () => {
     const markup = await (await fetch('/deps/swc/playground/snippets/conversation-turn.html')).text();
     const mount = document.createElement('div');
@@ -38,8 +41,8 @@ describe('executeSnippetScripts', () => {
     document.body.append(mount);
 
     try {
-      preview.executeSnippetScripts(mount);
       const turn = mount.querySelector('swc-conversation-turn');
+      const update = createSnippetStateUpdater(turn);
       const userMessage = turn.querySelector('swc-user-message');
       const texts = {
         user: 'Can you summarize the attached campaign assets?',
@@ -48,6 +51,7 @@ describe('executeSnippetScripts', () => {
 
       for (const type of ['user', 'system', 'system', 'user', 'system', 'user']) {
         turn.setAttribute('type', type);
+        update();
         await new Promise((resolve) => {
           setTimeout(resolve);
         });
@@ -63,8 +67,6 @@ describe('executeSnippetScripts', () => {
   });
 
   it('updates the response-status label and timeline when its status changes', async () => {
-    expect(preview.executeSnippetScripts).to.be.a('function');
-
     const sandbox = sinon.createSandbox();
     // The unbundled SWC source expects this build-time environment variable.
     sandbox.define(window, 'process', { env: { NODE_ENV: 'production' } });
@@ -76,9 +78,8 @@ describe('executeSnippetScripts', () => {
       /* eslint-enable import/no-unresolved */
       mount.innerHTML = await (await fetch('/deps/swc/playground/snippets/response-status.html')).text();
       document.body.append(mount);
-      preview.executeSnippetScripts(mount);
-
       const responseStatus = mount.querySelector('swc-response-status');
+      const update = createSnippetStateUpdater(responseStatus);
       const label = responseStatus.querySelector('[slot="label"]');
       const descriptions = {
         active: 'Checked 3 internal repositories for previously compiled trip package data and pricing templates.',
@@ -97,6 +98,7 @@ describe('executeSnippetScripts', () => {
 
       for (const [status, expectedLabel] of statuses) {
         responseStatus.setAttribute('status', status);
+        update();
         await new Promise((resolve) => {
           setTimeout(resolve);
         });
@@ -122,6 +124,7 @@ describe('executeSnippetScripts', () => {
       }
 
       responseStatus.setAttribute('status', 'unsupported');
+      update();
       await new Promise((resolve) => {
         setTimeout(resolve);
       });
