@@ -1,6 +1,17 @@
 // Shared postMessage contract between the playground block and every preview shell.
+export function executeSnippetScripts(container) {
+  // Scripts parsed through innerHTML stay inert, so recreate trusted snippet scripts.
+  container.querySelectorAll('script').forEach((script) => {
+    const executable = document.createElement('script');
+    [...script.attributes].forEach(({ name, value }) => executable.setAttribute(name, value));
+    executable.textContent = script.textContent;
+    script.replaceWith(executable);
+  });
+}
+
 export function listenForPropUpdates(handler) {
   window.addEventListener('message', (event) => {
+    if (event.source !== window.parent || event.origin !== window.location.origin) { return; }
     if (event.data?.type !== 'prop-update') { return; }
     const { property, attribute, value } = event.data;
     handler({ property, attribute, value });
@@ -20,12 +31,12 @@ export function notifyPreviewReady() {
 export function requestMarkup() {
   return new Promise((resolve) => {
     function onMessage(event) {
-      if (event.source !== window.parent) { return; }
+      if (event.source !== window.parent || event.origin !== window.location.origin) { return; }
       if (event.data?.type !== 'markup-response') { return; }
       window.removeEventListener('message', onMessage);
       resolve(event.data.markup ?? '');
     }
     window.addEventListener('message', onMessage);
-    window.parent.postMessage({ type: 'markup-request' }, '*');
+    window.parent.postMessage({ type: 'markup-request' }, window.location.origin);
   });
 }
