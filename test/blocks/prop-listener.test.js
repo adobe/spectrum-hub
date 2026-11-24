@@ -6,8 +6,13 @@ const { listenForPropUpdates, notifyPreviewReady, requestMarkup } = preview;
 
 // listenForPropUpdates wires a window 'message' listener; message events are
 // delivered synchronously via dispatchEvent, so no awaiting is needed.
-function send(data) {
-  window.dispatchEvent(new MessageEvent('message', { data }));
+function send(data, options = {}) {
+  window.dispatchEvent(new MessageEvent('message', {
+    data,
+    source: window.parent,
+    origin: window.location.origin,
+    ...options,
+  }));
 }
 
 describe('executeSnippetScripts', () => {
@@ -148,7 +153,38 @@ describe('prop-listener — listenForPropUpdates', () => {
   it('tolerates messages with no data (cross-frame noise)', () => {
     const calls = [];
     listenForPropUpdates((p) => calls.push(p));
-    expect(() => window.dispatchEvent(new MessageEvent('message'))).to.not.throw();
+    expect(() => send(undefined)).to.not.throw();
+    expect(calls).to.have.length(0);
+  });
+
+  it('ignores prop updates from another same-origin frame or a missing sender', () => {
+    const calls = [];
+    listenForPropUpdates((p) => calls.push(p));
+    const otherFrame = document.createElement('iframe');
+    document.body.append(otherFrame);
+    try {
+      for (const source of [otherFrame.contentWindow, null]) {
+        send({ type: 'prop-update', attribute: 'onclick', value: 'alert(1)' }, { source });
+      }
+      expect(calls).to.have.length(0);
+    } finally {
+      otherFrame.remove();
+    }
+  });
+
+  it('ignores prop updates from a parent with a different or opaque origin', () => {
+    const calls = [];
+    listenForPropUpdates((p) => calls.push(p));
+    const differentPort = new URL(window.location.origin);
+    differentPort.port = differentPort.port === '2001' ? '2002' : '2001';
+    const differentScheme = new URL(window.location.origin);
+    differentScheme.protocol = differentScheme.protocol === 'http:' ? 'https:' : 'http:';
+
+    for (const origin of [
+      'https://untrusted.example', differentPort.origin, differentScheme.origin, 'null', '',
+    ]) {
+      send({ type: 'prop-update', attribute: 'onclick', value: 'alert(1)' }, { origin });
+    }
     expect(calls).to.have.length(0);
   });
 

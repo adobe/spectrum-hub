@@ -18,8 +18,9 @@ Four independent sources, merged in `init()`:
 The division matters: **the workbook is the allow-list, the catalog is the vocabulary.** Button's RSP catalog holds 42 props; its page shows 8. Letting the catalog decide which controls exist would put every `aria-*` and `onKeyDown` on the page, and would leave ios/android — which have no catalog at all — with nothing.
 
 Preview shells request snippet markup only from a same-origin parent and accept
-responses only from that parent window with a matching origin (protocol, hostname,
-and port). Cross-origin embedding cannot supply markup. SWC snippets can execute
+markup responses and property updates only from that parent window with a matching
+origin (protocol, hostname, and port). Cross-origin embedding cannot supply markup
+or property updates. SWC snippets can execute
 JavaScript, so their checked-in scripts are trusted site code, not user content.
 
 ## Rules the consumer follows
