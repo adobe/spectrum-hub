@@ -82,6 +82,53 @@ node deps/build-status-index.js        # rebuilds the combined index
 
 Both scripts run daily via [`.github/workflows/extract-rsp-properties.yml`](../../.github/workflows/extract-rsp-properties.yml), which needs `npm ci` because the pipeline imports the real `typescript` package.
 
+### Additive playground runtime manifest
+
+`generate-playground-runtime-manifest.js` prepares
+`playground/runtime-manifest.json` for the future shared preview runtime.
+`build-playground-runtime-manifest.js` walks published module imports to collect
+each export's styles and AI's S2 support imports. The fixed S2/AI package settings
+live in `playground-runtime-sources.js`.
+
+[`version.json`](version.json) owns the phase 2 runtime pins: S2 `1.8.2`,
+AI `0.5.2`, and React/ReactDOM `19.3.1`. The manifest derives its version metadata
+from these same pins and remains self-contained. Neither file selects versions
+for production consumers yet.
+
+This tooling is not connected to discovery, extraction, the daily workflow, or
+the current previews. Adding or regenerating this artifact does not change
+production package selection, catalogs, or control behavior.
+
+```sh
+node deps/rsp/generate-playground-runtime-manifest.js --locked
+node deps/rsp/generate-playground-runtime-manifest.js --check
+```
+
+Both commands fetch published package files using exact `version.json` pins.
+`--locked` regenerates the manifest, even if it is missing or its metadata is
+stale, without rewriting `version.json`. `--check` builds in memory and rejects
+missing, stale, or inconsistent manifest output without writing either file.
+Both modes reject missing, floating, or malformed pins, metadata that disagrees
+with a requested pin, an AI S2 dependency that differs from the selected S2 pin,
+and React/ReactDOM versions incompatible with either package's peer ranges.
+
+Without either flag, the generator resolves AI once, selects its exact S2
+dependency, and resolves a concrete React release from AI's peer range. It
+validates compatibility and builds the full graph before staging both generated
+artifacts. A build or staging failure leaves existing artifacts unchanged; a
+publication failure rolls back any replaced artifact. If filesystem errors
+also prevent rollback, the error reports the retained backup for recovery.
+This is not a crash-safe, multi-file transaction.
+
+Use locked generation for this rollout slice rather than updating upstream
+versions. Missing modules or required stylesheet canaries fail generation.
+
+The manifest records support imports; it does not itself establish shared S2
+contexts. The later adapter must externalize AI's S2 imports and map them to the
+same S2 instance. Connecting extraction and preview consumers to these pins is
+a separate activation step. See the
+[rollout design](../../.ai/docs/specs/2026-11-23-playground-rollout-design.md).
+
 ## `components.json` schema
 
 Generated — do not edit by hand; the daily workflow overwrites it.

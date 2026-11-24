@@ -10,6 +10,7 @@ import {
   TEXT_KEYS,
 } from './playground-data.js';
 import { hasLabelProp } from '../../deps/rsp/playground/apply-rsp-prop.js';
+import { createSnippetStateUpdater } from '../../deps/swc/playground/snippet-state.js';
 import { resolveRspComponentName } from '../../deps/rsp/playground/pascal-case.js';
 import { getPlaygroundConfig } from '../../scripts/utils/implementations.js';
 import { isUnsetOption, optionLabel } from '../../deps/shared/playground/unset-control-options.js';
@@ -225,6 +226,7 @@ export function buildSwcSnippet(tagName, currentProps, markup) {
     hasRealLabelAttribute,
     (prop, { attribute }) => attribute,
   );
+  createSnippetStateUpdater(el)?.();
   const rootMarkup = serializeElement(el);
   // A trigger-anchored component's real usage needs its trigger too, or the
   // `for="..."` on the copied snippet dangles — include it verbatim.

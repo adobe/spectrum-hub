@@ -27,6 +27,7 @@
       requestMarkup,
     } from '../../shared/playground/prop-listener.js';
     import { applySwcProp } from './apply-swc-prop.js';
+    import { createSnippetStateUpdater } from './snippet-state.js';
     import { showError, resolvePreviewParams } from '../../../blocks/playground/preview-params.js';
 
     const mount = document.getElementById('mount');
@@ -91,6 +92,14 @@
       }));
 
       executeSnippetScripts(mount);
+
+      const updateSnippetState = createSnippetStateUpdater(root);
+      if (updateSnippetState) {
+        updateSnippetState();
+        new MutationObserver(updateSnippetState).observe(root, {
+          attributeFilter: ['type', 'status'],
+        });
+      }
 
       // Some components (e.g. tooltip) only reveal via the Popover API, not
       // the `open` attribute alone — markup can't call showPopover() itself.

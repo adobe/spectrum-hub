@@ -381,69 +381,63 @@ describe('buildSwcSnippet — AI Toolkit markup', () => {
     const response = await fetch('/deps/swc/playground/snippets/conversation-turn.html');
     expect(response.ok).to.be.true;
     const markup = await response.text();
-    const iframe = document.createElement('iframe');
-    iframe.srcdoc = buildSwcSnippet('swc-conversation-turn', {
-      type: { attribute: 'type', value: 'system' },
-      accessibleLabel: { attribute: 'accessible-label', value: 'Example turn' },
-    }, markup);
-    const loaded = new Promise((resolve) => {
-      iframe.addEventListener('load', resolve, { once: true });
-    });
-
-    try {
-      document.body.append(iframe);
-      await loaded;
-      const turn = iframe.contentDocument.querySelector('swc-conversation-turn');
-      expect(turn.getAttribute('type')).to.equal('system');
+    const texts = {
+      user: 'Can you summarize the attached campaign assets?',
+      system: 'Here is a concise summary based on the files you shared. I grouped themes by audience and channel.',
+    };
+    for (const type of ['system', 'user', 'system']) {
+      const template = document.createElement('template');
+      template.innerHTML = buildSwcSnippet('swc-conversation-turn', {
+        type: { attribute: 'type', value: type },
+        accessibleLabel: { attribute: 'accessible-label', value: 'Example turn' },
+      }, markup);
+      const turn = template.content.firstElementChild;
+      expect(turn.localName).to.equal('swc-conversation-turn');
+      expect(turn.getAttribute('type')).to.equal(type);
       expect(turn.getAttribute('accessible-label')).to.equal('Example turn');
-      expect(turn.querySelector('swc-user-message')).to.equal(null);
-      expect(turn.querySelector('swc-system-message').textContent.trim()).to.equal(
-        'Here is a concise summary based on the files you shared. I grouped themes by audience and channel.',
-      );
-    } finally {
-      iframe.remove();
+      const messages = turn.querySelectorAll('swc-user-message, swc-system-message');
+      expect(messages).to.have.length(1);
+      expect(messages[0].localName).to.equal(`swc-${type}-message`);
+      expect(messages[0].textContent.trim()).to.equal(texts[type]);
+      expect(turn.querySelectorAll('script')).to.have.length(0);
     }
   });
 
-  it('updates the response-status timeline in a standalone copied example', async () => {
+  it('copies the current response-status timeline without playground scripts', async () => {
     const response = await fetch('/deps/swc/playground/snippets/response-status.html');
     expect(response.ok).to.be.true;
     const markup = await response.text();
-    const iframe = document.createElement('iframe');
-    iframe.srcdoc = buildSwcSnippet('swc-response-status', {
-      status: { attribute: 'status', value: 'complete' },
-    }, markup);
-    const loaded = new Promise((resolve) => {
-      iframe.addEventListener('load', resolve, { once: true });
-    });
-
-    try {
-      document.body.append(iframe);
-      await loaded;
-      const status = iframe.contentDocument.querySelector('swc-response-status');
-      const label = status.querySelector('[slot="label"]');
-      expect(status.querySelectorAll('swc-response-status-step')).to.have.length(4);
-      expect([...status.querySelectorAll('swc-response-status-step')]
-        .every((step) => step.getAttribute('status') === 'complete')).to.be.true;
-      for (const [value, expected] of [
-        ['complete', 'Thought for 9 seconds'],
-        ['stopped', 'You stopped the response'],
-        ['active', 'Searching repositories for Europe trips'],
-      ]) {
-        status.setAttribute('status', value);
-        await new Promise((resolve) => {
-          setTimeout(resolve);
-        });
-        expect(label.textContent).to.equal(expected);
-        const steps = [...status.querySelectorAll('swc-response-status-step')];
-        expect(steps).to.have.length(value === 'complete' ? 4 : 3);
-        expect(steps.at(-1).querySelector('[slot="label"]').textContent.trim()).to.equal(
-          value === 'complete' ? 'Compose response' : 'Searching repositories for Europe trips',
-        );
-        expect(steps.at(-1).getAttribute('status')).to.equal(value);
-      }
-    } finally {
-      iframe.remove();
+    const descriptions = {
+      active: 'Checked 3 internal repositories for previously compiled trip package data and pricing templates.',
+      complete: 'Synthesizing findings into a structured comparison of available packages with pricing and availability.',
+      stopped: 'Interrupted before this step could finish.',
+    };
+    for (const [value, expected] of [
+      ['complete', 'Thought for 9 seconds'],
+      ['stopped', 'You stopped the response'],
+      ['active', 'Searching repositories for Europe trips'],
+      ['complete', 'Thought for 9 seconds'],
+    ]) {
+      const template = document.createElement('template');
+      template.innerHTML = buildSwcSnippet('swc-response-status', {
+        status: { attribute: 'status', value },
+      }, markup);
+      const status = template.content.firstElementChild;
+      expect(status.getAttribute('status')).to.equal(value);
+      expect(status.querySelector('[slot="label"]').textContent.trim()).to.equal(expected);
+      const steps = [...status.querySelectorAll('swc-response-status-step')];
+      expect(steps).to.have.length(value === 'complete' ? 4 : 3);
+      expect(steps.at(-1).querySelector('[slot="label"]').textContent.trim()).to.equal(
+        value === 'complete' ? 'Compose response' : 'Searching repositories for Europe trips',
+      );
+      expect(steps.map((step) => step.getAttribute('status'))).to.deep.equal(
+        value === 'complete'
+          ? ['complete', 'complete', 'complete', 'complete']
+          : ['complete', 'complete', value],
+      );
+      expect(steps.at(-1).querySelector('[slot="description"]').textContent.trim().replace(/\s+/g, ' '))
+        .to.equal(descriptions[value]);
+      expect(status.querySelectorAll('script')).to.have.length(0);
     }
   });
 });

@@ -8,6 +8,8 @@ const components = {
     { Component: 'Button', Implementation: 'swc', Properties: 'isDisabled, label, size' },
     { Component: 'Button', Implementation: 'ios, android', Properties: 'variant, staticColor' },
     { Component: 'Badge', Properties: 'fixed' },
+    { Component: 'conversation-turn', Implementation: 'swc', Properties: 'type' },
+    { Component: 'response-status', Implementation: 'swc', Properties: 'status' },
     { Component: 'Avatar', Properties: 'size' },
     { Component: 'Tooltip', Properties: 'placement' },
   ],
@@ -16,6 +18,8 @@ const controls = {
   data: [
     { Property: 'isDisabled', control: 'switch' },
     { Property: 'fixed', control: 'switch' },
+    { Property: 'type', control: 'picker' },
+    { Property: 'status', control: 'picker' },
     { Property: 'label', control: 'textfield' },
     { Property: 'size', control: 'picker' },
     { Property: 'placement', control: 'picker' },
@@ -79,6 +83,11 @@ const rspModule = `
 const swcModule = `
   export class Button extends HTMLElement {}
   export class Badge extends HTMLElement {}
+  export class ConversationTurn extends HTMLElement {}
+  export class UserMessage extends HTMLElement {}
+  export class SystemMessage extends HTMLElement {}
+  export class ResponseStatus extends HTMLElement {}
+  export class ResponseStatusStep extends HTMLElement {}
 `;
 
 test.beforeEach(async ({ context }) => {
@@ -108,6 +117,8 @@ test.beforeEach(async ({ context }) => {
     expect(snippets[path], `Unexpected snippet request: ${path}`).toBeDefined();
     return route.fulfill({ contentType: 'text/plain', body: snippets[path] });
   });
+  await context.route('**/deps/swc/data/swc-{conversation-turn,response-status}.json', (route) => route.continue());
+  await context.route('**/deps/swc/playground/snippets/{conversation-turn,response-status}.html', (route) => route.continue());
   await context.route('https://esm.sh/@react-spectrum/s2/package.json', (route) => json(route, rspMetadata));
   await context.route('https://data.jsdelivr.com/v1/package/npm/@react-spectrum/s2@*/flat', (route) => json(route, {
     files: [{ name: '/page.css' }],
@@ -132,7 +143,7 @@ test.beforeEach(async ({ context }) => {
 
 async function gotoFixture(page) {
   await page.goto(FIXTURE, { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('.playground-layout')).toHaveCount(8);
+  await expect(page.locator('.playground-layout')).toHaveCount(10);
 }
 
 async function rspTree(block) {
@@ -224,6 +235,69 @@ test('SWC optional picker values disappear from both the live element and copied
   await button.getByRole('combobox', { name: 'size' }).selectOption(NONE_OPTION);
   await expect(liveButton).not.toHaveAttribute('size');
   await expect(button.locator('pre')).not.toContainText('size=');
+});
+
+test('SWC conversation-turn controls update the live message through the frame observer', async ({ page }) => {
+  await gotoFixture(page);
+  const block = page.locator('#swc-conversation-turn');
+  await block.scrollIntoViewIfNeeded();
+  const turn = block.frameLocator('iframe').locator('swc-conversation-turn');
+  const messages = turn.locator('swc-user-message, swc-system-message');
+  const texts = {
+    user: 'Can you summarize the attached campaign assets?',
+    system: 'Here is a concise summary based on the files you shared. I grouped themes by audience and channel.',
+  };
+  await expect(turn).toHaveAttribute('type', 'user');
+  await expect(messages).toHaveCount(1);
+  await expect(turn.locator('swc-user-message')).toHaveText(texts.user);
+
+  for (const type of ['system', 'system', 'user', 'system', 'user']) {
+    await block.getByRole('combobox', { name: 'type', exact: true }).selectOption(type);
+    await expect(turn).toHaveAttribute('type', type);
+    await expect(messages).toHaveCount(1);
+    await expect(turn.locator(`swc-${type}-message`)).toHaveText(texts[type]);
+    await expect(block.locator('pre')).toContainText(`<swc-${type}-message>`);
+    await expect(block.locator('pre')).toContainText(texts[type]);
+  }
+});
+
+test('SWC response-status controls update the live timeline through the frame observer', async ({ page }) => {
+  await gotoFixture(page);
+  const block = page.locator('#swc-response-status');
+  await block.scrollIntoViewIfNeeded();
+  const status = block.frameLocator('iframe').locator('swc-response-status');
+  const steps = status.locator('swc-response-status-step');
+  const label = status.locator(':scope > [slot="label"]');
+  const labels = {
+    active: 'Searching repositories for Europe trips',
+    complete: 'Thought for 9 seconds',
+    stopped: 'You stopped the response',
+  };
+  const descriptions = {
+    active: 'Checked 3 internal repositories for previously compiled trip package data and pricing templates.',
+    complete: 'Synthesizing findings into a structured comparison of available packages with pricing and availability.',
+    stopped: 'Interrupted before this step could finish.',
+  };
+  await expect(status).toHaveAttribute('status', 'active');
+  await expect(label).toHaveText(labels.active);
+  await expect(steps).toHaveCount(3);
+
+  for (const value of ['complete', 'complete', 'stopped', 'active', 'complete', 'active', 'stopped']) {
+    await block.getByRole('combobox', { name: 'status', exact: true }).selectOption(value);
+    await expect(status).toHaveAttribute('status', value);
+    await expect(label).toHaveText(labels[value]);
+    await expect(steps).toHaveCount(value === 'complete' ? 4 : 3);
+    await expect(steps.last()).toHaveAttribute('status', value);
+    await expect(steps.last().locator('[slot="label"]')).toHaveText(
+      value === 'complete' ? 'Compose response' : labels.active,
+    );
+    await expect(steps.last().locator('[slot="description"]')).toHaveText(descriptions[value]);
+    await expect(block.locator('pre')).toContainText(labels[value]);
+    await expect(block.locator('pre')).toContainText(descriptions[value]);
+    if (value !== 'complete') {
+      await expect(block.locator('pre')).not.toContainText('Compose response');
+    }
+  }
 });
 
 test('native image controls preserve platform routing, sorted props and unset omission', async ({ page }) => {

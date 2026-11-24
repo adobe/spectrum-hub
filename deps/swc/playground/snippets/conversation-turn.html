@@ -2,26 +2,4 @@
   <swc-user-message>
     Can you summarize the attached campaign assets?
   </swc-user-message>
-  <script>
-    (() => {
-      const turn = document.currentScript.parentElement;
-      const userMessage = turn.querySelector('swc-user-message');
-      const systemMessage = document.createElement('swc-system-message');
-      systemMessage.textContent = 'Here is a concise summary based on the files you shared. I grouped themes by audience and channel.';
-
-      function updateMessage() {
-        const type = turn.getAttribute('type');
-        if (type === 'system') {
-          userMessage.replaceWith(systemMessage);
-        } else if (type === 'user') {
-          systemMessage.replaceWith(userMessage);
-        }
-      }
-
-      updateMessage();
-      new MutationObserver(updateMessage).observe(turn, {
-        attributeFilter: ['type'],
-      });
-    })();
-  </script>
 </swc-conversation-turn>

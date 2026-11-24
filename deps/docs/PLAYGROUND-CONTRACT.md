@@ -23,6 +23,33 @@ origin (protocol, hostname, and port). Cross-origin embedding cannot supply mark
 or property updates. SWC snippets can execute
 JavaScript, so their checked-in scripts are trusted site code, not user content.
 
+Conversation-turn and response-status share their state updates through
+[`snippet-state.js`](../swc/playground/snippet-state.js). The preview observes
+changes to the root's `type` and `status` attributes. The code builder applies the
+same updates before serialization, so displayed and copied HTML reflects the
+selected message, labels, descriptions, and steps without playground-only scripts.
+
+### Prepared runtime manifest, not active input
+
+[`rsp/playground/runtime-manifest.json`](../rsp/playground/runtime-manifest.json)
+is generated for the later shared runtime. It records exact S2/AI/React pins,
+export module descriptors, styles, and AI support imports. It is not a fifth
+input to the current block, and legacy frames do not read it. Discovery,
+extraction, and daily workflows remain unchanged in this additive phase.
+
+[`rsp/version.json`](../rsp/version.json) is the version authority for this
+prepared runtime only. Locked regeneration and check mode use its exact package
+pins, validate metadata and compatibility, and derive the manifest's
+self-contained version metadata from them. Check mode writes neither artifact.
+Unlocked generation builds successfully before publishing both artifacts, with
+rollback on publication errors. Existing catalogs and previews retain their
+current version selection.
+
+The future adapter must share S2 contexts across S2 and AI; pinned URLs alone
+do not establish that identity. Runtime activation and mixed-cache compatibility
+checks remain separate rollout stages. Regeneration and check commands are in
+the [RSP README](../rsp/README.md#additive-playground-runtime-manifest).
+
 ## Rules the consumer follows
 
 **Exactly one catalog is fetched: the page's own.** `fetchPlaygroundInputs` gates on

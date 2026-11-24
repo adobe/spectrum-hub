@@ -188,6 +188,12 @@ unset removal, themes, and controls changed before preview readiness. They do
 not replace the application's frame documents, message listeners, or apply
 helpers.
 
+Conversation-turn and response-status use their checked-in SWC snippets and
+catalogs. Their tests change the parent controls and verify that the real frame's
+attribute observer updates the message, label, description, and timeline while
+the copied markup stays aligned. Repeated state transitions check that messages
+and timeline steps are not duplicated or left behind.
+
 The native variant checks use the controls. Native `staticColor` updates use
 explicit legacy `prop-update` messages to check sorting and unset removal at
 the frame boundary. On `main`, that picker exposes only "None" because the
