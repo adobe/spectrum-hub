@@ -26,22 +26,67 @@ describe('executeSnippetScripts', () => {
     }
   });
 
-  it('updates the response-status label when its status changes', async () => {
-    expect(preview.executeSnippetScripts).to.be.a('function');
-
-    const markup = await (await fetch('/deps/swc/playground/snippets/response-status.html')).text();
+  it('switches the conversation-turn message element and text with its type', async () => {
+    const markup = await (await fetch('/deps/swc/playground/snippets/conversation-turn.html')).text();
     const mount = document.createElement('div');
     mount.innerHTML = markup;
     document.body.append(mount);
 
     try {
       preview.executeSnippetScripts(mount);
+      const turn = mount.querySelector('swc-conversation-turn');
+      const userMessage = turn.querySelector('swc-user-message');
+      const texts = {
+        user: 'Can you summarize the attached campaign assets?',
+        system: 'Here is a concise summary based on the files you shared. I grouped themes by audience and channel.',
+      };
+
+      for (const type of ['user', 'system', 'system', 'user', 'system', 'user']) {
+        turn.setAttribute('type', type);
+        await new Promise((resolve) => {
+          setTimeout(resolve);
+        });
+        const messages = turn.querySelectorAll('swc-user-message, swc-system-message');
+        expect(messages).to.have.length(1);
+        expect(messages[0].localName).to.equal(`swc-${type}-message`);
+        expect(messages[0].textContent.trim()).to.equal(texts[type]);
+      }
+      expect(turn.querySelector('swc-user-message')).to.equal(userMessage);
+    } finally {
+      mount.remove();
+    }
+  });
+
+  it('updates the response-status label and timeline when its status changes', async () => {
+    expect(preview.executeSnippetScripts).to.be.a('function');
+
+    const sandbox = sinon.createSandbox();
+    // The unbundled SWC source expects this build-time environment variable.
+    sandbox.define(window, 'process', { env: { NODE_ENV: 'production' } });
+    const mount = document.createElement('div');
+    try {
+      /* eslint-disable import/no-unresolved -- SWC's wildcard ESM exports confuse the resolver. */
+      await import('@adobe/spectrum-wc/patterns/ai-toolkit/response-status/swc-response-status.js');
+      await import('@adobe/spectrum-wc/patterns/ai-toolkit/response-status/response-status-step/swc-response-status-step.js');
+      /* eslint-enable import/no-unresolved */
+      mount.innerHTML = await (await fetch('/deps/swc/playground/snippets/response-status.html')).text();
+      document.body.append(mount);
+      preview.executeSnippetScripts(mount);
 
       const responseStatus = mount.querySelector('swc-response-status');
       const label = responseStatus.querySelector('[slot="label"]');
+      const descriptions = {
+        active: 'Checked 3 internal repositories for previously compiled trip package data and pricing templates.',
+        complete: 'Synthesizing findings into a structured comparison of available packages with pricing and availability.',
+        stopped: 'Interrupted before this step could finish.',
+      };
       const statuses = [
         ['active', 'Searching repositories for Europe trips'],
         ['complete', 'Thought for 9 seconds'],
+        ['complete', 'Thought for 9 seconds'],
+        ['stopped', 'You stopped the response'],
+        ['complete', 'Thought for 9 seconds'],
+        ['active', 'Searching repositories for Europe trips'],
         ['stopped', 'You stopped the response'],
       ];
 
@@ -51,6 +96,24 @@ describe('executeSnippetScripts', () => {
           setTimeout(resolve);
         });
         expect(label.textContent).to.equal(expectedLabel);
+        const steps = [...responseStatus.querySelectorAll('swc-response-status-step')];
+        expect(steps).to.have.length(status === 'complete' ? 4 : 3);
+        expect(steps.at(-1).querySelector('[slot="label"]').textContent).to.equal(
+          status === 'complete' ? 'Compose response' : 'Searching repositories for Europe trips',
+        );
+        expect(steps.map((step) => step.getAttribute('status'))).to.deep.equal(
+          status === 'complete'
+            ? ['complete', 'complete', 'complete', 'complete']
+            : ['complete', 'complete', status],
+        );
+        expect(steps.at(-1).querySelector('[slot="description"]').textContent.trim().replace(/\s+/g, ' '))
+          .to.equal(descriptions[status]);
+        for (const step of steps) {
+          await step.updateComplete;
+          const line = step.shadowRoot.querySelector('.swc-ResponseStatusStep-line');
+          expect(line.getBoundingClientRect().height > 0, `${status}: ${step.labelText}`)
+            .to.equal(step !== steps.at(-1));
+        }
       }
 
       responseStatus.setAttribute('status', 'unsupported');
@@ -60,6 +123,7 @@ describe('executeSnippetScripts', () => {
       expect(label.textContent).to.equal('You stopped the response');
     } finally {
       mount.remove();
+      sandbox.restore();
     }
   });
 });

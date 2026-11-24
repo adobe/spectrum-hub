@@ -36,6 +36,11 @@ export function registerElements(mod, registry = customElements) {
 
 // `load` is injectable so tests can exercise this without the network.
 export async function defineSwc(component, load = (url) => import(url)) {
+  // The conversation-turn snippet can switch its child message type at runtime.
+  if (component === 'conversation-turn') {
+    await defineSwc('system-message', load);
+  }
+
   const tagName = `swc-${component}`;
   if (customElements.get(tagName)) { return tagName; }
 

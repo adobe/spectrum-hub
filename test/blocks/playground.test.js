@@ -381,24 +381,38 @@ describe('buildSwcSnippet — AI Toolkit markup', () => {
     const response = await fetch('/deps/swc/playground/snippets/conversation-turn.html');
     expect(response.ok).to.be.true;
     const markup = await response.text();
-    const template = document.createElement('template');
-    template.innerHTML = buildSwcSnippet('swc-conversation-turn', {
+    const iframe = document.createElement('iframe');
+    iframe.srcdoc = buildSwcSnippet('swc-conversation-turn', {
       type: { attribute: 'type', value: 'system' },
       accessibleLabel: { attribute: 'accessible-label', value: 'Example turn' },
     }, markup);
-    const turn = template.content.firstElementChild;
-    expect(turn.localName).to.equal('swc-conversation-turn');
-    expect(turn.getAttribute('type')).to.equal('system');
-    expect(turn.getAttribute('accessible-label')).to.equal('Example turn');
-    expect(turn.querySelector('swc-user-message')).to.not.equal(null);
+    const loaded = new Promise((resolve) => {
+      iframe.addEventListener('load', resolve, { once: true });
+    });
+
+    try {
+      document.body.append(iframe);
+      await loaded;
+      const turn = iframe.contentDocument.querySelector('swc-conversation-turn');
+      expect(turn.getAttribute('type')).to.equal('system');
+      expect(turn.getAttribute('accessible-label')).to.equal('Example turn');
+      expect(turn.querySelector('swc-user-message')).to.equal(null);
+      expect(turn.querySelector('swc-system-message').textContent.trim()).to.equal(
+        'Here is a concise summary based on the files you shared. I grouped themes by audience and channel.',
+      );
+    } finally {
+      iframe.remove();
+    }
   });
 
-  it('updates the response-status label in a standalone copied example', async () => {
+  it('updates the response-status timeline in a standalone copied example', async () => {
     const response = await fetch('/deps/swc/playground/snippets/response-status.html');
     expect(response.ok).to.be.true;
     const markup = await response.text();
     const iframe = document.createElement('iframe');
-    iframe.srcdoc = buildSwcSnippet('swc-response-status', {}, markup);
+    iframe.srcdoc = buildSwcSnippet('swc-response-status', {
+      status: { attribute: 'status', value: 'complete' },
+    }, markup);
     const loaded = new Promise((resolve) => {
       iframe.addEventListener('load', resolve, { once: true });
     });
@@ -408,6 +422,9 @@ describe('buildSwcSnippet — AI Toolkit markup', () => {
       await loaded;
       const status = iframe.contentDocument.querySelector('swc-response-status');
       const label = status.querySelector('[slot="label"]');
+      expect(status.querySelectorAll('swc-response-status-step')).to.have.length(4);
+      expect([...status.querySelectorAll('swc-response-status-step')]
+        .every((step) => step.getAttribute('status') === 'complete')).to.be.true;
       for (const [value, expected] of [
         ['complete', 'Thought for 9 seconds'],
         ['stopped', 'You stopped the response'],
@@ -418,6 +435,12 @@ describe('buildSwcSnippet — AI Toolkit markup', () => {
           setTimeout(resolve);
         });
         expect(label.textContent).to.equal(expected);
+        const steps = [...status.querySelectorAll('swc-response-status-step')];
+        expect(steps).to.have.length(value === 'complete' ? 4 : 3);
+        expect(steps.at(-1).querySelector('[slot="label"]').textContent.trim()).to.equal(
+          value === 'complete' ? 'Compose response' : 'Searching repositories for Europe trips',
+        );
+        expect(steps.at(-1).getAttribute('status')).to.equal(value);
       }
     } finally {
       iframe.remove();

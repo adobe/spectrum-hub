@@ -103,6 +103,22 @@ describe('defineSwc', () => {
     expect(customElements.get('swc-button')).to.be.ok;
   });
 
+  it('registers the system-message companion used when a conversation-turn changes type', async () => {
+    const ConversationTurn = makeElement();
+    const SystemMessage = makeElement();
+    const load = (url) => {
+      if (url === `${BASE}/${COMPONENTS['system-message']}`) {
+        return Promise.resolve({ SystemMessage });
+      }
+      expect(url).to.equal(`${BASE}/${COMPONENTS['conversation-turn']}`);
+      return Promise.resolve({ ConversationTurn });
+    };
+
+    await defineSwc('conversation-turn', load);
+    expect(customElements.get('swc-conversation-turn')).to.equal(ConversationTurn);
+    expect(customElements.get('swc-system-message')).to.equal(SystemMessage);
+  });
+
   it('throws when the module does not provide the requested tag', async () => {
     // suggestion module ships SuggestionGroup, not a bare `suggestion` element.
     const load = () => Promise.resolve({ SuggestionGroup: makeElement() });
