@@ -15,6 +15,7 @@ helix-importer-ui
 .cursor
 .worktrees/
 .screenshots/
+.vscode/mcp.json
 playwright-report/
 playwright-report-links/
 playwright-report-smoke/
