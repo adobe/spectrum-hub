@@ -37,6 +37,14 @@ export module descriptors, styles, and AI support imports. It is not a fifth
 input to the current block, and legacy frames do not read it. Discovery,
 extraction, and daily workflows remain unchanged in this additive phase.
 
+[`rsp/version.json`](../rsp/version.json) is the version authority for this
+prepared runtime only. Locked regeneration and check mode use its exact package
+pins, validate metadata and compatibility, and derive the manifest's
+self-contained version metadata from them. Check mode writes neither artifact.
+Unlocked generation builds successfully before publishing both artifacts, with
+rollback on publication errors. Existing catalogs and previews retain their
+current version selection.
+
 The future adapter must share S2 contexts across S2 and AI; pinned URLs alone
 do not establish that identity. Runtime activation and mixed-cache compatibility
 checks remain separate rollout stages. Regeneration and check commands are in

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import fs, {
+  mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,7 +13,6 @@ import {
 import {
   createRspRuntimeSource,
   generateRuntimeManifest,
-  runtimeSourceVersion,
   writeManifestArtifact,
 } from '../../deps/rsp/generate-playground-runtime-manifest.js';
 
@@ -94,6 +95,8 @@ function generationFixture(t) {
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const componentsPath = join(dir, 'components.json');
   const outputPath = join(dir, 'runtime-manifest.json');
+  const versionPath = join(dir, 'version.json');
+  writeFileSync(versionPath, '{\n  "s2": "1.8.2",\n  "ai": "0.5.2",\n  "react": "19.3.1"\n}\n');
   writeFileSync(componentsPath, JSON.stringify({
     ActionButton: { interface: 'ActionButtonProps' },
     PixelLoader: { interface: 'PixelLoaderProps', package: 'ai', file: 'loader/react' },
@@ -110,6 +113,7 @@ function generationFixture(t) {
       version: '1.8.2', peerDependencies: { react: '^19.0.0' },
     }],
     ['https://esm.sh/react@^19.0.0/package.json', { version: '19.3.1' }],
+    ['https://esm.sh/react@19.3.1/package.json', { version: '19.3.1' }],
   ]);
   const packageModules = {
     s2: {
@@ -142,7 +146,7 @@ function generationFixture(t) {
     return new Response(typeof body === 'string' ? body : JSON.stringify(body));
   };
   return {
-    componentsPath, outputPath, fetchImpl, responses, requests,
+    componentsPath, outputPath, versionPath, fetchImpl, responses, requests,
   };
 }
 
@@ -159,6 +163,9 @@ describe('generateRuntimeManifest', () => {
     ).length, 1);
     assert.ok(fixture.requests.includes('https://esm.sh/@react-spectrum/s2@1.8.2/package.json'));
     assert.deepEqual(JSON.parse(readFileSync(fixture.outputPath, 'utf8')), manifest);
+    assert.deepEqual(JSON.parse(readFileSync(fixture.versionPath, 'utf8')), {
+      s2: '1.8.2', ai: '0.5.2', react: '19.3.1',
+    });
     assert.equal(manifest.sources.ai.exports.PixelLoader.modules[0].specifier, '/loader');
   });
 
@@ -166,12 +173,15 @@ describe('generateRuntimeManifest', () => {
     const fixture = generationFixture(t);
     await generateRuntimeManifest(fixture);
     const committed = readFileSync(fixture.outputPath, 'utf8');
+    const versions = readFileSync(fixture.versionPath, 'utf8');
     fixture.requests.length = 0;
     await generateRuntimeManifest({ ...fixture, locked: true });
     await generateRuntimeManifest({ ...fixture, check: true });
     assert.equal(readFileSync(fixture.outputPath, 'utf8'), committed);
-    assert.equal(fixture.requests.some((url) => /react@|\/ai\/package/.test(url)), false);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), versions);
+    assert.equal(fixture.requests.some((url) => /react@\^|\/ai\/package/.test(url)), false);
     assert.ok(fixture.requests.includes('https://esm.sh/@react-spectrum/ai@0.5.2/package.json'));
+    assert.ok(fixture.requests.includes('https://esm.sh/react@19.3.1/package.json'));
   });
 
   it('check mode reports stale bytes without overwriting them', async (t) => {
@@ -194,43 +204,219 @@ describe('generateRuntimeManifest', () => {
     await assert.rejects(generateRuntimeManifest(fixture), /S2.*version/i);
   });
 
-  it('rejects a floating React version in a locked artifact without overwriting it', async (t) => {
+  it('uses version.json rather than manifest metadata as the locked authority', async (t) => {
     const fixture = generationFixture(t);
     const manifest = await generateRuntimeManifest(fixture);
+    manifest.sources.ai.packageVersion = '9.0.0';
+    manifest.sources.s2.packageVersion = '8.0.0';
     manifest.sources.ai.reactVersion = 'latest';
-    const invalid = JSON.stringify(manifest);
-    writeFileSync(fixture.outputPath, invalid);
-    await assert.rejects(generateRuntimeManifest({ ...fixture, locked: true }), /React.*version/i);
-    assert.equal(readFileSync(fixture.outputPath, 'utf8'), invalid);
+    writeFileSync(fixture.outputPath, JSON.stringify(manifest));
+    fixture.requests.length = 0;
+    const rebuilt = await generateRuntimeManifest({ ...fixture, locked: true });
+    assert.equal(rebuilt.sources.ai.packageVersion, '0.5.2');
+    assert.equal(rebuilt.sources.s2.packageVersion, '1.8.2');
+    assert.equal(rebuilt.sources.ai.reactVersion, '19.3.1');
+    assert.equal(fixture.requests.some((url) => url.includes('@9.0.0') || url.includes('@8.0.0')), false);
   });
 
-  for (const [id, version] of [['ai', '0.5.2'], ['s2', '1.8.2']]) {
+  it('rebuilds a missing manifest from the version file in locked mode', async (t) => {
+    const fixture = generationFixture(t);
+    const manifest = await generateRuntimeManifest({ ...fixture, locked: true });
+    assert.deepEqual(JSON.parse(readFileSync(fixture.outputPath, 'utf8')), manifest);
+    assert.equal(fixture.requests.includes('https://esm.sh/@react-spectrum/ai/package.json'), false);
+  });
+
+  it('uses changed version-file pins for check and locked regeneration', async (t) => {
+    const fixture = generationFixture(t);
+    await generateRuntimeManifest(fixture);
+    const committed = readFileSync(fixture.outputPath, 'utf8');
+    const pins = '{"s2":"1.8.2","ai":"0.5.2","react":"19.2.0"}';
+    writeFileSync(fixture.versionPath, pins);
+    fixture.responses.set('https://esm.sh/react@19.2.0/package.json', { version: '19.2.0' });
+    await assert.rejects(generateRuntimeManifest({ ...fixture, check: true }), /stale/i);
+    assert.equal(readFileSync(fixture.outputPath, 'utf8'), committed);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), pins);
+    const manifest = await generateRuntimeManifest({ ...fixture, locked: true });
+    assert.equal(manifest.sources.ai.reactVersion, '19.2.0');
+    assert.equal(manifest.sources.s2.reactVersion, '19.2.0');
+    assert.match(manifest.sources.ai.exports.PixelLoader.modules[0].url, /react@19\.2\.0/);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), pins);
+  });
+
+  for (const mode of ['locked', 'check']) {
+    for (const key of ['ai', 's2', 'react']) {
+      it(`${mode} rejects missing, floating, and malformed ${key} pins before any fetch`, async (t) => {
+        const fixture = generationFixture(t);
+        writeFileSync(fixture.outputPath, 'existing manifest');
+        for (const value of [undefined, 'latest', '^1.8.2', '01.8.2', '1.8.2-01', 123]) {
+          const pins = { ai: '0.5.2', s2: '1.8.2', react: '19.3.1', [key]: value };
+          const invalid = JSON.stringify(pins);
+          writeFileSync(fixture.versionPath, invalid);
+          await assert.rejects(generateRuntimeManifest({ ...fixture, [mode]: true }), /exact version/i);
+          assert.equal(fixture.requests.length, 0);
+          assert.equal(readFileSync(fixture.outputPath, 'utf8'), 'existing manifest');
+          assert.equal(readFileSync(fixture.versionPath, 'utf8'), invalid);
+        }
+      });
+    }
+
+    it(`${mode} requires version.json even when the manifest exists`, async (t) => {
+      const fixture = generationFixture(t);
+      await generateRuntimeManifest(fixture);
+      rmSync(fixture.versionPath);
+      await assert.rejects(generateRuntimeManifest({ ...fixture, [mode]: true }), { code: 'ENOENT' });
+    });
+  }
+
+  for (const [id, version] of [['ai', '0.5.2'], ['s2', '1.8.2'], ['react', '19.3.1']]) {
     it(`rejects ${id} metadata that disagrees with the requested pin`, async (t) => {
       const fixture = generationFixture(t);
       await generateRuntimeManifest(fixture);
       const committed = readFileSync(fixture.outputPath, 'utf8');
-      fixture.responses.get(`https://esm.sh/@react-spectrum/${id}@${version}/package.json`)
+      const packageName = id === 'react' ? 'react' : `@react-spectrum/${id}`;
+      fixture.responses.get(`https://esm.sh/${packageName}@${version}/package.json`)
         .version = '9.0.0';
       await assert.rejects(generateRuntimeManifest({ ...fixture, locked: true }), /version.*pin/i);
       assert.equal(readFileSync(fixture.outputPath, 'utf8'), committed);
     });
   }
-});
 
-describe('runtimeSourceVersion', () => {
-  it('returns the exact committed package version for a source', () => {
-    assert.equal(runtimeSourceVersion({
-      schemaVersion: 1,
-      sources: { s2: { packageVersion: '1.7.1' } },
-    }, 's2'), '1.7.1');
+  it('rejects an AI S2 dependency different from the selected version-file pin', async (t) => {
+    const fixture = generationFixture(t);
+    fixture.responses.get('https://esm.sh/@react-spectrum/ai@0.5.2/package.json')
+      .dependencies['@react-spectrum/s2'] = '1.9.0';
+    await assert.rejects(generateRuntimeManifest({ ...fixture, locked: true }), /S2.*1\.8\.2.*1\.9\.0/);
   });
 
-  it('rejects a missing or invalid source version', () => {
-    assert.throws(() => runtimeSourceVersion({ schemaVersion: 1, sources: {} }, 's2'), /s2.*version/i);
-    assert.throws(
-      () => runtimeSourceVersion({ sources: { s2: { packageVersion: 'latest' } } }, 's2'),
-      /s2.*version/i,
+  for (const [id, version] of [['ai', '0.5.2'], ['s2', '1.8.2']]) {
+    it(`rejects React incompatible with ${id}'s peer range without writing either artifact`, async (t) => {
+      const fixture = generationFixture(t);
+      await generateRuntimeManifest(fixture);
+      const before = [fixture.versionPath, fixture.outputPath].map((path) => readFileSync(path, 'utf8'));
+      fixture.responses.get(`https://esm.sh/@react-spectrum/${id}@${version}/package.json`)
+        .peerDependencies.react = '^18.0.0';
+      await assert.rejects(generateRuntimeManifest({ ...fixture, locked: true }), /react.*19\.3\.1.*18\.0\.0/i);
+      assert.deepEqual(
+        [fixture.versionPath, fixture.outputPath].map((path) => readFileSync(path, 'utf8')),
+        before,
+      );
+    });
+
+    it(`rejects ReactDOM incompatible with ${id}'s peer range`, async (t) => {
+      const fixture = generationFixture(t);
+      fixture.responses.get(`https://esm.sh/@react-spectrum/${id}@${version}/package.json`)
+        .peerDependencies['react-dom'] = '^18.0.0';
+      await assert.rejects(generateRuntimeManifest({ ...fixture, locked: true }), /react-dom.*19\.3\.1.*18\.0\.0/i);
+    });
+  }
+
+  it('check reports a missing manifest without creating it', async (t) => {
+    const fixture = generationFixture(t);
+    await assert.rejects(generateRuntimeManifest({ ...fixture, check: true }), /manifest is missing/i);
+    assert.equal(fs.existsSync(fixture.outputPath), false);
+  });
+
+  it('check rejects manifest pins inconsistent with version.json without writing either file', async (t) => {
+    const fixture = generationFixture(t);
+    const manifest = await generateRuntimeManifest(fixture);
+    manifest.sources.s2.reactVersion = '18.0.0';
+    const stale = JSON.stringify(manifest);
+    const pins = readFileSync(fixture.versionPath, 'utf8');
+    writeFileSync(fixture.outputPath, stale);
+    await assert.rejects(generateRuntimeManifest({ ...fixture, check: true }), /stale/i);
+    assert.equal(readFileSync(fixture.outputPath, 'utf8'), stale);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), pins);
+  });
+
+  it('check does not rewrite matching artifacts, including version-file formatting', async (t) => {
+    const fixture = generationFixture(t);
+    await generateRuntimeManifest(fixture);
+    const pins = '{"react":"19.3.1","ai":"0.5.2","s2":"1.8.2"}';
+    writeFileSync(fixture.versionPath, pins);
+    const writes = t.mock.method(fs, 'writeFileSync', () => assert.fail('check must not write'));
+    await generateRuntimeManifest({ ...fixture, check: true });
+    assert.equal(writes.mock.callCount(), 0);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), pins);
+  });
+
+  it('unlocked generation replaces both stale artifacts only after building successfully', async (t) => {
+    const fixture = generationFixture(t);
+    writeFileSync(fixture.versionPath, '{"s2":"1.0.0","ai":"0.1.0","react":"18.0.0"}');
+    writeFileSync(fixture.outputPath, 'old manifest');
+    await generateRuntimeManifest(fixture);
+    assert.deepEqual(JSON.parse(readFileSync(fixture.versionPath, 'utf8')), {
+      s2: '1.8.2', ai: '0.5.2', react: '19.3.1',
+    });
+    assert.equal(JSON.parse(readFileSync(fixture.outputPath, 'utf8')).sources.ai.packageVersion, '0.5.2');
+  });
+
+  it('a failed unlocked graph build preserves both existing artifacts', async (t) => {
+    const fixture = generationFixture(t);
+    const pins = '{"s2":"1.0.0","ai":"0.1.0","react":"18.0.0"}';
+    writeFileSync(fixture.versionPath, pins);
+    writeFileSync(fixture.outputPath, 'old manifest');
+    fixture.responses.set(
+      'https://unpkg.com/@react-spectrum/s2@1.8.2/dist/exports/ActionButton.mjs',
+      'import "../private/Missing.css";',
     );
+    await assert.rejects(generateRuntimeManifest(fixture), /missing package module/i);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), pins);
+    assert.equal(readFileSync(fixture.outputPath, 'utf8'), 'old manifest');
+    assert.deepEqual(readdirSync(join(fixture.outputPath, '..')).sort(), [
+      'components.json', 'runtime-manifest.json', 'version.json',
+    ]);
+  });
+
+  it('rolls back both artifacts if publishing the second file fails', async (t) => {
+    const fixture = generationFixture(t);
+    writeFileSync(fixture.versionPath, 'old pins');
+    writeFileSync(fixture.outputPath, 'old manifest');
+    const rename = fs.renameSync;
+    let renames = 0;
+    t.mock.method(fs, 'renameSync', (...args) => {
+      renames += 1;
+      if (renames === 2) { throw new Error('injected publish failure'); }
+      return rename(...args);
+    });
+    await assert.rejects(generateRuntimeManifest(fixture), /injected publish failure/);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), 'old pins');
+    assert.equal(readFileSync(fixture.outputPath, 'utf8'), 'old manifest');
+    assert.deepEqual(readdirSync(join(fixture.outputPath, '..')).sort(), [
+      'components.json', 'runtime-manifest.json', 'version.json',
+    ]);
+  });
+
+  it('removes a newly published artifact on failure when neither artifact existed', async (t) => {
+    const fixture = generationFixture(t);
+    rmSync(fixture.versionPath);
+    const rename = fs.renameSync;
+    let renames = 0;
+    t.mock.method(fs, 'renameSync', (...args) => {
+      renames += 1;
+      if (renames === 2) { throw new Error('injected publish failure'); }
+      return rename(...args);
+    });
+    await assert.rejects(generateRuntimeManifest(fixture), /injected publish failure/);
+    assert.deepEqual(readdirSync(join(fixture.outputPath, '..')), ['components.json']);
+  });
+
+  it('preserves both artifacts when staging the new version file fails', async (t) => {
+    const fixture = generationFixture(t);
+    writeFileSync(fixture.versionPath, 'old pins');
+    writeFileSync(fixture.outputPath, 'old manifest');
+    const write = fs.writeFileSync;
+    t.mock.method(fs, 'writeFileSync', (path, ...args) => {
+      if (path.startsWith(`${fixture.versionPath}.`) && path.endsWith('.tmp')) {
+        throw new Error('injected staging failure');
+      }
+      return write(path, ...args);
+    });
+    await assert.rejects(generateRuntimeManifest(fixture), /injected staging failure/);
+    assert.equal(readFileSync(fixture.versionPath, 'utf8'), 'old pins');
+    assert.equal(readFileSync(fixture.outputPath, 'utf8'), 'old manifest');
+    assert.deepEqual(readdirSync(join(fixture.outputPath, '..')).sort(), [
+      'components.json', 'runtime-manifest.json', 'version.json',
+    ]);
   });
 });
 

@@ -49,8 +49,8 @@ compatible S2 and React versions and the same S2 contexts within a frame.
 ### Phase 2: additive runtime tooling
 
 Add the runtime-manifest builder, generator, fixed S2/AI source configuration,
-generated artifact, and contract tests. The manifest records concrete package
-and React versions, export entries, selected stylesheet graphs, and AI's S2
+version file, generated manifest, and contract tests. The manifest records
+concrete package and React versions, export entries, selected stylesheet graphs, and AI's S2
 support imports. Keep the source branch's pins when regenerating this slice.
 
 Do not change component discovery, prop extraction, daily workflows, catalogs,
@@ -59,9 +59,23 @@ The existing extraction and legacy previews retain their current version
 selection. Wiring extraction to the manifest is a later activation prerequisite,
 not part of phase 2. Its owning future slice has not been assigned yet.
 
-Regenerate with `--locked` to retain committed versions. Use `--check` to
-verify byte-for-byte reproducibility without writing the artifact. Both modes
-read published package files and fail if their graph or required CSS is missing.
+`deps/rsp/version.json` owns the phase 2 pins: S2 `1.8.2`, AI `0.5.2`, and
+React/ReactDOM `19.3.1`. The manifest keeps self-contained version metadata
+derived from the same resolved pins; it is not the version authority.
+
+Regenerate with `node deps/rsp/generate-playground-runtime-manifest.js --locked`
+to retain the version-file pins and write only the manifest. Use `--check` to
+verify byte-for-byte reproducibility without writing either artifact. Both modes
+read published package files at exact versions and reject missing or floating
+pins, mismatched package metadata, an incompatible AI S2 dependency, and React
+peer incompatibility. Missing graphs or required CSS also fail generation.
+
+Unlocked generation resolves compatible versions once and builds the graph
+before staging and publishing both artifacts. On publication errors, restore
+any replaced artifact; report retained recovery backups if rollback also fails.
+This guards command failures, not process crashes or concurrent generator runs.
+Use locked generation for this slice. No discovery, extraction, daily workflow,
+catalog, or preview consumer reads the new version file in phase 2.
 
 ### Before phase 3: SWC snippet-state parity
 
