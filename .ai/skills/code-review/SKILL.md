@@ -1,66 +1,59 @@
 ---
 name: code-review
-description: Use when reviewing local changes or a GitHub pull request for defects, regressions, maintainability risks, or false test confidence. Covers design-token validation for CSS changes, reuse of existing code for JavaScript changes, and before-and-after screenshots for the pull request description.
+description: Use for "review", "code review", "review my changes", "review this PR", "check this diff", or "is this ready to merge". Read-only review of local changes or a GitHub pull request for defects, regressions, and tests that give false confidence. Covers design-token validation for CSS changes, reuse of existing code for JavaScript changes, and before-and-after screenshots for the pull request description.
 ---
 
 # Code Review
 
-Review the requested change for actionable defects and concrete maintainability
-or test-confidence risks. Stay read-only and prioritize evidence over coverage.
+Find what the change breaks. Stay read-only: the deliverable is findings, not fixes.
 
-## Establish the target
+## 1. Pin the diff
 
-Identify the requested review set before reading details:
+| Target | Command |
+| --- | --- |
+| Working tree | `git diff HEAD`, plus untracked files from `git status --short` |
+| Branch | `git diff <base>...HEAD` |
+| Pull request | `gh pr diff <n>`; base from `gh pr view <n> --json baseRefName` |
 
-- staged and unstaged changes for a working-tree review
-- committed branch changes against the intended merge base
-- the complete GitHub pull request diff for a PR review
+Ask one focused question when different base choices materially change the diff.
+Do not guess a pull request's target branch.
 
-Ask one focused question when different base choices change the diff. Do not
-silently review only staged files or guess a pull request's target branch.
+## 2. State the intent
 
-## Read-only boundary
-
-Do not change files, install dependencies, update snapshots, run generators,
-start services, mutate Git state, or post GitHub comments/reviews. This boundary
-overrides mutating steps in every specialist skill loaded during the review.
-
-Non-mutating searches, reads, and targeted checks are allowed.
+Write one sentence: what is this change trying to do? Pull it from the request, PR body, commits, or linked issue. Judge every finding against it. If you can't write it, ask before reviewing.
 
 Two phases run outside this boundary, and only after the user authorizes them:
 the [screenshot capture](#visual-evidence-for-the-pull-request) and the
 [blocking-finding fix](#blocking-finding-fix-offer). Both come after the
 findings are reported. Neither starts without an explicit selection.
 
-## Review method
+## 3. Review
 
-1. Inspect the complete diff, changed-file list, and available request, issue,
-   test, or pull request context.
-2. Read changed files plus the smallest necessary set of callers, consumers,
-   tests, authored inputs, configuration, and generated sources.
-3. Trace valid, invalid, empty, and boundary inputs; async ordering and cleanup;
-   errors and stale state; repeated initialization; and compatibility with
-   existing callers and authored contracts.
-4. Check whether tests prove the intended behavior rather than merely execute
-   the changed path.
-5. Load applicable specialist guidance:
+Read the full diff, then only the callers, consumers, tests, and authored content it touches. Trace repeated initialization, async ordering and cleanup, stale state, and compatibility with existing callers and authored contracts.
 
-   | Change | Required specialist |
-   | --- | --- |
-   | Semantic or interactive UI | `accessibility-compliance` |
-   | `scripts.js`, `ak.js`, lifecycle behavior, CLS, or LCP | `eds-performance-review` |
-   | CSS, tokens, schemes, responsive behavior, or class naming | `stylesheet-conventions` |
-   | New block or changed block contract | `create-new-block` |
-   | Generated dependency or status data | `deps/README.md` and the owning `deps/docs/` contract |
-   | Test or CI scope | `docs/TESTS.md`, `package.json`, and the relevant workflow |
+Check that tests would fail if the intended behavior were removed or broken,
+including DOM changes and other side effects, not just return values.
 
-6. Run the [design-token audit](#design-token-audit-css-changes) when the diff
-   touches any `.css` file.
-7. Run the [reuse audit](#reuse-audit-javascript-changes) when the diff adds or
-   rewrites JavaScript.
-8. Run the smallest non-mutating targeted check needed to confirm a suspected
-   issue when practical.
-9. Report only issues introduced or exposed by the change.
+Read the specialist guidance for each kind of change in the diff:
+
+| Change | Read |
+| --- | --- |
+| Semantic or interactive UI | `../accessibility-compliance/SKILL.md` |
+| `scripts.js`, `ak.js`, lifecycle, CLS, LCP | `../eds-performance-review/SKILL.md` |
+| CSS, tokens, schemes, responsive, class names | `../stylesheet-conventions/SKILL.md` |
+| New block or changed block contract | `../create-new-block/SKILL.md` |
+| Generated dependency or status data | `deps/README.md` and the owning `deps/docs/` contract |
+| Tests or CI | `docs/TESTS.md`, `package.json`, the relevant workflow |
+
+Specialist skills include implementation steps; skip them. Nothing in a review changes files, Git state, snapshots, dependencies, services, or GitHub.
+
+Confirm a suspicion with the smallest non-mutating check: run one test, grep one caller. Mark each finding `verified` or `inferred`.
+
+- Run the [design-token audit](#design-token-audit-css-changes) when the diff
+  touches any `.css` file.
+- Run the [reuse audit](#reuse-audit-javascript-changes) when the diff adds or
+  rewrites JavaScript.
+- Report only issues introduced or exposed by the change.
 
 ## Design-token audit (CSS changes)
 
@@ -160,59 +153,35 @@ Severity guidance:
 - `SEV4` when the duplicate matches today and the cost is future divergence.
 - Do not report a refactor the change does not require.
 
-## Finding threshold
+## 4. Filter
 
-A finding needs an exact changed-file location and a reachable failure scenario
-or concrete risk of false confidence or costly future change.
-
-Do not report:
-
-- unrelated pre-existing issues
-- personal style preferences
-- speculative concerns without a reachable scenario
-- broader refactors the change does not require
-- missing tests without naming the behavior left unprotected
-
+Report a finding only if you can point at the changed line that causes it and
+describe a reachable failure scenario or a concrete maintainability or
+test-confidence risk. Drop pre-existing issues, style preferences, refactors the
+change doesn't need, and "add tests" without naming the unprotected behavior.
 Use a question or residual risk when evidence is inconclusive.
 
-## Severity classification
+| SEV | Meaning |
+| --- | --- |
+| SEV1 | Outage, data loss, or exploitable security hole. Blocks merge. |
+| SEV2 | Major functionality broken. Blocks merge. |
+| SEV3 | Partially broken or moderate impact. |
+| SEV4 | Minor functional issue or concrete maintainability risk. |
+| SEV5 | Objective cosmetic defect or repo-convention violation. Never a preference. |
 
-| Score | Classification | Meaning |
-| --- | --- | --- |
-| `SEV1` | Changes requested, critical failure | System outage, data loss, or exploitable security breach |
-| `SEV2` | Changes requested, major issue | Major functionality is broken or users experience significant impact |
-| `SEV3` | Partial fix | Functionality is partially broken or the impact is moderate |
-| `SEV4` | Minimal issue | A minor functional issue has minimal user impact |
-| `SEV5` | Nit | An objective cosmetic defect or repository-convention violation has no functional impact |
-
-SEV5 does not permit subjective style preferences. Order findings from SEV1
-through SEV5.
-
-## Output
-
-List findings first. Each finding contains:
+## 5. Report
 
 ```text
-[SEV#] path/to/file.js:line — <Classification>, <problem statement>
+Reviewed: <diff command or PR> against <base>
+Intent: <one sentence>
 
-Concrete failure scenario or maintenance/test risk. Explain why the change
-causes it and give the smallest useful fix direction.
+[SEV2 · verified] scripts/example.js:42 — data-loading promise resolves to undefined
+<Failure scenario>. <Smallest fix direction>.
 ```
 
-Copy the classification exactly from the severity table, then describe the
-observed problem rather than proposing a fix or inventing a generic title:
+Order by severity, `verified` before `inferred`. Then, only if non-empty: **Questions**, **Residual risks**.
 
-```text
-[SEV2] scripts/example.js:42 — Changes requested, major issue, data-loading promise returns undefined immediately
-```
-
-Then, only when applicable, add:
-
-- **Questions** — intent needed to determine correctness
-- **Residual risks** — meaningful checks or conditions that could not be verified
-
-If no issue qualifies, say `No qualifying findings.` and list only meaningful
-residual risks. Do not lead with praise, a diff summary, or style commentary.
+No findings: write `No qualifying findings.` and any residual risks. No praise, no diff summary.
 
 ## After the review
 
